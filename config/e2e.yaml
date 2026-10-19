@@ -12,3 +12,11 @@ overrides:
       service:
         # kind has no load balancer; helm --wait would wait for an external IP forever.
         type: NodePort
+
+# Components whose workloads cannot become ready without external credentials
+# CI does not have. e2e installs them without waiting for their workloads, runs
+# their smoke checks, uninstalls them and checks for residue, but does not
+# measure them.
+unready:
+  # The operator exits when it cannot mint an auth key with its OAuth client.
+  - remote-access/tailscale-operator

@@ -54,11 +54,18 @@ func e2e(fs *flag.FlagSet, cat *recs.Catalog) error {
 
 	var e2eCfg struct {
 		Overrides map[string]map[string]string `yaml:"overrides"`
+		Unready   []string                     `yaml:"unready"`
 	}
 	if err := recs.ReadYAML("config/e2e.yaml", &e2eCfg); err != nil {
 		return err
 	}
-	t := &recs.Tester{Catalog: cat, Profile: *profile, Overrides: e2eCfg.Overrides}
+	t := &recs.Tester{Catalog: cat, Profile: *profile, Overrides: e2eCfg.Overrides, Unready: map[string]bool{}}
+	for _, id := range e2eCfg.Unready {
+		if _, ok := cat.Get(id); !ok {
+			return fmt.Errorf("config/e2e.yaml: unready: unknown component %q", id)
+		}
+		t.Unready[id] = true
+	}
 	if *previous != "" {
 		if t.Previous, err = readPrevious(*previous); err != nil {
 			return err
@@ -77,7 +84,7 @@ func e2e(fs *flag.FlagSet, cat *recs.Catalog) error {
 		slog.Info("testing", "component", c.ID, "env", key)
 		res := t.Test(c.ID)
 		results = append(results, res)
-		if res.Err == nil && *write {
+		if res.Err == nil && !res.Unmeasured && *write {
 			if err := writeMeasurement(c, key, res); err != nil {
 				return err
 			}
@@ -88,6 +95,9 @@ func e2e(fs *flag.FlagSet, cat *recs.Catalog) error {
 	var errs []error
 	for _, r := range results {
 		status := fmt.Sprintf("PASS %4.0f MiB %3.0fm CPU", r.IdleMemoryMiB, r.IdleCPUm)
+		if r.Unmeasured {
+			status = "PASS (installed without credentials; not measured)"
+		}
 		if r.Err != nil {
 			status = "FAIL " + r.Err.Error()
 			errs = append(errs, fmt.Errorf("%s: %w", r.ID, r.Err))

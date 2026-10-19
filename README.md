@@ -40,6 +40,7 @@ tools/                                      the `recs` command (Go)
 | vulnerability-scanning | Trivy Operator | optional | optional |
 | dns | ExternalDNS | optional | optional |
 | resource-recommendations | Vertical Pod Autoscaler (recommender) | optional | optional |
+| remote-access | Tailscale Kubernetes operator | optional | optional |
 
 `recommended` is on by default, `optional` is offered but off, `unsupported`
 is not offered. Each file's `detection` rules find an existing installation so
@@ -139,7 +140,9 @@ Every pull request:
 4. installs each changed component and its dependents (every component when
    `config/`, `tools/` or the cluster changes) on kind for each profile, on
    amd64 and arm64: dependencies first, smoke test, idle memory and CPU,
-   uninstall, and fails on anything left behind;
+   uninstall, and fails on anything left behind (components listed under
+   `unready` in `config/e2e.yaml` need credentials CI lacks: they are installed
+   without waiting, smoke tested and uninstalled, not measured);
 5. checks that the single-node recommended set, measured on amd64, fits
    `config/budget.yaml`;
 6. upgrades from the latest release's version when it changed.

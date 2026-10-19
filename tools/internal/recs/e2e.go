@@ -26,6 +26,7 @@ type Tester struct {
 	Catalog   *Catalog
 	Profile   string
 	Overrides map[string]map[string]string // test-only values per component and release
+	Unready   map[string]bool              // components that cannot become ready without credentials
 	Previous  map[string]*Component        // last release's components, for upgrade tests
 }
 
@@ -35,6 +36,7 @@ type Result struct {
 	IdleMemoryMiB float64
 	IdleCPUm      float64
 	UpgradedFrom  string
+	Unmeasured    bool // installed without waiting; nothing ran long enough to measure
 	Err           error
 }
 
@@ -105,6 +107,14 @@ func (t *Tester) Test(id string) (res Result) {
 		}
 		if !target {
 			continue
+		}
+		if t.Unready[id] {
+			slog.Info("installed without credentials; not measured", "component", id)
+			res.Unmeasured = true
+			if err := smoke(c); err != nil {
+				res.Err = fmt.Errorf("smoke: %w", err)
+			}
+			return res
 		}
 		slog.Info("installed; settling", "component", id, "for", settle)
 		time.Sleep(settle)
@@ -220,8 +230,11 @@ func (t *Tester) installRelease(r *run, c *Component, rel Release) error {
 	}
 	defer cleanup()
 	slog.Info("helm upgrade --install", "component", c.ID, "release", rel.Name, "chart", rel.Chart, "version", rel.Version)
-	args := append([]string{"upgrade", "--install", rel.HelmName(), chart,
-		"--namespace", rel.Namespace, "--wait", "--timeout", "10m"}, files...)
+	args := []string{"upgrade", "--install", rel.HelmName(), chart, "--namespace", rel.Namespace}
+	if !t.Unready[c.ID] { // its workloads crash without real credentials
+		args = append(args, "--wait", "--timeout", "10m")
+	}
+	args = append(args, files...)
 	if _, err := Run(nil, "helm", args...); err != nil {
 		return err
 	}
