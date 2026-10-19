@@ -41,6 +41,7 @@ tools/                                      the `recs` command (Go)
 | dns | ExternalDNS | optional | optional |
 | resource-recommendations | Vertical Pod Autoscaler (recommender) | optional | optional |
 | remote-access | Tailscale Kubernetes operator | optional | optional |
+| config-reload | Stakater Reloader | optional | optional |
 
 `recommended` is on by default, `optional` is offered but off, `unsupported`
 is not offered. Each file's `detection` rules find an existing installation so
