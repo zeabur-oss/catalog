@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"slices"
 	"strings"
 	"sync"
@@ -27,7 +28,9 @@ type Tester struct {
 	Profile   string
 	Overrides map[string]map[string]string // test-only values per component and release
 	Unready   map[string]bool              // components that cannot become ready without credentials
-	Previous  map[string]*Component        // last release's components, for upgrade tests
+	// Test-only text replacements in manifests, per component and release.
+	Replacements map[string]map[string]map[string]string
+	Previous     map[string]*Component // last release's components, for upgrade tests
 }
 
 // Result is the outcome for one component.
@@ -191,6 +194,9 @@ func (t *Tester) installRelease(r *run, c *Component, rel Release) error {
 		if err != nil {
 			return err
 		}
+		if manifest, err = replace(manifest, t.Replacements[c.ID][rel.Name]); err != nil {
+			return fmt.Errorf("%s: %w", key, err)
+		}
 		slog.Info("applying", "component", c.ID, "release", rel.Name)
 		if err := retry(3*time.Minute, func() error {
 			_, err := Run(manifest, "kubectl", "apply", "--server-side", "--force-conflicts", "-f", "-")
@@ -246,6 +252,19 @@ func (t *Tester) installRelease(r *run, c *Component, rel Release) error {
 		})
 	}
 	return nil
+}
+
+// replace applies test-only replacements to a manifest, in key order. A
+// replacement that matches nothing fails, so it cannot go stale unnoticed.
+func replace(manifest []byte, replacements map[string]string) ([]byte, error) {
+	out := string(manifest)
+	for _, old := range slices.Sorted(maps.Keys(replacements)) {
+		if !strings.Contains(out, old) {
+			return nil, fmt.Errorf("replacement %q matches nothing", old)
+		}
+		out = strings.ReplaceAll(out, old, replacements[old])
+	}
+	return []byte(out), nil
 }
 
 // createSecrets creates the Secrets that inputs live in, one per name, with

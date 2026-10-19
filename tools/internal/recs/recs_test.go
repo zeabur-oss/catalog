@@ -68,3 +68,17 @@ func TestLicenseIDs(t *testing.T) {
 		t.Errorf("got %v", got)
 	}
 }
+
+func TestReplace(t *testing.T) {
+	got, err := replace([]byte("server: https://prod/dir\n---\nserver: https://prod/dir"),
+		map[string]string{"https://prod/dir": "https://staging/dir"})
+	if want := "server: https://staging/dir\n---\nserver: https://staging/dir"; err != nil || string(got) != want {
+		t.Errorf("got %q, %v; want %q", got, err, want)
+	}
+	if _, err := replace([]byte("server: x"), map[string]string{"absent": "y"}); err == nil {
+		t.Error("a replacement that matches nothing must fail")
+	}
+	if got, err := replace([]byte("a"), nil); err != nil || string(got) != "a" {
+		t.Errorf("no replacements: got %q, %v", got, err)
+	}
+}

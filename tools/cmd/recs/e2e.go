@@ -53,13 +53,15 @@ func e2e(fs *flag.FlagSet, cat *recs.Catalog) error {
 	key := *profile + "-" + arch + "-" + version.ServerVersion.GitVersion
 
 	var e2eCfg struct {
-		Overrides map[string]map[string]string `yaml:"overrides"`
-		Unready   []string                     `yaml:"unready"`
+		Overrides    map[string]map[string]string            `yaml:"overrides"`
+		Replacements map[string]map[string]map[string]string `yaml:"replacements"`
+		Unready      []string                                `yaml:"unready"`
 	}
 	if err := recs.ReadYAML("config/e2e.yaml", &e2eCfg); err != nil {
 		return err
 	}
-	t := &recs.Tester{Catalog: cat, Profile: *profile, Overrides: e2eCfg.Overrides, Unready: map[string]bool{}}
+	t := &recs.Tester{Catalog: cat, Profile: *profile, Overrides: e2eCfg.Overrides,
+		Replacements: e2eCfg.Replacements, Unready: map[string]bool{}}
 	for _, id := range e2eCfg.Unready {
 		if _, ok := cat.Get(id); !ok {
 			return fmt.Errorf("config/e2e.yaml: unready: unknown component %q", id)

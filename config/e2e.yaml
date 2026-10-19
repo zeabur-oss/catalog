@@ -20,3 +20,12 @@ overrides:
 unready:
   # The operator exits when it cannot mint an auth key with its OAuth client.
   - remote-access/tailscale-operator
+
+# Test-only text replacements in manifests releases, per component and release.
+# A replacement that matches nothing fails the run.
+replacements:
+  certificates/cert-manager:
+    issuers:
+      # Every CI install registers ACME accounts; Let's Encrypt production allows
+      # 10 per IP every 3 hours, staging 50, so both issuers use staging.
+      https://acme-v02.api.letsencrypt.org/directory: https://acme-staging-v02.api.letsencrypt.org/directory
