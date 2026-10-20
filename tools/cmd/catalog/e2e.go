@@ -37,7 +37,7 @@ func e2e(fs *flag.FlagSet, cat *catalog.Catalog) error {
 	fs.Parse(os.Args[2:])
 
 	if !slices.Contains(catalog.Profiles, *profile) {
-		return fmt.Errorf("unknown -profile %q", *profile)
+		return fmt.Errorf("unknown -profile %q; use %s", *profile, strings.Join(catalog.Profiles, " or "))
 	}
 	out, err := catalog.Run(nil, "kubectl", "version", "-o", "json")
 	if err != nil {

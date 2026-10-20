@@ -68,7 +68,7 @@ func Check(root string, cat *Catalog) error {
 				fail(c.Path, "input %s: no chart release for its path", in.Name)
 			}
 			if in.Required && in.Default == nil && in.TestValue == nil && in.Generate == "" {
-				fail(c.Path, "input %s: required inputs need a default, testValue or generate so CI can install", in.Name)
+				fail(c.Path, "input %s: required, so set default, testValue or generate for CI to install it", in.Name)
 			}
 		}
 		for _, ct := range c.Contributes {

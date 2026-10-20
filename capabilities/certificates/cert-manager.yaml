@@ -3,8 +3,9 @@ homepage: https://cert-manager.io
 license: Apache-2.0
 maturity: cncf-graduated
 rationale: >
-  The standard Kubernetes certificate controller (CNCF graduated). Issuers live
-  in the cluster, so certificates renew on their own.
+  cert-manager is the standard Kubernetes certificate controller (CNCF
+  graduated). Its issuers live in the cluster, so it renews certificates
+  itself.
 defaults:
   single-node: recommended
   multi-node: recommended
@@ -133,7 +134,7 @@ security:
   risks:
     - risk: Any namespace can use a ClusterIssuer for a hostname it does not own.
       mitigation: Offer tenants HTTP-01 ClusterIssuers only; keep DNS-01 admin-only.
-    - risk: A tenant DNS-01 Issuer can issue for any name in its zone.
+    - risk: A tenant DNS-01 Issuer can issue certificates for any name in its zone.
       mitigation: Scope the token to the tenant's own zones and namespace.
 
 # ACME account keys have no owner; keeping them keeps the accounts on reinstall.

@@ -3,10 +3,10 @@ homepage: https://docs.victoriametrics.com/victorialogs/
 license: Apache-2.0
 maturity: independent
 rationale: >
-  Log history and search with low memory and disk use; Apache-2.0, unlike
-  Loki. Runs on the VictoriaMetrics operator.
+  Keeps and searches log history with low memory and disk use. It is
+  Apache-2.0, unlike Loki, and runs on the VictoriaMetrics operator.
 alternatives:
-  loki: AGPL-3.0; reused if present.
+  loki: Licensed AGPL-3.0; an existing installation is reused.
 defaults:
   single-node: recommended
   multi-node: recommended

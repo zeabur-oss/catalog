@@ -3,9 +3,9 @@ homepage: https://falco.org
 license: Apache-2.0
 maturity: cncf-graduated
 rationale: >
-  Flags suspicious runtime behaviour (container shells, privilege escalation)
-  from kernel events as JSON logs. Optional: needs a privileged eBPF probe and
-  a BTF kernel (5.8+).
+  Flags suspicious runtime behavior (container shells, privilege escalation)
+  from kernel events as JSON logs. Optional: it needs a privileged eBPF probe
+  and a BTF kernel (5.8+).
 defaults:
   single-node: optional
   multi-node: optional

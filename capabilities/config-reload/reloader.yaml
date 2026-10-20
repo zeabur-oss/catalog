@@ -63,15 +63,16 @@ security:
     ClusterRole: reads, lists and watches every Secret and ConfigMap; reads,
     updates and patches Deployments, StatefulSets and DaemonSets; creates
     Events. Role in its namespace: lists, reads, watches, creates and updates
-    every ConfigMap there, not only its own; on multi-node also the
+    every ConfigMap there, not only its own, and on multi-node the
     leader-election Lease.
   clusterWide: true
   tenants: namespaced
   risks:
     - risk: It reads every Secret in the cluster, so its token exposes all of them.
       mitigation: >
-        Set watchGlobally false with namespaces: a Role per listed namespace and
-        no ClusterRole. resourceLabelSelector narrows what it caches, not its RBAC.
+        Set watchGlobally to false and list namespaces: the chart then creates a
+        Role per listed namespace and no ClusterRole. resourceLabelSelector
+        narrows what it caches, not its RBAC.
     - risk: It can rewrite the pod template of any Deployment, StatefulSet or DaemonSet, including kube-system's.
       mitigation: Keep its namespace admin-only; it runs as non-root with the RuntimeDefault seccomp profile.
 

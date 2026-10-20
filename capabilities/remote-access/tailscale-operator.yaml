@@ -15,14 +15,15 @@ defaults:
 inputs:
   - name: oauth-client-id
     description: >
-      ID of a Tailscale OAuth client with write scope for Services, Devices
-      Core and Auth Keys, tagged tag:k8s-operator. The tailnet policy must
-      make tag:k8s-operator an owner of tag:k8s, the proxies' default tag.
+      The operator uses the Tailscale OAuth client with this ID. The client
+      needs write scope for Services, Devices Core and Auth Keys, and the tag
+      tag:k8s-operator. The tailnet policy must make tag:k8s-operator an owner
+      of tag:k8s, the proxies' default tag.
     secret: {name: operator-oauth, key: client_id, namespace: tailscale}
     required: true
     testValue: catalog-ci
   - name: oauth-client-secret
-    description: Secret of that OAuth client.
+    description: The operator authenticates with this OAuth client secret.
     secret: {name: operator-oauth, key: client_secret, namespace: tailscale}
     required: true
     testValue: catalog-ci

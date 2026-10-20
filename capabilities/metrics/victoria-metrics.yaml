@@ -3,11 +3,11 @@ homepage: https://victoriametrics.com
 license: Apache-2.0
 maturity: independent
 rationale: >
-  Metrics history and alerts at a fraction of Prometheus' memory; tuned to
-  about 200Mi on one node.
+  Keeps metrics history and evaluates alerts with a fraction of Prometheus'
+  memory. On one node it is tuned to about 200Mi.
 alternatives:
-  metrics-server: Live CPU and memory only; installed alongside for the metrics API.
-  kube-prometheus-stack: Reused if present; not recommended for its memory use.
+  metrics-server: Serves live CPU and memory only; it is installed alongside for the metrics API.
+  kube-prometheus-stack: An existing installation is reused, but its memory use keeps it from being recommended.
 defaults:
   single-node: recommended
   multi-node: recommended
@@ -126,7 +126,7 @@ detection:
   helmCharts: [victoria-metrics-k8s-stack]
 
 security:
-  summary: Manages VM objects and scrapes pods in all namespaces.
+  summary: Manages VictoriaMetrics objects and scrapes pods in all namespaces.
   clusterWide: true
   tenants: admin-only
   tenantCRDs: [VMServiceScrape, VMPodScrape, VMRule, VMProbe]
@@ -134,9 +134,9 @@ security:
     - risk: VMRule and PrometheusRule queries see every tenant's metrics.
       mitigation: Keep rules admin-only until vmalert enforces a namespace label.
     - risk: Probe targets can reach any address (SSRF), including cloud metadata.
-      mitigation: Admit only the namespace's own hostnames or public URLs via admission policy.
+      mitigation: Admit only the namespace's own hostnames or public URLs with an admission policy.
     - risk: Scrape objects can select pods in other namespaces.
-      mitigation: Restrict tenant scrapes to their own namespace by admission policy.
+      mitigation: Restrict tenant scrapes to their own namespace with an admission policy.
 
 leftovers: [persistentvolumeclaims]
 
