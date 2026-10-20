@@ -1,4 +1,4 @@
-package recs
+package catalog
 
 import (
 	"cmp"
@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	smokeNamespace = "recs-smoke"
+	smokeNamespace = "catalog-smoke"
 	settle         = time.Minute // after install, before measuring
 )
 

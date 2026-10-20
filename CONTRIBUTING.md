@@ -26,7 +26,7 @@ existing branch: `git rebase --signoff main`, then force-push.
 - Never copy secrets, account IDs, domains, IP addresses or cloud-specific
   settings into values.
 - Do not edit `measurements/`; CI writes it.
-- Run `go run ./tools/cmd/recs validate` and `go run ./tools/cmd/recs render -kubeconform`
+- Run `go run ./tools/cmd/catalog validate` and `go run ./tools/cmd/catalog render -kubeconform`
   before pushing (inside `nix develop`).
 
 ## License

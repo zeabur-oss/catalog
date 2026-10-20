@@ -147,17 +147,17 @@ smoke:
     manifest: |
       apiVersion: cert-manager.io/v1
       kind: Issuer
-      metadata: {name: smoke, namespace: recs-smoke}
+      metadata: {name: smoke, namespace: catalog-smoke}
       spec: {selfSigned: {}}
       ---
       apiVersion: cert-manager.io/v1
       kind: Certificate
-      metadata: {name: smoke, namespace: recs-smoke}
+      metadata: {name: smoke, namespace: catalog-smoke}
       spec:
         secretName: smoke-tls
         dnsNames: [smoke.example.test]
         issuerRef: {kind: Issuer, name: smoke}
-    wait: ["-n recs-smoke certificate/smoke --for=condition=Ready"]
+    wait: ["-n catalog-smoke certificate/smoke --for=condition=Ready"]
   # Ready means the ACME account is registered; it needs egress to Let's
   # Encrypt, not a reachable ingress. CI points both issuers at staging
   # (config/e2e.yaml), so it registers no production accounts.

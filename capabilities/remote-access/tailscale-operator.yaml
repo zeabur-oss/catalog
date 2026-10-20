@@ -20,12 +20,12 @@ inputs:
       make tag:k8s-operator an owner of tag:k8s, the proxies' default tag.
     secret: {name: operator-oauth, key: client_id, namespace: tailscale}
     required: true
-    testValue: recs-ci
+    testValue: catalog-ci
   - name: oauth-client-secret
     description: Secret of that OAuth client.
     secret: {name: operator-oauth, key: client_secret, namespace: tailscale}
     required: true
-    testValue: recs-ci
+    testValue: catalog-ci
 
 releases:
   - name: tailscale-operator

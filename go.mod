@@ -1,4 +1,4 @@
-module github.com/engawahq/recommendations
+module github.com/zeabur/catalog
 
 go 1.26
 

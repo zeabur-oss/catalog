@@ -1,11 +1,11 @@
-// Command recs checks, renders, tests and packages the catalog.
+// Command catalog checks, renders, tests and packages the catalog.
 //
-//	recs validate                    schema, licenses, references, value comments
-//	recs render [ids]                helm template every profile and Kubernetes version, then kubeconform
-//	recs list [-since <ref>]         e2e CI matrix (profile × architecture × component) as JSON
-//	recs e2e -profile <p> [ids]      install, measure, smoke test, uninstall
-//	recs budget                      single-node memory budget
-//	recs index                       write index.json
+//	catalog validate                    schema, licenses, references, value comments
+//	catalog render [ids]                helm template every profile and Kubernetes version, then kubeconform
+//	catalog list [-since <ref>]         e2e CI matrix (profile × architecture × component) as JSON
+//	catalog e2e -profile <p> [ids]      install, measure, smoke test, uninstall
+//	catalog budget                      single-node memory budget
+//	catalog index                       write index.json
 package main
 
 import (
@@ -19,10 +19,10 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/engawahq/recommendations/tools/internal/recs"
+	"github.com/zeabur/catalog/tools/internal/catalog"
 )
 
-var commands = map[string]func(*flag.FlagSet, *recs.Catalog) error{
+var commands = map[string]func(*flag.FlagSet, *catalog.Catalog) error{
 	"validate": validate,
 	"render":   render,
 	"list":     list,
@@ -33,33 +33,33 @@ var commands = map[string]func(*flag.FlagSet, *recs.Catalog) error{
 
 func main() {
 	if len(os.Args) < 2 || commands[os.Args[1]] == nil {
-		fmt.Fprintln(os.Stderr, "usage: recs validate|render|list|e2e|budget|index [flags] [ids]")
+		fmt.Fprintln(os.Stderr, "usage: catalog validate|render|list|e2e|budget|index [flags] [ids]")
 		os.Exit(2)
 	}
 	if dir, err := os.UserCacheDir(); err == nil {
-		recs.CacheDir = filepath.Join(dir, "recs")
+		catalog.CacheDir = filepath.Join(dir, "catalog")
 	}
 	// Isolate helm from the user's repositories and registry logins.
-	helm := filepath.Join(recs.CacheDir, "helm")
+	helm := filepath.Join(catalog.CacheDir, "helm")
 	os.Setenv("HELM_REPOSITORY_CONFIG", filepath.Join(helm, "repositories.yaml"))
 	os.Setenv("HELM_REPOSITORY_CACHE", filepath.Join(helm, "repository"))
 	os.Setenv("HELM_REGISTRY_CONFIG", filepath.Join(helm, "registry.json"))
 
 	name := os.Args[1]
 	fs := flag.NewFlagSet(name, flag.ExitOnError)
-	cat, err := recs.Load(".")
+	cat, err := catalog.Load(".")
 	if err == nil {
 		err = commands[name](fs, cat)
 	}
 	if err != nil {
-		slog.Error("recs "+name+" failed", "err", err)
+		slog.Error("catalog "+name+" failed", "err", err)
 		os.Exit(1)
 	}
 }
 
-func validate(fs *flag.FlagSet, cat *recs.Catalog) error {
+func validate(fs *flag.FlagSet, cat *catalog.Catalog) error {
 	fs.Parse(os.Args[2:])
-	if err := recs.Check(".", cat); err != nil {
+	if err := catalog.Check(".", cat); err != nil {
 		return err
 	}
 	fmt.Println("ok")
@@ -68,7 +68,7 @@ func validate(fs *flag.FlagSet, cat *recs.Catalog) error {
 
 // list prints the e2e CI matrix: every profile × component it supports, and
 // the kind node version.
-func list(fs *flag.FlagSet, cat *recs.Catalog) error {
+func list(fs *flag.FlagSet, cat *catalog.Catalog) error {
 	since := fs.String("since", "", "only components changed since this git commit")
 	fs.Parse(os.Args[2:])
 	cfg, err := loadConfig()
@@ -89,7 +89,7 @@ func list(fs *flag.FlagSet, cat *recs.Catalog) error {
 		Component string `json:"component"`
 	}
 	var jobs []job
-	for _, p := range recs.Profiles {
+	for _, p := range catalog.Profiles {
 		for _, c := range cat.Components {
 			if c.Defaults[p] == "unsupported" {
 				continue
@@ -99,7 +99,7 @@ func list(fs *flag.FlagSet, cat *recs.Catalog) error {
 			if err != nil {
 				return err
 			}
-			if want == nil || slices.ContainsFunc(order, func(o *recs.Component) bool { return want[o.ID] }) {
+			if want == nil || slices.ContainsFunc(order, func(o *catalog.Component) bool { return want[o.ID] }) {
 				for _, arch := range []string{"amd64", "arm64"} {
 					jobs = append(jobs, job{p, arch, c.ID})
 				}
@@ -116,7 +116,7 @@ var shared = []string{"config/", "tools/", "go.", "flake.", ".github/kind.yaml",
 
 // changed returns the IDs of the components whose files changed, or nil when
 // a shared file changed.
-func changed(cat *recs.Catalog, files []string) map[string]bool {
+func changed(cat *catalog.Catalog, files []string) map[string]bool {
 	ids := map[string]bool{}
 	for _, f := range files {
 		for _, s := range shared {
@@ -133,7 +133,7 @@ func changed(cat *recs.Catalog, files []string) map[string]bool {
 	return ids
 }
 
-func recommended(cat *recs.Catalog, profile string) []string {
+func recommended(cat *catalog.Catalog, profile string) []string {
 	var ids []string
 	for _, c := range cat.Components {
 		if c.Defaults[profile] == "recommended" {
@@ -153,14 +153,14 @@ type config struct {
 
 func loadConfig() (config, error) {
 	var cfg config
-	return cfg, recs.ReadYAML("config/kubernetes.yaml", &cfg)
+	return cfg, catalog.ReadYAML("config/kubernetes.yaml", &cfg)
 }
 
-func selectComponents(cat *recs.Catalog, ids []string) ([]*recs.Component, error) {
+func selectComponents(cat *catalog.Catalog, ids []string) ([]*catalog.Component, error) {
 	if len(ids) == 0 {
 		return cat.Components, nil
 	}
-	var out []*recs.Component
+	var out []*catalog.Component
 	for _, id := range ids {
 		c, ok := cat.Get(id)
 		if !ok {

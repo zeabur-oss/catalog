@@ -80,14 +80,14 @@ smoke:
     manifest: |
       apiVersion: v1
       kind: ConfigMap
-      metadata: {name: smoke, namespace: recs-smoke}
+      metadata: {name: smoke, namespace: catalog-smoke}
       data: {revision: "1"}
       ---
       apiVersion: apps/v1
       kind: Deployment
       metadata:
         name: smoke
-        namespace: recs-smoke
+        namespace: catalog-smoke
         annotations: {reloader.stakater.com/auto: "true"}
       spec:
         selector: {matchLabels: {app: smoke}}
@@ -98,17 +98,17 @@ smoke:
               - name: pause
                 image: registry.k8s.io/pause:3.10
                 envFrom: [{configMapRef: {name: smoke}}]
-    wait: ["-n recs-smoke deployment/smoke --for=condition=Available"]
+    wait: ["-n catalog-smoke deployment/smoke --for=condition=Available"]
   - name: rolls-on-configmap-change
     manifest: |
       apiVersion: v1
       kind: ConfigMap
-      metadata: {name: smoke, namespace: recs-smoke}
+      metadata: {name: smoke, namespace: catalog-smoke}
       data: {revision: "2"}
     wait:
-      - "-n recs-smoke deployment/smoke --for=jsonpath={.spec.template.metadata.annotations.reloader\\.stakater\\.com/last-reloaded-from}"
-      - "-n recs-smoke deployment/smoke --for=jsonpath={.metadata.generation}=2"
-      - "-n recs-smoke deployment/smoke --for=condition=Available"
+      - "-n catalog-smoke deployment/smoke --for=jsonpath={.spec.template.metadata.annotations.reloader\\.stakater\\.com/last-reloaded-from}"
+      - "-n catalog-smoke deployment/smoke --for=jsonpath={.metadata.generation}=2"
+      - "-n catalog-smoke deployment/smoke --for=condition=Available"
 
 # Reloader creates reloader-meta-info itself, without an owner, so helm
 # uninstall leaves it in the namespace.

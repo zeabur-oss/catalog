@@ -32,8 +32,8 @@ jobs:
           exit $fail
       - run: go test ./...
       - name: Schema, licenses, references, value comments
-        run: go run ./tools/cmd/recs validate
-      - run: go run ./tools/cmd/recs index
+        run: go run ./tools/cmd/catalog validate
+      - run: go run ./tools/cmd/catalog index
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: index
@@ -45,7 +45,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: DeterminateSystems/determinate-nix-action@d0c908e6cbe9f89f36ed8205a3ab6f092636916a # v3.23.1
       - name: helm template every profile twice, kubeconform every Kubernetes version
-        run: nix develop -c go run ./tools/cmd/recs render
+        run: nix develop -c go run ./tools/cmd/catalog render
 
   e2e:
     needs: [validate, render]

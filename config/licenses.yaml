@@ -1,5 +1,5 @@
 # OSI-approved SPDX identifiers, generated from the SPDX License List 3.29.0
-# (https://spdx.org/licenses/licenses.json, isOsiApproved). Regenerate with: go run ./tools/cmd/recs licenses-update
+# (https://spdx.org/licenses/licenses.json, isOsiApproved). Regenerate with: go run ./tools/cmd/catalog licenses-update
 spdxVersion: "3.29.0"
 osiApproved:
   - 0BSD

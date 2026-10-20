@@ -1,4 +1,4 @@
-package recs
+package catalog
 
 import (
 	"bytes"
@@ -16,7 +16,7 @@ import (
 )
 
 // CacheDir holds pulled charts and downloaded manifests.
-var CacheDir = filepath.Join(os.TempDir(), "recs")
+var CacheDir = filepath.Join(os.TempDir(), "catalog")
 
 // Run executes a command and returns its stdout; stderr goes into the error.
 func Run(stdin []byte, name string, args ...string) (string, error) {
@@ -58,7 +58,7 @@ func pull(rel Release) (string, error) {
 // valuesFiles writes values documents to temporary files and returns -f
 // arguments for helm, plus a cleanup function.
 func valuesFiles(docs ...map[string]any) ([]string, func(), error) {
-	dir, err := os.MkdirTemp("", "recs-values-")
+	dir, err := os.MkdirTemp("", "catalog-values-")
 	if err != nil {
 		return nil, nil, err
 	}

@@ -1,10 +1,13 @@
-# Recommendations
+# Zeabur Catalog
 
 A tested catalog of Kubernetes components: for each capability, which upstream
 chart, which version, which values, and why. It is data, not an installer.
 CI installs and measures every component, and each release publishes a signed
 bundle any tool can read to generate `helm install` commands, Flux or Argo CD
 manifests, or k3s `HelmChart` objects.
+
+[Zeabur](https://github.com/zeabur/zeabur) reads this catalog to suggest what a
+cluster is missing; it never installs anything itself.
 
 ## Layout
 
@@ -16,7 +19,7 @@ config/kubernetes.yaml                      Kubernetes versions; kind node versi
 config/budget.yaml                          single-node memory budget (MiB)
 config/e2e.yaml                             test-only values
 measurements/                               idle memory and CPU, written by CI
-tools/                                      the `recs` command (Go)
+tools/                                      the `catalog` command (Go)
 ```
 
 ## Capabilities
@@ -86,7 +89,7 @@ releases:                         # installed in order
     version: 41.7.1                             # exact; Renovate bumps it
     values: |                                   # shared by every profile
       gatewayClass:
-        # Every value has a comment saying why; `recs validate` enforces it.
+        # Every value has a comment saying why; `catalog validate` enforces it.
         enabled: true
     profiles:                                   # merged over values like helm -f
       single-node: |
@@ -109,7 +112,7 @@ leftovers: []     # what the upstream keeps on uninstall (e.g. CRDs)
 
 Installs are deterministic: charts never generate secrets or certificates.
 Generated values are `inputs` (stored in Secrets), certificates come from
-cert-manager, and `recs render` fails if two renders differ.
+cert-manager, and `catalog render` fails if two renders differ.
 
 ## Adding an upstream
 
@@ -121,10 +124,10 @@ cert-manager, and `recs render` fails if two renders differ.
    kind):
 
    ```sh
-   go run ./tools/cmd/recs validate               # schema, license, references, comments
-   go run ./tools/cmd/recs render                 # helm template + kubeconform
+   go run ./tools/cmd/catalog validate               # schema, license, references, comments
+   go run ./tools/cmd/catalog render                 # helm template + kubeconform
    kind create cluster                            # --config .github/kind.yaml for multi-node
-   go run ./tools/cmd/recs e2e -profile single-node <id>
+   go run ./tools/cmd/catalog e2e -profile single-node <id>
    ```
 
 4. Open a pull request with signed-off commits (`git commit -s`).
@@ -163,7 +166,7 @@ Tagging `vX.Y.Z` publishes:
 
 ```sh
 cosign verify-blob index.json --bundle index.json.sigstore.json \
-  --certificate-identity-regexp '^https://github.com/engawahq/recommendations/.github/workflows/release.yml@refs/tags/v' \
+  --certificate-identity-regexp '^https://github.com/zeabur/catalog/.github/workflows/release.yml@refs/tags/v' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 

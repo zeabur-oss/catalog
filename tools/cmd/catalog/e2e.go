@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/engawahq/recommendations/tools/internal/recs"
+	"github.com/zeabur/catalog/tools/internal/catalog"
 )
 
 // measurement is measurements/<capability>/<upstream>.json. Environments are
@@ -30,16 +30,16 @@ type environment struct {
 	MeasuredAt    string            `json:"measuredAt"`
 }
 
-func e2e(fs *flag.FlagSet, cat *recs.Catalog) error {
+func e2e(fs *flag.FlagSet, cat *catalog.Catalog) error {
 	profile := fs.String("profile", "", "single-node or multi-node; the current cluster must match it")
 	write := fs.Bool("write", false, "update measurements/ for passing components")
 	previous := fs.String("previous", "", "previous release's index.json, for upgrade tests")
 	fs.Parse(os.Args[2:])
 
-	if !slices.Contains(recs.Profiles, *profile) {
+	if !slices.Contains(catalog.Profiles, *profile) {
 		return fmt.Errorf("unknown -profile %q", *profile)
 	}
-	out, err := recs.Run(nil, "kubectl", "version", "-o", "json")
+	out, err := catalog.Run(nil, "kubectl", "version", "-o", "json")
 	if err != nil {
 		return err
 	}
@@ -57,10 +57,10 @@ func e2e(fs *flag.FlagSet, cat *recs.Catalog) error {
 		Replacements map[string]map[string]map[string]string `yaml:"replacements"`
 		Unready      []string                                `yaml:"unready"`
 	}
-	if err := recs.ReadYAML("config/e2e.yaml", &e2eCfg); err != nil {
+	if err := catalog.ReadYAML("config/e2e.yaml", &e2eCfg); err != nil {
 		return err
 	}
-	t := &recs.Tester{Catalog: cat, Profile: *profile, Overrides: e2eCfg.Overrides,
+	t := &catalog.Tester{Catalog: cat, Profile: *profile, Overrides: e2eCfg.Overrides,
 		Replacements: e2eCfg.Replacements, Unready: map[string]bool{}}
 	for _, id := range e2eCfg.Unready {
 		if _, ok := cat.Get(id); !ok {
@@ -78,7 +78,7 @@ func e2e(fs *flag.FlagSet, cat *recs.Catalog) error {
 		return err
 	}
 
-	var results []recs.Result
+	var results []catalog.Result
 	for _, c := range comps {
 		if c.Defaults[*profile] == "unsupported" {
 			continue
@@ -112,16 +112,16 @@ func e2e(fs *flag.FlagSet, cat *recs.Catalog) error {
 	return errors.Join(errs...)
 }
 
-func readPrevious(path string) (map[string]*recs.Component, error) {
+func readPrevious(path string) (map[string]*catalog.Component, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	var idx struct{ Components []*recs.Component }
+	var idx struct{ Components []*catalog.Component }
 	if err := json.Unmarshal(data, &idx); err != nil {
 		return nil, err
 	}
-	out := map[string]*recs.Component{}
+	out := map[string]*catalog.Component{}
 	for _, c := range idx.Components {
 		out[c.ID] = c
 	}
@@ -130,7 +130,7 @@ func readPrevious(path string) (map[string]*recs.Component, error) {
 
 func measurementPath(id string) string { return filepath.Join("measurements", id+".json") }
 
-func writeMeasurement(c *recs.Component, key string, res recs.Result) error {
+func writeMeasurement(c *catalog.Component, key string, res catalog.Result) error {
 	m := readMeasurement(measurementPath(c.ID))
 	m.Component = c.ID
 	versions := map[string]string{}

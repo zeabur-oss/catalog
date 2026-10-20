@@ -21,9 +21,9 @@ jobs:
         run: |
           nix develop -c sh -c '
             go test ./... &&
-            go run ./tools/cmd/recs validate &&
-            go run ./tools/cmd/recs index &&
-            go run ./tools/cmd/recs render
+            go run ./tools/cmd/catalog validate &&
+            go run ./tools/cmd/catalog index &&
+            go run ./tools/cmd/catalog render
           '
           mkdir dist
           cp index.json dist/

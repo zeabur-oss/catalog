@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/engawahq/recommendations/schema/v1/component.schema.json",
+  "$id": "https://github.com/zeabur/catalog/schema/v1/component.schema.json",
   "title": "Recommended component",
   "description": "One upstream for one capability, at capabilities/<capability>/<upstream>.yaml.",
   "type": "object",
@@ -155,7 +155,7 @@
         "required": ["name", "wait"],
         "properties": {
           "name": { "type": "string" },
-          "manifest": { "type": "string", "description": "Objects to apply first, in namespace recs-smoke." },
+          "manifest": { "type": "string", "description": "Objects to apply first, in namespace catalog-smoke." },
           "wait": { "type": "array", "items": { "type": "string" }, "description": "`kubectl wait` arguments." },
           "timeout": { "type": "string", "default": "180s" }
         }

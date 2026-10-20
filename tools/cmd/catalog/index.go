@@ -9,7 +9,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/engawahq/recommendations/tools/internal/recs"
+	"github.com/zeabur/catalog/tools/internal/catalog"
 )
 
 // indexVersion changes only on incompatible changes to index.json.
@@ -24,7 +24,7 @@ type budgetConfig struct {
 // index writes index.json: every component with its install order and
 // measurements, recommended components per capability, the budget and the
 // Kubernetes versions.
-func index(fs *flag.FlagSet, cat *recs.Catalog) error {
+func index(fs *flag.FlagSet, cat *catalog.Catalog) error {
 	out := fs.String("out", "index.json", "output file")
 	fs.Parse(os.Args[2:])
 	cfg, err := loadConfig()
@@ -32,11 +32,11 @@ func index(fs *flag.FlagSet, cat *recs.Catalog) error {
 		return err
 	}
 	var budget budgetConfig
-	if err := recs.ReadYAML("config/budget.yaml", &budget); err != nil {
+	if err := catalog.ReadYAML("config/budget.yaml", &budget); err != nil {
 		return err
 	}
 	type component struct {
-		*recs.Component
+		*catalog.Component
 		InstallOrder map[string][]string    `json:"installOrder"`
 		Measured     map[string]environment `json:"measured,omitempty"`
 	}
@@ -44,7 +44,7 @@ func index(fs *flag.FlagSet, cat *recs.Catalog) error {
 	var comps []component
 	for _, c := range cat.Components {
 		ic := component{Component: c, InstallOrder: map[string][]string{}}
-		for _, p := range recs.Profiles {
+		for _, p := range catalog.Profiles {
 			if c.Defaults[p] == "unsupported" {
 				continue
 			}
@@ -61,7 +61,7 @@ func index(fs *flag.FlagSet, cat *recs.Catalog) error {
 		if capabilities[c.Capability] == nil {
 			capabilities[c.Capability] = map[string][]string{}
 		}
-		for _, p := range recs.Profiles {
+		for _, p := range catalog.Profiles {
 			if c.Defaults[p] == "recommended" {
 				capabilities[c.Capability][p] = append(capabilities[c.Capability][p], c.ID)
 			}
@@ -69,7 +69,7 @@ func index(fs *flag.FlagSet, cat *recs.Catalog) error {
 	}
 	return writeJSON(*out, map[string]any{
 		"indexVersion": indexVersion,
-		"profiles":     recs.Profiles,
+		"profiles":     catalog.Profiles,
 		"kubernetes":   cfg.Versions,
 		"budget":       budget,
 		"capabilities": capabilities, // capability -> profile -> recommended IDs
@@ -79,10 +79,10 @@ func index(fs *flag.FlagSet, cat *recs.Catalog) error {
 
 // budget sums the idle memory of every component recommended on single-node,
 // measured on single-node kind on amd64, and fails above the budget.
-func budget(fs *flag.FlagSet, cat *recs.Catalog) error {
+func budget(fs *flag.FlagSet, cat *catalog.Catalog) error {
 	fs.Parse(os.Args[2:])
 	var cfg budgetConfig
-	if err := recs.ReadYAML("config/budget.yaml", &cfg); err != nil {
+	if err := catalog.ReadYAML("config/budget.yaml", &cfg); err != nil {
 		return err
 	}
 	var total float64

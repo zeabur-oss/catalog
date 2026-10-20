@@ -10,13 +10,13 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/engawahq/recommendations/tools/internal/recs"
+	"github.com/zeabur/catalog/tools/internal/catalog"
 )
 
 // render runs helm template for every component, release, profile and
 // Kubernetes version, with every contribution applied, and checks the output
 // with kubeconform.
-func render(fs *flag.FlagSet, cat *recs.Catalog) error {
+func render(fs *flag.FlagSet, cat *catalog.Catalog) error {
 	out := fs.String("out", "out/render", "output directory")
 	fs.Parse(os.Args[2:])
 	cfg, err := loadConfig()
@@ -41,11 +41,11 @@ func render(fs *flag.FlagSet, cat *recs.Catalog) error {
 				return err
 			}
 			for _, kv := range cfg.Versions {
-				for _, p := range recs.Profiles {
+				for _, p := range catalog.Profiles {
 					if c.Defaults[p] == "unsupported" {
 						continue
 					}
-					manifest, err := recs.Template(c, rel, p, kv, extra...)
+					manifest, err := catalog.Template(c, rel, p, kv, extra...)
 					if err != nil {
 						errs = append(errs, fmt.Errorf("%s/%s %s %s: %w", c.ID, rel.Name, p, kv, err))
 						continue
@@ -53,7 +53,7 @@ func render(fs *flag.FlagSet, cat *recs.Catalog) error {
 					// Charts must not generate secrets or certificates: the same
 					// values must give the same objects on every install.
 					if kv == cfg.Versions[0] && rel.Kind() == "helm" {
-						again, err := recs.Template(c, rel, p, kv, extra...)
+						again, err := catalog.Template(c, rel, p, kv, extra...)
 						if err == nil && !bytes.Equal(again, manifest) {
 							errs = append(errs, fmt.Errorf("%s/%s %s: output differs between renders; supply generated values as inputs", c.ID, rel.Name, p))
 						}
@@ -72,7 +72,7 @@ func render(fs *flag.FlagSet, cat *recs.Catalog) error {
 	}
 	// Custom resources are checked against the CRDs rendered with them.
 	schemas := *out + "-schemas"
-	if err := recs.CRDSchemas(*out, schemas); err != nil {
+	if err := catalog.CRDSchemas(*out, schemas); err != nil {
 		return err
 	}
 	for _, kv := range cfg.Versions {
@@ -89,12 +89,12 @@ func render(fs *flag.FlagSet, cat *recs.Catalog) error {
 }
 
 // contributions returns the values other components add to a release.
-func contributions(cat *recs.Catalog, target, release string) ([]map[string]any, error) {
+func contributions(cat *catalog.Catalog, target, release string) ([]map[string]any, error) {
 	var out []map[string]any
 	for _, c := range cat.Components {
 		for _, ct := range c.Contributes {
 			if ct.Target == target && ct.Release == release {
-				m, err := recs.ParseValues(ct.Values)
+				m, err := catalog.ParseValues(ct.Values)
 				if err != nil {
 					return nil, fmt.Errorf("%s: %w", c.ID, err)
 				}

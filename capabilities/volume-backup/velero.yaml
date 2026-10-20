@@ -16,7 +16,7 @@ inputs:
     description: S3 bucket for backups.
     path: configuration.backupStorageLocation.0.bucket
     required: true
-    testValue: recs-ci
+    testValue: catalog-ci
   - name: s3-url
     description: S3 endpoint URL (any S3-compatible service).
     path: configuration.backupStorageLocation.0.config.s3Url

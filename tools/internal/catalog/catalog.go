@@ -1,5 +1,5 @@
-// Package recs loads, checks, renders and tests the component catalog.
-package recs
+// Package catalog loads, checks, renders and tests the component catalog.
+package catalog
 
 import (
 	"cmp"

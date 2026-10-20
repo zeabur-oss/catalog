@@ -27,7 +27,7 @@ jobs:
       - id: list
         env:
           SINCE: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: echo "matrix=$(go run ./tools/cmd/recs list -since "$SINCE")" >> "$GITHUB_OUTPUT"
+        run: echo "matrix=$(go run ./tools/cmd/catalog list -since "$SINCE")" >> "$GITHUB_OUTPUT"
 
   e2e:
     needs: matrix
@@ -52,7 +52,7 @@ jobs:
         run: gh release download --pattern index.json --output previous.json || true
       - name: e2e
         run: |
-          nix develop -c go run ./tools/cmd/recs e2e -profile '${{ matrix.profile }}' -write \
+          nix develop -c go run ./tools/cmd/catalog e2e -profile '${{ matrix.profile }}' -write \
             $([ -f previous.json ] && echo -previous previous.json) '${{ matrix.component }}'
       - name: Keep only this component's measurement
         if: always()
@@ -79,4 +79,4 @@ jobs:
           pattern: measurements-single-node-amd64-*
           path: measurements/
           merge-multiple: true
-      - run: go run ./tools/cmd/recs budget
+      - run: go run ./tools/cmd/catalog budget

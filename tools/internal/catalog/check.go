@@ -1,4 +1,4 @@
-package recs
+package catalog
 
 import (
 	"errors"

@@ -25,7 +25,7 @@ inputs:
     description: Marks this cluster's records so clusters never fight over one.
     path: txtOwnerId
     required: true
-    testValue: recs-ci
+    testValue: catalog-ci
 
 releases:
   - name: external-dns
