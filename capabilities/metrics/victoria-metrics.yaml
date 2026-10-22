@@ -4,7 +4,8 @@ license: Apache-2.0
 maturity: independent
 rationale: >
   Keeps metrics history and evaluates alerts with a fraction of Prometheus'
-  memory. On one node it is tuned to about 200Mi.
+  memory. On one node it idles at about 220Mi with node-exporter, more as
+  pods add series.
 alternatives:
   metrics-server: Serves live CPU and memory only; it is installed alongside for the metrics API.
   kube-prometheus-stack: An existing installation is reused, but its memory use keeps it from being recommended.
