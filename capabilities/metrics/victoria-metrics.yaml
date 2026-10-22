@@ -40,8 +40,33 @@ releases:
     profiles:
       single-node: |
         prometheus-node-exporter:
-          # cAdvisor already covers containers; little gain on one node.
-          enabled: false
+          # Node disk use (node_filesystem_*) has no other source; Zeabur reads it.
+          enabled: true
+          extraArgs:
+            # Only the collectors the default node-exporter, node and kubernetes rules query.
+            - --collector.disable-defaults
+            - --collector.filesystem
+            - --collector.cpu
+            - --collector.meminfo
+            - --collector.loadavg
+            - --collector.vmstat
+            - --collector.diskstats
+            - --collector.netdev
+            - --collector.netclass
+            - --collector.filefd
+            - --collector.conntrack
+            - --collector.timex
+            - --collector.mdadm
+            - --collector.bonding
+            - --collector.textfile
+            # The chart's excludes plus containerd's per-pod shm mounts (k3s keeps them under /run/k3s).
+            # /var/lib/kubelet itself stays visible; only mounts below it are dropped.
+            - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|run/containerd/.+|run/k3s/.+|var/lib/docker/.+|var/lib/kubelet/.+)($|/)
+            - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tracefs)$
+          resources:
+            # One small exporter per node.
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {memory: 64Mi}
         kube-state-metrics:
           # Only the objects needed to map pods to workloads.
           collectors: [pods, replicasets, deployments, statefulsets, daemonsets, jobs, cronjobs, nodes, persistentvolumeclaims, namespaces]
