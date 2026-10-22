@@ -39,18 +39,14 @@ func Check(root string, cat *Catalog) error {
 		return errors.Join(errs...) // later checks assume a valid shape
 	}
 
-	var licenses struct {
-		OSIApproved []string `yaml:"osiApproved"`
-	}
-	if err := ReadYAML(filepath.Join(root, "config", "licenses.yaml"), &licenses); err != nil {
+	licenses, err := ReadLicenses(root)
+	if err != nil {
 		return err
 	}
 
 	for _, c := range cat.Components {
-		for _, id := range licenseIDs(c.License) {
-			if !slices.Contains(licenses.OSIApproved, id) {
-				fail(c.Path, "license %s is not OSI-approved", id)
-			}
+		for _, p := range licenses.problems(c) {
+			fail(c.Path, "%s", p)
 		}
 		for _, r := range c.Releases {
 			check := func(where, values string) {
@@ -95,6 +91,47 @@ func Check(root string, cat *Catalog) error {
 		}
 	}
 	return errors.Join(errs...)
+}
+
+// Licenses is config/licenses.yaml.
+type Licenses struct {
+	OSIApproved []string `yaml:"osiApproved"`
+	// OptInOnly are allowed although not OSI-approved, in components that no
+	// profile recommends.
+	OptInOnly []string `yaml:"optInOnly"`
+}
+
+func ReadLicenses(root string) (Licenses, error) {
+	var l Licenses
+	return l, ReadYAML(filepath.Join(root, "config", "licenses.yaml"), &l)
+}
+
+// NotOSIApproved returns the identifiers in an SPDX expression that are not
+// OSI-approved.
+func (l Licenses) NotOSIApproved(expr string) []string {
+	var out []string
+	for _, id := range licenseIDs(expr) {
+		if !slices.Contains(l.OSIApproved, id) && !slices.Contains(out, id) {
+			out = append(out, id)
+		}
+	}
+	return out
+}
+
+func (l Licenses) problems(c *Component) []string {
+	var out []string
+	for _, id := range l.NotOSIApproved(c.License) {
+		if !slices.Contains(l.OptInOnly, id) {
+			out = append(out, fmt.Sprintf("license %s is not OSI-approved", id))
+			continue
+		}
+		for _, p := range Profiles {
+			if c.Defaults[p] == "recommended" {
+				out = append(out, fmt.Sprintf("license %s is opt-in only, so %s cannot be recommended", id, p))
+			}
+		}
+	}
+	return out
 }
 
 // licenseIDs splits an SPDX expression; every identifier must be approved,

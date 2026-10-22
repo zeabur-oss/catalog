@@ -19,7 +19,7 @@ cluster is missing; it never installs anything itself.
 ```text
 capabilities/<capability>/<upstream>.yaml   one file per capability × upstream
 schema/v1/component.schema.json             JSON Schema for those files
-config/licenses.yaml                        OSI-approved SPDX identifiers
+config/licenses.yaml                        OSI-approved SPDX identifiers; opt-in-only exceptions
 config/kubernetes.yaml                      Kubernetes versions; kind node version for e2e
 config/budget.yaml                          single-node memory budget (MiB)
 config/e2e.yaml                             test-only values
@@ -50,6 +50,8 @@ tools/                                      the `catalog` command (Go)
 | resource-recommendations | Vertical Pod Autoscaler (recommender) | optional | optional |
 | remote-access | Tailscale Kubernetes operator | optional | optional |
 | config-reload | Stakater Reloader | optional | optional |
+| databases | CloudNativePG with the Barman Cloud plugin (PostgreSQL) | optional | optional |
+| databases | Percona Operator for MongoDB (server SSPL-1.0, opt-in only) | optional | optional |
 
 `recommended` is on by default, `optional` is offered but off, `unsupported`
 is not offered. Each file's `detection` rules find an existing installation so
@@ -80,7 +82,7 @@ Abridged; the schema documents every field.
 ```yaml
 displayName: Traefik Proxy
 homepage: https://traefik.io/traefik/
-license: MIT                      # SPDX, OSI-approved
+license: MIT                      # SPDX; OSI-approved, or opt-in only (see below)
 maturity: independent             # cncf-graduated | cncf-incubating | cncf-sandbox | kubernetes-sig | independent
 rationale: Why it is recommended, in one or two sentences.
 defaults: {single-node: recommended, multi-node: recommended}
@@ -122,7 +124,8 @@ cert-manager, and `catalog render` fails if two renders differ.
 ## Adding an upstream
 
 1. Pick a capability and an upstream with an OSI-approved license; prefer CNCF
-   or Kubernetes SIG projects.
+   or Kubernetes SIG projects. A license under `optInOnly` (SSPL-1.0) is
+   allowed only with `optional` or `unsupported` in every profile.
 2. Create `capabilities/<capability>/<upstream>.yaml` from a similar file. Give
    both profiles values, each with a comment saying why.
 3. Check locally (`nix develop` provides Go, Helm, kubectl, kubeconform and
@@ -142,7 +145,8 @@ cert-manager, and `catalog render` fails if two renders differ.
 Every pull request:
 
 1. validates every file against the schema;
-2. rejects licenses that are not OSI-approved;
+2. rejects licenses that are not OSI-approved, except those under `optInOnly`
+   in `config/licenses.yaml` in components no profile recommends;
 3. renders every profile twice (output must be identical) and validates it
    with kubeconform for each version in `config/kubernetes.yaml`, checking
    custom resources against the CRDs rendered with them;

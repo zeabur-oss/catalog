@@ -35,15 +35,20 @@ func index(fs *flag.FlagSet, cat *catalog.Catalog) error {
 	if err := catalog.ReadYAML("config/budget.yaml", &budget); err != nil {
 		return err
 	}
+	licenses, err := catalog.ReadLicenses(".")
+	if err != nil {
+		return err
+	}
 	type component struct {
 		*catalog.Component
-		InstallOrder map[string][]string    `json:"installOrder"`
-		Measured     map[string]environment `json:"measured,omitempty"`
+		InstallOrder   map[string][]string    `json:"installOrder"`
+		Measured       map[string]environment `json:"measured,omitempty"`
+		NonOSILicenses []string               `json:"nonOSILicenses,omitempty"`
 	}
 	capabilities := map[string]map[string][]string{}
 	var comps []component
 	for _, c := range cat.Components {
-		ic := component{Component: c, InstallOrder: map[string][]string{}}
+		ic := component{Component: c, InstallOrder: map[string][]string{}, NonOSILicenses: licenses.NotOSIApproved(c.License)}
 		for _, p := range catalog.Profiles {
 			if c.Defaults[p] == "unsupported" {
 				continue

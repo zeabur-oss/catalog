@@ -9,7 +9,7 @@
   "properties": {
     "displayName": { "type": "string" },
     "homepage": { "type": "string", "format": "uri" },
-    "license": { "type": "string", "description": "SPDX expression; every identifier must be OSI-approved." },
+    "license": { "type": "string", "description": "SPDX expression; every identifier must be OSI-approved, or listed under optInOnly in config/licenses.yaml with no profile recommending the component." },
     "maturity": { "enum": ["cncf-graduated", "cncf-incubating", "cncf-sandbox", "kubernetes-sig", "independent"] },
     "stability": { "enum": ["stable", "beta"], "default": "stable" },
     "rationale": { "type": "string", "description": "Why it is recommended, in one or two sentences." },

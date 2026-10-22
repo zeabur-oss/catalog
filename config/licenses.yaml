@@ -156,3 +156,8 @@ osiApproved:
   - Zlib
   - curl
   - wxWindows
+# Not OSI-approved, but allowed in components that no profile recommends.
+# index.json lists them per component as nonOSILicenses, so installers can
+# show them before install.
+optInOnly:
+  - SSPL-1.0 # Percona Server for MongoDB
