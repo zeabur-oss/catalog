@@ -52,6 +52,8 @@ tools/                                      the `catalog` command (Go)
 | config-reload | Stakater Reloader | optional | optional |
 | databases | CloudNativePG with the Barman Cloud plugin (PostgreSQL) | optional | optional |
 | databases | Percona Operator for MongoDB (server SSPL-1.0, opt-in only) | optional | optional |
+| container-registry | zot | optional | optional |
+| image-updates | Keel | optional | optional |
 
 `recommended` is on by default, `optional` is offered but off, `unsupported`
 is not offered. Each file's `detection` rules find an existing installation so
