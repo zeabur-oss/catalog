@@ -55,6 +55,7 @@ tools/                                      the `catalog` command (Go)
 | databases | Percona Operator for MongoDB (server SSPL-1.0, opt-in only) | optional | optional |
 | databases | MariaDB Operator (MySQL-compatible) | optional | optional |
 | databases | Dragonfly Operator (Redis-compatible; server BUSL-1.1, opt-in only) | optional | optional |
+| databases | MOCO (MySQL 8) | optional | optional |
 | container-registry | zot | optional | optional |
 | image-updates | Keel | optional | optional |
 
