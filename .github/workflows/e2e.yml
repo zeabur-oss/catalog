@@ -46,6 +46,15 @@ jobs:
           nix develop -c kind create cluster --wait 5m \
             --image 'kindest/node:${{ fromJSON(needs.matrix.outputs.matrix).version }}' \
             $([ '${{ matrix.profile }}' = multi-node ] && echo --config .github/kind.yaml)
+      # Longhorn attaches volumes over iSCSI from each node; kind's nodes ship
+      # without an initiator, and the module comes from the runner's kernel.
+      - name: Longhorn node prerequisites
+        if: matrix.component == 'replicated-storage/longhorn'
+        run: |
+          sudo modprobe iscsi_tcp
+          for node in $(nix develop -c kind get nodes); do
+            docker exec "$node" sh -c 'apt-get update -qq && apt-get install -y -qq open-iscsi nfs-common && systemctl enable --now iscsid'
+          done
       - name: Previous release (upgrade test)
         env:
           GH_TOKEN: ${{ github.token }}

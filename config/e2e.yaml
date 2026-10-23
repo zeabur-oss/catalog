@@ -12,6 +12,11 @@ overrides:
       service:
         # kind has no load balancer; helm --wait would wait for an external IP forever.
         type: NodePort
+  replicated-storage/longhorn:
+    longhorn: |
+      defaultSettings:
+        # e2e uninstalls after every test; the chart refuses to without it.
+        deletingConfirmationFlag: true
 
 # Components whose workloads cannot become ready without external credentials
 # CI does not have. e2e installs them without waiting for their workloads, runs

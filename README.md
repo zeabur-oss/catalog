@@ -42,6 +42,7 @@ tools/                                      the `catalog` command (Go)
 | volume-backup | K8up | optional | optional |
 | volume-backup | Velero (administrators only) | optional | optional |
 | event-autoscaling | KEDA | optional | recommended |
+| replicated-storage | Longhorn (default storage class on multi-node) | optional | recommended |
 | event-autoscaling | KEDA HTTP add-on (beta) | optional | optional |
 | uptime-probes | Prometheus blackbox exporter | optional | recommended |
 | runtime-security | Falco | optional | optional |
@@ -72,6 +73,9 @@ known differences:
   their claims are deleted. On Ubuntu, map the hostname to the node IP in
   `/etc/hosts`; with `127.0.1.1` the API server refuses to proxy to the
   kubelet. Its node has no control-plane label.
+- Longhorn needs open-iscsi with `iscsid` running, the `iscsi_tcp` module and
+  an NFSv4 client on every node, and multipathd kept off its disks; see the
+  comments in its file. CI installs them into kind's nodes.
 - `distributions` limits a component to some distributions
   (system-upgrade-controller: k3s).
 
