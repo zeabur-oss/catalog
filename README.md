@@ -59,6 +59,7 @@ tools/                                      the `catalog` command (Go)
 | object-storage | SeaweedFS operator (beta) | optional | optional |
 | container-registry | zot | optional | optional |
 | image-updates | Keel | optional | optional |
+| gotify-notifications | Alertmanager Gotify bridge | optional | optional |
 
 `recommended` is on by default, `optional` is offered but off, `unsupported`
 is not offered. Each file's `detection` rules find an existing installation so
