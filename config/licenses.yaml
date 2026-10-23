@@ -160,4 +160,5 @@ osiApproved:
 # index.json lists them per component as nonOSILicenses, so installers can
 # show them before install.
 optInOnly:
+  - BUSL-1.1 # Dragonfly
   - SSPL-1.0 # Percona Server for MongoDB
