@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zeabur/catalog/tools/internal/catalog"
+	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 )
 
 // measurement is measurements/<capability>/<upstream>.json. Environments are

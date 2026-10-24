@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/zeabur/catalog/schema/v1/component.schema.json",
+  "$id": "https://github.com/zeabur-oss/catalog/schema/v1/component.schema.json",
   "title": "Recommended component",
   "description": "One upstream for one capability, at capabilities/<capability>/<upstream>.yaml.",
   "type": "object",

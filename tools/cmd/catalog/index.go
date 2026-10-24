@@ -9,7 +9,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/zeabur/catalog/tools/internal/catalog"
+	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 )
 
 // indexVersion changes only on incompatible changes to index.json.

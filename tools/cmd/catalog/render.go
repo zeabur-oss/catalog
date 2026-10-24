@@ -10,7 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/zeabur/catalog/tools/internal/catalog"
+	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 )
 
 // render runs helm template for every component, release, profile and

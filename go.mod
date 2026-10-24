@@ -1,4 +1,4 @@
-module github.com/zeabur/catalog
+module github.com/zeabur-oss/catalog
 
 go 1.26
 

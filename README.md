@@ -11,7 +11,7 @@ CI installs and measures every component, and each release publishes a signed
 bundle any tool can read to generate `helm install` commands, Flux or Argo CD
 manifests, or k3s `HelmChart` objects.
 
-[Zeabur](https://github.com/zeabur/zeabur) reads this catalog to suggest what a
+[Zeabur](https://github.com/zeabur-oss/zeabur) reads this catalog to suggest what a
 cluster is missing; it never installs anything itself.
 
 ## Layout
@@ -186,7 +186,7 @@ Tagging `vX.Y.Z` publishes:
 
 ```sh
 cosign verify-blob index.json --bundle index.json.sigstore.json \
-  --certificate-identity-regexp '^https://github.com/zeabur/catalog/.github/workflows/release.yml@refs/tags/v' \
+  --certificate-identity-regexp '^https://github.com/zeabur-oss/catalog/.github/workflows/release.yml@refs/tags/v' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 

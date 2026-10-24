@@ -19,7 +19,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/zeabur/catalog/tools/internal/catalog"
+	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 )
 
 var commands = map[string]func(*flag.FlagSet, *catalog.Catalog) error{
