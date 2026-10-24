@@ -881,7 +881,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: dify
-        image: docker.io/nginxinc/nginx-unprivileged:1.28.2-alpine@sha256:7377697a821c131a924a7105fafbe7414db4e9fcc77a6f08f776f33f141ec3f8
+        image: docker.io/nginxinc/nginx-unprivileged:1.31.7-alpine@sha256:b5047b9b76845eac124358373c6852377c52e4b05834a47647e955dd91cb8f1e
         ports:
         - name: http
           containerPort: 8080
@@ -1210,7 +1210,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: dify-api
-        image: docker.io/langgenius/dify-api:1.13.0@sha256:5f622b4d0b39bdc6d3b401063cfb60962fa92dcc63f55daccec138f98b260e67
+        image: docker.io/langgenius/dify-api:1.18.0@sha256:0120970fb4ea59aa328d63b7dda635cccc071efb8aae470cd07115a026dbffd3
         ports:
         - name: http
           containerPort: 5001
@@ -1293,8 +1293,10 @@ spec:
           value: /tmp/server.log
         - name: DEPLOY_ENV
           value: PRODUCTION
-        - name: EDITION
-          value: SELF_HOSTED
+        - name: DEPLOYMENT_EDITION
+          value: COMMUNITY
+        - name: ENABLE_COLLABORATION_MODE
+          value: 'false'
         - name: APP_WEB_URL
           value: https://{{ .Domain }}
         - name: APP_API_URL
@@ -1439,7 +1441,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: dify-worker
-        image: docker.io/langgenius/dify-api:1.13.0@sha256:5f622b4d0b39bdc6d3b401063cfb60962fa92dcc63f55daccec138f98b260e67
+        image: docker.io/langgenius/dify-api:1.18.0@sha256:0120970fb4ea59aa328d63b7dda635cccc071efb8aae470cd07115a026dbffd3
         env:
         - name: DB_TYPE
           value: postgresql
@@ -1519,8 +1521,10 @@ spec:
           value: /tmp/server.log
         - name: DEPLOY_ENV
           value: PRODUCTION
-        - name: EDITION
-          value: SELF_HOSTED
+        - name: DEPLOYMENT_EDITION
+          value: COMMUNITY
+        - name: ENABLE_COLLABORATION_MODE
+          value: 'false'
         - name: APP_WEB_URL
           value: https://{{ .Domain }}
         - name: APP_API_URL
@@ -1674,7 +1678,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: dify-beat
-        image: docker.io/langgenius/dify-api:1.13.0@sha256:5f622b4d0b39bdc6d3b401063cfb60962fa92dcc63f55daccec138f98b260e67
+        image: docker.io/langgenius/dify-api:1.18.0@sha256:0120970fb4ea59aa328d63b7dda635cccc071efb8aae470cd07115a026dbffd3
         env:
         - name: DB_TYPE
           value: postgresql
@@ -1754,8 +1758,10 @@ spec:
           value: /tmp/server.log
         - name: DEPLOY_ENV
           value: PRODUCTION
-        - name: EDITION
-          value: SELF_HOSTED
+        - name: DEPLOYMENT_EDITION
+          value: COMMUNITY
+        - name: ENABLE_COLLABORATION_MODE
+          value: 'false'
         - name: APP_WEB_URL
           value: https://{{ .Domain }}
         - name: APP_API_URL
@@ -1913,7 +1919,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: dify-web
-        image: docker.io/langgenius/dify-web:1.13.0@sha256:30339b4d5060488fac147ddc6fb40438ef71cd5f5dfdeb26c886768302bf7197
+        image: docker.io/langgenius/dify-web:1.18.0@sha256:e55a6bf1addf109c3655567663f906624f0980061efed864e0f07d23c71fa385
         ports:
         - name: http
           containerPort: 3000
@@ -1924,17 +1930,11 @@ spec:
           value: https://{{ .Domain }}
         - name: DEPLOY_ENV
           value: PRODUCTION
-        - name: EDITION
-          value: SELF_HOSTED
         - name: MARKETPLACE_API_URL
           value: https://marketplace.dify.ai
         - name: MARKETPLACE_URL
           value: https://marketplace.dify.ai
         - name: NEXT_TELEMETRY_DISABLED
-          value: '1'
-        - name: PM2_HOME
-          value: /tmp/pm2
-        - name: PM2_INSTANCES
           value: '1'
         - name: HOSTNAME
           value: 0.0.0.0
@@ -1955,7 +1955,7 @@ spec:
         - name: tmp
           mountPath: /tmp
         - name: next-cache
-          mountPath: /app/web/.next/cache
+          mountPath: /app/targets/next/web/.next/cache
         readinessProbe:
           tcpSocket:
             port: http
@@ -2012,7 +2012,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: dify-plugin
-        image: docker.io/langgenius/dify-plugin-daemon:0.5.3-local@sha256:0bf7734135702a719701646a0fd9d7ad8b20b7d9cfb8eaedc8a890cf682d55bc
+        image: docker.io/langgenius/dify-plugin-daemon:0.6.12-local@sha256:cf5a7f61f157736e64c5990a35c3dbe63ace6e2e2231ecca562462c74b1f7554
         ports:
         - name: http
           containerPort: 5002
@@ -2097,8 +2097,6 @@ spec:
           mountPath: /tmp
         - name: storage
           mountPath: /app/storage
-        command:
-        - /app/main
         readinessProbe:
           tcpSocket:
             port: http

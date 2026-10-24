@@ -262,6 +262,15 @@ upgradeNotes:
     workspace unless separately authorized; keep frontend logos and copyright
     unchanged.
   - >-
+    From Dify 1.13: back up the database first, because migration 5578e028b2f2
+    (1.17.1) cannot be reversed. Scale dify-worker and dify-beat to 0 before
+    the upgrade, so that old workers do not take new queue entries; the API
+    migrates the database at start. Then run
+    `flask backfill-plugin-auto-upgrade` once in dify-api (1.15), or plugin
+    auto-upgrade settings stop working. Keep PASSWORD_PEPPER unset: setting it
+    makes every existing password fail. The plugin daemon now migrates its own
+    database at start.
+  - >-
     Sandbox 0.2.15 runs each Python and JavaScript execution under its own UID.
     Check code-runner protocol and syscall changes during upgrades.
   - >-
