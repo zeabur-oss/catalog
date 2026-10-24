@@ -1,0 +1,85 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: ntfy
+  description: >-
+    ntfy push notification server over HTTP. Topics need an account, and the
+    message cache, users and attachments are on a persistent volume.
+  license: Apache-2.0 OR GPL-2.0-only
+  homepage: https://ntfy.sh/
+  icon: https://github.com/binwiederhier/ntfy/raw/main/web/public/static/images/ntfy.png
+  categories: [developer-tools]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: ntfy
+    securityProfile: restricted
+    ports: [{name: http, port: 8080}]
+    resources: {requests: {cpu: 50m, memory: 64Mi}, limits: {cpu: "1", memory: 512Mi}}
+    domains: ['{{ .Domain }}']
+
+inputs:
+  - name: adminPassword
+    description: >-
+      Password of the admin user. It is applied at each start, so change the
+      Secret to rotate it. Generated at installation.
+    generate: random
+    secret: {name: ntfy-secrets, key: admin-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: >-
+    Runs as UID 1000 with a read-only root filesystem, no service-account
+    token and all capabilities dropped. The namespace denies all traffic by
+    default. Anonymous users cannot read or write topics.
+  egress:
+    - None.
+  risks:
+    - risk: By default ntfy lets anyone publish to and read any topic.
+      mitigation: >-
+        auth-default-access is deny-all. The admin user reads and writes all
+        topics. Create users, access rules and tokens with ntfy user, ntfy
+        access and ntfy token in the Pod.
+    - risk: >-
+        Instant delivery to the iOS app, Firebase, web push, email and
+        calls need outbound access and are off.
+      mitigation: >-
+        Android and web clients receive messages over their own connection.
+        To use upstream-base-url or another sender, set it and add a
+        NetworkPolicy egress rule for its endpoint.
+    - risk: Attachments use disk space on the volume.
+      mitigation: >-
+        The attachment cache is limited to 2G in total and 15M per file. The
+        message cache keeps 12 hours of messages.
+
+scalability:
+  summary: One instance with SQLite on a 5Gi node-local volume.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      Subscribers hold connections to one process, and the caches are SQLite
+      files. More replicas need PostgreSQL and the experimental cluster mode.
+    - local-path volumes are node-local and have no snapshots or failover.
+
+upgradeNotes:
+  - >-
+    Copy user.db off the node before you change the image digest. It holds
+    users, access rules and tokens. cache.db and attachments are temporary.
+  - >-
+    ntfy migrates its databases on start. A rollback needs the copy taken
+    before the upgrade.
+  - Deleting the namespace deletes the PVC, users and cached messages.
+
+smoke:
+  - name: ntfy-ready
+    resource: statefulset/ntfy
+    condition: jsonpath={.status.readyReplicas}=1
+    timeout: 600s
+    http: {service: ntfy, port: 8080, path: /v1/health, status: 200, contains: '"healthy":true'}
+  - name: anonymous-access-denied
+    resource: statefulset/ntfy
+    condition: jsonpath={.status.readyReplicas}=1
+    timeout: 120s
+    http: {service: ntfy, port: 8080, path: '/test/json?poll=1', status: 403}
