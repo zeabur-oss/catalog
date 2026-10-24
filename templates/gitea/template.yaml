@@ -1,0 +1,179 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: Gitea
+  description: >-
+    Gitea Git hosting over HTTPS, with repositories and LFS objects on a
+    persistent volume and PostgreSQL 18 managed by CloudNativePG with Barman
+    backups.
+  license: MIT AND PostgreSQL AND Apache-2.0
+  # Also: https://cloudnative-pg.io/, https://github.com/cloudnative-pg/plugin-barman-cloud
+  homepage: https://about.gitea.com/
+  icon: https://github.com/go-gitea.png
+  categories: [developer-tools]
+
+requires:
+  - ingress/traefik
+  - certificates/cert-manager
+  - databases/cloudnative-pg
+
+services:
+  - name: gitea
+    securityProfile: restricted
+    ports: [{name: http, port: 3000}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 1Gi}}
+    domains: ['{{ .Domain }}']
+  - name: gitea-db
+    securityProfile: restricted
+    ports: [{name: postgresql, port: 5432}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "1", memory: 1Gi}}
+
+inputs:
+  - name: adminPassword
+    description: >-
+      Password of the administrator gitea_admin, created at the first start.
+      Change it in Gitea after you sign in; the Secret is not applied again.
+    generate: random
+    secret: {name: gitea-secrets, key: admin-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: secretKey
+    description: Encrypts stored credentials such as two-factor secrets. Keep it for the life of the database.
+    generate: random
+    secret: {name: gitea-secrets, key: secret-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: internalToken
+    description: Authenticates Git hooks to the Gitea web process.
+    generate: random
+    secret: {name: gitea-secrets, key: internal-token}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: jwtSecret
+    description: Signs OAuth2 tokens. Rotating it signs out OAuth2 clients.
+    generate: random
+    secret: {name: gitea-secrets, key: jwt-secret}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: lfsJwtSecret
+    description: Signs Git LFS tokens.
+    generate: random
+    secret: {name: gitea-secrets, key: lfs-jwt-secret}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: backupDestination
+    description: Dedicated S3 bucket and unique prefix for the database backups; never reuse a prefix from another cluster.
+    required: true
+    validation: {pattern: '^s3://[a-z0-9][a-z0-9.-]+/[A-Za-z0-9/_-]+$'}
+  - name: backupEndpoint
+    description: S3 HTTPS endpoint with a trusted certificate on TCP 443.
+    required: true
+    validation: {pattern: '^https://[a-zA-Z0-9.-]+(:443)?$'}
+  - name: backupSecret
+    description: >-
+      Existing Secret in the namespace with ACCESS_KEY_ID and
+      ACCESS_SECRET_KEY; create the S3 credentials out of band.
+    required: true
+    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: backupCidr
+    description: IPv4 CIDR that contains the S3 endpoint as the CNI sees it.
+    required: true
+    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
+  - name: kubeApiCidr
+    description: IPv4 CIDR of the Kubernetes API endpoint as the CNI sees it.
+    required: true
+    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
+
+security:
+  summary: >-
+    The rootless image runs as UID 1000 with a read-only root filesystem, no
+    service-account token and all capabilities dropped. The namespace denies
+    all traffic by default. Sign-up is closed and the install page is locked.
+  egress:
+    - Cluster DNS
+    - Gitea to PostgreSQL 5432 with a verified CA
+    - >-
+      Public IPv4 TCP 80/443 for webhooks, mirrors and migrations; private,
+      loopback, link-local and CGNAT ranges are blocked.
+    - CloudNativePG instances to the Kubernetes API 443/6443 and the S3 backup CIDR on 443
+  risks:
+    - risk: An unlocked install page lets the first visitor configure the server.
+      mitigation: >-
+        INSTALL_LOCK is true and the configuration comes from the
+        environment. An init container creates gitea_admin with the generated
+        password before Gitea starts.
+    - risk: Anyone could register an account.
+      mitigation: >-
+        DISABLE_REGISTRATION is true. The administrator creates users in Site
+        Administration.
+    - risk: Git over SSH is not available.
+      mitigation: >-
+        The Ingress carries HTTP only, so the SSH server is off. Clone and push
+        over HTTPS with a password or an access token.
+    - risk: >-
+        Webhooks, mirrors and repository migrations make server-side requests
+        to addresses that users choose.
+      mitigation: >-
+        Gitea blocks private webhook targets by default, and the NetworkPolicy
+        allows only public IPv4 on TCP 80 and 443. No SMTP server is
+        configured, so Gitea sends no email.
+    - risk: CloudNativePG instances call the Kubernetes API with an operator-created identity.
+      mitigation: >-
+        The databases/cloudnative-pg component creates RBAC for each cluster;
+        the Gitea Pod has no token. Database egress is limited to the API and
+        S3 CIDRs.
+    - risk: >-
+        Barman archives WAL continuously and takes a daily base backup at 02:00
+        UTC, kept for 7 days. Repositories and LFS objects are on the volume,
+        not in the database backup.
+      mitigation: >-
+        Back up the gitea-data volume separately, for example with gitea dump.
+        Check Backup status and rehearse a restore before production.
+
+scalability:
+  summary: One Gitea instance on a 20Gi node-local volume, with one PostgreSQL primary.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      Repositories, LFS objects, the code indexer and sessions are on a
+      ReadWriteOnce volume. More replicas need shared storage, a shared queue
+      and a shared session store.
+    - local-path volumes are node-local and have no snapshots or failover.
+
+upgradeNotes:
+  - >-
+    Back up the database and the gitea-data volume, and keep gitea-secrets,
+    before you change the image digest. Without secret-key, stored two-factor
+    and OAuth secrets cannot be decrypted.
+  - >-
+    The init container runs gitea migrate before the new version starts. Old
+    and new versions cannot run together. A rollback needs the database
+    backup taken before the upgrade.
+  - >-
+    Deleting the namespace deletes the volume and the database. Backups in S3
+    stay.
+
+smoke:
+  - name: postgresql-ready
+    resource: cluster/gitea-db
+    condition: condition=Ready
+    timeout: 900s
+  - name: gitea-ready
+    resource: deployment/gitea
+    condition: condition=Available
+    timeout: 900s
+    http: {service: gitea, port: 3000, path: /api/healthz, status: 200, contains: pass}
+  - name: authentication-required
+    resource: deployment/gitea
+    condition: condition=Available
+    timeout: 120s
+    http: {service: gitea, port: 3000, path: /api/v1/user, status: 401}
+  - name: administrator-created
+    resource: cluster/gitea-db
+    condition: condition=Ready
+    timeout: 120s
+    sql:
+      cluster: gitea-db
+      database: gitea
+      query: SELECT count(*) FROM "user" WHERE is_admin
+      expect: "1"
+  - name: initial-postgresql-backup-completed
+    resource: backup/gitea-db-initial
+    condition: jsonpath={.status.phase}=completed
+    timeout: 600s
