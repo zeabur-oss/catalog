@@ -1,0 +1,136 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: Umami
+  description: >-
+    Umami web analytics over HTTPS, with PostgreSQL 18 managed by
+    CloudNativePG with Barman backups.
+  license: MIT AND PostgreSQL AND Apache-2.0
+  # Also: https://cloudnative-pg.io/, https://github.com/cloudnative-pg/plugin-barman-cloud
+  homepage: https://umami.is/
+  icon: https://github.com/umami-software.png
+  categories: [analytics]
+
+requires:
+  - ingress/traefik
+  - certificates/cert-manager
+  - databases/cloudnative-pg
+
+services:
+  - name: umami
+    securityProfile: restricted
+    ports: [{name: http, port: 3000}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "1", memory: 1Gi}}
+    domains: ['{{ .Domain }}']
+  - name: umami-db
+    securityProfile: restricted
+    ports: [{name: postgresql, port: 5432}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "1", memory: 1Gi}}
+
+inputs:
+  - name: adminPassword
+    description: >-
+      Password of the admin user. It replaces the default password once, at
+      the first start. Change it in Umami after you sign in.
+    generate: random
+    secret: {name: umami-secrets, key: admin-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: appSecret
+    description: Signs sign-in tokens and share links. Rotating it signs everyone out.
+    generate: random
+    secret: {name: umami-secrets, key: app-secret}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: backupDestination
+    description: Dedicated S3 bucket and unique prefix for the database backups; never reuse a prefix from another cluster.
+    required: true
+    validation: {pattern: '^s3://[a-z0-9][a-z0-9.-]+/[A-Za-z0-9/_-]+$'}
+  - name: backupEndpoint
+    description: S3 HTTPS endpoint with a trusted certificate on TCP 443.
+    required: true
+    validation: {pattern: '^https://[a-zA-Z0-9.-]+(:443)?$'}
+  - name: backupSecret
+    description: >-
+      Existing Secret in the namespace with ACCESS_KEY_ID and
+      ACCESS_SECRET_KEY; create the S3 credentials out of band.
+    required: true
+    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: backupCidr
+    description: IPv4 CIDR that contains the S3 endpoint as the CNI sees it.
+    required: true
+    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
+  - name: kubeApiCidr
+    description: IPv4 CIDR of the Kubernetes API endpoint as the CNI sees it.
+    required: true
+    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
+
+security:
+  summary: >-
+    Runs as UID 1001 with a read-only root filesystem, no service-account
+    token and all capabilities dropped. The namespace denies all traffic by
+    default. Umami makes no outbound requests.
+  egress:
+    - Cluster DNS
+    - Umami to PostgreSQL 5432 with a verified CA
+    - CloudNativePG instances to the Kubernetes API 443/6443 and the S3 backup CIDR on 443
+  risks:
+    - risk: Umami creates the account admin with the published password umami.
+      mitigation: >-
+        An init container replaces that password with the generated one before
+        Umami starts. Only the default password is replaced, so a password set
+        in Umami stays.
+    - risk: The tracking endpoint accepts events from any website.
+      mitigation: >-
+        Umami stores events only for website IDs that exist in Umami.
+    - risk: CloudNativePG instances call the Kubernetes API with an operator-created identity.
+      mitigation: >-
+        The databases/cloudnative-pg component creates RBAC for each cluster;
+        the Umami Pod has no token. Database egress is limited to the API and
+        S3 CIDRs.
+    - risk: >-
+        Barman archives WAL continuously and takes a daily base backup at 02:00
+        UTC, kept for 7 days.
+      mitigation: Check Backup status and rehearse a restore before production.
+
+scalability:
+  summary: One Umami instance with one PostgreSQL primary.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      The init container migrates the database. More replicas need the
+      migration moved to a separate step.
+
+upgradeNotes:
+  - >-
+    The init container runs prisma migrate deploy before the new version
+    starts. A rollback needs the database backup taken before the upgrade.
+  - Deleting the namespace deletes the database. Backups in S3 stay.
+
+smoke:
+  - name: postgresql-ready
+    resource: cluster/umami-db
+    condition: condition=Ready
+    timeout: 900s
+  - name: umami-ready
+    resource: deployment/umami
+    condition: condition=Available
+    timeout: 600s
+    http: {service: umami, port: 3000, path: /api/heartbeat, status: 200, contains: '"ok":true'}
+  - name: authentication-required
+    resource: deployment/umami
+    condition: condition=Available
+    timeout: 120s
+    http: {service: umami, port: 3000, path: /api/websites, status: 401}
+  - name: default-password-replaced
+    resource: cluster/umami-db
+    condition: condition=Ready
+    timeout: 120s
+    sql:
+      cluster: umami-db
+      database: umami
+      query: SELECT count(*) FROM "user" WHERE username = 'admin' AND password LIKE '$2a$%'
+      expect: "1"
+  - name: initial-postgresql-backup-completed
+    resource: backup/umami-db-initial
+    condition: jsonpath={.status.phase}=completed
+    timeout: 600s
