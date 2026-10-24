@@ -29,6 +29,8 @@ spec:
         app: n8n
     spec:
       automountServiceAccountToken: false
+      # The Service n8n would set N8N_PORT to its address.
+      enableServiceLinks: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
@@ -63,9 +65,6 @@ spec:
           mountPath: /tmp
         - name: cache
           mountPath: /home/node/.cache
-        - name: db-ca
-          mountPath: /db-ca
-          readOnly: true
         ports:
         - name: http
           containerPort: 5678
@@ -167,7 +166,10 @@ spec:
         - name: DB_POSTGRESDB_SSL_REJECT_UNAUTHORIZED
           value: 'true'
         - name: DB_POSTGRESDB_SSL_CA
-          value: /db-ca/ca.crt
+          valueFrom:
+            secretKeyRef:
+              name: n8n-db-ca
+              key: ca.crt
         command:
         - tini
         - --
@@ -185,9 +187,6 @@ spec:
       - name: cache
         emptyDir:
           sizeLimit: 256Mi
-      - name: db-ca
-        secret:
-          secretName: n8n-db-ca
 ---
 apiVersion: v1
 kind: Service
