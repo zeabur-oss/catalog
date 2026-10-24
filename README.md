@@ -103,17 +103,23 @@ it can be reused instead.
 | cliproxyapi | CLIProxyAPI | ai |
 | dify | Dify | ai |
 | ghost | Ghost | cms |
+| gitea | Gitea | developer-tools |
 | halo | Halo | cms |
 | hermes-agent-custom-provider | Hermes Agent | ai, automation |
 | hermes-agent-openrouter | Hermes Agent | ai, automation |
 | librechat | LibreChat | ai |
+| litellm | LiteLLM | ai |
 | lobechat | LobeChat | ai |
+| meilisearch | Meilisearch | search |
+| memos | Memos | productivity |
+| miniflux | Miniflux | productivity |
 | mongodb | MongoDB | databases |
 | n8n | n8n PostgreSQL | automation |
 | n8n-ai-brain | n8n (AI Brain) | ai, automation |
 | n8n-sqlite | n8n SQLite | automation |
 | new-api | New API | ai |
 | nginx | nginx | web-servers |
+| ntfy | ntfy | developer-tools |
 | ollama | Ollama | ai |
 | open-webui | Open WebUI | ai |
 | openclaw | OpenClaw | ai |
@@ -121,13 +127,17 @@ it can be reused instead.
 | openlist | OpenList | storage |
 | postgresql | PostgreSQL | databases |
 | postgresql-pgvector | PostgreSQL with pgvector | databases |
+| qdrant | Qdrant | databases, ai |
 | searxng | SearXNG | search |
 | sillytavern | SillyTavern | ai |
 | sillytavern-legacy | SillyTavern | ai |
+| umami | Umami | analytics |
 | uptime-kuma | Uptime Kuma | monitoring |
+| vaultwarden | Vaultwarden | security |
 | wordpress | WordPress | cms |
 
-Categories: `ai`, `automation`, `cms`, `databases`, `monitoring`, `search`,
+Categories: `ai`, `analytics`, `automation`, `cms`, `databases`,
+`developer-tools`, `monitoring`, `productivity`, `search`, `security`,
 `storage`, `web-servers`. [Deploy a template](docs/deploy-a-template.md)
 explains how to install one by hand.
 
