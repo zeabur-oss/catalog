@@ -1,0 +1,159 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: LiteLLM
+  description: >-
+    LiteLLM proxy for LLM provider APIs over HTTPS, with keys, models and
+    spend in PostgreSQL 18 managed by CloudNativePG with Barman backups.
+  # enterprise/ and the bundled litellm_enterprise package use the BerriAI
+  # Enterprise license; the rest of LiteLLM is MIT.
+  license: MIT AND LicenseRef-LiteLLM-Enterprise AND PostgreSQL AND Apache-2.0
+  # Also: https://github.com/BerriAI/litellm/blob/main/enterprise/LICENSE.md, https://cloudnative-pg.io/
+  homepage: https://www.litellm.ai/
+  icon: https://github.com/BerriAI.png
+  categories: [ai]
+
+requires:
+  - ingress/traefik
+  - certificates/cert-manager
+  - databases/cloudnative-pg
+
+services:
+  - name: litellm
+    securityProfile: restricted
+    ports: [{name: http, port: 4000}]
+    resources: {requests: {cpu: 200m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+    domains: ['{{ .Domain }}']
+  - name: litellm-db
+    securityProfile: restricted
+    ports: [{name: postgresql, port: 5432}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "1", memory: 1Gi}}
+
+inputs:
+  - name: licenseOptIn
+    description: >-
+      The image includes the litellm_enterprise package under the BerriAI
+      Enterprise license, which allows production use only with a
+      subscription. Read it and type I-ACCEPT-LITELLM-ENTERPRISE-LICENSE.
+    required: true
+    validation: {pattern: ^I-ACCEPT-LITELLM-ENTERPRISE-LICENSE$}
+  - name: masterKey
+    description: >-
+      Admin API key without the sk- prefix. The key is sk- followed by this
+      value; it is also the password of the admin user in the UI.
+    generate: random
+    secret: {name: litellm-secrets, key: master-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: saltKey
+    description: >-
+      Encrypts provider credentials stored in the database. Never change it
+      after you add a model.
+    generate: random
+    secret: {name: litellm-secrets, key: salt-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: backupDestination
+    description: Dedicated S3 bucket and unique prefix for the database backups; never reuse a prefix from another cluster.
+    required: true
+    validation: {pattern: '^s3://[a-z0-9][a-z0-9.-]+/[A-Za-z0-9/_-]+$'}
+  - name: backupEndpoint
+    description: S3 HTTPS endpoint with a trusted certificate on TCP 443.
+    required: true
+    validation: {pattern: '^https://[a-zA-Z0-9.-]+(:443)?$'}
+  - name: backupSecret
+    description: >-
+      Existing Secret in the namespace with ACCESS_KEY_ID and
+      ACCESS_SECRET_KEY; create the S3 credentials out of band.
+    required: true
+    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: backupCidr
+    description: IPv4 CIDR that contains the S3 endpoint as the CNI sees it.
+    required: true
+    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
+  - name: kubeApiCidr
+    description: IPv4 CIDR of the Kubernetes API endpoint as the CNI sees it.
+    required: true
+    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
+
+security:
+  summary: >-
+    Runs as UID 65534 with a read-only root filesystem, no service-account
+    token and all capabilities dropped. The namespace denies all traffic by
+    default. Every API call needs the master key or a key it issued.
+  egress:
+    - Cluster DNS
+    - LiteLLM to PostgreSQL 5432 with a verified CA
+    - >-
+      Public IPv4 TCP 80/443 for LLM provider APIs; private, loopback,
+      link-local and CGNAT ranges are blocked.
+    - CloudNativePG instances to the Kubernetes API 443/6443 and the S3 backup CIDR on 443
+  risks:
+    - risk: >-
+        The master key has full access to the proxy, its keys and the
+        provider credentials it stores.
+      mitigation: >-
+        Keep the master key for administration. Issue virtual keys with
+        budgets and model limits for applications.
+    - risk: Enterprise features need a BerriAI license.
+      mitigation: >-
+        No LITELLM_LICENSE is set, so enterprise features stay off. The
+        installer must accept the enterprise license because the code ships in
+        the image.
+    - risk: Models on private addresses, such as Ollama in the cluster, are unreachable.
+      mitigation: >-
+        The NetworkPolicy allows only public IPv4 on TCP 80 and 443. Add an
+        egress rule for a private model server you trust.
+    - risk: CloudNativePG instances call the Kubernetes API with an operator-created identity.
+      mitigation: >-
+        The databases/cloudnative-pg component creates RBAC for each cluster;
+        the LiteLLM Pod has no token. Database egress is limited to the API and
+        S3 CIDRs.
+    - risk: >-
+        Barman archives WAL continuously and takes a daily base backup at 02:00
+        UTC, kept for 7 days.
+      mitigation: Check Backup status and rehearse a restore before production.
+
+scalability:
+  summary: One LiteLLM instance with one PostgreSQL primary.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      LiteLLM migrates the database at start, and rate limits and caches are
+      per process. More replicas need Redis and the migration moved to a
+      separate step.
+
+upgradeNotes:
+  - >-
+    LiteLLM migrates the database on start. A rollback needs the database
+    backup taken before the upgrade.
+  - Keep litellm-secrets. Without salt-key, stored provider credentials cannot be decrypted.
+  - Deleting the namespace deletes the database. Backups in S3 stay.
+
+smoke:
+  - name: postgresql-ready
+    resource: cluster/litellm-db
+    condition: condition=Ready
+    timeout: 900s
+  - name: litellm-ready
+    resource: deployment/litellm
+    condition: condition=Available
+    timeout: 900s
+    http: {service: litellm, port: 4000, path: /health/readiness, status: 200, contains: connected}
+  - name: authentication-required
+    resource: deployment/litellm
+    condition: condition=Available
+    timeout: 120s
+    http: {service: litellm, port: 4000, path: /key/list, status: 401}
+  - name: migrations-applied
+    resource: cluster/litellm-db
+    condition: condition=Ready
+    timeout: 120s
+    sql:
+      cluster: litellm-db
+      database: litellm
+      query: SELECT count(*) > 0 FROM _prisma_migrations WHERE finished_at IS NOT NULL
+      expect: "t"
+  - name: initial-postgresql-backup-completed
+    resource: backup/litellm-db-initial
+    condition: jsonpath={.status.phase}=completed
+    timeout: 600s
