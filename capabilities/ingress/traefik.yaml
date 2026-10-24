@@ -19,7 +19,7 @@ releases:
     skipIfPresent: [httproutes.gateway.networking.k8s.io]
     urls:
       - https://github.com/kubernetes-sigs/gateway-api/releases/download/{version}/standard-install.yaml
-    version: v1.6.2
+    version: v1.6.3
 
   - name: traefik
     namespace: traefik
