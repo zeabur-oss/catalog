@@ -102,6 +102,7 @@ it can be reused instead.
 | browserless | Browserless | automation |
 | cliproxyapi | CLIProxyAPI | ai |
 | dify | Dify | ai |
+| error-pages | Error pages | web-servers |
 | ghost | Ghost | cms |
 | gitea | Gitea | developer-tools |
 | halo | Halo | cms |
