@@ -59,7 +59,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: openclaw
-        image: ghcr.io/openclaw/openclaw:2026.9.7@sha256:0da12cd49983fcb5e4915fd3135ce7a33d82f93649b1df6964946d2c1d1dbcfc
+        image: ghcr.io/openclaw/openclaw:2026.10.7@sha256:fb26f0841659dc757f23feec9adeab51f11d76779a409db5d22e191b43841afa
         ports:
         - name: http
           containerPort: 18789
