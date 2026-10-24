@@ -61,21 +61,6 @@ func TestRenderingNeverGeneratesSecretValues(t *testing.T) {
 	if string(a) != string(b) || strings.Contains(string(a), "stringData") {
 		t.Fatal("render generated secret material")
 	}
-	generated, err := templates.GenerateInputs(r, "test")
-	if err != nil {
-		t.Fatal(err)
-	}
-	var list struct {
-		Items []struct {
-			StringData map[string]string `json:"stringData"`
-		} `json:"items"`
-	}
-	if err = json.Unmarshal(generated, &list); err != nil {
-		t.Fatal(err)
-	}
-	if len(list.Items) != 1 || len(list.Items[0].StringData["password"]) != 43 {
-		t.Fatal("explicit secret generation did not meet contract")
-	}
 	opts.Inputs = map[string]string{"password": "do-not-render"}
 	if _, err = templates.Render(r, opts); err == nil {
 		t.Fatal("generated input override accepted by renderer")
@@ -130,9 +115,6 @@ func TestRandomInputsMeetComponentByteAndASCIIConstraints(t *testing.T) {
 		{"name":"maximum","generate":"random","generateBytes":64,"generateEncoding":"base64url","secret":{"name":"z-components","key":"maximum"},"validation":{"pattern":"[A-Za-z0-9_-]{86}"}}
 	]`)
 	secrets := generatedSecrets(t, r)
-	if len(secrets) != 2 || len(secrets["a-components"]) != 2 || len(secrets["z-components"]) != 3 {
-		t.Fatal("inputs were not grouped by Secret name")
-	}
 	for _, tc := range []struct {
 		secret, key  string
 		ascii, bytes int

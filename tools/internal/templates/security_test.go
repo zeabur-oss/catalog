@@ -102,8 +102,6 @@ func TestRenderRequiresLicenseAcknowledgement(t *testing.T) {
 	}
 }
 
-// This fake only replaces the external cryptographic verifier for state-policy tests.
-// Production always executes cosign; a rejected external verification must never advance trust.
 func TestRestrictedAllowsIsolatedPingWithoutAllowingHostSysctls(t *testing.T) {
 	r := &templates.Template{}
 	r.Services = []templates.Service{{Name: "app", SecurityProfile: "restricted"}}
