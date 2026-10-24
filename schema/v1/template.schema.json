@@ -23,7 +23,7 @@
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": { "enum": ["ai", "automation", "cms", "databases", "monitoring", "search", "storage", "web-servers"] }
+          "items": { "enum": ["ai", "analytics", "automation", "cms", "databases", "developer-tools", "monitoring", "productivity", "search", "security", "storage", "web-servers"] }
         }
       }
     },
