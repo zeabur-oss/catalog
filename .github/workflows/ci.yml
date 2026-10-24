@@ -1,23 +1,29 @@
+# L0 on every pull request: unit tests, validate, render, template lint and a
+# server-side dry run on kind. L1 in the merge queue and on main: install and
+# smoke test what changed and what installs it, in groups. CONTRIBUTING.md
+# lists what each tier checks. L2 is nightly.yml.
 name: ci
 
 on:
   pull_request:
+  merge_group:
   push:
     branches: [main]
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  validate:
-    runs-on: ubuntu-slim
+  l0:
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version-file: go.mod
       - name: DCO sign-off
         if: github.event_name == 'pull_request'
         run: |
@@ -30,23 +36,63 @@ jobs:
             fi
           done
           exit $fail
-      - run: go test ./...
-      - name: Schema, licenses, references, value comments, template inputs and requires
-        run: go run ./tools/cmd/catalog validate
-      - run: go run ./tools/cmd/catalog index
+      - uses: ./.github/actions/setup
+      - run: nix develop -c go test ./...
+      - name: Validate, render, template lint, server-side dry run
+        run: nix develop -c go run ./tools/cmd/catalog e2e -tier l0
+      - run: nix develop -c go run ./tools/cmd/catalog index
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: index
           path: index.json
 
-  render:
-    runs-on: ubuntu-26.04-arm
+  l1-matrix:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-slim
+    outputs:
+      matrix: ${{ steps.list.outputs.matrix }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: DeterminateSystems/determinate-nix-action@f296148a827001a9a82d3685b53210c06e5d3b67 # v3.24.0
-      - name: helm template every profile twice, kubeconform every Kubernetes version
-        run: nix develop -c go run ./tools/cmd/catalog render
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - id: list
+        env:
+          SINCE: ${{ github.event.merge_group.base_sha || github.event.before }}
+        run: echo "matrix=$(go run ./tools/cmd/catalog list -tier l1 -since "$SINCE")" >> "$GITHUB_OUTPUT"
 
-  e2e:
-    needs: [validate, render]
-    uses: ./.github/workflows/e2e.yml
+  l1:
+    needs: [l0, l1-matrix]
+    if: fromJSON(needs.l1-matrix.outputs.matrix).include[0]
+    runs-on: ubuntu-26.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.l1-matrix.outputs.matrix).include }}
+    name: l1 ${{ matrix.ids }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - name: iSCSI module for Longhorn
+        if: contains(matrix.ids, 'replicated-storage/longhorn')
+        run: sudo modprobe iscsi_tcp
+      - id: group
+        env:
+          IDS: ${{ matrix.ids }}
+        run: echo "key=$(echo "$IDS" | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
+      # One image tarball per group. The tool pulls the images again when the
+      # image list changes.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/images
+          key: images-${{ steps.group.outputs.key }}-${{ hashFiles('components/**', 'templates/**') }}
+          restore-keys: images-${{ steps.group.outputs.key }}-
+      - name: e2e
+        env:
+          CATALOG_E2E_IMAGES: .cache/images
+          IDS: ${{ matrix.ids }}
+        run: |
+          # shellcheck disable=SC2086 # IDS is a list of IDs
+          nix develop -c go run ./tools/cmd/catalog e2e -tier l1 $IDS

@@ -1,12 +1,11 @@
-# After a merge, measure the changed components and their dependents; on
-# demand, every component. Opens a pull request with the idle memory and CPU,
-# so measurements/ is only ever written by CI.
-name: measure
+# Every night and on demand: L2, the full e2e matrix. Opens a pull request
+# with the idle memory and CPU it measured, so measurements/ is only ever
+# written by CI.
+name: nightly
 
 on:
-  push:
-    branches: [main]
-    paths: [components/**, config/**]
+  schedule:
+    - cron: "0 18 * * *"
   workflow_dispatch:
 
 permissions:
@@ -15,7 +14,6 @@ permissions:
 jobs:
   e2e:
     uses: ./.github/workflows/e2e.yml
-    secrets: inherit
 
   pull-request:
     needs: e2e
@@ -37,6 +35,7 @@ jobs:
           mkdir -p downloaded && cd downloaded
           for f in $(find . -name '*.json' | cut -d/ -f3- | sort -u); do
             mkdir -p "../measurements/$(dirname "$f")"
+            # shellcheck disable=SC2046 # one argument per file
             jq -s 'reduce .[] as $m ({}; . * $m)' $(ls "../measurements/$f" ./*/"$f" 2>/dev/null) > merged.json
             mv merged.json "../measurements/$f"
           done

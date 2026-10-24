@@ -263,13 +263,13 @@ never contain generated values.
 2. Create `components/<capability>/<upstream>.yaml` from a similar file. Give
    both profiles values, each with a comment saying why.
 3. Check locally (`nix develop` provides Go, Helm, kubectl, kubeconform and
-   kind):
+   kind; the e2e tiers also need Docker on Linux):
 
    ```sh
    go run ./tools/cmd/catalog validate          # schema, license, references, comments
    go run ./tools/cmd/catalog render            # helm template + kubeconform
-   kind create cluster                          # --config .github/kind.yaml for multi-node
-   go run ./tools/cmd/catalog e2e -profile single-node <id>
+   go run ./tools/cmd/catalog e2e -tier l0      # what every pull request runs
+   go run ./tools/cmd/catalog e2e -tier l2 -profile single-node <id>
    ```
 
 4. Open a pull request with signed-off commits (`git commit -s`).
@@ -291,41 +291,68 @@ never contain generated values.
    go run ./tools/cmd/catalog validate
    go run ./tools/cmd/catalog template lint -values values.json \
      -domain app.example.test -cluster-issuer letsencrypt <id>
-   kind create cluster
-   go run ./tools/cmd/catalog template e2e -values values.json <id>
+   go run ./tools/cmd/catalog e2e -tier l2 -profile single-node <id>
    ```
 
 5. Open a pull request with signed-off commits (`git commit -s`).
 
 ## CI
 
-Every pull request:
+Tests run in three tiers. A check that one tier leaves out runs in a later
+tier. `catalog e2e -tier l0|l1|l2` runs a tier on a Linux machine with Docker,
+as CI does.
 
-1. validates every file against its schema, and checks that every template's
+**L0, every pull request** (`ci.yml`, one job):
+
+1. runs the Go tests;
+2. validates every file against its schema, and checks that every template's
    `requires` resolves on both profiles;
-2. rejects component licenses that are not OSI-approved, except those under
+3. rejects component licenses that are not OSI-approved, except those under
    `optInOnly` in `config/licenses.yaml` in components no profile recommends;
-3. renders every profile twice (output must be identical) and validates it
+4. renders every profile twice (output must be identical) and validates it
    with kubeconform for each version in `config/kubernetes.yaml`, checking
    custom resources against the CRDs rendered with them;
-4. installs each changed component and its dependents on kind for each
-   profile, on amd64 and arm64: dependencies first, smoke test, idle memory
-   and CPU, uninstall, and fails on anything left behind (components listed
-   under `unready` in `config/e2e.yaml` need credentials CI lacks: they are
-   installed without waiting, smoke tested and uninstalled, not measured);
-5. installs each changed template, and each template that requires a changed
-   component, on single-node kind: the safety rules and kubeconform first (its
-   custom resources checked against the CRDs of the components it requires),
-   then the components it requires, then the template in
-   `templates-e2e-<id>`, then its smoke checks;
-6. checks that the single-node recommended set, measured on amd64, fits
-   `config/budget.yaml`;
-7. upgrades each component from the latest release's version when it changed.
+5. checks every template, rendered with its test inputs, against the safety
+   rules and kubeconform;
+6. starts kind with only the rendered CRDs, then sends every rendered
+   component (both profiles) and template to the API server with
+   `kubectl apply --dry-run=server`. The API server checks fields, defaults,
+   CEL rules and Pod Security, and nothing runs.
 
-A change to `config/`, `tools/` or the cluster tests everything. After
-merges, `measure.yml` measures the changed components and opens a pull request
-with fresh `measurements/`; run it by hand to measure everything. Renovate
-opens a pull request for every new upstream version and image digest.
+**L1, in the merge queue and after a merge to main** (`ci.yml`): installs each
+changed component and template, and each one that installs a changed
+component, on single-node amd64 kind, then runs its smoke checks. Tests that
+share dependencies share a cluster, and the dependencies install once per
+cluster. A component is uninstalled after its smoke checks unless a later test
+in the cluster needs it. A change to `config/`, `tools/`, the flake or a
+workflow tests everything.
+
+**L2, every night and before each release** (`e2e.yml`, called by
+`nightly.yml` and `release.yml`): tests every component in a fresh kind
+cluster for each profile (one node for single-node, three for multi-node), on
+amd64 and arm64:
+
+1. installs its dependencies, then the latest release's version when it
+   differs, then upgrades to the new version;
+2. measures idle memory and CPU every 10 seconds until five samples agree, for
+   at most 3 minutes;
+3. runs the smoke checks, uninstalls, and fails on anything left behind.
+
+Components listed under `unready` in `config/e2e.yaml` need credentials CI
+lacks: they are installed without waiting, smoke tested and uninstalled, not
+measured. L2 installs every template on single-node amd64 with the components
+it requires, then runs its smoke checks. It checks that the single-node
+recommended set, measured on amd64, fits `config/budget.yaml`.
+`nightly.yml` opens a pull request with fresh `measurements/`; run it by hand
+to measure now. Renovate opens a pull request for every new upstream version
+and image digest.
+
+Each tier creates its own kind clusters with their own kubeconfig and deletes
+them (`-keep` keeps them), and prints how long each phase took. With
+`ZEABUR_REGISTRY_MIRRORS` (`docker.io=http://mirror:5001,ghcr.io=...`), the
+nodes pull through those mirrors. With `CATALOG_E2E_IMAGES` set to a
+directory, L1 keeps one image tarball per image list there and loads it into
+the nodes; CI caches the directory.
 
 ### Test inputs for templates
 

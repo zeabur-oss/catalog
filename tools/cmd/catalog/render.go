@@ -28,10 +28,14 @@ func render(fs *flag.FlagSet, r *repo) error {
 	if err != nil {
 		return err
 	}
-	if err := os.RemoveAll(*out); err != nil {
+	return renderComponents(cat, comps, *out, cfg.Versions)
+}
+
+func renderComponents(cat *catalog.Catalog, comps []*catalog.Component, out string, versions []string) error {
+	if err := os.RemoveAll(out); err != nil {
 		return err
 	}
-	if err := os.RemoveAll(*out + "-schemas"); err != nil {
+	if err := os.RemoveAll(out + "-schemas"); err != nil {
 		return err
 	}
 	var errs []error
@@ -41,7 +45,7 @@ func render(fs *flag.FlagSet, r *repo) error {
 			if err != nil {
 				return err
 			}
-			for _, kv := range cfg.Versions {
+			for _, kv := range versions {
 				for _, p := range catalog.Profiles {
 					if c.Defaults[p] == "unsupported" {
 						continue
@@ -53,13 +57,13 @@ func render(fs *flag.FlagSet, r *repo) error {
 					}
 					// Charts must not generate secrets or certificates: the same
 					// values must give the same objects on every install.
-					if kv == cfg.Versions[0] && rel.Kind() == "helm" {
+					if kv == versions[0] && rel.Kind() == "helm" {
 						again, err := catalog.Template(c, rel, p, kv, extra...)
 						if err == nil && !bytes.Equal(again, manifest) {
 							errs = append(errs, fmt.Errorf("%s/%s %s: output differs between renders; supply generated values as inputs", c.ID, rel.Name, p))
 						}
 					}
-					f := filepath.Join(*out, kv, p, c.ID, rel.Name+".yaml")
+					f := filepath.Join(out, kv, p, c.ID, rel.Name+".yaml")
 					if err := os.MkdirAll(filepath.Dir(f), 0o755); err != nil {
 						return err
 					}
@@ -72,15 +76,15 @@ func render(fs *flag.FlagSet, r *repo) error {
 		slog.Info("rendered", "component", c.ID)
 	}
 	// Custom resources are checked against the CRDs rendered with them.
-	schemas := *out + "-schemas"
-	if err := catalog.CRDSchemas(*out, schemas); err != nil {
+	schemas := out + "-schemas"
+	if err := catalog.CRDSchemas(out, schemas); err != nil {
 		return err
 	}
-	for _, kv := range cfg.Versions {
+	for _, kv := range versions {
 		cmd := exec.Command("kubeconform", "-kubernetes-version", kv, "-strict", "-summary", "-skip", "CustomResourceDefinition",
 			"-schema-location", "default",
 			"-schema-location", schemas+"/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json",
-			filepath.Join(*out, kv))
+			filepath.Join(out, kv))
 		cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
 		if err := cmd.Run(); err != nil {
 			errs = append(errs, fmt.Errorf("kubeconform %s: %w", kv, err))

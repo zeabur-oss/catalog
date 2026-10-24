@@ -105,8 +105,9 @@ exact versions the template pins.
 
 ## Tests
 
-- The smoke checks run in CI on a fresh kind cluster with the components
-  the template requires. Make them prove the main behaviour, such as
+- The smoke checks run in CI on kind with the components the template
+  requires: in the merge queue on a cluster shared with tests that need the
+  same components, and every night on a fresh cluster. Make them prove the main behaviour, such as
   an authenticated request or a database query, beyond a Ready pod.
 - Use only disposable credentials and storage in tests. Put test input values
   in `config/e2e.yaml`. Backups go to SeaweedFS in the test cluster.

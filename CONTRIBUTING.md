@@ -31,6 +31,22 @@ existing branch: `git rebase --signoff main`, then force-push.
   before pushing, and `go run ./tools/cmd/catalog template lint <id>` for a
   template (inside `nix develop`).
 
+## When tests run
+
+- **Every pull request (L0, about 5 minutes):** Go tests, schema and license
+  checks, rendering, template safety rules, and a dry run of every manifest
+  against a real API server. Nothing is installed.
+- **In the merge queue and after a merge (L1, about 15 to 20 minutes):** what
+  you changed, and what installs it, is installed on one node and smoke
+  tested.
+- **Every night and before a release (L2):** everything on one and three
+  nodes, amd64 and arm64, with upgrades from the last release, idle memory and
+  CPU, uninstall and leftover checks.
+
+Run the same tiers on a Linux machine with Docker:
+`go run ./tools/cmd/catalog e2e -tier l0`, `-tier l1 <ids>`, or
+`-tier l2 -profile single-node <id>`.
+
 ## License
 
 By contributing you agree that your contributions are licensed under the

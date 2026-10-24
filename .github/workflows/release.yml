@@ -1,4 +1,4 @@
-# On a semver tag: validate, build index.json and bundle.tar.gz, write
+# On a semver tag: run L2 (e2e.yml), then validate, build index.json and bundle.tar.gz, write
 # checksums.txt, sign all three with cosign keyless (GitHub OIDC) and publish
 # them on the GitHub release.
 name: release
@@ -12,7 +12,13 @@ permissions:
   id-token: write # cosign keyless signing
 
 jobs:
+  e2e:
+    uses: ./.github/workflows/e2e.yml
+    permissions:
+      contents: read
+
   release:
+    needs: e2e
     runs-on: ubuntu-26.04-arm
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

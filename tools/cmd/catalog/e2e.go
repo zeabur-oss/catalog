@@ -32,10 +32,16 @@ type environment struct {
 
 func e2e(fs *flag.FlagSet, r *repo) error {
 	cat := r.cat
-	profile := fs.String("profile", "", "single-node or multi-node; the current cluster must match it")
+	tier := fs.String("tier", "", "l0, l1 or l2: create kind clusters and run that tier; without it, test on the current cluster")
+	profile := fs.String("profile", "", "single-node or multi-node; without -tier the current cluster must match it")
 	write := fs.Bool("write", false, "update measurements/ for passing components")
 	previous := fs.String("previous", "", "previous release's index.json, for upgrade tests")
+	since := fs.String("since", "", "l1: only what changed since this git commit")
+	keep := fs.Bool("keep", false, "keep the kind clusters")
 	fs.Parse(os.Args[2:])
+	if *tier != "" {
+		return runTier(r, *tier, tierOptions{profile: *profile, since: *since, previous: *previous, write: *write, keep: *keep}, fs.Args())
+	}
 
 	if !slices.Contains(catalog.Profiles, *profile) {
 		return fmt.Errorf("unknown -profile %q; use %s", *profile, strings.Join(catalog.Profiles, " or "))
@@ -44,14 +50,10 @@ func e2e(fs *flag.FlagSet, r *repo) error {
 	if err != nil {
 		return err
 	}
-	var version struct {
-		ServerVersion struct{ GitVersion, Platform string }
-	}
-	if err := json.Unmarshal([]byte(out), &version); err != nil {
+	key, err := environmentKey(*profile, out)
+	if err != nil {
 		return err
 	}
-	_, arch, _ := strings.Cut(version.ServerVersion.Platform, "/") // linux/amd64
-	key := *profile + "-" + arch + "-" + version.ServerVersion.GitVersion
 
 	t, err := newTester(cat, *profile)
 	if err != nil {
@@ -99,6 +101,19 @@ func e2e(fs *flag.FlagSet, r *repo) error {
 		fmt.Printf("  %-48s %s\n", r.ID, status)
 	}
 	return errors.Join(errs...)
+}
+
+// environmentKey returns "<profile>-<architecture>-<server version>" from
+// the output of kubectl version -o json.
+func environmentKey(profile, kubectlVersion string) (string, error) {
+	var version struct {
+		ServerVersion struct{ GitVersion, Platform string }
+	}
+	if err := json.Unmarshal([]byte(kubectlVersion), &version); err != nil {
+		return "", err
+	}
+	_, arch, _ := strings.Cut(version.ServerVersion.Platform, "/") // linux/amd64
+	return profile + "-" + arch + "-" + version.ServerVersion.GitVersion, nil
 }
 
 // newTester reads the test-only settings in config/e2e.yaml.

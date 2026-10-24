@@ -1,10 +1,9 @@
-# Installs every component on kind, one node for single-node and three for
-# multi-node: dependencies first, smoke test, idle memory and CPU, uninstall,
-# residue check, and an upgrade from the latest release when its version
-# differs, on amd64 and arm64. Installs every template on single-node amd64
-# with the components it requires, then runs its smoke checks. Pull requests
-# and pushes test only what they change and what installs it, or everything
-# when a shared file (config, tools, the cluster) changes.
+# L2: installs every component on kind, one node for single-node and three
+# for multi-node, on amd64 and arm64, each in a fresh cluster: dependencies
+# first, the previous release when its version differs (upgrade test), idle
+# memory and CPU once they are stable, smoke test, uninstall and residue
+# check. Installs every template on single-node amd64 with the components it
+# requires, then runs its smoke checks. nightly.yml and release.yml call it.
 name: e2e
 
 on:
@@ -20,19 +19,14 @@ jobs:
       matrix: ${{ steps.list.outputs.matrix }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
       - id: list
-        env:
-          SINCE: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: echo "matrix=$(go run ./tools/cmd/catalog list -since "$SINCE")" >> "$GITHUB_OUTPUT"
+        run: echo "matrix=$(go run ./tools/cmd/catalog list -tier l2)" >> "$GITHUB_OUTPUT"
 
   e2e:
     needs: matrix
-    if: fromJSON(needs.matrix.outputs.matrix).include[0]
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
     strategy:
       fail-fast: false
@@ -41,43 +35,23 @@ jobs:
     name: ${{ matrix.profile }} ${{ matrix.arch }} ${{ matrix.component || matrix.template }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: DeterminateSystems/determinate-nix-action@f296148a827001a9a82d3685b53210c06e5d3b67 # v3.24.0
-      - name: Create kind cluster
-        run: |
-          nix develop -c kind create cluster --wait 5m \
-            --image 'kindest/node:${{ fromJSON(needs.matrix.outputs.matrix).version }}' \
-            $([ '${{ matrix.profile }}' = multi-node ] && echo --config .github/kind.yaml)
-      # Longhorn attaches volumes over iSCSI from each node; kind's nodes ship
-      # without an initiator, and the module comes from the runner's kernel.
-      - name: Longhorn node prerequisites
+      - uses: ./.github/actions/setup
+      - name: iSCSI module for Longhorn
         if: matrix.component == 'replicated-storage/longhorn'
-        run: |
-          sudo modprobe iscsi_tcp
-          for node in $(nix develop -c kind get nodes); do
-            docker exec "$node" sh -c 'apt-get update -qq && apt-get install -y -qq open-iscsi nfs-common && systemctl enable --now iscsid'
-          done
+        run: sudo modprobe iscsi_tcp
       - name: Previous release (upgrade test)
         if: matrix.component
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release download --pattern index.json --output previous.json || true
       - name: e2e
-        if: matrix.component
+        env:
+          PROFILE: ${{ matrix.profile }}
+          ID: ${{ matrix.component || matrix.template }}
         run: |
-          nix develop -c go run ./tools/cmd/catalog e2e -profile '${{ matrix.profile }}' -write \
-            $([ -f previous.json ] && echo -previous previous.json) '${{ matrix.component }}'
-      # Templates name the local-path StorageClass; kind's default one uses the
-      # same provisioner.
-      - name: local-path StorageClass
-        if: matrix.template
-        run: |
-          nix develop -c sh -c 'kubectl get storageclass standard -o json |
-            jq "{apiVersion, kind, metadata: {name: \"local-path\"}, provisioner, reclaimPolicy, volumeBindingMode}" |
-            kubectl apply -f -'
-      - name: Template e2e
-        if: matrix.template
-        run: |
-          nix develop -c go run ./tools/cmd/catalog template e2e '${{ matrix.template }}'
+          previous=()
+          [ -f previous.json ] && previous=(-previous previous.json)
+          nix develop -c go run ./tools/cmd/catalog e2e -tier l2 -profile "$PROFILE" -write "${previous[@]}" "$ID"
       - name: Keep only this component's measurement
         if: always() && matrix.component
         run: find measurements -type f ! -path 'measurements/${{ matrix.component }}.json' -delete

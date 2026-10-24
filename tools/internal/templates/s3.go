@@ -37,8 +37,8 @@ const (
 //go:embed s3.yaml
 var s3Manifest string
 
-// The component that runs SeaweedFS.
-const s3Component = "object-storage/seaweedfs-operator"
+// S3Component is the component that runs SeaweedFS.
+const S3Component = "object-storage/seaweedfs-operator"
 
 // startS3 runs SeaweedFS in s3Namespace and returns a function that deletes it.
 func startS3() (_ *S3, stop func() error, err error) {

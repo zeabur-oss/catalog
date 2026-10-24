@@ -2,8 +2,9 @@
 //
 //	catalog validate                    schema, licenses, references, value comments
 //	catalog render [ids]                helm template every profile and Kubernetes version, then kubeconform
-//	catalog list [-since <ref>]         e2e CI matrix (profile × architecture × component or template) as JSON
-//	catalog e2e -profile <p> [ids]      install, measure, smoke test, uninstall
+//	catalog list -tier l1|l2 [-since <ref>]  e2e CI matrix as JSON
+//	catalog e2e -tier l0|l1|l2 [ids]    run a test tier on kind clusters it creates (see tier.go)
+//	catalog e2e -profile <p> [ids]      install, measure, smoke test, uninstall on the current cluster
 //	catalog budget                      single-node memory budget
 //	catalog index                       write index.json
 //	catalog template render <id>        expand manifests.yaml
@@ -19,9 +20,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"slices"
 	"strings"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
@@ -84,58 +83,67 @@ func validate(fs *flag.FlagSet, r *repo) error {
 	return nil
 }
 
-// list prints the e2e CI matrix: every profile × architecture × component it
-// supports, every template on single-node amd64, and the kind node version.
+// list prints the e2e CI matrix of a tier. For l1: one job per group, with
+// the IDs it tests. For l2: every profile × architecture × component it
+// supports, and every template on single-node amd64. Both carry the kind node
+// version.
 func list(fs *flag.FlagSet, r *repo) error {
 	since := fs.String("since", "", "only what changed since this git commit")
+	tier := fs.String("tier", "l2", "l1 or l2")
 	fs.Parse(os.Args[2:])
 	cfg, err := loadConfig()
 	if err != nil {
 		return err
 	}
-	var want map[string]bool // nil tests everything
-	if *since != "" && strings.Trim(*since, "0") != "" {
-		out, err := exec.Command("git", "diff", "--name-only", *since, "HEAD").Output()
-		if err != nil {
-			return fmt.Errorf("git diff %s: %w", *since, err)
-		}
-		want = changed(r, strings.Fields(string(out)))
-	}
-	// A test runs again when its subject or a component it installs changed.
-	selected := func(id string, order []*catalog.Component) bool {
-		return want == nil || want[id] || slices.ContainsFunc(order, func(o *catalog.Component) bool { return want[o.ID] })
+	selected, err := selector(r, *since)
+	if err != nil {
+		return err
 	}
 	type job struct {
-		Profile   string `json:"profile"`
-		Arch      string `json:"arch"`
+		Profile   string `json:"profile,omitempty"`
+		Arch      string `json:"arch,omitempty"`
 		Component string `json:"component,omitempty"`
 		Template  string `json:"template,omitempty"`
+		IDs       string `json:"ids,omitempty"`
 	}
-	var jobs []job
-	for _, p := range catalog.Profiles {
-		for _, c := range r.cat.Components {
-			if c.Defaults[p] == "unsupported" {
-				continue
-			}
-			order, err := r.cat.InstallOrder([]string{c.ID}, p)
-			if err != nil {
-				return err
-			}
-			if selected(c.ID, order) {
-				for _, arch := range []string{"amd64", "arm64"} {
-					jobs = append(jobs, job{Profile: p, Arch: arch, Component: c.ID})
-				}
-			}
-		}
-	}
-	for _, t := range r.templates {
-		order, err := r.cat.InstallOrder(t.Requires, templateProfile)
+	jobs := []job{}
+	switch *tier {
+	case "l1":
+		groups, err := l1Groups(r, selected)
 		if err != nil {
 			return err
 		}
-		if selected(t.ID, order) {
-			jobs = append(jobs, job{Profile: templateProfile, Arch: "amd64", Template: t.ID})
+		for _, g := range groups {
+			jobs = append(jobs, job{IDs: strings.Join(g.IDs, " ")})
 		}
+	case "l2":
+		for _, p := range catalog.Profiles {
+			for _, c := range r.cat.Components {
+				if c.Defaults[p] == "unsupported" {
+					continue
+				}
+				order, err := r.cat.InstallOrder([]string{c.ID}, p)
+				if err != nil {
+					return err
+				}
+				if selected(c.ID, order) {
+					for _, arch := range []string{"amd64", "arm64"} {
+						jobs = append(jobs, job{Profile: p, Arch: arch, Component: c.ID})
+					}
+				}
+			}
+		}
+		for _, t := range r.templates {
+			order, err := installOrder(r, t.ID, templateProfile)
+			if err != nil {
+				return err
+			}
+			if selected(t.ID, order) {
+				jobs = append(jobs, job{Profile: templateProfile, Arch: "amd64", Template: t.ID})
+			}
+		}
+	default:
+		return fmt.Errorf("unknown -tier %q; use l1 or l2", *tier)
 	}
 	return json.NewEncoder(os.Stdout).Encode(map[string]any{
 		"include": jobs, "version": cfg.E2E.Version,
@@ -143,7 +151,7 @@ func list(fs *flag.FlagSet, r *repo) error {
 }
 
 // shared lists the files every e2e run depends on.
-var shared = []string{"config/", "tools/", "go.", "flake.", ".github/kind.yaml", ".github/workflows/e2e.yml"}
+var shared = []string{"config/", "tools/", "go.", "flake.", ".github/workflows/"}
 
 // changed returns the IDs of the components and templates whose files
 // changed, or nil when a shared file changed.

@@ -16,7 +16,13 @@ nix develop -c go run ./tools/cmd/catalog index
 nix develop -c go run ./tools/cmd/catalog render     # helm template every profile, kubeconform
 nix develop -c go run ./tools/cmd/catalog template lint -values values.json <id>   # safety rules, kubeconform
 ```
-The install test in a cluster is `.github/workflows/e2e.yml`; it runs in CI after these.
+Cluster tests come in tiers (README, "CI"). Run them on a Linux machine with Docker, never
+on a kubeconfig context you did not create; each tier creates its own kind clusters:
+```sh
+nix develop -c go run ./tools/cmd/catalog e2e -tier l0               # every pull request
+nix develop -c go run ./tools/cmd/catalog e2e -tier l1 <ids>         # merge queue: install, smoke
+nix develop -c go run ./tools/cmd/catalog e2e -tier l2 -profile single-node <id>   # nightly: full
+```
 
 ## Standards
 - Writing a comment, doc comment or commit message; adding or removing a test; adding an

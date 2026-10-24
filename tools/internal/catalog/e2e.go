@@ -15,10 +15,7 @@ import (
 	"go.yaml.in/yaml/v3"
 )
 
-const (
-	smokeNamespace = "catalog-smoke"
-	settle         = time.Minute // after install, before measuring
-)
+const smokeNamespace = "catalog-smoke"
 
 // Tester installs components on the current kubectl context one at a time.
 type Tester struct {
@@ -29,6 +26,35 @@ type Tester struct {
 	// Test-only text replacements in manifests, per component and release.
 	Replacements map[string]map[string]map[string]string
 	Previous     map[string]*Component // last release's components, for upgrade tests
+	// Timings collects the phases of every Test, Quick and Install call.
+	Timings Timings
+	// shared is set by Share: Quick and Install keep components installed for later calls.
+	shared *run
+}
+
+// Phase is how long one step of a test took.
+type Phase struct {
+	Name string
+	Took time.Duration
+}
+
+// Timings lists phases in the order they ran.
+type Timings []Phase
+
+// Since adds the phase name that started at start.
+func (ts *Timings) Since(name string, start time.Time) {
+	*ts = append(*ts, Phase{name, time.Since(start).Round(time.Second)})
+}
+
+func (ts Timings) String() string {
+	var b strings.Builder
+	for i, p := range ts {
+		if i > 0 {
+			b.WriteString("  ")
+		}
+		fmt.Fprintf(&b, "%s %s", p.Name, p.Took)
+	}
+	return b.String()
 }
 
 // Result is the outcome for one component.
@@ -49,6 +75,10 @@ type run struct {
 	contributions map[string][]string // component/release -> extra values
 }
 
+func newRun() *run {
+	return &run{installed: map[string]bool{}, releases: map[string]bool{}, contributions: map[string][]string{}}
+}
+
 func kubectl(args ...string) (string, error) { return Run(nil, "kubectl", args...) }
 
 // Test installs id with its dependencies, measures and smoke tests it,
@@ -65,12 +95,16 @@ func (t *Tester) Test(id string) (res Result) {
 		res.Err = err
 		return
 	}
-	r := &run{installed: map[string]bool{}, releases: map[string]bool{}, contributions: map[string][]string{}}
+	r := newRun()
+	phase := time.Now()
 	defer func() {
 		var errs []error
+		start := time.Now()
 		for _, undo := range slices.Backward(r.undo) {
 			errs = append(errs, undo())
 		}
+		t.Timings.Since("uninstall", start)
+		start = time.Now()
 		after, err := inventory()
 		errs = append(errs, err)
 		added := addedSince(before, after)
@@ -82,6 +116,7 @@ func (t *Tester) Test(id string) (res Result) {
 			ns, n, _ := strings.Cut(name, "/")
 			kubectl("delete", kind, n, "--ignore-not-found", "--wait=false", "-n", cmp.Or(ns, "default"))
 		}
+		t.Timings.Since("residue", start)
 		res.Err = errors.Join(res.Err, errors.Join(errs...))
 	}()
 
@@ -89,18 +124,24 @@ func (t *Tester) Test(id string) (res Result) {
 		target := c.ID == id
 		var existing map[string]bool
 		if target {
+			if len(order) > 1 {
+				t.Timings.Since("dependencies", phase)
+			}
 			if existing, err = podNames(); err != nil {
 				res.Err = err
 				return
 			}
 			if prev, ok := t.Previous[id]; ok && versions(prev) != versions(c) {
 				slog.Info("installing previous release for the upgrade test", "component", id, "versions", versions(prev))
+				start := time.Now()
 				if err := t.install(r, prev); err != nil {
 					res.Err = fmt.Errorf("install previous: %w", err)
 					return
 				}
+				t.Timings.Since("previous release", start)
 				res.UpgradedFrom = versions(prev)
 			}
+			phase = time.Now()
 		}
 		if err := t.install(r, c); err != nil {
 			res.Err = fmt.Errorf("install %s: %w", c.ID, err)
@@ -109,30 +150,36 @@ func (t *Tester) Test(id string) (res Result) {
 		if !target {
 			continue
 		}
+		if res.UpgradedFrom != "" {
+			t.Timings.Since("upgrade", phase)
+		} else {
+			t.Timings.Since("install", phase)
+		}
 		if t.Unready[id] {
 			slog.Info("installed without credentials; not measured", "component", id)
 			res.Unmeasured = true
-			if err := smoke(c); err != nil {
+			if err := t.smoke(c); err != nil {
 				res.Err = fmt.Errorf("smoke: %w", err)
 			}
 			return res
 		}
-		slog.Info("installed; settling", "component", id, "for", settle)
-		time.Sleep(settle)
+		slog.Info("installed; waiting for idle usage to settle", "component", id)
+		start := time.Now()
 		// Only new pods in the component's own namespaces are its cost.
 		namespaces := map[string]bool{}
 		for _, rel := range c.Releases {
 			namespaces[rel.Namespace] = true
 		}
-		res.IdleMemoryMiB, res.IdleCPUm, err = sampleUsage(func(ns, name string) bool {
+		res.IdleMemoryMiB, res.IdleCPUm, err = idleUsage(func(ns, name string) bool {
 			return namespaces[ns] && !existing[ns+"/"+name]
 		})
 		if err != nil {
 			res.Err = err
 			return
 		}
+		t.Timings.Since("settle", start)
 		slog.Info("measured", "component", id, "memoryMiB", int(res.IdleMemoryMiB), "cpuM", int(res.IdleCPUm))
-		if err := smoke(c); err != nil {
+		if err := t.smoke(c); err != nil {
 			res.Err = fmt.Errorf("smoke: %w", err)
 			return
 		}
@@ -140,11 +187,77 @@ func (t *Tester) Test(id string) (res Result) {
 	return res
 }
 
+// Share makes later Quick and Install calls keep what they install, so the
+// next call installs only what is missing. The caller deletes the cluster.
+func (t *Tester) Share() { t.shared = newRun() }
+
+// Quick installs id with the dependencies that are missing and smoke tests
+// it. It needs Share. Then it uninstalls id, unless keep is set or id
+// contributes values to another component. It does not measure or check
+// residue.
+func (t *Tester) Quick(id string, keep bool) error {
+	r := t.shared
+	order, err := t.Catalog.InstallOrder([]string{id}, t.Profile)
+	if err != nil {
+		return err
+	}
+	if r.installed[id] { // a dependency of an earlier test
+		c, _ := t.Catalog.Get(id)
+		return t.smoke(c)
+	}
+	phase := time.Now()
+	for _, c := range order {
+		if r.installed[c.ID] {
+			continue
+		}
+		if c.ID != id {
+			if err := t.install(r, c); err != nil {
+				return fmt.Errorf("install %s: %w", c.ID, err)
+			}
+			continue
+		}
+		t.Timings.Since("dependencies", phase)
+		mark := len(r.undo)
+		start := time.Now()
+		if err := t.install(r, c); err != nil {
+			return fmt.Errorf("install %s: %w", c.ID, err)
+		}
+		t.Timings.Since("install", start)
+		if err := t.smoke(c); err != nil {
+			return fmt.Errorf("smoke: %w", err)
+		}
+		if keep || len(c.Contributes) > 0 {
+			return nil
+		}
+		start = time.Now()
+		var errs []error
+		for _, undo := range slices.Backward(r.undo[mark:]) {
+			errs = append(errs, undo())
+		}
+		r.undo = r.undo[:mark]
+		delete(r.installed, id)
+		for _, rel := range c.Releases {
+			delete(r.releases, id+"/"+rel.Name)
+		}
+		t.Timings.Since("uninstall", start)
+		return errors.Join(errs...)
+	}
+	return nil
+}
+
 // Install installs refs and their dependencies, and returns a function that
 // uninstalls them. Templates use it to install what they require.
 func (t *Tester) Install(refs []string) (uninstall func() error, err error) {
-	r := &run{installed: map[string]bool{}, releases: map[string]bool{}, contributions: map[string][]string{}}
+	start := time.Now()
+	defer t.Timings.Since("dependencies", start)
+	r := newRun()
+	if t.shared != nil {
+		r = t.shared
+	}
 	uninstall = func() error {
+		if t.shared != nil {
+			return nil
+		}
 		var errs []error
 		for _, undo := range slices.Backward(r.undo) {
 			errs = append(errs, undo())
@@ -156,6 +269,9 @@ func (t *Tester) Install(refs []string) (uninstall func() error, err error) {
 		return uninstall, err
 	}
 	for _, c := range order {
+		if r.installed[c.ID] {
+			continue
+		}
 		if err := t.install(r, c); err != nil {
 			return uninstall, fmt.Errorf("install %s: %w", c.ID, err)
 		}
@@ -388,10 +504,11 @@ func waitReady(manifest []byte, defaultNS string) error {
 	return nil
 }
 
-func smoke(c *Component) error {
+func (t *Tester) smoke(c *Component) error {
 	if len(c.Smoke) == 0 {
 		return nil
 	}
+	defer t.Timings.Since("smoke", time.Now())
 	if _, err := kubectl("create", "namespace", smokeNamespace); err != nil {
 		return err
 	}
@@ -429,23 +546,34 @@ func retry(timeout time.Duration, f func() error) error {
 	}
 }
 
-// sampleUsage returns the median working set (MiB) and CPU (millicores) of
-// matching pods over five samples, from the kubelet summary API.
-func sampleUsage(match func(ns, name string) bool) (mem, cpu float64, err error) {
+// idleUsage samples the working set (MiB) and CPU (millicores) of matching
+// pods every 10s from the kubelet summary API. It returns the medians of the
+// last five samples when they are stable, or after 3 minutes. Memory is stable
+// within 5% and CPU within 10m or 25%.
+func idleUsage(match func(ns, name string) bool) (mem, cpu float64, err error) {
+	const window = 5
 	var mems, cpus []float64
-	for i := range 5 {
-		if i > 0 {
-			time.Sleep(10 * time.Second)
-		}
+	deadline := time.Now().Add(3 * time.Minute)
+	for {
 		m, c, err := podUsage(match)
 		if err != nil {
 			return 0, 0, err
 		}
 		mems, cpus = append(mems, m), append(cpus, c)
+		if len(mems) >= window {
+			mem, memSpread := medianSpread(mems[len(mems)-window:])
+			cpu, cpuSpread := medianSpread(cpus[len(cpus)-window:])
+			if memSpread <= 0.05*mem && cpuSpread <= max(10, 0.25*cpu) || time.Now().After(deadline) {
+				return mem, cpu, nil
+			}
+		}
+		time.Sleep(10 * time.Second)
 	}
-	slices.Sort(mems)
-	slices.Sort(cpus)
-	return mems[2], cpus[2], nil
+}
+
+func medianSpread(samples []float64) (median, spread float64) {
+	s := slices.Sorted(slices.Values(samples))
+	return s[len(s)/2], s[len(s)-1] - s[0]
 }
 
 func podUsage(match func(ns, name string) bool) (mem, cpu float64, err error) {

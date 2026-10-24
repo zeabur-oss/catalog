@@ -88,7 +88,7 @@ type E2EValues struct {
 // E2E installs a template and what it requires with t, runs its smoke checks
 // and uninstalls everything.
 func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues, versions []string) (err error) {
-	ns := "templates-e2e-" + r.ID
+	ns := Namespace(r)
 	for name := range values.SkipSmoke {
 		if !slices.ContainsFunc(r.Smoke, func(s Smoke) bool { return s.Name == name }) {
 			return fmt.Errorf("skipSmoke: unknown smoke check %q", name)
@@ -124,7 +124,7 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues,
 
 	refs := r.Requires
 	if useS3 {
-		refs = append(slices.Clone(refs), s3Component)
+		refs = append(slices.Clone(refs), S3Component)
 	}
 	uninstall, err := t.Install(refs)
 	defer func() { err = errors.Join(err, uninstall()) }()
@@ -156,23 +156,13 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues,
 	}
 
 	// Pod Security admission applies before anything runs in the namespace.
-	profile := "restricted"
-	for _, s := range r.Services {
-		if s.SecurityProfile == "baseline" {
-			profile = "baseline"
-		}
-	}
-	if _, err := kubectl(nil, "create", "namespace", ns); err != nil {
+	if err := CreateNamespace(r, ns); err != nil {
 		return err
 	}
 	defer func() {
 		_, e := kubectl(nil, "delete", "namespace", ns, "--wait", "--timeout=5m")
 		err = errors.Join(err, e)
 	}()
-	if _, err := kubectl(nil, "label", "namespace", ns, "pod-security.kubernetes.io/enforce="+profile,
-		"pod-security.kubernetes.io/audit=restricted", "pod-security.kubernetes.io/warn=restricted"); err != nil {
-		return err
-	}
 	if useS3 {
 		if _, err := kubectl(s3.secret(ns), "apply", "-f", "-"); err != nil {
 			return err
@@ -216,6 +206,38 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues,
 		}
 	}
 	return nil
+}
+
+// Namespace is the namespace E2E installs r in.
+func Namespace(r *Template) string { return "templates-e2e-" + r.ID }
+
+// CreateNamespace creates ns with the Pod Security level that r needs.
+func CreateNamespace(r *Template, ns string) error {
+	profile := "restricted"
+	for _, s := range r.Services {
+		if s.SecurityProfile == "baseline" {
+			profile = "baseline"
+		}
+	}
+	if _, err := kubectl(nil, "create", "namespace", ns); err != nil {
+		return err
+	}
+	_, err := kubectl(nil, "label", "namespace", ns, "pod-security.kubernetes.io/enforce="+profile,
+		"pod-security.kubernetes.io/audit=restricted", "pod-security.kubernetes.io/warn=restricted")
+	return err
+}
+
+// E2EManifest renders r for Namespace(r) with values, a placeholder S3
+// gateway and a placeholder API server address.
+func E2EManifest(r *Template, values E2EValues) ([]byte, error) {
+	inputs, err := expand(r.ID, values.Inputs, &S3{Endpoint: "https://s3.example.test", Host: "s3.example.test", CIDR: "192.0.2.1/32", Bucket: "e2e"})
+	if err != nil {
+		return nil, err
+	}
+	if needs(r, "kubeApiCidr") && inputs["kubeApiCidr"] == "" {
+		inputs["kubeApiCidr"] = "192.0.2.2/32"
+	}
+	return Render(r, RenderOptions{Namespace: Namespace(r), Domain: r.ID + ".example.test", ClusterIssuer: selfSignedIssuer, Inputs: inputs})
 }
 
 // expand executes each input value as a text/template.
