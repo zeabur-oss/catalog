@@ -75,12 +75,15 @@
               "namespace": { "type": "string" }
             }
           },
-          "generate": { "const": "random", "description": "Generate a random 128-character hex string instead of asking." },
+          "generate": { "const": "random", "description": "Generate a random value instead of asking: generateBytes random bytes in generateEncoding." },
+          "generateBytes": { "type": "integer", "minimum": 12, "maximum": 64, "default": 64, "description": "Random bytes to generate." },
+          "generateEncoding": { "enum": ["hex", "base64url"], "default": "hex", "description": "hex, or base64url without padding." },
           "required": { "type": "boolean" },
           "default": {},
           "testValue": { "description": "Value CI installs with." }
         },
-        "oneOf": [{ "required": ["path"] }, { "required": ["secret"] }]
+        "oneOf": [{ "required": ["path"] }, { "required": ["secret"] }],
+        "dependentRequired": { "generateBytes": ["generate"], "generateEncoding": ["generate"] }
       }
     },
     "releases": {

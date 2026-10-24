@@ -3,6 +3,9 @@ package catalog
 
 import (
 	"cmp"
+	"crypto/rand"
+	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"maps"
 	"os"
@@ -72,9 +75,12 @@ type Input struct {
 	Path        string     `yaml:"path" json:"path,omitempty"`
 	Secret      *SecretRef `yaml:"secret" json:"secret,omitempty"`
 	Generate    string     `yaml:"generate" json:"generate,omitempty"`
-	Required    bool       `yaml:"required" json:"required,omitempty"`
-	Default     any        `yaml:"default" json:"default,omitempty"`
-	TestValue   any        `yaml:"testValue" json:"testValue,omitempty"`
+	// GenerateBytes and GenerateEncoding default to 64 and hex.
+	GenerateBytes    int    `yaml:"generateBytes" json:"generateBytes,omitempty"`
+	GenerateEncoding string `yaml:"generateEncoding" json:"generateEncoding,omitempty"`
+	Required         bool   `yaml:"required" json:"required,omitempty"`
+	Default          any    `yaml:"default" json:"default,omitempty"`
+	TestValue        any    `yaml:"testValue" json:"testValue,omitempty"`
 }
 
 type SecretRef struct {
@@ -263,6 +269,20 @@ func (c *Component) inputRelease(in Input) string {
 		}
 	}
 	return ""
+}
+
+// random returns a value as an installer generates it for the input.
+func (in Input) random() string {
+	n := in.GenerateBytes
+	if n == 0 {
+		n = 64
+	}
+	b := make([]byte, n)
+	rand.Read(b)
+	if in.GenerateEncoding == "base64url" {
+		return base64.RawURLEncoding.EncodeToString(b)
+	}
+	return hex.EncodeToString(b)
 }
 
 // testInputs returns the values CI installs with: testValue, else default.

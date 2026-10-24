@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"reflect"
+	"regexp"
 	"testing"
 )
 
@@ -80,5 +81,19 @@ func TestReplace(t *testing.T) {
 	}
 	if got, err := replace([]byte("a"), nil); err != nil || string(got) != "a" {
 		t.Errorf("no replacements: got %q, %v", got, err)
+	}
+}
+
+func TestRandom(t *testing.T) {
+	for _, c := range []struct {
+		in   Input
+		want string
+	}{
+		{Input{}, "^[0-9a-f]{128}$"},
+		{Input{GenerateBytes: 24, GenerateEncoding: "base64url"}, "^[A-Za-z0-9_-]{32}$"},
+	} {
+		if v := c.in.random(); !regexp.MustCompile(c.want).MatchString(v) {
+			t.Errorf("%+v: %q does not match %s", c.in, v, c.want)
+		}
 	}
 }
