@@ -141,7 +141,9 @@ security:
     - risk: Uninstalling deletes every Longhorn volume and its data.
       mitigation: The chart refuses to uninstall until the deleting-confirmation-flag setting is set to true by hand.
 
-leftovers: [customresourcedefinitions]
+# The manager creates the storage class longhorn-static itself, without an
+# owner, and Longhorn's uninstall deletes only the class longhorn.
+leftovers: [customresourcedefinitions, storageclasses/longhorn-static]
 
 smoke:
   - name: driver
