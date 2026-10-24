@@ -113,7 +113,6 @@ it can be reused instead.
 | meilisearch | Meilisearch | search |
 | memos | Memos | productivity |
 | miniflux | Miniflux | productivity |
-| mongodb | MongoDB | databases |
 | n8n | n8n PostgreSQL | automation |
 | n8n-ai-brain | n8n (AI Brain) | ai, automation |
 | n8n-sqlite | n8n SQLite | automation |
@@ -125,7 +124,6 @@ it can be reused instead.
 | openclaw | OpenClaw | ai |
 | openclaw-browser-sandbox | OpenClaw Browser Sandbox | ai, automation |
 | openlist | OpenList | storage |
-| postgresql | PostgreSQL | databases |
 | postgresql-pgvector | PostgreSQL with pgvector | databases |
 | qdrant | Qdrant | databases, ai |
 | searxng | SearXNG | search |
