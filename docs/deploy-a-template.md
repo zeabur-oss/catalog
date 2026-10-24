@@ -64,22 +64,15 @@ apply, run the template's smoke checks and your own tests.
 A generated input has a `secret` (`name` and `key`) and a `validation.pattern`
 that matches the whole generated value.
 
-| Field | Mode | Meaning |
-| --- | --- | --- |
-| `generate` | both | `random` or `jwt-hs256`. |
-| `generateBytes` | `random` | Random bytes before encoding, 12 to 64. Default 32. |
-| `generateEncoding` | `random` | `base64url` (default, unpadded) or lowercase `hex`. |
-| `jwtFrom` | `jwt-hs256` | Name of the `random` input that holds the signing secret. |
-| `jwtRole` | `jwt-hs256` | `anon` or `service_role`. |
+| Field | Meaning |
+| --- | --- |
+| `generate` | `random`. |
+| `generateBytes` | Random bytes before encoding, 12 to 64. Default 32. |
+| `generateEncoding` | `base64url` (default, unpadded) or lowercase `hex`. |
 
 An input the user supplies has `required` and no generation fields. 12 bytes in
 `base64url` give 16 characters; 16 or 32 bytes in `hex` give 32 or 64
 characters.
-
-JWTs use HS256 with the claims `iss: "supabase"`, the role, `iat` and an `exp`
-ten years later. The HMAC key is the encoded secret string as stored in the
-Secret. Rotating the JWT secret invalidates every issued key, so rotate the
-secret and its keys together. Keep the `service_role` key away from clients.
 
 CloudNativePG creates its own application credentials Secret; templates use it
 as is.

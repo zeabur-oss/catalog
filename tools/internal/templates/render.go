@@ -2,9 +2,7 @@ package templates
 
 import (
 	"bytes"
-	"crypto/hmac"
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -17,7 +15,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
-	"time"
 
 	"go.yaml.in/yaml/v3"
 )
@@ -122,30 +119,12 @@ func GenerateInputs(r *Template, namespace string) ([]byte, error) {
 			values[in.Name] = base64.RawURLEncoding.EncodeToString(b)
 		}
 	}
-	now := time.Now().UTC()
-	header := base64.RawURLEncoding.EncodeToString([]byte(`{"alg":"HS256","typ":"JWT"}`))
 	grouped := map[string]map[string]string{}
 	for i, in := range r.Inputs {
 		if in.Generate == "" {
 			continue
 		}
 		v := values[in.Name]
-		if in.Generate == "jwt-hs256" {
-			claims, err := json.Marshal(struct {
-				Iss  string `json:"iss"`
-				Role string `json:"role"`
-				Iat  int64  `json:"iat"`
-				Exp  int64  `json:"exp"`
-			}{"supabase", in.JWTRole, now.Unix(), now.AddDate(10, 0, 0).Unix()})
-			if err != nil {
-				return nil, err
-			}
-			unsigned := header + "." + base64.RawURLEncoding.EncodeToString(claims)
-			// Applications get the encoded secret string, so sign with its bytes.
-			mac := hmac.New(sha256.New, []byte(values[in.JWTFrom]))
-			mac.Write([]byte(unsigned))
-			v = unsigned + "." + base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
-		}
 		if !patterns[i].MatchString(v) {
 			return nil, fmt.Errorf("generated %s does not match its validation pattern", in.Name)
 		}
@@ -162,7 +141,7 @@ func GenerateInputs(r *Template, namespace string) ([]byte, error) {
 }
 
 // validateInputs checks what the schema cannot: unique names and Secret keys,
-// patterns that compile, and JWTs signed with a random input.
+// and patterns that compile.
 func validateInputs(inputs []Input) ([]*regexp.Regexp, error) {
 	byName := map[string]Input{}
 	secrets := map[string]bool{}
@@ -183,11 +162,6 @@ func validateInputs(inputs []Input) ([]*regexp.Regexp, error) {
 				return nil, fmt.Errorf("duplicate Secret key %s", key)
 			}
 			secrets[key] = true
-		}
-	}
-	for _, in := range inputs {
-		if in.Generate == "jwt-hs256" && byName[in.JWTFrom].Generate != "random" {
-			return nil, fmt.Errorf("input %s: jwtFrom must name a random input", in.Name)
 		}
 	}
 	return patterns, nil

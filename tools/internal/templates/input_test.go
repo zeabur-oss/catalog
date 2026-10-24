@@ -1,8 +1,6 @@
 package templates_test
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -10,7 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 
 	"go.yaml.in/yaml/v3"
 
@@ -124,71 +121,6 @@ func generatedSecrets(t *testing.T, r *templates.Template) map[string]map[string
 	return out
 }
 
-func TestGeneratedJWTsUseEmittedLiteralSecret(t *testing.T) {
-	r := inputRecord(t, `[
-		{"name":"anon","generate":"jwt-hs256","jwtFrom":"jwt_secret","jwtRole":"anon","secret":{"name":"app-secrets","key":"ANON_KEY"},"validation":{"pattern":"[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+"}},
-		{"name":"service","generate":"jwt-hs256","jwtFrom":"jwt_secret","jwtRole":"service_role","secret":{"name":"app-secrets","key":"SERVICE_ROLE_KEY"},"validation":{"pattern":"[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+"}},
-		{"name":"jwt_secret","generate":"random","generateBytes":32,"generateEncoding":"hex","secret":{"name":"app-secrets","key":"JWT_SECRET"},"validation":{"pattern":"[0-9a-f]{64}"}}
-	]`)
-	before := time.Now().Unix()
-	values := generatedSecrets(t, r)["app-secrets"]
-	after := time.Now().Unix()
-	if values["ANON_KEY"] == values["SERVICE_ROLE_KEY"] {
-		t.Fatal("role-specific JWTs are identical")
-	}
-	for key, role := range map[string]string{"ANON_KEY": "anon", "SERVICE_ROLE_KEY": "service_role"} {
-		parts := strings.Split(values[key], ".")
-		if len(parts) != 3 {
-			t.Fatalf("%s is not a JWT", key)
-		}
-		signature, err := base64.RawURLEncoding.DecodeString(parts[2])
-		if err != nil {
-			t.Fatal(err)
-		}
-		mac := hmac.New(sha256.New, []byte(values["JWT_SECRET"]))
-		_, _ = mac.Write([]byte(parts[0] + "." + parts[1]))
-		if !hmac.Equal(signature, mac.Sum(nil)) {
-			t.Fatalf("%s signature does not verify with emitted literal JWT_SECRET", key)
-		}
-		header, err := base64.RawURLEncoding.DecodeString(parts[0])
-		if err != nil {
-			t.Fatal(err)
-		}
-		var h map[string]string
-		if err = json.Unmarshal(header, &h); err != nil {
-			t.Fatal(err)
-		}
-		if len(h) != 2 || h["alg"] != "HS256" || h["typ"] != "JWT" {
-			t.Fatal("unexpected JWT header")
-		}
-		payload, err := base64.RawURLEncoding.DecodeString(parts[1])
-		if err != nil {
-			t.Fatal(err)
-		}
-		var claims struct {
-			Iss  string `json:"iss"`
-			Role string `json:"role"`
-			Iat  int64  `json:"iat"`
-			Exp  int64  `json:"exp"`
-		}
-		if err = json.Unmarshal(payload, &claims); err != nil {
-			t.Fatal(err)
-		}
-		if claims.Iss != "supabase" || claims.Role != role || claims.Iat < before || claims.Iat > after {
-			t.Fatalf("%s has incorrect issuer, role, or issued-at claim", key)
-		}
-		issued := time.Unix(claims.Iat, 0).UTC()
-		expires := time.Unix(claims.Exp, 0).UTC()
-		if !expires.Equal(issued.AddDate(10, 0, 0)) {
-			t.Fatalf("%s does not expire ten calendar years after issuance", key)
-		}
-	}
-	again := generatedSecrets(t, r)["app-secrets"]
-	if values["JWT_SECRET"] == again["JWT_SECRET"] || values["ANON_KEY"] == again["ANON_KEY"] || values["SERVICE_ROLE_KEY"] == again["SERVICE_ROLE_KEY"] {
-		t.Fatal("repeated explicit generation reused credential material")
-	}
-}
-
 func TestRandomInputsMeetComponentByteAndASCIIConstraints(t *testing.T) {
 	r := inputRecord(t, `[
 		{"name":"realtime","generate":"random","generateBytes":12,"secret":{"name":"z-components","key":"realtime"},"validation":{"pattern":"[A-Za-z0-9_-]{16}"}},
@@ -236,16 +168,6 @@ func TestGeneratedValuesRequireFullPatternMatch(t *testing.T) {
 	}
 	r.Inputs[0].Validation.Pattern = "[A-Za-z0-9_-]{42}|[A-Za-z0-9_-]{43}"
 	generatedSecrets(t, r)
-	r = inputRecord(t, `[
-		{"name":"seed","generate":"random","secret":{"name":"app","key":"secret"},"validation":{"pattern":"[A-Za-z0-9_-]{43}"}},
-		{"name":"anon","generate":"jwt-hs256","jwtFrom":"seed","jwtRole":"anon","secret":{"name":"app","key":"anon"},"validation":{"pattern":"[A-Za-z0-9_-]+"}}
-	]`)
-	if b, err := templates.GenerateInputs(r, "test"); err == nil || len(b) != 0 {
-		t.Fatal("partial JWT match accepted")
-	}
-	if b, err := templates.Render(r, templates.RenderOptions{Namespace: "test", Inputs: map[string]string{"anon": "do-not-render"}}); err == nil || len(b) != 0 {
-		t.Fatal("derived JWT override accepted by renderer")
-	}
 }
 
 func TestGenerateInputsRejectsInvalidNamespaces(t *testing.T) {

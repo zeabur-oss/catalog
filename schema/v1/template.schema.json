@@ -160,11 +160,9 @@
         "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
         "description": { "$ref": "#/$defs/text" },
         "required": { "type": "boolean" },
-        "generate": { "enum": ["random", "jwt-hs256"] },
+        "generate": { "const": "random" },
         "generateBytes": { "type": "integer", "minimum": 12, "maximum": 64, "default": 32 },
         "generateEncoding": { "enum": ["base64url", "hex"], "default": "base64url" },
-        "jwtFrom": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$", "description": "The random input that holds the signing secret." },
-        "jwtRole": { "enum": ["anon", "service_role"] },
         "secret": {
           "type": "object",
           "additionalProperties": false,
@@ -184,17 +182,11 @@
       "oneOf": [
         {
           "required": ["generate", "secret"],
-          "properties": { "generate": { "const": "random" } },
-          "not": { "anyOf": [{ "required": ["required"] }, { "required": ["jwtFrom"] }, { "required": ["jwtRole"] }] }
-        },
-        {
-          "required": ["generate", "secret", "jwtFrom", "jwtRole"],
-          "properties": { "generate": { "const": "jwt-hs256" } },
-          "not": { "anyOf": [{ "required": ["required"] }, { "required": ["generateBytes"] }, { "required": ["generateEncoding"] }] }
+          "not": { "required": ["required"] }
         },
         {
           "required": ["required"],
-          "not": { "anyOf": [{ "required": ["generate"] }, { "required": ["secret"] }, { "required": ["generateBytes"] }, { "required": ["generateEncoding"] }, { "required": ["jwtFrom"] }, { "required": ["jwtRole"] }] }
+          "not": { "anyOf": [{ "required": ["generate"] }, { "required": ["secret"] }, { "required": ["generateBytes"] }, { "required": ["generateEncoding"] }] }
         }
       ]
     }

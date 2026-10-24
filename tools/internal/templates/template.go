@@ -72,8 +72,6 @@ type Input struct {
 	Generate         string `yaml:"generate" json:"generate,omitempty"`
 	GenerateBytes    *int   `yaml:"generateBytes" json:"generateBytes,omitempty"`
 	GenerateEncoding string `yaml:"generateEncoding" json:"generateEncoding,omitempty"`
-	JWTFrom          string `yaml:"jwtFrom" json:"jwtFrom,omitempty"`
-	JWTRole          string `yaml:"jwtRole" json:"jwtRole,omitempty"`
 	Required         bool   `yaml:"required" json:"required,omitempty"`
 	Secret           *struct {
 		Name string `yaml:"name" json:"name"`
