@@ -1,0 +1,84 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: Qdrant
+  description: Qdrant vector database with API key authentication and data on a persistent volume.
+  license: Apache-2.0
+  homepage: https://qdrant.tech/
+  icon: https://github.com/qdrant.png
+  categories: [databases, ai]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: qdrant
+    securityProfile: restricted
+    ports: [{name: http, port: 6333}, {name: grpc, port: 6334}]
+    resources: {requests: {cpu: 200m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+    domains: ['{{ .Domain }}']
+
+inputs:
+  - name: apiKey
+    description: >-
+      API key for every REST and gRPC request, sent in the api-key header.
+      Generated at installation.
+    generate: random
+    secret: {name: qdrant-secrets, key: api-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: >-
+    The official unprivileged image runs as UID 1000 with a read-only root
+    filesystem, no service-account token and all capabilities dropped. The
+    namespace denies all traffic by default.
+  egress:
+    - None. Telemetry is turned off.
+  risks:
+    - risk: The REST API and web dashboard are public through the Ingress.
+      mitigation: >-
+        Every request needs the generated API key, except the health
+        endpoints. Keep the key on servers, and create JWT or read-only keys
+        for other clients.
+    - risk: The gRPC port is not exposed through the Ingress.
+      mitigation: >-
+        Pods in the same namespace with the label
+        templates.zeabur.com/qdrant-client=true reach REST on 6333 and gRPC on
+        6334. Use REST over the Ingress from outside the cluster.
+    - risk: Recovery from a snapshot URL and other outbound calls are blocked.
+      mitigation: >-
+        Upload snapshots through the API, or add a NetworkPolicy egress rule
+        for the exact source.
+
+scalability:
+  summary: One node on a 20Gi node-local volume. Distributed mode is not configured.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      More replicas need Qdrant distributed mode with peer discovery and a
+      volume per node. The template does not configure it.
+    - local-path volumes are node-local and have no snapshots or failover.
+
+upgradeNotes:
+  - >-
+    Create a full snapshot with the snapshot API and copy it off the node
+    before you change the image digest.
+  - >-
+    Qdrant supports upgrades from the previous minor version only. Upgrade one
+    minor version at a time. A rollback needs the snapshot taken before the
+    upgrade.
+  - >-
+    Deleting the namespace deletes the PVC and all collections. Keep
+    snapshots outside the cluster.
+
+smoke:
+  - name: qdrant-ready
+    resource: statefulset/qdrant
+    condition: jsonpath={.status.readyReplicas}=1
+    timeout: 600s
+    http: {service: qdrant, port: 6333, path: /readyz, status: 200}
+  - name: api-key-required
+    resource: statefulset/qdrant
+    condition: jsonpath={.status.readyReplicas}=1
+    timeout: 120s
+    http: {service: qdrant, port: 6333, path: /collections, status: 401}
