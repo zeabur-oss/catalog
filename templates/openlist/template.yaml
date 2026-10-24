@@ -1,0 +1,103 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: OpenList
+  description: File listing and WebDAV with FFmpeg and authenticated local Aria2 downloads.
+  license: AGPL-3.0-only
+  homepage: https://github.com/OpenListTeam/OpenList
+  icon: https://github.com/OpenListTeam.png
+  categories: [storage]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: openlist
+    securityProfile: restricted
+    ports: [{name: http, port: 5244}]
+    resources: {requests: {cpu: 100m, memory: 128Mi}, limits: {cpu: "2", memory: 1Gi}}
+
+inputs:
+  - name: adminPassword
+    description: >-
+      Password for the OpenList user admin. It is applied again at each restart,
+      so a password changed in the UI is lost on restart. Change this Secret to
+      rotate it.
+    generate: random
+    secret: {name: openlist-secrets, key: admin-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: aria2Password
+    description: >-
+      Aria2 loopback JSON-RPC secret. In OpenList offline download settings, set
+      endpoint http://127.0.0.1:6800/jsonrpc and this token.
+    generate: random
+    secret: {name: openlist-secrets, key: aria2-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: >-
+    Namespaced, digest-pinned non-root workloads with read-only roots, no API
+    token, dropped capabilities and default-deny networking.
+  egress:
+    - Cluster DNS
+    - >-
+      Public IPv4 destinations on all ports/protocols for configured storage and
+      peer-to-peer downloads; RFC1918, loopback, metadata and multicast ranges
+      blocked.
+  risks:
+    - risk: >-
+        Upstream AIO Aria2 configuration has no RPC secret; download providers
+        can target arbitrary URLs.
+      mitigation: >-
+        The template starts Aria2 with authenticated RPC on loopback only and
+        keeps FFmpeg, BitTorrent and downloads. Egress to private and metadata
+        ranges is denied.
+    - risk: Storage credentials and administrator hashes are held in the SQLite data volume.
+      mitigation: >-
+        Restrict PVC/Secret/log access, use generated administrator credentials
+        and encrypt off-node backups.
+    - risk: >-
+        Egress blocks private ranges. Storage providers inside the cluster or on
+        a private network cannot connect.
+      mitigation: >-
+        Add a separate NetworkPolicy egress rule for that exact destination. Do
+        not open all private networks.
+    - risk: >-
+        OpenList is AGPL-3.0. A modified version offered over a network must
+        offer its source to users.
+      mitigation: >-
+        Run the unmodified image, or publish your changes under AGPL-3.0. Keep
+        the license notices.
+
+scalability:
+  summary: One writable instance on node-local storage, with no failover.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      local-path volumes are node-local and provide no snapshots or cross-node
+      failover.
+    - >-
+      A single writable application instance is intentional; do not increase
+      replicas without an application-specific storage/database design.
+
+upgradeNotes:
+  - >-
+    Back up persistent application data and its database to storage outside the
+    node before updating the image digest. Stop OpenList and Aria2 first so the
+    SQLite database and download state are consistent.
+  - >-
+    Database migrations can be one-way. Restore a copy into a separate namespace
+    and test the upgrade there first: storage access, admin login, WebDAV,
+    FFmpeg and an Aria2 task.
+  - >-
+    The pinned image is v4.2.7-aio. The upstream latest-aio tag moves; update
+    only by changing the pinned digest.
+  - >-
+    The container timezone is Asia/Shanghai. Change the TZ variable if you need
+    another zone.
+
+smoke:
+  - name: application-ready
+    resource: statefulset/openlist
+    condition: jsonpath={.status.readyReplicas}=1
+    timeout: 600s

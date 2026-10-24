@@ -1,0 +1,253 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openclaw-bootstrap
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: openclaw-bootstrap
+data:
+  bootstrap.cjs: "const fs = require('node:fs');\nconst p = '/home/node/.openclaw/openclaw.json';\nfs.mkdirSync('/home/node/.openclaw',\
+    \ { recursive: true, mode: 0o700 });\nif (!fs.existsSync(p)) {\n  const c = {\n    gateway: { mode: 'local', bind: 'lan',\
+    \ auth: { mode: 'token', token: '${OPENCLAW_GATEWAY_TOKEN}' }, controlUi: { allowedOrigins: ['https://' + process.env.PUBLIC_DOMAIN]\
+    \ } },\n    models: { providers: { custom: { baseUrl: process.env.LLM_BASE_URL, apiKey: '${LLM_API_KEY}', api: 'openai-completions',\
+    \ models: [{ id: process.env.LLM_MODEL, name: process.env.LLM_MODEL, input: ['text', 'image'], contextWindow: 128000,\
+    \ maxTokens: 8192 }] } } },\n    agents: { defaults: { model: { primary: 'custom/' + process.env.LLM_MODEL }, workspace:\
+    \ '/home/node/.openclaw/workspace' } }\n  };\n  fs.writeFileSync(p, JSON.stringify(c, null, 2), { mode: 0o600, flag: 'wx'\
+    \ });\n}\n"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openclaw-home
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: openclaw-home
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openclaw
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: openclaw
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: openclaw
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: openclaw
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: openclaw
+        image: ghcr.io/openclaw/openclaw:2026.9.7@sha256:0da12cd49983fcb5e4915fd3135ce7a33d82f93649b1df6964946d2c1d1dbcfc
+        ports:
+        - name: http
+          containerPort: 18789
+        env:
+        - name: HOME
+          value: /home/node
+        - name: PUBLIC_DOMAIN
+          value: '{{ .Domain }}'
+        - name: LLM_BASE_URL
+          value: '{{ .Inputs.llmBaseUrl }}'
+        - name: LLM_MODEL
+          value: '{{ .Inputs.llmModel }}'
+        - name: OPENCLAW_DISABLE_BONJOUR
+          value: '1'
+        - name: NODE_OPTIONS
+          value: --max-old-space-size=2048
+        - name: OPENCLAW_GATEWAY_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: openclaw-secrets
+              key: gateway-token
+        - name: LLM_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: '{{ .Inputs.providerSecret }}'
+              key: api-key
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: '2'
+            memory: 4Gi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: home
+          mountPath: /home/node
+        - name: bootstrap
+          mountPath: /bootstrap
+          readOnly: true
+        command:
+        - /usr/bin/tini
+        - -s
+        - --
+        - /bin/sh
+        - -ec
+        args:
+        - node /bootstrap/bootstrap.cjs; exec node /app/openclaw.mjs gateway --bind lan
+        readinessProbe:
+          httpGet:
+            path: /startupz
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+          periodSeconds: 30
+          timeoutSeconds: 3
+        startupProbe:
+          httpGet:
+            path: /startupz
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 60
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: home
+        persistentVolumeClaim:
+          claimName: openclaw-home
+      - name: bootstrap
+        configMap:
+          name: openclaw-bootstrap
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: openclaw-default-deny
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: openclaw-default-deny
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: openclaw-allow
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: openclaw-allow
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: openclaw
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: traefik
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: traefik
+    ports:
+    - protocol: TCP
+      port: 18789
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: openclaw-sandbox-browser
+    ports:
+    - protocol: TCP
+      port: 9222
+  - {{ dnsEgress }}
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 0.0.0.0/8
+        - 10.0.0.0/8
+        - 100.64.0.0/10
+        - 127.0.0.0/8
+        - 169.254.0.0/16
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - 224.0.0.0/4
+        - 240.0.0.0/4
+    ports:
+    - protocol: TCP
+      port: 443
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openclaw
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: openclaw
+spec:
+  selector:
+    app.kubernetes.io/name: openclaw
+  ports:
+  - name: http
+    port: 18789
+    targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: openclaw
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: openclaw
+  annotations:
+    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - '{{ .Domain }}'
+    secretName: openclaw-tls
+  rules:
+  - host: '{{ .Domain }}'
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: openclaw
+            port:
+              name: http

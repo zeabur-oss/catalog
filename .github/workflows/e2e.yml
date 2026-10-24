@@ -1,13 +1,21 @@
 # Installs every component on kind, one node for single-node and three for
 # multi-node: dependencies first, smoke test, idle memory and CPU, uninstall,
 # residue check, and an upgrade from the latest release when its version
-# differs, on amd64 and arm64. Pull requests and pushes test only the
-# components they change and their dependents, or every component when a
-# shared file (config, tools, the cluster) changes.
+# differs, on amd64 and arm64. Installs every template on single-node amd64
+# with the components it requires, then runs its smoke checks. Pull requests
+# and pushes test only what they change and what installs it, or everything
+# when a shared file (config, tools, the cluster) changes.
 name: e2e
 
 on:
   workflow_call:
+    secrets:
+      # JSON objects keyed by template ID: input values, and objects to apply
+      # first (for example the Secrets that inputs name).
+      E2E_INPUTS_JSON:
+        required: false
+      E2E_SETUP_MANIFESTS_JSON:
+        required: false
 
 permissions:
   contents: read
@@ -37,7 +45,7 @@ jobs:
       fail-fast: false
       matrix:
         include: ${{ fromJSON(needs.matrix.outputs.matrix).include }}
-    name: ${{ matrix.profile }} ${{ matrix.arch }} ${{ matrix.component }}
+    name: ${{ matrix.profile }} ${{ matrix.arch }} ${{ matrix.component || matrix.template }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: DeterminateSystems/determinate-nix-action@d0c908e6cbe9f89f36ed8205a3ab6f092636916a # v3.23.1
@@ -56,20 +64,54 @@ jobs:
             docker exec "$node" sh -c 'apt-get update -qq && apt-get install -y -qq open-iscsi nfs-common && systemctl enable --now iscsid'
           done
       - name: Previous release (upgrade test)
+        if: matrix.component
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release download --pattern index.json --output previous.json || true
       - name: e2e
+        if: matrix.component
         run: |
           nix develop -c go run ./tools/cmd/catalog e2e -profile '${{ matrix.profile }}' -write \
             $([ -f previous.json ] && echo -previous previous.json) '${{ matrix.component }}'
+      - name: Template inputs
+        id: inputs
+        if: matrix.template
+        env:
+          E2E_INPUTS_JSON: ${{ secrets.E2E_INPUTS_JSON }}
+          E2E_SETUP_MANIFESTS_JSON: ${{ secrets.E2E_SETUP_MANIFESTS_JSON }}
+          ID: ${{ matrix.template }}
+        run: |
+          umask 077
+          mkdir -p out
+          jq --arg id "$ID" '.[$id] // {}' <<< "${E2E_INPUTS_JSON:-{\}}" > out/values.json
+          jq -r --arg id "$ID" '.[$id] // ""' <<< "${E2E_SETUP_MANIFESTS_JSON:-{\}}" > out/setup.yaml
+          # Pull requests get no secrets.
+          if [ "$GITHUB_EVENT_NAME" = pull_request ] && [ "$(jq length out/values.json)" = 0 ] &&
+            nix develop -c yq -e '[.inputs[] | select(.required)] | length > 0' "templates/$ID/template.yaml" > /dev/null 2>&1; then
+            echo "::notice::$ID needs values from E2E_INPUTS_JSON; it runs after merge"
+            echo skip=true >> "$GITHUB_OUTPUT"
+          fi
+      # Templates name the local-path StorageClass; kind's default one uses the
+      # same provisioner.
+      - name: local-path StorageClass
+        if: matrix.template && !steps.inputs.outputs.skip
+        run: |
+          nix develop -c sh -c 'kubectl get storageclass standard -o json |
+            jq "{apiVersion, kind, metadata: {name: \"local-path\"}, provisioner, reclaimPolicy, volumeBindingMode}" |
+            kubectl apply -f -'
+      - name: Template e2e
+        if: matrix.template && !steps.inputs.outputs.skip
+        run: |
+          nix develop -c go run ./tools/cmd/catalog template e2e -values out/values.json \
+            -setup out/setup.yaml '${{ matrix.template }}'
       - name: Keep only this component's measurement
-        if: always()
+        if: always() && matrix.component
         run: find measurements -type f ! -path 'measurements/${{ matrix.component }}.json' -delete
       - id: name
+        if: matrix.component
         run: echo "name=$(echo '${{ matrix.profile }}-${{ matrix.arch }}-${{ matrix.component }}' | tr / -)" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: always()
+        if: always() && matrix.component
         with:
           name: measurements-${{ steps.name.outputs.name }}
           path: measurements/

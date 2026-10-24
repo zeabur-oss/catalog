@@ -1,0 +1,85 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: SearXNG
+  description: >-
+    Privacy-respecting metasearch with generated signing secret and HTML/JSON
+    search.
+  license: AGPL-3.0-or-later
+  homepage: https://github.com/searxng/searxng
+  icon: https://github.com/searxng.png
+  categories: [search]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: searxng
+    securityProfile: restricted
+    ports: [{name: http, port: 8080}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}
+    domains: ['{{ .Domain }}']
+
+inputs:
+  - name: signingKey
+    description: Persistent server signing key; generated at installation.
+    generate: random
+    secret: {name: app-secrets, key: signing-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: >-
+    Restricted non-root workload; read-only root filesystem, no service-account
+    token, dropped capabilities, HTTPS ingress only from Traefik. Default-deny
+    networking permits cluster DNS and public HTTP(S), excluding private and
+    link-local networks.
+  egress:
+    - Cluster DNS UDP/TCP 53
+    - >-
+      Public Internet TCP 80/443; excludes private, loopback, link-local, CGNAT
+      and multicast IPv4 destinations
+  risks:
+    - risk: >-
+        Public search can be abused and upstream search engines may rate-limit
+        or block this server.
+      mitigation: >-
+        Public instance mode is disabled, and the Valkey-backed limiter is not
+        enabled. Use the instance for private, low-volume search. Add ingress
+        authentication and rate limiting before you publish it.
+    - risk: >-
+        Unrestricted provider domains require public Internet egress; search
+        terms leave this cluster.
+      mitigation: >-
+        Only TCP80/443 to public IPv4 destinations is permitted. Check the
+        privacy policy of each enabled search engine.
+    - risk: SearXNG is AGPL-3.0-or-later.
+      mitigation: >-
+        If you modify the code or offer it to other users, publish the
+        corresponding source as the license requires.
+
+scalability:
+  summary: >-
+    One replica. Cache is ephemeral and a restart clears it. The instance stores
+    no user data.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - More replicas need a shared rate limiter. The template does not provide one.
+
+upgradeNotes:
+  - >-
+    Pinned image version 2026.10.19-81371861f. On updates, check settings,
+    entrypoint and search engine compatibility.
+  - >-
+    Settings are in a ConfigMap. Change them there; changes inside the container
+    are lost on restart. Cache is disposable. No database or PVC backup is
+    needed.
+  - >-
+    The signing key in app-secrets persists for the installation. Include it in
+    encrypted secret backups.
+
+smoke:
+  - name: searxng-ready
+    resource: deployment/searxng
+    condition: condition=Available
+    timeout: 300s
+    http: {service: searxng, port: 8080, path: /healthz, status: 200}

@@ -6,7 +6,7 @@ name: measure
 on:
   push:
     branches: [main]
-    paths: [capabilities/**, config/**]
+    paths: [components/**, config/**]
   workflow_dispatch:
 
 permissions:
@@ -15,6 +15,7 @@ permissions:
 jobs:
   e2e:
     uses: ./.github/workflows/e2e.yml
+    secrets: inherit
 
   pull-request:
     needs: e2e

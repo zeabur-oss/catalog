@@ -1,0 +1,142 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: Ghost
+  description: >-
+    Ghost 6 publishing with a real MySQL dependency, persistent content and
+    external SMTP.
+  license: MIT AND GPL-2.0-only
+  # Also: https://github.com/docker-library/mysql, https://github.com/TryGhost/ghost-docker
+  homepage: https://github.com/TryGhost/Ghost
+  icon: https://github.com/TryGhost.png
+  categories: [cms]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: ghost
+    securityProfile: restricted
+    ports: [{name: http, port: 2368}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 1Gi}}
+  - name: ghost-mysql
+    securityProfile: restricted
+    ports: [{name: mysql, port: 3306}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 1Gi}}
+
+inputs:
+  - name: adminCidr
+    description: >-
+      Administrator IPv4 source CIDR as Traefik sees it, preferably a fixed /32.
+      IPv6 administrator access is not configured. Restricts /ghost owner setup,
+      admin and APIs; public blog/member routes remain open. Never allow a
+      shared load-balancer CIDR that admits arbitrary clients.
+    required: true
+    validation:
+      pattern: ^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])/(?:[1-9]|[12][0-9]|3[0-2])$
+  - name: databasePassword
+    description: Password for the least-privilege ghost MySQL application user.
+    generate: random
+    secret: {name: ghost-secrets, key: database-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: mysqlRootPassword
+    description: Local MySQL administrator password; never used by Ghost.
+    generate: random
+    secret: {name: ghost-secrets, key: root-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: smtpHost
+    description: External SMTP hostname for transactional email.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?$'}
+  - name: smtpPort
+    description: 'SMTP TLS port: 465 for implicit TLS or 587 for STARTTLS.'
+    required: true
+    validation: {pattern: ^(465|587)$}
+  - name: smtpFrom
+    description: Transactional mail From address.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
+  - name: smtpSecret
+    description: >-
+      Existing namespace Secret containing username and password for your SMTP
+      provider. Create it before deploying.
+    required: true
+    validation: {pattern: '^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$'}
+
+security:
+  summary: >-
+    Namespaced, digest-pinned non-root workloads with read-only roots, no API
+    token, dropped capabilities and default-deny networking.
+  egress:
+    - Cluster DNS
+    - Ghost -> its MySQL service on TCP 3306 only.
+    - >-
+      Public HTTPS 443 for Ghost integrations/newsletter delivery; external SMTP
+      on TCP 465/587.
+  risks:
+    - risk: The initial Ghost setup page allows the first visitor to create the site owner.
+      mitigation: >-
+        Required adminCidr restricts /ghost and its descendants through a
+        higher-priority Traefik ipAllowList router before initial owner
+        creation. Complete native setup from the approved network; retain the
+        restriction afterward.
+    - risk: >-
+        NAT or a shared reverse proxy can make untrusted clients appear to have
+        an allowed source address.
+      mitigation: >-
+        Check the source IP that Traefik sees and how the load balancer
+        preserves it before deployment. No forwarded-header IP strategy is
+        configured; never allow a shared LB/proxy CIDR that admits arbitrary
+        Internet clients. The adminCidr also blocks /ghost/api/content. A
+        headless client that needs the public Content API needs a narrow
+        /ghost/api/content route added after owner setup.
+    - risk: MySQL runs as a plain StatefulSet without an operator.
+      mitigation: >-
+        Keep one replica, protect both MySQL and content backups off-node, and
+        add a catalog MySQL operator before promising HA or automated PITR.
+    - risk: Transactional SMTP and newsletter providers are external dependencies.
+      mitigation: >-
+        Supply a preexisting SMTP Secret, configure Mailgun in Ghost for bulk
+        newsletters, and protect provider credentials in backups. Egress allows
+        only public SMTP; a private SMTP server needs an added NetworkPolicy for
+        that destination. Self-hosted ActivityPub and Tinybird analytics are not
+        included.
+
+scalability:
+  summary: >-
+    One writable instance backed by node-local storage. The template has no high
+    availability.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      local-path volumes are node-local and provide no snapshots or cross-node
+      failover.
+    - >-
+      A single writable application instance is intentional; do not increase
+      replicas without an application-specific storage/database design.
+
+upgradeNotes:
+  - >-
+    Back up persistent application data and its database to storage outside the
+    node before updating the image digest.
+  - >-
+    Restore into a separate namespace before upgrading. Image rollback does not
+    reverse Ghost or MySQL schema migrations.
+  - >-
+    Fresh deployments use MySQL 8.4 LTS, which Ghost's official hosting guide
+    supports. Existing 8.0 volumes require a rehearsed backup/restore or
+    supported upgrade. MySQL 8.4 disables mysql_native_password by default;
+    migrate those users to caching_sha2_password before upgrading.
+  - >-
+    MySQL initialization credentials apply only to empty data directories; use
+    SQL for subsequent rotation. Back up MySQL and Ghost content together.
+
+smoke:
+  - name: application-ready
+    resource: statefulset/ghost
+    condition: jsonpath={.status.readyReplicas}=1
+    timeout: 600s
+  - name: mysql-ready
+    resource: statefulset/ghost-mysql
+    condition: jsonpath={.status.readyReplicas}=1
+    timeout: 600s

@@ -1,0 +1,230 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openlist-data
+  namespace: '{{ .Namespace }}'
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: openlist
+  namespace: '{{ .Namespace }}'
+spec:
+  serviceName: openlist
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: openlist
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: openlist
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: openlist
+        image: openlistteam/openlist:latest-aio@sha256:ce34db61af4c42cd1b988430c76c335dfef460f5397f7380c55d1ad75ab97195
+        ports:
+        - name: http
+          containerPort: 5244
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: '2'
+            memory: 1Gi
+        env:
+        - name: TZ
+          value: Asia/Shanghai
+        - name: UMASK
+          value: '077'
+        - name: ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: openlist-secrets
+              key: admin-password
+        - name: ARIA2_RPC_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: openlist-secrets
+              key: aria2-password
+        volumeMounts:
+        - name: data
+          mountPath: /opt/openlist/data
+        - name: tmp
+          mountPath: /tmp
+        command:
+        - /bin/sh
+        - -ec
+        args:
+        - 'set -eu
+
+          umask 077
+
+          mkdir -p /opt/openlist/data/downloads /opt/openlist/data/aria2
+
+          ./openlist admin set "$ADMIN_PASSWORD" >/dev/null 2>&1
+
+          touch /opt/openlist/data/aria2/session
+
+          aria2c --conf-path=/dev/null --enable-rpc=true --rpc-listen-all=false --rpc-secret="$ARIA2_RPC_SECRET"
+          --dir=/opt/openlist/data/downloads --input-file=/opt/openlist/data/aria2/session --save-session=/opt/openlist/data/aria2/session
+          --save-session-interval=60 --log=- &
+
+          aria_pid=$!
+
+          ./openlist server --no-prefix &
+
+          app_pid=$!
+
+          trap ''kill -TERM "$app_pid" "$aria_pid" 2>/dev/null || true; wait'' TERM INT
+
+          set +e
+
+          wait "$app_pid"
+
+          status=$?
+
+          kill -TERM "$aria_pid" 2>/dev/null
+
+          wait "$aria_pid"
+
+          exit "$status"
+
+          '
+        startupProbe:
+          httpGet:
+            path: /ping
+            port: http
+          failureThreshold: 90
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /ping
+            port: http
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /ping
+            port: http
+          periodSeconds: 20
+          failureThreshold: 6
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: openlist-data
+      - name: tmp
+        emptyDir:
+          sizeLimit: 512Mi
+      terminationGracePeriodSeconds: 60
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openlist
+  namespace: '{{ .Namespace }}'
+spec:
+  selector:
+    app.kubernetes.io/name: openlist
+  ports:
+  - name: http
+    port: 5244
+    targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: openlist
+  namespace: '{{ .Namespace }}'
+  annotations:
+    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - '{{ .Domain }}'
+    secretName: openlist-tls
+  rules:
+  - host: '{{ .Domain }}'
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: openlist
+            port:
+              number: 5244
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: openlist-network
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: openlist
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: traefik
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: traefik
+    ports:
+    - protocol: TCP
+      port: 5244
+  egress:
+  - {{ dnsEgress }}
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 0.0.0.0/8
+        - 10.0.0.0/8
+        - 100.64.0.0/10
+        - 127.0.0.0/8
+        - 169.254.0.0/16
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - 224.0.0.0/4
+        - 240.0.0.0/4

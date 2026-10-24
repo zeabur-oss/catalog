@@ -1,0 +1,197 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lobechat
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: lobechat
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: lobechat
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: lobechat
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: lobechat
+        image: docker.io/lobehub/lobe-chat:1.143.3@sha256:b2d2454525523d9f0a19c79661f83ec45f13363dbadd5c1180887e77af35d872
+        ports:
+        - name: http
+          containerPort: 3210
+        env:
+        - name: ACCESS_CODE
+          valueFrom:
+            secretKeyRef:
+              name: lobechat-secrets
+              key: access-code
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: '{{ .Inputs.providerSecret }}'
+              key: api-key
+        - name: ENABLE_AUTH_PROTECTION
+          value: '1'
+        - name: APP_URL
+          value: https://{{ .Domain }}
+        - name: HOSTNAME
+          value: 0.0.0.0
+        - name: PORT
+          value: '3210'
+        - name: SSRF_ALLOW_PRIVATE_IP_ADDRESS
+          value: '0'
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: '2'
+            memory: 2Gi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /app/.next/cache
+        readinessProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 6
+        livenessProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 6
+        startupProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: cache
+        emptyDir:
+          sizeLimit: 512Mi
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lobechat-default-deny
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: lobechat-default-deny
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lobechat-allow
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: lobechat-allow
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: lobechat
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: traefik
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: traefik
+    ports:
+    - protocol: TCP
+      port: 3210
+  egress:
+  - {{ dnsEgress }}
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 0.0.0.0/8
+        - 10.0.0.0/8
+        - 100.64.0.0/10
+        - 127.0.0.0/8
+        - 169.254.0.0/16
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - 224.0.0.0/4
+        - 240.0.0.0/4
+    ports:
+    - protocol: TCP
+      port: 443
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lobechat
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: lobechat
+spec:
+  selector:
+    app.kubernetes.io/name: lobechat
+  ports:
+  - name: http
+    port: 3210
+    targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lobechat
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: lobechat
+  annotations:
+    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - '{{ .Domain }}'
+    secretName: lobechat-tls
+  rules:
+  - host: '{{ .Domain }}'
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: lobechat
+            port:
+              name: http

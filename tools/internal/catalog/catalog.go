@@ -20,18 +20,17 @@ var Profiles = []string{"single-node", "multi-node"}
 type Component struct {
 	ID              string            `yaml:"-" json:"id"`
 	Capability      string            `yaml:"-" json:"capability"`
-	DisplayName     string            `yaml:"displayName" json:"displayName"`
-	Homepage        string            `yaml:"homepage" json:"homepage"`
-	License         string            `yaml:"license" json:"license"`
+	APIVersion      string            `yaml:"apiVersion" json:"apiVersion"`
+	Kind            string            `yaml:"kind" json:"kind"`
+	Metadata        Metadata          `yaml:"metadata" json:"metadata"`
 	Maturity        string            `yaml:"maturity" json:"maturity"`
 	Stability       string            `yaml:"stability" json:"stability,omitempty"`
-	Rationale       string            `yaml:"rationale" json:"rationale"`
 	Alternatives    map[string]string `yaml:"alternatives" json:"alternatives,omitempty"`
 	Defaults        map[string]string `yaml:"defaults" json:"defaults"`
 	Distributions   []string          `yaml:"distributions" json:"distributions,omitempty"`
 	PersistsData    bool              `yaml:"persistsData" json:"persistsData,omitempty"`
 	DisruptsTraffic bool              `yaml:"disruptsTraffic" json:"disruptsTraffic,omitempty"`
-	DependsOn       []string          `yaml:"dependsOn" json:"dependsOn,omitempty"`
+	Requires        []string          `yaml:"requires" json:"requires,omitempty"`
 	Inputs          []Input           `yaml:"inputs" json:"inputs,omitempty"`
 	Releases        []Release         `yaml:"releases" json:"releases"`
 	Contributes     []Contribution    `yaml:"contributes" json:"contributes,omitempty"`
@@ -42,6 +41,14 @@ type Component struct {
 	UpgradeNotes    []map[string]any  `yaml:"upgradeNotes" json:"upgradeNotes,omitempty"`
 
 	Path string `yaml:"-" json:"-"` // relative to the repository root
+}
+
+// Metadata is the part Components and Templates share.
+type Metadata struct {
+	Name        string `yaml:"name" json:"name"`
+	Description string `yaml:"description" json:"description"`
+	License     string `yaml:"license" json:"license"`
+	Homepage    string `yaml:"homepage" json:"homepage"`
 }
 
 type Release struct {
@@ -119,9 +126,9 @@ type Catalog struct {
 	Raw map[string]any
 }
 
-// Load reads capabilities/<capability>/<upstream>.yaml under root.
+// Load reads components/<capability>/<upstream>.yaml under root.
 func Load(root string) (*Catalog, error) {
-	files, err := filepath.Glob(filepath.Join(root, "capabilities", "*", "*.yaml"))
+	files, err := filepath.Glob(filepath.Join(root, "components", "*", "*.yaml"))
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +205,7 @@ func (cat *Catalog) InstallOrder(ids []string, profile string) ([]*Component, er
 			return nil
 		}
 		state[c] = 1
-		for _, ref := range c.DependsOn {
+		for _, ref := range c.Requires {
 			dep, err := cat.provider(ref, profile)
 			if err != nil {
 				return fmt.Errorf("%s: %w", c.ID, err)

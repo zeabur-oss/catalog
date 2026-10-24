@@ -16,7 +16,8 @@ import (
 // render runs helm template for every component, release, profile and
 // Kubernetes version, with every contribution applied, and checks the output
 // with kubeconform.
-func render(fs *flag.FlagSet, cat *catalog.Catalog) error {
+func render(fs *flag.FlagSet, r *repo) error {
+	cat := r.cat
 	out := fs.String("out", "out/render", "output directory")
 	fs.Parse(os.Args[2:])
 	cfg, err := loadConfig()

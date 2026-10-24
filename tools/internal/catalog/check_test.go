@@ -20,7 +20,7 @@ func TestLicenseProblems(t *testing.T) {
 		{"BUSL-1.1", optional, []string{"license BUSL-1.1 is not OSI-approved"}},
 	}
 	for _, tt := range tests {
-		got := l.problems(&Component{License: tt.license, Defaults: tt.defaults})
+		got := l.problems(&Component{Metadata: Metadata{License: tt.license}, Defaults: tt.defaults})
 		if !reflect.DeepEqual(got, tt.want) {
 			t.Errorf("%s %v: got %q, want %q", tt.license, tt.defaults, got, tt.want)
 		}

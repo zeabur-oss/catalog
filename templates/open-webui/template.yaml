@@ -1,0 +1,131 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: Open WebUI
+  description: >-
+    Authenticated LLM interface with private pipelines; requires acceptance of
+    the branding-preservation license.
+  license: LicenseRef-Open-WebUI AND MIT
+  # Also: https://github.com/open-webui/pipelines
+  homepage: https://github.com/open-webui/open-webui
+  categories: [ai]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: open-webui
+    securityProfile: restricted
+    ports: [{name: http, port: 8080}]
+    resources: {requests: {cpu: 500m, memory: 1Gi}, limits: {cpu: "2", memory: 4Gi}}
+    domains: ['{{ .Domain }}']
+  - name: pipeline
+    securityProfile: restricted
+    ports: [{name: http, port: 9099}]
+    resources: {requests: {cpu: 200m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+
+inputs:
+  - name: licenseOptIn
+    description: >-
+      Read the upstream Open WebUI License, including branding obligations; type
+      I-ACCEPT-OPENWEBUI-LICENSE to accept.
+    required: true
+    validation: {pattern: ^I-ACCEPT-OPENWEBUI-LICENSE$}
+  - name: adminEmail
+    description: >-
+      Initial administrator email; password is generated in
+      app-secrets/admin-password.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
+  - name: adminPassword
+    description: adminPassword generated credential; retain during upgrades.
+    generate: random
+    secret: {name: app-secrets, key: admin-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: sessionKey
+    description: sessionKey generated credential; retain during upgrades.
+    generate: random
+    secret: {name: app-secrets, key: session-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: pipelineKey
+    description: pipelineKey generated credential; retain during upgrades.
+    generate: random
+    secret: {name: app-secrets, key: pipeline-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: >-
+    Both UI and pipeline service run as UID1000 without capabilities, on
+    read-only images. Initial admin credentials and pipeline API key are
+    generated; signup is disabled.
+  egress:
+    - CoreDNS TCP/UDP53
+    - UI to pipeline TCP9099
+    - >-
+      Public HTTPS TCP443 for provider APIs, model assets and pipeline
+      dependencies; RFC1918/link-local blocked.
+  risks:
+    - risk: >-
+        Open WebUI uses a custom source-available license with branding
+        obligations. It is not OSI-approved.
+      mitigation: >-
+        Required exact license acknowledgment; retain all upstream branding.
+        Section 4 allows branding changes only for at most 50 end users in a
+        rolling 30-day period, or with written or enterprise permission. This
+        template keeps the upstream branding.
+    - risk: >-
+        Pipelines and administrator-added tools execute Python with provider
+        credentials.
+      mitigation: >-
+        Trust every installed pipeline and dependency as application code; keep
+        service private to UI; no Kubernetes tokens, host sockets or
+        private-network egress. Python packages install to the writable pipeline
+        volume. Packages that need root (apt or browser system libraries) cannot
+        install at runtime; build them into your own pinned image.
+    - risk: External model providers receive chat content and uploaded document data.
+      mitigation: >-
+        Read each provider's privacy terms before you connect it. Ollama is
+        disabled; add provider connections in the admin settings.
+
+scalability:
+  summary: >-
+    Single replica with node-local persistent storage. The template has no high
+    availability.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - local-path volumes are tied to one node and have no snapshots.
+    - >-
+      The UI stores data in SQLite on its volume; the pipeline volume holds
+      installed pipeline code and packages. Neither supports more than one
+      writer.
+
+upgradeNotes:
+  - >-
+    Back up persistent state off-node before accepting an image digest or schema
+    migration; restore into a separate namespace before cutover.
+  - >-
+    Stop both Deployments, then back up the UI volume, the pipeline volume and
+    app-secrets together. Keep the previous image digest pair; UI schema
+    migrations and pipeline dependency changes can prevent rollback.
+  - >-
+    Keep app-secrets/session-key (WEBUI_SECRET_KEY). A new value signs out all
+    users.
+  - >-
+    ENABLE_PERSISTENT_CONFIG is false. Settings from the manifest environment
+    apply again at each restart.
+  - A change of embedding model requires you to re-embed stored documents.
+  - >-
+    Both images pin a digest of the upstream main branch. Read the upstream
+    changes and the license before you move to a newer digest.
+
+smoke:
+  - name: open-webui-ready
+    resource: deployment/open-webui
+    condition: condition=Available
+    timeout: 600s
+    http: {service: open-webui, port: 8080, path: /health, status: 200}
+  - name: pipeline-ready
+    resource: deployment/pipeline
+    condition: condition=Available
+    timeout: 600s
+    http: {service: pipeline, port: 9099, path: /, status: 200}

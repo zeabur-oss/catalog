@@ -1,0 +1,256 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: LibreChat
+  description: >-
+    Authenticated AI chat with Percona-managed MongoDB, CNPG pgvector RAG and
+    private community Meilisearch.
+  license: MIT AND SSPL-1.0 AND PostgreSQL AND Apache-2.0
+  # Also: https://github.com/danny-avila/rag_api, https://github.com/percona/percona-server-mongodb-operator, https://cloudnative-pg.io/, https://github.com/meilisearch/meilisearch
+  homepage: https://github.com/danny-avila/LibreChat
+  categories: [ai]
+
+requires:
+  - databases/percona-mongodb
+  - databases/cloudnative-pg
+  - ingress/traefik
+  - certificates/cert-manager
+
+services:
+  - name: librechat
+    securityProfile: restricted
+    ports: [{name: http, port: 3080}]
+    resources: {requests: {cpu: 500m, memory: 1Gi}, limits: {cpu: "2", memory: 3Gi}}
+    domains: ['{{ .Domain }}']
+  - name: rag-api
+    securityProfile: restricted
+    ports: [{name: http, port: 8000}]
+    resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+  - name: meilisearch
+    securityProfile: restricted
+    ports: [{name: http, port: 7700}]
+    resources: {requests: {cpu: 200m, memory: 512Mi}, limits: {cpu: "1", memory: 2Gi}}
+  - name: rag-db
+    securityProfile: restricted
+    ports: [{name: postgresql, port: 5432}]
+    resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+  - name: mongodb
+    securityProfile: restricted
+    ports: [{name: mongodb, port: 27017}]
+    resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+
+inputs:
+  - name: licenseOptIn
+    description: >-
+      The Percona MongoDB server uses SSPL-1.0. Read section 13 on
+      service-offering obligations, then type I-ACCEPT-MONGODB-SSPL.
+    required: true
+    validation: {pattern: ^I-ACCEPT-MONGODB-SSPL$}
+  - name: adminEmail
+    description: >-
+      Initial administrator email; password is generated in
+      app-secrets/admin-password. Public registration is disabled. Changing the
+      Secret later does not reset an existing password.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
+  - name: providerSecret
+    description: Existing Secret with real OPENAI_API_KEY used by chat and RAG embeddings.
+    required: true
+    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: adminPassword
+    description: adminPassword generated credential; retain during upgrades.
+    generate: random
+    secret: {name: app-secrets, key: admin-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: mongoPassword
+    description: mongoPassword generated credential; retain during upgrades.
+    generate: random
+    secret: {name: app-secrets, key: mongo-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: jwtSecret
+    description: jwtSecret generated credential; retain during upgrades.
+    generate: random
+    secret: {name: app-secrets, key: jwt-secret}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: jwtRefreshSecret
+    description: jwtRefreshSecret generated credential; retain during upgrades.
+    generate: random
+    secret: {name: app-secrets, key: jwt-refresh-secret}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: credsKey
+    description: credsKey generated credential; retain during upgrades.
+    generate: random
+    secret: {name: app-secrets, key: creds-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: credsIv
+    description: credsIv generated credential; retain during upgrades.
+    generate: random
+    secret: {name: app-secrets, key: creds-iv}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: meiliKey
+    description: meiliKey generated credential; retain during upgrades.
+    generate: random
+    secret: {name: app-secrets, key: meili-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: backupDestination
+    description: Unique S3 bucket/prefix for CNPG WAL/base backups.
+    required: true
+    validation: {pattern: '^s3://[a-z0-9][a-z0-9.-]+/[A-Za-z0-9/_-]+$'}
+  - name: backupEndpoint
+    description: S3-compatible HTTPS endpoint, publicly trusted certificate, TCP443.
+    required: true
+    validation: {pattern: '^https://[a-zA-Z0-9.-]+(:443)?$'}
+  - name: backupSecret
+    description: 'Existing CNPG S3 credential Secret: ACCESS_KEY_ID and ACCESS_SECRET_KEY.'
+    required: true
+    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: backupCidr
+    description: S3 endpoint IPv4 CIDR as seen by the CNI.
+    required: true
+    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
+  - name: kubeApiCidr
+    description: Kubernetes API IPv4 CIDR as seen by the CNI.
+    required: true
+    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
+  - name: mongoBackupBucket
+    description: Dedicated MongoDB S3 backup bucket.
+    required: true
+    validation: {pattern: '^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$'}
+  - name: mongoBackupPrefix
+    description: Unique MongoDB backup prefix. Use a different prefix from the CNPG destination.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9/_-]+$'}
+  - name: mongoBackupSecret
+    description: >-
+      Existing Percona S3 credential Secret: AWS_ACCESS_KEY_ID and
+      AWS_SECRET_ACCESS_KEY.
+    required: true
+    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: backupRegion
+    description: S3 region for Percona Backup for MongoDB.
+    required: true
+    validation: {pattern: '^[a-z0-9][a-z0-9-]+$'}
+
+security:
+  summary: >-
+    Restricted non-root app pods with read-only images and no API token.
+    TLS/authenticated Percona operands remain restricted with one writable-root
+    exception for hardcoded /tmp TLS material. CNPG uses scoped operator-managed
+    tokens.
+  egress:
+    - Explicit internal Mongo27017, Meili7700, RAG8000, PostgreSQL5432 flows.
+    - CoreDNS TCP/UDP53; public HTTPS443 for application providers.
+    - Database peer27017 or5432/8000; backup CIDR443 and CNPG API CIDR443/6443.
+  risks:
+    - risk: >-
+        Percona v1.23.1 main/PBM entry scripts write hardcoded /tmp/tls.pem and
+        tls-internal.pem; CR lacks a main-container /tmp mount override.
+      mitigation: >-
+        Explicit operator-only readOnlyRootFilesystem=false exception; keep TLS
+        requireTLS, UID1001, drop ALL, no escalation, RuntimeDefault. All
+        ordinary application images remain read-only; no post-reconcile mutation
+        or TLS disablement.
+    - risk: >-
+        The MongoDB server license (SSPL-1.0) imposes service-offering
+        obligations. SSPL is not OSI-approved.
+      mitigation: >-
+        Required exact license acknowledgment and private app-only Mongo
+        service. The Apache-2.0 operator license covers only the operator.
+        Meilisearch uses the MIT community image; BUSL enterprise modules are
+        not included.
+    - risk: CNPG instance manager requires Kubernetes API credentials.
+      mitigation: >-
+        The catalog operator creates a per-cluster SA/RBAC; permit only the
+        explicit API endpoint CIDR. Ordinary app and Percona operand tokens are
+        disabled.
+    - risk: >-
+        Meilisearch has no catalog operator, and local files and databases have
+        separate recovery points.
+      mitigation: >-
+        Hardened single-replica StatefulSet. Take coordinated backups of files,
+        MongoDB, pgvector, Meilisearch dumps and generated Secrets; stop writers
+        for a consistent file backup. Test a complete restore in an isolated
+        namespace, including login, saved credentials, search and document
+        retrieval.
+    - risk: The app shows the upstream LibreChat privacy policy and terms links.
+      mitigation: Configure your own privacy policy and terms of service before public use.
+
+scalability:
+  summary: >-
+    One application/RAG/Meili/PG replica. Mongo has three operator-managed
+    voting members across three nodes, but app PVC and single PG still prevent
+    full-stack HA.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - local-path volumes are tied to one node and have no snapshots.
+    - >-
+      At least three schedulable nodes are required by MongoDB anti-affinity.
+      Explicit MongoDB FQDNs assume the cluster DNS suffix cluster.local.
+    - >-
+      Application file PVC, Meili state and pgvector database are
+      single-instance; no app HPA.
+    - >-
+      Compatible catalog CNPG+Barman and Percona operators plus real
+      backup/provider Secrets must exist. NetworkPolicies select the operators
+      in namespaces psmdb-operator and cnpg-system; adjust them for other
+      install locations.
+
+upgradeNotes:
+  - >-
+    Back up persistent state off-node before accepting an image digest or schema
+    migration; restore into a separate namespace before cutover.
+  - >-
+    Keep credsKey, credsIv, the JWT secrets and the database passwords. A new
+    creds key or IV makes stored provider credentials unreadable.
+  - >-
+    Upgrade the app, RAG API and Meilisearch together and test sign-in, saved
+    credentials, search and RAG. Restoring the previous image does not undo
+    database schema or index migrations.
+  - >-
+    MongoDB feature-compatibility upgrades and Percona auto-update are off. Keep
+    the operator at CR version 1.23.1 with MongoDB 8.0.32 and PBM 2.15. Change
+    PostgreSQL major versions through a CNPG migration and check pgvector
+    compatibility.
+  - >-
+    CNPG takes a daily base backup at 02:00 UTC and keeps 7 days of WAL and base
+    backups. PBM takes a daily logical MongoDB backup and keeps seven;
+    point-in-time recovery is off.
+
+smoke:
+  - name: librechat-ready
+    resource: deployment/librechat
+    condition: condition=Available
+    timeout: 600s
+    http: {service: librechat, port: 3080, path: /health, status: 200}
+  - name: rag-api-ready
+    resource: deployment/rag-api
+    condition: condition=Available
+    timeout: 600s
+    http: {service: rag-api, port: 8000, path: /health, status: 200}
+  - name: meilisearch-ready
+    resource: statefulset/meilisearch
+    condition: jsonpath={.status.readyReplicas}=1
+    timeout: 600s
+    http: {service: meilisearch, port: 7700, path: /health, status: 200}
+  - name: mongodb-ready
+    resource: perconaservermongodb/mongodb
+    condition: jsonpath={.status.state}=ready
+    timeout: 1200s
+  - name: mongodb-initial-backup
+    resource: perconaservermongodbbackup/mongodb-initial
+    condition: jsonpath={.status.state}=ready
+    timeout: 600s
+  - name: pgvector-ready
+    resource: cluster/rag-db
+    condition: condition=Ready
+    timeout: 600s
+    sql:
+      cluster: rag-db
+      database: rag
+      query: SELECT count(*) FROM pg_extension WHERE extname='vector'
+      expect: "1"
+  - name: pgvector-initial-backup
+    resource: backup/rag-db-initial
+    condition: jsonpath={.status.phase}=completed
+    timeout: 600s

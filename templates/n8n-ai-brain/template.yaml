@@ -1,0 +1,197 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: n8n (AI Brain)
+  description: >-
+    Workflow automation with PostgreSQL17, Barman Cloud backups and isolated
+    external code runners; Sustainable Use License opt-in.
+  license: LicenseRef-n8n-Sustainable-Use AND PostgreSQL AND Apache-2.0
+  # Also: https://cloudnative-pg.io/, https://github.com/cloudnative-pg/plugin-barman-cloud
+  homepage: https://github.com/n8n-io/n8n
+  icon: https://github.com/n8n-io.png
+  categories: [ai, automation]
+
+requires:
+  - ingress/traefik
+  - certificates/cert-manager
+  - databases/cloudnative-pg
+
+services:
+  - name: n8n
+    securityProfile: restricted
+    ports: [{name: http, port: 5678}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}
+    domains: ['{{ .Domain }}']
+  - {name: n8n-runners, securityProfile: restricted, resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}}
+  - name: n8n-db
+    securityProfile: restricted
+    ports: [{name: postgresql, port: 5432}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}
+
+inputs:
+  - name: encryptionKey
+    description: >-
+      Encryption key for stored workflow credentials. Preserve permanently with
+      encrypted backups.
+    generate: random
+    secret: {name: app-secrets, key: encryption-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: runnerToken
+    description: Shared authentication token for isolated external JavaScript/Python runners.
+    generate: random
+    secret: {name: app-secrets, key: runner-token}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: jwtKey
+    description: Persistent user-management JWT secret.
+    generate: random
+    secret: {name: app-secrets, key: jwt-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: licenseOptIn
+    description: >-
+      Read the n8n Sustainable Use License. It allows use only for internal
+      business, personal or noncommercial purposes; hosted resale needs a
+      separate license. Type I-ACCEPT-N8N-SUSTAINABLE-USE.
+    required: true
+    validation: {pattern: ^I-ACCEPT-N8N-SUSTAINABLE-USE$}
+  - name: adminCidr
+    description: >-
+      Administrator IPv4 source CIDR as seen by Traefik. Restricts UI and
+      first-owner setup; public workflow webhooks remain open. Prefer your fixed
+      IP /32.
+    required: true
+    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
+  - name: backupDestination
+    description: >-
+      Dedicated S3 bucket/prefix, unique to this database; never reuse a live
+      cluster backup prefix.
+    required: true
+    validation: {pattern: '^s3://[a-z0-9][a-z0-9.-]+/[A-Za-z0-9/_-]+$'}
+  - name: backupEndpoint
+    description: S3-compatible HTTPS endpoint on TCP443 with publicly trusted certificate.
+    required: true
+    validation: {pattern: '^https://[a-zA-Z0-9.-]+(:443)?$'}
+  - name: backupSecret
+    description: >-
+      Existing namespaced Secret with ACCESS_KEY_ID and ACCESS_SECRET_KEY;
+      provision out of band.
+    required: true
+    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: backupCidr
+    description: S3 IPv4 egress CIDR; update when endpoint addresses change.
+    required: true
+    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
+  - name: kubeApiCidr
+    description: >-
+      Kubernetes API IPv4 egress CIDR as enforced by the CNI; permit the actual
+      API endpoint/service address.
+    required: true
+    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
+
+security:
+  summary: >-
+    Non-root restricted app and isolated external runners, no app API tokens,
+    read-only roots. UI source-CIDR restricted before owner setup; public HTTPS
+    webhooks only. CNPG owns scoped database RBAC/tokens; Barman archives to
+    required real S3 destination.
+  egress:
+    - Cluster DNS UDP/TCP 53
+    - >-
+      Public Internet TCP 80/443; excludes private, loopback, link-local, CGNAT
+      and multicast IPv4 destinations
+    - n8n to n8n-db TCP5432 with CA-verified TLS
+    - External runners to n8n broker TCP5679 only plus cluster DNS
+    - CNPG peer TCP5432/8000, Kubernetes API CIDR TCP443/6443 and S3 CIDR TCP443
+  risks:
+    - risk: >-
+        n8n is fair-code under the Sustainable Use License, which restricts use
+        and distribution. It is not OSI open source.
+      mitigation: >-
+        Required exact licenseOptIn acknowledgment blocks rendering until
+        accepted. Use only under applicable
+        internal-business/personal/noncommercial grants or obtain a separate
+        license.
+    - risk: >-
+        Initial owner signup is unauthenticated; workflow authors can access
+        connected credentials and public webhook triggers can be abused.
+      mitigation: >-
+        Required source-CIDR allowlist protects UI/owner creation. Public
+        ingress exposes only the production /webhook and /webhook-waiting paths;
+        editor, test webhooks and forms stay behind adminCidr. Authenticate each
+        webhook in workflow design. Limit authors to trusted operators; the
+        instance is no sandbox for untrusted tenant workflows. Community package
+        installation is disabled.
+    - risk: >-
+        CNPG instance managers require Kubernetes API permissions and S3 backup
+        credentials.
+      mitigation: >-
+        Use the catalog CNPG+Barman installation, operator-managed scoped
+        service accounts, explicit API/S3 egress CIDRs and separate existing S3
+        credential Secret.
+    - risk: N8N_PROXY_HOPS=1 assumes Traefik is the only proxy in front of n8n.
+      mitigation: >-
+        Change N8N_PROXY_HOPS if you add another proxy or load balancer that
+        sets forwarding headers.
+
+scalability:
+  summary: >-
+    One n8n main, one runner and one PostgreSQL primary. RWO node-local volumes
+    have no HA. Barman backs up PostgreSQL only; test a restore before relying
+    on it.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      Horizontal n8n execution requires separately designed queue mode, worker
+      runners, shared binary storage and Redis/Valkey; no naive replica
+      increase.
+    - >-
+      local-path is node-local with no snapshots. Barman does not back up the
+      application PVC or the encryption key: stop n8n and copy the PVC and
+      encrypted app-secrets off-node.
+    - S3 endpoint credentials/CIDR and Kubernetes API CIDR must match the environment.
+
+upgradeNotes:
+  - >-
+    PostgreSQL 17 runs as a CNPG Cluster with generated least-privilege app
+    credentials, CA-verified TLS, WAL archiving, a daily base backup and 7-day
+    retention.
+  - >-
+    Restore the CNPG backup to a separate cluster and preserve n8n
+    encryption/JWT keys plus application PVC before upgrade. After restore,
+    check that stored credentials decrypt and workflows run. Never rotate the
+    encryption key without upstream credential migration.
+  - >-
+    Keep n8n and external runner image versions identical. Read n8n database
+    migration notes and PostgreSQL minor changes; never change database major
+    through an ordinary digest update. Do not downgrade n8n after it has
+    migrated the database.
+  - >-
+    Complete native owner setup from adminCidr. Behind an external load
+    balancer, check the source IP that Traefik sees; the allowlist ignores
+    X-Forwarded-For.
+  - >-
+    GENERIC_TIMEZONE and TZ are Asia/Taipei. Change them in the manifest if
+    schedule triggers must use another timezone.
+  - >-
+    No SMTP server is configured. Invitations and password-reset mail need SMTP
+    settings and an egress rule for the SMTP endpoint.
+
+smoke:
+  - name: database-ready
+    resource: cluster/n8n-db
+    condition: condition=Ready
+    timeout: 600s
+    sql: {cluster: n8n-db, database: n8n, query: SELECT 1, expect: "1"}
+  - name: initial-backup-completed
+    resource: backup/n8n-db-initial
+    condition: jsonpath={.status.phase}=completed
+    timeout: 600s
+  - name: n8n-ready
+    resource: deployment/n8n
+    condition: condition=Available
+    timeout: 600s
+    http: {service: n8n, port: 5678, path: /healthz/readiness, status: 200}
+  - name: runners-ready
+    resource: deployment/n8n-runners
+    condition: condition=Available
+    timeout: 600s

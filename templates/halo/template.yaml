@@ -1,0 +1,155 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: Halo
+  description: >-
+    Halo publishing with persistent site assets, CloudNativePG PostgreSQL 16 and
+    Barman S3 backups.
+  license: GPL-3.0-only AND PostgreSQL
+  # Also: https://cloudnative-pg.io/, https://cloudnative-pg.io/plugin-barman-cloud/
+  homepage: https://github.com/halo-dev/halo
+  icon: https://github.com/halo-dev.png
+  categories: [cms]
+
+requires:
+  - databases/cloudnative-pg
+  - ingress/traefik
+  - certificates/cert-manager
+
+services:
+  - name: halo
+    securityProfile: restricted
+    ports: [{name: http, port: 8090}]
+    resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+  - name: halo-db
+    securityProfile: restricted
+    ports: [{name: postgresql, port: 5432}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 1Gi}}
+
+inputs:
+  - name: backupDestination
+    description: >-
+      Dedicated S3 bucket/prefix for this deployment; never reuse another CNPG
+      cluster backup path.
+    required: true
+    validation: {pattern: '^s3://[a-z0-9][a-z0-9.-]+(?:/[A-Za-z0-9._/-]*)?$'}
+  - name: backupEndpoint
+    description: S3-compatible HTTPS endpoint on port 443.
+    required: true
+    validation: {pattern: '^https://[A-Za-z0-9.-]+(?::443)?/?$'}
+  - name: backupSecret
+    description: >-
+      Existing namespace S3 credentials Secret with keys ACCESS_KEY_ID and
+      ACCESS_SECRET_KEY.
+    required: true
+    validation: {pattern: '^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$'}
+  - name: backupCidr
+    description: >-
+      IPv4 destination CIDR of the S3 endpoint; include resolved addresses
+      required by your storage provider.
+    required: true
+    validation: {pattern: '^(?:[0-9]{1,3}\.){3}[0-9]{1,3}/(?:[0-9]|[12][0-9]|3[0-2])$'}
+  - name: kubeApiCidr
+    description: >-
+      IPv4 destination CIDR of the Kubernetes API reachable from pods; account
+      for CNI Service DNAT.
+    required: true
+    validation: {pattern: '^(?:[0-9]{1,3}\.){3}[0-9]{1,3}/(?:[0-9]|[12][0-9]|3[0-2])$'}
+
+security:
+  summary: >-
+    Restricted non-root application, read-only root and no API token; PostgreSQL
+    operands are managed by the catalog CloudNativePG/Barman operators with
+    their scoped service-account exception. Default-deny networking.
+  egress:
+    - Cluster DNS
+    - >-
+      Halo -> halo-db PostgreSQL TCP 5432; public HTTPS 443 for plugin/theme
+      downloads.
+    - >-
+      CNPG -> explicitly supplied Kubernetes API CIDR TCP 443/6443 and S3 backup
+      CIDR TCP 443.
+  risks:
+    - risk: >-
+        CNPG instance managers need the Kubernetes API and a scoped
+        service-account token; the template cannot directly harden
+        operator-generated Pods.
+      mitigation: >-
+        Trust the pinned catalog operator, enforce namespace Pod Security
+        restricted, inspect the generated Pods, and restrict API egress to
+        kubeApiCidr.
+    - risk: >-
+        A wrong kubeApiCidr stops database reconciliation. A wrong backupCidr
+        stops WAL archiving and backups.
+      mitigation: >-
+        Use the IPv4 ranges that pods reach after CNI Service DNAT, and check
+        that backup/halo-initial completes.
+    - risk: The first visitor can initialize the Halo administrator account.
+      mitigation: >-
+        Finish initialization with kubectl port-forward before publishing
+        Ingress DNS and restrict Traefik externally during provisioning.
+    - risk: Database backups do not include local Halo attachments, plugins or themes.
+      mitigation: >-
+        Back up the Halo PVC off-node as well as the Barman object store, and
+        test a coordinated restore. The built-in Halo backup also stays on the
+        node.
+    - risk: >-
+        Halo egress allows public HTTPS only. Plugins and themes from private
+        repositories cannot download.
+      mitigation: >-
+        Add a separate NetworkPolicy egress rule scoped to the private
+        repository address.
+
+scalability:
+  summary: One writable instance on node-local storage, with no failover.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      local-path volumes are node-local and provide no snapshots or cross-node
+      failover.
+    - >-
+      A single writable application instance is intentional; do not increase
+      replicas without an application-specific storage/database design.
+    - >-
+      The database runs one PostgreSQL instance. More instances need multi-node
+      replicated storage; a replica count edit alone is not enough.
+
+upgradeNotes:
+  - >-
+    Back up persistent application data and its database to storage outside the
+    node before updating the image digest.
+  - >-
+    Database migrations can be one-way. Restore a copy into a separate namespace
+    and test the upgrade there first: migrations, login, publishing, file access
+    and plugin loading.
+  - >-
+    Keep PostgreSQL major version 16. The pinned image is PostgreSQL 16.15 on
+    Debian trixie. Upgrade the operator and Barman plugin only through the
+    catalog.
+  - >-
+    Halo keeps its work directory in /var/lib/halo. To move an existing install,
+    copy the contents of its .halo2 directory into this volume. Do not copy the
+    parent /root directory.
+  - >-
+    CNPG generates halo-db-app credentials; never overwrite or regenerate that
+    Secret during re-render.
+  - >-
+    Choose a unique backup destination and create the S3 credentials Secret
+    before applying. Barman takes an initial backup, a daily backup at 02:00 UTC
+    with 30-day retention, and archives WAL continuously. Test a restore before
+    you rely on it.
+
+smoke:
+  - name: application-ready
+    resource: statefulset/halo
+    condition: jsonpath={.status.readyReplicas}=1
+    timeout: 600s
+  - name: postgresql-ready
+    resource: cluster/halo-db
+    condition: condition=Ready
+    timeout: 900s
+  - name: initial-database-backup-completed
+    resource: backup/halo-initial
+    condition: jsonpath={.status.phase}=completed
+    timeout: 600s

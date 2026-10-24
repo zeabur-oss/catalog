@@ -1,0 +1,150 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: MongoDB
+  description: >-
+    MongoDB8.0 replica set managed by Percona Operator, with enforced SSPL
+    opt-in and S3 backups.
+  license: SSPL-1.0 AND Apache-2.0
+  # Also: https://www.mongodb.com/legal/licensing/server-side-public-license, https://docs.percona.com/percona-operator-for-mongodb/
+  homepage: https://github.com/percona/percona-server-mongodb-operator
+  icon: https://cdn.zeabur.com/marketplace/mongodb.svg
+  categories: [databases]
+
+requires: [databases/percona-mongodb, certificates/cert-manager]
+
+services:
+  - name: mongodb
+    securityProfile: restricted
+    ports: [{name: mongodb-tls, port: 27017}]
+    resources: {requests: {cpu: 300m, memory: 768Mi}, limits: {cpu: 3000m, memory: 3Gi}}
+
+inputs:
+  - name: licenseOptIn
+    description: >-
+      Read the linked license restrictions and explicitly acknowledge
+      applicability to your deployment.
+    required: true
+    validation: {pattern: ^I-ACCEPT-MONGODB-SSPL$}
+  - name: applicationPassword
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: mongodb-app-password, key: password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: backupBucket
+    description: Dedicated existing S3 bucket for MongoDB backups.
+    required: true
+    validation: {pattern: '^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$'}
+  - name: backupPrefix
+    description: Unique backup prefix; never share between clusters.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9][A-Za-z0-9/_-]*$'}
+  - name: backupRegion
+    description: S3 region.
+    required: true
+    validation: {pattern: '^[a-z0-9][a-z0-9-]*$'}
+  - name: backupEndpoint
+    description: Trusted HTTPS443 S3-compatible endpoint.
+    required: true
+    validation: {pattern: '^https://[a-zA-Z0-9.-]+(:443)?$'}
+  - name: backupSecret
+    description: >-
+      Existing Secret containing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
+      Ambient cloud identity is not used.
+    required: true
+    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: backupCidr
+    description: IPv4 CIDR for S3 endpoint as seen by CNI.
+    required: true
+    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
+
+security:
+  summary: >-
+    TLS-only, authenticated Percona-managed namespace replica set; nonroot
+    restricted Pod Security contexts. Explicit writable-root exception for
+    immutable PS/PBM TLS scripts; no privileged or public database service.
+  egress:
+    - DNS TCP/UDP53 to kube-dns
+    - Replica-set peer TLS27017
+    - Backup S3 CIDR HTTPS443
+  risks:
+    - risk: >-
+        MongoDB (Percona Server) is SSPL-1.0 source-available software. Offering
+        it as a third-party managed service carries broad source-disclosure
+        obligations. The SSPL opt-in does not grant extra permissions.
+      mitigation: >-
+        Required licenseOptIn=I-ACCEPT-MONGODB-SSPL and opt-in
+        databases/percona-mongodb capability. Read the legal terms and obtain an
+        appropriate agreement if needed.
+    - risk: The single-member replica set has no redundancy or failover.
+      mitigation: >-
+        unsafeFlags.replsetSize=true allows one member. Use backups and PITR,
+        and move to 3 members on separate nodes for availability.
+    - risk: >-
+        Pinned PS/PBM TLS entrypoints write /tmp/tls.pem; the CRD has no general
+        mongod extra-volume-mount field, so a read-only root breaks startup.
+      mitigation: >-
+        The writable root filesystem applies only to the PS and PBM containers.
+        They keep nonroot UID1001, ALL-capability drop, RuntimeDefault, no
+        escalation, token-off SA and bounded resources. Operator init stays
+        read-only. HOME=/ uses the operator-mounted /.mongodb volume.
+    - risk: The operator generates Pods, TLS certificates and system users at runtime.
+      mitigation: >-
+        Use the pinned catalog operator; the exact chart CRD schema is present
+        for strict validation. Check the generated Pods and backup state after
+        deployment.
+    - risk: MongoDB 8 has a known issue on Linux kernel 6.19 and later.
+      mitigation: >-
+        Check the node kernel version against MongoDB and Percona release notes
+        before deploying.
+
+scalability:
+  summary: >-
+    One replica-set member on a 10Gi node-local volume; no HA. Scale through
+    Percona to 3 voting members on 3 nodes.
+  replicas: 1
+  maxReplicas: 3
+  blockers:
+    - Single-member unsafeFlags.replsetSize=true has no redundancy.
+    - local-path is node-local, no snapshots; node loss requires off-node restore.
+    - >-
+      3 members require capacity and distinct nodes. Remove
+      unsafeFlags.replsetSize when scaling to 3. Replication does not replace
+      backups.
+
+upgradeNotes:
+  - >-
+    Preserve Secrets and PVCs. Back up data off-node and rehearse a restore
+    before changing image digests.
+  - >-
+    Images are Percona Server for MongoDB 8.0.32-14, operator init 1.23.1 and
+    PBM 2.15.0. Keep operator, chart and CRD versions compatible.
+  - >-
+    Backups are daily logical gzip dumps to S3 at 02:00 UTC with the last 7
+    kept, plus PITR oplog upload. A schedule does not show that backups succeed;
+    check backup and PBM status and rehearse a restore. Use a dedicated bucket,
+    prefix and credentials.
+  - >-
+    Do not automatically change MongoDB FCV; apply=disabled and setFCV=false.
+    Major upgrades and restore compatibility require MongoDB/Percona documented
+    procedures.
+  - >-
+    Connect using TLS and mounted mongodb-ssl CA, replicaSet=rs0,
+    authSource=zeabur, username app (readWrite on zeabur only) and
+    mongodb-app-password/password via app secretKeyRef. Seed host
+    mongodb-rs0-0.mongodb-rs0 in this namespace. Label authorized app Pods
+    templates.zeabur.com/database-client=mongodb.
+  - >-
+    Preserve system users, keyfile, encryption key, TLS material, app credential
+    Secret and PVCs; export backups before deletion. No PVC-delete finalizer is
+    installed.
+
+smoke:
+  - name: workload-ready
+    resource: psmdb/mongodb
+    condition: jsonpath={.status.state}=ready
+    timeout: 1200s
+  - name: initial-logical-backup
+    resource: perconaservermongodbbackup/mongodb-initial
+    condition: jsonpath={.status.state}=ready
+    timeout: 1200s

@@ -1,0 +1,371 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: halo-data
+  namespace: '{{ .Namespace }}'
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: halo-backups
+  namespace: '{{ .Namespace }}'
+spec:
+  retentionPolicy: 30d
+  configuration:
+    destinationPath: '{{ .Inputs.backupDestination }}'
+    endpointURL: '{{ .Inputs.backupEndpoint }}'
+    s3Credentials:
+      accessKeyId:
+        name: '{{ .Inputs.backupSecret }}'
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: '{{ .Inputs.backupSecret }}'
+        key: ACCESS_SECRET_KEY
+    wal:
+      compression: gzip
+    data:
+      compression: gzip
+  instanceSidecarConfiguration:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: '1'
+        memory: 512Mi
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Backup
+metadata:
+  name: halo-initial
+  namespace: '{{ .Namespace }}'
+spec:
+  cluster:
+    name: halo-db
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: halo-daily
+  namespace: '{{ .Namespace }}'
+spec:
+  schedule: 0 0 2 * * *
+  backupOwnerReference: self
+  cluster:
+    name: halo-db
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: halo
+  namespace: '{{ .Namespace }}'
+spec:
+  serviceName: halo
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: halo
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: halo
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: halo
+        image: halohub/halo:2.27.0@sha256:4cef0ad93ed967b34970c97ae325045100c26d69157c095007c2e3bab95576d1
+        ports:
+        - name: http
+          containerPort: 8090
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: '2'
+            memory: 2Gi
+        env:
+        - name: HALO_WORK_DIR
+          value: /var/lib/halo
+        - name: SPRING_CONFIG_LOCATION
+          value: optional:classpath:/;optional:file:/var/lib/halo/
+        - name: HALO_EXTERNAL_URL
+          value: https://{{ .Domain }}
+        - name: SPRING_R2DBC_URL
+          value: r2dbc:pool:postgresql://halo-db-rw:5432/halo
+        - name: SPRING_SQL_INIT_PLATFORM
+          value: postgresql
+        - name: JVM_OPTS
+          value: -XX:MaxRAMPercentage=70 -Djava.io.tmpdir=/tmp
+        - name: SPRING_R2DBC_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: halo-db-app
+              key: username
+        - name: SPRING_R2DBC_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: halo-db-app
+              key: password
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/halo
+        - name: tmp
+          mountPath: /tmp
+        startupProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: http
+          failureThreshold: 120
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: http
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: http
+          periodSeconds: 20
+          failureThreshold: 6
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: halo-data
+      - name: tmp
+        emptyDir:
+          sizeLimit: 512Mi
+      terminationGracePeriodSeconds: 60
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: halo
+  namespace: '{{ .Namespace }}'
+spec:
+  selector:
+    app.kubernetes.io/name: halo
+  ports:
+  - name: http
+    port: 8090
+    targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: halo
+  namespace: '{{ .Namespace }}'
+  annotations:
+    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - '{{ .Domain }}'
+    secretName: halo-tls
+  rules:
+  - host: '{{ .Domain }}'
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: halo
+            port:
+              number: 8090
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: halo-network
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: halo
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: traefik
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: traefik
+    ports:
+    - protocol: TCP
+      port: 8090
+  egress:
+  - {{ dnsEgress }}
+  - to:
+    - podSelector:
+        matchLabels:
+          cnpg.io/cluster: halo-db
+    ports:
+    - protocol: TCP
+      port: 5432
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 0.0.0.0/8
+        - 10.0.0.0/8
+        - 100.64.0.0/10
+        - 127.0.0.0/8
+        - 169.254.0.0/16
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - 224.0.0.0/4
+        - 240.0.0.0/4
+    ports:
+    - protocol: TCP
+      port: 443
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: halo-db-network
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: halo-db
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: halo
+    ports:
+    - protocol: TCP
+      port: 5432
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: cnpg-system
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: cloudnative-pg
+    ports:
+    - protocol: TCP
+      port: 8000
+    - protocol: TCP
+      port: 5432
+  - from:
+    - podSelector:
+        matchLabels:
+          cnpg.io/cluster: halo-db
+    ports:
+    - protocol: TCP
+      port: 5432
+    - protocol: TCP
+      port: 8000
+  egress:
+  - {{ dnsEgress }}
+  - to:
+    - ipBlock:
+        cidr: '{{ .Inputs.kubeApiCidr }}'
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 6443
+  - to:
+    - ipBlock:
+        cidr: '{{ .Inputs.backupCidr }}'
+    ports:
+    - protocol: TCP
+      port: 443
+  - to:
+    - podSelector:
+        matchLabels:
+          cnpg.io/cluster: halo-db
+    ports:
+    - protocol: TCP
+      port: 5432
+    - protocol: TCP
+      port: 8000
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: halo-db
+  namespace: '{{ .Namespace }}'
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:16-minimal-trixie@sha256:f76ba02680a07bdafaa00c81827351b15e671ac11e0e6a0b72f8ee5835cc82c6
+  enableSuperuserAccess: false
+  enablePDB: true
+  postgresUID: 26
+  postgresGID: 26
+  seccompProfile:
+    type: RuntimeDefault
+  bootstrap:
+    initdb:
+      database: halo
+      owner: halo
+      encoding: UTF8
+  storage:
+    storageClass: local-path
+    size: 10Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: '2'
+      memory: 1Gi
+  postgresql:
+    parameters:
+      shared_buffers: 128MB
+      max_connections: '100'
+  plugins:
+  - name: barman-cloud.cloudnative-pg.io
+    isWALArchiver: true
+    parameters:
+      barmanObjectName: halo-backups

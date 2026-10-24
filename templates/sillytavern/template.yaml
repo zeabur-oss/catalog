@@ -1,0 +1,92 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: SillyTavern
+  description: >-
+    Private LLM frontend with generated Basic authentication and persistent
+    conversations.
+  license: AGPL-3.0-only
+  homepage: https://github.com/SillyTavern/SillyTavern
+  icon: https://github.com/SillyTavern.png
+  categories: [ai]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: sillytavern
+    securityProfile: restricted
+    ports: [{name: http, port: 8000}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}
+    domains: ['{{ .Domain }}']
+
+inputs:
+  - name: basicPassword
+    description: >-
+      Basic authentication password for username user; generated, never a shared
+      default.
+    generate: random
+    secret: {name: app-secrets, key: basic-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: >-
+    Restricted non-root workload; read-only root filesystem, no service-account
+    token, dropped capabilities, HTTPS ingress only from Traefik. Default-deny
+    networking permits cluster DNS and public HTTP(S), excluding private and
+    link-local networks.
+  egress:
+    - Cluster DNS UDP/TCP 53
+    - >-
+      Public Internet TCP 80/443; excludes private, loopback, link-local, CGNAT
+      and multicast IPv4 destinations
+  risks:
+    - risk: >-
+        Authenticated users can configure outbound model/API connections and
+        access stored provider keys and chats.
+      mitigation: >-
+        Single trusted-user deployment; generated Basic auth over HTTPS.
+        Private-address filtering plus NetworkPolicy deny internal networks; a
+        local or private LLM backend needs an added NetworkPolicy rule. Do not
+        share credentials with untrusted users.
+    - risk: Plugins/extensions execute trusted code or browser scripts.
+      mitigation: >-
+        Server plugins and automatic extension updates/model downloads are
+        disabled. Check the code of each extension before installation.
+
+scalability:
+  summary: >-
+    One replica. Node-local RWO storage has no high availability; node loss
+    requires manual recovery from off-node backups.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - Sessions and rate limits are per process; multiple replicas are not supported
+    - >-
+      local-path is node-local and has no snapshots. In-app chat backups stay on
+      the same PVC and do not protect against node loss
+
+upgradeNotes:
+  - >-
+    Pin 1.19.0 by registry index digest; preserve app-secrets and all PVC
+    subdirectories before updates.
+  - >-
+    Stop the Deployment before copying the PVC off-node; local-path has no
+    snapshots or failover. Restore with the same generated authentication
+    secret. Do not run an older image on a PVC that a newer version has
+    migrated.
+  - >-
+    Login is HTTP Basic user user with the password in
+    app-secrets/basic-password. SillyTavern keeps its session secret in the data
+    directory.
+  - >-
+    config.yaml is rebuilt from the ConfigMap at each start; settings changed
+    only in the file are lost. Edit the ConfigMap instead. The host whitelist
+    contains only the deployment domain; render the template again if the domain
+    changes.
+
+smoke:
+  - name: sillytavern-ready
+    resource: deployment/sillytavern
+    condition: condition=Available
+    timeout: 300s
+    http: {service: sillytavern, port: 8000, path: /, status: 401}

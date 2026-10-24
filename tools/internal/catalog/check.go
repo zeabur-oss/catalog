@@ -87,7 +87,7 @@ func Check(root string, cat *Catalog) error {
 			}
 		}
 		if _, err := cat.InstallOrder(ids, p); err != nil {
-			fail("capabilities", "%s: %v", p, err)
+			fail("components", "%s: %v", p, err)
 		}
 	}
 	return errors.Join(errs...)
@@ -120,7 +120,7 @@ func (l Licenses) NotOSIApproved(expr string) []string {
 
 func (l Licenses) problems(c *Component) []string {
 	var out []string
-	for _, id := range l.NotOSIApproved(c.License) {
+	for _, id := range l.NotOSIApproved(c.Metadata.License) {
 		if !slices.Contains(l.OptInOnly, id) {
 			out = append(out, fmt.Sprintf("license %s is not OSI-approved", id))
 			continue

@@ -142,6 +142,29 @@ func (t *Tester) Test(id string) (res Result) {
 	return res
 }
 
+// Install installs refs and their dependencies, and returns a function that
+// uninstalls them. Templates use it to install what they require.
+func (t *Tester) Install(refs []string) (uninstall func() error, err error) {
+	r := &run{installed: map[string]bool{}, releases: map[string]bool{}, contributions: map[string][]string{}}
+	uninstall = func() error {
+		var errs []error
+		for _, undo := range slices.Backward(r.undo) {
+			errs = append(errs, undo())
+		}
+		return errors.Join(errs...)
+	}
+	order, err := t.Catalog.InstallOrder(refs, t.Profile)
+	if err != nil {
+		return uninstall, err
+	}
+	for _, c := range order {
+		if err := t.install(r, c); err != nil {
+			return uninstall, fmt.Errorf("install %s: %w", c.ID, err)
+		}
+	}
+	return uninstall, nil
+}
+
 func versions(c *Component) string {
 	var v []string
 	for _, r := range c.Releases {

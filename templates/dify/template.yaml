@@ -1,0 +1,353 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: Dify
+  description: >-
+    Dify LLM app development platform with PostgreSQL/pgvector, a Dragonfly
+    queue, a code sandbox and S3 object storage.
+  license: LicenseRef-Dify-Modified-Apache-2.0 AND BUSL-1.1 AND Apache-2.0 AND PostgreSQL
+  # Also: https://github.com/langgenius/dify-sandbox, https://cloudnative-pg.io/docs/, https://github.com/dragonflydb/dragonfly, https://github.com/dragonflydb/dragonfly-operator
+  homepage: https://github.com/langgenius/dify
+  icon: https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/dark/dify-color.png
+  categories: [ai]
+
+requires:
+  - databases/cloudnative-pg
+  - databases/dragonfly-operator
+  - ingress/traefik
+  - certificates/cert-manager
+
+services:
+  - name: dify
+    securityProfile: restricted
+    ports: [{name: http, port: 8080}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 2Gi}}
+    domains: ['{{ .Domain }}']
+  - name: dify-api
+    securityProfile: restricted
+    ports: [{name: http, port: 5001}]
+    resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+  - {name: dify-worker, securityProfile: restricted, resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}}
+  - {name: dify-beat, securityProfile: restricted, resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}}
+  - name: dify-web
+    securityProfile: restricted
+    ports: [{name: http, port: 3000}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 2Gi}}
+  - name: dify-plugin
+    securityProfile: restricted
+    ports: [{name: http, port: 5002}]
+    resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+  - name: dify-sandbox
+    securityProfile: baseline
+    ports: [{name: http, port: 8194}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 2Gi}}
+    baselineJustification: >-
+      Only this isolated code runner runs as root: SYS_CHROOT/SETUID/SETGID
+      establish the chroot and per-execution identities before upstream inner
+      seccomp. The prepare-runner init alone uses
+      CHOWN/DAC_OVERRIDE/FOWNER/FSETID to copy image-bundled runtime ownership
+      and modes into emptyDir. Neither container permits escalation or
+      privileged mode; all ordinary pods remain restricted.
+  - name: dify-proxy
+    securityProfile: restricted
+    ports: [{name: http, port: 3128}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 2Gi}}
+  - name: dify-dragonfly
+    securityProfile: restricted
+    ports: [{name: redis, port: 6379}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 2Gi}}
+  - name: dify-db
+    securityProfile: restricted
+    ports: [{name: postgresql, port: 5432}]
+    resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+
+inputs:
+  - name: dragonflyLicenseOptIn
+    description: >-
+      Dragonfly engine is BUSL-1.1 source-available. Offering third parties a
+      hosted/managed Dragonfly service or an in-memory data store product needs
+      a separate license. Read the pinned license and type
+      I-ACCEPT-DRAGONFLY-BUSL-1.1.
+    required: true
+    validation: {pattern: ^I-ACCEPT-DRAGONFLY-BUSL-1\.1$}
+  - name: dragonflyBackupDestination
+    description: >-
+      Existing S3 bucket and unique Dragonfly snapshot prefix, separate from
+      PostgreSQL/WAL and application object data.
+    required: true
+    validation:
+      pattern: ^s3://[a-z0-9][a-z0-9.-]+/[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*$
+  - name: dragonflyBackupEndpoint
+    description: >-
+      S3-compatible snapshot endpoint DNS name on HTTPS TCP443; omit the scheme.
+      The certificate must come from a publicly trusted CA; custom CAs are not
+      supported.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9][A-Za-z0-9.-]+$'}
+  - name: dragonflyBackupRegion
+    description: Region for the existing Dragonfly S3 snapshot bucket.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9-]+$'}
+  - name: dragonflyBackupCidr
+    description: IPv4 CIDR for the Dragonfly snapshot HTTPS endpoint as seen by the CNI.
+    required: true
+    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
+  - name: adminCidr
+    description: >-
+      Administrator IPv4 source CIDR as Traefik sees it. Restricts all console
+      API and first-owner setup; public apps and APIs remain public. Prefer your
+      fixed IP /32.
+    required: true
+    validation:
+      pattern: ^((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])/([1-9]|[12][0-9]|3[0-2])$
+  - name: backupDestination
+    description: Dedicated S3 bucket/unique cluster prefix for CNPG WAL and base backups.
+    required: true
+    validation: {pattern: '^s3://[a-z0-9][a-z0-9.-]+/[A-Za-z0-9/_-]+$'}
+  - name: backupEndpoint
+    description: S3-compatible backup endpoint using trusted HTTPS TCP443.
+    required: true
+    validation: {pattern: '^https://[a-zA-Z0-9.-]+(:443)?$'}
+  - name: backupSecret
+    description: >-
+      Existing namespaced S3 credentials Secret, keys ACCESS_KEY_ID and
+      ACCESS_SECRET_KEY.
+    required: true
+    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: backupCidr
+    description: IPv4 CIDR for backup endpoint as seen by the CNI.
+    required: true
+    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
+  - name: kubeApiCidr
+    description: Kubernetes API IPv4 CIDR as seen by the CNI.
+    required: true
+    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
+  - name: appKey
+    description: Generated app-key; retrieve from Secret dify-secrets, never from a public URL.
+    generate: random
+    secret: {name: dify-secrets, key: app-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: redisPassword
+    description: >-
+      Generated redis-password; retrieve from Secret dify-secrets, never from a
+      public URL.
+    generate: random
+    secret: {name: dify-secrets, key: redis-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: sandboxKey
+    description: >-
+      Generated sandbox-key; retrieve from Secret dify-secrets, never from a
+      public URL.
+    generate: random
+    secret: {name: dify-secrets, key: sandbox-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: storageEndpoint
+    description: >-
+      Existing public HTTPS S3-compatible object storage endpoint on TCP443 for
+      documents, model encryption keys and uploaded files.
+    required: true
+    validation: {pattern: '^https://[A-Za-z0-9.-]+(:443)?$'}
+  - name: storageRegion
+    description: Region for the S3-compatible storage bucket.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9-]+$'}
+  - name: storageBucket
+    description: Existing private S3 bucket dedicated to this application.
+    required: true
+    validation: {pattern: '^[a-z0-9][a-z0-9.-]+$'}
+  - name: storageSecret
+    description: >-
+      Existing namespaced S3 application credentials Secret with keys access-key
+      and secret-key.
+    required: true
+    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: licenseOptIn
+    description: >-
+      Dify modified Apache license: one workspace only without written
+      permission; keep all frontend logo/copyright. Type
+      I-ACCEPT-DIFY-SINGLE-WORKSPACE.
+    required: true
+    validation: {pattern: ^I-ACCEPT-DIFY-SINGLE-WORKSPACE$}
+
+security:
+  summary: >-
+    Restricted application/Dragonfly/gateway/proxy pods and a narrowly justified
+    baseline sandbox. Default-deny directional policies, generated secrets, TLS
+    ingress, operator-owned PostgreSQL/pgvector with Barman backups and
+    Dragonfly with S3 snapshots.
+  egress:
+    - CoreDNS TCP/UDP53.
+    - >-
+      Application integrations and controlled Squid proxy: public IPv4 TCP80/443
+      excluding private/link-local/loopback/reserved targets.
+    - Explicit internal application/database/queue flows only.
+    - >-
+      CNPG operator-managed API TCP443/6443 and backup endpoint TCP443
+      restricted to the input CIDRs.
+  risks:
+    - risk: >-
+        Dragonfly engine is BUSL-1.1 source-available and excludes third-party
+        hosted/managed service or in-memory data store product offerings under
+        its Additional Use Grant.
+      mitigation: >-
+        Required exact dragonflyLicenseOptIn=I-ACCEPT-DRAGONFLY-BUSL-1.1.
+        Operate only within the pinned license grant or obtain a separate
+        license; the Apache-2.0 operator does not relicense its engine. The
+        pinned engine license changes to Apache-2.0 on 2030-11-01.
+    - risk: >-
+        Five-minute Dragonfly snapshots replace Valkey AOF; writes, queued or
+        unacknowledged tasks and locks after the last successful snapshot may be
+        lost or replayed after recovery, with a longer window if backups fail.
+      mitigation: >-
+        The initial SAVE Job must complete. DB0/cache and DB1/Celery remain
+        separate; cache_mode=false avoids queue eviction. Stop beat/producers,
+        drain workers and checkpoint before cutover; reconcile jobs and
+        idempotency after restore. Old Valkey AOF, RDB or PVC data is not
+        imported.
+    - risk: Dify trigger/debug Lua scripts access keys outside their declared KEYS.
+      mitigation: >-
+        Dragonfly runs with allow-undeclared-keys. These scripts run with global
+        serialization and can reduce queue throughput.
+    - risk: >-
+        Unauthenticated first-owner setup and console administration must not be
+        reachable by arbitrary public clients.
+      mitigation: >-
+        Required adminCidr restricts /console/api through a higher-priority
+        Traefik ipAllowList router; other public app/API routes remain
+        unchanged. The allowlist uses the source address Traefik sees and
+        ignores client X-Forwarded-For. Check NAT and proxy source preservation;
+        allowing a shared load-balancer CIDR admits every client. Use a fixed
+        administrator address or a private ingress. Before you create the owner,
+        check that a request from outside adminCidr gets a Traefik denial.
+    - risk: Dify license restricts multi-workspace operation and frontend branding changes.
+      mitigation: >-
+        Required exact acknowledgement limits deployment to one workspace unless
+        written upstream permission exists. Unmodified frontend images retain
+        branding.
+    - risk: >-
+        Code runner needs root to set up chroot and drop to unique per-execution
+        identities.
+      mitigation: >-
+        Baseline-only exception with minimal caps and RuntimeDefault plus
+        upstream inner seccomp, generated API key, isolated
+        no-database-credential pod, proxy-only egress and bounded resources.
+    - risk: Plugins run trusted third-party code and access configured model integrations.
+      mitigation: >-
+        Keep FORCE_VERIFYING_SIGNATURE true, disable remote debugging/install
+        listener, only trusted administrator installs; one trust boundary and
+        restricted pod identity.
+    - risk: >-
+        CNPG instance managers require scoped Kubernetes API permissions and
+        Barman needs existing S3 credentials.
+      mitigation: >-
+        Use the catalog operator and its scoped service account; API and backup
+        egress use the input CIDRs. The initial backup check does not test
+        restore. Test recovery to independent storage.
+
+scalability:
+  summary: One instance per trusted owner; do not horizontally scale this deployment.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      One API migrator, one beat scheduler, single Dragonfly instance,
+      local-path plugin state, and one supported licensed workspace.
+    - >-
+      External S3 and Barman storage must exist; local-path is not HA or
+      snapshot storage.
+
+upgradeNotes:
+  - >-
+    Read and explicitly accept the Dify modified Apache license: exactly one
+    workspace unless separately authorized; keep frontend logos and copyright
+    unchanged.
+  - >-
+    Sandbox 0.2.15 runs each Python and JavaScript execution under its own UID.
+    Check code-runner protocol and syscall changes during upgrades.
+  - >-
+    Preserve CNPG application credentials, generated encryption/queue/sandbox
+    Secrets, PostgreSQL/Barman recovery chain, external S3 documents/keys, and
+    plugin storage PVC before updates. The Dify app key and the S3 key objects
+    are needed to decrypt model provider configuration. Stop writers before
+    filesystem exports.
+  - >-
+    PostgreSQL uses the CNPG standard image with pgvector as the vector store.
+    To migrate an existing instance that uses Weaviate, reindex its data into
+    pgvector. Do not change the PostgreSQL major version with an image-only
+    rollout; migrate logically or use a CNPG major upgrade.
+  - >-
+    Application object storage is an existing S3-compatible bucket with your
+    credentials. To migrate an existing instance, copy its objects into the
+    bucket.
+  - >-
+    Only API runs migrations; beat remains a single scheduler; Dragonfly
+    persists native recovery snapshots in S3 every five minutes, while plugin
+    storage remains a single-node PVC. Preserve queue credentials and DB0/DB1
+    separation; stop beat/producers, drain workers and checkpoint before
+    cutover. Reconcile lost/replayed tasks and expired locks after recovery. Old
+    Valkey AOF, RDB or PVC data is not imported. Dragonfly does not provide
+    Redis Stack modules; data that depends on them needs a separate migration.
+  - >-
+    Dragonfly startup autoload requires the preserved S3 prefix and matching
+    dump timestamp summary plus all shard files. A wrong/empty prefix starts
+    empty. Restore in isolation, verify DB0/cache, DB1/broker and representative
+    task state before restarting producers/workers; reconcile lost or replayed
+    jobs.
+  - >-
+    The initial Dragonfly snapshot Job runs once and does not monitor later
+    snapshots. Before every upgrade, run the same SAVE command in a separately
+    named Job, check that it completes, and test an isolated restore.
+  - >-
+    Dragonfly requires a separate BUSL-1.1 acknowledgement. Offering third
+    parties a hosted/managed Dragonfly or an in-memory data store product needs
+    a separate license.
+
+smoke:
+  - name: dify available
+    resource: deployment/dify
+    condition: condition=Available
+    timeout: 15m
+  - name: dify-api available
+    resource: deployment/dify-api
+    condition: condition=Available
+    timeout: 15m
+  - name: dify-worker available
+    resource: deployment/dify-worker
+    condition: condition=Available
+    timeout: 15m
+  - name: dify-beat available
+    resource: deployment/dify-beat
+    condition: condition=Available
+    timeout: 15m
+  - name: dify-web available
+    resource: deployment/dify-web
+    condition: condition=Available
+    timeout: 15m
+  - name: dify-plugin available
+    resource: deployment/dify-plugin
+    condition: condition=Available
+    timeout: 15m
+  - name: dify-sandbox available
+    resource: deployment/dify-sandbox
+    condition: condition=Available
+    timeout: 15m
+  - name: dify-proxy available
+    resource: deployment/dify-proxy
+    condition: condition=Available
+    timeout: 15m
+  - name: Database ready
+    resource: cluster/dify-db
+    condition: condition=Ready
+    timeout: 15m
+  - name: Initial PostgreSQL backup completed
+    resource: backup/dify-db-initial
+    condition: jsonpath={.status.phase}=completed
+    timeout: 600s
+  - name: Queue ready
+    resource: dragonfly/dify-dragonfly
+    condition: jsonpath={.status.phase}=Ready
+    timeout: 10m
+  - name: Initial Dragonfly S3 snapshot completed
+    resource: job/dify-dragonfly-initial
+    condition: condition=Complete
+    timeout: 600s

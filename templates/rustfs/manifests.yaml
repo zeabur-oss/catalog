@@ -1,0 +1,486 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: rustfs-bootstrap
+  namespace: '{{ .Namespace }}'
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: rustfs-ca
+  namespace: '{{ .Namespace }}'
+spec:
+  isCA: true
+  commonName: rustfs-private-ca
+  secretName: rustfs-ca
+  duration: 87600h
+  renewBefore: 8760h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  usages:
+  - cert sign
+  - crl sign
+  issuerRef:
+    name: rustfs-bootstrap
+    kind: Issuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: rustfs-ca
+  namespace: '{{ .Namespace }}'
+spec:
+  ca:
+    secretName: rustfs-ca
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: rustfs-server-tls
+  namespace: '{{ .Namespace }}'
+spec:
+  secretName: rustfs-server-tls
+  duration: 2160h
+  renewBefore: 360h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  dnsNames:
+  - rustfs
+  - 'rustfs.{{ .Namespace }}'
+  - 'rustfs.{{ .Namespace }}.svc'
+  - localhost
+  ipAddresses:
+  - 127.0.0.1
+  usages:
+  - digital signature
+  - server auth
+  issuerRef:
+    name: rustfs-ca
+    kind: Issuer
+    group: cert-manager.io
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: rustfs
+  namespace: '{{ .Namespace }}'
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rustfs-headless
+  namespace: '{{ .Namespace }}'
+spec:
+  clusterIP: None
+  selector:
+    app: rustfs
+  ports:
+  - name: s3-https
+    port: 9000
+    targetPort: s3-https
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rustfs
+  namespace: '{{ .Namespace }}'
+spec:
+  type: ClusterIP
+  selector:
+    app: rustfs
+  ports:
+  - name: s3-https
+    port: 9000
+    targetPort: s3-https
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rustfs
+  namespace: '{{ .Namespace }}'
+spec:
+  serviceName: rustfs-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rustfs
+  template:
+    metadata:
+      labels:
+        app: rustfs
+    spec:
+      serviceAccountName: rustfs
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: rustfs
+        image: docker.io/rustfs/rustfs:1.0.3@sha256:9ca9559533b537d10482fe923288b676ad08f92a7069d9a17327fbae3cab688b
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        command:
+        - /bin/sh
+        - -ec
+        - |
+          case "$RUSTFS_ACCESS_KEY" in
+            ''|rustfsadmin|*[!A-Za-z0-9_-]*) exit 1 ;;
+          esac
+          case "$RUSTFS_SECRET_KEY" in
+            ''|rustfsadmin|*[!A-Za-z0-9_-]*) exit 1 ;;
+          esac
+          test "${#RUSTFS_ACCESS_KEY}" -eq 43
+          test "${#RUSTFS_SECRET_KEY}" -eq 43
+          test -s /opt/tls/rustfs_cert.pem
+          test -s /opt/tls/rustfs_key.pem
+          test -s /opt/tls/public.crt
+          mkdir -p /data/.rustfs/events /data/.rustfs/audit
+          exec /entrypoint.sh rustfs
+        env:
+        - name: RUSTFS_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: rustfs-root-credentials
+              key: access-key
+        - name: RUSTFS_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: rustfs-root-credentials
+              key: secret-key
+        - name: RUSTFS_VOLUMES
+          value: /data
+        - name: RUSTFS_ADDRESS
+          value: ':9000'
+        - name: RUSTFS_REGION
+          value: us-east-1
+        - name: RUSTFS_CONSOLE_ENABLE
+          value: 'true'
+        - name: RUSTFS_CONSOLE_ADDRESS
+          value: '127.0.0.1:9001'
+        - name: RUSTFS_CONSOLE_CORS_ALLOWED_ORIGINS
+          value: https://localhost:9001
+        - name: RUSTFS_CORS_ALLOWED_ORIGINS
+          value: https://localhost:9001
+        - name: RUSTFS_TLS_PATH
+          value: /opt/tls
+        - name: RUSTFS_TLS_RELOAD_ENABLE
+          value: '1'
+        - name: RUSTFS_TLS_RELOAD_INTERVAL
+          value: '30'
+        - name: RUSTFS_TLS_KEYLOG
+          value: '0'
+        - name: RUSTFS_OBS_LOG_DIRECTORY
+          value: ''
+        - name: RUSTFS_OBS_LOGGER_LEVEL
+          value: warn
+        - name: RUSTFS_OBS_ENVIRONMENT
+          value: production
+        - name: RUSTFS_OBS_METRICS_EXPORT_ENABLED
+          value: 'false'
+        - name: RUSTFS_OBS_TRACES_EXPORT_ENABLED
+          value: 'false'
+        - name: RUSTFS_OBS_LOGS_EXPORT_ENABLED
+          value: 'false'
+        - name: RUSTFS_OBS_PROFILING_EXPORT_ENABLED
+          value: 'false'
+        ports:
+        - name: s3-https
+          containerPort: 9000
+        resources:
+          requests:
+            cpu: 250m
+            memory: 1Gi
+            ephemeral-storage: 128Mi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+            ephemeral-storage: 512Mi
+        startupProbe:
+          exec:
+            command:
+            - curl
+            - --silent
+            - --show-error
+            - --fail
+            - --max-time
+            - '4'
+            - --cacert
+            - /opt/tls/public.crt
+            - https://localhost:9000/health/ready
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 120
+        readinessProbe:
+          exec:
+            command:
+            - curl
+            - --silent
+            - --show-error
+            - --fail
+            - --max-time
+            - '4'
+            - --cacert
+            - /opt/tls/public.crt
+            - https://localhost:9000/health/ready
+          periodSeconds: 10
+          timeoutSeconds: 5
+        livenessProbe:
+          exec:
+            command:
+            - curl
+            - --silent
+            - --show-error
+            - --fail
+            - --max-time
+            - '4'
+            - --cacert
+            - /opt/tls/public.crt
+            - https://localhost:9000/health
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 6
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: tmp
+          mountPath: /tmp
+        - name: tls
+          mountPath: /opt/tls
+          readOnly: true
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 256Mi
+      - name: tls
+        secret:
+          secretName: rustfs-server-tls
+          defaultMode: 0440
+          items:
+          - key: tls.crt
+            path: rustfs_cert.pem
+          - key: tls.key
+            path: rustfs_key.pem
+          - key: ca.crt
+            path: public.crt
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      storageClassName: local-path
+      resources:
+        requests:
+          storage: '{{ .Inputs.storageSize }}'
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rustfs-initialize
+  namespace: '{{ .Namespace }}'
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 600
+  template:
+    metadata:
+      labels:
+        app: rustfs-initialize
+        templates.zeabur.com/rustfs-client: 'true'
+    spec:
+      serviceAccountName: rustfs
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: initialize
+        image: docker.io/rustfs/rustfs:1.0.3@sha256:9ca9559533b537d10482fe923288b676ad08f92a7069d9a17327fbae3cab688b
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+            ephemeral-storage: 16Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+            ephemeral-storage: 64Mi
+        env:
+        - name: RUSTFS_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: rustfs-root-credentials
+              key: access-key
+        - name: RUSTFS_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: rustfs-root-credentials
+              key: secret-key
+        - name: ENDPOINT
+          value: 'https://rustfs.{{ .Namespace }}.svc:9000'
+        - name: POD_UID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.uid
+        command:
+        - /bin/sh
+        - -ec
+        - |
+          umask 077
+          case "$RUSTFS_ACCESS_KEY" in
+            ''|rustfsadmin|*[!A-Za-z0-9_-]*) exit 1 ;;
+          esac
+          case "$RUSTFS_SECRET_KEY" in
+            ''|rustfsadmin|*[!A-Za-z0-9_-]*) exit 1 ;;
+          esac
+          test "${#RUSTFS_ACCESS_KEY}" -eq 43
+          test "${#RUSTFS_SECRET_KEY}" -eq 43
+          printf 'user = "%s:%s"\n' "$RUSTFS_ACCESS_KEY" "$RUSTFS_SECRET_KEY" > /tmp/curl-auth
+          trap 'rm -f /tmp/curl-auth' EXIT
+          signed() {
+            curl --silent --show-error --connect-timeout 5 --max-time 30 \
+              --cacert /ca/ca.crt --config /tmp/curl-auth \
+              --aws-sigv4 aws:amz:us-east-1:s3 \
+              --output /tmp/response --write-out '%{http_code}' "$@"
+          }
+          expect() {
+            if [ "$1" != "$2" ]; then
+              printf 'S3 smoke expected HTTP %s, received %s\n' "$2" "$1" >&2
+              exit 1
+            fi
+          }
+          n=0
+          until curl --silent --show-error --fail --connect-timeout 5 --max-time 5 \
+            --cacert /ca/ca.crt "$ENDPOINT/health/ready" > /dev/null; do
+            n=$((n + 1))
+            test "$n" -lt 100
+            sleep 3
+          done
+          status=$(signed --request PUT "$ENDPOINT/zeabur")
+          case "$status" in
+            200|409) ;;
+            *) printf 'Bucket creation failed (HTTP %s)\n' "$status" >&2; exit 1 ;;
+          esac
+          expect "$(signed --head "$ENDPOINT/zeabur")" 200
+          printf '%s' '<PublicAccessBlockConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><BlockPublicAcls>true</BlockPublicAcls><IgnorePublicAcls>true</IgnorePublicAcls><BlockPublicPolicy>true</BlockPublicPolicy><RestrictPublicBuckets>true</RestrictPublicBuckets></PublicAccessBlockConfiguration>' > /tmp/public-access-block.xml
+          expect "$(signed --request PUT --header 'Content-Type: application/xml' \
+            --header 'Content-MD5: Ia4HDf0jO6tNT32up/hopw==' \
+            --data-binary @/tmp/public-access-block.xml "$ENDPOINT/zeabur?publicAccessBlock")" 200
+          expect "$(signed "$ENDPOINT/zeabur?publicAccessBlock")" 200
+          for field in BlockPublicAcls IgnorePublicAcls BlockPublicPolicy RestrictPublicBuckets; do
+            grep -q "<$field>true</$field>" /tmp/response
+          done
+          object="$ENDPOINT/zeabur/_template-smoke/$POD_UID"
+          printf 'rustfs-private-s3-%s\n' "$POD_UID" > /tmp/object
+          expect "$(signed --request PUT --data-binary @/tmp/object "$object")" 200
+          expect "$(signed --output /tmp/download "$object")" 200
+          cmp /tmp/object /tmp/download
+          expect "$(curl --silent --show-error --connect-timeout 5 --max-time 30 \
+            --cacert /ca/ca.crt --output /tmp/anonymous --write-out '%{http_code}' "$object")" 403
+          expect "$(curl --silent --show-error --connect-timeout 5 --max-time 30 \
+            --cacert /ca/ca.crt --output /tmp/anonymous --write-out '%{http_code}' "$ENDPOINT/zeabur?list-type=2")" 403
+          expect "$(signed --request DELETE "$object")" 204
+          expect "$(signed --head "$object")" 404
+          printf 'Verified private bucket, public-access blocks, signed PUT/GET/DELETE and anonymous denial over trusted TLS.\n'
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: ca
+          mountPath: /ca
+          readOnly: true
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 32Mi
+      - name: ca
+        secret:
+          secretName: rustfs-server-tls
+          defaultMode: 0440
+          items:
+          - key: ca.crt
+            path: ca.crt
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rustfs
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector:
+    matchLabels:
+      app: rustfs
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          templates.zeabur.com/rustfs-client: 'true'
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: '{{ .Inputs.clientNamespace }}'
+      podSelector:
+        matchLabels:
+          templates.zeabur.com/rustfs-client: 'true'
+    ports:
+    - protocol: TCP
+      port: 9000
+  egress: []
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rustfs-initialize
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector:
+    matchLabels:
+      app: rustfs-initialize
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress: []
+  egress:
+  - {{ dnsEgress }}
+  - to:
+    - podSelector:
+        matchLabels:
+          app: rustfs
+    ports:
+    - protocol: TCP
+      port: 9000

@@ -1,0 +1,98 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: OpenClaw Browser Sandbox
+  description: >-
+    Headless Chromium browser sandbox that can be controlled via Chrome DevTools
+    Protocol (CDP). Use this with OpenClaw or other services that need browser
+    automation capabilities.
+  license: MIT
+  # Also: https://docs.openclaw.ai/tools/browser
+  homepage: https://github.com/canyugs/openclaw-sandbox-browser
+  icon: https://raw.githubusercontent.com/openclaw/openclaw/main/docs/assets/pixel-lobster.svg
+  categories: [ai, automation]
+
+services:
+  - name: openclaw-sandbox-browser
+    securityProfile: restricted
+    ports: [{name: cdp, port: 9222}]
+    resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+
+inputs:
+  - name: clientApp
+    description: >-
+      Explicitly trusted same-namespace caller pod app.kubernetes.io/name label;
+      use openclaw for openclaw. Anyone able to forge this label or create pods
+      in the namespace is trusted.
+    required: true
+    validation: {pattern: '^[a-z][a-z0-9-]{0,62}$'}
+  - name: trustOptIn
+    description: >-
+      Chromium runs with upstream --no-sandbox and CDP has no application
+      authentication. Use it for one trusted owner and caller only. It gives no
+      isolation from hostile pages or tenants. Type
+      I-ACCEPT-SINGLE-OWNER-BROWSER.
+    required: true
+    validation: {pattern: ^I-ACCEPT-SINGLE-OWNER-BROWSER$}
+
+security:
+  summary: >-
+    Private single-owner browser companion: restricted non-root read-only pod,
+    no privileges or API token, explicit approved-caller ingress only and
+    public-only egress. Chromium's renderer sandbox is disabled upstream, so a
+    hostile page can take over the browser pod.
+  egress:
+    - CoreDNS in kube-system TCP/UDP53.
+    - >-
+      Public IPv4 TCP80/443 excluding private, loopback, link-local, multicast
+      and reserved networks; IPv6 denied. Filtering is by IP range, so any
+      public host is reachable.
+  risks:
+    - risk: >-
+        A malicious webpage compromises an unsandboxed Chromium process with the
+        full pod identity and browser-session data.
+      mitigation: >-
+        Explicit single-owner acknowledgement; no application/provider
+        credentials, host mounts or Kubernetes token; read-only rootfs and
+        ephemeral state; public-only egress, restricted pod identity and
+        resource limits. Do not share one browser between users who do not trust
+        each other.
+    - risk: CDP is full browser control and the source proxy carries no authentication.
+      mitigation: >-
+        No public Ingress or LoadBalancer; NetworkPolicy admits only explicitly
+        approved same-namespace caller label on CDP9222. Pod/label writers in
+        the namespace are trusted. Headless mode only; VNC/noVNC is disabled.
+
+scalability:
+  summary: >-
+    One ephemeral browser/profile per trusted owner; independent sessions are
+    not horizontally interchangeable.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      CDP session state is process-local and ephemeral; no cross-owner shared
+      profiles.
+
+upgradeNotes:
+  - >-
+    Update the launch script, Chromium, base packages and the Caddy CDP proxy
+    together. Check the new image digest and license.
+  - >-
+    The template runs headless CDP on port 9222 only. It has no headful or VNC
+    mode, no renderer sandbox and no CDP authentication.
+  - >-
+    Configure OpenClaw attachOnly browser profile with cdpUrl
+    http://openclaw-sandbox-browser:9222. The approved caller must also allow
+    egress to this pod. The openclaw template includes this rule; other callers
+    need an equivalent rule scoped to this pod.
+  - >-
+    Browser cookies and sessions are ephemeral and lost on restart; never treat
+    this as durable storage or a secure cookie vault. Encrypt any exported
+    browser data and keep it off the cluster, because it holds credentials.
+
+smoke:
+  - name: Private browser available
+    resource: deployment/openclaw-sandbox-browser
+    condition: condition=Available
+    timeout: 10m

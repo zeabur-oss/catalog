@@ -1,0 +1,202 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zeabur-oss/catalog/schema/v1/template.schema.json",
+  "title": "Template",
+  "description": "One application, at templates/<slug>/template.yaml with its objects in manifests.yaml next to it. A project member installs it into one namespace.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "services", "security", "scalability", "smoke"],
+  "properties": {
+    "apiVersion": { "const": "catalog.zeabur.com/v1" },
+    "kind": { "const": "Template" },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "description", "license", "homepage", "categories"],
+      "properties": {
+        "name": { "$ref": "#/$defs/text", "description": "Name for people." },
+        "description": { "$ref": "#/$defs/text", "description": "What the application does and how the template runs it, in one or two sentences." },
+        "license": { "$ref": "#/$defs/text", "description": "SPDX expression for the application, its images and charts." },
+        "homepage": { "type": "string", "format": "uri", "pattern": "^https?://" },
+        "icon": { "type": "string", "format": "uri", "pattern": "^https://" },
+        "categories": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["ai", "automation", "cms", "databases", "monitoring", "search", "storage", "web-servers"] }
+        }
+      }
+    },
+    "requires": {
+      "type": "array",
+      "description": "Components the cluster must have: <capability> (its recommended upstream, else an optional one) or <capability>/<upstream>.",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z0-9-]+(/[a-z0-9-]+)?$" }
+    },
+    "services": {
+      "type": "array",
+      "description": "The workloads in manifests.yaml, for people and for the Pod Security profile of each.",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/service" }
+    },
+    "inputs": { "type": "array", "items": { "$ref": "#/$defs/input" } },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "egress", "risks"],
+      "properties": {
+        "summary": { "$ref": "#/$defs/text" },
+        "egress": { "type": "array", "items": { "$ref": "#/$defs/text" } },
+        "risks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["risk", "mitigation"],
+            "properties": { "risk": { "$ref": "#/$defs/text" }, "mitigation": { "$ref": "#/$defs/text" } }
+          }
+        }
+      }
+    },
+    "scalability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "replicas", "maxReplicas", "blockers"],
+      "properties": {
+        "summary": { "$ref": "#/$defs/text" },
+        "replicas": { "type": "integer", "minimum": 0 },
+        "maxReplicas": { "type": "integer", "minimum": 0 },
+        "blockers": { "type": "array", "items": { "$ref": "#/$defs/text" } }
+      }
+    },
+    "upgradeNotes": { "type": "array", "items": { "$ref": "#/$defs/text" } },
+    "smoke": {
+      "type": "array",
+      "description": "e2e checks after install, in the template's namespace.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "resource", "condition", "timeout"],
+        "properties": {
+          "name": { "$ref": "#/$defs/text" },
+          "resource": { "type": "string", "pattern": "^[a-zA-Z0-9.-]+/[a-z0-9][a-z0-9.-]*$" },
+          "condition": { "type": "string", "pattern": "^(condition=[A-Za-z][A-Za-z0-9]*(=(True|False|Unknown))?|jsonpath=.+)$" },
+          "timeout": { "type": "string", "pattern": "^[1-9][0-9]*(s|m)$" },
+          "http": {
+            "type": "object",
+            "description": "GET through a port-forward to the Service.",
+            "additionalProperties": false,
+            "required": ["service", "port", "path", "status"],
+            "properties": {
+              "service": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+              "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+              "path": { "type": "string", "pattern": "^/" },
+              "status": { "type": "integer", "minimum": 100, "maximum": 599 },
+              "contains": { "type": "string" }
+            }
+          },
+          "sql": {
+            "type": "object",
+            "description": "One read-only SELECT on the CloudNativePG primary.",
+            "additionalProperties": false,
+            "required": ["cluster", "database", "query", "expect"],
+            "properties": {
+              "cluster": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+              "database": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
+              "query": { "type": "string", "pattern": "^[Ss][Ee][Ll][Ee][Cc][Tt] " },
+              "expect": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1 },
+    "resourceValues": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cpu", "memory"],
+      "properties": {
+        "cpu": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?m?$" },
+        "memory": { "type": "string", "pattern": "^[1-9][0-9]*(Ki|Mi|Gi|Ti|K|M|G|T)?$" }
+      }
+    },
+    "service": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "securityProfile", "resources"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$", "maxLength": 53 },
+        "securityProfile": { "enum": ["restricted", "baseline"] },
+        "baselineJustification": { "$ref": "#/$defs/text", "description": "The Restricted control it fails, and why." },
+        "ports": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "port"],
+            "properties": { "name": { "$ref": "#/$defs/text" }, "port": { "type": "integer", "minimum": 1, "maximum": 65535 } }
+          }
+        },
+        "resources": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["requests", "limits"],
+          "properties": { "requests": { "$ref": "#/$defs/resourceValues" }, "limits": { "$ref": "#/$defs/resourceValues" } }
+        },
+        "domains": { "type": "array", "description": "Public hostnames; rendering then needs a domain and a ClusterIssuer.", "items": { "$ref": "#/$defs/text" } }
+      },
+      "if": { "properties": { "securityProfile": { "const": "baseline" } } },
+      "then": { "required": ["baselineJustification"] }
+    },
+    "input": {
+      "type": "object",
+      "description": "A value the person installing gives (required) or the installer generates into a Secret (generate).",
+      "additionalProperties": false,
+      "required": ["name", "description", "validation"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
+        "description": { "$ref": "#/$defs/text" },
+        "required": { "type": "boolean" },
+        "generate": { "enum": ["random", "jwt-hs256"] },
+        "generateBytes": { "type": "integer", "minimum": 12, "maximum": 64, "default": 32 },
+        "generateEncoding": { "enum": ["base64url", "hex"], "default": "base64url" },
+        "jwtFrom": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$", "description": "The random input that holds the signing secret." },
+        "jwtRole": { "enum": ["anon", "service_role"] },
+        "secret": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "key"],
+          "properties": {
+            "name": { "type": "string", "pattern": "^[a-z0-9][a-z0-9.-]*$" },
+            "key": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+$" }
+          }
+        },
+        "validation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pattern"],
+          "properties": { "pattern": { "$ref": "#/$defs/text", "description": "Regular expression the whole value matches." } }
+        }
+      },
+      "oneOf": [
+        {
+          "required": ["generate", "secret"],
+          "properties": { "generate": { "const": "random" } },
+          "not": { "anyOf": [{ "required": ["required"] }, { "required": ["jwtFrom"] }, { "required": ["jwtRole"] }] }
+        },
+        {
+          "required": ["generate", "secret", "jwtFrom", "jwtRole"],
+          "properties": { "generate": { "const": "jwt-hs256" } },
+          "not": { "anyOf": [{ "required": ["required"] }, { "required": ["generateBytes"] }, { "required": ["generateEncoding"] }] }
+        },
+        {
+          "required": ["required"],
+          "not": { "anyOf": [{ "required": ["generate"] }, { "required": ["secret"] }, { "required": ["generateBytes"] }, { "required": ["generateEncoding"] }, { "required": ["jwtFrom"] }, { "required": ["jwtRole"] }] }
+        }
+      ]
+    }
+  }
+}

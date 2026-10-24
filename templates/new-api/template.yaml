@@ -1,0 +1,158 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: New API
+  description: >-
+    OpenAI-compatible model gateway with secure initial owner provisioning and
+    CloudNativePG PostgreSQL.
+  license: AGPL-3.0-only AND PostgreSQL AND Apache-2.0
+  # Also: https://docs.newapi.pro/
+  homepage: https://github.com/QuantumNous/new-api
+  icon: https://i.imgur.com/3pRJ59s.png
+  categories: [ai]
+
+requires:
+  - ingress/traefik
+  - certificates/cert-manager
+  - databases/cloudnative-pg
+
+services:
+  - name: new-api
+    securityProfile: restricted
+    ports: [{name: http, port: 3000}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}
+    domains: ['{{ .Domain }}']
+  - name: newapi-db
+    securityProfile: restricted
+    ports: [{name: postgresql, port: 5432}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}
+
+inputs:
+  - name: initialAdminPassword
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: newapi-secrets, key: admin-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: sessionSecret
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: newapi-secrets, key: session-secret}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: cryptoSecret
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: newapi-secrets, key: crypto-secret}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: backupDestination
+    description: Dedicated unique S3 bucket/prefix; never reuse a different cluster backup path.
+    required: true
+    validation: {pattern: '^s3://[a-z0-9][a-z0-9.-]+/[A-Za-z0-9/_-]+$'}
+  - name: backupEndpoint
+    description: S3 HTTPS endpoint with trusted certificate on TCP443.
+    required: true
+    validation: {pattern: '^https://[a-zA-Z0-9.-]+(:443)?$'}
+  - name: backupSecret
+    description: >-
+      Existing namespaced Secret with ACCESS_KEY_ID and ACCESS_SECRET_KEY;
+      create the S3 credentials out of band.
+    required: true
+    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: backupCidr
+    description: IPv4 CIDR containing the S3 endpoint as seen by CNI.
+    required: true
+    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
+  - name: kubeApiCidr
+    description: IPv4 CIDR for Kubernetes API service/endpoint as seen by CNI.
+    required: true
+    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
+
+security:
+  summary: >-
+    Namespace-scoped, digest-pinned, non-root workloads with least-privilege
+    network access and no default passwords.
+  egress:
+    - DNS TCP/UDP53 to kube-dns
+    - Private PostgreSQL5432 with CA verification
+    - >-
+      Public IPv4 HTTP80/HTTPS443 model-provider endpoints;
+      metadata/private/loopback/CGNAT excluded
+    - CNPG API443/6443 and HTTPS443 backup CIDRs
+  risks:
+    - risk: First-visitor administrator takeover during uninitialized public deployment.
+      mitigation: >-
+        PostStart invokes supported /api/setup with generated password before
+        readiness permits Service endpoints. NetworkPolicy accepts app ingress
+        only from Traefik. No known root credential is created by this setup
+        flow.
+    - risk: >-
+        Gateway handles provider API keys, accounts and billing data; configured
+        providers can send sensitive prompts externally.
+      mitigation: >-
+        Restrict administrators and provider definitions;
+        nonroot/read-only/token-off app, generated session/crypto secrets,
+        verified TLS PostgreSQL and explicit public-provider egress. Check AGPL
+        source-offer obligations for network use and modification.
+    - risk: >-
+        Egress allows only public IPv4 endpoints on ports 80 and 443. Model
+        providers on private, in-cluster or other-port addresses are
+        unreachable.
+      mitigation: Add a narrow NetworkPolicy egress rule for each private provider.
+    - risk: CNPG manager requires projected identity/API access.
+      mitigation: >-
+        Token access applies only to operator-generated database operands; the
+        New API Pod has automount false. Use dedicated S3 credentials and
+        prefix, and set the endpoint and API CIDRs.
+    - risk: >-
+        Barman archives WAL continuously and takes a daily 02:00 UTC base
+        backup, kept for 7 days. The database holds accounts, channels, tokens
+        and billing state.
+      mitigation: Check Backup status and rehearse an off-node restore before production.
+
+scalability:
+  summary: >-
+    One gateway Pod and one PostgreSQL primary on a 10Gi local-path volume; no
+    automatic horizontal scaling.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      Node-local ReadWriteOnce storage has no HA or snapshots. The database is
+      unavailable while its node is down.
+    - >-
+      More gateway replicas need shared session and crypto secrets, a cache
+      design and a single schema-migration leader.
+
+upgradeNotes:
+  - >-
+    Preserve Secrets and PVCs. Back up data off-node and rehearse a restore
+    before changing image digests.
+  - >-
+    The image is the upstream release candidate v1.0.0-rc.46. Read upstream
+    release notes and schema migrations before each upgrade. Schema migrations
+    may not be reversible.
+  - >-
+    The database is PostgreSQL 17 managed by CloudNativePG with Barman backups.
+    Data from a MySQL-based New API deployment needs a logical migration; MySQL
+    data files cannot be attached to PostgreSQL.
+  - >-
+    Fresh admin username admin; initial password is literal prefix Aa1- followed
+    by newapi-secrets/admin-password. Setup runs only if /api/setup reports
+    uninitialized. Later user password changes are application-managed.
+  - >-
+    Logs and temporary files go to bounded emptyDir volumes and are lost on
+    restart. Accounts, channels and tokens live in PostgreSQL. Preserve
+    session/crypto Secrets and backup database.
+
+smoke:
+  - name: workload-ready
+    resource: deployment/new-api
+    condition: condition=Available
+    timeout: 900s
+  - name: database-ready
+    resource: cluster/newapi-db
+    condition: condition=Ready
+    timeout: 900s
+  - name: initial-postgresql-backup-completed
+    resource: backup/newapi-db-initial
+    condition: jsonpath={.status.phase}=completed
+    timeout: 600s

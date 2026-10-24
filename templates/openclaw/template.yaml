@@ -1,0 +1,114 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: OpenClaw
+  description: >-
+    OpenClaw (formerly Clawdbot, Moltbot) is a personal AI assistant that runs
+    locally and connects to multiple messaging platforms (WhatsApp, Telegram,
+    Slack, Discord, etc.) via a WebSocket-based Gateway architecture.
+  license: MIT
+  # Also: https://docs.openclaw.ai/gateway/security
+  homepage: https://github.com/openclaw/openclaw
+  icon: https://raw.githubusercontent.com/openclaw/openclaw/main/docs/assets/pixel-lobster.svg
+  categories: [ai]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: openclaw
+    securityProfile: restricted
+    ports: [{name: http, port: 18789}]
+    resources: {requests: {cpu: 500m, memory: 1Gi}, limits: {cpu: "2", memory: 4Gi}}
+    domains: ['{{ .Domain }}']
+
+inputs:
+  - name: gatewayToken
+    description: >-
+      Generated gateway-token; retrieve from Secret openclaw-secrets, never from
+      a public URL.
+    generate: random
+    secret: {name: openclaw-secrets, key: gateway-token}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: providerSecret
+    description: >-
+      Pre-existing Secret in this namespace containing the model provider API
+      key in key api-key.
+    required: true
+    validation: {pattern: '^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$'}
+  - name: llmBaseUrl
+    description: OpenAI-compatible HTTPS API base URL; public network on TCP 443 only.
+    required: true
+    validation: {pattern: '^https://[A-Za-z0-9.-]+(:443)?/[A-Za-z0-9._~/-]*$'}
+  - name: llmModel
+    description: Model identifier for the configured compatible provider.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9._:/-]+$'}
+
+security:
+  summary: >-
+    Non-root, read-only root filesystem, restricted PSS, no Kubernetes token,
+    TLS ingress, default-deny with explicit Traefik, DNS and public HTTPS
+    exceptions.
+  egress:
+    - Cluster DNS TCP/UDP 53 to kube-system CoreDNS.
+    - >-
+      Public IPv4 TCP 443 only; private, loopback, link-local, multicast and
+      reserved ranges denied. IPv6 denied.
+    - >-
+      Optional same-namespace openclaw-sandbox-browser companion TCP9222 only;
+      configure its openclaw-browser-sandbox clientApp input as openclaw, then
+      add an attach-only browser profile at
+      http://openclaw-sandbox-browser:9222.
+  risks:
+    - risk: >-
+        An AI assistant may execute commands and read all state and model
+        credentials accessible to its pod. Pod Security does not stop prompt
+        injection.
+      mitigation: >-
+        One trusted owner per namespace/gateway; no host mounts, service-account
+        token or Docker socket; public HTTPS-only egress and limited resources.
+        Do not share with adversarial users.
+    - risk: Agent state and channel credentials reside on node-local storage.
+      mitigation: >-
+        Stop writes, then take encrypted external backups of the whole PVC, the
+        gateway Secret and the provider Secret. local-path is not HA and has no
+        volume snapshots.
+    - risk: >-
+        Egress allows public IPv4 on TCP 443 only. Model providers on private
+        networks or other ports cannot connect.
+      mitigation: Add a separate NetworkPolicy egress rule scoped to that provider.
+
+scalability:
+  summary: One instance per trusted owner; do not horizontally scale this deployment.
+  replicas: 1
+  maxReplicas: 1
+  blockers: [Single-owner gateway and persistent node-local state.]
+
+upgradeNotes:
+  - >-
+    Back up the complete openclaw-home PVC and generated gateway-token Secret
+    before changing the pinned image.
+  - >-
+    Configuration is seeded only on first start; edit persisted configuration
+    through the Control UI or CLI. Changing provider inputs does not overwrite
+    existing user configuration.
+  - >-
+    Use https://<domain> and the generated token; approve device pairing with
+    the CLI inside the pod. Never put the token in a public URL.
+  - >-
+    Config schema and pairing behaviour change quickly. Read the upstream
+    migration notes before each upgrade. Restoring the PVC with the old image
+    rolls back only when the new version did not migrate data one-way.
+  - >-
+    Readiness uses /startupz and liveness uses /healthz. /readyz depends on
+    channels and can stay false until you configure one.
+  - >-
+    No runtime Homebrew/Go installs, Docker socket, host filesystem, local
+    Chromium, or unsafe origin-fallback flag. Tools run with the same restricted
+    pod identity as this one trusted owner.
+
+smoke:
+  - name: Application available
+    resource: deployment/openclaw
+    condition: condition=Available
+    timeout: 10m

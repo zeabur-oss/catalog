@@ -19,7 +19,7 @@
       "description": "Helm charts from HTTP repositories",
       "customType": "regex",
       "managerFilePatterns": [
-        "/^capabilities/.+\\.yaml$/"
+        "/^components/.+\\.yaml$/"
       ],
       "matchStrings": [
         "repo: (?<registryUrl>https://\\S+)\\n\\s+chart: (?<depName>\\S+)\\n\\s+version: (?<currentValue>\\S+)"
@@ -30,7 +30,7 @@
       "description": "Helm charts from OCI registries",
       "customType": "regex",
       "managerFilePatterns": [
-        "/^capabilities/.+\\.yaml$/"
+        "/^components/.+\\.yaml$/"
       ],
       "matchStrings": [
         "chart: oci://(?<depName>\\S+)\\n\\s+version: (?<currentValue>\\S+)"
@@ -41,7 +41,7 @@
       "description": "Manifests from GitHub releases",
       "customType": "regex",
       "managerFilePatterns": [
-        "/^capabilities/.+\\.yaml$/"
+        "/^components/.+\\.yaml$/"
       ],
       "matchStrings": [
         "- https://github\\.com/(?<depName>[^/\\s]+/[^/\\s]+)/releases/download/\\{version\\}/\\S+\\n\\s+version: (?<currentValue>\\S+)"
@@ -52,7 +52,7 @@
       "description": "Traefik plugins pinned in contributed values",
       "customType": "regex",
       "managerFilePatterns": [
-        "/^capabilities/.+\\.yaml$/"
+        "/^components/.+\\.yaml$/"
       ],
       "matchStrings": [
         "moduleName: github\\.com/(?<depName>\\S+)\\n\\s+version: (?<currentValue>\\S+)"
@@ -63,12 +63,24 @@
       "description": "Container images pinned inside values",
       "customType": "regex",
       "managerFilePatterns": [
-        "/^capabilities/.+\\.yaml$/"
+        "/^components/.+\\.yaml$/"
       ],
       "matchStrings": [
         "image: (?<depName>[a-z0-9./-]+):(?<currentValue>v[0-9][^\\s\"]*)"
       ],
       "datasourceTemplate": "docker"
+    },
+    {
+      "description": "Container images in template manifests",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^templates/[^/]+/manifests\\.yaml$/"
+      ],
+      "matchStrings": [
+        "(?:image|imageName|initImage):\\s*[\"']?(?<depName>[a-z0-9][a-z0-9./_-]*):(?<currentValue>[a-zA-Z0-9._-]+)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?"
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
     },
     {
       "description": "Cluster versions e2e runs on",
@@ -85,16 +97,25 @@
     {
       "description": "Each upstream gets its own pull request, so CI tests one change at a time",
       "matchFileNames": [
-        "capabilities/**"
+        "components/**"
       ],
       "groupName": null
     },
     {
       "description": "Pre-1.0 upstreams change behaviour in minor releases; never automerge them",
       "matchFileNames": [
-        "capabilities/**"
+        "components/**"
       ],
       "matchCurrentVersion": "/^v?0\\./",
+      "automerge": false
+    },
+    {
+      "description": "Each template gets its own pull request, and a person reviews every image change",
+      "matchFileNames": [
+        "templates/**"
+      ],
+      "groupName": null,
+      "pinDigests": true,
       "automerge": false
     }
   ]

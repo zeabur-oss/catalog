@@ -1,0 +1,101 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: LobeChat
+  description: >-
+    LobeChat chatbot UI in client-storage mode. Chats stay in each browser; a
+    generated access code protects the server model key.
+  license: LicenseRef-LobeHub-Community
+  # Also: https://github.com/lobehub/lobe-chat/blob/d718de7e1af2dd7281c4eaca70f627e4b9deddb1/LICENSE
+  homepage: https://github.com/lobehub/lobe-chat
+  icon: https://i.imgur.com/1N9pEHJ.png
+  categories: [ai]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: lobechat
+    securityProfile: restricted
+    ports: [{name: http, port: 3210}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 2Gi}}
+    domains: ['{{ .Domain }}']
+
+inputs:
+  - name: accessCode
+    description: >-
+      Generated access-code; retrieve from Secret lobechat-secrets, never from a
+      public URL.
+    generate: random
+    secret: {name: lobechat-secrets, key: access-code}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: providerSecret
+    description: Pre-existing Secret with key api-key for the OpenAI provider.
+    required: true
+    validation: {pattern: '^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$'}
+  - name: licenseOptIn
+    description: >-
+      Read LobeHub Community License: unmodified commercial use permitted;
+      developing/distributing derivative works requires a commercial license.
+      Type I-ACCEPT-LOBEHUB-COMMUNITY.
+    required: true
+    validation: {pattern: ^I-ACCEPT-LOBEHUB-COMMUNITY$}
+
+security:
+  summary: >-
+    Non-root, read-only root filesystem, restricted PSS, no Kubernetes token,
+    TLS ingress, default-deny with explicit Traefik, DNS and public HTTPS
+    exceptions.
+  egress:
+    - Cluster DNS TCP/UDP 53 to kube-system CoreDNS.
+    - >-
+      Public IPv4 TCP 443 only; private, loopback, link-local, multicast and
+      reserved ranges denied. IPv6 denied.
+  risks:
+    - risk: The LobeHub Community License restricts distribution of derivative works.
+      mitigation: >-
+        Deployment requires the license acknowledgement. The template runs the
+        unmodified image with notices intact. Get commercial permission before
+        you distribute a derivative.
+    - risk: >-
+        All users who know the shared access code share the server-funded model
+        key and the instance.
+      mitigation: >-
+        Share a deployment only between mutually trusted users. The code is
+        generated with high entropy, upstream auth protection is on, ingress is
+        TLS-only and private-network egress is denied.
+    - risk: The server can reach only public IPv4 HTTPS on TCP 443.
+      mitigation: >-
+        Use a model provider endpoint on public HTTPS. Providers on private
+        networks, IPv6 or other ports are unreachable.
+
+scalability:
+  summary: One instance per trusted owner; do not horizontally scale this deployment.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      Chats are browser-local and the access code is shared. The deployment has
+      no multi-tenant backend.
+
+upgradeNotes:
+  - >-
+    This template runs LobeChat 1.143.3 in client-storage mode. LobeHub server
+    mode uses different database, identity and storage. Do not switch the image
+    to server mode without migrating user data and authentication.
+  - >-
+    Unmodified upstream image only. License acknowledgement is required;
+    derivative-work distribution needs upstream commercial permission.
+  - >-
+    Access code is generated; use the UI settings to supply it. Chats live in
+    each browser. Export and import browser data for backups. Keep the
+    access-code and provider Secrets in an encrypted external backup.
+  - >-
+    Before updates, check release notes, license changes and browser data
+    migrations. Test import and rollback with exported histories. The runtime
+    cache is disposable.
+
+smoke:
+  - name: Application available
+    resource: deployment/lobechat
+    condition: condition=Available
+    timeout: 10m

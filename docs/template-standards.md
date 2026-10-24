@@ -1,0 +1,107 @@
+# Template standards
+
+Every template in Zeabur Catalog meets these rules. `catalog validate`, `catalog
+template lint` and the installation test enforce many of them; check the rest
+when you add or change a template. Follow the upstream documentation for the
+exact versions the template pins.
+
+## template.yaml
+
+- `metadata` names the application, its license, homepage and categories.
+- Each service names its security profile (`restricted` or `baseline`) and its
+  resource requests and limits.
+- `security`, `scalability` and `upgradeNotes` tell an operator what to know
+  before deploying: risks with their mitigations, the replica range and what
+  blocks more replicas, and the steps an upgrade needs.
+- `smoke` holds checks that prove the application works: a resource condition,
+  and an HTTP or SQL check against the running service.
+- `requires` lists the components the template needs, as `<capability>` or
+  `<capability>/<upstream>`.
+
+## Licenses and images
+
+- Name the license of the application and its images. Use the exact
+  license name for source-available software such as BUSL-1.1 or SSPL, and add a
+  required input that only accepts an exact acknowledgement string.
+- Pin every image, including init, migration and backup images, to a digest, and
+  keep the readable tag next to it.
+- Install nothing at runtime: no package managers, no downloads of mutable code,
+  no cluster-wide installers inside an application template.
+
+## Pod security
+
+- Run every container, including init containers and Jobs, under the
+  [Restricted Pod Security Standard](https://kubernetes.io/docs/concepts/security/pod-security-standards/):
+  non-root user, `allowPrivilegeEscalation: false`, all capabilities dropped and
+  `seccompProfile: RuntimeDefault`.
+- Use a read-only root filesystem where the application allows it, with
+  dedicated writable volumes for the paths it writes.
+- A `baseline` service gives a `baselineJustification` that names the control it
+  fails and why. Never use privileged containers, host namespaces, `hostPath` or
+  host ports.
+- `catalog template lint` allows only the sysctls
+  `net.ipv4.ip_unprivileged_port_start` and `net.ipv4.ping_group_range`, and
+  rejects probes or hooks that set a host.
+- Do not change the namespace's Pod Security labels.
+- Check pods that an operator creates (database instances, backup Jobs) against
+  the same rules, using the operator's documented fields.
+
+## Identity and Secrets
+
+- Set `automountServiceAccountToken: false` and grant no RBAC unless the
+  application calls the Kubernetes API. Scope any access to named resources and
+  verbs in the namespace.
+- Rendered resources reference Secrets; they never contain passwords, keys or
+  tokens. Declare generated values as `generate` inputs and existing credentials
+  as required inputs.
+- Turn off unauthenticated admin and debug endpoints and insecure first-run
+  defaults. Say how the first administrator signs in.
+
+## Network
+
+- Deny all ingress and egress in the namespace, then allow only the traffic the
+  application needs: the ingress controller, its own services, DNS and the
+  external endpoints it calls.
+- Keep databases, metrics and admin interfaces private. Expose only the
+  application through the ingress component with a cert-manager certificate.
+- List every outbound destination in `security.egress`. NetworkPolicy matches
+  IP ranges and ports, not host names.
+
+## Data and backups
+
+- Give each piece of state its owner: database, uploaded files, search indexes,
+  queues, configuration and encryption keys. Use `emptyDir` only for data that
+  can be lost.
+- Use a database operator from the components where one exists: CloudNativePG with Barman
+  Cloud for PostgreSQL, Percona for MongoDB, MariaDB Operator for MariaDB and
+  Dragonfly Operator for Redis-compatible use.
+- Back up state off the node, on a schedule, to storage the user provides. Say
+  what a restore needs (database, files, Secrets and keys) and how much data can
+  be lost.
+- Say what deleting the application keeps and what it destroys.
+
+## Scaling and resources
+
+- Set CPU and memory requests and limits on every container, Job and sidecar.
+- State the supported replica range and what blocks more replicas: node-local
+  volumes, an embedded database, in-memory sessions, a singleton scheduler.
+- Use a startup probe for slow starts, readiness to stop traffic, and liveness
+  only for a state a restart fixes.
+- Add a PodDisruptionBudget to replicated services. Enable autoscaling only for
+  services that support it.
+
+## Upgrades
+
+- Write the order of an upgrade into `upgradeNotes`: back up, migrate, roll out.
+  Say who runs schema migrations and whether old and new versions can run at the
+  same time.
+- Say when a rollback needs a restore. Reverting an image does not revert a
+  database migration.
+- Upgrade a shared operator through its component, never from a template.
+
+## Tests
+
+- The smoke checks run in CI on a fresh kind cluster with the components
+  the template requires. Make them prove the main behaviour, such as
+  an authenticated request or a database query, beyond a Ready pod.
+- Use only disposable credentials and storage in tests.

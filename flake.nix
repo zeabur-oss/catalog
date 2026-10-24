@@ -1,5 +1,5 @@
 {
-  description = "Zeabur Catalog: tested Kubernetes components, data, schema and tools";
+  description = "Zeabur Catalog: tested Kubernetes components and application templates, with their schema and tools";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";

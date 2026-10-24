@@ -1,0 +1,66 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: Ollama
+  description: Private CPU-only local model runtime. The API has no public ingress.
+  license: MIT
+  homepage: https://github.com/ollama/ollama
+  categories: [ai]
+
+services:
+  - name: ollama
+    securityProfile: restricted
+    ports: [{name: http, port: 11434}]
+    resources: {requests: {cpu: 500m, memory: 2Gi}, limits: {cpu: "4", memory: 8Gi}}
+
+security:
+  summary: >-
+    UID 1000, no capabilities, read-only image and private unauthenticated API;
+    only explicitly labeled same-namespace clients can connect.
+  egress:
+    - CoreDNS TCP/UDP 53
+    - >-
+      Public HTTPS TCP443 for model registry/blob downloads; private/link-local
+      destinations excluded.
+  risks:
+    - risk: Ollama API has no application authentication and permits model management.
+      mitigation: >-
+        No Ingress or NodePort; permit only trusted pods labeled
+        templates.zeabur.com/ollama-client=true in this namespace. Do not attach
+        an unauthenticated public route.
+    - risk: >-
+        Model licenses are separate from the MIT runtime and model files may
+        exhaust RAM/disk.
+      mitigation: >-
+        No model is preloaded. Review each model license and size, then run
+        `ollama pull MODEL` in the pod. The pod loads one model and serves one
+        request at a time, with an 8Gi memory limit and a 50Gi volume; most
+        large models do not fit.
+
+scalability:
+  summary: Single replica on node-local storage, with no failover.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - local-path volumes are tied to one node and have no snapshots.
+    - Replicas cannot share the model store. More replicas need a shared volume.
+    - Inference runs on CPU only. The template does not schedule GPUs.
+
+upgradeNotes:
+  - >-
+    Back up persistent state off-node before accepting an image digest or schema
+    migration; restore into a separate namespace before cutover.
+  - >-
+    To back up, stop writes and copy /data to encrypted off-node storage.
+    Include private model definitions and private keys, as well as public model
+    blobs. Keep the previous digest and a compatible data copy for rollback.
+  - >-
+    The Deployment uses the Recreate strategy. The API is unavailable during an
+    upgrade.
+
+smoke:
+  - name: ollama-ready
+    resource: deployment/ollama
+    condition: condition=Available
+    timeout: 600s
+    http: {service: ollama, port: 11434, path: /api/tags, status: 200}

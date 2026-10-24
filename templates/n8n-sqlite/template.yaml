@@ -1,0 +1,136 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: n8n SQLite
+  description: n8n2.39.7 with external JavaScript/Python task runner and SQLite persistence.
+  license: LicenseRef-n8n-sustainable-use
+  # Also: https://docs.n8n.io/hosting/, https://docs.n8n.io/sustainable-use-license/
+  homepage: https://github.com/n8n-io/n8n
+  icon: https://img.5xcamp.us/i/2732381b-be89-478f-9f82-7d63beed4d81.png
+  categories: [automation]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: n8n
+    securityProfile: restricted
+    ports: [{name: http, port: 5678}, {name: broker, port: 5679}]
+    resources: {requests: {cpu: 200m, memory: 512Mi}, limits: {cpu: 2000m, memory: 2Gi}}
+    domains: ['{{ .Domain }}']
+  - name: task-runner
+    securityProfile: restricted
+    ports: [{name: database, port: 5680}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}
+
+inputs:
+  - name: licenseOptIn
+    description: >-
+      Read the linked license restrictions and explicitly acknowledge
+      applicability to your deployment.
+    required: true
+    validation: {pattern: ^I-ACCEPT-N8N-SUSTAINABLE-USE$}
+  - name: ownerEmail
+    description: Owner email; account is provisioned before first public request.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
+  - name: ownerPassword
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: n8n-secrets, key: owner-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: encryptionKey
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: n8n-secrets, key: encryption-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: runnerToken
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: n8n-secrets, key: runner-token}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: >-
+    Namespace-scoped, digest-pinned, non-root workloads with least-privilege
+    network access and no default passwords.
+  egress:
+    - DNS TCP/UDP53 to kube-dns
+    - Authenticated task runner to broker5679
+    - >-
+      Public IPv4 TCP80/443 for workflows/providers;
+      private/loopback/CGNAT/metadata blocked
+  risks:
+    - risk: >-
+        n8n uses the Sustainable Use License. It is source-available and is not
+        OSI open source. Enterprise files have separate terms.
+      mitigation: >-
+        Required licenseOptIn=I-ACCEPT-N8N-SUSTAINABLE-USE. Deploy only for
+        permitted internal business, personal or noncommercial use. Reselling
+        hosted n8n requires a separate agreement with n8n.
+    - risk: >-
+        Workflow authors can invoke providers, install code or create powerful
+        integrations.
+      mitigation: >-
+        Use trusted administrators only; runner is isolated/token-off/read-only,
+        env access blocked and dangerous executeCommand/localFileTrigger
+        excluded. Public IPv4 egress80/443 is explicit; private integrations
+        require an added NetworkPolicy. Community package tool usage is enabled;
+        administrators must vet each installed package.
+    - risk: >-
+        First-owner signup can be claimed by the first visitor on an
+        unconfigured public instance.
+      mitigation: >-
+        Use supported v2.17+ managed-owner variables and bcrypt hash of
+        generated Secret before process startup. Deployment variables set the
+        owner email and password at each restart. Public signup stays closed.
+    - risk: No SMTP server is configured.
+      mitigation: >-
+        Email invitations and password-reset mail do not work until you
+        configure SMTP in n8n.
+
+scalability:
+  summary: Single-writer local-path deployment; no automatic horizontal scaling.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - Node-local ReadWriteOnce storage has no HA or snapshots.
+    - >-
+      Filesystem binary-data storage is node-local/single-writer; execution
+      queue mode and shared binary store are not configured.
+    - SQLite database supports one main process only.
+
+upgradeNotes:
+  - >-
+    Preserve Secrets and PVCs. Back up data off-node and rehearse a restore
+    before changing image digests. Stop n8n before you copy the SQLite database
+    and binary files; a copy of a running database can be inconsistent. After
+    restore, check that stored credentials decrypt and workflows run.
+  - >-
+    Main n8n and runner must remain exactly2.39.7 together; never upgrade one
+    side independently. Preserve encryption key, runner token, database, binary
+    files and owner password across upgrades.
+  - >-
+    Data lives in /home/node/.n8n. The runner token is a random Secret.
+    Settings-file permissions are enforced, node environment reads are blocked,
+    and the executeCommand and localFileTrigger nodes are disabled.
+  - >-
+    GENERIC_TIMEZONE is Asia/Taipei. Change it in the manifest if schedule
+    triggers must use another timezone.
+  - >-
+    Image rollback does not undo n8n database migrations; restore the backup
+    taken before the upgrade.
+  - >-
+    Owner email/password is controlled by deployment variables. Rotate
+    n8n-secrets/owner-password and restart to change password; recover
+    encryption-key from secure backups, never regenerate it for an existing
+    database.
+
+smoke:
+  - name: workload-ready
+    resource: deployment/n8n
+    condition: condition=Available
+    timeout: 900s
+  - name: runner-ready
+    resource: deployment/task-runner
+    condition: condition=Available
+    timeout: 900s

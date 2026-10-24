@@ -1,18 +1,27 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/zeabur-oss/catalog/schema/v1/component.schema.json",
-  "title": "Recommended component",
-  "description": "One upstream for one capability, at capabilities/<capability>/<upstream>.yaml.",
+  "title": "Component",
+  "description": "One upstream for one capability, at components/<capability>/<upstream>.yaml. A cluster administrator installs it.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["displayName", "homepage", "license", "maturity", "rationale", "defaults", "releases", "detection", "security"],
+  "required": ["apiVersion", "kind", "metadata", "maturity", "defaults", "releases", "detection", "security"],
   "properties": {
-    "displayName": { "type": "string" },
-    "homepage": { "type": "string", "format": "uri" },
-    "license": { "type": "string", "description": "SPDX expression; every identifier must be OSI-approved, or listed under optInOnly in config/licenses.yaml with no profile recommending the component." },
+    "apiVersion": { "const": "catalog.zeabur.com/v1" },
+    "kind": { "const": "Component" },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "description", "license", "homepage"],
+      "properties": {
+        "name": { "type": "string", "description": "Name for people." },
+        "description": { "type": "string", "description": "What it does and why the catalog recommends it, in one or two sentences." },
+        "license": { "type": "string", "description": "SPDX expression; every identifier must be OSI-approved, or listed under optInOnly in config/licenses.yaml with no profile recommending the component." },
+        "homepage": { "type": "string", "format": "uri" }
+      }
+    },
     "maturity": { "enum": ["cncf-graduated", "cncf-incubating", "cncf-sandbox", "kubernetes-sig", "independent"] },
     "stability": { "enum": ["stable", "beta"], "default": "stable" },
-    "rationale": { "type": "string", "description": "Why it is recommended, in one or two sentences." },
     "alternatives": {
       "type": "object",
       "description": "Other upstreams for this capability, with a one-line note each.",
@@ -37,9 +46,10 @@
     },
     "persistsData": { "type": "boolean", "description": "Keeps state in volumes; uninstalling loses data." },
     "disruptsTraffic": { "type": "boolean", "description": "Changes to it can interrupt serving traffic." },
-    "dependsOn": {
+    "requires": {
       "type": "array",
-      "description": "<capability> (any provider) or <capability>/<upstream>.",
+      "description": "Components installed first: <capability> (its recommended upstream, else an optional one) or <capability>/<upstream>.",
+      "uniqueItems": true,
       "items": { "type": "string", "pattern": "^[a-z0-9-]+(/[a-z0-9-]+)?$" }
     },
     "inputs": {

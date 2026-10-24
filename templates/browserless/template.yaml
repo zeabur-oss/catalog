@@ -1,0 +1,127 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: Browserless
+  description: >-
+    Authenticated headless Chromium service for trusted automation clients, with
+    restricted container isolation.
+  license: SSPL-1.0 OR LicenseRef-Browserless-Commercial
+  # Also: https://docs.browserless.io/
+  homepage: https://github.com/browserless/browserless
+  icon: https://avatars.githubusercontent.com/u/51244358?s=500&v=4
+  categories: [automation]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: browserless
+    securityProfile: restricted
+    ports: [{name: web, port: 3000}]
+    resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+    domains: ['{{ .Domain }}']
+
+inputs:
+  - name: licenseOptIn
+    description: >-
+      Read Browserless LICENSE: SSPL is not OSI-approved; closed-source
+      commercial sites/apps/CI may require a commercial license. Enter
+      I-ACCEPT-BROWSERLESS-LICENSE after you confirm which license applies to
+      your use.
+    required: true
+    validation: {pattern: ^I-ACCEPT-BROWSERLESS-LICENSE$}
+  - name: token
+    description: >-
+      Generated Browserless bearer/query token. Retrieve from
+      browserless-secrets/token through authorized Kubernetes access; never put
+      the value in a URL logged by a proxy.
+    generate: random
+    secret: {name: browserless-secrets, key: token}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: >-
+    Restricted non-root read-only container; authenticated API, no
+    service-account token, default-deny networking and public HTTP(S)-only
+    destination egress. Do not share one instance between untrusted tenants.
+  egress:
+    - DNS TCP/UDP53 to kube-system kube-dns
+    - >-
+      Public IPv4 TCP80/443 excluding RFC1918, loopback, link-local/metadata,
+      CGNAT, reserved and multicast ranges
+  risks:
+    - risk: >-
+        Upstream Chromium launch forces --no-sandbox; a browser exploit can
+        compromise the container, its Browserless token and other browser
+        session contents.
+      mitigation: >-
+        Only trusted API clients; keep image patched, run this service in an
+        isolated tenant namespace on dedicated nodes for sensitive browsing,
+        retain restricted admission and do not grant SYS_ADMIN or host access.
+        Do not share one instance between untrusted tenants.
+    - risk: >-
+        Browser automation can be used for SSRF; application-level
+        private-network blocking defaults off.
+      mitigation: >-
+        NetworkPolicy denies private, cluster and metadata IPv4 destinations
+        plus all IPv6 egress; only public TCP80/443 and cluster DNS are allowed.
+        File protocol, GET-style browser calls and CORS are disabled. The
+        browser cannot open intranet, cluster or IPv6 sites, or public sites on
+        other ports.
+    - risk: >-
+        SSPL/commercial dual license has non-OSI obligations and restricted
+        closed-source commercial scenarios.
+      mitigation: >-
+        Deployment requires the license acknowledgment. The acknowledgment does
+        not grant a license. Confirm the applicable license, and get legal
+        advice for commercial integration.
+    - risk: >-
+        A shared token authorizes high-trust automation and may appear in client
+        URLs/access logs.
+      mitigation: >-
+        Generate it at deploy time, use the upstream Authorization header where
+        supported, restrict Kubernetes Secret/log access, redact query strings
+        in external proxies and rotate token after disclosure.
+
+scalability:
+  summary: >-
+    One stateless instance, four concurrent and four queued sessions; active
+    browser sessions cannot migrate.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      Session and CDP/WebSocket connections are process-local; reconnect/retry
+      policy is the caller responsibility.
+    - CPU, memory and shared-memory usage bound browser concurrency.
+    - No HPA is enabled. More replicas need session-aware routing.
+    - Concurrency is set to four sessions. Load-test the node before you raise it.
+    - >-
+      Readiness removes the endpoint while the queue is full. The 90-second
+      termination window drains short work only.
+
+upgradeNotes:
+  - >-
+    Before each digest update, check the upstream license, browser security
+    fixes, and changes to the start command, paths or UID. Keep the previous
+    digest for rollback.
+  - >-
+    Drain/reconnect clients before replacing the Pod; running browser sessions
+    and ephemeral downloads are lost.
+  - >-
+    No persistent browser profiles, cookies, metrics or downloads are retained;
+    export any needed artifacts through the authenticated API before restart.
+  - >-
+    The only state to back up is the token in browserless-secrets. Back it up
+    with access control. Rotate the token if a browser compromise or a log
+    exposed it.
+
+smoke:
+  - name: browserless-ready
+    resource: deployment/browserless
+    condition: condition=Available
+    timeout: 300s
+  - name: authentication-required
+    resource: deployment/browserless
+    condition: condition=Available
+    timeout: 300s
+    http: {service: browserless, port: 3000, path: /pressure, status: 401}

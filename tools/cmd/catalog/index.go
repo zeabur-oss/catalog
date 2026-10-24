@@ -13,7 +13,7 @@ import (
 )
 
 // indexVersion changes only on incompatible changes to index.json.
-const indexVersion = 1
+const indexVersion = 2
 
 type budgetConfig struct {
 	SingleNode struct {
@@ -22,9 +22,10 @@ type budgetConfig struct {
 }
 
 // index writes index.json: every component with its install order and
-// measurements, recommended components per capability, the budget and the
-// Kubernetes versions.
-func index(fs *flag.FlagSet, cat *catalog.Catalog) error {
+// measurements, recommended components per capability, every template, the
+// budget and the Kubernetes versions.
+func index(fs *flag.FlagSet, r *repo) error {
+	cat := r.cat
 	out := fs.String("out", "index.json", "output file")
 	fs.Parse(os.Args[2:])
 	cfg, err := loadConfig()
@@ -48,7 +49,7 @@ func index(fs *flag.FlagSet, cat *catalog.Catalog) error {
 	capabilities := map[string]map[string][]string{}
 	var comps []component
 	for _, c := range cat.Components {
-		ic := component{Component: c, InstallOrder: map[string][]string{}, NonOSILicenses: licenses.NotOSIApproved(c.License)}
+		ic := component{Component: c, InstallOrder: map[string][]string{}, NonOSILicenses: licenses.NotOSIApproved(c.Metadata.License)}
 		for _, p := range catalog.Profiles {
 			if c.Defaults[p] == "unsupported" {
 				continue
@@ -79,12 +80,14 @@ func index(fs *flag.FlagSet, cat *catalog.Catalog) error {
 		"budget":       budget,
 		"capabilities": capabilities, // capability -> profile -> recommended IDs
 		"components":   comps,
+		"templates":    r.templates,
 	})
 }
 
 // budget sums the idle memory of every component recommended on single-node,
 // measured on single-node kind on amd64, and fails above the budget.
-func budget(fs *flag.FlagSet, cat *catalog.Catalog) error {
+func budget(fs *flag.FlagSet, r *repo) error {
+	cat := r.cat
 	fs.Parse(os.Args[2:])
 	var cfg budgetConfig
 	if err := catalog.ReadYAML("config/budget.yaml", &cfg); err != nil {

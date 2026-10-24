@@ -1,0 +1,206 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: browserless
+  namespace: {{ .Namespace }}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: browserless
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: browserless
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 90
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: browserless
+          image: ghcr.io/browserless/chromium:latest@sha256:f04924f64aec5fcfc35226433d76b749068398b2abf548b2ee8c2c93c0d11e45
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          ports:
+            - name: web
+              containerPort: 3000
+          env:
+            - name: TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: browserless-secrets
+                  key: token
+            - name: HOST
+              value: 0.0.0.0
+            - name: PORT
+              value: "3000"
+            - name: CONCURRENT
+              value: "4"
+            - name: QUEUED
+              value: "4"
+            - name: TIMEOUT
+              value: "60000"
+            - name: ALLOW_FILE_PROTOCOL
+              value: "false"
+            - name: ALLOW_GET
+              value: "false"
+            - name: CORS
+              value: "false"
+            - name: STRICT_TOKEN_USE
+              value: "true"
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+              ephemeral-storage: 256Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+              ephemeral-storage: 2Gi
+          startupProbe:
+            tcpSocket:
+              port: web
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            exec:
+              command:
+                - node
+                - -e
+                - 'fetch("http://127.0.0.1:3000/pressure?token="+encodeURIComponent(process.env.TOKEN),{headers:{Accept:"text/plain"}}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))'
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: web
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 6
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: home
+              mountPath: /home/blessuser
+            - name: shm
+              mountPath: /dev/shm
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 1Gi
+        - name: home
+          emptyDir:
+            sizeLimit: 256Mi
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: browserless
+  namespace: {{ .Namespace }}
+spec:
+  selector:
+    app.kubernetes.io/name: browserless
+  ports:
+    - name: web
+      port: 3000
+      targetPort: web
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: browserless
+  namespace: {{ .Namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: {{ .ClusterIssuer }}
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts: ["{{ .Domain }}"]
+      secretName: browserless-tls
+  rules:
+    - host: {{ .Domain }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: browserless
+                port:
+                  name: web
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: browserless-default-deny
+  namespace: {{ .Namespace }}
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+  ingress: []
+  egress: []
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: browserless-allow-traffic
+  namespace: {{ .Namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: browserless
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: [traefik, kube-system]
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: traefik
+      ports:
+        - protocol: TCP
+          port: 3000
+  egress:
+    - {{ dnsEgress }}
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 0.0.0.0/8
+              - 10.0.0.0/8
+              - 100.64.0.0/10
+              - 127.0.0.0/8
+              - 169.254.0.0/16
+              - 172.16.0.0/12
+              - 192.0.0.0/24
+              - 192.0.2.0/24
+              - 192.168.0.0/16
+              - 198.18.0.0/15
+              - 198.51.100.0/24
+              - 203.0.113.0/24
+              - 224.0.0.0/4
+              - 240.0.0.0/4
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 443

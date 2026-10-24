@@ -1,0 +1,105 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: CLIProxyAPI
+  description: >-
+    Authenticated OpenAI/Gemini-compatible API proxy with private OAuth
+    onboarding and management.
+  license: MIT
+  homepage: https://github.com/router-for-me/CLIProxyAPI
+  icon: https://github.com/router-for-me.png
+  categories: [ai]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: cliproxyapi
+    securityProfile: restricted
+    ports: [{name: http, port: 8317}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}
+    domains: ['{{ .Domain }}']
+
+inputs:
+  - name: apiKey
+    description: Client Bearer API key for /v1 requests. Provider credentials are separate.
+    generate: random
+    secret: {name: app-secrets, key: api-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: managementKey
+    description: >-
+      Management API key; management remains localhost-only and never receives
+      public ingress.
+    generate: random
+    secret: {name: app-secrets, key: management-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: >-
+    Restricted non-root workload; read-only root filesystem, no service-account
+    token, dropped capabilities, HTTPS ingress only from Traefik. Default-deny
+    networking permits cluster DNS and public HTTP(S), excluding private and
+    link-local networks.
+  egress:
+    - Cluster DNS UDP/TCP 53
+    - >-
+      Public Internet TCP 80/443; excludes private, loopback, link-local, CGNAT
+      and multicast IPv4 destinations
+  risks:
+    - risk: >-
+        OAuth refresh tokens grant upstream provider access and may be subject
+        to provider subscription restrictions.
+      mitigation: >-
+        Use only accounts you own and are permitted to proxy; credentials live
+        on the private PVC and backups must be encrypted. Onboard with native
+        device login through kubectl exec. Callback ports are not exposed.
+    - risk: >-
+        API keys can spend account quotas; management can read or mutate
+        sensitive proxy configuration.
+      mitigation: >-
+        Generated separate client/management keys; ingress exposes only /v1 and
+        /v1beta. Remote management and downloadable control panel are disabled.
+        For management, run kubectl -n NAMESPACE port-forward
+        deployment/cliproxyapi 8317:8317 --address 127.0.0.1 and do not publish
+        the tunnel.
+
+scalability:
+  summary: >-
+    One replica. Node-local RWO storage is not highly available; node loss
+    requires manual recovery from off-node backups.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - More replicas would write the same OAuth file store concurrently.
+    - >-
+      local-path is node-local and has no snapshots; copy the volume off the
+      node for backups
+
+upgradeNotes:
+  - >-
+    The container runs /CLIProxyAPI/CLIProxyAPI --config /runtime/config.yaml
+    --local-model with v8 configuration. No callback ports or management UI are
+    exposed.
+  - >-
+    Native OAuth credentials persist under /data/auth on local-path. Stop the
+    pod and back up that PVC and app-secrets encrypted off-node before digest
+    changes. Test a restore before production use.
+  - >-
+    Before upgrading, check v8 configuration compatibility, provider terms and
+    the stored token format. A rollback can fail after credentials migrate.
+  - >-
+    An init container regenerates the runtime config from the template settings
+    and generated keys at each pod start. Management config edits are lost when
+    the pod is replaced. Change settings in the template.
+  - >-
+    Inference fails until you connect a provider. Run native device-code login
+    with an account you own and are permitted to proxy: kubectl -n NAMESPACE
+    exec -it deployment/cliproxyapi -- /CLIProxyAPI/CLIProxyAPI --config
+    /runtime/config.yaml --codex-device-login --no-browser. Callback-based
+    provider logins need a localhost-only tunnel.
+
+smoke:
+  - name: cliproxyapi-ready
+    resource: deployment/cliproxyapi
+    condition: condition=Available
+    timeout: 300s
+    http: {service: cliproxyapi, port: 8317, path: /v1/models, status: 401}

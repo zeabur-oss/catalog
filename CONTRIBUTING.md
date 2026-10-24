@@ -1,7 +1,7 @@
 # Contributing
 
-Thanks for helping. The README explains the data format and how to add an
-upstream; this file covers the process.
+Thanks for helping. The README explains the data format and how to add a
+component or a template; this file covers the process.
 
 ## Developer Certificate of Origin
 
@@ -19,15 +19,17 @@ existing branch: `git rebase --signoff main`, then force-push.
 
 ## Pull requests
 
-- One upstream per pull request when you can; CI tests each component in
+- One component or template per pull request when you can; CI tests each in
   isolation.
-- Explain why the recommendation is right in the file's `rationale`, and why
-  each value is set in a comment next to it.
+- Explain why a component is recommended in its `metadata.description`, and
+  why each value is set in a comment next to it.
+- A template meets the [template standards](docs/template-standards.md).
 - Never copy secrets, account IDs, domains, IP addresses or cloud-specific
   settings into values.
 - Do not edit `measurements/`; CI writes it.
-- Run `go run ./tools/cmd/catalog validate` and `go run ./tools/cmd/catalog render -kubeconform`
-  before pushing (inside `nix develop`).
+- Run `go run ./tools/cmd/catalog validate` and `go run ./tools/cmd/catalog render`
+  before pushing, and `go run ./tools/cmd/catalog template lint <id>` for a
+  template (inside `nix develop`).
 
 ## License
 

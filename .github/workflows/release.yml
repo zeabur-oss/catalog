@@ -28,7 +28,7 @@ jobs:
           mkdir dist
           cp index.json dist/
           tar --sort=name --mtime="@0" --owner=0 --group=0 --numeric-owner -czf dist/bundle.tar.gz \
-            index.json capabilities schema config measurements LICENSE README.md
+            index.json components templates schema config measurements LICENSE README.md
           (cd dist && sha256sum bundle.tar.gz index.json > checksums.txt)
       - name: Sign
         run: |

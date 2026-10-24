@@ -30,7 +30,8 @@ type environment struct {
 	MeasuredAt    string            `json:"measuredAt"`
 }
 
-func e2e(fs *flag.FlagSet, cat *catalog.Catalog) error {
+func e2e(fs *flag.FlagSet, r *repo) error {
+	cat := r.cat
 	profile := fs.String("profile", "", "single-node or multi-node; the current cluster must match it")
 	write := fs.Bool("write", false, "update measurements/ for passing components")
 	previous := fs.String("previous", "", "previous release's index.json, for upgrade tests")
@@ -52,21 +53,9 @@ func e2e(fs *flag.FlagSet, cat *catalog.Catalog) error {
 	_, arch, _ := strings.Cut(version.ServerVersion.Platform, "/") // linux/amd64
 	key := *profile + "-" + arch + "-" + version.ServerVersion.GitVersion
 
-	var e2eCfg struct {
-		Overrides    map[string]map[string]string            `yaml:"overrides"`
-		Replacements map[string]map[string]map[string]string `yaml:"replacements"`
-		Unready      []string                                `yaml:"unready"`
-	}
-	if err := catalog.ReadYAML("config/e2e.yaml", &e2eCfg); err != nil {
+	t, err := newTester(cat, *profile)
+	if err != nil {
 		return err
-	}
-	t := &catalog.Tester{Catalog: cat, Profile: *profile, Overrides: e2eCfg.Overrides,
-		Replacements: e2eCfg.Replacements, Unready: map[string]bool{}}
-	for _, id := range e2eCfg.Unready {
-		if _, ok := cat.Get(id); !ok {
-			return fmt.Errorf("config/e2e.yaml: unready: unknown component %q", id)
-		}
-		t.Unready[id] = true
 	}
 	if *previous != "" {
 		if t.Previous, err = readPrevious(*previous); err != nil {
@@ -110,6 +99,27 @@ func e2e(fs *flag.FlagSet, cat *catalog.Catalog) error {
 		fmt.Printf("  %-48s %s\n", r.ID, status)
 	}
 	return errors.Join(errs...)
+}
+
+// newTester reads the test-only settings in config/e2e.yaml.
+func newTester(cat *catalog.Catalog, profile string) (*catalog.Tester, error) {
+	var cfg struct {
+		Overrides    map[string]map[string]string            `yaml:"overrides"`
+		Replacements map[string]map[string]map[string]string `yaml:"replacements"`
+		Unready      []string                                `yaml:"unready"`
+	}
+	if err := catalog.ReadYAML("config/e2e.yaml", &cfg); err != nil {
+		return nil, err
+	}
+	t := &catalog.Tester{Catalog: cat, Profile: profile, Overrides: cfg.Overrides,
+		Replacements: cfg.Replacements, Unready: map[string]bool{}}
+	for _, id := range cfg.Unready {
+		if _, ok := cat.Get(id); !ok {
+			return nil, fmt.Errorf("config/e2e.yaml: unready: unknown component %q", id)
+		}
+		t.Unready[id] = true
+	}
+	return t, nil
 }
 
 func readPrevious(path string) (map[string]*catalog.Component, error) {

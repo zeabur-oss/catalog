@@ -1,0 +1,243 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: WordPress
+  description: >-
+    WordPress PHP 8.3 with TLS MariaDB Operator 11.4 LTS, preinstalled owner and
+    native S3 backups.
+  license: GPL-2.0-or-later AND GPL-2.0-only AND BSD-2-Clause AND MIT
+  # Also: https://github.com/docker-library/wordpress, https://mariadb.org/, https://github.com/nginx/docker-nginx-unprivileged, https://github.com/mariadb-operator/mariadb-operator
+  homepage: https://wordpress.org/
+  icon: https://cdn.zeabur.com/marketplace/wordpress.png
+  categories: [cms]
+
+requires:
+  - ingress/traefik
+  - certificates/cert-manager
+  - databases/mariadb-operator
+
+services:
+  - name: wordpress
+    securityProfile: restricted
+    ports: [{name: http, port: 8080}]
+    resources: {requests: {cpu: 125m, memory: 320Mi}, limits: {cpu: 1500m, memory: 1280Mi}}
+    domains: ['{{ .Domain }}']
+  - name: mariadb
+    securityProfile: restricted
+    ports: [{name: database, port: 3306}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}
+
+inputs:
+  - name: adminEmail
+    description: WordPress administrator email.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
+  - name: databasePassword
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: database-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: databaseRootPassword
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: database-root-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: adminPassword
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: admin-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: wordpressAuthKey
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: auth-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: wordpressSecureAuthKey
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: secure-auth-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: wordpressLoggedInKey
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: logged-in-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: wordpressNonceKey
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: nonce-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: wordpressAuthSalt
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: auth-salt}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: wordpressSecureAuthSalt
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: secure-auth-salt}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: wordpressLoggedInSalt
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: logged-in-salt}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: wordpressNonceSalt
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: nonce-salt}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: backupBucket
+    description: >-
+      Existing dedicated S3-compatible bucket; restrict credentials to this
+      namespace prefix. Backups must be off-node.
+    required: true
+    validation: {pattern: '^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$'}
+  - name: backupEndpoint
+    description: >-
+      S3 HTTPS endpoint HOST:PORT without scheme (port mandatory, for example
+      s3.example.com:443); must match backupEndpointPort and resolve inside
+      backupEndpointCIDR.
+    required: true
+    validation: {pattern: '^[a-zA-Z0-9.-]+:[0-9]{1,5}$'}
+  - name: backupEndpointPort
+    description: S3 destination TCP port, exactly matching backupEndpoint.
+    required: true
+    validation:
+      pattern: ^([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$
+  - name: backupEndpointCIDR
+    description: >-
+      IPv4 S3 egress CIDR (prefer /32); update when endpoint DNS changes. Do not
+      use 0.0.0.0/0.
+    required: true
+    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([1-9]|[12][0-9]|3[0-2])$'}
+  - name: backupRegion
+    description: S3 bucket region accepted by the chosen service.
+    required: true
+    validation: {pattern: '^[a-zA-Z0-9-]{1,63}$'}
+  - name: backupCredentialsSecret
+    description: >-
+      Existing namespace Secret containing ACCESS_KEY_ID and ACCESS_SECRET_KEY
+      credentials, created out of band. The template does not generate cloud
+      keys.
+    required: true
+    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: backupCASecret
+    description: >-
+      Existing namespace Secret with ca.crt PEM trust bundle for the HTTPS S3
+      endpoint, created out of band (public root bundle or private CA).
+    required: true
+    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+
+security:
+  summary: >-
+    Restricted non-root application and MariaDB/operator-backup Pods,
+    TLS-required database, generated SQL credentials, default-deny networking
+    and native HTTPS S3 backups. Operator helper images are a catalog trust
+    boundary.
+  egress:
+    - DNS TCP/UDP53 for backup Pods
+    - Backup Pods to MariaDB TCP3306 and the S3 endpoint CIDR/port
+    - >-
+      WordPress to MariaDB3306 using TLS; public IPv4 HTTPS443 for updates with
+      private ranges excluded
+  risks:
+    - risk: >-
+        WordPress plugins and themes execute code with database and
+        uploaded-file access.
+      mitigation: >-
+        Restrict administrators, vet plugins and keep them patched. No public
+        FastCGI port; deny PHP execution in uploads and deny
+        wp-config/hidden/raw backup files.
+    - risk: An unconfigured WordPress installation lets the first visitor claim the site.
+      mitigation: >-
+        A digest-pinned official WP-CLI init container creates the admin with a
+        generated password before web Pods become ready. Nothing is downloaded
+        at runtime.
+    - risk: >-
+        MariaDB Operator is namespace-spanning trusted infrastructure and
+        injects its controller-configured helper image into backup Jobs; Backup
+        API has no image override.
+      mitigation: >-
+        Install the exact catalog provider and pin its image configuration
+        before use. The engine init container inherits the template digest; both
+        backup container contexts are restricted. MaxScale and Galera are not
+        installed.
+    - risk: >-
+        Native S3 backups are daily logical database dumps with no point-in-time
+        recovery. They do not include uploads, plugins or themes on the
+        wordpress-data volume. The 10Gi local-path staging volumes used during
+        backup are not a backup.
+      mitigation: >-
+        Use an off-node bucket with namespace-specific credentials, preserve SQL
+        Secrets and TLS PKI, configure retention and run restore drills. Quiesce
+        WordPress and archive the wordpress-data volume and Secrets at the same
+        recovery point as the database.
+
+scalability:
+  summary: >-
+    One WordPress Pod and one MariaDB writer, each on a 10Gi node-local
+    local-path volume. There is no automatic horizontal scaling.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - Node-local ReadWriteOnce storage has no HA, snapshots or cross-node failover.
+
+upgradeNotes:
+  - >-
+    Preserve Secrets and PVCs. Back up data off-node and rehearse a restore
+    before changing image digests.
+  - >-
+    WordPress runs PHP 8.3 on PHP-FPM (UID 82) behind unprivileged NGINX (UID
+    101). MariaDB is 11.4 LTS. Uploads are capped at 256MiB, PHP memory at 1GiB
+    and execution time at 300s.
+  - >-
+    WordPress connects to MariaDB with TLS and verifies the server certificate
+    against mariadb-ca-bundle/ca.crt. The trust bundle is built at Pod start;
+    restart WordPress after a MariaDB CA rotation.
+  - >-
+    The wordpress SQL user has SELECT, INSERT, UPDATE, DELETE, CREATE, DROP,
+    ALTER and INDEX on zeabur.* only, without GRANT OPTION. Plugins that need
+    other privileges or MySQL-only SQL can fail.
+  - >-
+    WordPress core/plugins/themes on the persistent HTML volume update through
+    WordPress; changing the seed image does not overwrite existing content.
+    Apply security updates in the admin UI or via /tools/wp inside the WordPress
+    container; retain backups for rollback.
+  - >-
+    Admin username is admin; retrieve wordpress-secrets/admin-password securely.
+    Initial installation is automatic; do not rerun core install against an
+    existing database. Domain is fixed via WP_HOME/WP_SITEURL; use pinned
+    /tools/wp search-replace for stored links.
+  - >-
+    Database storage uses new operator-owned PVCs. To move from a
+    StatefulSet-based deployment, restore a logical dump and the uploads into a
+    separate namespace; do not adopt, mount or downgrade an old datadir. Verify
+    URLs, plugins, TLS and admin login, then move traffic. Keep old PVCs,
+    Secrets and backups until a restore and application acceptance test
+    succeeds.
+  - >-
+    MariaDB Operator chart26.10.1 retains PVCs on scale/delete via explicit
+    Retain policy. Keep the CRD release installed while any data exists. Engine
+    auto-update is off; check exact-version compatibility before each engine
+    upgrade. Image changes do not reverse SQL migrations.
+  - >-
+    Initial Backup mariadb-initial-backup plus native daily scheduled Backup
+    mariadb-daily-backup at03:00UTC use independent prefixes and30-day
+    retention. Complete=True alone can mean failure; require Complete reason
+    JobComplete and actual Job Complete=True. Rotate external S3 credentials out
+    of band.
+
+smoke:
+  - name: workload-ready
+    resource: deployment/wordpress
+    condition: condition=Available
+    timeout: 900s
+  - name: database-ready
+    resource: mariadb/mariadb
+    condition: condition=Ready
+    timeout: 900s
+  - name: initial-native-backup-succeeded
+    resource: backups.k8s.mariadb.com/mariadb-initial-backup
+    condition: jsonpath={.status.conditions[?(@.type=="Complete")].reason}=JobComplete
+    timeout: 900s

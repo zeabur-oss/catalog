@@ -1,0 +1,2472 @@
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: dify-db-backups
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-db-backups
+spec:
+  retentionPolicy: 7d
+  configuration:
+    destinationPath: '{{ .Inputs.backupDestination }}'
+    endpointURL: '{{ .Inputs.backupEndpoint }}'
+    s3Credentials:
+      accessKeyId:
+        name: '{{ .Inputs.backupSecret }}'
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: '{{ .Inputs.backupSecret }}'
+        key: ACCESS_SECRET_KEY
+    wal:
+      compression: gzip
+    data:
+      compression: gzip
+  instanceSidecarConfiguration:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: '1'
+        memory: 512Mi
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: dify-db-daily
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-db-daily
+spec:
+  schedule: 0 0 2 * * *
+  immediate: true
+  backupOwnerReference: self
+  cluster:
+    name: dify-db
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dify-db-connectivity
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-db-connectivity
+spec:
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: dify-db
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          templates.zeabur.com/postgresql-client: 'true'
+    ports:
+    - protocol: TCP
+      port: 5432
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: cnpg-system
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: cloudnative-pg
+    ports:
+    - protocol: TCP
+      port: 8000
+    - protocol: TCP
+      port: 5432
+  - from:
+    - podSelector:
+        matchLabels:
+          cnpg.io/cluster: dify-db
+    ports:
+    - protocol: TCP
+      port: 5432
+    - protocol: TCP
+      port: 8000
+  egress:
+  - {{ dnsEgress }}
+  - to:
+    - ipBlock:
+        cidr: '{{ .Inputs.kubeApiCidr }}'
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 6443
+  - to:
+    - ipBlock:
+        cidr: '{{ .Inputs.backupCidr }}'
+    ports:
+    - protocol: TCP
+      port: 443
+  - to:
+    - podSelector:
+        matchLabels:
+          cnpg.io/cluster: dify-db
+    ports:
+    - protocol: TCP
+      port: 5432
+    - protocol: TCP
+      port: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dify-default-deny
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-default-deny
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dify-api-storage
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-api-storage
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dify-api
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-api
+spec:
+  selector:
+    app.kubernetes.io/name: dify-api
+  ports:
+  - name: http
+    port: 5001
+    targetPort: 5001
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dify-api-connections
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-api-connections
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: dify-api
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify
+    ports:
+    - protocol: TCP
+      port: 5001
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-plugin
+    ports:
+    - protocol: TCP
+      port: 5001
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: dify-dragonfly
+    ports:
+    - protocol: TCP
+      port: 6379
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-plugin
+    ports:
+    - protocol: TCP
+      port: 5002
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-sandbox
+    ports:
+    - protocol: TCP
+      port: 8194
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-proxy
+    ports:
+    - protocol: TCP
+      port: 3128
+  - to:
+    - podSelector:
+        matchLabels:
+          cnpg.io/cluster: dify-db
+    ports:
+    - protocol: TCP
+      port: 5432
+  - {{ dnsEgress }}
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 0.0.0.0/8
+        - 10.0.0.0/8
+        - 100.64.0.0/10
+        - 127.0.0.0/8
+        - 169.254.0.0/16
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - 224.0.0.0/4
+        - 240.0.0.0/4
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dify-worker-connections
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-worker-connections
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: dify-worker
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress: []
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: dify-dragonfly
+    ports:
+    - protocol: TCP
+      port: 6379
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-plugin
+    ports:
+    - protocol: TCP
+      port: 5002
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-sandbox
+    ports:
+    - protocol: TCP
+      port: 8194
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-proxy
+    ports:
+    - protocol: TCP
+      port: 3128
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-api
+    ports:
+    - protocol: TCP
+      port: 5001
+  - to:
+    - podSelector:
+        matchLabels:
+          cnpg.io/cluster: dify-db
+    ports:
+    - protocol: TCP
+      port: 5432
+  - {{ dnsEgress }}
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 0.0.0.0/8
+        - 10.0.0.0/8
+        - 100.64.0.0/10
+        - 127.0.0.0/8
+        - 169.254.0.0/16
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - 224.0.0.0/4
+        - 240.0.0.0/4
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dify-beat-connections
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-beat-connections
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: dify-beat
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress: []
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: dify-dragonfly
+    ports:
+    - protocol: TCP
+      port: 6379
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-plugin
+    ports:
+    - protocol: TCP
+      port: 5002
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-sandbox
+    ports:
+    - protocol: TCP
+      port: 8194
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-proxy
+    ports:
+    - protocol: TCP
+      port: 3128
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-api
+    ports:
+    - protocol: TCP
+      port: 5001
+  - to:
+    - podSelector:
+        matchLabels:
+          cnpg.io/cluster: dify-db
+    ports:
+    - protocol: TCP
+      port: 5432
+  - {{ dnsEgress }}
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 0.0.0.0/8
+        - 10.0.0.0/8
+        - 100.64.0.0/10
+        - 127.0.0.0/8
+        - 169.254.0.0/16
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - 224.0.0.0/4
+        - 240.0.0.0/4
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dify-dragonfly-connections
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-dragonfly-connections
+spec:
+  podSelector:
+    matchLabels:
+      app: dify-dragonfly
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-api
+    ports:
+    - protocol: TCP
+      port: 6379
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-worker
+    ports:
+    - protocol: TCP
+      port: 6379
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-beat
+    ports:
+    - protocol: TCP
+      port: 6379
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-plugin
+    ports:
+    - protocol: TCP
+      port: 6379
+  - from:
+    - podSelector:
+        matchLabels:
+          templates.zeabur.com/dragonfly-backup: dify-dragonfly
+    ports:
+    - protocol: TCP
+      port: 6379
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: dragonfly-operator-system
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dragonfly-operator
+    ports:
+    - protocol: TCP
+      port: 9999
+  egress:
+  - {{ dnsEgress }}
+  - to:
+    - ipBlock:
+        cidr: '{{ .Inputs.dragonflyBackupCidr }}'
+    ports:
+    - protocol: TCP
+      port: 443
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dify-web
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-web
+spec:
+  selector:
+    app.kubernetes.io/name: dify-web
+  ports:
+  - name: http
+    port: 3000
+    targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dify-web-connections
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-web-connections
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: dify-web
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify
+    ports:
+    - protocol: TCP
+      port: 3000
+  egress:
+  - {{ dnsEgress }}
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 0.0.0.0/8
+        - 10.0.0.0/8
+        - 100.64.0.0/10
+        - 127.0.0.0/8
+        - 169.254.0.0/16
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - 224.0.0.0/4
+        - 240.0.0.0/4
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dify-plugin-storage
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-plugin-storage
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dify-plugin
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-plugin
+spec:
+  selector:
+    app.kubernetes.io/name: dify-plugin
+  ports:
+  - name: http
+    port: 5002
+    targetPort: 5002
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dify-plugin-connections
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-plugin-connections
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: dify-plugin
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-api
+    ports:
+    - protocol: TCP
+      port: 5002
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-worker
+    ports:
+    - protocol: TCP
+      port: 5002
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-beat
+    ports:
+    - protocol: TCP
+      port: 5002
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify
+    ports:
+    - protocol: TCP
+      port: 5002
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: dify-dragonfly
+    ports:
+    - protocol: TCP
+      port: 6379
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-api
+    ports:
+    - protocol: TCP
+      port: 5001
+  - to:
+    - podSelector:
+        matchLabels:
+          cnpg.io/cluster: dify-db
+    ports:
+    - protocol: TCP
+      port: 5432
+  - {{ dnsEgress }}
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 0.0.0.0/8
+        - 10.0.0.0/8
+        - 100.64.0.0/10
+        - 127.0.0.0/8
+        - 169.254.0.0/16
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - 224.0.0.0/4
+        - 240.0.0.0/4
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dify-sandbox
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-sandbox
+spec:
+  selector:
+    app.kubernetes.io/name: dify-sandbox
+  ports:
+  - name: http
+    port: 8194
+    targetPort: 8194
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dify-sandbox-connections
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-sandbox-connections
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: dify-sandbox
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-api
+    ports:
+    - protocol: TCP
+      port: 8194
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-worker
+    ports:
+    - protocol: TCP
+      port: 8194
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-beat
+    ports:
+    - protocol: TCP
+      port: 8194
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-proxy
+    ports:
+    - protocol: TCP
+      port: 3128
+  - {{ dnsEgress }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dify-proxy-config
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-proxy-config
+data:
+  squid.conf: 'http_port 3128
+
+    pid_filename /tmp/squid.pid
+
+    access_log stdio:/dev/stdout
+
+    cache_log /dev/stderr
+
+    cache_store_log none
+
+    logfile_rotate 0
+
+    cache deny all
+
+    coredump_dir /tmp
+
+    acl manager proto cache_object
+
+    acl CONNECT method CONNECT
+
+    acl Safe_ports port 80 443
+
+    acl SSL_ports port 443
+
+    acl private dst 0.0.0.0/8 10.0.0.0/8 100.64.0.0/10 127.0.0.0/8 169.254.0.0/16 172.16.0.0/12 192.168.0.0/16 224.0.0.0/4
+    240.0.0.0/4 ::/0
+
+    http_access deny manager
+
+    http_access deny !Safe_ports
+
+    http_access deny CONNECT !SSL_ports
+
+    http_access deny private
+
+    http_access allow all
+
+    forwarded_for delete
+
+    via off
+
+    '
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dify-proxy
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-proxy
+spec:
+  selector:
+    app.kubernetes.io/name: dify-proxy
+  ports:
+  - name: http
+    port: 3128
+    targetPort: 3128
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dify-proxy-connections
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-proxy-connections
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: dify-proxy
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-api
+    ports:
+    - protocol: TCP
+      port: 3128
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-worker
+    ports:
+    - protocol: TCP
+      port: 3128
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-beat
+    ports:
+    - protocol: TCP
+      port: 3128
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-sandbox
+    ports:
+    - protocol: TCP
+      port: 3128
+  egress:
+  - {{ dnsEgress }}
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 0.0.0.0/8
+        - 10.0.0.0/8
+        - 100.64.0.0/10
+        - 127.0.0.0/8
+        - 169.254.0.0/16
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - 224.0.0.0/4
+        - 240.0.0.0/4
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dify-gateway-config
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-gateway-config
+data:
+  nginx.conf: "worker_processes auto;\npid /tmp/nginx.pid;\nerror_log /dev/stderr warn;\nevents { worker_connections 1024;\
+    \ }\nhttp {\n  include /etc/nginx/mime.types;\n  default_type application/octet-stream;\n  access_log /dev/stdout;\n \
+    \ client_body_temp_path /tmp/client;\n  proxy_temp_path /tmp/proxy;\n  fastcgi_temp_path /tmp/fastcgi;\n  uwsgi_temp_path\
+    \ /tmp/uwsgi;\n  scgi_temp_path /tmp/scgi;\n  client_max_body_size 100m;\n  proxy_set_header Host $host;\n  proxy_set_header\
+    \ X-Forwarded-For $proxy_add_x_forwarded_for;\n  proxy_set_header X-Forwarded-Proto https;\n  proxy_set_header X-Forwarded-Port\
+    \ 443;\n  proxy_http_version 1.1;\n  proxy_set_header Connection \"\";\n  proxy_buffering off;\n  proxy_read_timeout 3600s;\n\
+    \  proxy_send_timeout 3600s;\n  server {\n    listen 8080;\n    server_name _;\n    location ~ ^/(console/api|api|v1|files|mcp|triggers)(/|$)\
+    \ { proxy_pass http://dify-api:5001; }\n    location ~ ^/e/([^/]+)(/.*)?$ {\n      set $hook_id $1;\n      proxy_pass\
+    \ http://dify-plugin:5002;\n      proxy_set_header Dify-Hook-Url https://$host$request_uri;\n      proxy_redirect ~^/(?!e/)(.+)$\
+    \ /e/$hook_id/$1;\n    }\n    location / { proxy_pass http://dify-web:3000; }\n  }\n}\n"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dify
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dify
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dify
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: dify
+        image: docker.io/nginxinc/nginx-unprivileged:1.28.2-alpine@sha256:7377697a821c131a924a7105fafbe7414db4e9fcc77a6f08f776f33f141ec3f8
+        ports:
+        - name: http
+          containerPort: 8080
+        env: []
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: '2'
+            memory: 2Gi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: config
+          mountPath: /config
+          readOnly: true
+        command:
+        - nginx
+        - -c
+        - /config/nginx.conf
+        - -g
+        - daemon off;
+        readinessProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 6
+        livenessProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 6
+        startupProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: config
+        configMap:
+          name: dify-gateway-config
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dify-gateway-default-deny
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-gateway-default-deny
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: dify
+  policyTypes:
+  - Ingress
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dify-allow
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-allow
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: dify
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: traefik
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: traefik
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-api
+    ports:
+    - protocol: TCP
+      port: 5001
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-web
+    ports:
+    - protocol: TCP
+      port: 3000
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-plugin
+    ports:
+    - protocol: TCP
+      port: 5002
+  - {{ dnsEgress }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dify
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify
+spec:
+  selector:
+    app.kubernetes.io/name: dify
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dify
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify
+  annotations:
+    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.priority: '10'
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - '{{ .Domain }}'
+    secretName: dify-tls
+  rules:
+  - host: '{{ .Domain }}'
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: dify
+            port:
+              name: http
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: dify-admin
+  namespace: '{{ .Namespace }}'
+spec:
+  ipAllowList:
+    sourceRange: ['{{ .Inputs.adminCidr }}']
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dify-console
+  namespace: '{{ .Namespace }}'
+  annotations:
+    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.priority: '100'
+    traefik.ingress.kubernetes.io/router.middlewares: '{{ .Namespace }}-dify-admin@kubernetescrd'
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - '{{ .Domain }}'
+    secretName: dify-tls
+  rules:
+  - host: '{{ .Domain }}'
+    http:
+      paths:
+      - path: /console/api
+        pathType: Prefix
+        backend:
+          service:
+            name: dify
+            port:
+              name: http
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Backup
+metadata:
+  name: dify-db-initial
+  namespace: '{{ .Namespace }}'
+spec:
+  cluster:
+    name: dify-db
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dify-dragonfly
+  namespace: '{{ .Namespace }}'
+automountServiceAccountToken: false
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dify-dragonfly-initial
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector:
+    matchLabels:
+      templates.zeabur.com/dragonfly-backup: dify-dragonfly
+  policyTypes: [Ingress, Egress]
+  ingress: []
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: dify-dragonfly
+    ports:
+    - protocol: TCP
+      port: 6379
+  - {{ dnsEgress }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: dify-dragonfly-initial
+  namespace: '{{ .Namespace }}'
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 900
+  template:
+    metadata:
+      labels:
+        templates.zeabur.com/dragonfly-backup: dify-dragonfly
+    spec:
+      restartPolicy: Never
+      serviceAccountName: dify-dragonfly
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: snapshot
+        image: docker.dragonflydb.io/dragonflydb/dragonfly:v2.0.2@sha256:061f00b201b58e12f974e4e96c761a881ee1c05e9d8ee967466a604b7299753b
+        command: [/bin/sh, -ec]
+        args:
+        - |
+          until test "$(redis-cli -h dify-dragonfly --raw -e PING 2>/dev/null)" = PONG; do sleep 2; done
+          snapshot="dump-$(date -u +%Y-%m-%dT%H:%M:%S)"
+          test "$(redis-cli -h dify-dragonfly --raw -e SAVE DF "$BACKUP_DESTINATION" "$snapshot")" = OK
+          info="$(redis-cli -h dify-dragonfly --raw -e INFO persistence | tr -d '\r')"
+          printf '%s\n' "$info" | grep -qx 'saving:0'
+          printf '%s\n' "$info" | grep -Fqx "last_saved_file:${BACKUP_DESTINATION}/${snapshot}-summary.dfs"
+          printf '%s\n' "$info" | grep -Eq '^last_success_save:[1-9][0-9]*$'
+          test "$(redis-cli -h dify-dragonfly --raw -e LASTSAVE)" -gt 0
+          printf 'Completed native Dragonfly S3 snapshot: %s/%s-summary.dfs\n' "$BACKUP_DESTINATION" "$snapshot"
+        env:
+        - name: REDISCLI_AUTH
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: redis-password
+        - name: BACKUP_DESTINATION
+          value: '{{ .Inputs.dragonflyBackupDestination }}'
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: [ALL]
+        resources:
+          requests:
+            cpu: 25m
+            memory: 32Mi
+          limits:
+            cpu: 250m
+            memory: 128Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dify-api
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-api
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dify-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dify-api
+        templates.zeabur.com/postgresql-client: 'true'
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: dify-api
+        image: docker.io/langgenius/dify-api:1.13.0@sha256:5f622b4d0b39bdc6d3b401063cfb60962fa92dcc63f55daccec138f98b260e67
+        ports:
+        - name: http
+          containerPort: 5001
+        env:
+        - name: DB_TYPE
+          value: postgresql
+        - name: DB_HOST
+          value: dify-db-rw
+        - name: DB_PORT
+          value: '5432'
+        - name: DB_DATABASE
+          value: dify
+        - name: DB_USERNAME
+          value: app
+        - name: REDIS_HOST
+          value: dify-dragonfly
+        - name: REDIS_PORT
+          value: '6379'
+        - name: REDIS_DB
+          value: '0'
+        - name: REDIS_USE_SSL
+          value: 'false'
+        - name: VECTOR_STORE
+          value: pgvector
+        - name: PGVECTOR_HOST
+          value: dify-db-rw
+        - name: PGVECTOR_PORT
+          value: '5432'
+        - name: PGVECTOR_USER
+          value: app
+        - name: PGVECTOR_DATABASE
+          value: dify
+        - name: PGVECTOR_PG_BIGM
+          value: 'false'
+        - name: STORAGE_TYPE
+          value: s3
+        - name: S3_ENDPOINT
+          value: '{{ .Inputs.storageEndpoint }}'
+        - name: S3_REGION
+          value: '{{ .Inputs.storageRegion }}'
+        - name: S3_BUCKET_NAME
+          value: '{{ .Inputs.storageBucket }}'
+        - name: S3_USE_AWS_MANAGED_IAM
+          value: 'false'
+        - name: PLUGIN_DAEMON_URL
+          value: http://dify-plugin:5002
+        - name: PLUGIN_REMOTE_INSTALL_HOST
+          value: dify-plugin
+        - name: PLUGIN_REMOTE_INSTALL_PORT
+          value: '5003'
+        - name: CODE_EXECUTION_ENDPOINT
+          value: http://dify-sandbox:8194
+        - name: SSRF_PROXY_HTTP_URL
+          value: http://dify-proxy:3128
+        - name: SSRF_PROXY_HTTPS_URL
+          value: http://dify-proxy:3128
+        - name: INTERNAL_FILES_URL
+          value: http://dify-api:5001
+        - name: MARKETPLACE_ENABLED
+          value: 'true'
+        - name: MARKETPLACE_API_URL
+          value: https://marketplace.dify.ai
+        - name: INNER_API
+          value: 'true'
+        - name: ENDPOINT_URL_TEMPLATE
+          value: https://{{ .Domain }}/e/{hook_id}
+        - name: LANG
+          value: C.UTF-8
+        - name: LC_ALL
+          value: C.UTF-8
+        - name: PYTHONDONTWRITEBYTECODE
+          value: '1'
+        - name: HOME
+          value: /tmp
+        - name: UV_CACHE_DIR
+          value: /tmp/uv
+        - name: TIKTOKEN_CACHE_DIR
+          value: /tmp/tiktoken
+        - name: LOG_FILE
+          value: /tmp/server.log
+        - name: DEPLOY_ENV
+          value: PRODUCTION
+        - name: EDITION
+          value: SELF_HOSTED
+        - name: APP_WEB_URL
+          value: https://{{ .Domain }}
+        - name: APP_API_URL
+          value: https://{{ .Domain }}
+        - name: CONSOLE_API_URL
+          value: https://{{ .Domain }}
+        - name: CONSOLE_WEB_URL
+          value: https://{{ .Domain }}
+        - name: FILES_URL
+          value: https://{{ .Domain }}
+        - name: SERVICE_API_URL
+          value: https://{{ .Domain }}
+        - name: TRIGGER_URL
+          value: https://{{ .Domain }}
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dify-db-app
+              key: password
+        - name: PGVECTOR_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dify-db-app
+              key: password
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: redis-password
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: app-key
+        - name: INNER_API_KEY_FOR_PLUGIN
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: app-key
+        - name: INNER_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: app-key
+        - name: PLUGIN_DAEMON_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: app-key
+        - name: CODE_EXECUTION_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: sandbox-key
+        - name: S3_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: '{{ .Inputs.storageSecret }}'
+              key: access-key
+        - name: S3_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: '{{ .Inputs.storageSecret }}'
+              key: secret-key
+        - name: CELERY_BROKER_URL
+          value: redis://:$(REDIS_PASSWORD)@dify-dragonfly:6379/1
+        - name: MODE
+          value: api
+        - name: MIGRATION_ENABLED
+          value: 'true'
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: '2'
+            memory: 2Gi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: storage
+          mountPath: /app/api/storage
+        readinessProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 6
+        livenessProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 6
+        startupProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: storage
+        persistentVolumeClaim:
+          claimName: dify-api-storage
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dify-worker
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-worker
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dify-worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dify-worker
+        templates.zeabur.com/postgresql-client: 'true'
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: dify-worker
+        image: docker.io/langgenius/dify-api:1.13.0@sha256:5f622b4d0b39bdc6d3b401063cfb60962fa92dcc63f55daccec138f98b260e67
+        env:
+        - name: DB_TYPE
+          value: postgresql
+        - name: DB_HOST
+          value: dify-db-rw
+        - name: DB_PORT
+          value: '5432'
+        - name: DB_DATABASE
+          value: dify
+        - name: DB_USERNAME
+          value: app
+        - name: REDIS_HOST
+          value: dify-dragonfly
+        - name: REDIS_PORT
+          value: '6379'
+        - name: REDIS_DB
+          value: '0'
+        - name: REDIS_USE_SSL
+          value: 'false'
+        - name: VECTOR_STORE
+          value: pgvector
+        - name: PGVECTOR_HOST
+          value: dify-db-rw
+        - name: PGVECTOR_PORT
+          value: '5432'
+        - name: PGVECTOR_USER
+          value: app
+        - name: PGVECTOR_DATABASE
+          value: dify
+        - name: PGVECTOR_PG_BIGM
+          value: 'false'
+        - name: STORAGE_TYPE
+          value: s3
+        - name: S3_ENDPOINT
+          value: '{{ .Inputs.storageEndpoint }}'
+        - name: S3_REGION
+          value: '{{ .Inputs.storageRegion }}'
+        - name: S3_BUCKET_NAME
+          value: '{{ .Inputs.storageBucket }}'
+        - name: S3_USE_AWS_MANAGED_IAM
+          value: 'false'
+        - name: PLUGIN_DAEMON_URL
+          value: http://dify-plugin:5002
+        - name: PLUGIN_REMOTE_INSTALL_HOST
+          value: dify-plugin
+        - name: PLUGIN_REMOTE_INSTALL_PORT
+          value: '5003'
+        - name: CODE_EXECUTION_ENDPOINT
+          value: http://dify-sandbox:8194
+        - name: SSRF_PROXY_HTTP_URL
+          value: http://dify-proxy:3128
+        - name: SSRF_PROXY_HTTPS_URL
+          value: http://dify-proxy:3128
+        - name: INTERNAL_FILES_URL
+          value: http://dify-api:5001
+        - name: MARKETPLACE_ENABLED
+          value: 'true'
+        - name: MARKETPLACE_API_URL
+          value: https://marketplace.dify.ai
+        - name: INNER_API
+          value: 'true'
+        - name: ENDPOINT_URL_TEMPLATE
+          value: https://{{ .Domain }}/e/{hook_id}
+        - name: LANG
+          value: C.UTF-8
+        - name: LC_ALL
+          value: C.UTF-8
+        - name: PYTHONDONTWRITEBYTECODE
+          value: '1'
+        - name: HOME
+          value: /tmp
+        - name: UV_CACHE_DIR
+          value: /tmp/uv
+        - name: TIKTOKEN_CACHE_DIR
+          value: /tmp/tiktoken
+        - name: LOG_FILE
+          value: /tmp/server.log
+        - name: DEPLOY_ENV
+          value: PRODUCTION
+        - name: EDITION
+          value: SELF_HOSTED
+        - name: APP_WEB_URL
+          value: https://{{ .Domain }}
+        - name: APP_API_URL
+          value: https://{{ .Domain }}
+        - name: CONSOLE_API_URL
+          value: https://{{ .Domain }}
+        - name: CONSOLE_WEB_URL
+          value: https://{{ .Domain }}
+        - name: FILES_URL
+          value: https://{{ .Domain }}
+        - name: SERVICE_API_URL
+          value: https://{{ .Domain }}
+        - name: TRIGGER_URL
+          value: https://{{ .Domain }}
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dify-db-app
+              key: password
+        - name: PGVECTOR_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dify-db-app
+              key: password
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: redis-password
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: app-key
+        - name: INNER_API_KEY_FOR_PLUGIN
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: app-key
+        - name: INNER_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: app-key
+        - name: PLUGIN_DAEMON_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: app-key
+        - name: CODE_EXECUTION_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: sandbox-key
+        - name: S3_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: '{{ .Inputs.storageSecret }}'
+              key: access-key
+        - name: S3_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: '{{ .Inputs.storageSecret }}'
+              key: secret-key
+        - name: CELERY_BROKER_URL
+          value: redis://:$(REDIS_PASSWORD)@dify-dragonfly:6379/1
+        - name: MODE
+          value: worker
+        - name: MIGRATION_ENABLED
+          value: 'false'
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: '2'
+            memory: 2Gi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: storage
+          mountPath: /app/api/storage
+        readinessProbe:
+          exec:
+            command:
+            - /app/api/.venv/bin/python
+            - -c
+            - import pathlib; assert b'celery' in pathlib.Path('/proc/1/cmdline').read_bytes()
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 6
+        livenessProbe:
+          exec:
+            command:
+            - /app/api/.venv/bin/python
+            - -c
+            - import pathlib; assert b'celery' in pathlib.Path('/proc/1/cmdline').read_bytes()
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 6
+        startupProbe:
+          exec:
+            command:
+            - /app/api/.venv/bin/python
+            - -c
+            - import pathlib; assert b'celery' in pathlib.Path('/proc/1/cmdline').read_bytes()
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 20
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: storage
+        emptyDir:
+          sizeLimit: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dify-beat
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-beat
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dify-beat
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dify-beat
+        templates.zeabur.com/postgresql-client: 'true'
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: dify-beat
+        image: docker.io/langgenius/dify-api:1.13.0@sha256:5f622b4d0b39bdc6d3b401063cfb60962fa92dcc63f55daccec138f98b260e67
+        env:
+        - name: DB_TYPE
+          value: postgresql
+        - name: DB_HOST
+          value: dify-db-rw
+        - name: DB_PORT
+          value: '5432'
+        - name: DB_DATABASE
+          value: dify
+        - name: DB_USERNAME
+          value: app
+        - name: REDIS_HOST
+          value: dify-dragonfly
+        - name: REDIS_PORT
+          value: '6379'
+        - name: REDIS_DB
+          value: '0'
+        - name: REDIS_USE_SSL
+          value: 'false'
+        - name: VECTOR_STORE
+          value: pgvector
+        - name: PGVECTOR_HOST
+          value: dify-db-rw
+        - name: PGVECTOR_PORT
+          value: '5432'
+        - name: PGVECTOR_USER
+          value: app
+        - name: PGVECTOR_DATABASE
+          value: dify
+        - name: PGVECTOR_PG_BIGM
+          value: 'false'
+        - name: STORAGE_TYPE
+          value: s3
+        - name: S3_ENDPOINT
+          value: '{{ .Inputs.storageEndpoint }}'
+        - name: S3_REGION
+          value: '{{ .Inputs.storageRegion }}'
+        - name: S3_BUCKET_NAME
+          value: '{{ .Inputs.storageBucket }}'
+        - name: S3_USE_AWS_MANAGED_IAM
+          value: 'false'
+        - name: PLUGIN_DAEMON_URL
+          value: http://dify-plugin:5002
+        - name: PLUGIN_REMOTE_INSTALL_HOST
+          value: dify-plugin
+        - name: PLUGIN_REMOTE_INSTALL_PORT
+          value: '5003'
+        - name: CODE_EXECUTION_ENDPOINT
+          value: http://dify-sandbox:8194
+        - name: SSRF_PROXY_HTTP_URL
+          value: http://dify-proxy:3128
+        - name: SSRF_PROXY_HTTPS_URL
+          value: http://dify-proxy:3128
+        - name: INTERNAL_FILES_URL
+          value: http://dify-api:5001
+        - name: MARKETPLACE_ENABLED
+          value: 'true'
+        - name: MARKETPLACE_API_URL
+          value: https://marketplace.dify.ai
+        - name: INNER_API
+          value: 'true'
+        - name: ENDPOINT_URL_TEMPLATE
+          value: https://{{ .Domain }}/e/{hook_id}
+        - name: LANG
+          value: C.UTF-8
+        - name: LC_ALL
+          value: C.UTF-8
+        - name: PYTHONDONTWRITEBYTECODE
+          value: '1'
+        - name: HOME
+          value: /tmp
+        - name: UV_CACHE_DIR
+          value: /tmp/uv
+        - name: TIKTOKEN_CACHE_DIR
+          value: /tmp/tiktoken
+        - name: LOG_FILE
+          value: /tmp/server.log
+        - name: DEPLOY_ENV
+          value: PRODUCTION
+        - name: EDITION
+          value: SELF_HOSTED
+        - name: APP_WEB_URL
+          value: https://{{ .Domain }}
+        - name: APP_API_URL
+          value: https://{{ .Domain }}
+        - name: CONSOLE_API_URL
+          value: https://{{ .Domain }}
+        - name: CONSOLE_WEB_URL
+          value: https://{{ .Domain }}
+        - name: FILES_URL
+          value: https://{{ .Domain }}
+        - name: SERVICE_API_URL
+          value: https://{{ .Domain }}
+        - name: TRIGGER_URL
+          value: https://{{ .Domain }}
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dify-db-app
+              key: password
+        - name: PGVECTOR_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dify-db-app
+              key: password
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: redis-password
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: app-key
+        - name: INNER_API_KEY_FOR_PLUGIN
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: app-key
+        - name: INNER_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: app-key
+        - name: PLUGIN_DAEMON_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: app-key
+        - name: CODE_EXECUTION_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: sandbox-key
+        - name: S3_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: '{{ .Inputs.storageSecret }}'
+              key: access-key
+        - name: S3_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: '{{ .Inputs.storageSecret }}'
+              key: secret-key
+        - name: CELERY_BROKER_URL
+          value: redis://:$(REDIS_PASSWORD)@dify-dragonfly:6379/1
+        - name: MODE
+          value: beat
+        - name: MIGRATION_ENABLED
+          value: 'false'
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: '2'
+            memory: 2Gi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: storage
+          mountPath: /app/api/storage
+        readinessProbe:
+          exec:
+            command:
+            - /app/api/.venv/bin/python
+            - -c
+            - import pathlib; assert b'celery' in pathlib.Path('/proc/1/cmdline').read_bytes()
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 6
+        livenessProbe:
+          exec:
+            command:
+            - /app/api/.venv/bin/python
+            - -c
+            - import pathlib; assert b'celery' in pathlib.Path('/proc/1/cmdline').read_bytes()
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 6
+        startupProbe:
+          exec:
+            command:
+            - /app/api/.venv/bin/python
+            - -c
+            - import pathlib; assert b'celery' in pathlib.Path('/proc/1/cmdline').read_bytes()
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 20
+        command:
+        - /bin/bash
+        - -ec
+        args:
+        - exec celery -A app.celery beat --schedule=/tmp/celerybeat-schedule --loglevel=INFO
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: storage
+        emptyDir:
+          sizeLimit: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dify-web
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-web
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dify-web
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dify-web
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: dify-web
+        image: docker.io/langgenius/dify-web:1.13.0@sha256:30339b4d5060488fac147ddc6fb40438ef71cd5f5dfdeb26c886768302bf7197
+        ports:
+        - name: http
+          containerPort: 3000
+        env:
+        - name: APP_API_URL
+          value: https://{{ .Domain }}
+        - name: CONSOLE_API_URL
+          value: https://{{ .Domain }}
+        - name: DEPLOY_ENV
+          value: PRODUCTION
+        - name: EDITION
+          value: SELF_HOSTED
+        - name: MARKETPLACE_API_URL
+          value: https://marketplace.dify.ai
+        - name: MARKETPLACE_URL
+          value: https://marketplace.dify.ai
+        - name: NEXT_TELEMETRY_DISABLED
+          value: '1'
+        - name: PM2_HOME
+          value: /tmp/pm2
+        - name: PM2_INSTANCES
+          value: '1'
+        - name: HOSTNAME
+          value: 0.0.0.0
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: '2'
+            memory: 2Gi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: next-cache
+          mountPath: /app/web/.next/cache
+        readinessProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 6
+        livenessProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 6
+        startupProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: next-cache
+        emptyDir:
+          sizeLimit: 512Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dify-plugin
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-plugin
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dify-plugin
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dify-plugin
+        templates.zeabur.com/postgresql-client: 'true'
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: dify-plugin
+        image: docker.io/langgenius/dify-plugin-daemon:0.5.3-local@sha256:0bf7734135702a719701646a0fd9d7ad8b20b7d9cfb8eaedc8a890cf682d55bc
+        ports:
+        - name: http
+          containerPort: 5002
+        env:
+        - name: DB_HOST
+          value: dify-db-rw
+        - name: DB_PORT
+          value: '5432'
+        - name: DB_DATABASE
+          value: dify_plugin
+        - name: DB_USERNAME
+          value: app
+        - name: REDIS_HOST
+          value: dify-dragonfly
+        - name: REDIS_PORT
+          value: '6379'
+        - name: DIFY_INNER_API_URL
+          value: http://dify-api:5001
+        - name: FORCE_VERIFYING_SIGNATURE
+          value: 'true'
+        - name: PLUGIN_REMOTE_INSTALLING_ENABLED
+          value: 'false'
+        - name: PLUGIN_STORAGE_TYPE
+          value: local
+        - name: PLUGIN_WORKING_PATH
+          value: /app/storage/cwd
+        - name: PLUGIN_INSTALLED_PATH
+          value: /app/storage/plugin
+        - name: PLUGIN_PACKAGE_CACHE_PATH
+          value: /app/storage/plugin_packages
+        - name: PLUGIN_STORAGE_LOCAL_ROOT
+          value: /app/storage
+        - name: SERVER_PORT
+          value: '5002'
+        - name: SERVER_HOST
+          value: 0.0.0.0
+        - name: PLATFORM
+          value: local
+        - name: GIN_MODE
+          value: release
+        - name: HOME
+          value: /tmp
+        - name: UV_CACHE_DIR
+          value: /tmp/uv
+        - name: TIKTOKEN_CACHE_DIR
+          value: /tmp/tiktoken
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dify-db-app
+              key: password
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: redis-password
+        - name: DIFY_INNER_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: app-key
+        - name: SERVER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: app-key
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: '2'
+            memory: 2Gi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: storage
+          mountPath: /app/storage
+        command:
+        - /app/main
+        readinessProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 6
+        livenessProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 6
+        startupProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: storage
+        persistentVolumeClaim:
+          claimName: dify-plugin-storage
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dify-sandbox
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-sandbox
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dify-sandbox
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dify-sandbox
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: false
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: 0
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: dify-sandbox
+        image: docker.io/langgenius/dify-sandbox:0.2.15@sha256:750e1111426ef31a9217b81c98cccfb750f17b182af3221102e420afa9f0928e
+        ports:
+        - name: http
+          containerPort: 8194
+        env:
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: sandbox-key
+        - name: SANDBOX_PORT
+          value: '8194'
+        - name: ENABLE_NETWORK
+          value: 'true'
+        - name: ENABLE_PRELOAD
+          value: 'false'
+        - name: HTTP_PROXY
+          value: http://dify-proxy:3128
+        - name: HTTPS_PROXY
+          value: http://dify-proxy:3128
+        - name: WORKER_TIMEOUT
+          value: '15'
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+            add:
+            - SYS_CHROOT
+            - SETUID
+            - SETGID
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: '2'
+            memory: 2Gi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: sandbox
+          mountPath: /var/sandbox
+        - name: opt
+          mountPath: /opt
+        - name: logs
+          mountPath: /logs
+        command:
+        - /bin/bash
+        - -ec
+        args:
+        - export NODEJS_PATH="$NODE_DIR/bin/node"; exec /main
+        readinessProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 6
+        livenessProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 6
+        startupProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: sandbox
+        emptyDir:
+          sizeLimit: 2Gi
+      - name: opt
+        emptyDir:
+          sizeLimit: 2Gi
+      - name: logs
+        emptyDir:
+          sizeLimit: 2Gi
+      initContainers:
+      - name: prepare-runner
+        image: docker.io/langgenius/dify-sandbox:0.2.15@sha256:750e1111426ef31a9217b81c98cccfb750f17b182af3221102e420afa9f0928e
+        command:
+        - /bin/bash
+        - -ec
+        args:
+        - cp -a /opt/. /seed-opt/; tar -xf "$NODE_TAR_XZ" -C /seed-opt; if [ -d /var/sandbox ]; then cp -a /var/sandbox/.
+          /seed-sandbox/; fi
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: '2'
+            memory: 2Gi
+        securityContext:
+          runAsNonRoot: false
+          runAsUser: 0
+          runAsGroup: 0
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+            add:
+            - CHOWN
+            - DAC_OVERRIDE
+            - FOWNER
+            - FSETID
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - name: opt
+          mountPath: /seed-opt
+        - name: sandbox
+          mountPath: /seed-sandbox
+        - name: tmp
+          mountPath: /tmp
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dify-proxy
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-proxy
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dify-proxy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dify-proxy
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 13
+        runAsGroup: 13
+        fsGroup: 13
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: dify-proxy
+        image: docker.io/ubuntu/squid:6.6-24.04_beta@sha256:6a097f68bae708cedbabd6188d68c7e2e7a38cedd05a176e1cc0ba29e3bbe029
+        ports:
+        - name: http
+          containerPort: 3128
+        env: []
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: '2'
+            memory: 2Gi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: config
+          mountPath: /config
+          readOnly: true
+        command:
+        - /usr/sbin/squid
+        - -N
+        - -f
+        - /config/squid.conf
+        readinessProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 6
+        livenessProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 6
+        startupProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: config
+        configMap:
+          name: dify-proxy-config
+---
+apiVersion: dragonflydb.io/v1alpha1
+kind: Dragonfly
+metadata:
+  name: dify-dragonfly
+  namespace: '{{ .Namespace }}'
+spec:
+  replicas: 1
+  image: docker.dragonflydb.io/dragonflydb/dragonfly:v2.0.2@sha256:061f00b201b58e12f974e4e96c761a881ee1c05e9d8ee967466a604b7299753b
+  serviceAccountName: dify-dragonfly
+  args:
+  - --proactor_threads=2
+  - --maxmemory=1536mb
+  - --cache_mode=false
+  - --dbnum=16
+  - --logtostderr=true
+  # Dify trigger debug Lua computes inbox keys not declared in KEYS.
+  # Preserve that behavior; Dragonfly serializes these scripts globally.
+  - --default_lua_flags=allow-undeclared-keys
+  - --s3_endpoint={{ .Inputs.dragonflyBackupEndpoint }}
+  - --s3_use_https=true
+  - --s3_ec2_metadata=false
+  authentication:
+    passwordFromSecret:
+      name: dify-secrets
+      key: redis-password
+  env:
+  - name: AWS_ACCESS_KEY_ID
+    valueFrom:
+      secretKeyRef:
+        name: '{{ .Inputs.backupSecret }}'
+        key: ACCESS_KEY_ID
+  - name: AWS_SECRET_ACCESS_KEY
+    valueFrom:
+      secretKeyRef:
+        name: '{{ .Inputs.backupSecret }}'
+        key: ACCESS_SECRET_KEY
+  - name: AWS_REGION
+    value: '{{ .Inputs.dragonflyBackupRegion }}'
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    runAsGroup: 999
+    fsGroup: 999
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: [ALL]
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: '2'
+      memory: 2Gi
+  # Snapshot PVCs cannot be combined with an S3 dir in chart v1.7.1.
+  snapshot:
+    dir: '{{ .Inputs.dragonflyBackupDestination }}'
+    cron: '*/5 * * * *'
+    enableOnMasterOnly: true
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: dify-db
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: dify-db
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:16-standard-trixie@sha256:f105e137d731f6ac4f69667383f2373345ce8b72dadcc10ab6d385a7a32d6e7f
+  enableSuperuserAccess: false
+  enablePDB: true
+  postgresUID: 26
+  postgresGID: 26
+  seccompProfile:
+    type: RuntimeDefault
+  bootstrap:
+    initdb:
+      database: dify
+      owner: app
+      encoding: UTF8
+      postInitApplicationSQL:
+      - CREATE EXTENSION IF NOT EXISTS vector;
+      - CREATE DATABASE dify_plugin OWNER app;
+  storage:
+    storageClass: local-path
+    size: 20Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: '2'
+      memory: 2Gi
+  postgresql:
+    parameters:
+      shared_buffers: 256MB
+      max_connections: '200'
+  plugins:
+  - name: barman-cloud.cloudnative-pg.io
+    isWALArchiver: true
+    parameters:
+      barmanObjectName: dify-db-backups

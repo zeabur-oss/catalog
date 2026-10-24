@@ -1,0 +1,224 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+  ingress: []
+  egress: []
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mariadb-operator-paths
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: mariadb}
+  policyTypes: [Ingress]
+  ingress:
+  - from:
+    - podSelector: {matchLabels: {templates.zeabur.com/mariadb-client: 'true'}}
+    - podSelector: {matchLabels: {templates.zeabur.com/mariadb-backup: 'true'}}
+    - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: mariadb-operator}}
+      podSelector: {matchLabels: {app.kubernetes.io/name: mariadb-operator}}
+    ports: [{protocol: TCP, port: 3306}]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mariadb-backup-paths
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector:
+    matchLabels: {templates.zeabur.com/mariadb-backup: 'true'}
+  policyTypes: [Egress]
+  egress:
+  - {{ dnsEgress }}
+  - to:
+    - podSelector: {matchLabels: {app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: mariadb}}
+    ports: [{protocol: TCP, port: 3306}]
+  - to:
+    - ipBlock: {cidr: '{{ .Inputs.backupEndpointCIDR }}'}
+    ports: [{protocol: TCP, port: {{ .Inputs.backupEndpointPort }}}]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mariadb-workload
+  namespace: '{{ .Namespace }}'
+automountServiceAccountToken: false
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: MariaDB
+metadata:
+  name: mariadb
+  namespace: '{{ .Namespace }}'
+spec:
+  image: docker.io/mariadb:12.3.3@sha256:99c125f103f5d081ebbc9ffe064e63daf7f688ac33a5f7f29af2d7260a96debf
+  replicas: 1
+  rootPasswordSecretKeyRef:
+    name: mariadb-secrets
+    key: root-password
+    generate: false
+  serviceAccountName: mariadb-workload
+  tls:
+    enabled: true
+    required: true
+  storage:
+    size: 10Gi
+    storageClassName: local-path
+    pvcRetentionPolicy:
+      whenDeleted: Retain
+      whenScaled: Retain
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    runAsGroup: 999
+    fsGroup: 999
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: [ALL]
+  resources:
+    requests: {cpu: 100m, memory: 256Mi}
+    limits: {cpu: 1000m, memory: 1Gi}
+  updateStrategy:
+    autoUpdateDataPlane: false
+    mariadbAutoUpgradeEnabled: false
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Database
+metadata:
+  name: app
+  namespace: '{{ .Namespace }}'
+spec:
+  mariaDbRef: {name: mariadb, waitForIt: true}
+  name: zeabur
+  characterSet: utf8mb4
+  collate: utf8mb4_unicode_ci
+  cleanupPolicy: Skip
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: User
+metadata:
+  name: app
+  namespace: '{{ .Namespace }}'
+spec:
+  mariaDbRef: {name: mariadb, waitForIt: true}
+  name: app
+  host: '%'
+  passwordSecretKeyRef:
+    name: mariadb-secrets
+    key: password
+  require: {ssl: true}
+  maxUserConnections: 30
+  cleanupPolicy: Skip
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Grant
+metadata:
+  name: app
+  namespace: '{{ .Namespace }}'
+spec:
+  mariaDbRef: {name: mariadb, waitForIt: true}
+  username: app
+  host: '%'
+  database: zeabur
+  table: '*'
+  privileges: [SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, INDEX]
+  grantOption: false
+  cleanupPolicy: Skip
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Backup
+metadata:
+  name: mariadb-initial-backup
+  namespace: '{{ .Namespace }}'
+spec:
+  mariaDbRef: {name: mariadb, waitForIt: true}
+  serviceAccountName: mariadb-workload
+  podMetadata:
+    labels: {templates.zeabur.com/mariadb-backup: 'true'}
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    runAsGroup: 999
+    fsGroup: 999
+    seccompProfile: {type: RuntimeDefault}
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities: {drop: [ALL]}
+  resources:
+    requests: {cpu: 100m, memory: 128Mi}
+    limits: {cpu: 1000m, memory: 512Mi}
+  stagingStorage:
+    persistentVolumeClaim:
+      accessModes: [ReadWriteOnce]
+      storageClassName: local-path
+      resources: {requests: {storage: 10Gi}}
+  storage:
+    s3:
+      bucket: '{{ .Inputs.backupBucket }}'
+      endpoint: '{{ .Inputs.backupEndpoint }}'
+      region: '{{ .Inputs.backupRegion }}'
+      prefix: '{{ .Namespace }}/mariadb/initial'
+      accessKeyIdSecretKeyRef: {name: '{{ .Inputs.backupCredentialsSecret }}', key: ACCESS_KEY_ID}
+      secretAccessKeySecretKeyRef: {name: '{{ .Inputs.backupCredentialsSecret }}', key: ACCESS_SECRET_KEY}
+      tls:
+        enabled: true
+        caSecretKeyRef: {name: '{{ .Inputs.backupCASecret }}', key: ca.crt}
+  maxRetention: 720h
+  compression: gzip
+  backoffLimit: 3
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Backup
+metadata:
+  name: mariadb-daily-backup
+  namespace: '{{ .Namespace }}'
+spec:
+  mariaDbRef: {name: mariadb, waitForIt: true}
+  schedule: {cron: '0 3 * * *', suspend: false}
+  timeZone: Etc/UTC
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  serviceAccountName: mariadb-workload
+  podMetadata:
+    labels: {templates.zeabur.com/mariadb-backup: 'true'}
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    runAsGroup: 999
+    fsGroup: 999
+    seccompProfile: {type: RuntimeDefault}
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities: {drop: [ALL]}
+  resources:
+    requests: {cpu: 100m, memory: 128Mi}
+    limits: {cpu: 1000m, memory: 512Mi}
+  stagingStorage:
+    persistentVolumeClaim:
+      accessModes: [ReadWriteOnce]
+      storageClassName: local-path
+      resources: {requests: {storage: 10Gi}}
+  storage:
+    s3:
+      bucket: '{{ .Inputs.backupBucket }}'
+      endpoint: '{{ .Inputs.backupEndpoint }}'
+      region: '{{ .Inputs.backupRegion }}'
+      prefix: '{{ .Namespace }}/mariadb/daily'
+      accessKeyIdSecretKeyRef: {name: '{{ .Inputs.backupCredentialsSecret }}', key: ACCESS_KEY_ID}
+      secretAccessKeySecretKeyRef: {name: '{{ .Inputs.backupCredentialsSecret }}', key: ACCESS_SECRET_KEY}
+      tls:
+        enabled: true
+        caSecretKeyRef: {name: '{{ .Inputs.backupCASecret }}', key: ca.crt}
+  maxRetention: 720h
+  compression: gzip
+  backoffLimit: 3

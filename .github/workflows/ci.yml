@@ -31,7 +31,7 @@ jobs:
           done
           exit $fail
       - run: go test ./...
-      - name: Schema, licenses, references, value comments
+      - name: Schema, licenses, references, value comments, template inputs and requires
         run: go run ./tools/cmd/catalog validate
       - run: go run ./tools/cmd/catalog index
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -50,3 +50,6 @@ jobs:
   e2e:
     needs: [validate, render]
     uses: ./.github/workflows/e2e.yml
+    secrets:
+      E2E_INPUTS_JSON: ${{ github.event_name == 'push' && secrets.E2E_INPUTS_JSON || '' }}
+      E2E_SETUP_MANIFESTS_JSON: ${{ github.event_name == 'push' && secrets.E2E_SETUP_MANIFESTS_JSON || '' }}

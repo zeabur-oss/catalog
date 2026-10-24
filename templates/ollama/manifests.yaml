@@ -1,0 +1,166 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ollama-data
+  namespace: '{{ .Namespace }}'
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 50Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama
+  namespace: '{{ .Namespace }}'
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ollama
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ollama
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: ollama
+        image: docker.io/ollama/ollama:latest@sha256:5c6707fcf2e1a30cffe2ecb7e315584fc87747c389327e4bc711c4959aa1eecc
+        ports:
+        - name: http
+          containerPort: 11434
+        env:
+        - name: HOME
+          value: /data
+        - name: OLLAMA_MODELS
+          value: /data/models
+        - name: OLLAMA_HOST
+          value: 0.0.0.0:11434
+        - name: OLLAMA_NUM_PARALLEL
+          value: '1'
+        - name: OLLAMA_MAX_LOADED_MODELS
+          value: '1'
+        - name: OLLAMA_NO_CLOUD
+          value: 'true'
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 500m
+            memory: 2Gi
+          limits:
+            cpu: '4'
+            memory: 8Gi
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: tmp
+          mountPath: /tmp
+        startupProbe:
+          httpGet:
+            path: /api/tags
+            port: http
+          failureThreshold: 90
+          periodSeconds: 5
+          timeoutSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /api/tags
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+        livenessProbe:
+          httpGet:
+            path: /api/tags
+            port: http
+          periodSeconds: 30
+          timeoutSeconds: 3
+          failureThreshold: 6
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: ollama-data
+      - name: tmp
+        emptyDir:
+          sizeLimit: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama
+  namespace: '{{ .Namespace }}'
+spec:
+  selector:
+    app.kubernetes.io/name: ollama
+  ports:
+  - name: http
+    port: 11434
+    targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress: []
+  egress: []
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ollama-access
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: ollama
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          templates.zeabur.com/ollama-client: 'true'
+    ports:
+    - port: 11434
+      protocol: TCP
+  egress:
+  - {{ dnsEgress }}
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - 169.254.0.0/16
+        - 127.0.0.0/8
+    ports:
+    - port: 443
+      protocol: TCP

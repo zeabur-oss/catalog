@@ -1,0 +1,670 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wordpress-config
+  namespace: '{{ .Namespace }}'
+data:
+  nginx.conf: "worker_processes auto;\npid /tmp/nginx.pid;\nerror_log /dev/stderr warn;\nevents { worker_connections\
+    \ 1024; }\nhttp {\n  include /etc/nginx/mime.types;\n  default_type application/octet-stream;\n  access_log\
+    \ /dev/stdout;\n  client_max_body_size 256m;\n  client_body_temp_path /tmp/client_temp;\n  proxy_temp_path /tmp/proxy_temp;\n\
+    \  fastcgi_temp_path /tmp/fastcgi_temp;\n  uwsgi_temp_path /tmp/uwsgi_temp;\n  scgi_temp_path /tmp/scgi_temp;\n\
+    \  server {\n    listen 8080;\n    root /var/www/html;\n    index index.php;\n    location = /wp-config.php\
+    \ { deny all; }\n    location ~ /\\. { deny all; }\n    location ~* \\.(phar|sql|log|bak)$ { deny all; }\n \
+    \   location ~* ^/wp-content/uploads/.*\\.php$ { deny all; }\n    location / { try_files $uri $uri/ /index.php?$args;\
+    \ }\n    location ~ \\.php$ {\n      try_files $uri =404;\n      include /etc/nginx/fastcgi_params;\n      fastcgi_param\
+    \ SCRIPT_FILENAME $document_root$fastcgi_script_name;\n      fastcgi_param HTTP_PROXY \"\";\n      fastcgi_pass\
+    \ 127.0.0.1:9000;\n      fastcgi_read_timeout 300s;\n    }\n  }\n}\n"
+  uploads.ini: 'file_uploads=On
+
+    upload_max_filesize=256M
+
+    post_max_size=256M
+
+    memory_limit=1024M
+
+    max_execution_time=300
+
+    '
+  database-tls.ini: |
+    openssl.cafile=/tmp/database-ca-bundle.pem
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wordpress-data
+  namespace: '{{ .Namespace }}'
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+  namespace: '{{ .Namespace }}'
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 82
+        runAsGroup: 82
+        fsGroup: 82
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: wordpress
+        image: docker.io/wordpress:php8.3-fpm-alpine@sha256:82d93a279778e5307902813c402b9118521e8104459a0e350ed719f6d6c4d1ab
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        volumeMounts: &id001
+        - name: html
+          mountPath: /var/www/html
+        - name: tmp
+          mountPath: /tmp
+        - name: tools
+          mountPath: /tools
+        - name: config
+          mountPath: /usr/local/etc/php/conf.d/uploads.ini
+          subPath: uploads.ini
+          readOnly: true
+        - name: config
+          mountPath: /usr/local/etc/php/conf.d/database-tls.ini
+          subPath: database-tls.ini
+          readOnly: true
+        - name: database-ca
+          mountPath: /database-ca
+          readOnly: true
+        ports:
+        - name: database
+          containerPort: 9000
+        startupProbe:
+          tcpSocket:
+            port: 9000
+          periodSeconds: 5
+          failureThreshold: 120
+        readinessProbe:
+          tcpSocket:
+            port: 9000
+          periodSeconds: 10
+          timeoutSeconds: 3
+        livenessProbe:
+          tcpSocket:
+            port: 9000
+          periodSeconds: 20
+          timeoutSeconds: 3
+          failureThreshold: 6
+        env:
+        - &id002
+          name: WORDPRESS_DB_HOST
+          value: mariadb:3306
+        - &id003
+          name: WORDPRESS_DB_NAME
+          value: zeabur
+        - &id004
+          name: WORDPRESS_DB_USER
+          value: wordpress
+        - &id005
+          name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-secrets
+              key: database-password
+        - &id006
+          name: WORDPRESS_CONFIG_EXTRA
+          value: define('WP_HOME', 'https://{{ .Domain }}'); define('WP_SITEURL', 'https://{{ .Domain }}'); define('FORCE_SSL_ADMIN',
+            true); define('MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL);
+        - &id007
+          name: WORDPRESS_AUTH_KEY
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-secrets
+              key: auth-key
+        - &id008
+          name: WORDPRESS_SECURE_AUTH_KEY
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-secrets
+              key: secure-auth-key
+        - &id009
+          name: WORDPRESS_LOGGED_IN_KEY
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-secrets
+              key: logged-in-key
+        - &id010
+          name: WORDPRESS_NONCE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-secrets
+              key: nonce-key
+        - &id011
+          name: WORDPRESS_AUTH_SALT
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-secrets
+              key: auth-salt
+        - &id012
+          name: WORDPRESS_SECURE_AUTH_SALT
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-secrets
+              key: secure-auth-salt
+        - &id013
+          name: WORDPRESS_LOGGED_IN_SALT
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-secrets
+              key: logged-in-salt
+        - &id014
+          name: WORDPRESS_NONCE_SALT
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-secrets
+              key: nonce-salt
+        - name: PATH
+          value: /tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      - name: web
+        image: docker.io/nginxinc/nginx-unprivileged:stable-alpine@sha256:f5116ed4606f3eb015dd4a8e28cb9b351476dc0ad4bc6e9f93b19cec130cdf03
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+          runAsUser: 101
+          runAsGroup: 101
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+        volumeMounts:
+        - name: html
+          mountPath: /var/www/html
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+        - name: config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+          readOnly: true
+        ports:
+        - name: http
+          containerPort: 8080
+        startupProbe:
+          tcpSocket:
+            port: 8080
+          periodSeconds: 5
+          failureThreshold: 120
+        readinessProbe:
+          httpGet:
+            path: /wp-login.php
+            port: 8080
+          periodSeconds: 10
+          timeoutSeconds: 5
+        livenessProbe:
+          tcpSocket:
+            port: 8080
+          periodSeconds: 20
+          timeoutSeconds: 3
+          failureThreshold: 6
+        command:
+        - nginx
+        - -g
+        - daemon off;
+      volumes:
+      - name: html
+        persistentVolumeClaim:
+          claimName: wordpress-data
+      - name: tmp
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: tools
+        emptyDir: {}
+      - name: config
+        configMap:
+          name: wordpress-config
+      - name: database-ca
+        secret:
+          secretName: mariadb-ca
+          items:
+          - key: ca.crt
+            path: ca.crt
+      initContainers:
+      - name: initialize-wordpress
+        image: docker.io/wordpress:php8.3-fpm-alpine@sha256:82d93a279778e5307902813c402b9118521e8104459a0e350ed719f6d6c4d1ab
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        volumeMounts: *id001
+        env:
+        - *id002
+        - *id003
+        - *id004
+        - *id005
+        - *id006
+        - *id007
+        - *id008
+        - *id009
+        - *id010
+        - *id011
+        - *id012
+        - *id013
+        - *id014
+        command:
+        - /bin/sh
+        - -ec
+        - cat /etc/ssl/cert.pem /database-ca/ca.crt > /tmp/database-ca-bundle.pem; exec docker-entrypoint.sh php-fpm -t
+      - name: install-owner
+        image: docker.io/wordpress:cli-php8.3@sha256:661db880e953da051abcac6c0a769767b995a82cd52101c003ca7438dd427d7d
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        volumeMounts: *id001
+        env:
+        - *id002
+        - *id003
+        - *id004
+        - *id005
+        - *id006
+        - *id007
+        - *id008
+        - *id009
+        - *id010
+        - *id011
+        - *id012
+        - *id013
+        - *id014
+        - name: HOME
+          value: /tmp
+        - name: WP_CLI_CACHE_DIR
+          value: /tmp/wp-cli-cache
+        - name: WORDPRESS_ADMIN_EMAIL
+          value: '{{ .Inputs.adminEmail }}'
+        - name: WORDPRESS_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: wordpress-secrets
+              key: admin-password
+        command:
+        - /bin/sh
+        - -ec
+        - cp /usr/local/bin/wp /tools/wp; n=0; until wp db check --quiet --ssl --ssl-ca=/database-ca/ca.crt --ssl-verify-server-cert; do n=$((n+1)); [ "$n" -lt 120 ] || exit
+          1; sleep 5; done; if ! wp core is-installed; then wp core install --url="https://{{ .Domain }}" --title="WordPress"
+          --admin_user=admin --admin_password="$WORDPRESS_ADMIN_PASSWORD" --admin_email="$WORDPRESS_ADMIN_EMAIL"
+          --skip-email; fi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress
+  namespace: '{{ .Namespace }}'
+spec:
+  selector:
+    app: wordpress
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wordpress
+  namespace: '{{ .Namespace }}'
+  annotations:
+    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: 'true'
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - '{{ .Domain }}'
+    secretName: wordpress-tls
+  rules:
+  - host: '{{ .Domain }}'
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: wordpress
+            port:
+              number: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress: []
+  egress: []
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: wordpress
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector:
+    matchLabels:
+      app: wordpress
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: traefik
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: traefik
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  - {{ dnsEgress }}
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: mariadb
+          app.kubernetes.io/instance: mariadb
+    ports:
+    - protocol: TCP
+      port: 3306
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - 127.0.0.0/8
+        - 169.254.0.0/16
+        - 100.64.0.0/10
+    ports:
+    - protocol: TCP
+      port: 443
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mariadb-operator-paths
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: mariadb}
+  policyTypes: [Ingress]
+  ingress:
+  - from:
+    - podSelector: {matchLabels: {app: wordpress}}
+    - podSelector: {matchLabels: {templates.zeabur.com/mariadb-backup: 'true'}}
+    - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: mariadb-operator}}
+      podSelector: {matchLabels: {app.kubernetes.io/name: mariadb-operator}}
+    ports: [{protocol: TCP, port: 3306}]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mariadb-backup-paths
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector:
+    matchLabels: {templates.zeabur.com/mariadb-backup: 'true'}
+  policyTypes: [Egress]
+  egress:
+  - {{ dnsEgress }}
+  - to:
+    - podSelector: {matchLabels: {app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: mariadb}}
+    ports: [{protocol: TCP, port: 3306}]
+  - to:
+    - ipBlock: {cidr: '{{ .Inputs.backupEndpointCIDR }}'}
+    ports: [{protocol: TCP, port: {{ .Inputs.backupEndpointPort }}}]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mariadb-workload
+  namespace: '{{ .Namespace }}'
+automountServiceAccountToken: false
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: MariaDB
+metadata:
+  name: mariadb
+  namespace: '{{ .Namespace }}'
+spec:
+  image: docker.io/mariadb:11.4.13@sha256:250e1609e93c0e6aecf64bfbab2d84d5e89d2481540fe77447ff6c855c3b1873
+  replicas: 1
+  rootPasswordSecretKeyRef:
+    name: wordpress-secrets
+    key: database-root-password
+    generate: false
+  serviceAccountName: mariadb-workload
+  tls:
+    enabled: true
+    required: true
+  storage:
+    size: 10Gi
+    storageClassName: local-path
+    pvcRetentionPolicy:
+      whenDeleted: Retain
+      whenScaled: Retain
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    runAsGroup: 999
+    fsGroup: 999
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: [ALL]
+  resources:
+    requests: {cpu: 100m, memory: 256Mi}
+    limits: {cpu: 1000m, memory: 1Gi}
+  updateStrategy:
+    autoUpdateDataPlane: false
+    mariadbAutoUpgradeEnabled: false
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Database
+metadata:
+  name: wordpress
+  namespace: '{{ .Namespace }}'
+spec:
+  mariaDbRef: {name: mariadb, waitForIt: true}
+  name: zeabur
+  characterSet: utf8mb4
+  collate: utf8mb4_unicode_ci
+  cleanupPolicy: Skip
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: User
+metadata:
+  name: wordpress
+  namespace: '{{ .Namespace }}'
+spec:
+  mariaDbRef: {name: mariadb, waitForIt: true}
+  name: wordpress
+  host: '%'
+  passwordSecretKeyRef:
+    name: wordpress-secrets
+    key: database-password
+  require: {ssl: true}
+  maxUserConnections: 30
+  cleanupPolicy: Skip
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Grant
+metadata:
+  name: wordpress
+  namespace: '{{ .Namespace }}'
+spec:
+  mariaDbRef: {name: mariadb, waitForIt: true}
+  username: wordpress
+  host: '%'
+  database: zeabur
+  table: '*'
+  privileges: [SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, INDEX]
+  grantOption: false
+  cleanupPolicy: Skip
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Backup
+metadata:
+  name: mariadb-initial-backup
+  namespace: '{{ .Namespace }}'
+spec:
+  mariaDbRef: {name: mariadb, waitForIt: true}
+  serviceAccountName: mariadb-workload
+  podMetadata:
+    labels: {templates.zeabur.com/mariadb-backup: 'true'}
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    runAsGroup: 999
+    fsGroup: 999
+    seccompProfile: {type: RuntimeDefault}
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities: {drop: [ALL]}
+  resources:
+    requests: {cpu: 100m, memory: 128Mi}
+    limits: {cpu: 1000m, memory: 512Mi}
+  stagingStorage:
+    persistentVolumeClaim:
+      accessModes: [ReadWriteOnce]
+      storageClassName: local-path
+      resources: {requests: {storage: 10Gi}}
+  storage:
+    s3:
+      bucket: '{{ .Inputs.backupBucket }}'
+      endpoint: '{{ .Inputs.backupEndpoint }}'
+      region: '{{ .Inputs.backupRegion }}'
+      prefix: '{{ .Namespace }}/mariadb/initial'
+      accessKeyIdSecretKeyRef: {name: '{{ .Inputs.backupCredentialsSecret }}', key: ACCESS_KEY_ID}
+      secretAccessKeySecretKeyRef: {name: '{{ .Inputs.backupCredentialsSecret }}', key: ACCESS_SECRET_KEY}
+      tls:
+        enabled: true
+        caSecretKeyRef: {name: '{{ .Inputs.backupCASecret }}', key: ca.crt}
+  maxRetention: 720h
+  compression: gzip
+  backoffLimit: 3
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Backup
+metadata:
+  name: mariadb-daily-backup
+  namespace: '{{ .Namespace }}'
+spec:
+  mariaDbRef: {name: mariadb, waitForIt: true}
+  schedule: {cron: '0 3 * * *', suspend: false}
+  timeZone: Etc/UTC
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  serviceAccountName: mariadb-workload
+  podMetadata:
+    labels: {templates.zeabur.com/mariadb-backup: 'true'}
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    runAsGroup: 999
+    fsGroup: 999
+    seccompProfile: {type: RuntimeDefault}
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities: {drop: [ALL]}
+  resources:
+    requests: {cpu: 100m, memory: 128Mi}
+    limits: {cpu: 1000m, memory: 512Mi}
+  stagingStorage:
+    persistentVolumeClaim:
+      accessModes: [ReadWriteOnce]
+      storageClassName: local-path
+      resources: {requests: {storage: 10Gi}}
+  storage:
+    s3:
+      bucket: '{{ .Inputs.backupBucket }}'
+      endpoint: '{{ .Inputs.backupEndpoint }}'
+      region: '{{ .Inputs.backupRegion }}'
+      prefix: '{{ .Namespace }}/mariadb/daily'
+      accessKeyIdSecretKeyRef: {name: '{{ .Inputs.backupCredentialsSecret }}', key: ACCESS_KEY_ID}
+      secretAccessKeySecretKeyRef: {name: '{{ .Inputs.backupCredentialsSecret }}', key: ACCESS_SECRET_KEY}
+      tls:
+        enabled: true
+        caSecretKeyRef: {name: '{{ .Inputs.backupCASecret }}', key: ca.crt}
+  maxRetention: 720h
+  compression: gzip
+  backoffLimit: 3

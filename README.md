@@ -5,29 +5,59 @@
 
 # Zeabur Catalog
 
-A tested catalog of Kubernetes components: for each capability, which upstream
-chart, which version, which values, and why. It is data, not an installer.
-CI installs and measures every component, and each release publishes a signed
-bundle any tool can read to generate `helm install` commands, Flux or Argo CD
-manifests, or k3s `HelmChart` objects.
+A tested catalog for Kubernetes clusters, in two parts:
 
-[Zeabur](https://github.com/zeabur-oss/zeabur) reads this catalog to suggest what a
-cluster is missing; it never installs anything itself.
+- **Components** are what a cluster administrator installs once per cluster:
+  ingress, certificates, metrics, database operators. For each capability the
+  catalog says which upstream chart, which version, which values, and why.
+- **Templates** are applications a project member installs into one namespace:
+  n8n, Dify, Supabase, WordPress, PostgreSQL. Each pins its images, sets
+  resource requests and limits, runs under the Restricted Pod Security
+  Standard where the application allows it, and says how it scales, how its
+  data is backed up and what to check before an upgrade. A template names the
+  components it needs in `requires`.
+
+The catalog is data. CI installs and tests every component and template, and
+each release publishes one signed bundle that any tool can read to generate
+`helm install` commands, Flux or Argo CD manifests, k3s `HelmChart` objects or
+template installs.
+
+[Zeabur](https://github.com/zeabur-oss/zeabur) reads this catalog to suggest what
+a cluster is missing; it never installs anything itself.
 
 ## Layout
 
 ```text
-capabilities/<capability>/<upstream>.yaml   one file per capability × upstream
-schema/v1/component.schema.json             JSON Schema for those files
-config/licenses.yaml                        OSI-approved SPDX identifiers; opt-in-only exceptions
-config/kubernetes.yaml                      Kubernetes versions; kind node version for e2e
-config/budget.yaml                          single-node memory budget (MiB)
-config/e2e.yaml                             test-only values
-measurements/                               idle memory and CPU, written by CI
-tools/                                      the `catalog` command (Go)
+components/<capability>/<upstream>.yaml   one file per capability × upstream
+templates/<id>/template.yaml              one application: inputs, services, security, scaling, smoke checks
+templates/<id>/manifests.yaml             its Kubernetes objects
+schema/v1/                                JSON Schemas for both
+config/licenses.yaml                      OSI-approved SPDX identifiers; opt-in-only exceptions
+config/kubernetes.yaml                    Kubernetes versions; kind node version for e2e
+config/budget.yaml                        single-node memory budget (MiB)
+config/e2e.yaml                           test-only values
+measurements/                             idle memory and CPU, written by CI
+tools/                                    the `catalog` command (Go)
+docs/                                     template standards, deploying a template
 ```
 
-## Capabilities
+Both kinds of file share one envelope:
+
+```yaml
+apiVersion: catalog.zeabur.com/v1
+kind: Component                   # or Template
+metadata:
+  name: Traefik Proxy
+  description: Why it is recommended, or what the template runs, in one or two sentences.
+  license: MIT                    # SPDX
+  homepage: https://traefik.io/traefik/
+requires: [certificates]          # <capability> or <capability>/<upstream>
+```
+
+The path is the ID: `components/ingress/traefik.yaml` is `ingress/traefik`,
+`templates/n8n/` is `n8n`.
+
+## Components
 
 | Capability | Upstream | single-node | multi-node |
 | --- | --- | --- | --- |
@@ -65,10 +95,50 @@ tools/                                      the `catalog` command (Go)
 is not offered. Each file's `detection` rules find an existing installation so
 it can be reused instead.
 
+## Templates
+
+| ID | Application | Categories |
+| --- | --- | --- |
+| browserless | Browserless | automation |
+| cliproxyapi | CLIProxyAPI | ai |
+| dify | Dify | ai |
+| ghost | Ghost | cms |
+| halo | Halo | cms |
+| hermes-agent-custom-provider | Hermes Agent | ai, automation |
+| hermes-agent-openrouter | Hermes Agent | ai, automation |
+| librechat | LibreChat | ai |
+| lobechat | LobeChat | ai |
+| mariadb | MariaDB | databases |
+| mongodb | MongoDB | databases |
+| n8n | n8n PostgreSQL | automation |
+| n8n-ai-brain | n8n (AI Brain) | ai, automation |
+| n8n-sqlite | n8n SQLite | automation |
+| new-api | New API | ai |
+| nginx | nginx | web-servers |
+| ollama | Ollama | ai |
+| open-webui | Open WebUI | ai |
+| openclaw | OpenClaw | ai |
+| openclaw-browser-sandbox | OpenClaw Browser Sandbox | ai, automation |
+| openlist | OpenList | storage |
+| postgresql | PostgreSQL | databases |
+| postgresql-pgvector | PostgreSQL with pgvector | databases |
+| redis | Dragonfly (Redis-compatible) | databases |
+| rustfs | RustFS | storage |
+| searxng | SearXNG | search |
+| sillytavern | SillyTavern | ai |
+| sillytavern-legacy | SillyTavern | ai |
+| supabase | Supabase | databases |
+| uptime-kuma | Uptime Kuma | monitoring |
+| wordpress | WordPress | cms |
+
+Categories: `ai`, `automation`, `cms`, `databases`, `monitoring`, `search`,
+`storage`, `web-servers`. [Deploy a template](docs/deploy-a-template.md)
+explains how to install one by hand.
+
 ## Distributions
 
-Components are tested on kind: one node for single-node, three for
-multi-node. They behave the same on other distributions apart from these
+Components and templates are tested on kind: one node for single-node, three
+for multi-node. They behave the same on other distributions apart from these
 known differences:
 
 - k3s: run it with `--disable=traefik,metrics-server` so both come from their
@@ -83,21 +153,25 @@ known differences:
   comments in its file. CI installs them into kind's nodes.
 - `distributions` limits a component to some distributions
   (system-upgrade-controller: k3s).
+- Templates store data in a StorageClass named `local-path`, which keeps data
+  on one node. k3s has it; elsewhere, create it or edit the rendered
+  `storageClassName`.
 
+## Component format
 
-## Data format
-
-The path names the component: `capabilities/<capability>/<upstream>.yaml`.
-Abridged; the schema documents every field.
+Abridged; `schema/v1/component.schema.json` documents every field.
 
 ```yaml
-displayName: Traefik Proxy
-homepage: https://traefik.io/traefik/
-license: MIT                      # SPDX; OSI-approved, or opt-in only (see below)
+apiVersion: catalog.zeabur.com/v1
+kind: Component
+metadata:
+  name: Traefik Proxy
+  description: Why it is recommended, in one or two sentences.
+  license: MIT                    # SPDX; OSI-approved, or opt-in only (see below)
+  homepage: https://traefik.io/traefik/
 maturity: independent             # cncf-graduated | cncf-incubating | cncf-sandbox | kubernetes-sig | independent
-rationale: Why it is recommended, in one or two sentences.
 defaults: {single-node: recommended, multi-node: recommended}
-dependsOn: [certificates]         # <capability> or <capability>/<upstream>
+requires: [certificates]          # installed first
 distributions: [k3s]              # optional; omitted means any cluster
 
 releases:                         # installed in order
@@ -132,56 +206,152 @@ Installs are deterministic: charts never generate secrets or certificates.
 Generated values are `inputs` (stored in Secrets), certificates come from
 cert-manager, and `catalog render` fails if two renders differ.
 
-## Adding an upstream
+## Template format
+
+Abridged; `schema/v1/template.schema.json` documents every field.
+
+```yaml
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: PostgreSQL
+  description: PostgreSQL 18 managed by CloudNativePG, with Barman Cloud WAL archiving and scheduled base backups.
+  license: PostgreSQL AND Apache-2.0
+  homepage: https://www.postgresql.org/
+  icon: https://cdn.zeabur.com/marketplace/postgresql.svg
+  categories: [databases]
+
+requires: [databases/cloudnative-pg]
+
+services:                         # the workloads in manifests.yaml
+  - name: postgresql
+    securityProfile: restricted   # or baseline, with baselineJustification
+    ports: [{name: postgresql, port: 5432}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "1", memory: 1Gi}}
+
+inputs:
+  - name: backupDestination       # the person installing gives it
+    description: Dedicated S3 bucket and unique prefix for this cluster.
+    required: true
+    validation: {pattern: '^s3://[a-z0-9][a-z0-9.-]+/[A-Za-z0-9/_-]+$'}
+  # From n8n: the installer generates this value into a Secret.
+  # - name: encryptionKey
+  #   generate: random
+  #   secret: {name: n8n-secrets, key: encryption-key}
+
+security: {...}      # summary, egress destinations, risks with mitigations
+scalability: {...}   # replica range and what blocks more
+upgradeNotes: []     # what an upgrade needs
+smoke: []            # resource condition, then an HTTP or SQL check
+```
+
+`manifests.yaml` is a Go template. It gets `.Namespace`, `.Domain`,
+`.ClusterIssuer` and `.Inputs.<name>`, and `{{ dnsEgress }}` inserts the
+NetworkPolicy rule to cluster DNS. Rendered objects reference Secrets and
+never contain generated values.
+
+## Adding a component
 
 1. Pick a capability and an upstream with an OSI-approved license; prefer CNCF
    or Kubernetes SIG projects. A license under `optInOnly` (SSPL-1.0) is
    allowed only with `optional` or `unsupported` in every profile.
-2. Create `capabilities/<capability>/<upstream>.yaml` from a similar file. Give
+2. Create `components/<capability>/<upstream>.yaml` from a similar file. Give
    both profiles values, each with a comment saying why.
 3. Check locally (`nix develop` provides Go, Helm, kubectl, kubeconform and
    kind):
 
    ```sh
-   go run ./tools/cmd/catalog validate               # schema, license, references, comments
-   go run ./tools/cmd/catalog render                 # helm template + kubeconform
-   kind create cluster                            # --config .github/kind.yaml for multi-node
+   go run ./tools/cmd/catalog validate          # schema, license, references, comments
+   go run ./tools/cmd/catalog render            # helm template + kubeconform
+   kind create cluster                          # --config .github/kind.yaml for multi-node
    go run ./tools/cmd/catalog e2e -profile single-node <id>
    ```
 
 4. Open a pull request with signed-off commits (`git commit -s`).
 
+## Adding a template
+
+1. Create `templates/<id>/template.yaml` and `manifests.yaml` from a similar
+   template. The ID is lowercase words joined by hyphens, at most 49
+   characters.
+2. Meet the [template standards](docs/template-standards.md): pinned images,
+   Restricted Pod Security, default-deny NetworkPolicy, resource limits,
+   backups for state, and honest scaling limits.
+3. Add smoke checks that prove the application answers: a resource condition,
+   and an HTTP or SQL check.
+4. Check locally. `values.json` is a JSON object with a value for each input
+   the template asks for:
+
+   ```sh
+   go run ./tools/cmd/catalog validate
+   go run ./tools/cmd/catalog template lint -values values.json \
+     -domain app.example.test -cluster-issuer letsencrypt <id>
+   kind create cluster
+   go run ./tools/cmd/catalog template e2e -values values.json <id>
+   ```
+
+5. Open a pull request with signed-off commits (`git commit -s`).
+
 ## CI
 
 Every pull request:
 
-1. validates every file against the schema;
-2. rejects licenses that are not OSI-approved, except those under `optInOnly`
-   in `config/licenses.yaml` in components no profile recommends;
+1. validates every file against its schema, and checks that every template's
+   `requires` resolves on both profiles;
+2. rejects component licenses that are not OSI-approved, except those under
+   `optInOnly` in `config/licenses.yaml` in components no profile recommends;
 3. renders every profile twice (output must be identical) and validates it
    with kubeconform for each version in `config/kubernetes.yaml`, checking
    custom resources against the CRDs rendered with them;
-4. installs each changed component and its dependents (every component when
-   `config/`, `tools/` or the cluster changes) on kind for each profile, on
-   amd64 and arm64: dependencies first, smoke test, idle memory and CPU,
-   uninstall, and fails on anything left behind (components listed under
-   `unready` in `config/e2e.yaml` need credentials CI lacks: they are installed
-   without waiting, smoke tested and uninstalled, not measured);
-5. checks that the single-node recommended set, measured on amd64, fits
+4. installs each changed component and its dependents on kind for each
+   profile, on amd64 and arm64: dependencies first, smoke test, idle memory
+   and CPU, uninstall, and fails on anything left behind (components listed
+   under `unready` in `config/e2e.yaml` need credentials CI lacks: they are
+   installed without waiting, smoke tested and uninstalled, not measured);
+5. installs each changed template, and each template that requires a changed
+   component, on single-node kind: the safety rules and kubeconform first (its
+   custom resources checked against the CRDs of the components it requires),
+   then the components it requires, then the template in
+   `templates-e2e-<id>`, then its smoke checks;
+6. checks that the single-node recommended set, measured on amd64, fits
    `config/budget.yaml`;
-6. upgrades from the latest release's version when it changed.
+7. upgrades each component from the latest release's version when it changed.
 
-After merges, `measure.yml` measures the same components and opens a pull
-request with fresh `measurements/`; run it by hand to measure everything. Renovate opens a pull request for every new upstream version.
+A change to `config/`, `tools/` or the cluster tests everything. After
+merges, `measure.yml` measures the changed components and opens a pull request
+with fresh `measurements/`; run it by hand to measure everything. Renovate
+opens a pull request for every new upstream version and image digest.
+
+### Test inputs for templates
+
+Template tests read two repository secrets, each a JSON object keyed by
+template ID:
+
+- `E2E_INPUTS_JSON`: the input values for each template, in the shape of the
+  `-values` file. Include every required input and the exact license
+  acknowledgement, for example
+  `{"redis": {"licenseOptIn": "I-ACCEPT-DRAGONFLY-BUSL-1.1", "backupDestination": "s3://bucket/redis"}}`.
+- `E2E_SETUP_MANIFESTS_JSON`: YAML for each template, applied in
+  `templates-e2e-<id>` before the template. Use it for the Secrets that hold
+  test credentials, such as the S3 credentials that `backupSecret` names.
+
+Templates with backups need a real S3-compatible bucket and prefix, an HTTPS
+endpoint on TCP 443 and its `backupCidr`. The test sets `kubeApiCidr` from the
+kind cluster. Use short-lived, least-privilege credentials and a separate
+prefix; deleting the namespace leaves backup objects in the bucket. Pull
+requests get no secrets, so CI skips the templates that need inputs on a pull
+request and tests them on the push to `main`. Never use
+`pull_request_target` to run pull request code with secrets.
 
 ## Releases
 
 Tagging `vX.Y.Z` publishes:
 
 - `index.json`: every component with its install order per profile and
-  measurements, recommended components per capability, the budget and the
-  Kubernetes versions;
-- `bundle.tar.gz`: `index.json` plus sources, schema, config and measurements;
+  measurements, recommended components per capability, every template, the
+  budget and the Kubernetes versions;
+- `bundle.tar.gz`: `index.json` plus `components/`, `templates/`, schemas,
+  config and measurements;
 - `checksums.txt`, and a cosign keyless Sigstore bundle for each.
 
 ```sh
@@ -194,10 +364,16 @@ Consumers pin a release, verify it, and read `index.json`. `indexVersion`
 changes only on incompatible changes. A typical consumer runs `detection`,
 offers the recommended components for the cluster's profile, asks for their
 `inputs`, and generates installs in `installOrder`, merging `contributes` into
-their targets.
+their targets. For a template, it checks that the cluster has everything in
+`requires`, asks for the template's inputs, generates the others into Secrets,
+and applies `manifests.yaml` rendered for the project's namespace.
 
 ## License
 
-Apache-2.0. Contributions use the
+The tools and original files are licensed under Apache-2.0. Each upstream,
+application, image and chart keeps its own license, named in
+`metadata.license`. Some use source-available licenses such as BUSL-1.1 or
+SSPL; those components are opt-in only, and those templates ask the person
+installing to accept the license before they render. Contributions use the
 [Developer Certificate of Origin](https://developercertificate.org/); see
 [CONTRIBUTING.md](CONTRIBUTING.md).

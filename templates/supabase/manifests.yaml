@@ -1,0 +1,4246 @@
+# Converted and hardened from supabase-community/supabase-kubernetes 0.8.0 (Apache-2.0).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: supabase-backup-scripts
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-backup-scripts
+    app.kubernetes.io/part-of: supabase
+data:
+  controller.py: |
+    import json, os, pathlib, signal, ssl, time, urllib.request, urllib.error
+    state = pathlib.Path("/state/lock")
+    work = pathlib.Path("/work")
+    names = json.loads(os.environ["DEPLOYMENTS"])
+    namespace = pathlib.Path("/var/run/secrets/supabase/namespace").read_text().strip()
+    host = os.environ["KUBERNETES_SERVICE_HOST"]
+    if ":" in host: host = "[" + host + "]"
+    base = "https://" + host + ":" + os.environ.get("KUBERNETES_SERVICE_PORT_HTTPS", "443")
+    context = ssl.create_default_context(cafile="/var/run/secrets/supabase/ca.crt")
+    def api(name, replicas=None):
+        # Re-read the projected 600-second token for every request; never cache the rotating credential.
+        token = pathlib.Path("/var/run/secrets/supabase/token").read_text().strip()
+        headers = {"Authorization": "Bearer " + token}
+        body = None
+        if replicas is not None:
+            headers["Content-Type"] = "application/merge-patch+json"
+            body = json.dumps({"spec": {"replicas": replicas}}).encode()
+        url = base + "/apis/apps/v1/namespaces/" + namespace + "/deployments/" + name + "/scale"
+        req = urllib.request.Request(url, data=body, headers=headers, method="PATCH" if body is not None else "GET")
+        with urllib.request.urlopen(req, context=context, timeout=20) as response:
+            return json.load(response)
+    def stop(signum, frame):
+        raise SystemExit(128 + signum)
+    signal.signal(signal.SIGTERM, stop)
+    signal.signal(signal.SIGINT, stop)
+    try:
+        state.mkdir()  # Atomic, persisted lock shared by initial Job and every CronJob.
+    except FileExistsError:
+        (work / "result").write_text("1")
+        raise RuntimeError("Another backup or interrupted maintenance owns /state/lock; inspect persisted state")
+    counts = {}
+    saved = False
+    restored = False
+    try:
+        deadline = time.monotonic() + 600
+        for name in names:
+            while True:
+                try:
+                    counts[name] = api(name)["spec"]["replicas"]
+                    break
+                except urllib.error.HTTPError as error:
+                    if error.code != 404 or time.monotonic() >= deadline: raise
+                    time.sleep(2)
+        with (state / "replicas.json").open("x") as file:
+            json.dump(counts, file)
+            file.flush()
+            os.fsync(file.fileno())
+        directory = os.open(state, os.O_RDONLY)
+        os.fsync(directory)
+        os.close(directory)
+        saved = True
+        for name in names: api(name, 0)
+        while any(api(name).get("status", {}).get("replicas", 0) != 0 for name in names):
+            if time.monotonic() >= deadline: raise TimeoutError("Workloads did not quiesce")
+            time.sleep(2)
+        # Scale status can stop counting terminating Pods. All declared app Pods have a 30-second grace period.
+        time.sleep(35)
+        (work / "quiesced").touch()
+        deadline = time.monotonic() + 2700
+        while not (work / "result").exists():
+            if time.monotonic() >= deadline: raise TimeoutError("Backup exceeded maintenance window")
+            time.sleep(2)
+        if (work / "result").read_text().strip() != "0": raise RuntimeError("Backup failed; restoring original scales")
+    except BaseException:
+        (work / "result").write_text("1")
+        raise
+    finally:
+        if saved:
+            failures = []
+            for name, replicas in counts.items():
+                for attempt in range(6):
+                    try:
+                        api(name, replicas)
+                        break
+                    except Exception:
+                        if attempt == 5: failures.append(name)
+                        else: time.sleep(5)
+            if failures:
+                raise RuntimeError("Manual scale recovery required; persisted state retained for " + ",".join(failures))
+            restored = True
+            (state / "replicas.json").unlink()
+        if not saved or restored: state.rmdir()
+  dump.sh: |
+    set -eu
+    umask 007
+    trap 's=$?; if [ "$s" -ne 0 ]; then printf "%s" "$s" > /work/result; fi' EXIT
+    while [ ! -f /work/quiesced ]; do
+      if [ -f /work/result ]; then exit 1; fi
+      sleep 2
+    done
+    until pg_isready -h supabase-db -p 5432 -U supabase_admin -d postgres; do sleep 2; done
+    mkdir -p /work/dumps
+    # The encrypted snapshot also preserves SCRAM role verifiers needed for exact password restoration.
+    pg_dumpall --globals-only > /work/dumps/globals.sql
+    pg_dump -Fc --create -d postgres -f /work/dumps/postgres.dump
+    pg_dump -Fc --create -d _supabase -f /work/dumps/_supabase.dump
+    printf '%s\n' 'Supabase PostgreSQL 17 logical backup taken with apps stopped; no WAL archive or point-in-time recovery.' > /work/dumps/contract.txt
+    touch /work/dump-ready
+  backup.sh: |
+    set -eu
+    umask 007
+    if [ -f /secrets/backup/ca.crt ]; then export RESTIC_CACERT=/secrets/backup/ca.crt; fi
+    trap 's=$?; printf "%s" "$s" > /work/result' EXIT
+    while [ ! -f /work/dump-ready ]; do
+      if [ -f /work/result ]; then exit 1; fi
+      sleep 2
+    done
+    if ! restic cat config; then restic init; fi
+    restic backup --host supabase --tag consistent-maintenance \
+      /work/dumps /data/objects /data/functions /data/snippets /data/pg-config /data/backup-state /secrets
+    restic snapshots --latest 1 --tag consistent-maintenance
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: supabase-pg-config
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-pg-config
+    app.kubernetes.io/part-of: supabase
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: supabase-objects
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-objects
+    app.kubernetes.io/part-of: supabase
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: supabase-functions
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-functions
+    app.kubernetes.io/part-of: supabase
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: supabase-snippets
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-snippets
+    app.kubernetes.io/part-of: supabase
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: supabase-backup-state
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-backup-state
+    app.kubernetes.io/part-of: supabase
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: supabase-backup
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-backup
+    app.kubernetes.io/part-of: supabase
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: supabase-backup
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-backup
+    app.kubernetes.io/part-of: supabase
+rules:
+- apiGroups:
+  - apps
+  resources:
+  - deployments/scale
+  resourceNames:
+  - supabase-auth
+  - supabase-rest
+  - supabase-realtime
+  - supabase-storage
+  - supabase-imgproxy
+  - supabase-meta
+  - supabase-studio
+  - supabase-supavisor
+  - supabase-functions
+  - supabase-kong
+  verbs:
+  - get
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: supabase-backup
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-backup
+    app.kubernetes.io/part-of: supabase
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: supabase-backup
+subjects:
+- kind: ServiceAccount
+  name: supabase-backup
+  namespace: '{{ .Namespace }}'
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: supabase-initial-backup
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-initial-backup
+    app.kubernetes.io/part-of: supabase
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 3600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: supabase-backup
+        app.kubernetes.io/part-of: supabase
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 120
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: supabase-db
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: maintenance-controller
+        image: python:3.14.0-alpine3.22@sha256:8373231e1e906ddfb457748bfc032c4c06ada8c759b7b62d9c73ec2a3c56e710
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: '1'
+            memory: 512Mi
+        env:
+        - name: DEPLOYMENTS
+          value: '["supabase-auth", "supabase-rest", "supabase-realtime", "supabase-storage", "supabase-imgproxy", "supabase-meta",
+            "supabase-studio", "supabase-supavisor", "supabase-functions", "supabase-kong"]'
+        - name: PYTHONDONTWRITEBYTECODE
+          value: '1'
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+          readOnly: false
+        - name: scripts
+          mountPath: /scripts
+          readOnly: true
+        - name: work
+          mountPath: /work
+          readOnly: false
+        - name: backup-state
+          mountPath: /state
+          readOnly: false
+        - name: kube-api
+          mountPath: /var/run/secrets/supabase
+          readOnly: true
+        command:
+        - python3
+        - /scripts/controller.py
+      - name: postgres-native-dump
+        image: supabase/postgres:17.6.1.136@sha256:f371b5f3f2ac0a05703f33d6e6134515fb2498cab708fb948a0aeb7481467c00
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: '1'
+            memory: 1Gi
+        env:
+        - name: PGHOST
+          value: supabase-db
+        - name: PGPORT
+          value: '5432'
+        - name: PGUSER
+          value: supabase_admin
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: admin-db-password
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+          readOnly: false
+        - name: scripts
+          mountPath: /scripts
+          readOnly: true
+        - name: work
+          mountPath: /work
+          readOnly: false
+        command:
+        - /bin/sh
+        - /scripts/dump.sh
+      - name: encrypted-s3-snapshot
+        image: restic/restic:0.18.1@sha256:39d9072fb5651c80d75c7a811612eb60b4c06b32ffe87c2e9f3c7222e1797e76
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: '1'
+            memory: 1Gi
+        env:
+        - name: RESTIC_REPOSITORY
+          value: s3:{{ .Inputs.backupEndpoint }}/{{ .Inputs.backupBucket }}/{{ .Inputs.backupPrefix }}
+        - name: RESTIC_PASSWORD_FILE
+          value: /secrets/install/backup-password
+        - name: RESTIC_CACHE_DIR
+          value: /tmp/restic
+        - name: AWS_DEFAULT_REGION
+          value: '{{ .Inputs.backupRegion }}'
+        - name: AWS_EC2_METADATA_DISABLED
+          value: 'true'
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: '{{ .Inputs.backupSecret }}'
+              key: ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: '{{ .Inputs.backupSecret }}'
+              key: ACCESS_SECRET_KEY
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+          readOnly: false
+        - name: scripts
+          mountPath: /scripts
+          readOnly: true
+        - name: work
+          mountPath: /work
+          readOnly: false
+        - name: objects
+          mountPath: /data/objects
+          readOnly: true
+        - name: functions
+          mountPath: /data/functions
+          readOnly: true
+        - name: snippets
+          mountPath: /data/snippets
+          readOnly: true
+        - name: pg-config
+          mountPath: /data/pg-config
+          readOnly: true
+        - name: backup-state
+          mountPath: /data/backup-state
+          readOnly: true
+        - name: install-secrets
+          mountPath: /secrets/install
+          readOnly: true
+        - name: backup-secrets
+          mountPath: /secrets/backup
+          readOnly: true
+        - name: smtp-secrets
+          mountPath: /secrets/smtp
+          readOnly: true
+        command:
+        - /bin/sh
+        - /scripts/backup.sh
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: scripts
+        configMap:
+          name: supabase-backup-scripts
+          defaultMode: 292
+      - name: work
+        emptyDir: {}
+      - name: backup-state
+        persistentVolumeClaim:
+          claimName: supabase-backup-state
+      - name: objects
+        persistentVolumeClaim:
+          claimName: supabase-objects
+      - name: functions
+        persistentVolumeClaim:
+          claimName: supabase-functions
+      - name: snippets
+        persistentVolumeClaim:
+          claimName: supabase-snippets
+      - name: pg-config
+        persistentVolumeClaim:
+          claimName: supabase-pg-config
+      - name: install-secrets
+        secret:
+          secretName: supabase-credentials
+          defaultMode: 288
+      - name: backup-secrets
+        secret:
+          secretName: '{{ .Inputs.backupSecret }}'
+          defaultMode: 288
+      - name: smtp-secrets
+        secret:
+          secretName: '{{ .Inputs.smtpSecret }}'
+          defaultMode: 288
+      - name: kube-api
+        projected:
+          defaultMode: 288
+          sources:
+          - serviceAccountToken:
+              path: token
+              expirationSeconds: 600
+          - configMap:
+              name: kube-root-ca.crt
+              items:
+              - key: ca.crt
+                path: ca.crt
+          - downwardAPI:
+              items:
+              - path: namespace
+                fieldRef:
+                  fieldPath: metadata.namespace
+      serviceAccountName: supabase-backup
+      restartPolicy: Never
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: supabase-daily-backup
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-daily-backup
+    app.kubernetes.io/part-of: supabase
+spec:
+  schedule: 0 3 * * *
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 3600
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: supabase-backup
+            app.kubernetes.io/part-of: supabase
+        spec:
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+            fsGroupChangePolicy: OnRootMismatch
+            seccompProfile:
+              type: RuntimeDefault
+          terminationGracePeriodSeconds: 120
+          affinity:
+            podAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: supabase-db
+                topologyKey: kubernetes.io/hostname
+          containers:
+          - name: maintenance-controller
+            image: python:3.14.0-alpine3.22@sha256:8373231e1e906ddfb457748bfc032c4c06ada8c759b7b62d9c73ec2a3c56e710
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+              readOnlyRootFilesystem: true
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                cpu: '1'
+                memory: 512Mi
+            env:
+            - name: DEPLOYMENTS
+              value: '["supabase-auth", "supabase-rest", "supabase-realtime", "supabase-storage", "supabase-imgproxy", "supabase-meta",
+                "supabase-studio", "supabase-supavisor", "supabase-functions", "supabase-kong"]'
+            - name: PYTHONDONTWRITEBYTECODE
+              value: '1'
+            volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+              readOnly: false
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+            - name: work
+              mountPath: /work
+              readOnly: false
+            - name: backup-state
+              mountPath: /state
+              readOnly: false
+            - name: kube-api
+              mountPath: /var/run/secrets/supabase
+              readOnly: true
+            command:
+            - python3
+            - /scripts/controller.py
+          - name: postgres-native-dump
+            image: supabase/postgres:17.6.1.136@sha256:f371b5f3f2ac0a05703f33d6e6134515fb2498cab708fb948a0aeb7481467c00
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+              readOnlyRootFilesystem: true
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                cpu: '1'
+                memory: 1Gi
+            env:
+            - name: PGHOST
+              value: supabase-db
+            - name: PGPORT
+              value: '5432'
+            - name: PGUSER
+              value: supabase_admin
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: supabase-credentials
+                  key: admin-db-password
+            volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+              readOnly: false
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+            - name: work
+              mountPath: /work
+              readOnly: false
+            command:
+            - /bin/sh
+            - /scripts/dump.sh
+          - name: encrypted-s3-snapshot
+            image: restic/restic:0.18.1@sha256:39d9072fb5651c80d75c7a811612eb60b4c06b32ffe87c2e9f3c7222e1797e76
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+              readOnlyRootFilesystem: true
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                cpu: '1'
+                memory: 1Gi
+            env:
+            - name: RESTIC_REPOSITORY
+              value: s3:{{ .Inputs.backupEndpoint }}/{{ .Inputs.backupBucket }}/{{ .Inputs.backupPrefix }}
+            - name: RESTIC_PASSWORD_FILE
+              value: /secrets/install/backup-password
+            - name: RESTIC_CACHE_DIR
+              value: /tmp/restic
+            - name: AWS_DEFAULT_REGION
+              value: '{{ .Inputs.backupRegion }}'
+            - name: AWS_EC2_METADATA_DISABLED
+              value: 'true'
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: '{{ .Inputs.backupSecret }}'
+                  key: ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: '{{ .Inputs.backupSecret }}'
+                  key: ACCESS_SECRET_KEY
+            volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+              readOnly: false
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+            - name: work
+              mountPath: /work
+              readOnly: false
+            - name: objects
+              mountPath: /data/objects
+              readOnly: true
+            - name: functions
+              mountPath: /data/functions
+              readOnly: true
+            - name: snippets
+              mountPath: /data/snippets
+              readOnly: true
+            - name: pg-config
+              mountPath: /data/pg-config
+              readOnly: true
+            - name: backup-state
+              mountPath: /data/backup-state
+              readOnly: true
+            - name: install-secrets
+              mountPath: /secrets/install
+              readOnly: true
+            - name: backup-secrets
+              mountPath: /secrets/backup
+              readOnly: true
+            - name: smtp-secrets
+              mountPath: /secrets/smtp
+              readOnly: true
+            command:
+            - /bin/sh
+            - /scripts/backup.sh
+          volumes:
+          - name: tmp
+            emptyDir: {}
+          - name: scripts
+            configMap:
+              name: supabase-backup-scripts
+              defaultMode: 292
+          - name: work
+            emptyDir: {}
+          - name: backup-state
+            persistentVolumeClaim:
+              claimName: supabase-backup-state
+          - name: objects
+            persistentVolumeClaim:
+              claimName: supabase-objects
+          - name: functions
+            persistentVolumeClaim:
+              claimName: supabase-functions
+          - name: snippets
+            persistentVolumeClaim:
+              claimName: supabase-snippets
+          - name: pg-config
+            persistentVolumeClaim:
+              claimName: supabase-pg-config
+          - name: install-secrets
+            secret:
+              secretName: supabase-credentials
+              defaultMode: 288
+          - name: backup-secrets
+            secret:
+              secretName: '{{ .Inputs.backupSecret }}'
+              defaultMode: 288
+          - name: smtp-secrets
+            secret:
+              secretName: '{{ .Inputs.smtpSecret }}'
+              defaultMode: 288
+          - name: kube-api
+            projected:
+              defaultMode: 288
+              sources:
+              - serviceAccountToken:
+                  path: token
+                  expirationSeconds: 600
+              - configMap:
+                  name: kube-root-ca.crt
+                  items:
+                  - key: ca.crt
+                    path: ca.crt
+              - downwardAPI:
+                  items:
+                  - path: namespace
+                    fieldRef:
+                      fieldPath: metadata.namespace
+          serviceAccountName: supabase-backup
+          restartPolicy: Never
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: supabase-gateway
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-gateway
+    app.kubernetes.io/part-of: supabase
+  annotations:
+    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: 'true'
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - '{{ .Domain }}'
+    secretName: supabase-tls
+  rules:
+  - host: '{{ .Domain }}'
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: supabase-kong
+            port:
+              number: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-default-deny
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-default-deny
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-dns
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-dns
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - {{ dnsEgress }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-kong-to-auth
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-kong-to-auth
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-kong
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-auth
+    ports:
+    - protocol: TCP
+      port: 9999
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-auth-from-kong
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-auth-from-kong
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-auth
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-kong
+    ports:
+    - protocol: TCP
+      port: 9999
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-kong-to-rest
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-kong-to-rest
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-kong
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-rest
+    ports:
+    - protocol: TCP
+      port: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-rest-from-kong
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-rest-from-kong
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-rest
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-kong
+    ports:
+    - protocol: TCP
+      port: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-kong-to-realtime
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-kong-to-realtime
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-kong
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-realtime
+    ports:
+    - protocol: TCP
+      port: 4000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-realtime-from-kong
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-realtime-from-kong
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-realtime
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-kong
+    ports:
+    - protocol: TCP
+      port: 4000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-kong-to-storage
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-kong-to-storage
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-kong
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-storage
+    ports:
+    - protocol: TCP
+      port: 5000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-storage-from-kong
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-storage-from-kong
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-storage
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-kong
+    ports:
+    - protocol: TCP
+      port: 5000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-kong-to-functions
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-kong-to-functions
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-kong
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-functions
+    ports:
+    - protocol: TCP
+      port: 9000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-functions-from-kong
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-functions-from-kong
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-functions
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-kong
+    ports:
+    - protocol: TCP
+      port: 9000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-kong-to-studio
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-kong-to-studio
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-kong
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-studio
+    ports:
+    - protocol: TCP
+      port: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-studio-from-kong
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-studio-from-kong
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-studio
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-kong
+    ports:
+    - protocol: TCP
+      port: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-auth-to-db
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-auth-to-db
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-auth
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-db
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-db-from-auth
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-db-from-auth
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-db
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-auth
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-rest-to-db
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-rest-to-db
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-rest
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-db
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-db-from-rest
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-db-from-rest
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-db
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-rest
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-realtime-to-db
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-realtime-to-db
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-realtime
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-db
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-db-from-realtime
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-db-from-realtime
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-db
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-realtime
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-storage-to-db
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-storage-to-db
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-storage
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-db
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-db-from-storage
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-db-from-storage
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-db
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-storage
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-storage-to-rest
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-storage-to-rest
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-storage
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-rest
+    ports:
+    - protocol: TCP
+      port: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-rest-from-storage
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-rest-from-storage
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-rest
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-storage
+    ports:
+    - protocol: TCP
+      port: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-storage-to-imgproxy
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-storage-to-imgproxy
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-storage
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-imgproxy
+    ports:
+    - protocol: TCP
+      port: 5001
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-imgproxy-from-storage
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-imgproxy-from-storage
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-imgproxy
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-storage
+    ports:
+    - protocol: TCP
+      port: 5001
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-studio-to-meta
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-studio-to-meta
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-studio
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-meta
+    ports:
+    - protocol: TCP
+      port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-meta-from-studio
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-meta-from-studio
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-meta
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-studio
+    ports:
+    - protocol: TCP
+      port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-studio-to-kong
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-studio-to-kong
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-studio
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-kong
+    ports:
+    - protocol: TCP
+      port: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-kong-from-studio
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-kong-from-studio
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-kong
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-studio
+    ports:
+    - protocol: TCP
+      port: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-studio-to-db
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-studio-to-db
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-studio
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-db
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-db-from-studio
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-db-from-studio
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-db
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-studio
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-meta-to-db
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-meta-to-db
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-meta
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-db
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-db-from-meta
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-db-from-meta
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-db
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-meta
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-functions-to-kong
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-functions-to-kong
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-functions
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-kong
+    ports:
+    - protocol: TCP
+      port: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-kong-from-functions
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-kong-from-functions
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-kong
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-functions
+    ports:
+    - protocol: TCP
+      port: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-functions-to-db
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-functions-to-db
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-functions
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-db
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-db-from-functions
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-db-from-functions
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-db
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-functions
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-supavisor-to-db
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-supavisor-to-db
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-supavisor
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-db
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-db-from-supavisor
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-db-from-supavisor
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-db
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-supavisor
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-backup-to-db
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-backup-to-db
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-backup
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-db
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-db-from-backup
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-db-from-backup
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-db
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-backup
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-db-to-functions
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-db-to-functions
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-db
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-functions
+    ports:
+    - protocol: TCP
+      port: 9000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-functions-from-db
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-functions-from-db
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-functions
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: supabase-db
+    ports:
+    - protocol: TCP
+      port: 9000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-traefik
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-traefik
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-kong
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: traefik
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: traefik
+    ports:
+    - protocol: TCP
+      port: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-auth-external-587-1
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-auth-external-587-1
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-auth
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - ipBlock:
+        cidr: '{{ .Inputs.smtpCidr }}'
+    ports:
+    - protocol: TCP
+      port: 587
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-backup-external-443-1
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-backup-external-443-1
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-backup
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - ipBlock:
+        cidr: '{{ .Inputs.backupCidr }}'
+    ports:
+    - protocol: TCP
+      port: 443
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: supabase-backup-external-443-2
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-backup-external-443-2
+    app.kubernetes.io/part-of: supabase
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-backup
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - ipBlock:
+        cidr: '{{ .Inputs.kubeApiCidr }}'
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 6443
+---
+# Converted and hardened from supabase-community/supabase-kubernetes 0.8.0 (Apache-2.0).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: supabase-db-bootstrap
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-db-bootstrap
+    app.kubernetes.io/part-of: supabase
+data:
+  98-webhooks.sql: |
+    BEGIN;
+      -- Create pg_net extension
+      CREATE EXTENSION IF NOT EXISTS pg_net SCHEMA extensions;
+      -- Create supabase_functions schema
+      CREATE SCHEMA supabase_functions AUTHORIZATION supabase_admin;
+      GRANT USAGE ON SCHEMA supabase_functions TO postgres, anon, authenticated, service_role;
+      ALTER DEFAULT PRIVILEGES IN SCHEMA supabase_functions GRANT ALL ON TABLES TO postgres, anon, authenticated, service_role;
+      ALTER DEFAULT PRIVILEGES IN SCHEMA supabase_functions GRANT ALL ON FUNCTIONS TO postgres, anon, authenticated, service_role;
+      ALTER DEFAULT PRIVILEGES IN SCHEMA supabase_functions GRANT ALL ON SEQUENCES TO postgres, anon, authenticated, service_role;
+      -- supabase_functions.migrations definition
+      CREATE TABLE supabase_functions.migrations (
+        version text PRIMARY KEY,
+        inserted_at timestamptz NOT NULL DEFAULT NOW()
+      );
+      -- Initial supabase_functions migration
+      INSERT INTO supabase_functions.migrations (version) VALUES ('initial');
+      -- supabase_functions.hooks definition
+      CREATE TABLE supabase_functions.hooks (
+        id bigserial PRIMARY KEY,
+        hook_table_id integer NOT NULL,
+        hook_name text NOT NULL,
+        created_at timestamptz NOT NULL DEFAULT NOW(),
+        request_id bigint
+      );
+      CREATE INDEX supabase_functions_hooks_request_id_idx ON supabase_functions.hooks USING btree (request_id);
+      CREATE INDEX supabase_functions_hooks_h_table_id_h_name_idx ON supabase_functions.hooks USING btree (hook_table_id, hook_name);
+      COMMENT ON TABLE supabase_functions.hooks IS 'Supabase Functions Hooks: Audit trail for triggered hooks.';
+      CREATE FUNCTION supabase_functions.http_request()
+        RETURNS trigger
+        LANGUAGE plpgsql
+        AS $function$
+        DECLARE
+          request_id bigint;
+          payload jsonb;
+          url text := TG_ARGV[0]::text;
+          method text := TG_ARGV[1]::text;
+          headers jsonb DEFAULT '{}'::jsonb;
+          params jsonb DEFAULT '{}'::jsonb;
+          timeout_ms integer DEFAULT 1000;
+        BEGIN
+          IF url IS NULL OR url = 'null' THEN
+            RAISE EXCEPTION 'url argument is missing';
+          END IF;
+
+          IF method IS NULL OR method = 'null' THEN
+            RAISE EXCEPTION 'method argument is missing';
+          END IF;
+
+          IF TG_ARGV[2] IS NULL OR TG_ARGV[2] = 'null' THEN
+            headers = '{"Content-Type": "application/json"}'::jsonb;
+          ELSE
+            headers = TG_ARGV[2]::jsonb;
+          END IF;
+
+          IF TG_ARGV[3] IS NULL OR TG_ARGV[3] = 'null' THEN
+            params = '{}'::jsonb;
+          ELSE
+            params = TG_ARGV[3]::jsonb;
+          END IF;
+
+          IF TG_ARGV[4] IS NULL OR TG_ARGV[4] = 'null' THEN
+            timeout_ms = 1000;
+          ELSE
+            timeout_ms = TG_ARGV[4]::integer;
+          END IF;
+
+          CASE
+            WHEN method = 'GET' THEN
+              SELECT http_get INTO request_id FROM net.http_get(
+                url,
+                params,
+                headers,
+                timeout_ms
+              );
+            WHEN method = 'POST' THEN
+              payload = jsonb_build_object(
+                'old_record', OLD,
+                'record', NEW,
+                'type', TG_OP,
+                'table', TG_TABLE_NAME,
+                'schema', TG_TABLE_SCHEMA
+              );
+
+              SELECT http_post INTO request_id FROM net.http_post(
+                url,
+                payload,
+                params,
+                headers,
+                timeout_ms
+              );
+            ELSE
+              RAISE EXCEPTION 'method argument % is invalid', method;
+          END CASE;
+
+          INSERT INTO supabase_functions.hooks
+            (hook_table_id, hook_name, request_id)
+          VALUES
+            (TG_RELID, TG_NAME, request_id);
+
+          RETURN NEW;
+        END
+      $function$;
+      -- Supabase super admin
+      DO
+      $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1
+          FROM pg_roles
+          WHERE rolname = 'supabase_functions_admin'
+        )
+        THEN
+          CREATE USER supabase_functions_admin NOINHERIT CREATEROLE LOGIN NOREPLICATION;
+        END IF;
+      END
+      $$;
+      GRANT ALL PRIVILEGES ON SCHEMA supabase_functions TO supabase_functions_admin;
+      GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA supabase_functions TO supabase_functions_admin;
+      GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA supabase_functions TO supabase_functions_admin;
+      ALTER USER supabase_functions_admin SET search_path = "supabase_functions";
+      ALTER table "supabase_functions".migrations OWNER TO supabase_functions_admin;
+      ALTER table "supabase_functions".hooks OWNER TO supabase_functions_admin;
+      ALTER function "supabase_functions".http_request() OWNER TO supabase_functions_admin;
+      GRANT supabase_functions_admin TO postgres;
+      -- Remove unused supabase_pg_net_admin role
+      DO
+      $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1
+          FROM pg_roles
+          WHERE rolname = 'supabase_pg_net_admin'
+        )
+        THEN
+          REASSIGN OWNED BY supabase_pg_net_admin TO supabase_admin;
+          DROP OWNED BY supabase_pg_net_admin;
+          DROP ROLE supabase_pg_net_admin;
+        END IF;
+      END
+      $$;
+      -- pg_net grants when extension is already enabled
+      DO
+      $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1
+          FROM pg_extension
+          WHERE extname = 'pg_net'
+        )
+        THEN
+          GRANT USAGE ON SCHEMA net TO supabase_functions_admin, postgres, anon, authenticated, service_role;
+          ALTER function net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) SECURITY DEFINER;
+          ALTER function net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) SECURITY DEFINER;
+          ALTER function net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) SET search_path = net;
+          ALTER function net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) SET search_path = net;
+          REVOKE ALL ON FUNCTION net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) FROM PUBLIC;
+          REVOKE ALL ON FUNCTION net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) FROM PUBLIC;
+          GRANT EXECUTE ON FUNCTION net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) TO supabase_functions_admin, postgres, anon, authenticated, service_role;
+          GRANT EXECUTE ON FUNCTION net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) TO supabase_functions_admin, postgres, anon, authenticated, service_role;
+        END IF;
+      END
+      $$;
+      -- Event trigger for pg_net
+      CREATE OR REPLACE FUNCTION extensions.grant_pg_net_access()
+      RETURNS event_trigger
+      LANGUAGE plpgsql
+      AS $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1
+          FROM pg_event_trigger_ddl_commands() AS ev
+          JOIN pg_extension AS ext
+          ON ev.objid = ext.oid
+          WHERE ext.extname = 'pg_net'
+        )
+        THEN
+          GRANT USAGE ON SCHEMA net TO supabase_functions_admin, postgres, anon, authenticated, service_role;
+          ALTER function net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) SECURITY DEFINER;
+          ALTER function net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) SECURITY DEFINER;
+          ALTER function net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) SET search_path = net;
+          ALTER function net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) SET search_path = net;
+          REVOKE ALL ON FUNCTION net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) FROM PUBLIC;
+          REVOKE ALL ON FUNCTION net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) FROM PUBLIC;
+          GRANT EXECUTE ON FUNCTION net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) TO supabase_functions_admin, postgres, anon, authenticated, service_role;
+          GRANT EXECUTE ON FUNCTION net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) TO supabase_functions_admin, postgres, anon, authenticated, service_role;
+        END IF;
+      END;
+      $$;
+      COMMENT ON FUNCTION extensions.grant_pg_net_access IS 'Grants access to pg_net';
+      DO
+      $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1
+          FROM pg_event_trigger
+          WHERE evtname = 'issue_pg_net_access'
+        ) THEN
+          CREATE EVENT TRIGGER issue_pg_net_access ON ddl_command_end WHEN TAG IN ('CREATE EXTENSION')
+          EXECUTE PROCEDURE extensions.grant_pg_net_access();
+        END IF;
+      END
+      $$;
+      INSERT INTO supabase_functions.migrations (version) VALUES ('20210809183423_update_grants');
+      ALTER function supabase_functions.http_request() SECURITY DEFINER;
+      ALTER function supabase_functions.http_request() SET search_path = supabase_functions;
+      REVOKE ALL ON FUNCTION supabase_functions.http_request() FROM PUBLIC;
+      GRANT EXECUTE ON FUNCTION supabase_functions.http_request() TO postgres, anon, authenticated, service_role;
+    COMMIT;
+  97-_supabase.sql: |
+    CREATE DATABASE _supabase WITH OWNER supabase_admin;
+  99-realtime.sql: |
+    CREATE SCHEMA IF NOT EXISTS _realtime AUTHORIZATION supabase_admin;
+  99-pooler.sql: |
+    \connect _supabase
+    CREATE SCHEMA IF NOT EXISTS _supavisor AUTHORIZATION supabase_admin;
+  99-jwt.sql: |
+    \getenv jwt JWT_SECRET
+    ALTER DATABASE postgres SET app.settings.jwt_secret TO :'jwt';
+    ALTER DATABASE postgres SET app.settings.jwt_exp TO '3600';
+  final.sql: |
+    -- Preserve upstream Supabase migrations/demotion; split application and private administrator credentials.
+    \getenv developer POSTGRES_DEVELOPER_PASSWORD
+    \getenv auth AUTH_DB_PASSWORD
+    \getenv storage STORAGE_DB_PASSWORD
+    \getenv rest REST_DB_PASSWORD
+    \getenv pooler POOLER_DB_PASSWORD
+    ALTER ROLE postgres WITH PASSWORD :'developer';
+    ALTER ROLE supabase_auth_admin WITH PASSWORD :'auth';
+    ALTER ROLE supabase_storage_admin WITH PASSWORD :'storage';
+    ALTER ROLE authenticator WITH PASSWORD :'rest';
+    ALTER ROLE pgbouncer WITH PASSWORD :'pooler';
+    ALTER ROLE supabase_functions_admin NOLOGIN;
+    ALTER ROLE supabase_replication_admin NOLOGIN;
+    ALTER ROLE supabase_etl_admin NOLOGIN;
+    ALTER ROLE supabase_read_only_user LOGIN PASSWORD :'developer';
+    ALTER ROLE dashboard_user NOLOGIN;
+    -- Upstream pg17 disables GraphQL by default; enable the provided extension rather than stripping the API.
+    CREATE SCHEMA IF NOT EXISTS graphql;
+    CREATE EXTENSION IF NOT EXISTS pg_graphql WITH SCHEMA graphql;
+    GRANT USAGE ON SCHEMA graphql_public TO postgres, anon, authenticated, service_role;
+  pg_hba.conf: |
+    # Local bootstrap/maintenance only. No TCP trust authentication.
+    local all supabase_admin trust
+    local all all peer map=supabase_map
+    host all all 0.0.0.0/0 scram-sha-256
+    host all all ::/0 scram-sha-256
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: supabase-db
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-db
+    app.kubernetes.io/part-of: supabase
+spec:
+  selector:
+    app.kubernetes.io/name: supabase-db
+  ports:
+  - name: postgresql
+    port: 5432
+    targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: supabase-db
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-db
+    app.kubernetes.io/part-of: supabase
+spec:
+  serviceName: supabase-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-db
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: supabase-db
+        app.kubernetes.io/part-of: supabase
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 101
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 30
+      containers:
+      - name: db
+        image: supabase/postgres:17.6.1.136@sha256:f371b5f3f2ac0a05703f33d6e6134515fb2498cab708fb948a0aeb7481467c00
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: '2'
+            memory: 2Gi
+        env:
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        - name: POSTGRES_USER
+          value: supabase_admin
+        - name: POSTGRES_DB
+          value: postgres
+        - name: POSTGRES_HOST
+          value: /var/run/postgresql
+        - name: POSTGRES_PORT
+          value: '5432'
+        - name: PGPORT
+          value: '5432'
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: admin-db-password
+        - name: POSTGRES_DEVELOPER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: developer-db-password
+        - name: AUTH_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: auth-db-password
+        - name: STORAGE_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: storage-db-password
+        - name: REST_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: rest-db-password
+        - name: POOLER_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: pooler-db-password
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: jwt-secret
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+          readOnly: false
+        - name: data
+          mountPath: /var/lib/postgresql/data
+          readOnly: false
+        - name: socket
+          mountPath: /var/run/postgresql
+          readOnly: false
+        - name: initdb
+          mountPath: /docker-entrypoint-initdb.d
+          readOnly: true
+        - name: bootstrap
+          mountPath: /bootstrap
+          readOnly: true
+        - name: bootstrap
+          mountPath: /etc/postgresql.schema.sql
+          subPath: final.sql
+          readOnly: true
+        - name: pg-config
+          mountPath: /etc/postgresql-custom
+          readOnly: false
+        ports:
+        - name: http
+          containerPort: 5432
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -h
+            - 127.0.0.1
+            - -U
+            - postgres
+            - -d
+            - postgres
+          periodSeconds: 5
+        startupProbe:
+          tcpSocket:
+            port: 5432
+          failureThreshold: 120
+          periodSeconds: 5
+        args:
+        - postgres
+        - -c
+        - config_file=/etc/postgresql/postgresql.conf
+        - -c
+        - data_directory=/var/lib/postgresql/data/pgdata
+        - -c
+        - hba_file=/bootstrap/pg_hba.conf
+        - -c
+        - log_min_messages=warning
+        - -c
+        - unix_socket_permissions=0770
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: initdb
+        emptyDir: {}
+      - name: bootstrap
+        configMap:
+          name: supabase-db-bootstrap
+          defaultMode: 292
+      - name: pg-config
+        persistentVolumeClaim:
+          claimName: supabase-pg-config
+      - name: keys
+        secret:
+          secretName: supabase-credentials
+          defaultMode: 288
+          items:
+          - key: pgsodium-root-key
+            path: pgsodium-root-key
+      - name: socket
+        emptyDir: {}
+      initContainers:
+      - name: prepare-database
+        image: supabase/postgres:17.6.1.136@sha256:f371b5f3f2ac0a05703f33d6e6134515fb2498cab708fb948a0aeb7481467c00
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: '1'
+            memory: 512Mi
+        env: []
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+          readOnly: false
+        - name: initdb
+          mountPath: /initdb
+          readOnly: false
+        - name: bootstrap
+          mountPath: /bootstrap
+          readOnly: true
+        - name: pg-config
+          mountPath: /pg-config
+          readOnly: false
+        - name: keys
+          mountPath: /keys
+          readOnly: true
+        command:
+        - /bin/sh
+        - -ec
+        - |
+          set -eu
+          cp -R /docker-entrypoint-initdb.d/. /initdb/
+          cp /bootstrap/98-webhooks.sql /initdb/init-scripts/98-webhooks.sql
+          cp /bootstrap/99-jwt.sql /initdb/init-scripts/99-jwt.sql
+          cp /bootstrap/97-_supabase.sql /initdb/migrations/97-_supabase.sql
+          cp /bootstrap/99-realtime.sql /initdb/migrations/99-realtime.sql
+          cp /bootstrap/99-pooler.sql /initdb/migrations/99-pooler.sql
+          if [ ! -f /pg-config/.initialized ]; then
+            cp -R /etc/postgresql-custom/. /pg-config/
+            touch /pg-config/.initialized
+          fi
+          if [ -f /pg-config/pgsodium_root.key ]; then
+            cmp /keys/pgsodium-root-key /pg-config/pgsodium_root.key
+          else
+            umask 027
+            cat /keys/pgsodium-root-key > /pg-config/pgsodium_root.key
+          fi
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      storageClassName: local-path
+      resources:
+        requests:
+          storage: 20Gi
+---
+# Converted and hardened from supabase-community/supabase-kubernetes 0.8.0 (Apache-2.0).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supabase-auth
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-auth
+    app.kubernetes.io/part-of: supabase
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-auth
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: supabase-auth
+        app.kubernetes.io/part-of: supabase
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 30
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: supabase-db
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: auth
+        image: supabase/gotrue:v2.189.0@sha256:385184459f57569c54c25209f51f3b2be99ddd7c4ce9e3555b5d3eea8447b7cf
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: '1'
+            memory: 512Mi
+        env:
+        - name: GOTRUE_API_HOST
+          value: 0.0.0.0
+        - name: GOTRUE_API_PORT
+          value: '9999'
+        - name: API_EXTERNAL_URL
+          value: https://{{ .Domain }}
+        - name: GOTRUE_SITE_URL
+          value: '{{ .Inputs.siteUrl }}'
+        - name: GOTRUE_URI_ALLOW_LIST
+          value: '{{ .Inputs.siteUrl }}'
+        - name: GOTRUE_DISABLE_SIGNUP
+          value: 'false'
+        - name: GOTRUE_JWT_ADMIN_ROLES
+          value: service_role
+        - name: GOTRUE_JWT_AUD
+          value: authenticated
+        - name: GOTRUE_JWT_DEFAULT_GROUP_NAME
+          value: authenticated
+        - name: GOTRUE_JWT_EXP
+          value: '3600'
+        - name: GOTRUE_JWT_ISSUER
+          value: https://{{ .Domain }}/auth/v1
+        - name: GOTRUE_JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: jwt-secret
+        - name: GOTRUE_DB_DRIVER
+          value: postgres
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: auth-db-password
+        - name: GOTRUE_DB_DATABASE_URL
+          value: postgres://supabase_auth_admin:$(DB_PASSWORD)@supabase-db:5432/postgres
+        - name: GOTRUE_EXTERNAL_EMAIL_ENABLED
+          value: 'true'
+        - name: GOTRUE_MAILER_AUTOCONFIRM
+          value: 'false'
+        - name: GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED
+          value: 'false'
+        - name: GOTRUE_EXTERNAL_PHONE_ENABLED
+          value: 'false'
+        - name: GOTRUE_SMS_AUTOCONFIRM
+          value: 'false'
+        - name: GOTRUE_SMTP_HOST
+          value: '{{ .Inputs.smtpHost }}'
+        - name: GOTRUE_SMTP_PORT
+          value: '587'
+        - name: GOTRUE_SMTP_USER
+          valueFrom:
+            secretKeyRef:
+              name: '{{ .Inputs.smtpSecret }}'
+              key: username
+        - name: GOTRUE_SMTP_PASS
+          valueFrom:
+            secretKeyRef:
+              name: '{{ .Inputs.smtpSecret }}'
+              key: password
+        - name: GOTRUE_SMTP_ADMIN_EMAIL
+          value: '{{ .Inputs.smtpFrom }}'
+        - name: GOTRUE_SMTP_SENDER_NAME
+          value: Supabase
+        - name: GOTRUE_MAILER_URLPATHS_INVITE
+          value: /auth/v1/verify
+        - name: GOTRUE_MAILER_URLPATHS_CONFIRMATION
+          value: /auth/v1/verify
+        - name: GOTRUE_MAILER_URLPATHS_RECOVERY
+          value: /auth/v1/verify
+        - name: GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE
+          value: /auth/v1/verify
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+          readOnly: false
+        ports:
+        - name: http
+          containerPort: 9999
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 9999
+          periodSeconds: 5
+        startupProbe:
+          tcpSocket:
+            port: 9999
+          failureThreshold: 120
+          periodSeconds: 5
+      volumes:
+      - name: tmp
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: supabase-auth
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-auth
+    app.kubernetes.io/part-of: supabase
+spec:
+  selector:
+    app.kubernetes.io/name: supabase-auth
+  ports:
+  - name: http
+    port: 9999
+    targetPort: 9999
+---
+# Converted and hardened from supabase-community/supabase-kubernetes 0.8.0 (Apache-2.0).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supabase-realtime
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-realtime
+    app.kubernetes.io/part-of: supabase
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-realtime
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: supabase-realtime
+        app.kubernetes.io/part-of: supabase
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 30
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: supabase-db
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: realtime
+        image: supabase/realtime:v2.102.3@sha256:aa1c92c0cf326007563641730ec9da9c60478caa6853887775365fa2c097a471
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: '1'
+            memory: 1Gi
+        env:
+        - name: PORT
+          value: '4000'
+        - name: DB_HOST
+          value: supabase-db
+        - name: DB_PORT
+          value: '5432'
+        - name: DB_USER
+          value: supabase_admin
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: admin-db-password
+        - name: DB_NAME
+          value: postgres
+        - name: DB_AFTER_CONNECT_QUERY
+          value: SET search_path TO _realtime
+        - name: SELF_HOST_TENANT_NAME
+          value: supabase-realtime
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: jwt-secret
+        - name: DB_ENC_KEY
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: realtime-db-key
+        - name: API_JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: jwt-secret
+        - name: SECRET_KEY_BASE
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: secret-key-base
+        - name: METRICS_JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: jwt-secret
+        - name: ERL_AFLAGS
+          value: -proto_dist inet_tcp
+        - name: RELEASE_DISTRIBUTION
+          value: none
+        - name: DNS_NODES
+          value: ''''''
+        - name: APP_NAME
+          value: realtime
+        - name: SEED_SELF_HOST
+          value: 'true'
+        - name: RUN_JANITOR
+          value: 'true'
+        - name: DISABLE_HEALTHCHECK_LOGGING
+          value: 'true'
+        - name: HOME
+          value: /tmp
+        - name: RELEASE_TMP
+          value: /tmp
+        - name: RELEASE_COOKIE
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: secret-key-base
+        - name: ERL_CRASH_DUMP
+          value: /tmp/erl_crash.dump
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+          readOnly: false
+        ports:
+        - name: http
+          containerPort: 4000
+        readinessProbe:
+          tcpSocket:
+            port: 4000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        startupProbe:
+          tcpSocket:
+            port: 4000
+          failureThreshold: 120
+          periodSeconds: 5
+        command:
+        - /bin/sh
+        - -ec
+        args:
+        - |
+          /app/bin/migrate
+          /app/bin/realtime eval "Realtime.Release.seeds(Realtime.Repo)"
+          exec /app/bin/server
+      volumes:
+      - name: tmp
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: supabase-realtime
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-realtime
+    app.kubernetes.io/part-of: supabase
+spec:
+  selector:
+    app.kubernetes.io/name: supabase-realtime
+  ports:
+  - name: http
+    port: 4000
+    targetPort: 4000
+---
+# Converted and hardened from supabase-community/supabase-kubernetes 0.8.0 (Apache-2.0).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supabase-storage
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-storage
+    app.kubernetes.io/part-of: supabase
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-storage
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: supabase-storage
+        app.kubernetes.io/part-of: supabase
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 30
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: supabase-db
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: storage
+        image: supabase/storage-api:v1.60.4@sha256:c8eb9858eafec891a97c27125470aaad54703c3f4eb4d55ca7f1bf6c6411febf
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: '1'
+            memory: 512Mi
+        env:
+        - name: ANON_KEY
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: anon-key
+        - name: SERVICE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: service-role-key
+        - name: POSTGREST_URL
+          value: http://supabase-rest:3000
+        - name: AUTH_JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: jwt-secret
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: storage-db-password
+        - name: DATABASE_URL
+          value: postgres://supabase_storage_admin:$(DB_PASSWORD)@supabase-db:5432/postgres
+        - name: STORAGE_PUBLIC_URL
+          value: https://{{ .Domain }}
+        - name: FILE_SIZE_LIMIT
+          value: '52428800'
+        - name: STORAGE_BACKEND
+          value: file
+        - name: FILE_STORAGE_BACKEND_PATH
+          value: /var/lib/storage
+        - name: TENANT_ID
+          value: supabase
+        - name: GLOBAL_S3_BUCKET
+          value: objects
+        - name: REGION
+          value: local
+        - name: ENABLE_IMAGE_TRANSFORMATION
+          value: 'true'
+        - name: IMGPROXY_URL
+          value: http://supabase-imgproxy:5001
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+          readOnly: false
+        - name: objects
+          mountPath: /var/lib/storage
+          readOnly: false
+        ports:
+        - name: http
+          containerPort: 5000
+        readinessProbe:
+          httpGet:
+            path: /status
+            port: 5000
+          periodSeconds: 5
+        startupProbe:
+          tcpSocket:
+            port: 5000
+          failureThreshold: 120
+          periodSeconds: 5
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: objects
+        persistentVolumeClaim:
+          claimName: supabase-objects
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: supabase-storage
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-storage
+    app.kubernetes.io/part-of: supabase
+spec:
+  selector:
+    app.kubernetes.io/name: supabase-storage
+  ports:
+  - name: http
+    port: 5000
+    targetPort: 5000
+---
+# Converted and hardened from supabase-community/supabase-kubernetes 0.8.0 (Apache-2.0).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: supabase-kong-config
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-kong-config
+    app.kubernetes.io/part-of: supabase
+data:
+  kong.yml: |
+    _format_version: '3.0'
+    _transform: true
+    consumers:
+    - username: anon
+      keyauth_credentials:
+      - key: $ANON_KEY
+    - username: service_role
+      keyauth_credentials:
+      - key: $SERVICE_ROLE_KEY
+    - username: dashboard
+      basicauth_credentials:
+      - username: $DASHBOARD_USERNAME
+        password: $DASHBOARD_PASSWORD
+    acls:
+    - consumer: anon
+      group: anon
+    - consumer: service_role
+      group: admin
+    services:
+    - name: auth-open-verify
+      url: http://supabase-auth:9999/verify
+      routes:
+      - name: auth-open-verify
+        paths:
+        - /auth/v1/verify
+        strip_path: true
+      plugins:
+      - &id001
+        name: cors
+        config:
+          origins:
+          - '{{ .Inputs.siteUrl }}'
+          credentials: true
+          headers:
+          - Authorization
+          - apikey
+          - Content-Type
+          - X-Client-Info
+          methods:
+          - GET
+          - POST
+          - PUT
+          - PATCH
+          - DELETE
+          - OPTIONS
+          preflight_continue: false
+    - name: auth-open-callback
+      url: http://supabase-auth:9999/callback
+      routes:
+      - name: auth-open-callback
+        paths:
+        - /auth/v1/callback
+        strip_path: true
+      plugins:
+      - *id001
+    - name: auth-open-authorize
+      url: http://supabase-auth:9999/authorize
+      routes:
+      - name: auth-open-authorize
+        paths:
+        - /auth/v1/authorize
+        strip_path: true
+      plugins:
+      - *id001
+    - name: auth-open--well-known-jwks-json
+      url: http://supabase-auth:9999/.well-known/jwks.json
+      routes:
+      - name: auth-open--well-known-jwks-json
+        paths:
+        - /auth/v1/.well-known/jwks.json
+        strip_path: true
+      plugins:
+      - *id001
+    - name: auth-open-sso-saml-acs
+      url: http://supabase-auth:9999/sso/saml/acs
+      routes:
+      - name: auth-open-sso-saml-acs
+        paths:
+        - /auth/v1/sso/saml/acs
+        strip_path: true
+      plugins:
+      - *id001
+    - name: auth-open-sso-saml-metadata
+      url: http://supabase-auth:9999/sso/saml/metadata
+      routes:
+      - name: auth-open-sso-saml-metadata
+        paths:
+        - /auth/v1/sso/saml/metadata
+        strip_path: true
+      plugins:
+      - *id001
+    - name: auth
+      url: http://supabase-auth:9999/
+      routes:
+      - name: auth
+        paths:
+        - /auth/v1/
+        strip_path: true
+      plugins: &id002
+      - *id001
+      - &id003
+        name: key-auth
+        config:
+          hide_credentials: false
+      - &id004
+        name: acl
+        config:
+          allow:
+          - anon
+          - admin
+          hide_groups_header: true
+    - name: rest-openapi-block
+      url: http://supabase-rest:3000/
+      routes:
+      - name: rest-openapi-block
+        paths:
+        - ~^/rest/v1/?$
+        strip_path: true
+      plugins:
+      - name: request-termination
+        config:
+          status_code: 403
+          message: OpenAPI is available privately.
+    - name: rest
+      url: http://supabase-rest:3000/
+      routes:
+      - name: rest
+        paths:
+        - /rest/v1/
+        strip_path: true
+      plugins: *id002
+    - name: graphql
+      url: http://supabase-rest:3000/rpc/graphql
+      routes:
+      - name: graphql
+        paths:
+        - /graphql/v1
+        strip_path: true
+      plugins:
+      - *id001
+      - *id003
+      - *id004
+      - name: request-transformer
+        config:
+          add:
+            headers:
+            - Content-Profile:graphql_public
+    - name: realtime-block-api-tenants
+      url: http://supabase-realtime:4000/api/tenants
+      routes:
+      - name: realtime-block-api-tenants
+        paths:
+        - /realtime/v1/api/tenants
+        strip_path: true
+      plugins:
+      - name: request-termination
+        config:
+          status_code: 403
+          message: Management endpoint is private.
+    - name: realtime-block-api-openapi
+      url: http://supabase-realtime:4000/api/openapi
+      routes:
+      - name: realtime-block-api-openapi
+        paths:
+        - /realtime/v1/api/openapi
+        strip_path: true
+      plugins:
+      - name: request-termination
+        config:
+          status_code: 403
+          message: Management endpoint is private.
+    - name: realtime-api
+      url: http://supabase-realtime:4000/api
+      routes:
+      - name: realtime-api
+        paths:
+        - /realtime/v1/api
+        strip_path: true
+      plugins: *id002
+    - name: realtime
+      url: http://supabase-realtime:4000/socket
+      routes:
+      - name: realtime
+        paths:
+        - /realtime/v1/
+        strip_path: true
+        protocols:
+        - http
+        - https
+      plugins: *id002
+    - name: storage
+      url: http://supabase-storage:5000/
+      routes:
+      - name: storage
+        paths:
+        - /storage/v1/
+        strip_path: true
+      plugins:
+      - *id001
+    - name: functions
+      url: http://supabase-functions:9000/
+      routes:
+      - name: functions
+        paths:
+        - /functions/v1/
+        strip_path: true
+      plugins:
+      - *id001
+    - name: admin-block-pg
+      url: http://supabase-studio:3000/
+      routes:
+      - name: admin-block-pg
+        paths:
+        - ~^/pg/
+        strip_path: true
+      plugins:
+      - name: request-termination
+        config:
+          status_code: 403
+          message: Management endpoint is private.
+    - name: admin-block-api-mcp
+      url: http://supabase-studio:3000/
+      routes:
+      - name: admin-block-api-mcp
+        paths:
+        - ~^/api/mcp
+        strip_path: true
+      plugins:
+      - name: request-termination
+        config:
+          status_code: 403
+          message: Management endpoint is private.
+    - name: admin-block-mcp
+      url: http://supabase-studio:3000/
+      routes:
+      - name: admin-block-mcp
+        paths:
+        - ~^/mcp
+        strip_path: true
+      plugins:
+      - name: request-termination
+        config:
+          status_code: 403
+          message: Management endpoint is private.
+    - name: dashboard
+      url: http://supabase-studio:3000/
+      routes:
+      - name: dashboard
+        paths:
+        - /
+        strip_path: true
+      plugins:
+      - name: basic-auth
+        config:
+          hide_credentials: true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supabase-kong
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-kong
+    app.kubernetes.io/part-of: supabase
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-kong
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: supabase-kong
+        app.kubernetes.io/part-of: supabase
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 30
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: supabase-db
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: kong
+        image: kong:3.9.1@sha256:76c14b93e989f7f4418039f7f9789ca32564016211c86ac1a18022f4788e7b9c
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: '1'
+            memory: 512Mi
+        env:
+        - name: KONG_DATABASE
+          value: 'off'
+        - name: KONG_DECLARATIVE_CONFIG
+          value: /kong/kong.yml
+        - name: KONG_PREFIX
+          value: /kong
+        - name: KONG_ADMIN_LISTEN
+          value: 'off'
+        - name: KONG_PROXY_LISTEN
+          value: 0.0.0.0:8000
+        - name: KONG_STATUS_LISTEN
+          value: 0.0.0.0:8100
+        - name: KONG_PLUGINS
+          value: request-transformer,cors,key-auth,acl,basic-auth,request-termination
+        - name: KONG_DNS_ORDER
+          value: LAST,A,CNAME
+        - name: KONG_PROXY_ACCESS_LOG
+          value: /dev/stdout
+        - name: KONG_PROXY_ERROR_LOG
+          value: /dev/stderr
+        - name: KONG_NGINX_WORKER_PROCESSES
+          value: '2'
+        - name: KONG_NGINX_PROXY_PROXY_BUFFER_SIZE
+          value: 160k
+        - name: KONG_NGINX_PROXY_PROXY_BUFFERS
+          value: 64 160k
+        - name: ANON_KEY
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: anon-key
+        - name: SERVICE_ROLE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: service-role-key
+        - name: DASHBOARD_USERNAME
+          value: admin
+        - name: DASHBOARD_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: dashboard-password
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+          readOnly: false
+        - name: config
+          mountPath: /config
+          readOnly: true
+        - name: kong
+          mountPath: /kong
+          readOnly: false
+        ports:
+        - name: http
+          containerPort: 8000
+        - name: status
+          containerPort: 8100
+        readinessProbe:
+          httpGet:
+            path: /status/ready
+            port: 8100
+          periodSeconds: 5
+        startupProbe:
+          tcpSocket:
+            port: 8000
+          failureThreshold: 120
+          periodSeconds: 5
+        command:
+        - /bin/sh
+        - -ec
+        - |
+          set -eu
+          umask 077
+          # Values are generated base64url/JWT strings, constrained at input; substitute only named key material.
+          sed -e "s|\$ANON_KEY|$ANON_KEY|g" -e "s|\$SERVICE_ROLE_KEY|$SERVICE_ROLE_KEY|g" \
+              -e "s|\$DASHBOARD_USERNAME|$DASHBOARD_USERNAME|g" -e "s|\$DASHBOARD_PASSWORD|$DASHBOARD_PASSWORD|g" \
+              /config/kong.yml > /kong/kong.yml
+          exec /docker-entrypoint.sh kong docker-start
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: config
+        configMap:
+          name: supabase-kong-config
+          defaultMode: 292
+      - name: kong
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: supabase-kong
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-kong
+    app.kubernetes.io/part-of: supabase
+spec:
+  selector:
+    app.kubernetes.io/name: supabase-kong
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+---
+# Converted and hardened from supabase-community/supabase-kubernetes 0.8.0 (Apache-2.0).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supabase-meta
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-meta
+    app.kubernetes.io/part-of: supabase
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-meta
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: supabase-meta
+        app.kubernetes.io/part-of: supabase
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 30
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: supabase-db
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: meta
+        image: supabase/postgres-meta:v0.96.6@sha256:a84cc713585eea7b401e4a2561ec4a1e48c87083d1c7ecb4502f204bb4391300
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: '1'
+            memory: 512Mi
+        env:
+        - name: PG_META_PORT
+          value: '8080'
+        - name: PG_META_DB_HOST
+          value: supabase-db
+        - name: PG_META_DB_PORT
+          value: '5432'
+        - name: PG_META_DB_NAME
+          value: postgres
+        - name: PG_META_DB_USER
+          value: postgres
+        - name: PG_META_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: developer-db-password
+        - name: CRYPTO_KEY
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: meta-crypto-key
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+          readOnly: false
+        ports:
+        - name: http
+          containerPort: 8080
+        readinessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        startupProbe:
+          tcpSocket:
+            port: 8080
+          failureThreshold: 120
+          periodSeconds: 5
+      volumes:
+      - name: tmp
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: supabase-meta
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-meta
+    app.kubernetes.io/part-of: supabase
+spec:
+  selector:
+    app.kubernetes.io/name: supabase-meta
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+---
+# Converted and hardened from supabase-community/supabase-kubernetes 0.8.0 (Apache-2.0).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supabase-studio
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-studio
+    app.kubernetes.io/part-of: supabase
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-studio
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: supabase-studio
+        app.kubernetes.io/part-of: supabase
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 30
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: supabase-db
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: studio
+        image: supabase/studio:2026.08.03-sha-022b374@sha256:606aca9fdaa753b60968d5c304e2ada83869b76c9043684e63d5885aca9550e8
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: '2'
+            memory: 1Gi
+        env:
+        - name: HOSTNAME
+          value: 0.0.0.0
+        - name: STUDIO_PG_META_URL
+          value: http://supabase-meta:8080
+        - name: POSTGRES_HOST
+          value: supabase-db
+        - name: POSTGRES_PORT
+          value: '5432'
+        - name: POSTGRES_DB
+          value: postgres
+        - name: POSTGRES_USER_READ_WRITE
+          value: postgres
+        - name: POSTGRES_USER_READ_ONLY
+          value: supabase_read_only_user
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: developer-db-password
+        - name: PG_META_CRYPTO_KEY
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: meta-crypto-key
+        - name: PGRST_DB_SCHEMAS
+          value: public,graphql_public
+        - name: PGRST_DB_MAX_ROWS
+          value: '1000'
+        - name: PGRST_DB_EXTRA_SEARCH_PATH
+          value: public
+        - name: DEFAULT_ORGANIZATION_NAME
+          value: Zeabur
+        - name: DEFAULT_PROJECT_NAME
+          value: Supabase
+        - name: SUPABASE_URL
+          value: http://supabase-kong:8000
+        - name: SUPABASE_PUBLIC_URL
+          value: https://{{ .Domain }}
+        - name: SUPABASE_ANON_KEY
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: anon-key
+        - name: SUPABASE_SERVICE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: service-role-key
+        - name: AUTH_JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: jwt-secret
+        - name: ENABLED_FEATURES_LOGS_ALL
+          value: 'false'
+        - name: SNIPPETS_MANAGEMENT_FOLDER
+          value: /app/snippets
+        - name: EDGE_FUNCTIONS_MANAGEMENT_FOLDER
+          value: /app/edge-functions
+        - name: NEXT_TELEMETRY_DISABLED
+          value: '1'
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+          readOnly: false
+        - name: snippets
+          mountPath: /app/snippets
+          readOnly: false
+        - name: functions
+          mountPath: /app/edge-functions
+          readOnly: false
+        - name: next-cache
+          mountPath: /app/apps/studio/.next/cache
+          readOnly: false
+        ports:
+        - name: http
+          containerPort: 3000
+        readinessProbe:
+          httpGet:
+            path: /api/platform/profile
+            port: 3000
+          periodSeconds: 5
+        startupProbe:
+          tcpSocket:
+            port: 3000
+          failureThreshold: 120
+          periodSeconds: 5
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: snippets
+        persistentVolumeClaim:
+          claimName: supabase-snippets
+      - name: functions
+        persistentVolumeClaim:
+          claimName: supabase-functions
+      - name: next-cache
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: supabase-studio
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-studio
+    app.kubernetes.io/part-of: supabase
+spec:
+  selector:
+    app.kubernetes.io/name: supabase-studio
+  ports:
+  - name: http
+    port: 3000
+    targetPort: 3000
+---
+# Converted and hardened from supabase-community/supabase-kubernetes 0.8.0 (Apache-2.0).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: supabase-pooler-config
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-pooler-config
+    app.kubernetes.io/part-of: supabase
+data:
+  pooler.exs: |
+    {:ok, _} = Application.ensure_all_started(:supavisor)
+    %{rows: [[ver]]} = Supavisor.Repo.query!("select version()")
+    {:ok, version} = Supavisor.Helpers.parse_pg_version(ver)
+    params = %{
+      "external_id" => System.fetch_env!("POOLER_TENANT_ID"),
+      "db_host" => System.fetch_env!("POSTGRES_HOST"),
+      "db_port" => System.fetch_env!("POSTGRES_PORT"),
+      "db_database" => System.fetch_env!("POSTGRES_DB"),
+      "require_user" => false,
+      "auth_query" => "SELECT * FROM pgbouncer.get_auth($1)",
+      "default_max_clients" => System.fetch_env!("POOLER_MAX_CLIENT_CONN"),
+      "default_pool_size" => System.fetch_env!("POOLER_DEFAULT_POOL_SIZE"),
+      "default_parameter_status" => %{"server_version" => version},
+      "users" => [%{"db_user" => "pgbouncer", "db_password" => System.fetch_env!("POSTGRES_PASSWORD"),
+        "mode_type" => "transaction", "pool_size" => System.fetch_env!("POOLER_DEFAULT_POOL_SIZE"), "is_manager" => true}]
+    }
+    if !Supavisor.Tenants.get_tenant_by_external_id(params["external_id"]) do
+      {:ok, _} = Supavisor.Tenants.create_tenant(params)
+    end
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supabase-supavisor
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-supavisor
+    app.kubernetes.io/part-of: supabase
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-supavisor
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: supabase-supavisor
+        app.kubernetes.io/part-of: supabase
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 30
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: supabase-db
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: supavisor
+        image: supabase/supavisor:2.9.13@sha256:07f1a6098ffc04b80263bca4eb5c3e7bd2e03dfd1fc465aa108d7329000a1a4e
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: '1'
+            memory: 1Gi
+        env:
+        - name: PORT
+          value: '4000'
+        - name: POSTGRES_PORT
+          value: '5432'
+        - name: POSTGRES_HOST
+          value: supabase-db
+        - name: POSTGRES_DB
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: pooler-db-password
+        - name: ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: admin-db-password
+        - name: DATABASE_URL
+          value: ecto://supabase_admin:$(ADMIN_PASSWORD)@supabase-db:5432/_supabase
+        - name: CLUSTER_POSTGRES
+          value: 'true'
+        - name: SECRET_KEY_BASE
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: secret-key-base
+        - name: VAULT_ENC_KEY
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: pooler-vault-key
+        - name: API_JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: jwt-secret
+        - name: METRICS_JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: jwt-secret
+        - name: REGION
+          value: local
+        - name: ERL_AFLAGS
+          value: -proto_dist inet_tcp
+        - name: RELEASE_DISTRIBUTION
+          value: none
+        - name: RLIMIT_NOFILE
+          value: '10000'
+        - name: POOLER_TENANT_ID
+          value: supabase
+        - name: POOLER_DEFAULT_POOL_SIZE
+          value: '20'
+        - name: POOLER_MAX_CLIENT_CONN
+          value: '100'
+        - name: POOLER_POOL_MODE
+          value: transaction
+        - name: DB_POOL_SIZE
+          value: '5'
+        - name: HOME
+          value: /tmp
+        - name: RELEASE_TMP
+          value: /tmp
+        - name: RELEASE_COOKIE
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: secret-key-base
+        - name: ERL_CRASH_DUMP
+          value: /tmp/erl_crash.dump
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+          readOnly: false
+        - name: config
+          mountPath: /config
+          readOnly: true
+        ports:
+        - name: http
+          containerPort: 4000
+        - name: session
+          containerPort: 5432
+        - name: transaction
+          containerPort: 6543
+        readinessProbe:
+          tcpSocket:
+            port: 4000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        startupProbe:
+          tcpSocket:
+            port: 4000
+          failureThreshold: 120
+          periodSeconds: 5
+        command:
+        - /bin/sh
+        - -ec
+        args:
+        - |
+          /app/bin/migrate
+          /app/bin/supavisor eval "$(cat /config/pooler.exs)"
+          exec /app/bin/server
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: config
+        configMap:
+          name: supabase-pooler-config
+          defaultMode: 292
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: supabase-supavisor
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-supavisor
+    app.kubernetes.io/part-of: supabase
+spec:
+  selector:
+    app.kubernetes.io/name: supabase-supavisor
+  ports:
+  - name: http
+    port: 4000
+    targetPort: 4000
+  - name: session
+    port: 5432
+    targetPort: 5432
+  - name: transaction
+    port: 6543
+    targetPort: 6543
+---
+# Converted and hardened from supabase-community/supabase-kubernetes 0.8.0 (Apache-2.0).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: supabase-functions-router
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-functions-router
+    app.kubernetes.io/part-of: supabase
+data:
+  index.ts: |
+    // Hardened local router: no network imports and no privileged worker for OPTIONS or anonymous API keys.
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey("raw", encoder.encode(Deno.env.get("JWT_SECRET")!),
+      { name: "HMAC", hash: "SHA-256" }, false, ["verify"]);
+    const decode = (s: string) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0));
+    const headers = { "Access-Control-Allow-Origin": Deno.env.get("SITE_ORIGIN")!,
+      "Access-Control-Allow-Headers": "authorization, apikey, content-type", "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS" };
+    Deno.serve(async (req: Request) => {
+      if (req.method === "OPTIONS") return new Response(null, { status: 204, headers });
+      try {
+        const authorization = req.headers.get("authorization") ?? "";
+        if (!authorization.startsWith("Bearer ")) throw new Error("Bearer token required");
+        const token = authorization.slice(7).split(".");
+        if (token.length !== 3) throw new Error("Invalid JWT");
+        const h = JSON.parse(new TextDecoder().decode(decode(token[0])));
+        const claims = JSON.parse(new TextDecoder().decode(decode(token[1])));
+        if (h.alg !== "HS256" || !await crypto.subtle.verify("HMAC", key, decode(token[2]), encoder.encode(token[0] + "." + token[1])))
+          throw new Error("Invalid JWT signature");
+        const now = Date.now() / 1000;
+        if (typeof claims.exp !== "number" || claims.exp <= now || (claims.nbf && claims.nbf > now)) throw new Error("Expired or inactive JWT");
+        if (!["authenticated", "service_role"].includes(claims.role)) throw new Error("User authentication required");
+        if (!["supabase", Deno.env.get("AUTH_ISSUER")].includes(claims.iss)) throw new Error("Invalid issuer");
+      } catch {
+        return Response.json({ error: "Authenticated user or service-role JWT required" }, { status: 401, headers });
+      }
+      const name = new URL(req.url).pathname.split("/")[1];
+      if (!name || !/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(name) || ["main", "router"].includes(name))
+        return Response.json({ error: "Invalid function name" }, { status: 404, headers });
+      try {
+        const envVars = Object.entries(Deno.env.toObject());
+        const worker = await EdgeRuntime.userWorkers.create({ servicePath: "/home/deno/functions/" + name,
+          memoryLimitMb: 150, workerTimeoutMs: 60000, noModuleCache: false, importMapPath: null, envVars });
+        return await worker.fetch(req);
+      } catch {
+        return Response.json({ error: "Function unavailable" }, { status: 500, headers });
+      }
+    });
+  health.ts: |
+    // Authenticated operational endpoint; application functions are persisted beside this directory.
+    Deno.serve(() => Response.json({ service: "supabase-edge-runtime", status: "ok" }));
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supabase-functions
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-functions
+    app.kubernetes.io/part-of: supabase
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-functions
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: supabase-functions
+        app.kubernetes.io/part-of: supabase
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 30
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: supabase-db
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: functions
+        image: supabase/edge-runtime:v1.74.0@sha256:2781daf92394db91f7e94129cc3d04ec474ad16a8fe64b3fbeef6e7d557ab120
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: '1'
+            memory: 1Gi
+        env:
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: jwt-secret
+        - name: AUTH_ISSUER
+          value: https://{{ .Domain }}/auth/v1
+        - name: SITE_ORIGIN
+          value: '{{ .Inputs.siteUrl }}'
+        - name: VERIFY_JWT
+          value: 'true'
+        - name: SUPABASE_URL
+          value: http://supabase-kong:8000
+        - name: SUPABASE_PUBLIC_URL
+          value: https://{{ .Domain }}
+        - name: SUPABASE_ANON_KEY
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: anon-key
+        - name: SUPABASE_SERVICE_ROLE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: service-role-key
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: developer-db-password
+        - name: SUPABASE_DB_URL
+          value: postgresql://postgres:$(DB_PASSWORD)@supabase-db:5432/postgres
+        - name: DENO_DIR
+          value: /tmp/deno
+        - name: HOME
+          value: /tmp
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+          readOnly: false
+        - name: functions
+          mountPath: /home/deno/functions
+          readOnly: true
+        - name: router
+          mountPath: /opt/router
+          readOnly: true
+        ports:
+        - name: http
+          containerPort: 9000
+        readinessProbe:
+          tcpSocket:
+            port: 9000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        startupProbe:
+          tcpSocket:
+            port: 9000
+          failureThreshold: 120
+          periodSeconds: 5
+        args:
+        - start
+        - --main-service
+        - /opt/router
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: functions
+        persistentVolumeClaim:
+          claimName: supabase-functions
+      - name: router
+        configMap:
+          name: supabase-functions-router
+          defaultMode: 292
+      initContainers:
+      - name: seed-functions
+        image: python:3.14.0-alpine3.22@sha256:8373231e1e906ddfb457748bfc032c4c06ada8c759b7b62d9c73ec2a3c56e710
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: '1'
+            memory: 512Mi
+        env: []
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+          readOnly: false
+        - name: functions
+          mountPath: /functions
+          readOnly: false
+        - name: router
+          mountPath: /router
+          readOnly: true
+        command:
+        - python3
+        - -c
+        - |
+          from pathlib import Path
+          p=Path("/functions/health/index.ts")
+          p.parent.mkdir(parents=True,exist_ok=True)
+          if not p.exists(): p.write_text(Path("/router/health.ts").read_text())
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: supabase-functions
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-functions
+    app.kubernetes.io/part-of: supabase
+spec:
+  selector:
+    app.kubernetes.io/name: supabase-functions
+  ports:
+  - name: http
+    port: 9000
+    targetPort: 9000
+---
+# Converted and hardened from supabase-community/supabase-kubernetes 0.8.0 (Apache-2.0).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supabase-imgproxy
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-imgproxy
+    app.kubernetes.io/part-of: supabase
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-imgproxy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: supabase-imgproxy
+        app.kubernetes.io/part-of: supabase
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 30
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: supabase-db
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: imgproxy
+        image: darthsim/imgproxy:v3.30.1@sha256:3b709e4a0e5e8e0e959b556b7031229202b4b8e7e7d955c517ea7abed68ee34d
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: '1'
+            memory: 512Mi
+        env:
+        - name: IMGPROXY_BIND
+          value: :5001
+        - name: IMGPROXY_LOCAL_FILESYSTEM_ROOT
+          value: /var/lib/storage
+        - name: IMGPROXY_USE_ETAG
+          value: 'true'
+        - name: IMGPROXY_AUTO_WEBP
+          value: 'true'
+        - name: IMGPROXY_MAX_SRC_RESOLUTION
+          value: '16.8'
+        - name: IMGPROXY_ALLOWED_SOURCES
+          value: local://
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+          readOnly: false
+        - name: objects
+          mountPath: /var/lib/storage
+          readOnly: true
+        ports:
+        - name: http
+          containerPort: 5001
+        readinessProbe:
+          tcpSocket:
+            port: 5001
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        startupProbe:
+          tcpSocket:
+            port: 5001
+          failureThreshold: 120
+          periodSeconds: 5
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: objects
+        persistentVolumeClaim:
+          claimName: supabase-objects
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: supabase-imgproxy
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-imgproxy
+    app.kubernetes.io/part-of: supabase
+spec:
+  selector:
+    app.kubernetes.io/name: supabase-imgproxy
+  ports:
+  - name: http
+    port: 5001
+    targetPort: 5001
+---
+# Converted and hardened from supabase-community/supabase-kubernetes 0.8.0 (Apache-2.0).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supabase-rest
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-rest
+    app.kubernetes.io/part-of: supabase
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: supabase-rest
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: supabase-rest
+        app.kubernetes.io/part-of: supabase
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 30
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: supabase-db
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: rest
+        image: postgrest/postgrest:v14.12@sha256:54000f24847d01a2c2302e0041cf0618b875c57fb48507d743cfa9aaa50bf43c
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: '1'
+            memory: 512Mi
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: rest-db-password
+        - name: PGRST_DB_URI
+          value: postgres://authenticator:$(DB_PASSWORD)@supabase-db:5432/postgres
+        - name: PGRST_DB_SCHEMAS
+          value: public,graphql_public
+        - name: PGRST_DB_ANON_ROLE
+          value: anon
+        - name: PGRST_DB_USE_LEGACY_GUCS
+          value: 'false'
+        - name: PGRST_JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: supabase-credentials
+              key: jwt-secret
+        - name: PGRST_APP_SETTINGS_JWT_EXP
+          value: '3600'
+        - name: PGRST_DB_MAX_ROWS
+          value: '1000'
+        - name: PGRST_DB_EXTRA_SEARCH_PATH
+          value: public
+        - name: PGRST_SERVER_PORT
+          value: '3000'
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+          readOnly: false
+        ports:
+        - name: http
+          containerPort: 3000
+        readinessProbe:
+          tcpSocket:
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        startupProbe:
+          tcpSocket:
+            port: 3000
+          failureThreshold: 120
+          periodSeconds: 5
+      volumes:
+      - name: tmp
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: supabase-rest
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: supabase-rest
+    app.kubernetes.io/part-of: supabase
+spec:
+  selector:
+    app.kubernetes.io/name: supabase-rest
+  ports:
+  - name: http
+    port: 3000
+    targetPort: 3000

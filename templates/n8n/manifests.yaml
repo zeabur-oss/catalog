@@ -1,0 +1,588 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: n8n-data
+  namespace: '{{ .Namespace }}'
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n
+  namespace: '{{ .Namespace }}'
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: n8n
+  template:
+    metadata:
+      labels:
+        app: n8n
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: n8n
+        image: docker.io/n8nio/n8n:2.39.7@sha256:54323be085a6086acd87f612a25752d6582d3a0c0b07cc93c2b40a9356c3203b
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+        volumeMounts:
+        - name: data
+          mountPath: /home/node/.n8n
+        - name: tmp
+          mountPath: /tmp
+        - name: db-ca
+          mountPath: /db-ca
+          readOnly: true
+        ports:
+        - name: http
+          containerPort: 5678
+        - name: broker
+          containerPort: 5679
+        startupProbe:
+          tcpSocket:
+            port: 5678
+          periodSeconds: 5
+          failureThreshold: 120
+        readinessProbe:
+          httpGet:
+            path: /healthz/readiness
+            port: 5678
+          periodSeconds: 10
+          timeoutSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 5678
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 6
+        env:
+        - name: DB_TYPE
+          value: postgresdb
+        - name: GENERIC_TIMEZONE
+          value: Asia/Taipei
+        - name: N8N_BLOCK_ENV_ACCESS_IN_NODE
+          value: 'true'
+        - name: N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE
+          value: 'true'
+        - name: N8N_DEFAULT_BINARY_DATA_MODE
+          value: filesystem
+        - name: N8N_DIAGNOSTICS_ENABLED
+          value: 'false'
+        - name: N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS
+          value: 'true'
+        - name: N8N_HOST
+          value: '{{ .Domain }}'
+        - name: N8N_PROTOCOL
+          value: https
+        - name: N8N_PROXY_HOPS
+          value: '1'
+        - name: WEBHOOK_URL
+          value: https://{{ .Domain }}/
+        - name: N8N_EDITOR_BASE_URL
+          value: https://{{ .Domain }}/
+        - name: N8N_RUNNERS_MODE
+          value: external
+        - name: N8N_RUNNERS_BROKER_LISTEN_ADDRESS
+          value: 0.0.0.0
+        - name: N8N_RUNNERS_BROKER_PORT
+          value: '5679'
+        - name: N8N_RUNNERS_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: n8n-secrets
+              key: runner-token
+        - name: N8N_ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: n8n-secrets
+              key: encryption-key
+        - name: NODE_ENV
+          value: production
+        - name: NODES_EXCLUDE
+          value: '["n8n-nodes-base.executeCommand","n8n-nodes-base.localFileTrigger"]'
+        - name: N8N_INSTANCE_OWNER_MANAGED_BY_ENV
+          value: 'true'
+        - name: N8N_INSTANCE_OWNER_EMAIL
+          value: '{{ .Inputs.ownerEmail }}'
+        - name: N8N_INSTANCE_OWNER_FIRST_NAME
+          value: Instance
+        - name: N8N_INSTANCE_OWNER_LAST_NAME
+          value: Owner
+        - name: OWNER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: n8n-secrets
+              key: owner-password
+        - name: N8N_USER_FOLDER
+          value: /home/node
+        - name: DB_POSTGRESDB_DATABASE
+          value: n8n
+        - name: DB_POSTGRESDB_HOST
+          value: n8n-db-rw
+        - name: DB_POSTGRESDB_PORT
+          value: '5432'
+        - name: DB_POSTGRESDB_USER
+          value: n8n
+        - name: DB_POSTGRESDB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: n8n-db-app
+              key: password
+        - name: DB_POSTGRESDB_SSL_ENABLED
+          value: 'true'
+        - name: DB_POSTGRESDB_SSL_REJECT_UNAUTHORIZED
+          value: 'true'
+        - name: DB_POSTGRESDB_SSL_CA
+          value: /db-ca/ca.crt
+        command:
+        - tini
+        - --
+        - /bin/sh
+        - -ec
+        - export N8N_INSTANCE_OWNER_PASSWORD_HASH="$(node -e 'process.stdout.write(require("/usr/local/lib/node_modules/n8n/node_modules/bcryptjs").hashSync(process.env.OWNER_PASSWORD,12))')";
+          unset OWNER_PASSWORD; exec /docker-entrypoint.sh start
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: n8n-data
+      - name: tmp
+        emptyDir:
+          sizeLimit: 512Mi
+      - name: db-ca
+        secret:
+          secretName: n8n-db-ca
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: n8n
+  namespace: '{{ .Namespace }}'
+spec:
+  selector:
+    app: n8n
+  ports:
+  - name: http
+    port: 5678
+    targetPort: 5678
+  - name: broker
+    port: 5679
+    targetPort: 5679
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: n8n
+  namespace: '{{ .Namespace }}'
+  annotations:
+    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: 'true'
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - '{{ .Domain }}'
+    secretName: n8n-tls
+  rules:
+  - host: '{{ .Domain }}'
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: n8n
+            port:
+              number: 5678
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress: []
+  egress: []
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: n8n
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector:
+    matchLabels:
+      app: n8n
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: traefik
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: traefik
+    ports:
+    - protocol: TCP
+      port: 5678
+  - from:
+    - podSelector:
+        matchLabels:
+          app: task-runner
+    ports:
+    - protocol: TCP
+      port: 5679
+  egress:
+  - {{ dnsEgress }}
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - 127.0.0.0/8
+        - 169.254.0.0/16
+        - 100.64.0.0/10
+    ports:
+    - protocol: TCP
+      port: 80
+    - protocol: TCP
+      port: 443
+  - to:
+    - podSelector:
+        matchLabels:
+          cnpg.io/cluster: n8n-db
+    ports:
+    - protocol: TCP
+      port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: task-runner
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector:
+    matchLabels:
+      app: task-runner
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress: []
+  egress:
+  - {{ dnsEgress }}
+  - to:
+    - podSelector:
+        matchLabels:
+          app: n8n
+    ports:
+    - protocol: TCP
+      port: 5679
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - 127.0.0.0/8
+        - 169.254.0.0/16
+        - 100.64.0.0/10
+    ports:
+    - protocol: TCP
+      port: 80
+    - protocol: TCP
+      port: 443
+---
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: n8n-db-backups
+  namespace: '{{ .Namespace }}'
+spec:
+  retentionPolicy: 7d
+  configuration:
+    destinationPath: '{{ .Inputs.backupDestination }}'
+    endpointURL: '{{ .Inputs.backupEndpoint }}'
+    s3Credentials:
+      accessKeyId:
+        name: '{{ .Inputs.backupSecret }}'
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: '{{ .Inputs.backupSecret }}'
+        key: ACCESS_SECRET_KEY
+    wal:
+      compression: gzip
+    data:
+      compression: gzip
+  instanceSidecarConfiguration:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 1000m
+        memory: 512Mi
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: n8n-db-daily
+  namespace: '{{ .Namespace }}'
+spec:
+  schedule: 0 0 2 * * *
+  immediate: true
+  backupOwnerReference: self
+  cluster:
+    name: n8n-db
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: n8n-db
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: n8n-db
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: n8n
+    ports:
+    - protocol: TCP
+      port: 5432
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: cnpg-system
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: cloudnative-pg
+    ports:
+    - protocol: TCP
+      port: 5432
+    - protocol: TCP
+      port: 8000
+  - from:
+    - podSelector:
+        matchLabels:
+          cnpg.io/cluster: n8n-db
+    ports:
+    - protocol: TCP
+      port: 5432
+    - protocol: TCP
+      port: 8000
+  egress:
+  - {{ dnsEgress }}
+  - to:
+    - ipBlock:
+        cidr: '{{ .Inputs.kubeApiCidr }}'
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 6443
+  - to:
+    - ipBlock:
+        cidr: '{{ .Inputs.backupCidr }}'
+    ports:
+    - protocol: TCP
+      port: 443
+  - to:
+    - podSelector:
+        matchLabels:
+          cnpg.io/cluster: n8n-db
+    ports:
+    - protocol: TCP
+      port: 5432
+    - protocol: TCP
+      port: 8000
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Backup
+metadata:
+  name: n8n-db-initial
+  namespace: '{{ .Namespace }}'
+spec:
+  cluster:
+    name: n8n-db
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: task-runner
+  namespace: '{{ .Namespace }}'
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: task-runner
+  template:
+    metadata:
+      labels:
+        app: task-runner
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: task-runner
+        image: docker.io/n8nio/runners:2.39.7@sha256:d8da4acaad269005cf4a2c4b95d7ffc5fb963d83996ce9d0ecfdc46e86670fa6
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: home
+          mountPath: /home/runner
+        ports:
+        - name: database
+          containerPort: 5680
+        startupProbe:
+          tcpSocket:
+            port: 5680
+          periodSeconds: 5
+          failureThreshold: 120
+        readinessProbe:
+          tcpSocket:
+            port: 5680
+          periodSeconds: 10
+          timeoutSeconds: 3
+        livenessProbe:
+          tcpSocket:
+            port: 5680
+          periodSeconds: 20
+          timeoutSeconds: 3
+          failureThreshold: 6
+        env:
+        - name: N8N_RUNNERS_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: n8n-secrets
+              key: runner-token
+        - name: N8N_RUNNERS_TASK_BROKER_URI
+          value: http://n8n:5679
+        - name: N8N_RUNNERS_LAUNCHER_HEALTH_CHECK_PORT
+          value: '5680'
+        - name: GENERIC_TIMEZONE
+          value: Asia/Taipei
+        - name: N8N_BLOCK_RUNNER_ENV_ACCESS
+          value: 'true'
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 512Mi
+      - name: home
+        emptyDir:
+          sizeLimit: 256Mi
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: n8n-db
+  namespace: '{{ .Namespace }}'
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17@sha256:70664ebcfa1100361b5bdc28bbf06fdbe08db2dc4ad7bd14de33c5e05fe8ea8e
+  enableSuperuserAccess: false
+  enablePDB: true
+  postgresUID: 26
+  postgresGID: 26
+  seccompProfile:
+    type: RuntimeDefault
+  bootstrap:
+    initdb:
+      database: n8n
+      owner: n8n
+      encoding: UTF8
+  storage:
+    storageClass: local-path
+    size: 10Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  postgresql:
+    parameters:
+      shared_buffers: 128MB
+      max_connections: '100'
+  plugins:
+  - name: barman-cloud.cloudnative-pg.io
+    isWALArchiver: true
+    parameters:
+      barmanObjectName: n8n-db-backups

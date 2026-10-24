@@ -1,0 +1,124 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: Hermes Agent
+  description: Supervised Hermes gateway and authenticated OpenRouter-backed API.
+  license: MIT
+  # Also: https://github.com/just-containers/s6-overlay
+  homepage: https://github.com/NousResearch/hermes-agent
+  icon: https://raw.githubusercontent.com/NousResearch/hermes-agent/main/landingpage/nous-logo.png
+  categories: [ai, automation]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: hermes-agent
+    securityProfile: baseline
+    baselineJustification: >-
+      Pinned /init starts as root, owns state and drops services to UID10000.
+      Drop ALL then add CHOWN/SETUID/SETGID/FOWNER/KILL only for ownership,
+      explicit privilege drop and graceful cross-UID shutdown. No escalation or
+      host/privileged access.
+    ports: [{name: api, port: 8642}]
+    resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+    domains: ['{{ .Domain }}']
+
+inputs:
+  - name: providerSecret
+    description: Existing namespaced Secret with key api-key that holds the OpenRouter API key.
+    required: true
+    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: model
+    description: Provider model identifier including owner/path where required.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}$'}
+  - name: apiKey
+    description: >-
+      Generated API bearer key; retrieve hermes-secrets/api-key through
+      authorized Kubernetes access.
+    generate: random
+    secret: {name: hermes-secrets, key: api-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: >-
+    Baseline root supervisor with UID10000 services, minimal capabilities, no
+    escalation, read-only root, bounded writable paths, authenticated API,
+    messaging deny-by-default and default-deny networking.
+  egress:
+    - Cluster DNS TCP/UDP53 to kube-system kube-dns
+    - >-
+      Public IPv4 TCP80/443 excluding private, loopback, link-local/metadata,
+      CGNAT and reserved ranges
+  risks:
+    - risk: >-
+        The upstream root supervisor owns state and explicitly changes
+        user/group IDs before starting services as UID10000.
+      mitigation: >-
+        Baseline exception: drop ALL, add CHOWN/SETUID/SETGID/FOWNER/KILL only;
+        retain no escalation, RuntimeDefault, read-only root, no UID remapping
+        and no host access.
+    - risk: Agent tools invoke subprocesses and execute code from high-trust users.
+      mitigation: >-
+        No host socket/path, privileged mode or service-account credentials.
+        Public HTTP(S)-only egress excludes private/metadata/cluster ranges.
+        Malicious skills, prompts or web content can take over agent state and
+        credentials. Give each trust boundary its own namespace, and use
+        dedicated nodes for untrusted users.
+    - risk: >-
+        Persistent state contains provider credentials, conversations, memories
+        and executable skills.
+      mitigation: >-
+        One writer, trusted skills, disabled lazy installs, encrypted off-node
+        backups taken with the gateway stopped, and restore rehearsal. After a
+        restore, check file ownership, provider access and messaging allowlists
+        before routing clients. local-path is node-local without HA/snapshots.
+    - risk: >-
+        Egress allows public IPv4 on TCP 80/443 only. Agent tasks that need
+        private addresses, custom ports or IPv6 cannot connect.
+      mitigation: Add a separate NetworkPolicy egress rule scoped to that destination.
+
+scalability:
+  summary: >-
+    One supervised writer with a 10Gi local-path PVC; profile/session state is
+    local to this instance.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      Profile gateways, scheduler, locks and sessions are not distributed
+      shared-nothing state.
+    - Node-local storage has no snapshots or cross-node HA.
+    - Provider quotas and CPU/memory limit concurrent browser/tool subprocesses.
+
+upgradeNotes:
+  - >-
+    Back up /opt/data consistently before upgrades. Upstream migrates persisted
+    configuration during startup, and an older image may not read migrated
+    state. Roll back by restoring the backup.
+  - >-
+    Preserve /init/main-wrapper supervision and check capabilities and writable
+    paths after each image update. Do not enable UID remapping under this
+    read-only-root configuration.
+  - >-
+    At startup a hook sets provider openrouter and the model in the config.
+    Startup fails when that config is invalid. The Hermes dashboard is off in
+    this template.
+  - >-
+    The smoke check tests the API listener only. Send one request through
+    OpenRouter to confirm inference.
+  - >-
+    Keep messaging deny-by-default; configure explicit allowed messaging
+    identities before enabling any external channel. Never restore
+    GATEWAY_ALLOW_ALL_USERS=true.
+  - >-
+    Only trusted skills/plugins; lazy dependency installation is disabled and
+    application code remains read-only. Integrations that need extra packages
+    need a custom image.
+
+smoke:
+  - name: hermes-api-ready
+    resource: deployment/hermes-agent
+    condition: condition=Available
+    timeout: 600s
+    http: {service: hermes-agent, port: 8642, path: /health, status: 200}
