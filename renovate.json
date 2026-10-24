@@ -181,6 +181,17 @@
       "dependencyDashboardApproval": true
     },
     {
+      "description": "The Percona operator supports only the MongoDB and PBM versions in its version service (check.percona.com); a person checks each update against it",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "/^(docker\\.io/)?percona/percona-server-mongodb$/",
+        "/^(docker\\.io/)?percona/percona-backup-mongodb$/"
+      ],
+      "dependencyDashboardApproval": true
+    },
+    {
       "description": "Ghost supports MySQL 8 only; later MySQL tags such as 26.10 are innovation releases",
       "matchDatasources": [
         "docker"
