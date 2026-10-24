@@ -114,6 +114,13 @@ inputs:
       ACCESS_SECRET_KEY.
     required: true
     validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: backupCASecret
+    description: >-
+      Optional existing namespaced Secret with key ca.crt, the PEM CA that
+      signed the backup endpoint certificate. Set it for a private CA. Leave it
+      empty for a publicly trusted certificate.
+    required: false
+    validation: {pattern: '^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$'}
   - name: backupCidr
     description: IPv4 CIDR for backup endpoint as seen by the CNI.
     required: true
@@ -161,6 +168,13 @@ inputs:
       and secret-key.
     required: true
     validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: storageCASecret
+    description: >-
+      Optional existing namespaced Secret with key ca.crt, the PEM CA that
+      signed the storage endpoint certificate. Set it for a private CA. Leave
+      it empty for a publicly trusted certificate.
+    required: false
+    validation: {pattern: '^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$'}
   - name: licenseOptIn
     description: >-
       Dify modified Apache license: one workspace only without written

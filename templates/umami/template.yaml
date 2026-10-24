@@ -54,6 +54,13 @@ inputs:
       ACCESS_SECRET_KEY; create the S3 credentials out of band.
     required: true
     validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: backupCASecret
+    description: >-
+      Optional existing namespaced Secret with key ca.crt, the PEM CA that
+      signed the backup endpoint certificate. Set it for a private CA. Leave it
+      empty for a publicly trusted certificate.
+    required: false
+    validation: {pattern: '^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$'}
   - name: backupCidr
     description: IPv4 CIDR that contains the S3 endpoint as the CNI sees it.
     required: true

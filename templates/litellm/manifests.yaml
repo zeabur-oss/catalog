@@ -265,6 +265,11 @@ spec:
   configuration:
     destinationPath: '{{ .Inputs.backupDestination }}'
     endpointURL: '{{ .Inputs.backupEndpoint }}'
+{{- if .Inputs.backupCASecret }}
+    endpointCA:
+      name: '{{ .Inputs.backupCASecret }}'
+      key: ca.crt
+{{- end }}
     s3Credentials:
       accessKeyId:
         name: '{{ .Inputs.backupSecret }}'
