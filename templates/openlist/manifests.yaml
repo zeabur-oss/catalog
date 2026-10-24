@@ -38,7 +38,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: openlist
-        image: openlistteam/openlist:latest-aio@sha256:ce34db61af4c42cd1b988430c76c335dfef460f5397f7380c55d1ad75ab97195
+        image: openlistteam/openlist:latest-aio@sha256:8b9f6f2e11ff8ceb682b9107ccb3424290d81738d6c1f79a3f95006588b27477
         ports:
         - name: http
           containerPort: 5244
