@@ -1,0 +1,91 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: Meilisearch
+  description: Meilisearch Community Edition search engine with a master key and indexes on a persistent volume.
+  # The getmeili/meilisearch image is built without the enterprise feature, so
+  # it ships only the MIT-licensed code. Enterprise Edition code (BUSL-1.1) is
+  # in getmeili/meilisearch-enterprise.
+  license: MIT
+  homepage: https://www.meilisearch.com/
+  icon: https://github.com/meilisearch.png
+  categories: [search]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: meilisearch
+    securityProfile: restricted
+    ports: [{name: http, port: 7700}]
+    resources: {requests: {cpu: 200m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+    domains: ['{{ .Domain }}']
+
+inputs:
+  - name: masterKey
+    description: >-
+      Master key. Use it only to manage API keys, and give clients the search
+      or admin keys from GET /keys. Generated at installation.
+    generate: random
+    secret: {name: meilisearch-secrets, key: master-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: >-
+    Runs as UID 1000 with a read-only root filesystem, no service-account
+    token and all capabilities dropped. Production mode requires the master
+    key. The namespace denies all traffic by default.
+  egress:
+    - None. Analytics are turned off.
+  risks:
+    - risk: The API is public through the Ingress.
+      mitigation: >-
+        Production mode rejects requests without a valid key, and the search
+        preview page is off. Give browsers only a search key or a tenant
+        token, never the master key.
+    - risk: >-
+        AI-powered search embedders, webhooks and network search need
+        outbound access. The NetworkPolicy blocks all egress.
+      mitigation: >-
+        Add a NetworkPolicy egress rule for each provider endpoint you
+        configure.
+    - risk: Enterprise Edition features are not in this image.
+      mitigation: >-
+        Sharding, replication and S3 snapshots return a
+        requires_enterprise_edition error. They need the separate
+        Enterprise image under BUSL-1.1 and a commercial license for
+        production use.
+
+scalability:
+  summary: One instance on a 20Gi node-local volume. Indexing uses at most 1 GiB of memory.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      Each instance keeps its own LMDB indexes on its volume. Replication needs
+      the Enterprise Edition.
+    - local-path volumes are node-local and have no snapshots or failover.
+
+upgradeNotes:
+  - >-
+    Create a dump with POST /dumps and copy it off the node before you change
+    the image digest. Dumps are the supported path between versions.
+  - >-
+    Meilisearch migrates the database on start for most upgrades. Read the
+    release notes for each version in between; some need a dump import.
+    A rollback needs the dump taken before the upgrade.
+  - >-
+    The master key in meilisearch-secrets protects all derived API keys. If
+    you rotate it, every API key changes.
+  - Deleting the namespace deletes the PVC and all indexes.
+
+smoke:
+  - name: meilisearch-ready
+    resource: statefulset/meilisearch
+    condition: jsonpath={.status.readyReplicas}=1
+    timeout: 600s
+    http: {service: meilisearch, port: 7700, path: /health, status: 200, contains: available}
+  - name: master-key-required
+    resource: statefulset/meilisearch
+    condition: jsonpath={.status.readyReplicas}=1
+    timeout: 120s
+    http: {service: meilisearch, port: 7700, path: /keys, status: 401}
