@@ -77,7 +77,7 @@
         "/^components/.+\\.yaml$/"
       ],
       "matchStrings": [
-        "repository: (?<depName>[a-z0-9][a-z0-9./_-]*)\\n(?:\\s*#.*\\n)*\\s+tag: [\"']?(?<currentValue>v?[0-9][^\\s\"']*)"
+        "repository: (?<depName>[a-z0-9][a-z0-9./_-]*)\\n(?:\\s*#.*\\n)*\\s+tag: [\"']?(?<currentValue>v?[0-9][^\\s\"'@]*)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?"
       ],
       "datasourceTemplate": "docker"
     },

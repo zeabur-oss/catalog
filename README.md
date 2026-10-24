@@ -81,6 +81,7 @@ The path is the ID: `components/ingress/traefik.yaml` is `ingress/traefik`,
 | resource-recommendations | Vertical Pod Autoscaler (recommender) | optional | optional |
 | remote-access | Tailscale Kubernetes operator | optional | optional |
 | config-reload | Stakater Reloader | optional | optional |
+| external-secrets | External Secrets Operator (no SecretStore by default) | optional | optional |
 | databases | CloudNativePG with the Barman Cloud plugin (PostgreSQL) | optional | optional |
 | databases | Percona Operator for MongoDB (server SSPL-1.0, opt-in only) | optional | optional |
 | databases | MariaDB Operator (MySQL-compatible) | optional | optional |
