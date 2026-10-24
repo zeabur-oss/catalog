@@ -77,7 +77,6 @@ The path is the ID: `components/ingress/traefik.yaml` is `ingress/traefik`,
 | uptime-probes | Prometheus blackbox exporter | optional | recommended |
 | runtime-security | Falco | optional | optional |
 | vulnerability-scanning | Trivy Operator | optional | optional |
-| dns | ExternalDNS | optional | optional |
 | resource-recommendations | Vertical Pod Autoscaler (recommender) | optional | optional |
 | remote-access | Tailscale Kubernetes operator | optional | optional |
 | config-reload | Stakater Reloader | optional | optional |
