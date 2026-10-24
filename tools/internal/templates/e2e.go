@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -141,8 +142,11 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, inputs map[string
 	if err != nil {
 		return err
 	}
-	if _, err := kubectl(secrets, "apply", "-n", ns, "-f", "-"); err != nil {
-		return err
+	// kubectl refuses to apply an empty List.
+	if slices.ContainsFunc(r.Inputs, func(in Input) bool { return in.Generate != "" }) {
+		if _, err := kubectl(secrets, "apply", "-n", ns, "-f", "-"); err != nil {
+			return err
+		}
 	}
 	if _, err := kubectl(manifest, "apply", "-n", ns, "-f", "-"); err != nil {
 		return err
