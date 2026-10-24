@@ -1,0 +1,220 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: memos-data
+  namespace: '{{ .Namespace }}'
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: memos-settings
+  namespace: '{{ .Namespace }}'
+data:
+  memos-instance-setting-general.json: |
+    {"key": "GENERAL", "generalSetting": {"disallowUserRegistration": true}}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: memos
+  namespace: '{{ .Namespace }}'
+spec:
+  serviceName: memos
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: memos
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: memos
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: memos
+        image: neosmemo/memos:0.31.0@sha256:24c2707ddd8fbd2ceaa7a61ecab86a53cdcde640b24ce572b73da14b00b5785f
+        ports:
+        - name: http
+          containerPort: 5230
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: [ALL]
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: '1'
+            memory: 512Mi
+        env:
+        - name: MEMOS_PORT
+          value: '5230'
+        - name: MEMOS_DATA
+          value: /var/opt/memos
+        - name: MEMOS_DRIVER
+          value: sqlite
+        - name: MEMOS_INSTANCE_URL
+          value: https://{{ .Domain }}
+        - name: ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: memos-secrets
+              key: admin-password
+        # The first account on an empty instance becomes the administrator.
+        # The kubelet runs this hook before any probe, so the Pod receives
+        # traffic only after the hook has created the account.
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - /bin/sh
+              - -ec
+              - |
+                for i in $(seq 60); do
+                  wget -q -O /dev/null http://127.0.0.1:5230/healthz && break
+                  sleep 2
+                done
+                profile="$(wget -q -O - http://127.0.0.1:5230/api/v1/instance/profile)"
+                if echo "$profile" | grep -Eq '"needsSetup": ?true'; then
+                  wget -q -O /dev/null --header 'Content-Type: application/json' \
+                    --post-data "{\"username\":\"admin\",\"password\":\"$ADMIN_PASSWORD\"}" \
+                    http://127.0.0.1:5230/api/v1/users
+                fi
+        volumeMounts:
+        - name: data
+          mountPath: /var/opt/memos
+        - name: settings
+          mountPath: /etc/secrets
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+        startupProbe:
+          httpGet:
+            path: /healthz
+            port: http
+          periodSeconds: 5
+          failureThreshold: 60
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+          periodSeconds: 20
+          failureThreshold: 6
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: memos-data
+      - name: settings
+        configMap:
+          name: memos-settings
+      - name: tmp
+        emptyDir:
+          sizeLimit: 512Mi
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: memos
+  namespace: '{{ .Namespace }}'
+spec:
+  selector:
+    app.kubernetes.io/name: memos
+  ports:
+  - name: http
+    port: 5230
+    targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: memos
+  namespace: '{{ .Namespace }}'
+  annotations:
+    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts: ['{{ .Domain }}']
+    secretName: memos-tls
+  rules:
+  - host: '{{ .Domain }}'
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: memos
+            port:
+              number: 5230
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: memos
+  namespace: '{{ .Namespace }}'
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: memos
+  policyTypes: [Ingress, Egress]
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: traefik
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: traefik
+    ports:
+    - protocol: TCP
+      port: 5230
+  egress:
+  - {{ dnsEgress }}
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - 127.0.0.0/8
+        - 169.254.0.0/16
+        - 100.64.0.0/10
+    ports:
+    - protocol: TCP
+      port: 80
+    - protocol: TCP
+      port: 443

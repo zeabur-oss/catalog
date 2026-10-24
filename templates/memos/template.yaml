@@ -1,0 +1,85 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: Memos
+  description: Memos note-taking service with SQLite on a persistent volume and a provisioned administrator.
+  license: MIT
+  homepage: https://usememos.com/
+  icon: https://github.com/usememos.png
+  categories: [productivity]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: memos
+    securityProfile: restricted
+    ports: [{name: http, port: 5230}]
+    resources: {requests: {cpu: 50m, memory: 128Mi}, limits: {cpu: "1", memory: 512Mi}}
+    domains: ['{{ .Domain }}']
+
+inputs:
+  - name: adminPassword
+    description: >-
+      Password of the administrator account admin, created at the first start.
+      Change it in Memos after you sign in; the Secret is not applied again.
+    generate: random
+    secret: {name: memos-secrets, key: admin-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: >-
+    Runs as UID 10001 with a read-only root filesystem, no service-account
+    token and all capabilities dropped. The namespace denies all traffic by
+    default. Public sign-up is off.
+  egress:
+    - Cluster DNS
+    - >-
+      Public IPv4 TCP 80/443 for link previews, webhooks, OAuth sign-in and S3
+      storage; private, loopback, link-local and CGNAT ranges are blocked.
+  risks:
+    - risk: The first account on an empty instance becomes the administrator.
+      mitigation: >-
+        A postStart hook creates the account admin with the generated password
+        before the Pod becomes ready. If the hook fails, the kubelet restarts
+        the container and the Pod receives no traffic.
+    - risk: Anyone could register an account.
+      mitigation: >-
+        The memos-settings ConfigMap sets disallowUserRegistration. The
+        administrator creates accounts in Settings. Because the ConfigMap
+        manages the general settings, edit it to change them, then restart
+        the Pod.
+    - risk: >-
+        Webhooks and link previews are server-side requests to addresses
+        that users choose.
+      mitigation: >-
+        Memos blocks private webhook targets by default, and the NetworkPolicy
+        allows only public IPv4 on TCP 80 and 443.
+
+scalability:
+  summary: One instance with SQLite on a 10Gi node-local volume.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - SQLite allows one writer. More replicas need MySQL or PostgreSQL.
+    - local-path volumes are node-local and have no snapshots or failover.
+
+upgradeNotes:
+  - >-
+    Stop Memos and copy /var/opt/memos (the SQLite database and local
+    attachments) off the node before you change the image digest.
+  - >-
+    Memos migrates the database on start. Read the release notes for each
+    version in between. A rollback needs the copy taken before the upgrade.
+  - Deleting the namespace deletes the PVC with all memos and attachments.
+
+smoke:
+  - name: memos-ready
+    resource: statefulset/memos
+    condition: jsonpath={.status.readyReplicas}=1
+    timeout: 600s
+    http: {service: memos, port: 5230, path: /healthz, status: 200}
+  - name: administrator-created
+    resource: statefulset/memos
+    condition: jsonpath={.status.readyReplicas}=1
+    timeout: 120s
+    http: {service: memos, port: 5230, path: /api/v1/instance/profile, status: 200, contains: users/admin}
