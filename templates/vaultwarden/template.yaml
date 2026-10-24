@@ -1,0 +1,100 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: Vaultwarden
+  description: >-
+    Vaultwarden, a Bitwarden-compatible password manager server, with SQLite
+    on a persistent volume. Sign-up is closed; the administrator invites users.
+  # Server AGPL-3.0-only; the bundled web vault (dani-garcia/bw_web_builds,
+  # built from the Bitwarden clients) GPL-3.0-only.
+  license: AGPL-3.0-only AND GPL-3.0-only
+  homepage: https://github.com/dani-garcia/vaultwarden
+  icon: https://github.com/dani-garcia/vaultwarden/raw/main/resources/vaultwarden-icon.svg
+  categories: [security]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: vaultwarden
+    securityProfile: restricted
+    ports: [{name: http, port: 8080}]
+    resources: {requests: {cpu: 50m, memory: 64Mi}, limits: {cpu: "1", memory: 512Mi}}
+    domains: ['{{ .Domain }}']
+
+inputs:
+  - name: adminToken
+    description: >-
+      Token for the admin page at /admin, where you invite users. Generated
+      at installation.
+    generate: random
+    secret: {name: vaultwarden-secrets, key: admin-token}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: >-
+    Runs as UID 1000 with a read-only root filesystem, no service-account
+    token and all capabilities dropped. The namespace denies all traffic by
+    default. Sign-up is closed.
+  egress:
+    - Cluster DNS
+    - >-
+      Public IPv4 TCP 80/443 for website icons; private, loopback, link-local
+      and CGNAT ranges are blocked.
+  risks:
+    - risk: Anyone who reaches the server could create an account.
+      mitigation: >-
+        SIGNUPS_ALLOWED is false. Sign in to /admin with the token in
+        vaultwarden-secrets and invite users by email. Without SMTP, an
+        invited address can register directly.
+    - risk: >-
+        The admin token is a plain-text value in a Secret. Vaultwarden logs a
+        notice that recommends an Argon2 hash.
+      mitigation: >-
+        Restrict access to the Secret. To use a hash, run vaultwarden hash
+        in a terminal and store the PHC string in the Secret.
+    - risk: The admin page is public through the Ingress.
+      mitigation: >-
+        It requires the 43-character admin token. To remove it, delete the
+        ADMIN_TOKEN variable after you invite users.
+    - risk: >-
+        No SMTP server is configured. Invitation emails, two-factor email and
+        emergency access emails are not sent.
+      mitigation: >-
+        Configure the SMTP_ variables and add a NetworkPolicy egress rule for
+        the SMTP port of your mail server.
+    - risk: The icon service fetches favicons from websites that users store.
+      mitigation: >-
+        Egress allows only public IPv4 on TCP 80 and 443. Set
+        ICON_SERVICE=none to turn it off.
+
+scalability:
+  summary: One instance with SQLite on a 10Gi node-local volume.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      SQLite allows one writer, and attachments, sends and the RSA key are on
+      the volume. More replicas need PostgreSQL and shared file storage.
+    - local-path volumes are node-local and have no snapshots or failover.
+
+upgradeNotes:
+  - >-
+    Back up /data off the node before you change the image digest: db.sqlite3
+    (with sqlite3 .backup, or with Vaultwarden stopped), attachments, sends,
+    config.json and rsa_key.pem. Losing rsa_key.pem signs out every client.
+  - >-
+    Vaultwarden migrates the database on start. A rollback needs the backup
+    taken before the upgrade.
+  - Deleting the namespace deletes the PVC and every vault.
+
+smoke:
+  - name: vaultwarden-ready
+    resource: statefulset/vaultwarden
+    condition: jsonpath={.status.readyReplicas}=1
+    timeout: 600s
+    http: {service: vaultwarden, port: 8080, path: /api/config, status: 200, contains: Vaultwarden}
+  - name: authentication-required
+    resource: statefulset/vaultwarden
+    condition: jsonpath={.status.readyReplicas}=1
+    timeout: 120s
+    http: {service: vaultwarden, port: 8080, path: /api/accounts/profile, status: 401}
