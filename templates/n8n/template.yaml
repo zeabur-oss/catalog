@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: n8n PostgreSQL
   description: >-
-    n8n2.39.7 with external JavaScript/Python task runner and operator-managed
+    n8n 2.44.6 with external JavaScript/Python task runner and operator-managed
     PostgreSQL17 and Barman backups.
   license: LicenseRef-n8n-sustainable-use AND PostgreSQL AND Apache-2.0
   # Also: https://docs.n8n.io/hosting/, https://docs.n8n.io/sustainable-use-license/
@@ -144,7 +144,7 @@ upgradeNotes:
     Preserve Secrets and PVCs. Back up data off-node and rehearse a restore
     before changing image digests.
   - >-
-    Main n8n and runner must remain exactly2.39.7 together; never upgrade one
+    Main n8n and runner must remain exactly 2.44.6 together; never upgrade one
     side independently. Preserve encryption key, runner token, database, binary
     files and owner password across upgrades.
   - >-
