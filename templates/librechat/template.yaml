@@ -208,6 +208,9 @@ upgradeNotes:
     credentials, search and RAG. Restoring the previous image does not undo
     database schema or index migrations.
   - >-
+    Meilisearch migrates its database in place at start (MEILI_UPGRADE_DB).
+    The migration is not atomic, so take a snapshot of its volume first.
+  - >-
     MongoDB feature-compatibility upgrades and Percona auto-update are off. Keep
     the operator at CR version 1.23.1 with MongoDB 8.0.32 and PBM 2.15. Change
     PostgreSQL major versions through a CNPG migration and check pgvector

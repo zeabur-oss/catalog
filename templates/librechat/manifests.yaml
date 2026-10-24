@@ -883,7 +883,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: meilisearch
-        image: docker.io/getmeili/meilisearch:v1.35.1@sha256:8b57fc3c7f46535ddef3828df1538465ac19d892eb57c9a10da6df0880bd5856
+        image: docker.io/getmeili/meilisearch:v1.55.0@sha256:ff546679970126f8822e15d1b6a06bfbff1f2ce2e43f810cfb5258012f92de5c
         ports:
         - name: http
           containerPort: 7700
@@ -896,6 +896,8 @@ spec:
         - name: MEILI_ENV
           value: production
         - name: MEILI_NO_ANALYTICS
+          value: 'true'
+        - name: MEILI_UPGRADE_DB
           value: 'true'
         - name: HOME
           value: /meili_data
