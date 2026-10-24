@@ -96,10 +96,13 @@ spec:
           volumeMounts:
             - {name: data, mountPath: /home/node/.n8n}
             - {name: tmp, mountPath: /tmp}
+            - {name: cache, mountPath: /home/node/.cache}
       volumes:
         - name: data
           persistentVolumeClaim: {claimName: n8n-data}
         - name: tmp
+          emptyDir: {sizeLimit: 256Mi}
+        - name: cache
           emptyDir: {sizeLimit: 256Mi}
 ---
 apiVersion: v1
