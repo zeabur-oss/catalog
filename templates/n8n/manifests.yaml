@@ -61,6 +61,8 @@ spec:
           mountPath: /home/node/.n8n
         - name: tmp
           mountPath: /tmp
+        - name: cache
+          mountPath: /home/node/.cache
         - name: db-ca
           mountPath: /db-ca
           readOnly: true
@@ -180,6 +182,9 @@ spec:
       - name: tmp
         emptyDir:
           sizeLimit: 512Mi
+      - name: cache
+        emptyDir:
+          sizeLimit: 256Mi
       - name: db-ca
         secret:
           secretName: n8n-db-ca
