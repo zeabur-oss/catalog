@@ -11,7 +11,7 @@ A tested catalog for Kubernetes clusters, in two parts:
   ingress, certificates, metrics, database operators. For each capability the
   catalog says which upstream chart, which version, which values, and why.
 - **Templates** are applications a project member installs into one namespace:
-  n8n, Dify, Supabase, WordPress, PostgreSQL. Each pins its images, sets
+  n8n, Dify, WordPress, PostgreSQL. Each pins its images, sets
   resource requests and limits, runs under the Restricted Pod Security
   Standard where the application allows it, and says how it scales, how its
   data is backed up and what to check before an upgrade. A template names the
@@ -108,7 +108,6 @@ it can be reused instead.
 | hermes-agent-openrouter | Hermes Agent | ai, automation |
 | librechat | LibreChat | ai |
 | lobechat | LobeChat | ai |
-| mariadb | MariaDB | databases |
 | mongodb | MongoDB | databases |
 | n8n | n8n PostgreSQL | automation |
 | n8n-ai-brain | n8n (AI Brain) | ai, automation |
@@ -122,12 +121,9 @@ it can be reused instead.
 | openlist | OpenList | storage |
 | postgresql | PostgreSQL | databases |
 | postgresql-pgvector | PostgreSQL with pgvector | databases |
-| redis | Dragonfly (Redis-compatible) | databases |
-| rustfs | RustFS | storage |
 | searxng | SearXNG | search |
 | sillytavern | SillyTavern | ai |
 | sillytavern-legacy | SillyTavern | ai |
-| supabase | Supabase | databases |
 | uptime-kuma | Uptime Kuma | monitoring |
 | wordpress | WordPress | cms |
 
@@ -330,7 +326,7 @@ template ID:
 - `E2E_INPUTS_JSON`: the input values for each template, in the shape of the
   `-values` file. Include every required input and the exact license
   acknowledgement, for example
-  `{"redis": {"licenseOptIn": "I-ACCEPT-DRAGONFLY-BUSL-1.1", "backupDestination": "s3://bucket/redis"}}`.
+  `{"dify": {"licenseOptIn": "I-ACCEPT-DIFY-SINGLE-WORKSPACE", "backupDestination": "s3://bucket/dify"}}`.
 - `E2E_SETUP_MANIFESTS_JSON`: YAML for each template, applied in
   `templates-e2e-<id>` before the template. Use it for the Secrets that hold
   test credentials, such as the S3 credentials that `backupSecret` names.
