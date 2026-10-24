@@ -31,6 +31,10 @@ func Lint(cat *catalog.Catalog, r *Template, manifest []byte, namespace, profile
 		return err
 	}
 	defer os.RemoveAll(dir)
+	// A template without requires renders no components. CRDSchemas needs the directory.
+	if err := os.Mkdir(filepath.Join(dir, "components"), 0o755); err != nil {
+		return err
+	}
 	order, err := cat.InstallOrder(r.Requires, profile)
 	if err != nil {
 		return err
