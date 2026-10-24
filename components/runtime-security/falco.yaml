@@ -46,7 +46,7 @@ releases:
   - name: falco
     namespace: falco
     chart: oci://ghcr.io/falcosecurity/charts/falco
-    version: 9.2.0
+    version: 9.2.1
     values: |
       driver:
         # Built-in CO-RE eBPF probe: no kernel module or headers.
