@@ -3,6 +3,7 @@ package templates
 import (
 	"fmt"
 	"net/netip"
+	"slices"
 	"strings"
 )
 
@@ -97,14 +98,7 @@ func checkPercona(r *Template, d map[string]any, docs []map[string]any, w string
 		where := fmt.Sprintf("%s/operand-%d", w, n)
 		checkResources(object(p["resources"]), where, fail)
 		safeOperandContext(object(p["podSecurityContext"]), object(p["containerSecurityContext"]), where, fail)
-		sa := text(p["serviceAccountName"])
-		found := false
-		for _, doc := range docs {
-			if text(doc["kind"]) == "ServiceAccount" && text(object(doc["metadata"])["name"]) == sa && doc["automountServiceAccountToken"] == false {
-				found = true
-			}
-		}
-		if !found {
+		if !declaredServiceAccount(docs, text(p["serviceAccountName"])) {
 			fail(where, "operand must reference declared token-disabled ServiceAccount")
 		}
 		volume := object(p["volumeSpec"])
@@ -176,6 +170,130 @@ func checkMiddleware(r *Template, d map[string]any, w string, fail func(string, 
 		cidr, e := netip.ParsePrefix(text(v))
 		if e != nil || cidr.Bits() == 0 || strings.TrimSpace(text(v)) != text(v) {
 			fail(w, "ipAllowList requires non-public, valid explicit CIDR")
+		}
+	}
+}
+
+// onlyKeys rejects each spec field that is not in allowed.
+func onlyKeys(spec map[string]any, allowed []string, what, w string, fail func(string, string)) {
+	for key := range spec {
+		if !slices.Contains(allowed, key) {
+			fail(w, "unsupported "+what+" override forbidden: "+key)
+		}
+	}
+}
+
+func declaredServiceAccount(docs []map[string]any, name string) bool {
+	for _, doc := range docs {
+		if text(doc["kind"]) == "ServiceAccount" && text(object(doc["metadata"])["name"]) == name && doc["automountServiceAccountToken"] == false {
+			return true
+		}
+	}
+	return false
+}
+
+func checkDragonfly(r *Template, d map[string]any, docs []map[string]any, w string, fail func(string, string)) {
+	if !hasProvider(r, "databases/dragonfly-operator") {
+		fail(w, "Dragonfly requires exact databases/dragonfly-operator")
+	}
+	if len(r.Security.Risks) == 0 {
+		fail(w, "security.risks must describe the BUSL-1.1 licence and the operator-generated pods")
+	}
+	spec := object(d["spec"])
+	onlyKeys(spec, []string{"replicas", "image", "imagePullPolicy", "imagePullSecrets", "serviceAccountName", "args", "authentication", "env", "podSecurityContext", "containerSecurityContext", "resources", "snapshot", "tlsSecretRef", "affinity", "nodeSelector", "tolerations", "topologySpreadConstraints"}, "Dragonfly", w, fail)
+	if !digestImage.MatchString(text(spec["image"])) {
+		fail(w, "Dragonfly image must use sha256 digest")
+	}
+	checkResources(object(spec["resources"]), w, fail)
+	safeOperandContext(object(spec["podSecurityContext"]), object(spec["containerSecurityContext"]), w, fail)
+	if !declaredServiceAccount(docs, text(spec["serviceAccountName"])) {
+		fail(w, "operand must reference declared token-disabled ServiceAccount")
+	}
+	auth := object(object(spec["authentication"])["passwordFromSecret"])
+	if text(auth["name"]) == "" || text(auth["key"]) == "" {
+		fail(w, "Dragonfly authentication.passwordFromSecret required")
+	}
+	// These flags open a port or the admin console without a password.
+	for _, arg := range array(spec["args"]) {
+		for _, flag := range []string{"--admin_nopass", "--memcached_port"} {
+			if text(arg) == flag || strings.HasPrefix(text(arg), flag+"=") {
+				fail(w, "unauthenticated Dragonfly flag forbidden: "+flag)
+			}
+		}
+	}
+}
+
+// checkMariaDBRef requires a reference to a MariaDB in this template. The operator
+// is cluster-wide, so a reference to another namespace reaches another tenant.
+func checkMariaDBRef(spec map[string]any, docs []map[string]any, namespace, w string, fail func(string, string)) {
+	ref := object(spec["mariaDbRef"])
+	onlyKeys(ref, []string{"name", "namespace", "waitForIt"}, "mariaDbRef", w, fail)
+	if ns := text(ref["namespace"]); ns != "" && ns != namespace {
+		fail(w, "mariaDbRef escapes target namespace")
+	}
+	for _, doc := range docs {
+		if text(doc["apiVersion"]) == "k8s.mariadb.com/v1alpha1" && text(doc["kind"]) == "MariaDB" && text(object(doc["metadata"])["name"]) == text(ref["name"]) {
+			return
+		}
+	}
+	fail(w, "mariaDbRef must name a MariaDB declared in this template")
+}
+
+func checkMariaDB(r *Template, d map[string]any, docs []map[string]any, namespace, w string, fail func(string, string)) {
+	if !hasProvider(r, "databases/mariadb-operator") {
+		fail(w, "MariaDB Operator resources require exact databases/mariadb-operator")
+	}
+	spec := object(d["spec"])
+	switch text(d["kind"]) {
+	case "MariaDB":
+		if len(r.Security.Risks) == 0 {
+			fail(w, "security.risks must describe the operator-generated pods and helper images")
+		}
+		onlyKeys(spec, []string{"image", "imagePullPolicy", "imagePullSecrets", "replicas", "rootPasswordSecretKeyRef", "database", "username", "passwordSecretKeyRef", "serviceAccountName", "tls", "storage", "podSecurityContext", "securityContext", "resources", "updateStrategy", "timeZone", "affinity", "nodeSelector", "tolerations", "topologySpreadConstraints"}, "MariaDB", w, fail)
+		if !digestImage.MatchString(text(spec["image"])) {
+			fail(w, "MariaDB image must use sha256 digest")
+		}
+		checkResources(object(spec["resources"]), w, fail)
+		safeOperandContext(object(spec["podSecurityContext"]), object(spec["securityContext"]), w, fail)
+		if !declaredServiceAccount(docs, text(spec["serviceAccountName"])) {
+			fail(w, "operand must reference declared token-disabled ServiceAccount")
+		}
+	case "Backup":
+		checkMariaDBRef(spec, docs, namespace, w, fail)
+		onlyKeys(spec, []string{"mariaDbRef", "schedule", "timeZone", "successfulJobsHistoryLimit", "failedJobsHistoryLimit", "serviceAccountName", "podMetadata", "podSecurityContext", "securityContext", "resources", "stagingStorage", "storage", "databases", "maxRetention", "compression", "backoffLimit"}, "backup", w, fail)
+		checkResources(object(spec["resources"]), w, fail)
+		safeOperandContext(object(spec["podSecurityContext"]), object(spec["securityContext"]), w, fail)
+		if !declaredServiceAccount(docs, text(spec["serviceAccountName"])) {
+			fail(w, "operand must reference declared token-disabled ServiceAccount")
+		}
+		for key := range object(spec["stagingStorage"]) {
+			if key != "persistentVolumeClaim" {
+				fail(w, "backup stagingStorage must use PVC only")
+			}
+		}
+		storage := object(spec["storage"])
+		s3 := object(storage["s3"])
+		if len(storage) != 1 || text(s3["bucket"]) == "" || text(s3["endpoint"]) == "" || len(object(s3["accessKeyIdSecretKeyRef"])) == 0 || len(object(s3["secretAccessKeySecretKeyRef"])) == 0 || !truth(object(s3["tls"])["enabled"]) {
+			fail(w, "backup must use S3 with explicit credentials and TLS verification")
+		}
+	case "Database":
+		checkMariaDBRef(spec, docs, namespace, w, fail)
+		onlyKeys(spec, []string{"mariaDbRef", "name", "characterSet", "collate", "cleanupPolicy", "requeueInterval", "retryInterval"}, "Database", w, fail)
+	case "User":
+		checkMariaDBRef(spec, docs, namespace, w, fail)
+		onlyKeys(spec, []string{"mariaDbRef", "name", "host", "passwordSecretKeyRef", "require", "maxUserConnections", "cleanupPolicy", "requeueInterval", "retryInterval"}, "User", w, fail)
+		ref := object(spec["passwordSecretKeyRef"])
+		if text(ref["name"]) == "" || text(ref["key"]) == "" {
+			fail(w, "User passwordSecretKeyRef required")
+		}
+	case "Grant":
+		checkMariaDBRef(spec, docs, namespace, w, fail)
+		onlyKeys(spec, []string{"mariaDbRef", "username", "host", "database", "table", "privileges", "grantOption", "cleanupPolicy", "requeueInterval", "retryInterval"}, "Grant", w, fail)
+		if db := text(spec["database"]); db == "" || db == "*" {
+			fail(w, "Grant must name one database; global privileges forbidden")
+		}
+		if truth(spec["grantOption"]) {
+			fail(w, "Grant grantOption forbidden")
 		}
 	}
 }

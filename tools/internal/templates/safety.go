@@ -58,6 +58,8 @@ func Safety(r *Template, b []byte, namespace string) error {
 		switch api + "/" + k {
 		case "v1/Pod", "v1/Service", "v1/ConfigMap", "v1/Secret", "v1/ServiceAccount", "v1/PersistentVolumeClaim", "apps/v1/Deployment", "apps/v1/StatefulSet", "apps/v1/DaemonSet", "apps/v1/ReplicaSet", "batch/v1/Job", "batch/v1/CronJob", "networking.k8s.io/v1/Ingress", "networking.k8s.io/v1/NetworkPolicy", "policy/v1/PodDisruptionBudget", "autoscaling/v2/HorizontalPodAutoscaler", "cert-manager.io/v1/Certificate", "postgresql.cnpg.io/v1/Cluster", "postgresql.cnpg.io/v1/Backup", "postgresql.cnpg.io/v1/ScheduledBackup", "barmancloud.cnpg.io/v1/ObjectStore", "psmdb.percona.com/v1/PerconaServerMongoDB", "traefik.io/v1alpha1/Middleware":
 		case "psmdb.percona.com/v1/PerconaServerMongoDBBackup":
+		case "dragonflydb.io/v1alpha1/Dragonfly":
+		case "k8s.mariadb.com/v1alpha1/MariaDB", "k8s.mariadb.com/v1alpha1/Backup", "k8s.mariadb.com/v1alpha1/Database", "k8s.mariadb.com/v1alpha1/User", "k8s.mariadb.com/v1alpha1/Grant":
 		case "rbac.authorization.k8s.io/v1/Role", "rbac.authorization.k8s.io/v1/RoleBinding":
 		default:
 			fail(where, "unsupported resource kind; the linter needs a namespaced safety adapter for it")
@@ -158,6 +160,12 @@ func Safety(r *Template, b []byte, namespace string) error {
 		}
 		if k == "PerconaServerMongoDBBackup" && api == "psmdb.percona.com/v1" {
 			checkPerconaBackup(r, d, docs, where, fail)
+		}
+		if k == "Dragonfly" && api == "dragonflydb.io/v1alpha1" {
+			checkDragonfly(r, d, docs, where, fail)
+		}
+		if api == "k8s.mariadb.com/v1alpha1" {
+			checkMariaDB(r, d, docs, namespace, where, fail)
 		}
 		if k == "Middleware" && api == "traefik.io/v1alpha1" {
 			checkMiddleware(r, d, where, fail)

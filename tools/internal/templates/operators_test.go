@@ -60,3 +60,90 @@ spec:
 		})
 	}
 }
+
+func TestOperatorDatabasesStayInTemplate(t *testing.T) {
+	digest := "@sha256:" + strings.Repeat("a", 64)
+	operand := `
+  serviceAccountName: db
+  resources:
+    requests: {cpu: 10m, memory: 16Mi}
+    limits: {cpu: 100m, memory: 32Mi}
+  podSecurityContext: {runAsNonRoot: true, runAsUser: 999, seccompProfile: {type: RuntimeDefault}}
+`
+	dragonfly := safeManifest + `---
+apiVersion: v1
+kind: ServiceAccount
+metadata: {name: db}
+automountServiceAccountToken: false
+---
+apiVersion: dragonflydb.io/v1alpha1
+kind: Dragonfly
+metadata: {name: queue}
+spec:
+  image: docker.dragonflydb.io/dragonflydb/dragonfly` + digest + `
+  args: [--cache_mode=false]
+  authentication: {passwordFromSecret: {name: app, key: password}}
+  containerSecurityContext: {allowPrivilegeEscalation: false, capabilities: {drop: [ALL]}}` + operand
+	mariadb := safeManifest + `---
+apiVersion: v1
+kind: ServiceAccount
+metadata: {name: db}
+automountServiceAccountToken: false
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: MariaDB
+metadata: {name: mariadb}
+spec:
+  image: docker.io/mariadb` + digest + `
+  securityContext: {allowPrivilegeEscalation: false, capabilities: {drop: [ALL]}}` + operand + `---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Grant
+metadata: {name: app}
+spec:
+  mariaDbRef: {name: mariadb}
+  username: app
+  database: app
+  privileges: [SELECT]
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Backup
+metadata: {name: daily}
+spec:
+  mariaDbRef: {name: mariadb}
+  securityContext: {allowPrivilegeEscalation: false, capabilities: {drop: [ALL]}}` + operand + `  storage:
+    s3:
+      bucket: backups
+      endpoint: s3.example.test:443
+      accessKeyIdSecretKeyRef: {name: s3, key: id}
+      secretAccessKeySecretKeyRef: {name: s3, key: secret}
+      tls: {enabled: true}
+`
+	for _, tc := range []struct {
+		name, manifest, provider string
+		reject                   bool
+	}{
+		{name: "dragonfly", manifest: dragonfly, provider: "databases/dragonfly-operator"},
+		{name: "dragonfly-provider", manifest: dragonfly, provider: "databases/mariadb-operator", reject: true},
+		{name: "dragonfly-tag", manifest: strings.Replace(dragonfly, digest, ":v1", 1), provider: "databases/dragonfly-operator", reject: true},
+		{name: "dragonfly-no-password", manifest: strings.Replace(dragonfly, "  authentication: {passwordFromSecret: {name: app, key: password}}\n", "", 1), provider: "databases/dragonfly-operator", reject: true},
+		{name: "dragonfly-memcached", manifest: strings.Replace(dragonfly, "--cache_mode=false", "--memcached_port=11211", 1), provider: "databases/dragonfly-operator", reject: true},
+		{name: "dragonfly-sidecar", manifest: dragonfly + "  additionalContainers: [{name: x, image: x}]\n", provider: "databases/dragonfly-operator", reject: true},
+		{name: "mariadb", manifest: mariadb, provider: "databases/mariadb-operator"},
+		{name: "mariadb-provider", manifest: mariadb, provider: "databases/dragonfly-operator", reject: true},
+		{name: "mariadb-root", manifest: strings.Replace(mariadb, "runAsUser: 999", "runAsUser: 0", 1), provider: "databases/mariadb-operator", reject: true},
+		{name: "mariadb-config", manifest: strings.Replace(mariadb, "kind: MariaDB\nmetadata: {name: mariadb}\nspec:\n", "kind: MariaDB\nmetadata: {name: mariadb}\nspec:\n  myCnf: skip-grant-tables\n", 1), provider: "databases/mariadb-operator", reject: true},
+		{name: "mariadb-other-namespace", manifest: strings.Replace(mariadb, "mariaDbRef: {name: mariadb}", "mariaDbRef: {name: mariadb, namespace: other}", 1), provider: "databases/mariadb-operator", reject: true},
+		{name: "mariadb-undeclared", manifest: strings.Replace(mariadb, "mariaDbRef: {name: mariadb}", "mariaDbRef: {name: shared}", 1), provider: "databases/mariadb-operator", reject: true},
+		{name: "mariadb-global-grant", manifest: strings.Replace(mariadb, "database: app", "database: '*'", 1), provider: "databases/mariadb-operator", reject: true},
+		{name: "mariadb-backup-plain", manifest: strings.Replace(mariadb, "tls: {enabled: true}", "tls: {enabled: false}", 1), provider: "databases/mariadb-operator", reject: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			r := &templates.Template{Requires: []string{tc.provider}}
+			r.Security.Risks = []map[string]string{{"risk": "Operator generated pods", "mitigation": "Pinned catalog review"}}
+			err := templates.Safety(r, []byte(tc.manifest), "test")
+			if (err != nil) != tc.reject {
+				t.Fatalf("rejected = %v, want %v: %v", err != nil, tc.reject, err)
+			}
+		})
+	}
+}
