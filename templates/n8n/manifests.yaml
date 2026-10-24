@@ -490,7 +490,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: task-runner
-        image: docker.io/n8nio/runners:2.44.6@sha256:255e69ed23d8b3866e593f6e105e7e12cafc81c4d1966a8f8702115af1032461
+        image: docker.io/n8nio/runners:2.45.3@sha256:c57f7d17c37e89fc8128c165063874db788b599ed9c5d263c7adc6d3b59a0477
         securityContext:
           runAsNonRoot: true
           allowPrivilegeEscalation: false
