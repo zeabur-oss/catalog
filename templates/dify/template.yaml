@@ -340,6 +340,11 @@ smoke:
     resource: deployment/dify-sandbox
     condition: condition=Available
     timeout: 15m
+  - name: dify-web reads system features from dify-api
+    resource: deployment/dify-web
+    condition: condition=Available
+    timeout: 15m
+    http: {service: dify-web, port: 3000, path: /signin, status: 200, contains: sso_enforced_for_signin}
   - name: dify-proxy available
     resource: deployment/dify-proxy
     condition: condition=Available

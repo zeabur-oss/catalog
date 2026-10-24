@@ -188,6 +188,13 @@ spec:
     ports:
     - protocol: TCP
       port: 5001
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-web
+    ports:
+    - protocol: TCP
+      port: 5001
   egress:
   - to:
     - podSelector:
@@ -509,6 +516,13 @@ spec:
   egress:
   - {{ dnsEgress }}
   - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dify-api
+    ports:
+    - protocol: TCP
+      port: 5001
+  - to:
     - ipBlock:
         cidr: 0.0.0.0/0
         except:
@@ -713,7 +727,9 @@ metadata:
 data:
   squid.conf: 'http_port 3128
 
-    pid_filename /tmp/squid.pid
+    pid_filename none
+
+    max_filedescriptors 65536
 
     access_log stdio:/dev/stdout
 
@@ -1201,6 +1217,8 @@ spec:
         templates.zeabur.com/postgresql-client: 'true'
     spec:
       automountServiceAccountToken: false
+      # The Service dify would set DIFY_PORT to its address.
+      enableServiceLinks: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 1001
@@ -1432,6 +1450,7 @@ spec:
         templates.zeabur.com/postgresql-client: 'true'
     spec:
       automountServiceAccountToken: false
+      enableServiceLinks: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 1001
@@ -1669,6 +1688,7 @@ spec:
         templates.zeabur.com/postgresql-client: 'true'
     spec:
       automountServiceAccountToken: false
+      enableServiceLinks: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 1001
@@ -1910,6 +1930,7 @@ spec:
         app.kubernetes.io/name: dify-web
     spec:
       automountServiceAccountToken: false
+      enableServiceLinks: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 1001
@@ -1928,6 +1949,9 @@ spec:
           value: https://{{ .Domain }}
         - name: CONSOLE_API_URL
           value: https://{{ .Domain }}
+        # Server-side rendering calls the API in the cluster.
+        - name: SERVER_CONSOLE_API_URL
+          value: http://dify-api:5001
         - name: DEPLOY_ENV
           value: PRODUCTION
         - name: MARKETPLACE_API_URL
@@ -2003,6 +2027,7 @@ spec:
         templates.zeabur.com/postgresql-client: 'true'
     spec:
       automountServiceAccountToken: false
+      enableServiceLinks: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 1001
@@ -2143,6 +2168,7 @@ spec:
         app.kubernetes.io/name: dify-sandbox
     spec:
       automountServiceAccountToken: false
+      enableServiceLinks: false
       securityContext:
         runAsNonRoot: false
         runAsUser: 0
@@ -2244,7 +2270,7 @@ spec:
         - -ec
         args:
         - cp -a /opt/. /seed-opt/; tar -xf "$NODE_TAR_XZ" -C /seed-opt; if [ -d /var/sandbox ]; then cp -a /var/sandbox/.
-          /seed-sandbox/; fi
+          /seed-sandbox/; chmod -R u+w /seed-sandbox; fi
         resources:
           requests:
             cpu: 100m
