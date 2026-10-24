@@ -2,7 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: n8n SQLite
-  description: n8n2.39.7 with external JavaScript/Python task runner and SQLite persistence.
+  description: n8n 2.44.6 with external JavaScript/Python task runner and SQLite persistence.
   license: LicenseRef-n8n-sustainable-use
   # Also: https://docs.n8n.io/hosting/, https://docs.n8n.io/sustainable-use-license/
   homepage: https://github.com/n8n-io/n8n
@@ -106,7 +106,7 @@ upgradeNotes:
     and binary files; a copy of a running database can be inconsistent. After
     restore, check that stored credentials decrypt and workflows run.
   - >-
-    Main n8n and runner must remain exactly2.39.7 together; never upgrade one
+    Main n8n and runner must remain exactly 2.44.6 together; never upgrade one
     side independently. Preserve encryption key, runner token, database, binary
     files and owner password across upgrades.
   - >-
