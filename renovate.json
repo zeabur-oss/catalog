@@ -66,7 +66,18 @@
         "/^components/.+\\.yaml$/"
       ],
       "matchStrings": [
-        "image: (?<depName>[a-z0-9./-]+):(?<currentValue>v[0-9][^\\s\"]*)"
+        "image: (?<depName>[a-z0-9][a-z0-9./_-]*):(?<currentValue>v?[0-9][^\\s\"@]*)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?"
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "description": "Container image tags pinned under a chart's image.repository",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^components/.+\\.yaml$/"
+      ],
+      "matchStrings": [
+        "repository: (?<depName>[a-z0-9][a-z0-9./_-]*)\\n(?:\\s*#.*\\n)*\\s+tag: [\"']?(?<currentValue>v?[0-9][^\\s\"']*)"
       ],
       "datasourceTemplate": "docker"
     },
@@ -117,6 +128,90 @@
       "groupName": null,
       "pinDigests": true,
       "automerge": false
+    },
+    {
+      "description": "Keel's smoke test starts on pause 3.9 so that Keel can update it to 3.10",
+      "matchFileNames": [
+        "components/image-updates/keel.yaml"
+      ],
+      "matchPackageNames": [
+        "registry.k8s.io/pause"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Database images change their data format in a major release; a person approves each major upgrade",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "/^(docker\\.io/)?(library/)?(mariadb|mysql)$/",
+        "ghcr.io/cloudnative-pg/postgresql",
+        "ghcr.io/cybozu-go/moco/mysql",
+        "/^(docker\\.io/)?percona/percona-server-mongodb$/"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "A MariaDB or MongoDB minor is a new release series with its own upgrade steps. Propose its patches separately",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "/^(docker\\.io/)?(library/)?mariadb$/",
+        "/^(docker\\.io/)?percona/percona-server-mongodb$/"
+      ],
+      "separateMinorPatch": true
+    },
+    {
+      "description": "MariaDB and MongoDB minor releases wait for approval",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "/^(docker\\.io/)?(library/)?mariadb$/",
+        "/^(docker\\.io/)?percona/percona-server-mongodb$/"
+      ],
+      "matchUpdateTypes": [
+        "minor"
+      ],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Ghost supports MySQL 8 only; later MySQL tags such as 26.10 are innovation releases",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchFileNames": [
+        "templates/ghost/**"
+      ],
+      "matchPackageNames": [
+        "/^(docker\\.io/)?(library/)?mysql$/"
+      ],
+      "allowedVersions": "/^8\\./"
+    },
+    {
+      "description": "Percona Server for MongoDB tags are <version>-<build>",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "/^(docker\\.io/)?percona/percona-server-mongodb$/"
+      ],
+      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-(?<build>\\d+)$"
+    },
+    {
+      "description": "SearXNG tags are <year>.<month>.<day>-<commit>",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "/^(docker\\.io/)?searxng/searxng$/"
+      ],
+      "versioning": "regex:^(?<major>\\d{4})\\.(?<minor>\\d{1,2})\\.(?<patch>\\d{1,2})-[0-9a-f]+$"
     }
   ]
 }
