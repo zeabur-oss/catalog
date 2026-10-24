@@ -9,13 +9,6 @@ name: e2e
 
 on:
   workflow_call:
-    secrets:
-      # JSON objects keyed by template ID: input values, and objects to apply
-      # first (for example the Secrets that inputs name).
-      E2E_INPUTS_JSON:
-        required: false
-      E2E_SETUP_MANIFESTS_JSON:
-        required: false
 
 permissions:
   contents: read
@@ -73,37 +66,18 @@ jobs:
         run: |
           nix develop -c go run ./tools/cmd/catalog e2e -profile '${{ matrix.profile }}' -write \
             $([ -f previous.json ] && echo -previous previous.json) '${{ matrix.component }}'
-      - name: Template inputs
-        id: inputs
-        if: matrix.template
-        env:
-          E2E_INPUTS_JSON: ${{ secrets.E2E_INPUTS_JSON }}
-          E2E_SETUP_MANIFESTS_JSON: ${{ secrets.E2E_SETUP_MANIFESTS_JSON }}
-          ID: ${{ matrix.template }}
-        run: |
-          umask 077
-          mkdir -p out
-          jq --arg id "$ID" '.[$id] // {}' <<< "${E2E_INPUTS_JSON:-{\}}" > out/values.json
-          jq -r --arg id "$ID" '.[$id] // ""' <<< "${E2E_SETUP_MANIFESTS_JSON:-{\}}" > out/setup.yaml
-          # Pull requests get no secrets.
-          if [ "$GITHUB_EVENT_NAME" = pull_request ] && [ "$(jq length out/values.json)" = 0 ] &&
-            nix develop -c yq -e '[.inputs[] | select(.required)] | length > 0' "templates/$ID/template.yaml" > /dev/null 2>&1; then
-            echo "::notice::$ID needs values from E2E_INPUTS_JSON; it runs after merge"
-            echo skip=true >> "$GITHUB_OUTPUT"
-          fi
       # Templates name the local-path StorageClass; kind's default one uses the
       # same provisioner.
       - name: local-path StorageClass
-        if: matrix.template && !steps.inputs.outputs.skip
+        if: matrix.template
         run: |
           nix develop -c sh -c 'kubectl get storageclass standard -o json |
             jq "{apiVersion, kind, metadata: {name: \"local-path\"}, provisioner, reclaimPolicy, volumeBindingMode}" |
             kubectl apply -f -'
       - name: Template e2e
-        if: matrix.template && !steps.inputs.outputs.skip
+        if: matrix.template
         run: |
-          nix develop -c go run ./tools/cmd/catalog template e2e -values out/values.json \
-            -setup out/setup.yaml '${{ matrix.template }}'
+          nix develop -c go run ./tools/cmd/catalog template e2e '${{ matrix.template }}'
       - name: Keep only this component's measurement
         if: always() && matrix.component
         run: find measurements -type f ! -path 'measurements/${{ matrix.component }}.json' -delete

@@ -79,6 +79,10 @@ exact versions the template pins.
   what a restore needs (database, files, Secrets and keys) and how much data can
   be lost.
 - Say what deleting the application keeps and what it destroys.
+- Give each S3 endpoint an optional CA input, a Secret with `ca.crt`, for
+  storage behind a private CA, when its client takes one. The e2e test uses
+  it. If the client cannot take one, the test skips that backup check and says
+  why.
 
 ## Scaling and resources
 
@@ -104,4 +108,5 @@ exact versions the template pins.
 - The smoke checks run in CI on a fresh kind cluster with the components
   the template requires. Make them prove the main behaviour, such as
   an authenticated request or a database query, beyond a Ready pod.
-- Use only disposable credentials and storage in tests.
+- Use only disposable credentials and storage in tests. Put test input values
+  in `config/e2e.yaml`. Backups go to SeaweedFS in the test cluster.

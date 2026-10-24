@@ -4,8 +4,10 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"maps"
 	"os"
 
+	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
 
@@ -62,13 +64,46 @@ func template(fs *flag.FlagSet, r *repo) error {
 		if err != nil {
 			return err
 		}
-		var objects []byte
+		values, err := e2eValues(r.templates, t)
+		if err != nil {
+			return err
+		}
+		maps.Copy(values.Inputs, inputs)
 		if *setup != "" {
-			if objects, err = os.ReadFile(*setup); err != nil {
+			objects, err := os.ReadFile(*setup)
+			if err != nil {
 				return err
 			}
+			values.Setup += "\n---\n" + string(objects)
 		}
-		return templates.E2E(r.cat, tester, t, inputs, objects, cfg.Versions)
+		return templates.E2E(r.cat, tester, t, values, cfg.Versions)
 	}
 	return fmt.Errorf("unknown template action %q", action)
+}
+
+// e2eValues reads the test values for t from config/e2e.yaml: the shared
+// inputs that t declares, then its own values.
+func e2eValues(all []*templates.Template, t *templates.Template) (templates.E2EValues, error) {
+	var cfg struct {
+		Inputs    map[string]string              `yaml:"templateInputs"`
+		Templates map[string]templates.E2EValues `yaml:"templates"`
+	}
+	if err := catalog.ReadYAML("config/e2e.yaml", &cfg); err != nil {
+		return templates.E2EValues{}, err
+	}
+	for id := range cfg.Templates {
+		if _, err := templates.Get(all, id); err != nil {
+			return templates.E2EValues{}, fmt.Errorf("config/e2e.yaml: %w", err)
+		}
+	}
+	v := cfg.Templates[t.ID]
+	inputs := map[string]string{}
+	for _, in := range t.Inputs {
+		if s, ok := cfg.Inputs[in.Name]; ok {
+			inputs[in.Name] = s
+		}
+	}
+	maps.Copy(inputs, v.Inputs)
+	v.Inputs = inputs
+	return v, nil
 }

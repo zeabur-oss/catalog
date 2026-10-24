@@ -187,3 +187,32 @@ func TestAskInputsRequireFullPatternMatch(t *testing.T) {
 		}
 	}
 }
+
+func TestOptionalInputRendersOnlyWhenGiven(t *testing.T) {
+	dir := t.TempDir()
+	manifest := "apiVersion: v1\nkind: ConfigMap\nmetadata: {name: app}\ndata:\n{{- if .Inputs.ca }}\n  ca: '{{ .Inputs.ca }}'\n{{- end }}\n  app: x\n"
+	if err := os.WriteFile(filepath.Join(dir, "manifests.yaml"), []byte(manifest), 0600); err != nil {
+		t.Fatal(err)
+	}
+	r := inputRecord(t, `[{"name":"ca","required":false,"validation":{"pattern":"[a-z]*"}}]`)
+	r.Dir = dir
+	for _, tc := range []struct {
+		name   string
+		inputs map[string]string
+		want   bool
+	}{
+		{"omitted", nil, false},
+		{"empty", map[string]string{"ca": ""}, false},
+		{"given", map[string]string{"ca": "bundle"}, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			out, err := templates.Render(r, templates.RenderOptions{Namespace: "test", Inputs: tc.inputs})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := strings.Contains(string(out), "ca: 'bundle'"); got != tc.want {
+				t.Fatalf("rendered CA = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}

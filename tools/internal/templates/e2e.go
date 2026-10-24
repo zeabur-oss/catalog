@@ -1,13 +1,13 @@
 package templates
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
+	"maps"
 	"net"
 	"net/http"
 	"os"
@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
@@ -74,21 +75,46 @@ func Lint(cat *catalog.Catalog, r *Template, manifest []byte, namespace, profile
 
 const selfSignedIssuer = "ci-selfsigned"
 
+// E2EValues are the test values for one template: input values, objects to
+// apply first and the smoke checks to skip with the reason. An input value is
+// a text/template with .ID and .S3 (see S3). If a value uses .S3, the test
+// runs SeaweedFS.
+type E2EValues struct {
+	Inputs    map[string]string `yaml:"inputs"`
+	Setup     string            `yaml:"setup"`
+	SkipSmoke map[string]string `yaml:"skipSmoke"`
+}
+
 // E2E installs a template and what it requires with t, runs its smoke checks
-// and uninstalls everything. setup holds objects to apply first, such as the
-// Secrets that required inputs name.
-func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, inputs map[string]string, setup []byte, versions []string) (err error) {
+// and uninstalls everything.
+func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues, versions []string) (err error) {
 	ns := "templates-e2e-" + r.ID
-	opts := RenderOptions{Namespace: ns, Domain: r.ID + ".example.test", ClusterIssuer: selfSignedIssuer, Inputs: inputs}
-	if needs(r, "kubeApiCidr") && opts.Inputs["kubeApiCidr"] == "" {
-		ip, err := kubectl(nil, "get", "endpointslices", "-n", "default", "-l", "kubernetes.io/service-name=kubernetes",
-			"-o", "jsonpath={.items[0].endpoints[0].addresses[0]}")
-		if err != nil {
-			return err
+	for name := range values.SkipSmoke {
+		if !slices.ContainsFunc(r.Smoke, func(s Smoke) bool { return s.Name == name }) {
+			return fmt.Errorf("skipSmoke: unknown smoke check %q", name)
 		}
-		opts.Inputs["kubeApiCidr"] = ip + "/32"
 	}
-	manifest, err := Render(r, opts)
+	useS3 := slices.ContainsFunc(slices.Collect(maps.Values(values.Inputs)), func(v string) bool { return strings.Contains(v, ".S3") })
+	opts := RenderOptions{Namespace: ns, Domain: r.ID + ".example.test", ClusterIssuer: selfSignedIssuer}
+	// Lint before the cluster work, with a placeholder for the gateway address.
+	s3 := &S3{Endpoint: "https://s3.example.test", Host: "s3.example.test", CIDR: "192.0.2.1/32", Bucket: "e2e"}
+	render := func() ([]byte, error) {
+		inputs, err := expand(r.ID, values.Inputs, s3)
+		if err != nil {
+			return nil, err
+		}
+		opts.Inputs = inputs
+		if needs(r, "kubeApiCidr") && opts.Inputs["kubeApiCidr"] == "" {
+			ip, err := kubectl(nil, "get", "endpointslices", "-n", "default", "-l", "kubernetes.io/service-name=kubernetes",
+				"-o", "jsonpath={.items[0].endpoints[0].addresses[0]}")
+			if err != nil {
+				return nil, err
+			}
+			opts.Inputs["kubeApiCidr"] = ip + "/32"
+		}
+		return Render(r, opts)
+	}
+	manifest, err := render()
 	if err != nil {
 		return err
 	}
@@ -96,7 +122,11 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, inputs map[string
 		return err
 	}
 
-	uninstall, err := t.Install(r.Requires)
+	refs := r.Requires
+	if useS3 {
+		refs = append(slices.Clone(refs), s3Component)
+	}
+	uninstall, err := t.Install(refs)
 	defer func() { err = errors.Join(err, uninstall()) }()
 	if err != nil {
 		return err
@@ -111,6 +141,16 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, inputs map[string
 			err = errors.Join(err, e)
 		}()
 		if _, err := kubectl(nil, "wait", "clusterissuer/"+selfSignedIssuer, "--for=condition=Ready", "--timeout=3m"); err != nil {
+			return err
+		}
+	}
+	if useS3 {
+		var stop func() error
+		if s3, stop, err = startS3(); err != nil {
+			return err
+		}
+		defer func() { err = errors.Join(err, stop()) }()
+		if manifest, err = render(); err != nil {
 			return err
 		}
 	}
@@ -133,8 +173,13 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, inputs map[string
 		"pod-security.kubernetes.io/audit=restricted", "pod-security.kubernetes.io/warn=restricted"); err != nil {
 		return err
 	}
-	if len(bytes.TrimSpace(setup)) > 0 {
-		if _, err := kubectl(setup, "apply", "-n", ns, "-f", "-"); err != nil {
+	if useS3 {
+		if _, err := kubectl(s3.secret(ns), "apply", "-f", "-"); err != nil {
+			return err
+		}
+	}
+	if setup := strings.TrimSpace(values.Setup); setup != "" {
+		if _, err := kubectl([]byte(setup), "apply", "-n", ns, "-f", "-"); err != nil {
 			return fmt.Errorf("setup: %w", err)
 		}
 	}
@@ -152,6 +197,10 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, inputs map[string
 		return err
 	}
 	for _, s := range r.Smoke {
+		if reason, ok := values.SkipSmoke[s.Name]; ok {
+			slog.Warn("smoke skipped", "template", r.ID, "check", s.Name, "reason", reason)
+			continue
+		}
 		slog.Info("smoke", "template", r.ID, "check", s.Name)
 		if _, err := kubectl(nil, "wait", "-n", ns, s.Resource, "--for="+s.Condition, "--timeout="+s.Timeout); err != nil {
 			return fmt.Errorf("smoke %s: %w", s.Name, err)
@@ -167,6 +216,23 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, inputs map[string
 		}
 	}
 	return nil
+}
+
+// expand executes each input value as a text/template.
+func expand(id string, inputs map[string]string, s3 *S3) (map[string]string, error) {
+	out := map[string]string{}
+	for k, v := range inputs {
+		t, err := template.New(k).Option("missingkey=error").Parse(v)
+		if err != nil {
+			return nil, fmt.Errorf("input %s: %w", k, err)
+		}
+		var b strings.Builder
+		if err := t.Execute(&b, map[string]any{"ID": id, "S3": s3}); err != nil {
+			return nil, fmt.Errorf("input %s: %w", k, err)
+		}
+		out[k] = b.String()
+	}
+	return out, nil
 }
 
 func needs(r *Template, input string) bool {

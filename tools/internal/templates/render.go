@@ -87,6 +87,17 @@ func Render(r *Template, o RenderOptions) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	// An optional input that is not given is empty.
+	inputs := maps.Clone(o.Inputs)
+	if inputs == nil {
+		inputs = map[string]string{}
+	}
+	for _, in := range r.Inputs {
+		if _, ok := inputs[in.Name]; !ok && in.Generate == "" {
+			inputs[in.Name] = ""
+		}
+	}
+	o.Inputs = inputs
 	var out bytes.Buffer
 	err = t.Execute(&out, o)
 	return out.Bytes(), err

@@ -329,24 +329,22 @@ opens a pull request for every new upstream version and image digest.
 
 ### Test inputs for templates
 
-Template tests read two repository secrets, each a JSON object keyed by
-template ID:
+Template tests take their input values from `config/e2e.yaml`. They need no
+repository secrets, so pull requests run them in full:
 
-- `E2E_INPUTS_JSON`: the input values for each template, in the shape of the
-  `-values` file. Include every required input and the exact license
-  acknowledgement, for example
-  `{"dify": {"licenseOptIn": "I-ACCEPT-DIFY-SINGLE-WORKSPACE", "backupDestination": "s3://bucket/dify"}}`.
-- `E2E_SETUP_MANIFESTS_JSON`: YAML for each template, applied in
-  `templates-e2e-<id>` before the template. Use it for the Secrets that hold
-  test credentials, such as the S3 credentials that `backupSecret` names.
+- `templateInputs`: values for every template that declares the input.
+- `templates.<id>`: values for one template, objects to apply in
+  `templates-e2e-<id>` first (such as a Secret that an input names) and smoke
+  checks to skip with the reason.
 
-Templates with backups need a real S3-compatible bucket and prefix, an HTTPS
-endpoint on TCP 443 and its `backupCidr`. The test sets `kubeApiCidr` from the
-kind cluster. Use short-lived, least-privilege credentials and a separate
-prefix; deleting the namespace leaves backup objects in the bucket. Pull
-requests get no secrets, so CI skips the templates that need inputs on a pull
-request and tests them on the push to `main`. Never use
-`pull_request_target` to run pull request code with secrets.
+Every value is disposable test data. A value that uses `.S3` starts SeaweedFS
+(`object-storage/seaweedfs-operator`) in `templates-e2e-s3`, with HTTPS on TCP
+443 from a test CA. Backups and object storage go to it. The Secret `e2e-s3`
+in the template's namespace holds its credentials and the CA as `ca.crt`.
+Templates take the CA through an optional input such as `backupCASecret`. A
+template that cannot use a custom CA skips only that smoke check. The test sets
+`kubeApiCidr` from the kind cluster. To test against other storage, pass
+`-values` and `-setup` to `catalog template e2e`.
 
 ## Releases
 

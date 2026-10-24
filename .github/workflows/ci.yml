@@ -50,6 +50,3 @@ jobs:
   e2e:
     needs: [validate, render]
     uses: ./.github/workflows/e2e.yml
-    secrets:
-      E2E_INPUTS_JSON: ${{ github.event_name == 'push' && secrets.E2E_INPUTS_JSON || '' }}
-      E2E_SETUP_MANIFESTS_JSON: ${{ github.event_name == 'push' && secrets.E2E_SETUP_MANIFESTS_JSON || '' }}
