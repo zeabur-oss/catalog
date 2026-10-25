@@ -19,10 +19,10 @@ requires:
 services:
   - name: n8n
     securityProfile: restricted
-    ports: [{name: http, port: 5678}]
+    ports: [{name: http, port: 5678}, {name: broker, port: 5679}]
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}
     domains: ['{{ .Domain }}']
-  - {name: n8n-runners, securityProfile: restricted, resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}}
+  - {name: n8n-runners, securityProfile: restricted, ports: [{name: health, port: 5680}], resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}}
   - name: n8n-db
     securityProfile: restricted
     ports: [{name: postgresql, port: 5432}]

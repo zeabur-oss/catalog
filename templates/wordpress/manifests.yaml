@@ -104,9 +104,6 @@ spec:
         - name: database-ca
           mountPath: /database-ca
           readOnly: true
-        ports:
-        - name: database
-          containerPort: 9000
         startupProbe:
           tcpSocket:
             port: 9000

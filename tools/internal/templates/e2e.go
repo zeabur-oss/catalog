@@ -20,11 +20,11 @@ import (
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 )
 
-// Lint runs Safety, then kubeconform for every Kubernetes version. Custom
-// resources are checked against the CRD schemas in schemas (see
-// catalog.CRDSchemas).
+// Lint runs Safety and CheckServices, then kubeconform for every Kubernetes
+// version. Custom resources are checked against the CRD schemas in schemas
+// (see catalog.CRDSchemas).
 func Lint(r *Template, manifest []byte, namespace, schemas string, versions []string) error {
-	if err := Safety(r, manifest, namespace); err != nil {
+	if err := errors.Join(Safety(r, manifest, namespace), CheckServices(r, manifest)); err != nil {
 		return err
 	}
 	var errs []error

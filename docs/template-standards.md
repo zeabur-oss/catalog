@@ -8,8 +8,11 @@ exact versions the template pins.
 ## template.yaml
 
 - `metadata` names the application, its license, homepage and categories.
-- Each service names its security profile (`restricted` or `baseline`) and its
-  resource requests and limits.
+- Each service names its security profile (`restricted` or `baseline`), its
+  resource requests and limits, and its ports. A service has the name of its
+  Deployment, StatefulSet or database object. Its CPU and memory are the sum of
+  that object's containers, and its ports are their named ports; `catalog
+  template lint` checks both.
 - `security`, `scalability` and `upgradeNotes` tell an operator what to know
   before deploying: risks with their mitigations, the replica range and what
   blocks more replicas, and the steps an upgrade needs.
