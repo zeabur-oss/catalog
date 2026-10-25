@@ -400,6 +400,7 @@ func dryRun(r *repo, dir string) error {
 		if err := templates.CreateNamespace(t, ns); err != nil {
 			return err
 		}
+		namespaces[ns] = true
 		v, err := e2eValues(r.templates, t)
 		if err != nil {
 			return err
@@ -421,6 +422,15 @@ func dryRun(r *repo, dir string) error {
 				files = append(files, file{"templates/" + t.ID, ns, d, true})
 			}
 		}
+	}
+	// The API server has no controller manager to create each namespace's
+	// default ServiceAccount, which Pods without one use.
+	var accounts bytes.Buffer
+	for _, ns := range slices.Sorted(maps.Keys(namespaces)) {
+		fmt.Fprintf(&accounts, "{\"apiVersion\": \"v1\", \"kind\": \"ServiceAccount\", \"metadata\": {\"name\": \"default\", \"namespace\": %q}}\n", ns)
+	}
+	if _, err := catalog.Run(accounts.Bytes(), "kubectl", "apply", "-f", "-"); err != nil {
+		return err
 	}
 	errs := make([]error, len(files))
 	var wg sync.WaitGroup
