@@ -4,10 +4,9 @@ metadata:
   name: Gitea
   description: >-
     Gitea Git hosting over HTTPS, with repositories and LFS objects on a
-    persistent volume and PostgreSQL 18 managed by CloudNativePG with Barman
-    backups.
+    persistent volume and PostgreSQL 18 managed by CloudNativePG.
   license: MIT AND PostgreSQL AND Apache-2.0
-  # Also: https://cloudnative-pg.io/, https://github.com/cloudnative-pg/plugin-barman-cloud
+  # Also: https://cloudnative-pg.io/
   homepage: https://about.gitea.com/
   icon: https://github.com/go-gitea.png
   categories: [developer-tools]
@@ -56,31 +55,6 @@ inputs:
     generate: random
     secret: {name: gitea-secrets, key: lfs-jwt-secret}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
-  - name: backupDestination
-    description: Dedicated S3 bucket and unique prefix for the database backups; never reuse a prefix from another cluster.
-    required: true
-    validation: {pattern: '^s3://[a-z0-9][a-z0-9.-]+/[A-Za-z0-9/_-]+$'}
-  - name: backupEndpoint
-    description: S3 HTTPS endpoint with a trusted certificate on TCP 443.
-    required: true
-    validation: {pattern: '^https://[a-zA-Z0-9.-]+(:443)?$'}
-  - name: backupSecret
-    description: >-
-      Existing Secret in the namespace with ACCESS_KEY_ID and
-      ACCESS_SECRET_KEY; create the S3 credentials out of band.
-    required: true
-    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
-  - name: backupCASecret
-    description: >-
-      Optional existing namespaced Secret with key ca.crt, the PEM CA that
-      signed the backup endpoint certificate. Set it for a private CA. Leave it
-      empty for a publicly trusted certificate.
-    required: false
-    validation: {pattern: '^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$'}
-  - name: backupCidr
-    description: IPv4 CIDR that contains the S3 endpoint as the CNI sees it.
-    required: true
-    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
   - name: kubeApiCidr
     description: IPv4 CIDR of the Kubernetes API endpoint as the CNI sees it.
     required: true
@@ -97,7 +71,7 @@ security:
     - >-
       Public IPv4 TCP 80/443 for webhooks, mirrors and migrations; private,
       loopback, link-local and CGNAT ranges are blocked.
-    - CloudNativePG instances to the Kubernetes API 443/6443 and the S3 backup CIDR on 443
+    - CloudNativePG instances to the Kubernetes API 443/6443
   risks:
     - risk: An unlocked install page lets the first visitor configure the server.
       mitigation: >-
@@ -122,15 +96,14 @@ security:
     - risk: CloudNativePG instances call the Kubernetes API with an operator-created identity.
       mitigation: >-
         The databases/cloudnative-pg component creates RBAC for each cluster;
-        the Gitea Pod has no token. Database egress is limited to the API and
-        S3 CIDRs.
+        the Gitea Pod has no token. Database egress is limited to the API
+        CIDR.
     - risk: >-
-        Barman archives WAL continuously and takes a daily base backup at 02:00
-        UTC, kept for 7 days. Repositories and LFS objects are on the volume,
-        not in the database backup.
+        Repositories and LFS objects are on the volume, not in the database
+        backup.
       mitigation: >-
         Back up the gitea-data volume separately, for example with gitea dump.
-        Check Backup status and rehearse a restore before production.
+        Rehearse a restore before production.
 
 scalability:
   summary: One Gitea instance on a 20Gi node-local volume, with one PostgreSQL primary.
@@ -144,6 +117,11 @@ scalability:
     - local-path volumes are node-local and have no snapshots or failover.
 
 upgradeNotes:
+  - >-
+    New installs start without database backups. Installs made before this
+    version keep their backups. To turn backups on, open the database in
+    Zeabur and use the Backups tab, then allow the database Pods egress to the
+    S3 endpoint on TCP 443 in the namespace NetworkPolicy.
   - >-
     Back up the database and the gitea-data volume, and keep gitea-secrets,
     before you change the image digest. Without secret-key, stored two-factor
@@ -180,7 +158,3 @@ smoke:
       database: gitea
       query: SELECT count(*) FROM "user" WHERE is_admin
       expect: "1"
-  - name: initial-postgresql-backup-completed
-    resource: backup/gitea-db-initial
-    condition: jsonpath={.status.phase}=completed
-    timeout: 600s

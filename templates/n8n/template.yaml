@@ -4,7 +4,7 @@ metadata:
   name: n8n PostgreSQL
   description: >-
     n8n 2.44.6 with external JavaScript/Python task runner and operator-managed
-    PostgreSQL17 and Barman backups.
+    PostgreSQL17.
   license: LicenseRef-n8n-sustainable-use AND PostgreSQL AND Apache-2.0
   # Also: https://docs.n8n.io/hosting/, https://docs.n8n.io/sustainable-use-license/
   homepage: https://github.com/n8n-io/n8n
@@ -57,31 +57,6 @@ inputs:
     generate: random
     secret: {name: n8n-secrets, key: runner-token}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
-  - name: backupDestination
-    description: Dedicated unique S3 bucket/prefix; never reuse a different cluster backup path.
-    required: true
-    validation: {pattern: '^s3://[a-z0-9][a-z0-9.-]+/[A-Za-z0-9/_-]+$'}
-  - name: backupEndpoint
-    description: S3 HTTPS endpoint with trusted certificate on TCP443.
-    required: true
-    validation: {pattern: '^https://[a-zA-Z0-9.-]+(:443)?$'}
-  - name: backupSecret
-    description: >-
-      Existing namespaced Secret with ACCESS_KEY_ID and ACCESS_SECRET_KEY;
-      provision real S3 credentials out of band.
-    required: true
-    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
-  - name: backupCASecret
-    description: >-
-      Optional existing namespaced Secret with key ca.crt, the PEM CA that
-      signed the backup endpoint certificate. Set it for a private CA. Leave it
-      empty for a publicly trusted certificate.
-    required: false
-    validation: {pattern: '^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$'}
-  - name: backupCidr
-    description: IPv4 CIDR containing the S3 endpoint as seen by the CNI.
-    required: true
-    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
   - name: kubeApiCidr
     description: IPv4 CIDR for the Kubernetes API service/endpoint as seen by the CNI.
     required: true
@@ -98,7 +73,7 @@ security:
       Public IPv4 TCP80/443 for workflows/providers;
       private/loopback/CGNAT/metadata blocked
     - App to PostgreSQL5432 with verified CA
-    - CNPG to the Kubernetes API443/6443 and S3 backup443 CIDRs
+    - CNPG to the Kubernetes API443/6443 CIDR
   risks:
     - risk: >-
         n8n uses the Sustainable Use License. It is source-available and is not
@@ -126,8 +101,8 @@ security:
     - risk: CNPG instance-manager must access Kubernetes API with operator-created identity.
       mitigation: >-
         The databases/cloudnative-pg capability creates per-cluster RBAC; this
-        exception never applies to n8n/task-runner Pods. CNPG uses explicit
-        API/S3 CIDRs and Secrets instead of node identity.
+        exception never applies to n8n/task-runner Pods. CNPG uses an explicit
+        API CIDR instead of node identity.
     - risk: No SMTP server is configured.
       mitigation: >-
         Email invitations and password-reset mail do not work until you
@@ -148,6 +123,11 @@ scalability:
 
 upgradeNotes:
   - >-
+    New installs start without database backups. Installs made before this
+    version keep their backups. To turn backups on, open the database in
+    Zeabur and use the Backups tab, then allow the database Pods egress to the
+    S3 endpoint on TCP 443 in the namespace NetworkPolicy.
+  - >-
     Preserve Secrets and PVCs. Back up data off-node and rehearse a restore
     before changing image digests.
   - >-
@@ -164,10 +144,6 @@ upgradeNotes:
   - >-
     GENERIC_TIMEZONE is Asia/Taipei. Change it in the manifest if schedule
     triggers must use another timezone.
-  - >-
-    CNPG takes a daily base backup at 02:00 UTC and keeps 7 days of WAL and base
-    backups. Check Backup status and rehearse an off-node restore before
-    production.
   - >-
     Owner email/password is controlled by deployment variables. Rotate
     n8n-secrets/owner-password and restart to change password; recover
@@ -187,7 +163,3 @@ smoke:
     resource: cluster/n8n-db
     condition: condition=Ready
     timeout: 900s
-  - name: initial-postgresql-backup-completed
-    resource: backup/n8n-db-initial
-    condition: jsonpath={.status.phase}=completed
-    timeout: 600s

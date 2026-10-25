@@ -72,17 +72,18 @@ exact versions the template pins.
 - Give each piece of state its owner: database, uploaded files, search indexes,
   queues, configuration and encryption keys. Use `emptyDir` only for data that
   can be lost.
-- Use a database operator from the components where one exists: CloudNativePG with Barman
-  Cloud for PostgreSQL, Percona for MongoDB, MariaDB Operator for MariaDB and
+- Use a database operator from the components where one exists: CloudNativePG for PostgreSQL, Percona for MongoDB, MariaDB Operator for MariaDB and
   Dragonfly Operator for Redis-compatible use.
-- Back up state off the node, on a schedule, to storage the user provides. Say
-  what a restore needs (database, files, Secrets and keys) and how much data can
-  be lost.
+- Do not turn on database backups in the template. New installs start without
+  them, and people turn them on later from the database's Backups tab in Zeabur.
+  Say in `upgradeNotes` where to turn them on, and what a restore needs
+  (database, files, Secrets and keys).
+- If a template does configure backups, send them to HTTPS S3 with TLS
+  verification and credentials in a Secret.
 - Say what deleting the application keeps and what it destroys.
 - Give each S3 endpoint an optional CA input, a Secret with `ca.crt`, for
   storage behind a private CA, when its client takes one. The e2e test uses
-  it. If the client cannot take one, the test skips that backup check and says
-  why.
+  it.
 
 ## Scaling and resources
 
@@ -110,4 +111,4 @@ exact versions the template pins.
   same components, and every night on a fresh cluster. Make them prove the main behaviour, such as
   an authenticated request or a database query, beyond a Ready pod.
 - Use only disposable credentials and storage in tests. Put test input values
-  in `config/e2e.yaml`. Backups go to SeaweedFS in the test cluster.
+  in `config/e2e.yaml`. Object storage goes to SeaweedFS in the test cluster.

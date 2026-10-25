@@ -92,51 +92,10 @@ inputs:
     generate: random
     secret: {name: app-secrets, key: meili-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
-  - name: backupDestination
-    description: Unique S3 bucket/prefix for CNPG WAL/base backups.
-    required: true
-    validation: {pattern: '^s3://[a-z0-9][a-z0-9.-]+/[A-Za-z0-9/_-]+$'}
-  - name: backupEndpoint
-    description: S3-compatible HTTPS endpoint, publicly trusted certificate, TCP443.
-    required: true
-    validation: {pattern: '^https://[a-zA-Z0-9.-]+(:443)?$'}
-  - name: backupSecret
-    description: 'Existing CNPG S3 credential Secret: ACCESS_KEY_ID and ACCESS_SECRET_KEY.'
-    required: true
-    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
-  - name: backupCASecret
-    description: >-
-      Optional existing namespaced Secret with key ca.crt, the PEM CA that
-      signed the backup endpoint certificate. Set it for a private CA. Leave it
-      empty for a publicly trusted certificate.
-    required: false
-    validation: {pattern: '^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$'}
-  - name: backupCidr
-    description: S3 endpoint IPv4 CIDR as seen by the CNI.
-    required: true
-    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
   - name: kubeApiCidr
     description: Kubernetes API IPv4 CIDR as seen by the CNI.
     required: true
     validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
-  - name: mongoBackupBucket
-    description: Dedicated MongoDB S3 backup bucket.
-    required: true
-    validation: {pattern: '^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$'}
-  - name: mongoBackupPrefix
-    description: Unique MongoDB backup prefix. Use a different prefix from the CNPG destination.
-    required: true
-    validation: {pattern: '^[A-Za-z0-9/_-]+$'}
-  - name: mongoBackupSecret
-    description: >-
-      Existing Percona S3 credential Secret: AWS_ACCESS_KEY_ID and
-      AWS_SECRET_ACCESS_KEY.
-    required: true
-    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
-  - name: backupRegion
-    description: S3 region for Percona Backup for MongoDB.
-    required: true
-    validation: {pattern: '^[a-z0-9][a-z0-9-]+$'}
 
 security:
   summary: >-
@@ -147,10 +106,10 @@ security:
   egress:
     - Explicit internal Mongo27017, Meili7700, RAG8000, PostgreSQL5432 flows.
     - CoreDNS TCP/UDP53; public HTTPS443 for application providers.
-    - Database peer27017 or5432/8000; backup CIDR443 and CNPG API CIDR443/6443.
+    - Database peer27017 or5432/8000; CNPG API CIDR443/6443.
   risks:
     - risk: >-
-        Percona v1.23.1 main/PBM entry scripts write hardcoded /tmp/tls.pem and
+        Percona v1.23.1 entry scripts write hardcoded /tmp/tls.pem and
         tls-internal.pem; CR lacks a main-container /tmp mount override.
       mitigation: >-
         Explicit operator-only readOnlyRootFilesystem=false exception; keep TLS
@@ -197,12 +156,17 @@ scalability:
       Application file PVC, Meili state and pgvector database are
       single-instance; no app HPA.
     - >-
-      Compatible catalog CNPG+Barman and Percona operators plus real
-      backup/provider Secrets must exist. NetworkPolicies select the operators
+      Compatible catalog CNPG and Percona operators plus real provider Secrets
+      must exist. NetworkPolicies select the operators
       in namespaces psmdb-operator and cnpg-system; adjust them for other
       install locations.
 
 upgradeNotes:
+  - >-
+    New installs start without database backups. Installs made before this
+    version keep their backups. To turn backups on, open the database in
+    Zeabur and use the Backups tab, then allow the database Pods egress to the
+    S3 endpoint on TCP 443 in the namespace NetworkPolicy.
   - >-
     Back up persistent state off-node before accepting an image digest or schema
     migration; restore into a separate namespace before cutover.
@@ -218,7 +182,7 @@ upgradeNotes:
     The migration is not atomic, so take a snapshot of its volume first.
   - >-
     MongoDB feature-compatibility upgrades and Percona auto-update are off. Keep
-    the operator at CR version 1.23.1 with MongoDB 8.0.32 and PBM 2.15. Change
+    the operator at CR version 1.23.1 with MongoDB 8.0.32. Change
     PostgreSQL major versions through a CNPG migration and check pgvector
     compatibility.
   - >-
@@ -229,10 +193,6 @@ upgradeNotes:
     This version reduces the MongoDB replica set from three members to one.
     Back up MongoDB first. The operator removes rs0-1 and rs0-2 and keeps their
     PVCs. Delete those PVCs after you check the data on rs0-0.
-  - >-
-    CNPG takes a daily base backup at 02:00 UTC and keeps 7 days of WAL and base
-    backups. PBM takes a daily logical MongoDB backup and keeps seven;
-    point-in-time recovery is off.
 
 smoke:
   - name: librechat-ready
@@ -254,10 +214,6 @@ smoke:
     resource: perconaservermongodb/mongodb
     condition: jsonpath={.status.state}=ready
     timeout: 1200s
-  - name: mongodb-initial-backup
-    resource: perconaservermongodbbackup/mongodb-initial
-    condition: jsonpath={.status.state}=ready
-    timeout: 600s
   - name: pgvector-ready
     resource: cluster/rag-db
     condition: condition=Ready
@@ -267,7 +223,3 @@ smoke:
       database: rag
       query: SELECT count(*) FROM pg_extension WHERE extname='vector'
       expect: "1"
-  - name: pgvector-initial-backup
-    resource: backup/rag-db-initial
-    condition: jsonpath={.status.phase}=completed
-    timeout: 600s

@@ -2,6 +2,7 @@ package templates
 
 import (
 	"slices"
+	"strings"
 	"testing"
 )
 
@@ -37,6 +38,37 @@ func TestPerconaBackupStaysWithinDeclaredClusterAndStorage(t *testing.T) {
 			checkPerconaBackup(r, doc, []map[string]any{cluster}, "backup/initial", func(_ string, rule Rule, _ ...string) { broken = append(broken, rule) })
 			if (tc.rule == "" && len(broken) > 0) || (tc.rule != "" && !slices.Contains(broken, tc.rule)) {
 				t.Fatalf("got %v, want %v", broken, tc.rule)
+			}
+		})
+	}
+}
+
+func TestPerconaClusterChecksBackupsOnlyWhenEnabled(t *testing.T) {
+	cases := []struct {
+		name   string
+		backup map[string]any
+		broken bool
+	}{
+		{name: "off", backup: map[string]any{"enabled": false}},
+		{name: "absent"},
+		{name: "unverified-tls", backup: map[string]any{"enabled": true, "image": "example.test/pbm@sha256:" + strings.Repeat("a", 64), "storages": map[string]any{"s3": map[string]any{"type": "s3", "s3": map[string]any{"credentialsSecret": "backup-credentials", "endpointUrl": "https://s3.example.test", "insecureSkipTLSVerify": true}}}}, broken: true},
+		{name: "unpinned-image", backup: map[string]any{"enabled": true, "image": "example.test/pbm:2", "storages": map[string]any{}}, broken: true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := &Template{Requires: []string{"databases/percona-mongodb"}}
+			spec := map[string]any{"image": "example.test/mongod@sha256:" + strings.Repeat("a", 64), "initImage": "example.test/init@sha256:" + strings.Repeat("a", 64)}
+			if tc.backup != nil {
+				spec["backup"] = tc.backup
+			}
+			var broken []string
+			checkPercona(r, map[string]any{"spec": spec}, nil, "mongodb", func(where string, rule Rule, args ...string) {
+				if rule == ErrPerconaBackupStorage || slices.Contains(args, "backup.image") || strings.Contains(where, "/operand-") {
+					broken = append(broken, where+": "+string(rule))
+				}
+			})
+			if (len(broken) > 0) != tc.broken {
+				t.Fatalf("got %v, want broken=%v", broken, tc.broken)
 			}
 		})
 	}

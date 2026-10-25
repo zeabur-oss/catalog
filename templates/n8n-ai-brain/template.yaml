@@ -3,10 +3,10 @@ kind: Template
 metadata:
   name: n8n (AI Brain)
   description: >-
-    Workflow automation with PostgreSQL17, Barman Cloud backups and isolated
-    external code runners; Sustainable Use License opt-in.
+    Workflow automation with PostgreSQL17 and isolated external code runners;
+    Sustainable Use License opt-in.
   license: LicenseRef-n8n-Sustainable-Use AND PostgreSQL AND Apache-2.0
-  # Also: https://cloudnative-pg.io/, https://github.com/cloudnative-pg/plugin-barman-cloud
+  # Also: https://cloudnative-pg.io/
   homepage: https://github.com/n8n-io/n8n
   icon: https://github.com/n8n-io.png
   categories: [ai, automation]
@@ -60,33 +60,6 @@ inputs:
       IP /32.
     required: true
     validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
-  - name: backupDestination
-    description: >-
-      Dedicated S3 bucket/prefix, unique to this database; never reuse a live
-      cluster backup prefix.
-    required: true
-    validation: {pattern: '^s3://[a-z0-9][a-z0-9.-]+/[A-Za-z0-9/_-]+$'}
-  - name: backupEndpoint
-    description: S3-compatible HTTPS endpoint on TCP443 with publicly trusted certificate.
-    required: true
-    validation: {pattern: '^https://[a-zA-Z0-9.-]+(:443)?$'}
-  - name: backupSecret
-    description: >-
-      Existing namespaced Secret with ACCESS_KEY_ID and ACCESS_SECRET_KEY;
-      provision out of band.
-    required: true
-    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
-  - name: backupCASecret
-    description: >-
-      Optional existing namespaced Secret with key ca.crt, the PEM CA that
-      signed the backup endpoint certificate. Set it for a private CA. Leave it
-      empty for a publicly trusted certificate.
-    required: false
-    validation: {pattern: '^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$'}
-  - name: backupCidr
-    description: S3 IPv4 egress CIDR; update when endpoint addresses change.
-    required: true
-    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
   - name: kubeApiCidr
     description: >-
       Kubernetes API IPv4 egress CIDR as enforced by the CNI; permit the actual
@@ -98,8 +71,7 @@ security:
   summary: >-
     Non-root restricted app and isolated external runners, no app API tokens,
     read-only roots. UI source-CIDR restricted before owner setup; public HTTPS
-    webhooks only. CNPG owns scoped database RBAC/tokens; Barman archives to
-    required real S3 destination.
+    webhooks only. CNPG owns scoped database RBAC/tokens.
   egress:
     - Cluster DNS UDP/TCP 53
     - >-
@@ -107,7 +79,7 @@ security:
       and multicast IPv4 destinations
     - n8n to n8n-db TCP5432 with CA-verified TLS
     - External runners to n8n broker TCP5679 only plus cluster DNS
-    - CNPG peer TCP5432/8000, Kubernetes API CIDR TCP443/6443 and S3 CIDR TCP443
+    - CNPG peer TCP5432/8000 and Kubernetes API CIDR TCP443/6443
   risks:
     - risk: >-
         n8n is fair-code under the Sustainable Use License, which restricts use
@@ -127,13 +99,10 @@ security:
         webhook in workflow design. Limit authors to trusted operators; the
         instance is no sandbox for untrusted tenant workflows. Community package
         installation is disabled.
-    - risk: >-
-        CNPG instance managers require Kubernetes API permissions and S3 backup
-        credentials.
+    - risk: CNPG instance managers require Kubernetes API permissions.
       mitigation: >-
-        Use the catalog CNPG+Barman installation, operator-managed scoped
-        service accounts, explicit API/S3 egress CIDRs and separate existing S3
-        credential Secret.
+        Use the catalog CNPG installation, operator-managed scoped service
+        accounts and an explicit API egress CIDR.
     - risk: N8N_PROXY_HOPS=1 assumes Traefik is the only proxy in front of n8n.
       mitigation: >-
         Change N8N_PROXY_HOPS if you add another proxy or load balancer that
@@ -142,8 +111,7 @@ security:
 scalability:
   summary: >-
     One n8n main, one runner and one PostgreSQL primary. RWO node-local volumes
-    have no HA. Barman backs up PostgreSQL only; test a restore before relying
-    on it.
+    have no HA.
   replicas: 1
   maxReplicas: 1
   blockers:
@@ -152,18 +120,22 @@ scalability:
       runners, shared binary storage and Redis/Valkey; no naive replica
       increase.
     - >-
-      local-path is node-local with no snapshots. Barman does not back up the
-      application PVC or the encryption key: stop n8n and copy the PVC and
-      encrypted app-secrets off-node.
-    - S3 endpoint credentials/CIDR and Kubernetes API CIDR must match the environment.
+      local-path is node-local with no snapshots. Database backups do not
+      include the application PVC or the encryption key: stop n8n and copy the
+      PVC and encrypted app-secrets off-node.
+    - The Kubernetes API CIDR must match the environment.
 
 upgradeNotes:
   - >-
-    PostgreSQL 17 runs as a CNPG Cluster with generated least-privilege app
-    credentials, CA-verified TLS, WAL archiving, a daily base backup and 7-day
-    retention.
+    New installs start without database backups. Installs made before this
+    version keep their backups. To turn backups on, open the database in
+    Zeabur and use the Backups tab, then allow the database Pods egress to the
+    S3 endpoint on TCP 443 in the namespace NetworkPolicy.
   - >-
-    Restore the CNPG backup to a separate cluster and preserve n8n
+    PostgreSQL 17 runs as a CNPG Cluster with generated least-privilege app
+    credentials and CA-verified TLS.
+  - >-
+    Back up PostgreSQL, restore it to a separate cluster and preserve n8n
     encryption/JWT keys plus application PVC before upgrade. After restore,
     check that stored credentials decrypt and workflows run. Never rotate the
     encryption key without upstream credential migration.
@@ -189,10 +161,6 @@ smoke:
     condition: condition=Ready
     timeout: 600s
     sql: {cluster: n8n-db, database: n8n, query: SELECT 1, expect: "1"}
-  - name: initial-backup-completed
-    resource: backup/n8n-db-initial
-    condition: jsonpath={.status.phase}=completed
-    timeout: 600s
   - name: n8n-ready
     resource: deployment/n8n
     condition: condition=Available

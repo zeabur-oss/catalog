@@ -4,9 +4,9 @@ metadata:
   name: Miniflux
   description: >-
     Miniflux feed reader over HTTPS, with PostgreSQL 18 managed by
-    CloudNativePG with Barman backups.
+    CloudNativePG.
   license: Apache-2.0 AND PostgreSQL
-  # Also: https://cloudnative-pg.io/, https://github.com/cloudnative-pg/plugin-barman-cloud
+  # Also: https://cloudnative-pg.io/
   homepage: https://miniflux.app/
   icon: https://github.com/miniflux.png
   categories: [productivity]
@@ -35,31 +35,6 @@ inputs:
     generate: random
     secret: {name: miniflux-secrets, key: admin-password}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
-  - name: backupDestination
-    description: Dedicated S3 bucket and unique prefix for the database backups; never reuse a prefix from another cluster.
-    required: true
-    validation: {pattern: '^s3://[a-z0-9][a-z0-9.-]+/[A-Za-z0-9/_-]+$'}
-  - name: backupEndpoint
-    description: S3 HTTPS endpoint with a trusted certificate on TCP 443.
-    required: true
-    validation: {pattern: '^https://[a-zA-Z0-9.-]+(:443)?$'}
-  - name: backupSecret
-    description: >-
-      Existing Secret in the namespace with ACCESS_KEY_ID and
-      ACCESS_SECRET_KEY; create the S3 credentials out of band.
-    required: true
-    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
-  - name: backupCASecret
-    description: >-
-      Optional existing namespaced Secret with key ca.crt, the PEM CA that
-      signed the backup endpoint certificate. Set it for a private CA. Leave it
-      empty for a publicly trusted certificate.
-    required: false
-    validation: {pattern: '^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$'}
-  - name: backupCidr
-    description: IPv4 CIDR that contains the S3 endpoint as the CNI sees it.
-    required: true
-    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
   - name: kubeApiCidr
     description: IPv4 CIDR of the Kubernetes API endpoint as the CNI sees it.
     required: true
@@ -76,7 +51,7 @@ security:
     - >-
       Public IPv4 TCP 80/443 to fetch feeds and icons; private, loopback,
       link-local and CGNAT ranges are blocked.
-    - CloudNativePG instances to the Kubernetes API 443/6443 and the S3 backup CIDR on 443
+    - CloudNativePG instances to the Kubernetes API 443/6443
   risks:
     - risk: Feeds are fetched from addresses that users choose.
       mitigation: >-
@@ -86,11 +61,7 @@ security:
       mitigation: >-
         The databases/cloudnative-pg component creates RBAC for each cluster;
         the Miniflux Pod has no token. Database egress is limited to the API
-        and S3 CIDRs.
-    - risk: >-
-        Barman archives WAL continuously and takes a daily base backup at 02:00
-        UTC, kept for 7 days.
-      mitigation: Check Backup status and rehearse a restore before production.
+        CIDR.
 
 scalability:
   summary: One Miniflux instance with one PostgreSQL primary.
@@ -102,6 +73,11 @@ scalability:
       scheduler disabled on all but one instance.
 
 upgradeNotes:
+  - >-
+    New installs start without database backups. Installs made before this
+    version keep their backups. To turn backups on, open the database in
+    Zeabur and use the Backups tab, then allow the database Pods egress to the
+    S3 endpoint on TCP 443 in the namespace NetworkPolicy.
   - >-
     Miniflux migrates the database on start. A rollback needs the database
     backup taken before the upgrade.
@@ -131,7 +107,3 @@ smoke:
       database: miniflux
       query: SELECT count(*) FROM users WHERE is_admin
       expect: "1"
-  - name: initial-postgresql-backup-completed
-    resource: backup/miniflux-db-initial
-    condition: jsonpath={.status.phase}=completed
-    timeout: 600s

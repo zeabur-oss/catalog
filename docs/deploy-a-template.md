@@ -43,7 +43,7 @@ go run ./tools/cmd/catalog template render -namespace app \
 
 `inputs.json` is a JSON object of string values for the inputs the template
 asks for. Rendering checks every required input, including license
-acknowledgements. Backup buckets and credentials must already exist.
+acknowledgements. Object storage buckets and credentials must already exist.
 
 Generate the template's passwords and keys as Secrets, then apply:
 

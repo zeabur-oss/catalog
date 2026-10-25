@@ -1,57 +1,3 @@
-apiVersion: barmancloud.cnpg.io/v1
-kind: ObjectStore
-metadata:
-  name: dify-db-backups
-  namespace: '{{ .Namespace }}'
-  labels:
-    app.kubernetes.io/name: dify-db-backups
-spec:
-  retentionPolicy: 7d
-  configuration:
-    destinationPath: '{{ .Inputs.backupDestination }}'
-    endpointURL: '{{ .Inputs.backupEndpoint }}'
-{{- if .Inputs.backupCASecret }}
-    endpointCA:
-      name: '{{ .Inputs.backupCASecret }}'
-      key: ca.crt
-{{- end }}
-    s3Credentials:
-      accessKeyId:
-        name: '{{ .Inputs.backupSecret }}'
-        key: ACCESS_KEY_ID
-      secretAccessKey:
-        name: '{{ .Inputs.backupSecret }}'
-        key: ACCESS_SECRET_KEY
-    wal:
-      compression: gzip
-    data:
-      compression: gzip
-  instanceSidecarConfiguration:
-    resources:
-      requests:
-        cpu: 50m
-        memory: 128Mi
-      limits:
-        cpu: '1'
-        memory: 512Mi
----
-apiVersion: postgresql.cnpg.io/v1
-kind: ScheduledBackup
-metadata:
-  name: dify-db-daily
-  namespace: '{{ .Namespace }}'
-  labels:
-    app.kubernetes.io/name: dify-db-daily
-spec:
-  schedule: 0 0 2 * * *
-  immediate: true
-  backupOwnerReference: self
-  cluster:
-    name: dify-db
-  method: plugin
-  pluginConfiguration:
-    name: barman-cloud.cloudnative-pg.io
----
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -105,21 +51,6 @@ spec:
       port: 443
     - protocol: TCP
       port: 6443
-  - to:
-    - ipBlock:
-        cidr: '{{ .Inputs.backupCidr }}'
-    ports:
-    - protocol: TCP
-      port: 443
-  - to:
-    - podSelector:
-        matchLabels:
-          cnpg.io/cluster: dify-db
-    ports:
-    - protocol: TCP
-      port: 5432
-    - protocol: TCP
-      port: 8000
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -480,13 +411,6 @@ spec:
     - protocol: TCP
       port: 6379
   - from:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/dragonfly-backup: dify-dragonfly
-    ports:
-    - protocol: TCP
-      port: 6379
-  - from:
     - namespaceSelector:
         matchLabels:
           kubernetes.io/metadata.name: dragonfly-operator-system
@@ -498,12 +422,6 @@ spec:
       port: 9999
   egress:
   - {{ dnsEgress }}
-  - to:
-    - ipBlock:
-        cidr: '{{ .Inputs.dragonflyBackupCidr }}'
-    ports:
-    - protocol: TCP
-      port: 443
 ---
 apiVersion: v1
 kind: Service
@@ -1127,103 +1045,12 @@ spec:
             port:
               name: http
 ---
-apiVersion: postgresql.cnpg.io/v1
-kind: Backup
-metadata:
-  name: dify-db-initial
-  namespace: '{{ .Namespace }}'
-spec:
-  cluster:
-    name: dify-db
-  method: plugin
-  pluginConfiguration:
-    name: barman-cloud.cloudnative-pg.io
----
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: dify-dragonfly
   namespace: '{{ .Namespace }}'
 automountServiceAccountToken: false
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: dify-dragonfly-initial
-  namespace: '{{ .Namespace }}'
-spec:
-  podSelector:
-    matchLabels:
-      templates.zeabur.com/dragonfly-backup: dify-dragonfly
-  policyTypes: [Ingress, Egress]
-  ingress: []
-  egress:
-  - to:
-    - podSelector:
-        matchLabels:
-          app: dify-dragonfly
-    ports:
-    - protocol: TCP
-      port: 6379
-  - {{ dnsEgress }}
----
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: dify-dragonfly-initial
-  namespace: '{{ .Namespace }}'
-spec:
-  backoffLimit: 3
-  activeDeadlineSeconds: 900
-  template:
-    metadata:
-      labels:
-        templates.zeabur.com/dragonfly-backup: dify-dragonfly
-    spec:
-      restartPolicy: Never
-      serviceAccountName: dify-dragonfly
-      automountServiceAccountToken: false
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 999
-        runAsGroup: 999
-        seccompProfile:
-          type: RuntimeDefault
-      containers:
-      - name: snapshot
-        image: docker.dragonflydb.io/dragonflydb/dragonfly:v2.0.2@sha256:061f00b201b58e12f974e4e96c761a881ee1c05e9d8ee967466a604b7299753b
-        command: [/bin/sh, -ec]
-        args:
-        - |
-          until test "$(redis-cli -h dify-dragonfly --raw -e PING 2>/dev/null)" = PONG; do sleep 2; done
-          snapshot="dump-$(date -u +%Y-%m-%dT%H:%M:%S)"
-          test "$(redis-cli -h dify-dragonfly --raw -e SAVE DF "$BACKUP_DESTINATION" "$snapshot")" = OK
-          info="$(redis-cli -h dify-dragonfly --raw -e INFO persistence | tr -d '\r')"
-          printf '%s\n' "$info" | grep -qx 'saving:0'
-          printf '%s\n' "$info" | grep -Fqx "last_saved_file:${BACKUP_DESTINATION}/${snapshot}-summary.dfs"
-          printf '%s\n' "$info" | grep -Eq '^last_success_save:[1-9][0-9]*$'
-          test "$(redis-cli -h dify-dragonfly --raw -e LASTSAVE)" -gt 0
-          printf 'Completed native Dragonfly S3 snapshot: %s/%s-summary.dfs\n' "$BACKUP_DESTINATION" "$snapshot"
-        env:
-        - name: REDISCLI_AUTH
-          valueFrom:
-            secretKeyRef:
-              name: dify-secrets
-              key: redis-password
-        - name: BACKUP_DESTINATION
-          value: '{{ .Inputs.dragonflyBackupDestination }}'
-        securityContext:
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-          capabilities:
-            drop: [ALL]
-        resources:
-          requests:
-            cpu: 25m
-            memory: 32Mi
-          limits:
-            cpu: 250m
-            memory: 128Mi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -2481,26 +2308,10 @@ spec:
   # Dify trigger debug Lua computes inbox keys not declared in KEYS.
   # Preserve that behavior; Dragonfly serializes these scripts globally.
   - --default_lua_flags=allow-undeclared-keys
-  - --s3_endpoint={{ .Inputs.dragonflyBackupEndpoint }}
-  - --s3_use_https=true
-  - --s3_ec2_metadata=false
   authentication:
     passwordFromSecret:
       name: dify-secrets
       key: redis-password
-  env:
-  - name: AWS_ACCESS_KEY_ID
-    valueFrom:
-      secretKeyRef:
-        name: '{{ .Inputs.backupSecret }}'
-        key: ACCESS_KEY_ID
-  - name: AWS_SECRET_ACCESS_KEY
-    valueFrom:
-      secretKeyRef:
-        name: '{{ .Inputs.backupSecret }}'
-        key: ACCESS_SECRET_KEY
-  - name: AWS_REGION
-    value: '{{ .Inputs.dragonflyBackupRegion }}'
   podSecurityContext:
     runAsNonRoot: true
     runAsUser: 999
@@ -2522,11 +2333,6 @@ spec:
     limits:
       cpu: '2'
       memory: 2Gi
-  # Snapshot PVCs cannot be combined with an S3 dir in chart v1.7.1.
-  snapshot:
-    dir: '{{ .Inputs.dragonflyBackupDestination }}'
-    cron: '*/5 * * * *'
-    enableOnMasterOnly: true
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
@@ -2566,8 +2372,3 @@ spec:
     parameters:
       shared_buffers: 256MB
       max_connections: '200'
-  plugins:
-  - name: barman-cloud.cloudnative-pg.io
-    isWALArchiver: true
-    parameters:
-      barmanObjectName: dify-db-backups

@@ -24,7 +24,7 @@ type S3 struct {
 const (
 	s3Namespace = "templates-e2e-s3"
 	// S3Secret is the Secret in the template namespace with the S3
-	// credentials (under each key name the templates use) and ca.crt.
+	// credentials (access-key and secret-key) and ca.crt.
 	S3Secret = "e2e-s3"
 )
 
@@ -110,7 +110,6 @@ func (s *S3) secret(namespace string) []byte {
 		"apiVersion": "v1", "kind": "Secret", "type": "Opaque",
 		"metadata": map[string]any{"name": S3Secret, "namespace": namespace},
 		"stringData": map[string]string{
-			"ACCESS_KEY_ID": s.accessKey, "ACCESS_SECRET_KEY": s.secretKey,
 			"access-key": s.accessKey, "secret-key": s.secretKey,
 			"ca.crt": string(s.ca),
 		},

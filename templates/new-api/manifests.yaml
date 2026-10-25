@@ -227,56 +227,6 @@ spec:
     - protocol: TCP
       port: 443
 ---
-apiVersion: barmancloud.cnpg.io/v1
-kind: ObjectStore
-metadata:
-  name: newapi-db-backups
-  namespace: '{{ .Namespace }}'
-spec:
-  retentionPolicy: 7d
-  configuration:
-    destinationPath: '{{ .Inputs.backupDestination }}'
-    endpointURL: '{{ .Inputs.backupEndpoint }}'
-{{- if .Inputs.backupCASecret }}
-    endpointCA:
-      name: '{{ .Inputs.backupCASecret }}'
-      key: ca.crt
-{{- end }}
-    s3Credentials:
-      accessKeyId:
-        name: '{{ .Inputs.backupSecret }}'
-        key: ACCESS_KEY_ID
-      secretAccessKey:
-        name: '{{ .Inputs.backupSecret }}'
-        key: ACCESS_SECRET_KEY
-    wal:
-      compression: gzip
-    data:
-      compression: gzip
-  instanceSidecarConfiguration:
-    resources:
-      requests:
-        cpu: 50m
-        memory: 128Mi
-      limits:
-        cpu: 1000m
-        memory: 512Mi
----
-apiVersion: postgresql.cnpg.io/v1
-kind: ScheduledBackup
-metadata:
-  name: newapi-db-daily
-  namespace: '{{ .Namespace }}'
-spec:
-  schedule: 0 0 2 * * *
-  immediate: true
-  backupOwnerReference: self
-  cluster:
-    name: newapi-db
-  method: plugin
-  pluginConfiguration:
-    name: barman-cloud.cloudnative-pg.io
----
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -328,33 +278,6 @@ spec:
       port: 443
     - protocol: TCP
       port: 6443
-  - to:
-    - ipBlock:
-        cidr: '{{ .Inputs.backupCidr }}'
-    ports:
-    - protocol: TCP
-      port: 443
-  - to:
-    - podSelector:
-        matchLabels:
-          cnpg.io/cluster: newapi-db
-    ports:
-    - protocol: TCP
-      port: 5432
-    - protocol: TCP
-      port: 8000
----
-apiVersion: postgresql.cnpg.io/v1
-kind: Backup
-metadata:
-  name: newapi-db-initial
-  namespace: '{{ .Namespace }}'
-spec:
-  cluster:
-    name: newapi-db
-  method: plugin
-  pluginConfiguration:
-    name: barman-cloud.cloudnative-pg.io
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
@@ -389,8 +312,3 @@ spec:
     parameters:
       shared_buffers: 128MB
       max_connections: '100'
-  plugins:
-  - name: barman-cloud.cloudnative-pg.io
-    isWALArchiver: true
-    parameters:
-      barmanObjectName: newapi-db-backups

@@ -3,8 +3,7 @@ kind: Template
 metadata:
   name: PostgreSQL with pgvector
   description: >-
-    CloudNativePG PostgreSQL 18 standard image with pgvector enabled and Barman
-    Cloud backups.
+    CloudNativePG PostgreSQL 18 standard image with pgvector enabled.
   license: PostgreSQL AND Apache-2.0
   # Also: https://github.com/cloudnative-pg/postgres-containers, https://cloudnative-pg.io/
   homepage: https://github.com/pgvector/pgvector
@@ -20,31 +19,6 @@ services:
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "1", memory: 1Gi}}
 
 inputs:
-  - name: backupDestination
-    description: Dedicated S3 bucket and unique prefix for this cluster.
-    required: true
-    validation: {pattern: '^s3://[a-z0-9][a-z0-9.-]+/[A-Za-z0-9/_-]+$'}
-  - name: backupEndpoint
-    description: S3 HTTPS endpoint with publicly trusted certificate on TCP443.
-    required: true
-    validation: {pattern: '^https://[a-zA-Z0-9.-]+(:443)?$'}
-  - name: backupSecret
-    description: >-
-      Existing namespaced Secret containing ACCESS_KEY_ID and ACCESS_SECRET_KEY,
-      supplied out of band.
-    required: true
-    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
-  - name: backupCASecret
-    description: >-
-      Optional existing namespaced Secret with key ca.crt, the PEM CA that
-      signed the backup endpoint certificate. Set it for a private CA. Leave it
-      empty for a publicly trusted certificate.
-    required: false
-    validation: {pattern: '^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$'}
-  - name: backupCidr
-    description: IPv4 CIDR for the actual S3 endpoint.
-    required: true
-    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
   - name: kubeApiCidr
     description: IPv4 CIDR for Kubernetes API as seen by the enforcing CNI.
     required: true
@@ -58,7 +32,6 @@ security:
   egress:
     - DNS TCP/UDP53
     - Explicit API CIDR TCP443/6443
-    - Explicit S3 CIDR TCP443
     - Cluster peers TCP5432/8000
   risks:
     - risk: >-
@@ -74,12 +47,9 @@ security:
         Check the operator release, database digest and backups; restore-test
         with pgvector before production and upgrades.
     - risk: >-
-        Barman archives WAL continuously and takes an immediate and a daily
-        02:00 UTC base backup, kept for 7 days. A completed Backup does not
-        prove that vectors and indexes restore correctly.
-      mitigation: >-
-        Adjust retention to your recovery needs. Run a restore drill with
-        representative vectors before production.
+        A completed backup does not prove that vectors and indexes restore
+        correctly.
+      mitigation: Run a restore drill with representative vectors before production.
     - risk: NetworkPolicy inputs are IPv4 only.
       mitigation: IPv6-only clusters need an extended NetworkPolicy.
 
@@ -99,6 +69,11 @@ scalability:
 
 upgradeNotes:
   - >-
+    New installs start without database backups. Installs made before this
+    version keep their backups. To turn backups on, open the database in
+    Zeabur and use the Backups tab, then allow the database Pods egress to the
+    S3 endpoint on TCP 443 in the namespace NetworkPolicy.
+  - >-
     Connect to postgresql-rw:5432, database zeabur, owner app, with credentials
     from the operator-generated postgresql-app Secret. Superuser access is
     disabled. Client Pods in the same namespace need the label
@@ -114,9 +89,6 @@ upgradeNotes:
     extension, check pg_extension.extversion, pgvector release notes and index
     compatibility, then run ALTER EXTENSION vector UPDATE as a planned
     migration.
-  - >-
-    Backup/postgresql-initial runs only at first install. Before an upgrade,
-    confirm a recent completed Backup.
 
 smoke:
   - name: cluster-ready
@@ -128,7 +100,3 @@ smoke:
       database: zeabur
       query: SELECT '[1,2,3]'::vector <-> '[1,2,4]'::vector
       expect: "1"
-  - name: initial-base-backup
-    resource: backup/postgresql-initial
-    condition: jsonpath={.status.phase}=completed
-    timeout: 600s

@@ -71,12 +71,19 @@ func checkPercona(r *Template, d map[string]any, docs []map[string]any, w string
 		fail(w, "security.risks must describe the operator-generated pods, service account and probes")
 	}
 	spec := object(d["spec"])
-	for _, entry := range []struct {
-		name  string
-		value any
-	}{{"image", spec["image"]}, {"initImage", spec["initImage"]}, {"backup.image", object(spec["backup"])["image"]}} {
-		if !digestImage.MatchString(text(entry.value)) {
-			fail(w, "Percona image must use sha256 digest", entry.name)
+	backup := object(spec["backup"])
+	images := [][2]any{{"image", spec["image"]}, {"initImage", spec["initImage"]}}
+	if truth(backup["enabled"]) {
+		images = append(images, [2]any{"backup.image", backup["image"]})
+		for name, storage := range object(backup["storages"]) {
+			if !perconaStorageSafe(object(storage)) {
+				fail(w, ErrPerconaBackupStorage, name)
+			}
+		}
+	}
+	for _, image := range images {
+		if !digestImage.MatchString(text(image[1])) {
+			fail(w, "Percona image must use sha256 digest", text(image[0]))
 		}
 	}
 	if truth(object(spec["sharding"])["enabled"]) {
@@ -92,7 +99,9 @@ func checkPercona(r *Template, d map[string]any, docs []map[string]any, w string
 	if len(parts) == 0 {
 		fail(w, "at least one Percona replica set required")
 	}
-	parts = append(parts, object(spec["backup"]))
+	if truth(backup["enabled"]) {
+		parts = append(parts, backup)
+	}
 	for n, part := range parts {
 		p := object(part)
 		where := fmt.Sprintf("%s/operand-%d", w, n)
@@ -140,14 +149,17 @@ func checkPerconaBackup(r *Template, d map[string]any, docs []map[string]any, w 
 			continue
 		}
 		backup := object(object(doc["spec"])["backup"])
-		storage := object(object(backup["storages"])[storageName])
-		s3 := object(storage["s3"])
-		if !truth(backup["enabled"]) || text(storage["type"]) != "s3" || text(s3["credentialsSecret"]) == "" || !strings.HasPrefix(text(s3["endpointUrl"]), "https://") || truth(s3["insecureSkipTLSVerify"]) {
+		if !truth(backup["enabled"]) || !perconaStorageSafe(object(object(backup["storages"])[storageName])) {
 			fail(w, ErrPerconaBackupStorage)
 		}
 		return
 	}
 	fail(w, ErrPerconaBackupCluster)
+}
+
+func perconaStorageSafe(storage map[string]any) bool {
+	s3 := object(storage["s3"])
+	return text(storage["type"]) == "s3" && text(s3["credentialsSecret"]) != "" && strings.HasPrefix(text(s3["endpointUrl"]), "https://") && !truth(s3["insecureSkipTLSVerify"])
 }
 func checkMiddleware(r *Template, d map[string]any, w string, fail func(string, Rule, ...string)) {
 	if !hasProvider(r, "ingress/traefik") {

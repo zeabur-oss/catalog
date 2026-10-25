@@ -54,56 +54,6 @@ metadata:
   namespace: '{{ .Namespace }}'
 automountServiceAccountToken: false
 ---
-apiVersion: barmancloud.cnpg.io/v1
-kind: ObjectStore
-metadata:
-  name: rag-db-backups
-  namespace: '{{ .Namespace }}'
-spec:
-  retentionPolicy: 7d
-  configuration:
-    destinationPath: '{{ .Inputs.backupDestination }}'
-    endpointURL: '{{ .Inputs.backupEndpoint }}'
-{{- if .Inputs.backupCASecret }}
-    endpointCA:
-      name: '{{ .Inputs.backupCASecret }}'
-      key: ca.crt
-{{- end }}
-    s3Credentials:
-      accessKeyId:
-        name: '{{ .Inputs.backupSecret }}'
-        key: ACCESS_KEY_ID
-      secretAccessKey:
-        name: '{{ .Inputs.backupSecret }}'
-        key: ACCESS_SECRET_KEY
-    wal:
-      compression: gzip
-    data:
-      compression: gzip
-  instanceSidecarConfiguration:
-    resources:
-      requests:
-        cpu: 50m
-        memory: 128Mi
-      limits:
-        cpu: '1'
-        memory: 512Mi
----
-apiVersion: postgresql.cnpg.io/v1
-kind: ScheduledBackup
-metadata:
-  name: rag-db-daily
-  namespace: '{{ .Namespace }}'
-spec:
-  schedule: 0 0 2 * * *
-  immediate: true
-  backupOwnerReference: self
-  cluster:
-    name: rag-db
-  method: plugin
-  pluginConfiguration:
-    name: barman-cloud.cloudnative-pg.io
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -636,12 +586,6 @@ spec:
     ports:
     - port: 27017
       protocol: TCP
-  - to:
-    - ipBlock:
-        cidr: '{{ .Inputs.backupCidr }}'
-    ports:
-    - port: 443
-      protocol: TCP
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -697,48 +641,6 @@ spec:
       protocol: TCP
     - port: 6443
       protocol: TCP
-  - to:
-    - ipBlock:
-        cidr: '{{ .Inputs.backupCidr }}'
-    ports:
-    - port: 443
-      protocol: TCP
-  - to:
-    - podSelector:
-        matchLabels: *id001
-    ports:
-    - port: 5432
-      protocol: TCP
-  - to:
-    - podSelector:
-        matchLabels: *id001
-    ports:
-    - port: 8000
-      protocol: TCP
----
-apiVersion: postgresql.cnpg.io/v1
-kind: Backup
-metadata:
-  name: rag-db-initial
-  namespace: '{{ .Namespace }}'
-spec:
-  cluster:
-    name: rag-db
-  method: plugin
-  pluginConfiguration:
-    name: barman-cloud.cloudnative-pg.io
----
-apiVersion: psmdb.percona.com/v1
-kind: PerconaServerMongoDBBackup
-metadata:
-  name: mongodb-initial
-  namespace: '{{ .Namespace }}'
-spec:
-  clusterName: mongodb
-  storageName: s3
-  type: logical
-  compressionType: gzip
-  startingDeadlineSeconds: 1800
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -991,11 +893,6 @@ spec:
     limits:
       cpu: '2'
       memory: 2Gi
-  plugins:
-  - name: barman-cloud.cloudnative-pg.io
-    isWALArchiver: true
-    parameters:
-      barmanObjectName: rag-db-backups
 ---
 apiVersion: psmdb.percona.com/v1
 kind: PerconaServerMongoDB
@@ -1090,41 +987,3 @@ spec:
         resources:
           requests:
             storage: 10Gi
-  backup:
-    enabled: true
-    image: docker.io/percona/percona-backup-mongodb:2.15.0@sha256:12dcba7f1b55e00eb1b49dac51427d942c221b826d621d6bfad926a9d959a7c5
-    serviceAccountName: mongodb-operand
-    containerSecurityContext: *id003
-    podSecurityContext:
-      runAsNonRoot: true
-      runAsUser: 1001
-      runAsGroup: 1001
-      fsGroup: 1001
-      seccompProfile:
-        type: RuntimeDefault
-    resources:
-      requests:
-        cpu: 100m
-        memory: 256Mi
-      limits:
-        cpu: '1'
-        memory: 1Gi
-    storages:
-      s3:
-        type: s3
-        s3:
-          bucket: '{{ .Inputs.mongoBackupBucket }}'
-          prefix: '{{ .Inputs.mongoBackupPrefix }}'
-          region: '{{ .Inputs.backupRegion }}'
-          endpointUrl: '{{ .Inputs.backupEndpoint }}'
-          credentialsSecret: '{{ .Inputs.mongoBackupSecret }}'
-          insecureSkipTLSVerify: false
-    tasks:
-    - name: daily
-      enabled: true
-      schedule: 0 2 * * *
-      keep: 7
-      storageName: s3
-      compressionType: gzip
-    pitr:
-      enabled: false
