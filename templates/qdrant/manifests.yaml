@@ -23,7 +23,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: qdrant
+        templates.zeabur.com/template: qdrant
         app.kubernetes.io/name: qdrant
     spec:
       automountServiceAccountToken: false
@@ -149,7 +149,7 @@ metadata:
   name: qdrant-default-deny
   namespace: '{{ .Namespace }}'
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: qdrant}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: qdrant}}
   policyTypes: [Ingress, Egress]
 ---
 apiVersion: networking.k8s.io/v1
@@ -160,7 +160,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: qdrant
+      templates.zeabur.com/template: qdrant
       app.kubernetes.io/name: qdrant
   policyTypes: [Ingress, Egress]
   ingress:
@@ -177,7 +177,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: qdrant
+          templates.zeabur.com/template: qdrant
           templates.zeabur.com/qdrant-client: 'true'
     ports:
     - protocol: TCP

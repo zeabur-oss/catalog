@@ -25,7 +25,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: n8n
+        templates.zeabur.com/template: n8n
         app: n8n
     spec:
       automountServiceAccountToken: false
@@ -237,7 +237,7 @@ metadata:
   name: n8n-default-deny
   namespace: '{{ .Namespace }}'
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: n8n}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: n8n}}
   policyTypes:
   - Ingress
   - Egress
@@ -252,7 +252,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: n8n
+      templates.zeabur.com/template: n8n
       app: n8n
   policyTypes:
   - Ingress
@@ -271,7 +271,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: n8n
+          templates.zeabur.com/template: n8n
           app: task-runner
     ports:
     - protocol: TCP
@@ -296,7 +296,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: n8n
+          templates.zeabur.com/template: n8n
           cnpg.io/cluster: n8n-db
     ports:
     - protocol: TCP
@@ -310,7 +310,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: n8n
+      templates.zeabur.com/template: n8n
       app: task-runner
   policyTypes:
   - Ingress
@@ -321,7 +321,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: n8n
+          templates.zeabur.com/template: n8n
           app: n8n
     ports:
     - protocol: TCP
@@ -350,7 +350,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: n8n
+      templates.zeabur.com/template: n8n
       cnpg.io/cluster: n8n-db
   policyTypes:
   - Ingress
@@ -359,7 +359,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: n8n
+          templates.zeabur.com/template: n8n
           app: n8n
     ports:
     - protocol: TCP
@@ -379,7 +379,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: n8n
+          templates.zeabur.com/template: n8n
           cnpg.io/cluster: n8n-db
     ports:
     - protocol: TCP
@@ -412,7 +412,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: n8n
+        templates.zeabur.com/template: n8n
         app: task-runner
     spec:
       automountServiceAccountToken: false
@@ -497,7 +497,7 @@ metadata:
 spec:
   inheritedMetadata:
     labels:
-      app.kubernetes.io/part-of: n8n
+      templates.zeabur.com/template: n8n
   instances: 1
   imageName: ghcr.io/cloudnative-pg/postgresql:17@sha256:70664ebcfa1100361b5bdc28bbf06fdbe08db2dc4ad7bd14de33c5e05fe8ea8e
   enableSuperuserAccess: false

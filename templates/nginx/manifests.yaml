@@ -41,7 +41,7 @@ spec:
     rollingUpdate: {maxSurge: 1, maxUnavailable: 0}
   template:
     metadata:
-      labels: {app.kubernetes.io/name: nginx, app.kubernetes.io/part-of: nginx}
+      labels: {app.kubernetes.io/name: nginx, templates.zeabur.com/template: nginx}
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -121,7 +121,7 @@ metadata:
   name: nginx-default-deny
   namespace: {{ .Namespace }}
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: nginx}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: nginx}}
   policyTypes: [Ingress, Egress]
 ---
 apiVersion: networking.k8s.io/v1
@@ -131,7 +131,7 @@ metadata:
   namespace: {{ .Namespace }}
 spec:
   podSelector:
-    matchLabels: {app.kubernetes.io/name: nginx, app.kubernetes.io/part-of: nginx}
+    matchLabels: {app.kubernetes.io/name: nginx, templates.zeabur.com/template: nginx}
   policyTypes: [Ingress]
   ingress:
     - from:

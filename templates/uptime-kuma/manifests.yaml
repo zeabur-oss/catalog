@@ -24,7 +24,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: uptime-kuma
+        templates.zeabur.com/template: uptime-kuma
         app.kubernetes.io/name: uptime-kuma
     spec:
       automountServiceAccountToken: false
@@ -156,7 +156,7 @@ metadata:
   name: uptime-kuma-default-deny
   namespace: '{{ .Namespace }}'
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: uptime-kuma}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: uptime-kuma}}
   policyTypes:
   - Ingress
   - Egress
@@ -169,7 +169,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: uptime-kuma
+      templates.zeabur.com/template: uptime-kuma
       app.kubernetes.io/name: uptime-kuma
   policyTypes:
   - Ingress

@@ -13,7 +13,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: new-api
+        templates.zeabur.com/template: new-api
         app: new-api
     spec:
       automountServiceAccountToken: false
@@ -173,7 +173,7 @@ metadata:
   name: new-api-default-deny
   namespace: '{{ .Namespace }}'
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: new-api}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: new-api}}
   policyTypes:
   - Ingress
   - Egress
@@ -188,7 +188,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: new-api
+      templates.zeabur.com/template: new-api
       app: new-api
   policyTypes:
   - Ingress
@@ -209,7 +209,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: new-api
+          templates.zeabur.com/template: new-api
           cnpg.io/cluster: newapi-db
     ports:
     - protocol: TCP
@@ -238,7 +238,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: new-api
+      templates.zeabur.com/template: new-api
       cnpg.io/cluster: newapi-db
   policyTypes:
   - Ingress
@@ -247,7 +247,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: new-api
+          templates.zeabur.com/template: new-api
           app: new-api
     ports:
     - protocol: TCP
@@ -267,7 +267,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: new-api
+          templates.zeabur.com/template: new-api
           cnpg.io/cluster: newapi-db
     ports:
     - protocol: TCP
@@ -293,7 +293,7 @@ metadata:
 spec:
   inheritedMetadata:
     labels:
-      app.kubernetes.io/part-of: new-api
+      templates.zeabur.com/template: new-api
   instances: 1
   imageName: ghcr.io/cloudnative-pg/postgresql:17@sha256:70664ebcfa1100361b5bdc28bbf06fdbe08db2dc4ad7bd14de33c5e05fe8ea8e
   enableSuperuserAccess: false

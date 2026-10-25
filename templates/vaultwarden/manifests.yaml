@@ -23,7 +23,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: vaultwarden
+        templates.zeabur.com/template: vaultwarden
         app.kubernetes.io/name: vaultwarden
     spec:
       automountServiceAccountToken: false
@@ -148,7 +148,7 @@ metadata:
   name: vaultwarden-default-deny
   namespace: '{{ .Namespace }}'
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: vaultwarden}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: vaultwarden}}
   policyTypes: [Ingress, Egress]
 ---
 apiVersion: networking.k8s.io/v1
@@ -159,7 +159,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: vaultwarden
+      templates.zeabur.com/template: vaultwarden
       app.kubernetes.io/name: vaultwarden
   policyTypes: [Ingress, Egress]
   ingress:

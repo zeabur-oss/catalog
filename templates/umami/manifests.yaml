@@ -35,7 +35,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: umami
+        templates.zeabur.com/template: umami
         app.kubernetes.io/name: umami
     spec:
       automountServiceAccountToken: false
@@ -210,7 +210,7 @@ metadata:
   name: umami-default-deny
   namespace: '{{ .Namespace }}'
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: umami}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: umami}}
   policyTypes: [Ingress, Egress]
 ---
 apiVersion: networking.k8s.io/v1
@@ -221,7 +221,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: umami
+      templates.zeabur.com/template: umami
       app.kubernetes.io/name: umami
   policyTypes: [Ingress, Egress]
   ingress:
@@ -240,7 +240,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: umami
+          templates.zeabur.com/template: umami
           cnpg.io/cluster: umami-db
     ports:
     - protocol: TCP
@@ -254,7 +254,7 @@ metadata:
 spec:
   inheritedMetadata:
     labels:
-      app.kubernetes.io/part-of: umami
+      templates.zeabur.com/template: umami
   instances: 1
   imageName: ghcr.io/cloudnative-pg/postgresql:18-minimal-trixie@sha256:0675340b02be838319b9b6f323c206693e519dcd62ec729d539be9f46bb7a2f9
   enableSuperuserAccess: false
@@ -292,14 +292,14 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: umami
+      templates.zeabur.com/template: umami
       cnpg.io/cluster: umami-db
   policyTypes: [Ingress, Egress]
   ingress:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: umami
+          templates.zeabur.com/template: umami
           app.kubernetes.io/name: umami
     ports:
     - protocol: TCP
@@ -319,7 +319,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: umami
+          templates.zeabur.com/template: umami
           cnpg.io/cluster: umami-db
     ports:
     - protocol: TCP

@@ -178,12 +178,12 @@ func E2E(t *catalog.Tester, r *Template, values E2EValues, measure bool) (usage 
 			return nil, fmt.Errorf("smoke %s: %w", s.Name, err)
 		}
 	}
-	// The NetworkPolicies select pods by PartOf. A pod without it, such as
+	// The NetworkPolicies select pods by TemplateLabel. A pod without it, such as
 	// an operator pod, has no default deny in a shared namespace.
-	if out, err := kubectl(nil, "get", "pods", "-n", ns, "-l", PartOf+"!="+r.ID, "-o", "name"); err != nil {
+	if out, err := kubectl(nil, "get", "pods", "-n", ns, "-l", TemplateLabel+"!="+r.ID, "-o", "name"); err != nil {
 		return nil, err
 	} else if out != "" {
-		return nil, fmt.Errorf("pods without %s=%s: %s", PartOf, r.ID, strings.Join(strings.Fields(out), " "))
+		return nil, fmt.Errorf("pods without %s=%s: %s", TemplateLabel, r.ID, strings.Join(strings.Fields(out), " "))
 	}
 	if !measure {
 		return nil, nil

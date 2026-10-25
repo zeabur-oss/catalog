@@ -15,7 +15,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: openclaw-browser-sandbox
+        templates.zeabur.com/template: openclaw-browser-sandbox
         app.kubernetes.io/name: openclaw-sandbox-browser
     spec:
       automountServiceAccountToken: false
@@ -92,7 +92,7 @@ metadata:
   labels:
     app.kubernetes.io/name: openclaw-sandbox-browser-default-deny
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: openclaw-browser-sandbox}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: openclaw-browser-sandbox}}
   policyTypes:
   - Ingress
   - Egress
@@ -107,7 +107,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: openclaw-browser-sandbox
+      templates.zeabur.com/template: openclaw-browser-sandbox
       app.kubernetes.io/name: openclaw-sandbox-browser
   policyTypes:
   - Ingress
@@ -116,7 +116,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: openclaw-browser-sandbox
+          templates.zeabur.com/template: openclaw-browser-sandbox
           app.kubernetes.io/name: '{{ .Inputs.clientApp }}'
     ports:
     - protocol: TCP

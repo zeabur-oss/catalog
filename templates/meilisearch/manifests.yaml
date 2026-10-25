@@ -23,7 +23,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: meilisearch
+        templates.zeabur.com/template: meilisearch
         app.kubernetes.io/name: meilisearch
     spec:
       automountServiceAccountToken: false
@@ -146,7 +146,7 @@ metadata:
   name: meilisearch-default-deny
   namespace: '{{ .Namespace }}'
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: meilisearch}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: meilisearch}}
   policyTypes: [Ingress, Egress]
 ---
 apiVersion: networking.k8s.io/v1
@@ -157,7 +157,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: meilisearch
+      templates.zeabur.com/template: meilisearch
       app.kubernetes.io/name: meilisearch
   policyTypes: [Ingress, Egress]
   ingress:
@@ -174,7 +174,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: meilisearch
+          templates.zeabur.com/template: meilisearch
           templates.zeabur.com/meilisearch-client: 'true'
     ports:
     - protocol: TCP

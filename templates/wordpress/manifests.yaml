@@ -55,7 +55,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: wordpress
+        templates.zeabur.com/template: wordpress
         app: wordpress
     spec:
       automountServiceAccountToken: false
@@ -398,7 +398,7 @@ metadata:
   name: wordpress-default-deny
   namespace: '{{ .Namespace }}'
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: wordpress}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: wordpress}}
   policyTypes:
   - Ingress
   - Egress
@@ -413,7 +413,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: wordpress
+      templates.zeabur.com/template: wordpress
       app: wordpress
   policyTypes:
   - Ingress
@@ -434,7 +434,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: wordpress
+          templates.zeabur.com/template: wordpress
           app.kubernetes.io/name: mariadb
           app.kubernetes.io/instance: mariadb
     ports:
@@ -461,11 +461,11 @@ metadata:
   namespace: '{{ .Namespace }}'
 spec:
   podSelector:
-    matchLabels: {app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: mariadb, app.kubernetes.io/part-of: wordpress}
+    matchLabels: {app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: mariadb, templates.zeabur.com/template: wordpress}
   policyTypes: [Ingress]
   ingress:
   - from:
-    - podSelector: {matchLabels: {app: wordpress, app.kubernetes.io/part-of: wordpress}}
+    - podSelector: {matchLabels: {app: wordpress, templates.zeabur.com/template: wordpress}}
     - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: mariadb-operator}}
       podSelector: {matchLabels: {app.kubernetes.io/name: mariadb-operator}}
     ports: [{protocol: TCP, port: 3306}]
@@ -485,7 +485,7 @@ metadata:
 spec:
   podMetadata:
     labels:
-      app.kubernetes.io/part-of: wordpress
+      templates.zeabur.com/template: wordpress
   image: docker.io/mariadb:11.4.13@sha256:250e1609e93c0e6aecf64bfbab2d84d5e89d2481540fe77447ff6c855c3b1873
   replicas: 1
   rootPasswordSecretKeyRef:

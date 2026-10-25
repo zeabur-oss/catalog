@@ -21,7 +21,7 @@ spec:
     matchLabels: {app.kubernetes.io/name: cliproxyapi}
   template:
     metadata:
-      labels: {app.kubernetes.io/name: cliproxyapi, app.kubernetes.io/part-of: cliproxyapi}
+      labels: {app.kubernetes.io/name: cliproxyapi, templates.zeabur.com/template: cliproxyapi}
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -156,7 +156,7 @@ metadata:
   name: cliproxyapi-default-deny
   namespace: {{ .Namespace }}
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: cliproxyapi}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: cliproxyapi}}
   policyTypes: [Ingress, Egress]
 ---
 apiVersion: networking.k8s.io/v1
@@ -166,7 +166,7 @@ metadata:
   namespace: {{ .Namespace }}
 spec:
   podSelector:
-    matchLabels: {app.kubernetes.io/name: cliproxyapi, app.kubernetes.io/part-of: cliproxyapi}
+    matchLabels: {app.kubernetes.io/name: cliproxyapi, templates.zeabur.com/template: cliproxyapi}
   policyTypes: [Ingress, Egress]
   ingress:
     - from:

@@ -24,7 +24,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: gitea
+        templates.zeabur.com/template: gitea
         app.kubernetes.io/name: gitea
     spec:
       automountServiceAccountToken: false
@@ -231,7 +231,7 @@ metadata:
   name: gitea-default-deny
   namespace: '{{ .Namespace }}'
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: gitea}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: gitea}}
   policyTypes: [Ingress, Egress]
 ---
 apiVersion: networking.k8s.io/v1
@@ -242,7 +242,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: gitea
+      templates.zeabur.com/template: gitea
       app.kubernetes.io/name: gitea
   policyTypes: [Ingress, Egress]
   ingress:
@@ -261,7 +261,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: gitea
+          templates.zeabur.com/template: gitea
           cnpg.io/cluster: gitea-db
     ports:
     - protocol: TCP
@@ -290,7 +290,7 @@ metadata:
 spec:
   inheritedMetadata:
     labels:
-      app.kubernetes.io/part-of: gitea
+      templates.zeabur.com/template: gitea
   instances: 1
   imageName: ghcr.io/cloudnative-pg/postgresql:18-minimal-trixie@sha256:0675340b02be838319b9b6f323c206693e519dcd62ec729d539be9f46bb7a2f9
   enableSuperuserAccess: false
@@ -326,14 +326,14 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: gitea
+      templates.zeabur.com/template: gitea
       cnpg.io/cluster: gitea-db
   policyTypes: [Ingress, Egress]
   ingress:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: gitea
+          templates.zeabur.com/template: gitea
           app.kubernetes.io/name: gitea
     ports:
     - protocol: TCP
@@ -353,7 +353,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: gitea
+          templates.zeabur.com/template: gitea
           cnpg.io/cluster: gitea-db
     ports:
     - protocol: TCP

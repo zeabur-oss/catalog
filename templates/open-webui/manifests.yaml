@@ -38,7 +38,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: open-webui
+        templates.zeabur.com/template: open-webui
         app.kubernetes.io/name: open-webui
     spec:
       automountServiceAccountToken: false
@@ -237,7 +237,7 @@ metadata:
   name: open-webui-default-deny
   namespace: '{{ .Namespace }}'
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: open-webui}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: open-webui}}
   policyTypes:
   - Ingress
   - Egress
@@ -252,7 +252,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: open-webui
+      templates.zeabur.com/template: open-webui
       app.kubernetes.io/name: open-webui
   policyTypes:
   - Ingress
@@ -273,7 +273,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: open-webui
+          templates.zeabur.com/template: open-webui
           app.kubernetes.io/name: pipeline
     ports:
     - port: 9099
@@ -299,7 +299,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: open-webui
+      templates.zeabur.com/template: open-webui
       app.kubernetes.io/name: pipeline
   policyTypes:
   - Ingress
@@ -308,7 +308,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: open-webui
+          templates.zeabur.com/template: open-webui
           app.kubernetes.io/name: open-webui
     ports:
     - port: 9099
@@ -344,7 +344,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: open-webui
+        templates.zeabur.com/template: open-webui
         app.kubernetes.io/name: pipeline
     spec:
       automountServiceAccountToken: false

@@ -19,7 +19,7 @@ metadata:
 spec:
   template:
     metadata:
-      labels: {app: app, app.kubernetes.io/part-of: app}
+      labels: {app: app, templates.zeabur.com/template: app}
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -41,7 +41,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata: {name: app-default-deny}
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: app}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: app}}
   policyTypes: [Ingress, Egress]
   ingress: []
   egress: []
@@ -49,7 +49,7 @@ spec:
 
 // allow returns a NetworkPolicy that allows ingress to the template's pods from peer.
 func allow(peer string) string {
-	return "---\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata: {name: allow}\nspec:\n  podSelector: {matchLabels: {app.kubernetes.io/part-of: app}}\n  policyTypes: [Ingress]\n  ingress: [{from: [" + peer + "]}]\n"
+	return "---\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata: {name: allow}\nspec:\n  podSelector: {matchLabels: {templates.zeabur.com/template: app}}\n  policyTypes: [Ingress]\n  ingress: [{from: [" + peer + "]}]\n"
 }
 
 // matches reports whether err breaks rule, or is nil when rule is empty.
@@ -79,8 +79,8 @@ func TestSafetyRejectsPrivilegeAndNetworkEscapes(t *testing.T) {
 		"tag":                             {strings.Replace(safeManifest, "example.test/app@sha256:"+strings.Repeat("a", 64), "example.test/app:latest", 1), templates.ErrImageDigest},
 		"namespace":                       {strings.Replace(safeManifest, "name: app\nspec:", "name: app\n  namespace: kube-system\nspec:", 1), templates.ErrNamespaceEscape},
 		"network":                         {strings.Replace(safeManifest, "policyTypes: [Ingress, Egress]", "policyTypes: [Ingress]", 1), templates.ErrDefaultDeny},
-		"pod-label":                       {strings.Replace(safeManifest, "labels: {app: app, app.kubernetes.io/part-of: app}", "labels: {app: app}", 1), templates.ErrPartOf},
-		"deny-selects-namespace":          {strings.Replace(safeManifest, "podSelector: {matchLabels: {app.kubernetes.io/part-of: app}}", "podSelector: {}", 1), templates.ErrDefaultDeny},
+		"pod-label":                       {strings.Replace(safeManifest, "labels: {app: app, templates.zeabur.com/template: app}", "labels: {app: app}", 1), templates.ErrTemplateLabel},
+		"deny-selects-namespace":          {strings.Replace(safeManifest, "podSelector: {matchLabels: {templates.zeabur.com/template: app}}", "podSelector: {}", 1), templates.ErrDefaultDeny},
 		"deny-name":                       {strings.Replace(safeManifest, "name: app-default-deny", "name: default-deny", 1), templates.ErrDefaultDeny},
 		"peer-without-label":              {safeManifest + allow("{podSelector: {matchLabels: {app: other}}}"), templates.ErrForeignPods},
 		"peer-whole-namespace":            {safeManifest + allow("{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: test}}}"), templates.ErrForeignPods},

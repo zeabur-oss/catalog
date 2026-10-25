@@ -42,7 +42,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: hermes-agent
+        templates.zeabur.com/template: hermes-agent
         app.kubernetes.io/name: hermes-agent
     spec:
       automountServiceAccountToken: false
@@ -265,7 +265,7 @@ metadata:
   name: hermes-agent-default-deny
   namespace: '{{ .Namespace }}'
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: hermes-agent}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: hermes-agent}}
   policyTypes:
   - Ingress
   - Egress
@@ -280,7 +280,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: hermes-agent
+      templates.zeabur.com/template: hermes-agent
       app.kubernetes.io/name: hermes-agent
   policyTypes:
   - Ingress

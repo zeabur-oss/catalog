@@ -38,8 +38,8 @@ const (
 	ErrClusterIssuerProvider Rule = "ClusterIssuer annotation requires exact certificates/cert-manager provider"
 	ErrCNPGProvider          Rule = "CNPG workload requires exact databases/cloudnative-pg provider"
 	ErrDefaultDeny           Rule = "a NetworkPolicy <id>-default-deny that selects the template's pods and denies ingress and egress is required"
-	ErrPartOf                Rule = "pods must have the label " + PartOf + " set to the template ID"
-	ErrForeignPods           Rule = "NetworkPolicy selectors must select only pods with the label " + PartOf + " set to the template ID"
+	ErrTemplateLabel         Rule = "pods must have the label " + TemplateLabel + " set to the template ID"
+	ErrForeignPods           Rule = "NetworkPolicy selectors must select only pods with the label " + TemplateLabel + " set to the template ID"
 	ErrPositiveResource      Rule = "positive resource required"
 	ErrPodTokenAutomount     Rule = "automountServiceAccountToken must explicitly be false"
 	ErrPodSecurity           Rule = "pod breaks the Pod Security Standard of its service"
@@ -67,14 +67,16 @@ const (
 	ErrStorageClass          Rule = "storage class forbidden; volumes use the cluster's default StorageClass"
 )
 
-// PartOf is the label that every pod of a template has, with the template ID
-// as its value. The NetworkPolicies of a template select only these pods, so
-// other pods in a shared namespace keep their own policies.
-const PartOf = "app.kubernetes.io/part-of"
+// TemplateLabel is the label that every pod of a template has, with the template
+// ID as its value. The NetworkPolicies of a template select only these pods, so
+// other pods in a shared namespace keep their own policies. It is not
+// app.kubernetes.io/part-of: the Dragonfly operator owns that label and
+// rejects it in podMetadata.
+const TemplateLabel = "templates.zeabur.com/template"
 
 // ownPods reports whether sel selects only the pods of template id.
 func ownPods(sel map[string]any, id string) bool {
-	return id != "" && text(object(sel["matchLabels"])[PartOf]) == id
+	return id != "" && text(object(sel["matchLabels"])[TemplateLabel]) == id
 }
 
 // Safety checks the rendered objects themselves.
@@ -165,8 +167,8 @@ func Safety(r *Template, b []byte, namespace string) error {
 					profile = "baseline"
 				}
 			}
-			if text(object(pm["labels"])[PartOf]) != r.ID {
-				fail(where, ErrPartOf)
+			if text(object(pm["labels"])[TemplateLabel]) != r.ID {
+				fail(where, ErrTemplateLabel)
 			}
 			checkPodSecurity(pm, p, profile, where, fail)
 			checkPod(p, where, k != "Job" && k != "CronJob", fail)
@@ -176,8 +178,8 @@ func Safety(r *Template, b []byte, namespace string) error {
 				fail(where, "CNPG imageName must use sha256 digest")
 			}
 			checkResources(object(spec["resources"]), where, fail)
-			if text(object(object(spec["inheritedMetadata"])["labels"])[PartOf]) != r.ID {
-				fail(where+"/inheritedMetadata", ErrPartOf)
+			if text(object(object(spec["inheritedMetadata"])["labels"])[TemplateLabel]) != r.ID {
+				fail(where+"/inheritedMetadata", ErrTemplateLabel)
 			}
 			provider := false
 			for _, ref := range r.Requires {

@@ -8,7 +8,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: dify
+      templates.zeabur.com/template: dify
       cnpg.io/cluster: dify-db
   policyTypes:
   - Ingress
@@ -17,7 +17,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           templates.zeabur.com/postgresql-client: 'true'
     ports:
     - protocol: TCP
@@ -37,7 +37,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           cnpg.io/cluster: dify-db
     ports:
     - protocol: TCP
@@ -63,7 +63,7 @@ metadata:
   labels:
     app.kubernetes.io/name: dify-default-deny
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: dify}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: dify}}
   policyTypes:
   - Ingress
   - Egress
@@ -107,7 +107,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: dify
+      templates.zeabur.com/template: dify
       app.kubernetes.io/name: dify-api
   policyTypes:
   - Ingress
@@ -116,7 +116,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify
     ports:
     - protocol: TCP
@@ -124,7 +124,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-plugin
     ports:
     - protocol: TCP
@@ -132,7 +132,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-web
     ports:
     - protocol: TCP
@@ -141,7 +141,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app: dify-dragonfly
     ports:
     - protocol: TCP
@@ -149,7 +149,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-plugin
     ports:
     - protocol: TCP
@@ -157,7 +157,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-sandbox
     ports:
     - protocol: TCP
@@ -165,7 +165,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-proxy
     ports:
     - protocol: TCP
@@ -173,7 +173,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           cnpg.io/cluster: dify-db
     ports:
     - protocol: TCP
@@ -216,7 +216,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: dify
+      templates.zeabur.com/template: dify
       app.kubernetes.io/name: dify-worker
   policyTypes:
   - Ingress
@@ -226,7 +226,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app: dify-dragonfly
     ports:
     - protocol: TCP
@@ -234,7 +234,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-plugin
     ports:
     - protocol: TCP
@@ -242,7 +242,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-sandbox
     ports:
     - protocol: TCP
@@ -250,7 +250,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-proxy
     ports:
     - protocol: TCP
@@ -258,7 +258,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-api
     ports:
     - protocol: TCP
@@ -266,7 +266,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           cnpg.io/cluster: dify-db
     ports:
     - protocol: TCP
@@ -309,7 +309,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: dify
+      templates.zeabur.com/template: dify
       app.kubernetes.io/name: dify-beat
   policyTypes:
   - Ingress
@@ -319,7 +319,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app: dify-dragonfly
     ports:
     - protocol: TCP
@@ -327,7 +327,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-plugin
     ports:
     - protocol: TCP
@@ -335,7 +335,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-sandbox
     ports:
     - protocol: TCP
@@ -343,7 +343,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-proxy
     ports:
     - protocol: TCP
@@ -351,7 +351,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-api
     ports:
     - protocol: TCP
@@ -359,7 +359,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           cnpg.io/cluster: dify-db
     ports:
     - protocol: TCP
@@ -402,7 +402,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: dify
+      templates.zeabur.com/template: dify
       app: dify-dragonfly
   policyTypes:
   - Ingress
@@ -411,7 +411,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-api
     ports:
     - protocol: TCP
@@ -419,7 +419,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-worker
     ports:
     - protocol: TCP
@@ -427,7 +427,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-beat
     ports:
     - protocol: TCP
@@ -435,7 +435,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-plugin
     ports:
     - protocol: TCP
@@ -478,7 +478,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: dify
+      templates.zeabur.com/template: dify
       app.kubernetes.io/name: dify-web
   policyTypes:
   - Ingress
@@ -487,7 +487,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify
     ports:
     - protocol: TCP
@@ -497,7 +497,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-api
     ports:
     - protocol: TCP
@@ -560,7 +560,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: dify
+      templates.zeabur.com/template: dify
       app.kubernetes.io/name: dify-plugin
   policyTypes:
   - Ingress
@@ -569,7 +569,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-api
     ports:
     - protocol: TCP
@@ -577,7 +577,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-worker
     ports:
     - protocol: TCP
@@ -585,7 +585,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-beat
     ports:
     - protocol: TCP
@@ -593,7 +593,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify
     ports:
     - protocol: TCP
@@ -602,7 +602,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app: dify-dragonfly
     ports:
     - protocol: TCP
@@ -610,7 +610,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-api
     ports:
     - protocol: TCP
@@ -618,7 +618,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           cnpg.io/cluster: dify-db
     ports:
     - protocol: TCP
@@ -668,7 +668,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: dify
+      templates.zeabur.com/template: dify
       app.kubernetes.io/name: dify-sandbox
   policyTypes:
   - Ingress
@@ -677,7 +677,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-api
     ports:
     - protocol: TCP
@@ -685,7 +685,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-worker
     ports:
     - protocol: TCP
@@ -693,7 +693,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-beat
     ports:
     - protocol: TCP
@@ -702,7 +702,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-proxy
     ports:
     - protocol: TCP
@@ -787,7 +787,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: dify
+      templates.zeabur.com/template: dify
       app.kubernetes.io/name: dify-proxy
   policyTypes:
   - Ingress
@@ -796,7 +796,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-api
     ports:
     - protocol: TCP
@@ -804,7 +804,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-worker
     ports:
     - protocol: TCP
@@ -812,7 +812,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-beat
     ports:
     - protocol: TCP
@@ -820,7 +820,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-sandbox
     ports:
     - protocol: TCP
@@ -882,7 +882,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: dify
+        templates.zeabur.com/template: dify
         app.kubernetes.io/name: dify
     spec:
       automountServiceAccountToken: false
@@ -961,7 +961,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: dify
+      templates.zeabur.com/template: dify
       app.kubernetes.io/name: dify
   policyTypes:
   - Ingress
@@ -977,7 +977,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: dify
+      templates.zeabur.com/template: dify
       app.kubernetes.io/name: dify
   policyTypes:
   - Ingress
@@ -997,7 +997,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-api
     ports:
     - protocol: TCP
@@ -1005,7 +1005,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-web
     ports:
     - protocol: TCP
@@ -1013,7 +1013,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: dify
+          templates.zeabur.com/template: dify
           app.kubernetes.io/name: dify-plugin
     ports:
     - protocol: TCP
@@ -1125,7 +1125,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: dify
+        templates.zeabur.com/template: dify
         app.kubernetes.io/name: dify-api
         templates.zeabur.com/postgresql-client: 'true'
     spec:
@@ -1374,7 +1374,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: dify
+        templates.zeabur.com/template: dify
         app.kubernetes.io/name: dify-worker
         templates.zeabur.com/postgresql-client: 'true'
     spec:
@@ -1628,7 +1628,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: dify
+        templates.zeabur.com/template: dify
         app.kubernetes.io/name: dify-beat
         templates.zeabur.com/postgresql-client: 'true'
     spec:
@@ -1887,7 +1887,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: dify
+        templates.zeabur.com/template: dify
         app.kubernetes.io/name: dify-web
     spec:
       automountServiceAccountToken: false
@@ -1984,7 +1984,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: dify
+        templates.zeabur.com/template: dify
         app.kubernetes.io/name: dify-plugin
         templates.zeabur.com/postgresql-client: 'true'
     spec:
@@ -2127,7 +2127,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: dify
+        templates.zeabur.com/template: dify
         app.kubernetes.io/name: dify-sandbox
     spec:
       automountServiceAccountToken: false
@@ -2285,7 +2285,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: dify
+        templates.zeabur.com/template: dify
         app.kubernetes.io/name: dify-proxy
     spec:
       automountServiceAccountToken: false
@@ -2361,7 +2361,7 @@ metadata:
 spec:
   podMetadata:
     labels:
-      app.kubernetes.io/part-of: dify
+      templates.zeabur.com/template: dify
   replicas: 1
   image: docker.dragonflydb.io/dragonflydb/dragonfly:v2.0.2@sha256:061f00b201b58e12f974e4e96c761a881ee1c05e9d8ee967466a604b7299753b
   serviceAccountName: dify-dragonfly
@@ -2410,7 +2410,7 @@ metadata:
 spec:
   inheritedMetadata:
     labels:
-      app.kubernetes.io/part-of: dify
+      templates.zeabur.com/template: dify
   instances: 1
   imageName: ghcr.io/cloudnative-pg/postgresql:16-standard-trixie@sha256:f105e137d731f6ac4f69667383f2373345ce8b72dadcc10ab6d385a7a32d6e7f
   enableSuperuserAccess: false

@@ -32,7 +32,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: memos
+        templates.zeabur.com/template: memos
         app.kubernetes.io/name: memos
     spec:
       automountServiceAccountToken: false
@@ -177,7 +177,7 @@ metadata:
   name: memos-default-deny
   namespace: '{{ .Namespace }}'
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: memos}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: memos}}
   policyTypes: [Ingress, Egress]
 ---
 apiVersion: networking.k8s.io/v1
@@ -188,7 +188,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: memos
+      templates.zeabur.com/template: memos
       app.kubernetes.io/name: memos
   policyTypes: [Ingress, Egress]
   ingress:

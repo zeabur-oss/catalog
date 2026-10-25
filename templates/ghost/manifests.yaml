@@ -49,7 +49,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: ghost
+        templates.zeabur.com/template: ghost
         app.kubernetes.io/name: ghost
     spec:
       automountServiceAccountToken: false
@@ -233,7 +233,7 @@ metadata:
   name: ghost-default-deny
   namespace: '{{ .Namespace }}'
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: ghost}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: ghost}}
   policyTypes:
   - Ingress
   - Egress
@@ -246,7 +246,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: ghost
+      templates.zeabur.com/template: ghost
       app.kubernetes.io/name: ghost
   policyTypes:
   - Ingress
@@ -267,7 +267,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: ghost
+          templates.zeabur.com/template: ghost
           app.kubernetes.io/name: ghost-mysql
     ports:
     - protocol: TCP
@@ -301,7 +301,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: ghost
+      templates.zeabur.com/template: ghost
       app.kubernetes.io/name: ghost-mysql
   policyTypes:
   - Ingress
@@ -310,7 +310,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: ghost
+          templates.zeabur.com/template: ghost
           app.kubernetes.io/name: ghost
     ports:
     - protocol: TCP
@@ -331,7 +331,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: ghost
+        templates.zeabur.com/template: ghost
         app.kubernetes.io/name: ghost-mysql
     spec:
       automountServiceAccountToken: false

@@ -14,7 +14,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: browserless
+        templates.zeabur.com/template: browserless
         app.kubernetes.io/name: browserless
     spec:
       automountServiceAccountToken: false
@@ -152,7 +152,7 @@ metadata:
   name: browserless-default-deny
   namespace: {{ .Namespace }}
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: browserless}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: browserless}}
   policyTypes: [Ingress, Egress]
   ingress: []
   egress: []
@@ -165,7 +165,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: browserless
+      templates.zeabur.com/template: browserless
       app.kubernetes.io/name: browserless
   policyTypes: [Ingress, Egress]
   ingress:

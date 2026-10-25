@@ -62,7 +62,7 @@ exact versions the template pins.
 
 ## Network
 
-- Give every pod the label `app.kubernetes.io/part-of: <id>`. For operator
+- Give every pod the label `templates.zeabur.com/template: <id>`. For operator
   pods, set it in the custom resource: `inheritedMetadata` for CloudNativePG,
   `podMetadata` for Dragonfly and MariaDB, and `replsets[].labels` for Percona.
 - Add a NetworkPolicy `<id>-default-deny` that selects these pods and denies

@@ -76,8 +76,8 @@ func checkPercona(r *Template, d map[string]any, docs []map[string]any, w string
 		p := object(part)
 		where := fmt.Sprintf("%s/operand-%d", w, n)
 		if n < len(array(spec["replsets"])) {
-			if text(object(p["labels"])[PartOf]) != r.ID {
-				fail(where, ErrPartOf)
+			if text(object(p["labels"])[TemplateLabel]) != r.ID {
+				fail(where, ErrTemplateLabel)
 			}
 			for _, key := range []string{"arbiter", "nonvoting", "hidden"} {
 				if truth(object(p[key])["enabled"]) {
@@ -167,11 +167,11 @@ func checkMiddleware(r *Template, d map[string]any, w string, fail func(string, 
 }
 
 // onlyKeys rejects each spec field that is not in allowed.
-// checkPodMetadata requires the PartOf label in spec.podMetadata, which the
+// checkPodMetadata requires the TemplateLabel label in spec.podMetadata, which the
 // operator copies to the pods it creates.
 func checkPodMetadata(r *Template, spec map[string]any, w string, fail func(string, Rule, ...string)) {
-	if text(object(object(spec["podMetadata"])["labels"])[PartOf]) != r.ID {
-		fail(w+"/podMetadata", ErrPartOf)
+	if text(object(object(spec["podMetadata"])["labels"])[TemplateLabel]) != r.ID {
+		fail(w+"/podMetadata", ErrTemplateLabel)
 	}
 }
 

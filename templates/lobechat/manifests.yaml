@@ -15,7 +15,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: lobechat
+        templates.zeabur.com/template: lobechat
         app.kubernetes.io/name: lobechat
     spec:
       automountServiceAccountToken: false
@@ -105,7 +105,7 @@ metadata:
   labels:
     app.kubernetes.io/name: lobechat-default-deny
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: lobechat}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: lobechat}}
   policyTypes:
   - Ingress
   - Egress
@@ -120,7 +120,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: lobechat
+      templates.zeabur.com/template: lobechat
       app.kubernetes.io/name: lobechat
   policyTypes:
   - Ingress

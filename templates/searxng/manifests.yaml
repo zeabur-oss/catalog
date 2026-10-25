@@ -31,7 +31,7 @@ spec:
     matchLabels: {app.kubernetes.io/name: searxng}
   template:
     metadata:
-      labels: {app.kubernetes.io/name: searxng, app.kubernetes.io/part-of: searxng}
+      labels: {app.kubernetes.io/name: searxng, templates.zeabur.com/template: searxng}
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -121,7 +121,7 @@ metadata:
   name: searxng-default-deny
   namespace: {{ .Namespace }}
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: searxng}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: searxng}}
   policyTypes: [Ingress, Egress]
 ---
 apiVersion: networking.k8s.io/v1
@@ -131,7 +131,7 @@ metadata:
   namespace: {{ .Namespace }}
 spec:
   podSelector:
-    matchLabels: {app.kubernetes.io/name: searxng, app.kubernetes.io/part-of: searxng}
+    matchLabels: {app.kubernetes.io/name: searxng, templates.zeabur.com/template: searxng}
   policyTypes: [Ingress, Egress]
   ingress:
     - from:

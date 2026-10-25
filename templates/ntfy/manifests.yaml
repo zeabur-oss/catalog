@@ -23,7 +23,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: ntfy
+        templates.zeabur.com/template: ntfy
         app.kubernetes.io/name: ntfy
     spec:
       automountServiceAccountToken: false
@@ -163,7 +163,7 @@ metadata:
   name: ntfy-default-deny
   namespace: '{{ .Namespace }}'
 spec:
-  podSelector: {matchLabels: {app.kubernetes.io/part-of: ntfy}}
+  podSelector: {matchLabels: {templates.zeabur.com/template: ntfy}}
   policyTypes: [Ingress, Egress]
 ---
 apiVersion: networking.k8s.io/v1
@@ -174,7 +174,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/part-of: ntfy
+      templates.zeabur.com/template: ntfy
       app.kubernetes.io/name: ntfy
   policyTypes: [Ingress, Egress]
   ingress:
@@ -191,7 +191,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app.kubernetes.io/part-of: ntfy
+          templates.zeabur.com/template: ntfy
           templates.zeabur.com/ntfy-client: 'true'
     ports:
     - protocol: TCP
