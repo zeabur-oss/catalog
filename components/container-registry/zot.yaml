@@ -181,8 +181,7 @@ releases:
           gcInterval: 1h
           # Every untagged manifest goes after the delay; per repository, the
           # 20 most recently pushed tags stay. Builder pushes one tag per
-          # commit and re-pushes buildcache each build, so the cache always
-          # stays and 20 commits remain to roll back to.
+          # commit, so 20 commits remain to roll back to.
           retention:
             delay: 2h
             policies:
