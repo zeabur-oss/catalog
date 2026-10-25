@@ -73,6 +73,7 @@ templates:
       storageBucket: '{{ .S3.Bucket }}'
       storageSecret: e2e-s3
       storageCASecret: e2e-s3
+      storageCidr: '{{ .S3.CIDR }}'
     skipSmoke:
       Initial Dragonfly S3 snapshot completed: >-
         Dragonfly takes no custom CA for its S3 snapshots, and the test

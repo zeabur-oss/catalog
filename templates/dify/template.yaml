@@ -44,8 +44,9 @@ services:
     baselineJustification: >-
       Only this isolated code runner runs as root: SYS_CHROOT/SETUID/SETGID
       establish the chroot and per-execution identities before upstream inner
-      seccomp. The prepare-runner init alone uses
-      CHOWN/DAC_OVERRIDE/FOWNER/FSETID to copy image-bundled runtime ownership
+      seccomp, CHOWN gives each Python script to the run user and DAC_OVERRIDE
+      lets root open it. The
+      prepare-runner init alone uses CHOWN/DAC_OVERRIDE/FOWNER/FSETID to copy image-bundled runtime ownership
       and modes into emptyDir. Neither container permits escalation or
       privileged mode; all ordinary pods remain restricted.
   - name: dify-proxy
@@ -150,8 +151,9 @@ inputs:
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: storageEndpoint
     description: >-
-      Existing public HTTPS S3-compatible object storage endpoint on TCP443 for
-      documents, model encryption keys and uploaded files.
+      Existing HTTPS S3-compatible object storage endpoint on TCP443 for
+      documents, model encryption keys and uploaded files. It must be on a
+      public address unless storageCidr is set.
     required: true
     validation: {pattern: '^https://[A-Za-z0-9.-]+(:443)?$'}
   - name: storageRegion
@@ -168,6 +170,14 @@ inputs:
       and secret-key.
     required: true
     validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: storageCidr
+    description: >-
+      Optional IPv4 CIDR of a storage endpoint on a private network. Warning:
+      it lets the Dify API, worker and beat reach that private range on TCP443.
+      Keep it as narrow as the endpoint, such as one /32. Leave it empty for
+      public storage.
+    required: false
+    validation: {pattern: '^(([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2]))?$'}
   - name: storageCASecret
     description: >-
       Optional existing namespaced Secret with key ca.crt, the PEM CA that
@@ -198,6 +208,7 @@ security:
     - >-
       CNPG operator-managed API TCP443/6443 and backup endpoint TCP443
       restricted to the input CIDRs.
+    - Storage endpoint TCP443 restricted to storageCidr, only when it is set.
   risks:
     - risk: >-
         Dragonfly engine is BUSL-1.1 source-available and excludes third-party
@@ -218,6 +229,21 @@ security:
         drain workers and checkpoint before cutover; reconcile jobs and
         idempotency after restore. Old Valkey AOF, RDB or PVC data is not
         imported.
+    - risk: >-
+        The sandbox container has CAP_CHOWN and CAP_DAC_OVERRIDE, because Dify
+        sandbox gives each Python script to its run user and then opens it as
+        root. With DAC_OVERRIDE, root in the sandbox can read and write files
+        it does not own inside the container.
+      mitigation: >-
+        Only the sandbox gets them, next to SYS_CHROOT/SETUID/SETGID. It still
+        drops all other capabilities, permits no escalation and runs user code
+        under the upstream seccomp filter with a separate user.
+    - risk: >-
+        With storageCidr set, the API, worker and beat can reach that private
+        range on TCP443.
+      mitigation: >-
+        It is empty by default. Set it to the storage endpoint only, such as
+        one /32.
     - risk: Dify trigger/debug Lua scripts access keys outside their declared KEYS.
       mitigation: >-
         Dragonfly runs with allow-undeclared-keys. These scripts run with global

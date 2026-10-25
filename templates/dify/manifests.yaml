@@ -237,6 +237,14 @@ spec:
     - protocol: TCP
       port: 5432
   - {{ dnsEgress }}
+{{- if .Inputs.storageCidr }}
+  - to:
+    - ipBlock:
+        cidr: '{{ .Inputs.storageCidr }}'
+    ports:
+    - protocol: TCP
+      port: 443
+{{- end }}
   - to:
     - ipBlock:
         cidr: 0.0.0.0/0
@@ -315,6 +323,14 @@ spec:
     - protocol: TCP
       port: 5432
   - {{ dnsEgress }}
+{{- if .Inputs.storageCidr }}
+  - to:
+    - ipBlock:
+        cidr: '{{ .Inputs.storageCidr }}'
+    ports:
+    - protocol: TCP
+      port: 443
+{{- end }}
   - to:
     - ipBlock:
         cidr: 0.0.0.0/0
@@ -393,6 +409,14 @@ spec:
     - protocol: TCP
       port: 5432
   - {{ dnsEgress }}
+{{- if .Inputs.storageCidr }}
+  - to:
+    - ipBlock:
+        cidr: '{{ .Inputs.storageCidr }}'
+    ports:
+    - protocol: TCP
+      port: 443
+{{- end }}
   - to:
     - ipBlock:
         cidr: 0.0.0.0/0
@@ -2260,6 +2284,9 @@ spec:
             - SYS_CHROOT
             - SETUID
             - SETGID
+            # Dify sandbox chowns each Python script to its run user, then opens it as root.
+            - CHOWN
+            - DAC_OVERRIDE
         resources:
           requests:
             cpu: 100m
