@@ -27,6 +27,24 @@ inputs:
       to it. Left out: an address is assigned and only pods reach the registry.
     release: zot
     path: service.clusterIP
+  # Builder pushes and reads source archives with the account of each build
+  # namespace. Without an account, nobody reads a source repository.
+  - name: htpasswd
+    description: >
+      The registry's accounts as an htpasswd file with bcrypt hashes, one line
+      per build namespace, named after it. An empty file is valid: then no one
+      reads source archives.
+    secret: {name: zot-htpasswd, key: htpasswd, namespace: zot}
+    required: true
+    testValue: "ci:$2y$05$s4ySHqIe7D/T1cjpIzr91OyAkbXYw.lO9/zWLsnzvJjeu26wBQR.W"
+  - name: access-control
+    description: >
+      Replaces the registry's accessControl. Keep the "**" and "**/source"
+      rules, and add one rule per build namespace, such as "team-a/**/source"
+      with policies [{users: [team-a], actions: [read, create, update,
+      delete]}]. Left out: the two rules alone, so source archives stay
+      closed.
+    path: config.http.accessControl
 
 releases:
   # Before the chart: the CA that signs zot-tls.
@@ -90,12 +108,6 @@ releases:
         scheme: HTTPS
       # StatefulSet with a volumeClaimTemplate; images survive restarts.
       persistence: true
-      # zot-tls from the certificate below; /etc/zot holds the config.
-      externalSecrets:
-        - secretName: zot-tls
-          mountPath: /tls
-      # Mount configFiles below as /etc/zot/config.json.
-      mountConfig: true
       extraObjects:
         # The serving certificate; the pod starts once its Secret exists.
         # localhost and 127.0.0.1 let a node pull through a loopback
@@ -122,41 +134,70 @@ releases:
             issuerRef:
               kind: Issuer
               name: zot-ca
+      # The chart stores config in a Secret named zot-config and mounts it at
+      # /etc/zot. configFiles stays empty: the chart refuses both.
       configFiles:
+        config.json: null
+      # The chart mounts config from its own Secret; no ConfigMap.
+      mountConfig: false
+      # The accounts for accessControl, from the htpasswd input.
+      externalSecrets:
+        - secretName: zot-tls
+          mountPath: /tls
+        - secretName: zot-htpasswd
+          mountPath: /auth
+      config:
+        # Referrers and artifactType, which source archives use.
+        distSpecVersion: 1.1.1
         # No search or UI extensions: they keep an index in memory. No
         # read/write timeouts: the chart's 60s cuts off large layer pushes.
-        # retention: every untagged manifest goes after the delay; per
-        # repository, the 20 most recently pushed tags stay. Builder pushes
-        # one tag per commit and re-pushes buildcache each build, so the
-        # cache always stays and 20 commits remain to roll back to.
-        config.json: |-
-          {
-            "distSpecVersion": "1.1.1",
-            "storage": {
-              "rootDirectory": "/var/lib/registry",
-              "dedupe": true,
-              "gc": true,
-              "gcDelay": "2h",
-              "gcInterval": "1h",
-              "retention": {
-                "delay": "2h",
-                "policies": [
-                  {
-                    "repositories": ["**"],
-                    "deleteReferrers": true,
-                    "deleteUntagged": true,
-                    "keepTags": [{"mostRecentlyPushedCount": 20}]
-                  }
-                ]
-              }
-            },
-            "http": {
-              "address": "0.0.0.0",
-              "port": "5000",
-              "tls": {"cert": "/tls/tls.crt", "key": "/tls/tls.key"}
-            },
-            "log": {"level": "info"}
-          }
+        storage:
+          rootDirectory: /var/lib/registry
+          dedupe: true
+          gc: true
+          gcDelay: 2h
+          gcInterval: 1h
+          # Every untagged manifest goes after the delay; per repository, the
+          # 20 most recently pushed tags stay. Builder pushes one tag per
+          # commit and re-pushes buildcache each build, so the cache always
+          # stays and 20 commits remain to roll back to.
+          retention:
+            delay: 2h
+            policies:
+              - repositories: ["**"]
+                deleteReferrers: true
+                deleteUntagged: true
+                keepTags:
+                  - mostRecentlyPushedCount: 20
+        http:
+          # All interfaces, so the Service reaches the pod.
+          address: 0.0.0.0
+          # The Service port.
+          port: "5000"
+          # The certificate and key from the zot-tls Secret.
+          tls:
+            cert: /tls/tls.crt
+            key: /tls/tls.key
+          # Accounts from the zot-htpasswd Secret.
+          auth:
+            htpasswd:
+              path: /auth/htpasswd
+          # zot applies the rule with the longest pattern, not the union of
+          # matches. Images: everyone reads and writes, as before. Source
+          # archives (<namespace>/<build>/source): nobody, unless a rule
+          # <namespace>/**/source names the account of that namespace. Such a
+          # pattern is always longer than **/source. Never add <namespace>/**
+          # rules: one of them can be as long as **/source.
+          accessControl:
+            repositories:
+              "**":
+                defaultPolicy: [read, create, update, delete]
+                anonymousPolicy: [read, create, update, delete]
+              "**/source":
+                policies: []
+        # Requests and errors only.
+        log:
+          level: info
     profiles:
       single-node: |
         pvc:
@@ -193,10 +234,14 @@ security:
   risks:
     - risk: Any pod in the cluster can push, overwrite and pull any image anonymously.
       mitigation: >
-        Add an htpasswd file (an input stored in a Secret, mounted through
-        externalSecrets) and accessControl with one repository path per
-        namespace; give Builder the push credential and nodes a pull
+        Narrow the "**" rule of accessControl to one repository path per
+        namespace, and give Builder the push credential and nodes a pull
         credential. A NetworkPolicy can limit pushes to Builder's namespace.
+    - risk: Source archives (repositories ending in /source) hold uploaded code. Only the account of the namespace in the path reads them.
+      mitigation: >
+        Add an htpasswd line and a "<namespace>/**/source" rule for each build
+        namespace (the htpasswd and access-control inputs). Without the rule,
+        that namespace's account cannot read its own archives.
     - risk: Nodes refuse to pull until they trust its CA, and a node told to skip verification trusts anything at that address.
       mitigation: >
         Set the cluster-ip input, and on every node mirror zot.zot.svc:5000 to
