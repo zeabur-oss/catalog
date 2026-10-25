@@ -129,7 +129,6 @@ it can be reused instead.
 | qdrant | Qdrant | databases, ai |
 | searxng | SearXNG | search |
 | sillytavern | SillyTavern | ai |
-| sillytavern-legacy | SillyTavern | ai |
 | umami | Umami | analytics |
 | uptime-kuma | Uptime Kuma | monitoring |
 | vaultwarden | Vaultwarden | security |
