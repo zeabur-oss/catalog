@@ -70,6 +70,15 @@ services:
     resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
 
 inputs:
+  - name: initPassword
+    description: >-
+      Generated password that Dify asks for before it creates the first
+      administrator; retrieve it from Secret dify-secrets, key init-password.
+    generate: random
+    generateBytes: 14
+    generateEncoding: hex
+    secret: {name: dify-secrets, key: init-password}
+    validation: {pattern: '^[0-9a-f]{28}$'}
   - name: appKey
     description: Generated app-key; retrieve from Secret dify-secrets, never from a public URL.
     generate: random
@@ -195,10 +204,13 @@ security:
         Dragonfly runs with allow-undeclared-keys. These scripts run with global
         serialization and can reduce queue throughput.
     - risk: >-
-        Unauthenticated first-owner setup and console administration must not be
-        reachable by arbitrary public clients.
+        An uninitialized Dify lets the first visitor create the owner, and the
+        console is reachable by arbitrary public clients.
       mitigation: >-
-        Create the first owner right after the deploy finishes. The console
+        Dify asks for INIT_PASSWORD, generated in
+        dify-secrets/init-password, before it creates the first administrator, so
+        a visitor cannot claim the instance without it. Open /install, enter
+        that password and create the owner right after the deploy. The console
         is open to anyone who can reach the domain; Dify has its own sign-in.
         To limit who can reach it, add an IP limit in the service's network
         settings.
@@ -245,6 +257,10 @@ scalability:
       or snapshots.
 
 upgradeNotes:
+  - >-
+    The dify-api pod now has INIT_PASSWORD from dify-secrets/init-password.
+    A new install needs it on the /install page; an installation that already
+    has an owner is not affected.
   - >-
     Breaking change: the template no longer ships its default-deny and per-pod
     NetworkPolicies, because the installer isolates project namespaces. Applying

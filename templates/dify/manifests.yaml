@@ -556,6 +556,11 @@ spec:
             secretKeyRef:
               name: dify-secrets
               key: redis-password
+        - name: INIT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: init-password
         - name: SECRET_KEY
           valueFrom:
             secretKeyRef:
