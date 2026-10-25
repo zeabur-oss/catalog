@@ -167,38 +167,3 @@ func testCertificates(host string) (cert, key, ca []byte, err error) {
 		pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: keyDER}),
 		pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: caDER}), nil
 }
-
-// skipPerconaS3Verify turns off TLS verification for each Percona MongoDB S3
-// storage at endpoint. PBM cannot take a CA, and the e2e CA is disposable.
-func skipPerconaS3Verify(manifest []byte, endpoint string) ([]byte, error) {
-	docs, err := DecodeDocuments(manifest)
-	if err != nil {
-		return nil, err
-	}
-	patched := false
-	for _, doc := range docs {
-		if text(doc["apiVersion"]) != "psmdb.percona.com/v1" || text(doc["kind"]) != "PerconaServerMongoDB" {
-			continue
-		}
-		for _, storage := range object(object(object(doc["spec"])["backup"])["storages"]) {
-			if s3 := object(object(storage)["s3"]); s3 != nil && text(s3["endpointUrl"]) == endpoint {
-				s3["insecureSkipTLSVerify"] = true
-				patched = true
-			}
-		}
-	}
-	if !patched {
-		return manifest, nil
-	}
-	var out bytes.Buffer
-	for _, doc := range docs {
-		b, err := json.Marshal(doc)
-		if err != nil {
-			return nil, err
-		}
-		out.WriteString("---\n")
-		out.Write(b)
-		out.WriteString("\n")
-	}
-	return out.Bytes(), nil
-}

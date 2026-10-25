@@ -109,6 +109,10 @@ templates:
       mongoBackupPrefix: librechat/mongodb
       mongoBackupSecret: e2e-s3
     setup: *provider
+    skipSmoke:
+      mongodb-initial-backup: >-
+        Percona's s3 storage takes no custom CA, and the test gateway's
+        certificate comes from a test CA.
   litellm:
     inputs: {licenseOptIn: I-ACCEPT-LITELLM-ENTERPRISE-LICENSE}
   lobechat:
