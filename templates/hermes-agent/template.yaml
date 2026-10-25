@@ -81,18 +81,6 @@ inputs:
     description: Separate HTTPS dashboard hostname.
     required: true
     validation: {pattern: '^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$'}
-  - name: adminCidr
-    label: Administrator IP range
-    locales:
-      zh-TW:
-        label: 管理員 IP 範圍
-        description: "只有這個 IPv4 範圍能開啟管理介面，以 Traefik 看到的來源位址為準；不接受 /0。"
-      zh-CN:
-        label: 管理员 IP 范围
-        description: "只有这个 IPv4 范围能打开管理界面，以 Traefik 看到的来源地址为准；不接受 /0。"
-    description: Administrator IPv4 source CIDR as seen by Traefik; /0 is not accepted.
-    required: true
-    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([1-9]|[12][0-9]|3[0-2])$'}
   - name: dashboardPassword
     description: Independent generated dashboard password for user admin.
     generate: random
@@ -129,15 +117,10 @@ security:
         before routing clients. A node-local StorageClass has no HA or snapshots.
     - risk: Dashboard exposes high-trust administration of tools, profiles and secrets.
       mitigation: >-
-        Separate generated Basic-auth and session keys, separate hostname, and
-        administrator source-CIDR middleware.
-    - risk: >-
-        The adminCidr allowlist matches the source address that Traefik sees. A
-        proxy or load balancer that hides client addresses makes the allowlist
-        match the proxy.
-      mitigation: >-
-        Deliver the real client address to Traefik. Do not set an ipStrategy
-        that trusts forwarded headers.
+        Separate generated Basic-auth and session keys, and a separate
+        hostname. The dashboard is open to anyone who can reach that hostname,
+        so keep the generated password private. To limit who can reach it, add
+        an IP limit in the service's network settings.
 
 scalability:
   summary: >-
@@ -154,13 +137,17 @@ scalability:
 
 upgradeNotes:
   - >-
+    Breaking change: the adminCidr input and its allowlist are removed. The
+    dashboard is open to anyone who can reach adminDomain and signs in with the
+    generated password. Remove adminCidr from saved values.
+  - >-
     This template replaces hermes-agent-custom-provider and
     hermes-agent-openrouter. From hermes-agent-custom-provider, install
     hermes-agent in the same namespace with the same inputs. The objects keep
     their names, so the hermes-data PVC and the hermes-secrets Secret stay.
   - >-
     From hermes-agent-openrouter, leave providerEndpoint empty and give
-    adminDomain and adminCidr for the dashboard. Add the keys
+    adminDomain for the dashboard. Add the keys
     dashboard-password and dashboard-session-key to hermes-secrets, and keep
     api-key. The API moves from TCP 8642 to TCP 5000, so update clients that
     connect to the Service.

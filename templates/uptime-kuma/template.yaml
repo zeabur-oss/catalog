@@ -17,22 +17,6 @@ services:
     ports: [{name: http, port: 3001}]
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 1Gi}}
 
-inputs:
-  - name: adminCidr
-    label: Administrator IP range
-    locales:
-      zh-TW:
-        label: 管理員 IP 範圍
-        description: "只有這個 IPv4 範圍能開啟監控介面、初始設定和狀態頁，以 Traefik 看到的來源位址為準。建議填你固定 IP 的 /32。"
-      zh-CN:
-        label: 管理员 IP 范围
-        description: "只有这个 IPv4 范围能打开监控界面、初始设置和状态页，以 Traefik 看到的来源地址为准。建议填你固定 IP 的 /32。"
-    description: >-
-      Administrator IPv4 source CIDR as seen by Traefik. Restricts the entire
-      private monitor UI, setup and status pages. Prefer your fixed IP /32.
-    required: true
-    validation:
-      pattern: ^((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])/([1-9]|[12][0-9]|3[0-2])$
 security:
   summary: >-
     Namespaced, digest-pinned non-root workloads with read-only roots, no API
@@ -41,17 +25,10 @@ security:
   risks:
     - risk: The first visitor can claim an uninitialized installation.
       mitigation: >-
-        Required adminCidr enforces Traefik ipAllowList on the entire Ingress
-        before owner provisioning, even when wildcard DNS already resolves.
-        Create the first owner account from the allowed network. The UI and
-        status pages stay private. To publish a status page, plan a separate
-        exposure after owner setup and keep the allowlist on the monitor UI.
-    - risk: NAT or a reverse proxy can hide the real client source from Traefik.
-      mitigation: >-
-        The allowlist uses the source address Traefik sees and ignores
-        client-supplied X-Forwarded-For. Check source preservation and proxy
-        trust; allowing a shared load-balancer CIDR admits every Internet
-        client.
+        Create the first owner account right after the deploy finishes. The
+        monitor UI, setup and status pages are open to anyone who can reach
+        the domain; the application has its own sign-in. To limit who can
+        reach it, add an IP limit in the service's network settings.
     - risk: >-
         Monitoring targets can become an SSRF path into cluster or private
         infrastructure.

@@ -172,7 +172,6 @@ metadata:
   namespace: '{{ .Namespace }}'
   annotations:
     cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
-    traefik.ingress.kubernetes.io/router.priority: '10'
 spec:
   ingressClassName: traefik
   tls:
@@ -184,42 +183,6 @@ spec:
     http:
       paths:
       - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: ghost
-            port:
-              number: 2368
----
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: ghost-admin
-  namespace: '{{ .Namespace }}'
-spec:
-  ipAllowList:
-    sourceRange: ['{{ .Inputs.adminCidr }}']
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: ghost-admin
-  namespace: '{{ .Namespace }}'
-  annotations:
-    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
-    traefik.ingress.kubernetes.io/router.priority: '100'
-    traefik.ingress.kubernetes.io/router.middlewares: '{{ .Namespace }}-ghost-admin@kubernetescrd'
-spec:
-  ingressClassName: traefik
-  tls:
-  - hosts:
-    - '{{ .Domain }}'
-    secretName: ghost-tls
-  rules:
-  - host: '{{ .Domain }}'
-    http:
-      paths:
-      - path: /ghost
         pathType: Prefix
         backend:
           service:
