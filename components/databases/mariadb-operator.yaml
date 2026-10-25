@@ -26,7 +26,7 @@ releases:
     namespace: mariadb-operator
     repo: https://helm.mariadb.com/mariadb-operator
     chart: mariadb-operator-crds
-    version: 26.10.1
+    version: 26.10.2
     chartDigest: sha256:2a0c8ae8ec848e18144eb2606d7860f01d08c783a512066d2cf8b784d13a64d4
 
   - name: mariadb-operator
