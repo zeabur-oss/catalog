@@ -392,58 +392,6 @@ spec:
             port:
               number: 8080
 ---
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: wordpress-default-deny
-  namespace: '{{ .Namespace }}'
-spec:
-  podSelector: {matchLabels: {templates.zeabur.com/template: wordpress}}
-  policyTypes: [Ingress]
-  ingress: []
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: wordpress
-  namespace: '{{ .Namespace }}'
-spec:
-  podSelector:
-    matchLabels:
-      templates.zeabur.com/template: wordpress
-      app: wordpress
-  policyTypes: [Ingress]
-  ingress:
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: traefik
-      podSelector:
-        matchLabels:
-          app.kubernetes.io/name: traefik
-    ports:
-    - protocol: TCP
-      port: 8080
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: mariadb-operator-paths
-  namespace: '{{ .Namespace }}'
-spec:
-  podSelector:
-    matchLabels: {app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: mariadb, templates.zeabur.com/template: wordpress}
-  policyTypes: [Ingress]
-  ingress:
-  - from:
-    - podSelector: {matchLabels: {app: wordpress, templates.zeabur.com/template: wordpress}}
-    - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: mariadb-operator}}
-      podSelector: {matchLabels: {app.kubernetes.io/name: mariadb-operator}}
-    # The Pods of a Backup of the MariaDB. The Backup gives them these labels
-    # in spec.podMetadata.
-    - podSelector: {matchLabels: {app.kubernetes.io/component: backup, templates.zeabur.com/template: wordpress}}
-    ports: [{protocol: TCP, port: 3306}]
----
 apiVersion: v1
 kind: ServiceAccount
 metadata:

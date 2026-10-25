@@ -48,8 +48,7 @@ inputs:
 security:
   summary: >-
     Non-root, read-only root filesystem, restricted PSS, no Kubernetes token,
-    TLS ingress, default-deny ingress with Traefik as the only outside client.
-    Outbound traffic is not limited.
+    TLS ingress. Outbound traffic is not limited.
   risks:
     - risk: The LobeHub Community License restricts distribution of derivative works.
       mitigation: >-
@@ -74,6 +73,11 @@ scalability:
       no multi-tenant backend.
 
 upgradeNotes:
+  - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy lobechat-default-deny lobechat-allow`.
   - >-
     Breaking change: the licenseOptIn input is removed. The license is named in
     the template description. Remove licenseOptIn from saved values.

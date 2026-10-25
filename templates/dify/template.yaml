@@ -160,10 +160,10 @@ inputs:
 security:
   summary: >-
     Restricted application/Dragonfly/gateway/proxy pods and a narrowly justified
-    baseline sandbox. Default-deny ingress with directional rules; the sandbox
-    reaches only the proxy and DNS, and other outbound traffic is not limited;
+    baseline sandbox. Ingress NetworkPolicies protect the sandbox and the proxy, which have no sign-in; the sandbox reaches only the proxy and DNS, and other outbound traffic is not limited;
     generated secrets, TLS ingress, operator-owned PostgreSQL/pgvector and
     Dragonfly.
+  unauthenticated: [dify-sandbox, dify-proxy]
   risks:
     - risk: >-
         Dragonfly engine is BUSL-1.1 source-available and excludes third-party
@@ -208,6 +208,14 @@ security:
         written upstream permission exists. Unmodified frontend images retain
         branding.
     - risk: >-
+        The sandbox runs code that other people write, and the SSRF proxy has no
+        sign-in. A pod in the same namespace could call either.
+      mitigation: >-
+        Each keeps an ingress NetworkPolicy that admits only the Dify API,
+        worker and beat pods; the sandbox may also reach only the proxy and DNS.
+        These are the only NetworkPolicies in the template. Namespace isolation
+        covers the rest.
+    - risk: >-
         Code runner needs root to set up chroot and drop to unique per-execution
         identities.
       mitigation: >-
@@ -237,6 +245,14 @@ scalability:
       or snapshots.
 
 upgradeNotes:
+  - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy dify-db-connectivity dify-default-deny dify-api-connections
+    dify-dragonfly-connections dify-web-connections dify-plugin-connections
+    dify-gateway-default-deny dify-allow`. dify-sandbox-connections,
+    dify-proxy-connections stays.
   - >-
     New installs start without database backups. Installs made before this
     version keep their backups. To turn backups on, open the database in Zeabur

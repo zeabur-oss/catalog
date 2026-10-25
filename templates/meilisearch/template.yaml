@@ -33,9 +33,7 @@ inputs:
 security:
   summary: >-
     Runs as UID 1000 with a read-only root filesystem, no service-account token
-    and all capabilities dropped. Production mode requires the master key. Only
-    the ingress controller and labelled clients can connect to it, and it has no
-    outbound access.
+    and all capabilities dropped. Production mode requires the master key. The ingress route is public.
   risks:
     - risk: The API is public through the Ingress.
       mitigation: >-
@@ -44,10 +42,9 @@ security:
         token, never the master key.
     - risk: >-
         AI-powered search embedders, webhooks and network search need
-        outbound access. The NetworkPolicy blocks all egress.
+        outbound access, and the template does not limit it, so a configured endpoint can point at private addresses.
       mitigation: >-
-        Add a NetworkPolicy egress rule for each provider endpoint you
-        configure.
+        Configure only trusted provider endpoints, or add an egress NetworkPolicy that limits them.
     - risk: Enterprise Edition features are not in this image.
       mitigation: >-
         Sharding, replication and S3 snapshots return a
@@ -66,6 +63,11 @@ scalability:
     - A node-local default StorageClass, such as local-path, has no snapshots or failover.
 
 upgradeNotes:
+  - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy meilisearch-default-deny meilisearch`.
   - >-
     Create a dump with POST /dumps and copy it off the node before you change
     the image digest. Dumps are the supported path between versions.

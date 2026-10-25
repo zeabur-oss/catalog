@@ -148,47 +148,6 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: n8n-ai-brain-default-deny
-  namespace: {{ .Namespace }}
-spec:
-  podSelector: {matchLabels: {templates.zeabur.com/template: n8n-ai-brain}}
-  policyTypes: [Ingress]
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: n8n-network
-  namespace: {{ .Namespace }}
-spec:
-  podSelector:
-    matchLabels: {app.kubernetes.io/name: n8n, templates.zeabur.com/template: n8n-ai-brain}
-  policyTypes: [Ingress]
-  ingress:
-    - from:
-        - namespaceSelector:
-            matchLabels: {kubernetes.io/metadata.name: traefik}
-          podSelector:
-            matchLabels: {app.kubernetes.io/name: traefik}
-      ports: [{protocol: TCP, port: 5678}]
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: n8n-internal
-  namespace: {{ .Namespace }}
-spec:
-  podSelector:
-    matchLabels: {app.kubernetes.io/name: n8n, templates.zeabur.com/template: n8n-ai-brain}
-  policyTypes: [Ingress]
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels: {app.kubernetes.io/name: n8n-runners, templates.zeabur.com/template: n8n-ai-brain}
-      ports: [{protocol: TCP, port: 5679}]
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
   name: n8n-runners-network
   namespace: {{ .Namespace }}
 spec:
@@ -201,31 +160,6 @@ spec:
         - podSelector:
             matchLabels: {app.kubernetes.io/name: n8n, templates.zeabur.com/template: n8n-ai-brain}
       ports: [{protocol: TCP, port: 5679}]
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: n8n-db-connectivity
-  namespace: {{ .Namespace }}
-spec:
-  podSelector:
-    matchLabels: {cnpg.io/cluster: n8n-db, templates.zeabur.com/template: n8n-ai-brain}
-  policyTypes: [Ingress]
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels: {app.kubernetes.io/name: n8n, templates.zeabur.com/template: n8n-ai-brain}
-      ports: [{protocol: TCP, port: 5432}]
-    - from:
-        - namespaceSelector:
-            matchLabels: {kubernetes.io/metadata.name: cnpg-system}
-          podSelector:
-            matchLabels: {app.kubernetes.io/name: cloudnative-pg}
-      ports: [{protocol: TCP, port: 8000}, {protocol: TCP, port: 5432}]
-    - from:
-        - podSelector:
-            matchLabels: {cnpg.io/cluster: n8n-db, templates.zeabur.com/template: n8n-ai-brain}
-      ports: [{protocol: TCP, port: 5432}, {protocol: TCP, port: 8000}]
 ---
 apiVersion: apps/v1
 kind: Deployment

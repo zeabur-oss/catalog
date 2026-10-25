@@ -30,8 +30,7 @@ inputs:
 security:
   summary: >-
     Runs as UID 10001 with a read-only root filesystem, no service-account token
-    and all capabilities dropped. Only the ingress controller and the template's
-    own Pods can connect to it. Outbound traffic is not limited. Public sign-up
+    and all capabilities dropped. Outbound traffic is not limited. Public sign-up
     is off.
   risks:
     - risk: The first account on an empty instance becomes the administrator.
@@ -61,6 +60,11 @@ scalability:
     - A node-local default StorageClass, such as local-path, has no snapshots or failover.
 
 upgradeNotes:
+  - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy memos-default-deny memos`.
   - >-
     Stop Memos and copy /var/opt/memos (the SQLite database and local
     attachments) off the node before you change the image digest.

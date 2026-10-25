@@ -30,9 +30,7 @@ inputs:
 security:
   summary: >-
     The official unprivileged image runs as UID 1000 with a read-only root
-    filesystem, no service-account token and all capabilities dropped. The
-    namespace lets only the ingress controller and labelled clients connect, and
-    qdrant has no outbound access.
+    filesystem, no service-account token and all capabilities dropped. Qdrant needs its API key for every request.
   risks:
     - risk: The REST API and web dashboard are public through the Ingress.
       mitigation: >-
@@ -44,10 +42,9 @@ security:
         Pods in the same namespace with the label
         templates.zeabur.com/qdrant-client=true reach REST on 6333 and gRPC on
         6334. Use REST over the Ingress from outside the cluster.
-    - risk: Recovery from a snapshot URL and other outbound calls are blocked.
+    - risk: Outbound traffic is not limited, so a snapshot URL can reach private addresses.
       mitigation: >-
-        Upload snapshots through the API, or add a NetworkPolicy egress rule
-        for the exact source.
+        Upload snapshots through the API, or add an egress NetworkPolicy that limits the source.
 
 scalability:
   summary: One node on a 20Gi volume. Distributed mode is not configured.
@@ -60,6 +57,11 @@ scalability:
     - A node-local default StorageClass, such as local-path, has no snapshots or failover.
 
 upgradeNotes:
+  - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy qdrant-default-deny qdrant`.
   - >-
     Create a full snapshot with the snapshot API and copy it off the node
     before you change the image digest.

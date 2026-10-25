@@ -87,17 +87,6 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: openclaw-browser-sandbox-default-deny
-  namespace: '{{ .Namespace }}'
-  labels:
-    app.kubernetes.io/name: openclaw-sandbox-browser-default-deny
-spec:
-  podSelector: {matchLabels: {templates.zeabur.com/template: openclaw-browser-sandbox}}
-  policyTypes: [Ingress]
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
   name: openclaw-sandbox-browser-allow
   namespace: '{{ .Namespace }}'
   labels:

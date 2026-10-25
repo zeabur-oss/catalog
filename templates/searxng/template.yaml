@@ -62,6 +62,11 @@ scalability:
 
 upgradeNotes:
   - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy searxng-default-deny searxng-network`.
+  - >-
     Pinned image version 2026.10.19-81371861f. On updates, check settings,
     entrypoint and search engine compatibility.
   - >-

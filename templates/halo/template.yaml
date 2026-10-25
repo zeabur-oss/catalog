@@ -30,8 +30,7 @@ security:
   summary: >-
     Restricted non-root application, read-only root and no API token; PostgreSQL
     operands are managed by the catalog CloudNativePG operator with their scoped
-    service-account exception. Default-deny ingress; outbound traffic is not
-    limited.
+    service-account exception. Outbound traffic is not limited.
   risks:
     - risk: >-
         CNPG instance managers need the Kubernetes API and a scoped
@@ -66,6 +65,11 @@ scalability:
       replicated storage; a replica count edit alone is not enough.
 
 upgradeNotes:
+  - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy halo-default-deny halo-network halo-db-network`.
   - >-
     New installs start without database backups. Installs made before this
     version keep their backups. To turn backups on, open the database in Zeabur

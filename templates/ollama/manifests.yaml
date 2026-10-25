@@ -120,16 +120,6 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: ollama-default-deny
-  namespace: '{{ .Namespace }}'
-spec:
-  podSelector: {matchLabels: {templates.zeabur.com/template: ollama}}
-  policyTypes: [Ingress]
-  ingress: []
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
   name: ollama-access
   namespace: '{{ .Namespace }}'
 spec:

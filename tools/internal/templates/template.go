@@ -43,6 +43,9 @@ type Metadata struct {
 type Security struct {
 	Summary string              `yaml:"summary" json:"summary"`
 	Risks   []map[string]string `yaml:"risks" json:"risks"`
+	// Unauthenticated names the services that have no sign-in or key of their
+	// own. Each needs a NetworkPolicy that limits who can connect to it.
+	Unauthenticated []string `yaml:"unauthenticated" json:"unauthenticated,omitempty"`
 }
 
 type Scalability struct {

@@ -162,38 +162,6 @@ spec:
             port:
               number: 4000
 ---
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: litellm-default-deny
-  namespace: '{{ .Namespace }}'
-spec:
-  podSelector: {matchLabels: {templates.zeabur.com/template: litellm}}
-  policyTypes: [Ingress]
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: litellm
-  namespace: '{{ .Namespace }}'
-spec:
-  podSelector:
-    matchLabels:
-      templates.zeabur.com/template: litellm
-      app.kubernetes.io/name: litellm
-  policyTypes: [Ingress]
-  ingress:
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: traefik
-      podSelector:
-        matchLabels:
-          app.kubernetes.io/name: traefik
-    ports:
-    - protocol: TCP
-      port: 4000
----
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
@@ -229,46 +197,3 @@ spec:
     parameters:
       shared_buffers: 128MB
       max_connections: '100'
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: litellm-db
-  namespace: '{{ .Namespace }}'
-spec:
-  podSelector:
-    matchLabels:
-      templates.zeabur.com/template: litellm
-      cnpg.io/cluster: litellm-db
-  policyTypes: [Ingress]
-  ingress:
-  - from:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: litellm
-          app.kubernetes.io/name: litellm
-    ports:
-    - protocol: TCP
-      port: 5432
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: cnpg-system
-      podSelector:
-        matchLabels:
-          app.kubernetes.io/name: cloudnative-pg
-    ports:
-    - protocol: TCP
-      port: 5432
-    - protocol: TCP
-      port: 8000
-  - from:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: litellm
-          cnpg.io/cluster: litellm-db
-    ports:
-    - protocol: TCP
-      port: 5432
-    - protocol: TCP
-      port: 8000

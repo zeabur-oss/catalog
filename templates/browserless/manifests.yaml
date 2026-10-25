@@ -145,38 +145,3 @@ spec:
                 name: browserless
                 port:
                   name: web
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: browserless-default-deny
-  namespace: {{ .Namespace }}
-spec:
-  podSelector: {matchLabels: {templates.zeabur.com/template: browserless}}
-  policyTypes: [Ingress]
-  ingress: []
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: browserless-allow-traffic
-  namespace: {{ .Namespace }}
-spec:
-  podSelector:
-    matchLabels:
-      templates.zeabur.com/template: browserless
-      app.kubernetes.io/name: browserless
-  policyTypes: [Ingress]
-  ingress:
-    - from:
-        - namespaceSelector:
-            matchExpressions:
-              - key: kubernetes.io/metadata.name
-                operator: In
-                values: [traefik, kube-system]
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: traefik
-      ports:
-        - protocol: TCP
-          port: 3000

@@ -24,12 +24,8 @@ services:
 security:
   summary: >-
     No Kubernetes API access; non-root UID 101, read-only filesystem, no
-    capabilities. Only Traefik may reach HTTP. No outbound connections.
-  risks:
-    - risk: Ingress namespace and controller labels differ between installations.
-      mitigation: >-
-        Inspect the explicit Traefik NetworkPolicy selector in the plan; use the
-        catalog ingress/traefik installation labels.
+    capabilities. The pod makes no outbound connections.
+  risks: []
 
 scalability:
   summary: >-
@@ -45,6 +41,11 @@ scalability:
     - With one replica, the PDB blocks node drain until you add a replica.
 
 upgradeNotes:
+  - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy nginx-default-deny nginx-traefik`.
   - >-
     Check nginx configuration compatibility and image vulnerability reports
     before you accept a digest update.

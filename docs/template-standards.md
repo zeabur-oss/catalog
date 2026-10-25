@@ -69,22 +69,38 @@ exact versions the template pins.
 - Give every pod the label `templates.zeabur.com/template: <id>`. For operator
   pods, set it in the custom resource: `inheritedMetadata` for CloudNativePG,
   `podMetadata` for Dragonfly and MariaDB, and `replsets[].labels` for Percona.
-- Add a NetworkPolicy `<id>-default-deny` that selects these pods and denies
-  all ingress. Then allow only the connections the application needs: from the
-  ingress controller to the application, and from the template's own pods to
-  each other. A database accepts connections only from its application and its
-  operator.
-- Do not limit egress. Applications call model providers, webhooks, mail
-  servers and S3 stores that the template cannot know, and NetworkPolicy
-  matches IP ranges, not host names. A person who wants to limit egress adds a
-  NetworkPolicy of their own.
-- Exception: a component that holds sensitive data or runs untrusted code, and
-  never needs outbound connections, may deny egress. Allow only DNS
-  (`{{ dnsEgress }}`) and its own peers. A database that can back up connects to
-  S3, so it does not qualify.
+- Do not ship default-deny or per-pod NetworkPolicies. The installer isolates
+  project namespaces from each other with a baseline policy, and that is the
+  default boundary.
+- Exception: a component with no sign-in or key of its own gets an ingress
+  NetworkPolicy that admits only its own app. Examples: Redis or Dragonfly
+  without a password, Meilisearch or Qdrant without a key, and sandboxes that
+  run other people's code. List its service in `security.unauthenticated`;
+  `catalog template lint` then requires an ingress NetworkPolicy whose
+  `podSelector` names that service, and the `security` risks say why it
+  exists. A component that runs untrusted code may also limit egress to DNS
+  (`{{ dnsEgress }}`) and its own peers.
+- Do not limit egress otherwise. Applications call model providers, webhooks,
+  mail servers and S3 stores that the template cannot know, and NetworkPolicy
+  matches IP ranges, not host names.
 - Make every NetworkPolicy, and every peer in the template's namespace, select
-  pods by that label. Other applications can share the namespace, and the
+  pods by the label above. Other applications can share the namespace, and the
   template's policies must not change their traffic.
+- People who want stricter isolation inside a namespace can add their own
+  NetworkPolicy. For example, this admits only pods labelled `role=frontend`
+  to the pods of one template:
+
+  ```yaml
+  apiVersion: networking.k8s.io/v1
+  kind: NetworkPolicy
+  metadata: {name: only-frontend}
+  spec:
+    podSelector:
+      matchLabels: {templates.zeabur.com/template: ghost}
+    policyTypes: [Ingress]
+    ingress:
+    - from: [{podSelector: {matchLabels: {role: frontend}}}]
+  ```
 - Keep databases, metrics and admin interfaces private. Expose only the
   application through the ingress component with a cert-manager certificate.
 

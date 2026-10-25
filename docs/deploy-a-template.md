@@ -24,9 +24,10 @@ absolute paths, `..` and links.
 ## 2. Prepare the cluster
 
 - Install each component in the template's `requires` from the same release.
-- Use a CNI that enforces NetworkPolicy. Templates deny all incoming traffic
-  to their own pods, then allow only what each service needs. They do not
-  limit outgoing traffic.
+- Use a CNI that enforces NetworkPolicy. The installer isolates project
+  namespaces from each other; templates add no default-deny policies of their
+  own. Only a service with no sign-in of its own, such as a code sandbox,
+  ships an ingress policy. Templates do not limit outgoing traffic.
 - Mark one StorageClass as the default. Templates name no StorageClass, so
   their volumes use the default. Without one, their claims stay `Pending`.
 - For a template with domains, have a cert-manager ClusterIssuer ready.

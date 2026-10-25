@@ -37,7 +37,8 @@ const (
 	ErrTraefikProvider       Rule = "Traefik Ingress requires exact ingress/traefik provider"
 	ErrClusterIssuerProvider Rule = "ClusterIssuer annotation requires exact certificates/cert-manager provider"
 	ErrCNPGProvider          Rule = "CNPG workload requires exact databases/cloudnative-pg provider"
-	ErrDefaultDeny           Rule = "a NetworkPolicy <id>-default-deny that selects the template's pods and denies only ingress is required"
+	ErrIngressPolicy         Rule = "a service listed in security.unauthenticated needs an ingress NetworkPolicy whose podSelector names it"
+	ErrUnknownService        Rule = "security.unauthenticated names a service the template does not declare"
 	ErrTemplateLabel         Rule = "pods must have the label " + TemplateLabel + " set to the template ID"
 	ErrForeignPods           Rule = "NetworkPolicy selectors must select only pods with the label " + TemplateLabel + " set to the template ID"
 	ErrPositiveResource      Rule = "positive resource required"
@@ -86,7 +87,7 @@ func Safety(r *Template, b []byte, namespace string) error {
 		return err
 	}
 	var errs []error
-	defaultDeny := false
+	var ingressPolicies []map[string]any
 	fail := func(where string, rule Rule, detail ...string) {
 		err := fmt.Errorf("%s: %w", where, rule)
 		if len(detail) > 0 {
@@ -238,14 +239,28 @@ func Safety(r *Template, b []byte, namespace string) error {
 			if !ownPods(sel, r.ID) {
 				fail(where, ErrForeignPods, "podSelector")
 			}
-			if name == r.ID+"-default-deny" && len(sel) == 1 && len(object(sel["matchLabels"])) == 1 && len(array(spec["policyTypes"])) == 1 && contains(array(spec["policyTypes"]), "Ingress") && len(array(spec["ingress"])) == 0 {
-				defaultDeny = true
+			if contains(array(spec["policyTypes"]), "Ingress") {
+				ingressPolicies = append(ingressPolicies, object(sel["matchLabels"]))
 			}
 			checkPolicyRules(r, spec, namespace, where, fail)
 		}
 	}
-	if !defaultDeny {
-		fail("NetworkPolicy", ErrDefaultDeny)
+	for _, name := range r.Security.Unauthenticated {
+		if !slices.ContainsFunc(r.Services, func(s Service) bool { return s.Name == name }) {
+			fail("security.unauthenticated", ErrUnknownService, name)
+			continue
+		}
+		named := slices.ContainsFunc(ingressPolicies, func(labels map[string]any) bool {
+			for k, v := range labels {
+				if k != TemplateLabel && text(v) == name {
+					return true
+				}
+			}
+			return false
+		})
+		if !named {
+			fail("NetworkPolicy", ErrIngressPolicy, name)
+		}
 	}
 	return errors.Join(errs...)
 }

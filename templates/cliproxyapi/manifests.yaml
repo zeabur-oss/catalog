@@ -149,29 +149,3 @@ spec:
               service:
                 name: cliproxyapi
                 port: {name: http}
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: cliproxyapi-default-deny
-  namespace: {{ .Namespace }}
-spec:
-  podSelector: {matchLabels: {templates.zeabur.com/template: cliproxyapi}}
-  policyTypes: [Ingress]
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: cliproxyapi-network
-  namespace: {{ .Namespace }}
-spec:
-  podSelector:
-    matchLabels: {app.kubernetes.io/name: cliproxyapi, templates.zeabur.com/template: cliproxyapi}
-  policyTypes: [Ingress]
-  ingress:
-    - from:
-        - namespaceSelector:
-            matchLabels: {kubernetes.io/metadata.name: traefik}
-          podSelector:
-            matchLabels: {app.kubernetes.io/name: traefik}
-      ports: [{protocol: TCP, port: 8317}]

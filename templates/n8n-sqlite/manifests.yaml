@@ -211,47 +211,6 @@ spec:
             port:
               number: 5678
 ---
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: n8n-sqlite-default-deny
-  namespace: '{{ .Namespace }}'
-spec:
-  podSelector: {matchLabels: {templates.zeabur.com/template: n8n-sqlite}}
-  policyTypes: [Ingress]
-  ingress: []
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: n8n
-  namespace: '{{ .Namespace }}'
-spec:
-  podSelector:
-    matchLabels:
-      templates.zeabur.com/template: n8n-sqlite
-      app: n8n
-  policyTypes: [Ingress]
-  ingress:
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: traefik
-      podSelector:
-        matchLabels:
-          app.kubernetes.io/name: traefik
-    ports:
-    - protocol: TCP
-      port: 5678
-  - from:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: n8n-sqlite
-          app: task-runner
-    ports:
-    - protocol: TCP
-      port: 5679
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:

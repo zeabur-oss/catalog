@@ -60,8 +60,7 @@ inputs:
 security:
   summary: >-
     The rootless image runs as UID 1000 with a read-only root filesystem, no
-    service-account token and all capabilities dropped. Only the ingress
-    controller and the template's own Pods can connect to it. Outbound traffic
+    service-account token and all capabilities dropped. Outbound traffic
     is not limited. Sign-up is closed and the install page is locked.
   risks:
     - risk: An unlocked install page lets the first visitor configure the server.
@@ -109,6 +108,11 @@ scalability:
     - A node-local default StorageClass, such as local-path, has no snapshots or failover.
 
 upgradeNotes:
+  - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy gitea-default-deny gitea gitea-db`.
   - >-
     New installs start without database backups. Installs made before this
     version keep their backups. To turn backups on, open the database in Zeabur

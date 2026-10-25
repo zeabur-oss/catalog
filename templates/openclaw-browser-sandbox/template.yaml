@@ -43,6 +43,7 @@ security:
     no privileges or API token, explicit approved-caller ingress only; outbound
     traffic is not limited. Chromium's renderer sandbox is disabled upstream, so
     a hostile page can take over the browser pod.
+  unauthenticated: [openclaw-sandbox-browser]
   risks:
     - risk: >-
         A malicious webpage compromises an unsandboxed Chromium process with the
@@ -72,6 +73,12 @@ scalability:
       profiles.
 
 upgradeNotes:
+  - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy openclaw-browser-sandbox-default-deny`.
+    openclaw-sandbox-browser-allow stays.
   - >-
     Breaking change: the trustOptIn input is removed. The template description
     now says the browser sandbox is for one owner. Remove trustOptIn from saved

@@ -58,6 +58,11 @@ scalability:
 
 upgradeNotes:
   - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy postgresql-pgvector-default-deny postgresql-connectivity`.
+  - >-
     New installs start without database backups. Installs made before this
     version keep their backups. To turn backups on, open the database in Zeabur
     and use the Backups tab.

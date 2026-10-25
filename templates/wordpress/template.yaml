@@ -99,7 +99,7 @@ inputs:
 security:
   summary: >-
     Restricted non-root application and MariaDB Pods, TLS-required database,
-    generated SQL credentials and default-deny ingress. Operator helper images
+    generated SQL credentials. Operator helper images
     are a catalog trust boundary.
   risks:
     - risk: >-
@@ -137,6 +137,11 @@ scalability:
     - A node-local default StorageClass has no HA, snapshots or cross-node failover.
 
 upgradeNotes:
+  - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy wordpress-default-deny wordpress mariadb-operator-paths`.
   - >-
     New installs start without database backups. Installs made before this
     version keep their backups. To turn backups on, open the database in Zeabur

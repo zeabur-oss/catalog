@@ -37,7 +37,7 @@ inputs:
 security:
   summary: >-
     Restricted non-root read-only container; authenticated API, no
-    service-account token, default-deny ingress. Outbound traffic is not
+    service-account token. Outbound traffic is not
     limited. Do not share one instance between untrusted tenants.
   risks:
     - risk: >-
@@ -55,8 +55,7 @@ security:
       mitigation: >-
         File protocol, GET-style browser calls and CORS are disabled. The
         template does not limit outbound traffic, so the browser can open
-        private, cluster and cloud metadata addresses. Pods of other templates
-        accept connections only from their own peers. Add an egress
+        private, cluster and cloud metadata addresses. Add an egress
         NetworkPolicy that blocks private ranges before untrusted clients use
         the API.
     - risk: >-
@@ -92,6 +91,11 @@ scalability:
       termination window drains short work only.
 
 upgradeNotes:
+  - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy browserless-default-deny browserless-allow-traffic`.
   - >-
     Breaking change: the licenseOptIn input is removed. The license is named in
     the template description. Remove licenseOptIn from saved values.

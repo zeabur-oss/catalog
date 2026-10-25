@@ -16,8 +16,8 @@ services:
 
 security:
   summary: >-
-    UID 1000, no capabilities, read-only image and private unauthenticated API;
-    only explicitly labeled same-namespace clients can connect.
+    UID 1000, no capabilities, read-only image and unauthenticated API that only explicitly labeled same-namespace clients can reach.
+  unauthenticated: [ollama]
   risks:
     - risk: Ollama API has no application authentication and permits model management.
       mitigation: >-
@@ -43,6 +43,11 @@ scalability:
     - Inference runs on CPU only. The template does not schedule GPUs.
 
 upgradeNotes:
+  - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy ollama-default-deny`. ollama-access stays.
   - >-
     Back up persistent state off-node before accepting an image digest or schema
     migration; restore into a separate namespace before cutover.

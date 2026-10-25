@@ -72,8 +72,7 @@ inputs:
 security:
   summary: >-
     Non-root, read-only root filesystem, restricted PSS, no Kubernetes token,
-    TLS ingress, default-deny ingress with Traefik as the only outside client.
-    Outbound traffic is not limited.
+    TLS ingress. Outbound traffic is not limited.
   risks:
     - risk: >-
         An AI assistant may execute commands and read all state and model
@@ -96,6 +95,11 @@ scalability:
   blockers: [Single-owner gateway and persistent state on one volume.]
 
 upgradeNotes:
+  - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy openclaw-default-deny openclaw-allow`.
   - >-
     Back up the complete openclaw-home PVC and generated gateway-token Secret
     before changing the pinned image.

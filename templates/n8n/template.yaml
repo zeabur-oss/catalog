@@ -117,6 +117,11 @@ scalability:
 
 upgradeNotes:
   - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy n8n-default-deny n8n n8n-db`.
+  - >-
     Breaking change: the licenseOptIn input is removed. The license is named in
     the template description. Remove licenseOptIn from saved values.
   - >-

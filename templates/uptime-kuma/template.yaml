@@ -20,7 +20,7 @@ services:
 security:
   summary: >-
     Namespaced, digest-pinned non-root workloads with read-only roots, no API
-    token, dropped capabilities and default-deny ingress. Outbound traffic is
+    token, dropped capabilities. Outbound traffic is
     not limited.
   risks:
     - risk: The first visitor can claim an uninitialized installation.
@@ -60,6 +60,11 @@ scalability:
       an application-specific storage/database design.
 
 upgradeNotes:
+  - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy uptime-kuma-default-deny uptime-kuma-network`.
   - >-
     Back up persistent application data and its database to storage outside the
     node before updating the image digest.

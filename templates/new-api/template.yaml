@@ -53,8 +53,7 @@ security:
     - risk: First-visitor administrator takeover during uninitialized public deployment.
       mitigation: >-
         PostStart invokes supported /api/setup with generated password before
-        readiness permits Service endpoints. NetworkPolicy accepts app ingress
-        only from Traefik. No known root credential is created by this setup
+        readiness permits Service endpoints. No known root credential is created by this setup
         flow.
     - risk: >-
         Gateway handles provider API keys, accounts and billing data; configured
@@ -84,6 +83,11 @@ scalability:
       design and a single schema-migration leader.
 
 upgradeNotes:
+  - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy new-api-default-deny new-api newapi-db`.
   - >-
     New installs start without database backups. Installs made before this
     version keep their backups. To turn backups on, open the database in Zeabur

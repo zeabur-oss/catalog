@@ -145,42 +145,6 @@ spec:
         configMap:
           name: openclaw-bootstrap
 ---
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: openclaw-default-deny
-  namespace: '{{ .Namespace }}'
-  labels:
-    app.kubernetes.io/name: openclaw-default-deny
-spec:
-  podSelector: {matchLabels: {templates.zeabur.com/template: openclaw}}
-  policyTypes: [Ingress]
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: openclaw-allow
-  namespace: '{{ .Namespace }}'
-  labels:
-    app.kubernetes.io/name: openclaw-allow
-spec:
-  podSelector:
-    matchLabels:
-      templates.zeabur.com/template: openclaw
-      app.kubernetes.io/name: openclaw
-  policyTypes: [Ingress]
-  ingress:
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: traefik
-      podSelector:
-        matchLabels:
-          app.kubernetes.io/name: traefik
-    ports:
-    - protocol: TCP
-      port: 18789
----
 apiVersion: v1
 kind: Service
 metadata:

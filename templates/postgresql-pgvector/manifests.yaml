@@ -30,37 +30,3 @@ spec:
     parameters:
       shared_buffers: 128MB
       max_connections: '100'
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: postgresql-pgvector-default-deny
-  namespace: {{ .Namespace }}
-spec:
-  podSelector: {matchLabels: {templates.zeabur.com/template: postgresql-pgvector}}
-  policyTypes: [Ingress]
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: postgresql-connectivity
-  namespace: {{ .Namespace }}
-spec:
-  podSelector:
-    matchLabels: {cnpg.io/cluster: postgresql, templates.zeabur.com/template: postgresql-pgvector}
-  policyTypes: [Ingress]
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels: {templates.zeabur.com/postgresql-client: 'true', templates.zeabur.com/template: postgresql-pgvector}
-      ports: [{protocol: TCP, port: 5432}]
-    - from:
-        - namespaceSelector:
-            matchLabels: {kubernetes.io/metadata.name: cnpg-system}
-          podSelector:
-            matchLabels: {app.kubernetes.io/name: cloudnative-pg}
-      ports: [{protocol: TCP, port: 8000}, {protocol: TCP, port: 5432}]
-    - from:
-        - podSelector:
-            matchLabels: {cnpg.io/cluster: postgresql, templates.zeabur.com/template: postgresql-pgvector}
-      ports: [{protocol: TCP, port: 5432}, {protocol: TCP, port: 8000}]

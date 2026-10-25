@@ -36,14 +36,6 @@ spec:
             limits: {cpu: 100m, memory: 32Mi}
           readinessProbe: {tcpSocket: {port: 8080}}
           livenessProbe: {tcpSocket: {port: 8080}}
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata: {name: app-default-deny}
-spec:
-  podSelector: {matchLabels: {templates.zeabur.com/template: app}}
-  policyTypes: [Ingress]
-  ingress: []
 `
 
 // allow returns a NetworkPolicy that allows ingress to the template's pods from peer.
@@ -77,10 +69,7 @@ func TestSafetyRejectsPrivilegeAndNetworkEscapes(t *testing.T) {
 		"lifecycle-host":                  {strings.Replace(safeManifest, "          readinessProbe:", "          lifecycle: {preStop: {httpGet: {host: 127.0.0.1, path: /, port: 10250}}}\n          readinessProbe:", 1), templates.ErrPodSecurity},
 		"tag":                             {strings.Replace(safeManifest, "example.test/app@sha256:"+strings.Repeat("a", 64), "example.test/app:latest", 1), templates.ErrImageDigest},
 		"namespace":                       {strings.Replace(safeManifest, "name: app\nspec:", "name: app\n  namespace: kube-system\nspec:", 1), templates.ErrNamespaceEscape},
-		"network":                         {strings.Replace(safeManifest, "policyTypes: [Ingress]", "policyTypes: [Ingress, Egress]", 1), templates.ErrDefaultDeny},
 		"pod-label":                       {strings.Replace(safeManifest, "labels: {app: app, templates.zeabur.com/template: app}", "labels: {app: app}", 1), templates.ErrTemplateLabel},
-		"deny-selects-namespace":          {strings.Replace(safeManifest, "podSelector: {matchLabels: {templates.zeabur.com/template: app}}", "podSelector: {}", 1), templates.ErrDefaultDeny},
-		"deny-name":                       {strings.Replace(safeManifest, "name: app-default-deny", "name: default-deny", 1), templates.ErrDefaultDeny},
 		"peer-without-label":              {safeManifest + allow("{podSelector: {matchLabels: {app: other}}}"), templates.ErrForeignPods},
 		"peer-whole-namespace":            {safeManifest + allow("{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: test}}}"), templates.ErrForeignPods},
 		"storage-class":                   {safeManifest + "---\napiVersion: v1\nkind: PersistentVolumeClaim\nmetadata: {name: data}\nspec: {storageClassName: local-path}\n", templates.ErrStorageClass},
@@ -142,5 +131,28 @@ func TestRestrictedAllowsIsolatedPingWithoutAllowingHostSysctls(t *testing.T) {
 				t.Fatalf("got %v, want %v", err, tc.rule)
 			}
 		})
+	}
+}
+
+func TestUnauthenticatedServiceNeedsIngressPolicy(t *testing.T) {
+	r := &templates.Template{ID: "app", Services: []templates.Service{{Name: "app"}, {Name: "cache"}}}
+	if err := templates.Safety(r, []byte(safeManifest), "test"); err != nil {
+		t.Fatalf("no policy for a service that has its own sign-in: %v", err)
+	}
+	r.Security.Unauthenticated = []string{"app"}
+	if err := templates.Safety(r, []byte(safeManifest), "test"); !errors.Is(err, templates.ErrIngressPolicy) {
+		t.Fatalf("unauthenticated service without policy: got %v", err)
+	}
+	named := strings.Replace(allow("{podSelector: {matchLabels: {templates.zeabur.com/template: app}}}"), "template: app}}\n  policyTypes", "template: app, app: app}}\n  policyTypes", 1)
+	if err := templates.Safety(r, []byte(safeManifest+named), "test"); err != nil {
+		t.Fatalf("unauthenticated service with policy: %v", err)
+	}
+	other := &templates.Template{ID: "app", Services: r.Services, Security: templates.Security{Unauthenticated: []string{"cache"}}}
+	if err := templates.Safety(other, []byte(safeManifest+named), "test"); !errors.Is(err, templates.ErrIngressPolicy) {
+		t.Fatalf("policy that names another service: got %v", err)
+	}
+	other.Security.Unauthenticated = []string{"missing"}
+	if err := templates.Safety(other, []byte(safeManifest), "test"); !errors.Is(err, templates.ErrUnknownService) {
+		t.Fatalf("unknown service: got %v", err)
 	}
 }

@@ -56,6 +56,7 @@ security:
     read-only roots. The editor, webhooks and forms are open on the public HTTPS
     domain. Runners reach only n8n and DNS; other outbound traffic is not
     limited. CNPG owns scoped database RBAC/tokens.
+  unauthenticated: [n8n-runners]
   risks:
     - risk: >-
         n8n is fair-code under the Sustainable Use License, which restricts use
@@ -75,6 +76,12 @@ security:
         design. Limit authors to trusted operators; the instance is no sandbox
         for untrusted tenant workflows. Community package installation is
         disabled.
+    - risk: >-
+        The runners execute workflow code and have no sign-in of their own.
+      mitigation: >-
+        They keep a NetworkPolicy that admits no incoming connections and lets
+        them reach only n8n and DNS. It is the only NetworkPolicy in the
+        template; namespace isolation covers the rest.
     - risk: >-
         CNPG instance managers require Kubernetes API permissions.
       mitigation: >-
@@ -102,6 +109,12 @@ scalability:
       PVC and encrypted app-secrets off-node.
 
 upgradeNotes:
+  - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy n8n-ai-brain-default-deny n8n-network n8n-internal
+    n8n-db-connectivity`. n8n-runners-network stays.
   - >-
     New installs start without database backups. Installs made before this
     version keep their backups. To turn backups on, open the database in Zeabur

@@ -139,35 +139,3 @@ spec:
             name: uptime-kuma
             port:
               number: 3001
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: uptime-kuma-default-deny
-  namespace: '{{ .Namespace }}'
-spec:
-  podSelector: {matchLabels: {templates.zeabur.com/template: uptime-kuma}}
-  policyTypes: [Ingress]
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: uptime-kuma-network
-  namespace: '{{ .Namespace }}'
-spec:
-  podSelector:
-    matchLabels:
-      templates.zeabur.com/template: uptime-kuma
-      app.kubernetes.io/name: uptime-kuma
-  policyTypes: [Ingress]
-  ingress:
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: traefik
-      podSelector:
-        matchLabels:
-          app.kubernetes.io/name: traefik
-    ports:
-    - protocol: TCP
-      port: 3001

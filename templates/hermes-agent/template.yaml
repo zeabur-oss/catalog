@@ -95,8 +95,7 @@ inputs:
 security:
   summary: >-
     Restricted pod as UID 10000 with no capabilities, no escalation, read-only
-    root, bounded writable paths, authenticated API, messaging deny-by-default
-    and default-deny ingress. Outbound traffic is not limited.
+    root, bounded writable paths, authenticated API, messaging deny-by-default. Outbound traffic is not limited.
   risks:
     - risk: >-
         Agent tools invoke subprocesses and execute code from high-trust users.
@@ -136,6 +135,11 @@ scalability:
     - Provider quotas and CPU/memory limit concurrent browser/tool subprocesses.
 
 upgradeNotes:
+  - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy hermes-agent-default-deny hermes-traffic`.
   - >-
     Breaking change: the adminCidr input and its allowlist are removed. The
     dashboard is open to anyone who can reach adminDomain and signs in with the

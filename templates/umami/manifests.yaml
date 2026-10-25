@@ -204,38 +204,6 @@ spec:
             port:
               number: 3000
 ---
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: umami-default-deny
-  namespace: '{{ .Namespace }}'
-spec:
-  podSelector: {matchLabels: {templates.zeabur.com/template: umami}}
-  policyTypes: [Ingress]
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: umami
-  namespace: '{{ .Namespace }}'
-spec:
-  podSelector:
-    matchLabels:
-      templates.zeabur.com/template: umami
-      app.kubernetes.io/name: umami
-  policyTypes: [Ingress]
-  ingress:
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: traefik
-      podSelector:
-        matchLabels:
-          app.kubernetes.io/name: traefik
-    ports:
-    - protocol: TCP
-      port: 3000
----
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
@@ -273,46 +241,3 @@ spec:
     parameters:
       shared_buffers: 128MB
       max_connections: '100'
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: umami-db
-  namespace: '{{ .Namespace }}'
-spec:
-  podSelector:
-    matchLabels:
-      templates.zeabur.com/template: umami
-      cnpg.io/cluster: umami-db
-  policyTypes: [Ingress]
-  ingress:
-  - from:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: umami
-          app.kubernetes.io/name: umami
-    ports:
-    - protocol: TCP
-      port: 5432
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: cnpg-system
-      podSelector:
-        matchLabels:
-          app.kubernetes.io/name: cloudnative-pg
-    ports:
-    - protocol: TCP
-      port: 5432
-    - protocol: TCP
-      port: 8000
-  - from:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: umami
-          cnpg.io/cluster: umami-db
-    ports:
-    - protocol: TCP
-      port: 5432
-    - protocol: TCP
-      port: 8000

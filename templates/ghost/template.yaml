@@ -89,8 +89,7 @@ inputs:
 security:
   summary: >-
     Namespaced, digest-pinned non-root workloads with read-only roots, no API
-    token, dropped capabilities and default-deny ingress. MySQL has no outbound
-    access; outbound traffic from Ghost is not limited.
+    token, dropped capabilities. Outbound traffic is not limited.
   risks:
     - risk: The initial Ghost setup page allows the first visitor to create the site owner.
       mitigation: >-
@@ -124,6 +123,11 @@ scalability:
       replicas without an application-specific storage/database design.
 
 upgradeNotes:
+  - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy ghost-default-deny ghost-network ghost-mysql-network`.
   - >-
     Back up persistent application data and its database to storage outside the
     node before updating the image digest.

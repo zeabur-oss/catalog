@@ -243,7 +243,7 @@ inputs:
   #   generate: random
   #   secret: {name: n8n-secrets, key: encryption-key}
 
-security: {...}      # summary, risks with mitigations
+security: {...}      # summary, risks with mitigations, unauthenticated services
 scalability: {...}   # replica range and what blocks more
 upgradeNotes: []     # what an upgrade needs
 smoke: []            # resource condition, then an HTTP or SQL check
@@ -279,7 +279,7 @@ objects reference Secrets and never contain generated values.
    template. The ID is lowercase words joined by hyphens, at most 49
    characters.
 2. Meet the [template standards](docs/template-standards.md): pinned images,
-   Restricted Pod Security, a NetworkPolicy that denies ingress, resource
+   Restricted Pod Security, an ingress NetworkPolicy for any service without its own sign-in, resource
    limits, backups for state, and honest scaling limits.
 3. Add smoke checks that prove the application answers: a resource condition,
    and an HTTP or SQL check.

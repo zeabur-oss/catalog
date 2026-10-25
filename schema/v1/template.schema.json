@@ -47,6 +47,12 @@
       "required": ["summary", "risks"],
       "properties": {
         "summary": { "$ref": "#/$defs/text" },
+        "unauthenticated": {
+          "type": "array",
+          "description": "Services with no sign-in or key of their own. Each needs an ingress NetworkPolicy; the risks say why.",
+          "uniqueItems": true,
+          "items": { "type": "string" }
+        },
         "risks": {
           "type": "array",
           "items": {

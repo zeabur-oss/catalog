@@ -32,8 +32,7 @@ inputs:
 security:
   summary: >-
     Runs as UID 1000 with a read-only root filesystem, no service-account token
-    and all capabilities dropped. Only the ingress controller and the template's
-    own Pods can connect to it. Outbound traffic is not limited. Anonymous users
+    and all capabilities dropped. Outbound traffic is not limited. Anonymous users
     cannot read or write topics.
   risks:
     - risk: By default ntfy lets anyone publish to and read any topic.
@@ -64,6 +63,11 @@ scalability:
     - A node-local default StorageClass, such as local-path, has no snapshots or failover.
 
 upgradeNotes:
+  - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy ntfy-default-deny ntfy`.
   - >-
     Copy user.db off the node before you change the image digest. It holds
     users, access rules and tokens. cache.db and attachments are temporary.

@@ -164,11 +164,15 @@ scalability:
       single-instance; no app HPA.
     - >-
       Compatible catalog CNPG and Percona operators plus real provider Secrets
-      must exist. NetworkPolicies select the operators
-      in namespaces psmdb-operator and cnpg-system; adjust them for other
-      install locations.
+      must exist.
 
 upgradeNotes:
+  - >-
+    Breaking change: the template no longer ships its default-deny and per-pod
+    NetworkPolicies, because the installer isolates project namespaces. Applying
+    this version does not delete the old ones. Delete them with `kubectl delete
+    networkpolicy librechat-default-deny librechat-access rag-api-access
+    meilisearch-access mongodb-access rag-db-access`.
   - >-
     Breaking change: the licenseOptIn input is removed. The SSPL-1.0 license is
     named in the template description. Remove licenseOptIn from saved values.

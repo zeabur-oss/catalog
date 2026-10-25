@@ -225,38 +225,6 @@ spec:
             port:
               number: 3000
 ---
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: gitea-default-deny
-  namespace: '{{ .Namespace }}'
-spec:
-  podSelector: {matchLabels: {templates.zeabur.com/template: gitea}}
-  policyTypes: [Ingress]
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: gitea
-  namespace: '{{ .Namespace }}'
-spec:
-  podSelector:
-    matchLabels:
-      templates.zeabur.com/template: gitea
-      app.kubernetes.io/name: gitea
-  policyTypes: [Ingress]
-  ingress:
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: traefik
-      podSelector:
-        matchLabels:
-          app.kubernetes.io/name: traefik
-    ports:
-    - protocol: TCP
-      port: 3000
----
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
@@ -292,46 +260,3 @@ spec:
     parameters:
       shared_buffers: 128MB
       max_connections: '100'
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: gitea-db
-  namespace: '{{ .Namespace }}'
-spec:
-  podSelector:
-    matchLabels:
-      templates.zeabur.com/template: gitea
-      cnpg.io/cluster: gitea-db
-  policyTypes: [Ingress]
-  ingress:
-  - from:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: gitea
-          app.kubernetes.io/name: gitea
-    ports:
-    - protocol: TCP
-      port: 5432
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: cnpg-system
-      podSelector:
-        matchLabels:
-          app.kubernetes.io/name: cloudnative-pg
-    ports:
-    - protocol: TCP
-      port: 5432
-    - protocol: TCP
-      port: 8000
-  - from:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: gitea
-          cnpg.io/cluster: gitea-db
-    ports:
-    - protocol: TCP
-      port: 5432
-    - protocol: TCP
-      port: 8000
