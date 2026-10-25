@@ -5,7 +5,8 @@ metadata:
   description: >
     An OCI registry inside the cluster for the images Zeabur Builder builds, so
     builds need no external registry account. Optional: it serves only images
-    pushed to it, and nodes must trust its CA to pull.
+    pushed to it. Nodes pull from it at the fixed address of the cluster-ip
+    input, and must trust its CA.
   license: Apache-2.0
   homepage: https://zotregistry.dev
 maturity: cncf-sandbox
@@ -15,8 +16,20 @@ defaults:
 persistsData: true
 requires: [certificates]
 
+inputs:
+  # A node's container runtime cannot resolve zot.zot.svc. With a fixed
+  # ClusterIP, a registry mirror on each node (k3s and RKE2 registries.yaml)
+  # sends zot.zot.svc:5000 there, and the certificate names that address.
+  - name: cluster-ip
+    description: >
+      A free address in the cluster's Service CIDR for the registry's Service,
+      such as 10.43.0.50 on k3s and RKE2. Nodes pull through a registry mirror
+      to it. Left out: an address is assigned and only pods reach the registry.
+    release: zot
+    path: service.clusterIP
+
 releases:
-  # Before the chart: the pod mounts zot-tls and starts once it exists.
+  # Before the chart: the CA that signs zot-tls.
   - name: tls
     namespace: zot
     manifests: |
@@ -58,28 +71,6 @@ releases:
       spec:
         ca:
           secretName: zot-ca
-      ---
-      # The serving certificate. localhost and 127.0.0.1 let nodes pull
-      # through a loopback port-forward or mirror; no node addresses, which
-      # differ per cluster. zot reloads it when cert-manager renews it.
-      apiVersion: cert-manager.io/v1
-      kind: Certificate
-      metadata:
-        name: zot-tls
-        namespace: zot
-      spec:
-        secretName: zot-tls
-        dnsNames:
-          - zot.zot.svc
-          - zot.zot.svc.cluster.local
-          - localhost
-        ipAddresses: [127.0.0.1]
-        privateKey:
-          algorithm: ECDSA
-          size: 256
-        issuerRef:
-          kind: Issuer
-          name: zot-ca
 
   - name: zot
     namespace: zot
@@ -92,17 +83,45 @@ releases:
         # default is NodePort).
         type: ClusterIP
         port: 5000
+        # Set by the cluster-ip input; the certificate below names it.
+        clusterIP: ""
       httpGet:
         # The probes must speak TLS once zot does.
         scheme: HTTPS
       # StatefulSet with a volumeClaimTemplate; images survive restarts.
       persistence: true
-      # zot-tls from the tls release; /etc/zot holds the config.
+      # zot-tls from the certificate below; /etc/zot holds the config.
       externalSecrets:
         - secretName: zot-tls
           mountPath: /tls
       # Mount configFiles below as /etc/zot/config.json.
       mountConfig: true
+      extraObjects:
+        # The serving certificate; the pod starts once its Secret exists.
+        # localhost and 127.0.0.1 let a node pull through a loopback
+        # port-forward; the last address is the fixed ClusterIP, or ::1 when
+        # there is none. zot reloads the certificate when cert-manager renews
+        # it.
+        - apiVersion: cert-manager.io/v1
+          kind: Certificate
+          metadata:
+            name: zot-tls
+            namespace: zot
+          spec:
+            secretName: zot-tls
+            dnsNames:
+              - zot.zot.svc
+              - zot.zot.svc.cluster.local
+              - localhost
+            ipAddresses:
+              - 127.0.0.1
+              - '{{ .Values.service.clusterIP | default "::1" }}'
+            privateKey:
+              algorithm: ECDSA
+              size: 256
+            issuerRef:
+              kind: Issuer
+              name: zot-ca
       configFiles:
         # No search or UI extensions: they keep an index in memory. No
         # read/write timeouts: the chart's 60s cuts off large layer pushes.
@@ -180,10 +199,11 @@ security:
         credential. A NetworkPolicy can limit pushes to Builder's namespace.
     - risk: Nodes refuse to pull until they trust its CA, and a node told to skip verification trusts anything at that address.
       mitigation: >
-        Install ca.crt from the zot-tls Secret on every node, in
-        /etc/containerd/certs.d/<host>/ca.crt or k3s registries.yaml
-        (configs.<host>.tls.ca_file), and in buildkitd's registry config;
-        never set insecure_skip_verify.
+        Set the cluster-ip input, and on every node mirror zot.zot.svc:5000 to
+        https://<cluster-ip>:5000 with ca.crt from the zot-tls Secret as the
+        mirror's CA: k3s or RKE2 registries.yaml (configs.<cluster-ip>:5000.tls.ca_file),
+        or /etc/containerd/certs.d/zot.zot.svc:5000/hosts.toml. zeabur-installer
+        does both. Give buildkitd the same CA; never set insecure_skip_verify.
 
 smoke:
   - name: ready
