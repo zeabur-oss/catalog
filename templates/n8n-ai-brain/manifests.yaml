@@ -56,6 +56,13 @@ spec:
             - name: N8N_RUNNERS_AUTH_TOKEN
               valueFrom:
                 secretKeyRef: {name: app-secrets, key: runner-token}
+            - {name: N8N_INSTANCE_OWNER_MANAGED_BY_ENV, value: 'true'}
+            - {name: N8N_INSTANCE_OWNER_EMAIL, value: '{{ .Inputs.ownerEmail }}'}
+            - {name: N8N_INSTANCE_OWNER_FIRST_NAME, value: Instance}
+            - {name: N8N_INSTANCE_OWNER_LAST_NAME, value: Owner}
+            - name: OWNER_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: app-secrets, key: owner-password}
             - {name: N8N_RUNNERS_MODE, value: external}
             - {name: N8N_RUNNERS_BROKER_LISTEN_ADDRESS, value: '0.0.0.0'}
             - {name: N8N_NATIVE_PYTHON_RUNNER, value: 'true'}
@@ -70,6 +77,13 @@ spec:
             - {name: N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS, value: 'true'}
             - {name: N8N_BLOCK_ENV_ACCESS_IN_NODE, value: 'true'}
             - {name: N8N_COMMUNITY_PACKAGES_ENABLED, value: 'false'}
+          command:
+            - tini
+            - --
+            - /bin/sh
+            - -ec
+            - export N8N_INSTANCE_OWNER_PASSWORD_HASH="$(node -e 'process.stdout.write(require("/usr/local/lib/node_modules/n8n/node_modules/bcryptjs").hashSync(process.env.OWNER_PASSWORD,12))')";
+              unset OWNER_PASSWORD; exec /docker-entrypoint.sh start
           ports:
             - {name: http, containerPort: 5678}
             - {name: broker, containerPort: 5679}

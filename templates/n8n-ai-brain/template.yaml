@@ -32,6 +32,25 @@ services:
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}
 
 inputs:
+  - name: ownerEmail
+    label: Owner email
+    locales:
+      zh-TW:
+        label: 擁有者 Email
+        description: "n8n 擁有者帳號的 Email，第一次有人連進來之前就會建立好。密碼會自動產生，放在機密 app-secrets 的 owner-password。"
+      zh-CN:
+        label: 所有者邮箱
+        description: "n8n 所有者账号的邮箱，第一次有人访问之前就会创建好。密码会自动生成，放在机密 app-secrets 的 owner-password。"
+    description: >-
+      Owner email; the account is provisioned before the first public request.
+      The password is generated in app-secrets/owner-password.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
+  - name: ownerPassword
+    description: Generated owner password; preserve it across upgrades.
+    generate: random
+    secret: {name: app-secrets, key: owner-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: encryptionKey
     description: >-
       Encryption key for stored workflow credentials. Preserve permanently with
@@ -66,12 +85,13 @@ security:
         internal-business, personal or noncommercial grants, or obtain a
         separate license.
     - risk: >-
-        Initial owner signup is unauthenticated; workflow authors can access
+        Workflow authors can access
         connected credentials and public webhook triggers can be abused.
       mitigation: >-
-        Create the first owner right after the deploy finishes. The editor,
-        webhooks and forms are open to anyone who can reach the domain; n8n has
-        its own sign-in. To limit who can reach them, add an IP limit in the
+        The owner is created before n8n starts, from ownerEmail and a generated
+        password in app-secrets/owner-password, so no visitor can claim it. The
+        editor, webhooks and forms are open to anyone who can reach the domain;
+        n8n has its own sign-in. To limit who can reach them, add an IP limit in the
         service's network settings. Authenticate each webhook in workflow
         design. Limit authors to trusted operators; the instance is no sandbox
         for untrusted tenant workflows. Community package installation is
@@ -132,6 +152,10 @@ upgradeNotes:
     migration notes and PostgreSQL minor changes; never change database major
     through an ordinary digest update. Do not downgrade n8n after it has
     migrated the database.
+  - >-
+    Breaking change: ownerEmail is a new required input. The owner now comes
+    from deployment variables, as in the n8n template: change the password by
+    editing app-secrets/owner-password and restarting n8n.
   - >-
     Breaking change: the adminCidr and licenseOptIn inputs are removed, and so
     are the admin allowlist and the separate webhook route. The editor and all
