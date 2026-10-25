@@ -102,7 +102,9 @@ security:
     Restricted non-root app pods with read-only images and no API token.
     TLS/authenticated Percona operands remain restricted with one writable-root
     exception for hardcoded /tmp TLS material. CNPG uses scoped operator-managed
-    tokens.
+    tokens. mongod requires client certificates: LibreChat presents a 90-day
+    client-auth certificate from the cluster CA, renewed by cert-manager, and
+    restarts when it changes.
   egress:
     - Explicit internal Mongo27017, Meili7700, RAG8000, PostgreSQL5432 flows.
     - CoreDNS TCP/UDP53; public HTTPS443 for application providers.

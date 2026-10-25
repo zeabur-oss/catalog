@@ -10,7 +10,7 @@ data:
     process.chdir('/app');
     process.env.CREDS_KEY = Buffer.from(process.env.CREDS_KEY_SEED, 'base64url').toString('hex');
     process.env.CREDS_IV = Buffer.from(process.env.CREDS_IV_SEED, 'base64url').subarray(0, 16).toString('hex');
-    process.env.MONGO_URI = `mongodb://librechat:${encodeURIComponent(process.env.MONGO_PASSWORD)}@mongodb-rs0-0.mongodb-rs0.{{ .Namespace }}.svc.cluster.local:27017/LibreChat?authSource=admin&replicaSet=rs0&tls=true&tlsCAFile=/mongo-tls/ca.crt`;
+    process.env.MONGO_URI = `mongodb://librechat:${encodeURIComponent(process.env.MONGO_PASSWORD)}@mongodb-rs0-0.mongodb-rs0.{{ .Namespace }}.svc.cluster.local:27017/LibreChat?authSource=admin&replicaSet=rs0&tls=true&tlsCAFile=/mongo-tls/ca.crt&tlsCertificateKeyFile=/mongo-client/client.pem`;
     if (process.argv[2] === 'init') {
       for (const name of ['data', 'uploads', 'logs', 'images', 'skill']) require('node:fs').mkdirSync('/persistent/' + name, {recursive: true});
       // The upstream administrative CLI uses the same registration service as the app.
@@ -26,6 +26,18 @@ data:
         if (child.status !== 0) throw new Error('Upstream account creation failed');
       })().catch(error => { console.error(error.message); process.exitCode = 1; });
     } else {
+      // The driver reads the client certificate once. Exit after cert-manager renews it, so that the container restarts with the new one.
+      const fs = require('node:fs');
+      const loaded = fs.readFileSync('/mongo-client/client.pem');
+      setInterval(() => {
+        try {
+          if (fs.readFileSync('/mongo-client/client.pem').equals(loaded)) return;
+        } catch {
+          return;
+        }
+        console.log('MongoDB client certificate renewed; restarting');
+        process.exit(0);
+      }, 60000).unref();
       require('/app/api/server/index.js');
     }
   librechat.yaml: 'version: 1.2.1
@@ -217,6 +229,9 @@ spec:
         - &id031
           name: mongo-tls
           mountPath: /mongo-tls
+        - &id033
+          name: mongo-client
+          mountPath: /mongo-client
           readOnly: true
         - &id032
           name: tmp
@@ -257,6 +272,12 @@ spec:
           items:
           - key: ca.crt
             path: ca.crt
+      - name: mongo-client
+        secret:
+          secretName: librechat-mongodb-client
+          items:
+          - key: tls-combined.pem
+            path: client.pem
       - name: tmp
         emptyDir:
           sizeLimit: 1Gi
@@ -339,6 +360,31 @@ spec:
         - *id030
         - *id031
         - *id032
+        - *id033
+---
+# mongod requires a client certificate. Percona's operator issues the cluster TLS from the Issuer mongodb-psmdb-issuer.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: librechat-mongodb-client
+  namespace: '{{ .Namespace }}'
+spec:
+  secretName: librechat-mongodb-client
+  commonName: librechat
+  duration: 2160h
+  renewBefore: 720h
+  usages:
+  - client auth
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  additionalOutputFormats:
+  - type: CombinedPEM
+  issuerRef:
+    group: cert-manager.io
+    kind: Issuer
+    name: mongodb-psmdb-issuer
 ---
 apiVersion: v1
 kind: Service
@@ -946,11 +992,6 @@ spec:
     env:
     - name: GLIBC_TUNABLES
       value: glibc.pthread.rseq=1
-    # LibreChat signs in with a password over TLS and has no client certificate.
-    configuration: |
-      net:
-        tls:
-          allowConnectionsWithoutCertificates: true
     affinity:
       antiAffinityTopologyKey: kubernetes.io/hostname
     podSecurityContext:
