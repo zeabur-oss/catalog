@@ -110,9 +110,7 @@ templates:
       mongoBackupSecret: e2e-s3
     setup: *provider
     skipSmoke:
-      mongodb-initial-backup: >-
-        Percona's s3 storage takes no custom CA, and the test gateway's
-        certificate comes from a test CA.
+      mongodb-initial-backup: The e2e test turns off Percona backups.
   litellm:
     inputs: {licenseOptIn: I-ACCEPT-LITELLM-ENTERPRISE-LICENSE}
   lobechat:

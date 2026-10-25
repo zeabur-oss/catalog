@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -190,6 +191,9 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues,
 			return nil, err
 		}
 	}
+	if manifest, err = disablePerconaBackups(manifest); err != nil {
+		return err
+	}
 	if _, err := kubectl(manifest, "apply", "-n", ns, "-f", "-"); err != nil {
 		return nil, err
 	}
@@ -376,4 +380,39 @@ func ReadValues(path string) (map[string]string, error) {
 		return nil, fmt.Errorf("%s: want a JSON object of strings: %v", path, err)
 	}
 	return values, nil
+}
+
+// disablePerconaBackups sets spec.backup.enabled to false on each
+// PerconaServerMongoDB. The e2e test does not test backups. Without this
+// change, the cluster stays initializing while the backup agent cannot reach
+// its storage.
+func disablePerconaBackups(manifest []byte) ([]byte, error) {
+	docs, err := DecodeDocuments(manifest)
+	if err != nil {
+		return nil, err
+	}
+	patched := false
+	for _, doc := range docs {
+		if text(doc["apiVersion"]) != "psmdb.percona.com/v1" || text(doc["kind"]) != "PerconaServerMongoDB" {
+			continue
+		}
+		if backup := object(object(doc["spec"])["backup"]); backup != nil {
+			backup["enabled"] = false
+			patched = true
+		}
+	}
+	if !patched {
+		return manifest, nil
+	}
+	var out bytes.Buffer
+	for _, doc := range docs {
+		b, err := json.Marshal(doc)
+		if err != nil {
+			return nil, err
+		}
+		out.WriteString("---\n")
+		out.Write(b)
+		out.WriteString("\n")
+	}
+	return out.Bytes(), nil
 }
