@@ -114,6 +114,21 @@ releases:
         scheme: HTTPS
       # StatefulSet with a volumeClaimTemplate; images survive restarts.
       persistence: true
+      # The restricted Pod Security level. The image has no user of its own,
+      # so any UID works; fsGroup gives it the volume and the mounted Secrets.
+      podSecurityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      securityContext:
+        # A process gains no privilege that its parent lacks.
+        allowPrivilegeEscalation: false
+        capabilities:
+          # zot binds port 5000 and needs no capability.
+          drop: [ALL]
       extraObjects:
         # The serving certificate; the pod starts once its Secret exists.
         # localhost and 127.0.0.1 let a node pull through a loopback
@@ -279,9 +294,16 @@ smoke:
         template:
           spec:
             restartPolicy: Never
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: 65532
+              seccompProfile: {type: RuntimeDefault}
             containers:
               - name: curl
                 image: curlimages/curl:8.23.0
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities: {drop: [ALL]}
                 args: [-sSf, --cacert, /tls/ca.crt, "https://zot.zot.svc:5000/v2/"]
                 volumeMounts: [{name: tls, mountPath: /tls}]
             volumes: [{name: tls, secret: {secretName: zot-tls}}]
