@@ -106,6 +106,15 @@
   ],
   "packageRules": [
     {
+      "description": "go.sum changes the vendorHash in flake.nix; CI's nix build .#release prints the new one.",
+      "matchManagers": [
+        "gomod"
+      ],
+      "postUpdateOptions": [
+        "gomodTidy"
+      ]
+    },
+    {
       "description": "Each upstream gets its own pull request, so CI tests one change at a time",
       "matchFileNames": [
         "components/**"
