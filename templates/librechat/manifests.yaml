@@ -1041,6 +1041,12 @@ spec:
   - name: rs0
     size: 3
     serviceAccountName: mongodb-operand
+    # The image sets glibc.pthread.rseq=0, so TCMalloc takes rseq for per-CPU caches.
+    # Kernels 6.19 to 7.0.13 break that, and mongod 8.0 then exits at start (SERVER-121912).
+    # With rseq kept by glibc, TCMalloc uses per-thread caches and mongod starts.
+    env:
+    - name: GLIBC_TUNABLES
+      value: glibc.pthread.rseq=1
     affinity:
       antiAffinityTopologyKey: kubernetes.io/hostname
     podSecurityContext:

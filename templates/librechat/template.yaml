@@ -223,6 +223,10 @@ upgradeNotes:
     PostgreSQL major versions through a CNPG migration and check pgvector
     compatibility.
   - >-
+    mongod runs with GLIBC_TUNABLES=glibc.pthread.rseq=1, so TCMalloc uses
+    per-thread caches. Without it, MongoDB 8.0 exits at start on Linux 6.19
+    to 7.0.13 and on Ubuntu 7.0 kernels (SERVER-121912, SERVER-136848).
+  - >-
     CNPG takes a daily base backup at 02:00 UTC and keeps 7 days of WAL and base
     backups. PBM takes a daily logical MongoDB backup and keeps seven;
     point-in-time recovery is off.
