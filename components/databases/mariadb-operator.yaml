@@ -33,7 +33,7 @@ releases:
     namespace: mariadb-operator
     repo: https://helm.mariadb.com/mariadb-operator
     chart: mariadb-operator
-    version: 26.10.1
+    version: 26.10.2
     chartDigest: sha256:c569d8ae12fcd62c21c5b9c5e0acf33a5895d60ac040eb68ce7f5c55c8b8b81a
     values: |
       # Pinned by digest; a tag alone can move.
