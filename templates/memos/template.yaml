@@ -56,12 +56,12 @@ security:
         allows only public IPv4 on TCP 80 and 443.
 
 scalability:
-  summary: One instance with SQLite on a 10Gi node-local volume.
+  summary: One instance with SQLite on a 10Gi volume.
   replicas: 1
   maxReplicas: 1
   blockers:
     - SQLite allows one writer. More replicas need MySQL or PostgreSQL.
-    - local-path volumes are node-local and have no snapshots or failover.
+    - A node-local default StorageClass, such as local-path, has no snapshots or failover.
 
 upgradeNotes:
   - >-

@@ -68,14 +68,14 @@ security:
         ICON_SERVICE=none to turn it off.
 
 scalability:
-  summary: One instance with SQLite on a 10Gi node-local volume.
+  summary: One instance with SQLite on a 10Gi volume.
   replicas: 1
   maxReplicas: 1
   blockers:
     - >-
       SQLite allows one writer, and attachments, sends and the RSA key are on
       the volume. More replicas need PostgreSQL and shared file storage.
-    - local-path volumes are node-local and have no snapshots or failover.
+    - A node-local default StorageClass, such as local-path, has no snapshots or failover.
 
 upgradeNotes:
   - >-

@@ -101,7 +101,7 @@ security:
         One writer, trusted skills, disabled lazy installs, encrypted off-node
         backups taken with the gateway stopped, and restore rehearsal. After a
         restore, check file ownership, provider access and messaging allowlists
-        before routing clients. local-path is node-local without HA/snapshots.
+        before routing clients. A node-local StorageClass has no HA or snapshots.
     - risk: Dashboard exposes high-trust administration of tools, profiles and secrets.
       mitigation: >-
         Separate generated Basic-auth and session keys, separate hostname, and
@@ -120,7 +120,7 @@ security:
 
 scalability:
   summary: >-
-    One supervised writer with a 10Gi local-path PVC; profile/session state is
+    One supervised writer with a 10Gi PVC; profile/session state is
     local to this instance.
   replicas: 1
   maxReplicas: 1
@@ -128,7 +128,7 @@ scalability:
     - >-
       Profile gateways, scheduler, locks and sessions are not distributed
       shared-nothing state.
-    - Node-local storage has no snapshots or cross-node HA.
+    - A node-local StorageClass has no snapshots or cross-node HA.
     - Provider quotas and CPU/memory limit concurrent browser/tool subprocesses.
 
 upgradeNotes:

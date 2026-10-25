@@ -54,7 +54,6 @@ metadata:
 spec:
   accessModes:
   - ReadWriteOnce
-  storageClassName: local-path
   resources:
     requests:
       storage: 20Gi
@@ -903,7 +902,6 @@ spec:
     spec:
       accessModes:
       - ReadWriteOnce
-      storageClassName: local-path
       resources:
         requests:
           storage: 10Gi
@@ -930,7 +928,6 @@ spec:
       postInitApplicationSQL:
       - CREATE EXTENSION IF NOT EXISTS vector;
   storage:
-    storageClass: local-path
     size: 10Gi
   resources:
     requests:
@@ -1022,7 +1019,6 @@ spec:
       enabled: false
     volumeSpec:
       persistentVolumeClaim:
-        storageClassName: local-path
         accessModes:
         - ReadWriteOnce
         resources:

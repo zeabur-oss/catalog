@@ -68,11 +68,11 @@ security:
         One trusted owner per namespace/gateway; no host mounts, service-account
         token or Docker socket; public HTTPS-only egress and limited resources.
         Do not share with adversarial users.
-    - risk: Agent state and channel credentials reside on node-local storage.
+    - risk: Agent state and channel credentials reside on one PVC.
       mitigation: >-
         Stop writes, then take encrypted external backups of the whole PVC, the
-        gateway Secret and the provider Secret. local-path is not HA and has no
-        volume snapshots.
+        gateway Secret and the provider Secret. A node-local StorageClass has no
+        HA and no volume snapshots.
     - risk: >-
         Egress allows public IPv4 on TCP 443 only. Model providers on private
         networks or other ports cannot connect.
@@ -82,7 +82,7 @@ scalability:
   summary: One instance per trusted owner; do not horizontally scale this deployment.
   replicas: 1
   maxReplicas: 1
-  blockers: [Single-owner gateway and persistent node-local state.]
+  blockers: [Single-owner gateway and persistent state on one volume.]
 
 upgradeNotes:
   - >-

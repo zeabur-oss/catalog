@@ -38,11 +38,11 @@ security:
         large models do not fit.
 
 scalability:
-  summary: Single replica on node-local storage, with no failover.
+  summary: Single replica on one volume, with no failover.
   replicas: 1
   maxReplicas: 1
   blockers:
-    - local-path volumes are tied to one node and have no snapshots.
+    - A node-local default StorageClass, such as local-path, has no snapshots or failover.
     - Replicas cannot share the model store. More replicas need a shared volume.
     - Inference runs on CPU only. The template does not schedule GPUs.
 

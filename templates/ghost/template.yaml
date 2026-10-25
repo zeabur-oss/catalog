@@ -103,14 +103,14 @@ security:
 
 scalability:
   summary: >-
-    One writable instance backed by node-local storage. The template has no high
+    One writable instance backed by one volume. The template has no high
     availability.
   replicas: 1
   maxReplicas: 1
   blockers:
     - >-
-      local-path volumes are node-local and provide no snapshots or cross-node
-      failover.
+      A node-local default StorageClass, such as local-path, has no snapshots
+      or failover.
     - >-
       A single writable application instance is intentional; do not increase
       replicas without an application-specific storage/database design.

@@ -106,7 +106,7 @@ security:
         Rehearse a restore before production.
 
 scalability:
-  summary: One Gitea instance on a 20Gi node-local volume, with one PostgreSQL primary.
+  summary: One Gitea instance on a 20Gi volume, with one PostgreSQL primary.
   replicas: 1
   maxReplicas: 1
   blockers:
@@ -114,7 +114,7 @@ scalability:
       Repositories, LFS objects, the code indexer and sessions are on a
       ReadWriteOnce volume. More replicas need shared storage, a shared queue
       and a shared session store.
-    - local-path volumes are node-local and have no snapshots or failover.
+    - A node-local default StorageClass, such as local-path, has no snapshots or failover.
 
 upgradeNotes:
   - >-

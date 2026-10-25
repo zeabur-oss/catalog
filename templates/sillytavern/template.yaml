@@ -55,14 +55,14 @@ security:
 
 scalability:
   summary: >-
-    One replica. Node-local RWO storage has no high availability; node loss
-    requires manual recovery from off-node backups.
+    One replica. On a node-local StorageClass, node loss requires manual
+    recovery from off-node backups.
   replicas: 1
   maxReplicas: 1
   blockers:
     - Sessions and rate limits are per process; multiple replicas are not supported
     - >-
-      local-path is node-local and has no snapshots. In-app chat backups stay on
+      A node-local StorageClass has no snapshots. In-app chat backups stay on
       the same PVC and do not protect against node loss
 
 upgradeNotes:
@@ -70,10 +70,10 @@ upgradeNotes:
     Pin 1.19.0 by registry index digest; preserve app-secrets and all PVC
     subdirectories before updates.
   - >-
-    Stop the Deployment before copying the PVC off-node; local-path has no
-    snapshots or failover. Restore with the same generated authentication
-    secret. Do not run an older image on a PVC that a newer version has
-    migrated.
+    Stop the Deployment before copying the PVC off-node. A node-local
+    StorageClass has no snapshots or failover. Restore with the same generated
+    authentication secret. Do not run an older image on a PVC that a newer
+    version has migrated.
   - >-
     Login is HTTP Basic user user with the password in
     app-secrets/basic-password. SillyTavern keeps its session secret in the data

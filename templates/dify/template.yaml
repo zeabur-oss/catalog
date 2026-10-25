@@ -237,10 +237,10 @@ scalability:
   blockers:
     - >-
       One API migrator, one beat scheduler, single Dragonfly instance,
-      local-path plugin state, and one supported licensed workspace.
+      plugin state on one RWO volume, and one supported licensed workspace.
     - >-
-      External S3 object storage must exist; local-path is not HA or snapshot
-      storage.
+      External S3 object storage must exist. A node-local StorageClass has no HA
+      or snapshots.
 
 upgradeNotes:
   - >-

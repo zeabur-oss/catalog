@@ -73,13 +73,13 @@ security:
         repository address.
 
 scalability:
-  summary: One writable instance on node-local storage, with no failover.
+  summary: One writable instance on one volume, with no failover.
   replicas: 1
   maxReplicas: 1
   blockers:
     - >-
-      local-path volumes are node-local and provide no snapshots or cross-node
-      failover.
+      A node-local default StorageClass, such as local-path, has no snapshots
+      or failover.
     - >-
       A single writable application instance is intentional; do not increase
       replicas without an application-specific storage/database design.

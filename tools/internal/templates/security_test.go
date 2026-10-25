@@ -74,6 +74,7 @@ func TestSafetyRejectsPrivilegeAndNetworkEscapes(t *testing.T) {
 		"tag":                             {strings.Replace(safeManifest, "example.test/app@sha256:"+strings.Repeat("a", 64), "example.test/app:latest", 1), templates.ErrImageDigest},
 		"namespace":                       {strings.Replace(safeManifest, "name: app\nspec:", "name: app\n  namespace: kube-system\nspec:", 1), templates.ErrNamespaceEscape},
 		"network":                         {strings.Replace(safeManifest, "policyTypes: [Ingress, Egress]", "policyTypes: [Ingress]", 1), templates.ErrDefaultDeny},
+		"storage-class":                   {safeManifest + "---\napiVersion: v1\nkind: PersistentVolumeClaim\nmetadata: {name: data}\nspec: {storageClassName: local-path}\n", templates.ErrStorageClass},
 		"rbac":                            {safeManifest + "---\napiVersion: rbac.authorization.k8s.io/v1\nkind: RoleBinding\nmetadata: {name: escape}\n", templates.ErrUnsupportedKind},
 	}
 	for name, tc := range cases {

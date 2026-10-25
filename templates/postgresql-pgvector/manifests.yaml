@@ -19,7 +19,6 @@ spec:
       postInitApplicationSQL:
         - CREATE EXTENSION IF NOT EXISTS vector;
   storage:
-    storageClass: local-path
     size: 10Gi
   resources:
     requests: {cpu: 100m, memory: 256Mi}

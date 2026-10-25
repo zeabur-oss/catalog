@@ -75,7 +75,6 @@ metadata:
 spec:
   accessModes:
   - ReadWriteOnce
-  storageClassName: local-path
   resources:
     requests:
       storage: 10Gi
@@ -498,7 +497,6 @@ metadata:
 spec:
   accessModes:
   - ReadWriteOnce
-  storageClassName: local-path
   resources:
     requests:
       storage: 20Gi
@@ -2359,7 +2357,6 @@ spec:
       - CREATE EXTENSION IF NOT EXISTS vector;
       - CREATE DATABASE dify_plugin OWNER app;
   storage:
-    storageClass: local-path
     size: 20Gi
   resources:
     requests:

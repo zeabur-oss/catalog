@@ -208,7 +208,6 @@ spec:
       owner: miniflux
       encoding: UTF8
   storage:
-    storageClass: local-path
     size: 5Gi
   resources:
     requests:

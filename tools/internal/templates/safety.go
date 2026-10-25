@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -66,6 +67,7 @@ const (
 	ErrPerconaBackupStorage  Rule = "backup must use the declared cluster's enabled S3 storage with explicit credentials and TLS verification"
 	ErrPerconaBackupCluster  Rule = "backup cluster must be declared in this template"
 	ErrUnsupportedKind       Rule = "unsupported resource kind; the linter needs a namespaced safety adapter for it"
+	ErrStorageClass          Rule = "storage class forbidden; volumes use the cluster's default StorageClass"
 )
 
 // Safety checks the rendered objects themselves.
@@ -111,6 +113,9 @@ func Safety(r *Template, b []byte, namespace string) error {
 		case "k8s.mariadb.com/v1alpha1/MariaDB", "k8s.mariadb.com/v1alpha1/Backup", "k8s.mariadb.com/v1alpha1/Database", "k8s.mariadb.com/v1alpha1/User", "k8s.mariadb.com/v1alpha1/Grant":
 		default:
 			fail(where, ErrUnsupportedKind)
+		}
+		if hasKey(d, "storageClassName", "storageClass") {
+			fail(where, ErrStorageClass)
 		}
 		if k == "Secret" {
 			fail(where, "rendered Secrets forbidden; use explicit inputs and preexisting Secrets")
@@ -258,6 +263,26 @@ func Safety(r *Template, b []byte, namespace string) error {
 	}
 	return errors.Join(errs...)
 }
+
+// hasKey reports whether a map anywhere in v has one of keys.
+func hasKey(v any, keys ...string) bool {
+	switch v := v.(type) {
+	case map[string]any:
+		for k, child := range v {
+			if slices.Contains(keys, k) || hasKey(child, keys...) {
+				return true
+			}
+		}
+	case []any:
+		for _, child := range v {
+			if hasKey(child, keys...) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func checkResources(r map[string]any, w string, fail func(string, Rule, ...string)) {
 	for _, level := range []string{"requests", "limits"} {
 		m := object(r[level])

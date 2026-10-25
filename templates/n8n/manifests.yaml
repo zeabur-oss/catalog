@@ -6,7 +6,6 @@ metadata:
 spec:
   accessModes:
   - ReadWriteOnce
-  storageClassName: local-path
   resources:
     requests:
       storage: 10Gi
@@ -500,7 +499,6 @@ spec:
       owner: n8n
       encoding: UTF8
   storage:
-    storageClass: local-path
     size: 10Gi
   resources:
     requests:

@@ -150,7 +150,7 @@ scalability:
   replicas: 1
   maxReplicas: 1
   blockers:
-    - local-path volumes are tied to one node and have no snapshots.
+    - A node-local default StorageClass, such as local-path, has no snapshots or failover.
     - >-
       MongoDB runs one replica set member (unsafeFlags.replsetSize). Explicit
       MongoDB FQDNs assume the cluster DNS suffix cluster.local.

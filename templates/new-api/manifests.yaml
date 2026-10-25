@@ -299,7 +299,6 @@ spec:
       owner: newapi
       encoding: UTF8
   storage:
-    storageClass: local-path
     size: 10Gi
   resources:
     requests:

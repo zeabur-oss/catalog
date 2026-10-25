@@ -64,15 +64,15 @@ security:
 
 scalability:
   summary: >-
-    One replica. Node-local RWO storage is not highly available; node loss
-    requires manual recovery from off-node backups.
+    One replica. On a node-local StorageClass, node loss requires manual
+    recovery from off-node backups.
   replicas: 1
   maxReplicas: 1
   blockers:
     - More replicas would write the same OAuth file store concurrently.
     - >-
-      local-path is node-local and has no snapshots; copy the volume off the
-      node for backups
+      A node-local StorageClass, such as local-path, has no snapshots. Copy the
+      volume off the node for backups
 
 upgradeNotes:
   - >-
@@ -80,7 +80,7 @@ upgradeNotes:
     --local-model with v8 configuration. No callback ports or management UI are
     exposed.
   - >-
-    Native OAuth credentials persist under /data/auth on local-path. Stop the
+    Native OAuth credentials persist under /data/auth on the PVC. Stop the
     pod and back up that PVC and app-secrets encrypted off-node before digest
     changes. Test a restore before production use.
   - >-

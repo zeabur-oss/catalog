@@ -50,14 +50,14 @@ security:
         for the exact source.
 
 scalability:
-  summary: One node on a 20Gi node-local volume. Distributed mode is not configured.
+  summary: One node on a 20Gi volume. Distributed mode is not configured.
   replicas: 1
   maxReplicas: 1
   blockers:
     - >-
       More replicas need Qdrant distributed mode with peer discovery and a
       volume per node. The template does not configure it.
-    - local-path volumes are node-local and have no snapshots or failover.
+    - A node-local default StorageClass, such as local-path, has no snapshots or failover.
 
 upgradeNotes:
   - >-

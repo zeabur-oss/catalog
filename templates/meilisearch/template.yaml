@@ -56,14 +56,14 @@ security:
         production use.
 
 scalability:
-  summary: One instance on a 20Gi node-local volume. Indexing uses at most 1 GiB of memory.
+  summary: One instance on a 20Gi volume. Indexing uses at most 1 GiB of memory.
   replicas: 1
   maxReplicas: 1
   blockers:
     - >-
       Each instance keeps its own LMDB indexes on its volume. Replication needs
       the Enterprise Edition.
-    - local-path volumes are node-local and have no snapshots or failover.
+    - A node-local default StorageClass, such as local-path, has no snapshots or failover.
 
 upgradeNotes:
   - >-

@@ -69,14 +69,14 @@ security:
 
 scalability:
   summary: >-
-    One writable instance on a 10Gi node-local volume with SQLite. There is no
+    One writable instance on a 10Gi volume with SQLite. There is no
     high availability.
   replicas: 1
   maxReplicas: 1
   blockers:
     - >-
-      local-path volumes are node-local and provide no snapshots or cross-node
-      failover.
+      A node-local default StorageClass, such as local-path, has no snapshots
+      or failover.
     - >-
       The template runs one writable instance. Do not increase replicas without
       an application-specific storage/database design.

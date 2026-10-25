@@ -54,14 +54,14 @@ security:
         message cache keeps 12 hours of messages.
 
 scalability:
-  summary: One instance with SQLite on a 5Gi node-local volume.
+  summary: One instance with SQLite on a 5Gi volume.
   replicas: 1
   maxReplicas: 1
   blockers:
     - >-
       Subscribers hold connections to one process, and the caches are SQLite
       files. More replicas need PostgreSQL and the experimental cluster mode.
-    - local-path volumes are node-local and have no snapshots or failover.
+    - A node-local default StorageClass, such as local-path, has no snapshots or failover.
 
 upgradeNotes:
   - >-

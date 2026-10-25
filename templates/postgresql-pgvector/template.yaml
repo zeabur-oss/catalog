@@ -55,13 +55,13 @@ security:
 
 scalability:
   summary: >-
-    Single primary with 10Gi node-local volume; vector indexes may need
+    Single primary with a 10Gi volume; vector indexes may need
     substantially more memory and disk. No HPA. Read replicas require separate
     nodes and a CNPG capacity check.
   replicas: 1
   maxReplicas: 3
   blockers:
-    - Node-local data requires remote backup and restore on node loss.
+    - On a node-local StorageClass, node loss requires a restore from a remote backup.
     - Vector dimensions, index memory and extension versions constrain migrations.
     - >-
       The PodDisruptionBudget (enablePDB) protects the single instance from

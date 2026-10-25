@@ -78,13 +78,6 @@ func createCluster(profile, version string, needs []*catalog.Component) (*cluste
 }
 
 func (c *cluster) setup(needs []*catalog.Component) error {
-	// Templates name the local-path StorageClass. kind's default StorageClass
-	// uses the same provisioner.
-	sc := `{"apiVersion": "storage.k8s.io/v1", "kind": "StorageClass", "metadata": {"name": "local-path"},
-		"provisioner": "rancher.io/local-path", "reclaimPolicy": "Delete", "volumeBindingMode": "WaitForFirstConsumer"}`
-	if _, err := catalog.Run([]byte(sc), "kubectl", "apply", "-f", "-"); err != nil {
-		return err
-	}
 	out, err := catalog.Run(nil, "kind", "get", "nodes", "--name", c.name)
 	if err != nil {
 		return err

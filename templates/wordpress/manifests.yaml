@@ -36,7 +36,6 @@ metadata:
 spec:
   accessModes:
   - ReadWriteOnce
-  storageClassName: local-path
   resources:
     requests:
       storage: 10Gi
@@ -496,7 +495,6 @@ spec:
     required: true
   storage:
     size: 10Gi
-    storageClassName: local-path
     pvcRetentionPolicy:
       whenDeleted: Retain
       whenScaled: Retain

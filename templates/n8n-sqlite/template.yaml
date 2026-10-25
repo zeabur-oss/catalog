@@ -89,13 +89,13 @@ security:
         configure SMTP in n8n.
 
 scalability:
-  summary: Single-writer local-path deployment; no automatic horizontal scaling.
+  summary: Single-writer deployment; no automatic horizontal scaling.
   replicas: 1
   maxReplicas: 1
   blockers:
-    - Node-local ReadWriteOnce storage has no HA or snapshots.
+    - A node-local default StorageClass has no HA or snapshots.
     - >-
-      Filesystem binary-data storage is node-local/single-writer; execution
+      Filesystem binary-data storage has a single writer; execution
       queue mode and shared binary store are not configured.
     - SQLite database supports one main process only.
 

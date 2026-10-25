@@ -86,14 +86,14 @@ security:
 
 scalability:
   summary: >-
-    One gateway Pod and one PostgreSQL primary on a 10Gi local-path volume; no
+    One gateway Pod and one PostgreSQL primary on a 10Gi volume; no
     automatic horizontal scaling.
   replicas: 1
   maxReplicas: 1
   blockers:
     - >-
-      Node-local ReadWriteOnce storage has no HA or snapshots. The database is
-      unavailable while its node is down.
+      On a node-local StorageClass, ReadWriteOnce storage has no HA or snapshots.
+      The database is unavailable while its node is down.
     - >-
       More gateway replicas need shared session and crypto secrets, a cache
       design and a single schema-migration leader.

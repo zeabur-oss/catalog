@@ -156,9 +156,8 @@ known differences:
   comments in its file. CI installs them into kind's nodes.
 - `distributions` limits a component to some distributions
   (system-upgrade-controller: k3s).
-- Templates store data in a StorageClass named `local-path`, which keeps data
-  on one node. k3s has it; elsewhere, create it or edit the rendered
-  `storageClassName`.
+- Templates name no StorageClass, so their volumes use the cluster's default
+  StorageClass. Without a default, their claims stay `Pending`.
 
 ## Component format
 

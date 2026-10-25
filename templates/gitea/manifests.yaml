@@ -5,7 +5,6 @@ metadata:
   namespace: '{{ .Namespace }}'
 spec:
   accessModes: [ReadWriteOnce]
-  storageClassName: local-path
   resources:
     requests:
       storage: 20Gi
@@ -300,7 +299,6 @@ spec:
       owner: gitea
       encoding: UTF8
   storage:
-    storageClass: local-path
     size: 10Gi
   resources:
     requests:

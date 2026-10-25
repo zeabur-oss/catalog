@@ -26,8 +26,8 @@ absolute paths, `..` and links.
 - Install each component in the template's `requires` from the same release.
 - Use a CNI that enforces NetworkPolicy. Templates deny all traffic in the
   namespace, then allow only what each service needs.
-- Create a StorageClass named `local-path` (k3s has one), or edit the rendered
-  `storageClassName`.
+- Mark one StorageClass as the default. Templates name no StorageClass, so
+  their volumes use the default. Without one, their claims stay `Pending`.
 - For a template with domains, have a cert-manager ClusterIssuer ready.
 - Use a dedicated namespace for each deployment.
 

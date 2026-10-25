@@ -110,8 +110,8 @@ security:
 
 scalability:
   summary: >-
-    One n8n main, one runner and one PostgreSQL primary. RWO node-local volumes
-    have no HA.
+    One n8n main, one runner and one PostgreSQL primary. RWO volumes on a
+    node-local StorageClass have no HA.
   replicas: 1
   maxReplicas: 1
   blockers:
@@ -120,7 +120,7 @@ scalability:
       runners, shared binary storage and Redis/Valkey; no naive replica
       increase.
     - >-
-      local-path is node-local with no snapshots. Database backups do not
+      A node-local StorageClass has no snapshots. Database backups do not
       include the application PVC or the encryption key: stop n8n and copy the
       PVC and encrypted app-secrets off-node.
     - The Kubernetes API CIDR must match the environment.
