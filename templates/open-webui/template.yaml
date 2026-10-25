@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Open WebUI
+  version: "main"
   description: >-
     Authenticated LLM interface with private pipelines; requires acceptance of
     the branding-preservation license.
@@ -25,12 +26,28 @@ services:
 
 inputs:
   - name: licenseOptIn
+    label: License agreement
+    locales:
+      zh-TW:
+        label: 授權同意
+        description: "讀過 Open WebUI 授權（包含品牌標示的義務）後再同意。"
+      zh-CN:
+        label: 许可协议
+        description: "读完 Open WebUI 许可证（包含品牌标识的义务）后再同意。"
     description: >-
       Read the upstream Open WebUI License, including branding obligations; type
       I-ACCEPT-OPENWEBUI-LICENSE to accept.
     required: true
     validation: {pattern: ^I-ACCEPT-OPENWEBUI-LICENSE$}
   - name: adminEmail
+    label: Administrator email
+    locales:
+      zh-TW:
+        label: 管理員 Email
+        description: "第一個管理員的 Email。密碼會自動產生，放在機密 app-secrets 的 admin-password。"
+      zh-CN:
+        label: 管理员邮箱
+        description: "第一个管理员的邮箱。密码会自动生成，放在机密 app-secrets 的 admin-password。"
     description: >-
       Initial administrator email; password is generated in
       app-secrets/admin-password.
@@ -57,12 +74,6 @@ security:
     Both UI and pipeline service run as UID1000 without capabilities, on
     read-only images. Initial admin credentials and pipeline API key are
     generated; signup is disabled.
-  egress:
-    - CoreDNS TCP/UDP53
-    - UI to pipeline TCP9099
-    - >-
-      Public HTTPS TCP443 for provider APIs, model assets and pipeline
-      dependencies; RFC1918/link-local blocked.
   risks:
     - risk: >-
         Open WebUI uses a custom source-available license with branding
@@ -77,10 +88,12 @@ security:
         credentials.
       mitigation: >-
         Trust every installed pipeline and dependency as application code; keep
-        service private to UI; no Kubernetes tokens, host sockets or
-        private-network egress. Python packages install to the writable pipeline
-        volume. Packages that need root (apt or browser system libraries) cannot
-        install at runtime; build them into your own pinned image.
+        service private to UI; no Kubernetes tokens or host sockets. Outbound
+        traffic is not limited; add an egress NetworkPolicy to keep pipelines
+        away from private addresses. Python packages install to the writable
+        pipeline volume. Packages that need root (apt or browser system
+        libraries) cannot install at runtime; build them into your own pinned
+        image.
     - risk: External model providers receive chat content and uploaded document data.
       mitigation: >-
         Read each provider's privacy terms before you connect it. Ollama is

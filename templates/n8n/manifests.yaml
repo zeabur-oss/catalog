@@ -238,11 +238,8 @@ metadata:
   namespace: '{{ .Namespace }}'
 spec:
   podSelector: {matchLabels: {templates.zeabur.com/template: n8n}}
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress: []
-  egress: []
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -254,9 +251,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: n8n
       app: n8n
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress:
   - from:
     - namespaceSelector:
@@ -276,71 +271,6 @@ spec:
     ports:
     - protocol: TCP
       port: 5679
-  egress:
-  - {{ dnsEgress }}
-  - to:
-    - ipBlock:
-        cidr: 0.0.0.0/0
-        except:
-        - 10.0.0.0/8
-        - 172.16.0.0/12
-        - 192.168.0.0/16
-        - 127.0.0.0/8
-        - 169.254.0.0/16
-        - 100.64.0.0/10
-    ports:
-    - protocol: TCP
-      port: 80
-    - protocol: TCP
-      port: 443
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: n8n
-          cnpg.io/cluster: n8n-db
-    ports:
-    - protocol: TCP
-      port: 5432
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: task-runner
-  namespace: '{{ .Namespace }}'
-spec:
-  podSelector:
-    matchLabels:
-      templates.zeabur.com/template: n8n
-      app: task-runner
-  policyTypes:
-  - Ingress
-  - Egress
-  ingress: []
-  egress:
-  - {{ dnsEgress }}
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: n8n
-          app: n8n
-    ports:
-    - protocol: TCP
-      port: 5679
-  - to:
-    - ipBlock:
-        cidr: 0.0.0.0/0
-        except:
-        - 10.0.0.0/8
-        - 172.16.0.0/12
-        - 192.168.0.0/16
-        - 127.0.0.0/8
-        - 169.254.0.0/16
-        - 100.64.0.0/10
-    ports:
-    - protocol: TCP
-      port: 80
-    - protocol: TCP
-      port: 443
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -352,9 +282,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: n8n
       cnpg.io/cluster: n8n-db
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress:
   - from:
     - podSelector:
@@ -386,16 +314,6 @@ spec:
       port: 5432
     - protocol: TCP
       port: 8000
-  egress:
-  - {{ dnsEgress }}
-  - to:
-    - ipBlock:
-        cidr: '{{ .Inputs.kubeApiCidr }}'
-    ports:
-    - protocol: TCP
-      port: 443
-    - protocol: TCP
-      port: 6443
 ---
 apiVersion: apps/v1
 kind: Deployment

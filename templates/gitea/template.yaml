@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Gitea
+  version: "28.2.0-rootless"
   description: >-
     Gitea Git hosting over HTTPS, with repositories and LFS objects on a
     persistent volume and PostgreSQL 18 managed by CloudNativePG.
@@ -55,23 +56,13 @@ inputs:
     generate: random
     secret: {name: gitea-secrets, key: lfs-jwt-secret}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
-  - name: kubeApiCidr
-    description: IPv4 CIDR of the Kubernetes API endpoint as the CNI sees it.
-    required: true
-    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
 
 security:
   summary: >-
     The rootless image runs as UID 1000 with a read-only root filesystem, no
-    service-account token and all capabilities dropped. The namespace denies
-    all traffic by default. Sign-up is closed and the install page is locked.
-  egress:
-    - Cluster DNS
-    - Gitea to PostgreSQL 5432 with a verified CA
-    - >-
-      Public IPv4 TCP 80/443 for webhooks, mirrors and migrations; private,
-      loopback, link-local and CGNAT ranges are blocked.
-    - CloudNativePG instances to the Kubernetes API 443/6443
+    service-account token and all capabilities dropped. Only the ingress
+    controller and the template's own Pods can connect to it. Outbound traffic
+    is not limited. Sign-up is closed and the install page is locked.
   risks:
     - risk: An unlocked install page lets the first visitor configure the server.
       mitigation: >-
@@ -87,17 +78,18 @@ security:
         The Ingress carries HTTP only, so the SSH server is off. Clone and push
         over HTTPS with a password or an access token.
     - risk: >-
-        Webhooks, mirrors and repository migrations make server-side requests
-        to addresses that users choose.
+        Webhooks, mirrors and repository migrations make server-side requests to
+        addresses that users choose.
       mitigation: >-
-        Gitea blocks private webhook targets by default, and the NetworkPolicy
-        allows only public IPv4 on TCP 80 and 443. No SMTP server is
-        configured, so Gitea sends no email.
-    - risk: CloudNativePG instances call the Kubernetes API with an operator-created identity.
+        Gitea blocks private webhook targets by default. The template does not
+        limit outbound traffic; to limit it, add an egress NetworkPolicy. No
+        SMTP server is configured, so Gitea sends no email.
+    - risk: >-
+        CloudNativePG instances call the Kubernetes API with an operator-created
+        identity.
       mitigation: >-
         The databases/cloudnative-pg component creates RBAC for each cluster;
-        the Gitea Pod has no token. Database egress is limited to the API
-        CIDR.
+        the Gitea Pod has no token.
     - risk: >-
         Repositories and LFS objects are on the volume, not in the database
         backup.
@@ -119,9 +111,8 @@ scalability:
 upgradeNotes:
   - >-
     New installs start without database backups. Installs made before this
-    version keep their backups. To turn backups on, open the database in
-    Zeabur and use the Backups tab, then allow the database Pods egress to the
-    S3 endpoint on TCP 443 in the namespace NetworkPolicy.
+    version keep their backups. To turn backups on, open the database in Zeabur
+    and use the Backups tab.
   - >-
     Back up the database and the gitea-data volume, and keep gitea-secrets,
     before you change the image digest. Without secret-key, stored two-factor

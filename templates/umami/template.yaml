@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Umami
+  version: "3.4.1"
   description: >-
     Umami web analytics over HTTPS, with PostgreSQL 18 managed by
     CloudNativePG.
@@ -40,20 +41,13 @@ inputs:
     generate: random
     secret: {name: umami-secrets, key: app-secret}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
-  - name: kubeApiCidr
-    description: IPv4 CIDR of the Kubernetes API endpoint as the CNI sees it.
-    required: true
-    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
 
 security:
   summary: >-
-    Runs as UID 1001 with a read-only root filesystem, no service-account
-    token and all capabilities dropped. The namespace denies all traffic by
-    default. Umami makes no outbound requests.
-  egress:
-    - Cluster DNS
-    - Umami to PostgreSQL 5432 with a verified CA
-    - CloudNativePG instances to the Kubernetes API 443/6443
+    Runs as UID 1001 with a read-only root filesystem, no service-account token
+    and all capabilities dropped. Only the ingress controller and the template's
+    own Pods can connect to it. Outbound traffic is not limited. Umami makes no
+    outbound requests.
   risks:
     - risk: Umami creates the account admin with the published password umami.
       mitigation: >-
@@ -63,11 +57,12 @@ security:
     - risk: The tracking endpoint accepts events from any website.
       mitigation: >-
         Umami stores events only for website IDs that exist in Umami.
-    - risk: CloudNativePG instances call the Kubernetes API with an operator-created identity.
+    - risk: >-
+        CloudNativePG instances call the Kubernetes API with an operator-created
+        identity.
       mitigation: >-
         The databases/cloudnative-pg component creates RBAC for each cluster;
-        the Umami Pod has no token. Database egress is limited to the API
-        CIDR.
+        the Umami Pod has no token.
 
 scalability:
   summary: One Umami instance with one PostgreSQL primary.
@@ -81,9 +76,8 @@ scalability:
 upgradeNotes:
   - >-
     New installs start without database backups. Installs made before this
-    version keep their backups. To turn backups on, open the database in
-    Zeabur and use the Backups tab, then allow the database Pods egress to the
-    S3 endpoint on TCP 443 in the namespace NetworkPolicy.
+    version keep their backups. To turn backups on, open the database in Zeabur
+    and use the Backups tab.
   - >-
     The init container runs prisma migrate deploy before the new version
     starts. A rollback needs the database backup taken before the upgrade.

@@ -232,7 +232,7 @@ metadata:
   namespace: '{{ .Namespace }}'
 spec:
   podSelector: {matchLabels: {templates.zeabur.com/template: gitea}}
-  policyTypes: [Ingress, Egress]
+  policyTypes: [Ingress]
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -244,7 +244,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: gitea
       app.kubernetes.io/name: gitea
-  policyTypes: [Ingress, Egress]
+  policyTypes: [Ingress]
   ingress:
   - from:
     - namespaceSelector:
@@ -256,31 +256,6 @@ spec:
     ports:
     - protocol: TCP
       port: 3000
-  egress:
-  - {{ dnsEgress }}
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: gitea
-          cnpg.io/cluster: gitea-db
-    ports:
-    - protocol: TCP
-      port: 5432
-  - to:
-    - ipBlock:
-        cidr: 0.0.0.0/0
-        except:
-        - 10.0.0.0/8
-        - 172.16.0.0/12
-        - 192.168.0.0/16
-        - 127.0.0.0/8
-        - 169.254.0.0/16
-        - 100.64.0.0/10
-    ports:
-    - protocol: TCP
-      port: 80
-    - protocol: TCP
-      port: 443
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
@@ -328,7 +303,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: gitea
       cnpg.io/cluster: gitea-db
-  policyTypes: [Ingress, Egress]
+  policyTypes: [Ingress]
   ingress:
   - from:
     - podSelector:
@@ -360,13 +335,3 @@ spec:
       port: 5432
     - protocol: TCP
       port: 8000
-  egress:
-  - {{ dnsEgress }}
-  - to:
-    - ipBlock:
-        cidr: '{{ .Inputs.kubeApiCidr }}'
-    ports:
-    - protocol: TCP
-      port: 443
-    - protocol: TCP
-      port: 6443

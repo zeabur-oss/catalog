@@ -35,13 +35,13 @@ type Template struct {
 
 type Metadata struct {
 	catalog.Metadata `yaml:",inline"`
+	Version          string   `yaml:"version" json:"version"`
 	Icon             string   `yaml:"icon" json:"icon,omitempty"`
 	Categories       []string `yaml:"categories" json:"categories"`
 }
 
 type Security struct {
 	Summary string              `yaml:"summary" json:"summary"`
-	Egress  []string            `yaml:"egress" json:"egress"`
 	Risks   []map[string]string `yaml:"risks" json:"risks"`
 }
 
@@ -67,8 +67,13 @@ type Port struct {
 }
 
 type Input struct {
-	Name             string `yaml:"name" json:"name"`
-	Description      string `yaml:"description" json:"description"`
+	Name        string `yaml:"name" json:"name"`
+	Description string `yaml:"description" json:"description"`
+	Label       string `yaml:"label" json:"label,omitempty"`
+	Locales     map[string]struct {
+		Label       string `yaml:"label" json:"label"`
+		Description string `yaml:"description" json:"description"`
+	} `yaml:"locales" json:"locales,omitempty"`
 	Generate         string `yaml:"generate" json:"generate,omitempty"`
 	GenerateBytes    *int   `yaml:"generateBytes" json:"generateBytes,omitempty"`
 	GenerateEncoding string `yaml:"generateEncoding" json:"generateEncoding,omitempty"`
@@ -182,6 +187,8 @@ func Check(root string, cat *catalog.Catalog, all []*Template) error {
 			fail("%v", err)
 		} else if _, err := parse(data); err != nil {
 			fail("manifests.yaml: %v", err)
+		} else if !labelValue.MatchString(t.Metadata.Version) || !strings.Contains(string(data), ":"+t.Metadata.Version+"@") {
+			fail("metadata.version must be the tag of an image in manifests.yaml, pinned with a digest")
 		}
 		for _, p := range catalog.Profiles {
 			if _, err := cat.InstallOrder(t.Requires, p); err != nil {

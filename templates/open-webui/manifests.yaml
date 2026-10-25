@@ -238,11 +238,8 @@ metadata:
   namespace: '{{ .Namespace }}'
 spec:
   podSelector: {matchLabels: {templates.zeabur.com/template: open-webui}}
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress: []
-  egress: []
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -254,9 +251,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: open-webui
       app.kubernetes.io/name: open-webui
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress:
   - from:
     - namespaceSelector:
@@ -267,28 +262,6 @@ spec:
           app.kubernetes.io/name: traefik
     ports:
     - port: 8080
-      protocol: TCP
-  egress:
-  - {{ dnsEgress }}
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: open-webui
-          app.kubernetes.io/name: pipeline
-    ports:
-    - port: 9099
-      protocol: TCP
-  - to:
-    - ipBlock:
-        cidr: 0.0.0.0/0
-        except:
-        - 10.0.0.0/8
-        - 172.16.0.0/12
-        - 192.168.0.0/16
-        - 169.254.0.0/16
-        - 127.0.0.0/8
-    ports:
-    - port: 443
       protocol: TCP
 ---
 apiVersion: networking.k8s.io/v1
@@ -301,9 +274,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: open-webui
       app.kubernetes.io/name: pipeline
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress:
   - from:
     - podSelector:
@@ -312,20 +283,6 @@ spec:
           app.kubernetes.io/name: open-webui
     ports:
     - port: 9099
-      protocol: TCP
-  egress:
-  - {{ dnsEgress }}
-  - to:
-    - ipBlock:
-        cidr: 0.0.0.0/0
-        except:
-        - 10.0.0.0/8
-        - 172.16.0.0/12
-        - 192.168.0.0/16
-        - 169.254.0.0/16
-        - 127.0.0.0/8
-    ports:
-    - port: 443
       protocol: TCP
 ---
 apiVersion: apps/v1

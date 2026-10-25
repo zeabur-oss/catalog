@@ -85,7 +85,8 @@ func (o RenderOptions) validate(r *Template) error {
 // dnsEgress is the NetworkPolicy egress rule to cluster DNS. A manifest inserts it with {{ dnsEgress }}.
 const dnsEgress = `{to: [{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: kube-system}}, podSelector: {matchLabels: {k8s-app: kube-dns}}}], ports: [{protocol: UDP, port: 53}, {protocol: TCP, port: 53}]}`
 
-// Render expands manifests.yaml. Generated inputs stay in their Secrets.
+// Render expands manifests.yaml and adds Labels to every object. Generated
+// inputs stay in their Secrets.
 func Render(r *Template, o RenderOptions) ([]byte, error) {
 	if err := o.validate(r); err != nil {
 		return nil, err
@@ -110,12 +111,14 @@ func Render(r *Template, o RenderOptions) ([]byte, error) {
 	}
 	o.Inputs = inputs
 	var out bytes.Buffer
-	err = t.Execute(&out, o)
-	return out.Bytes(), err
+	if err := t.Execute(&out, o); err != nil {
+		return nil, err
+	}
+	return stamp(out.Bytes(), Labels(r))
 }
 
-// GenerateInputs returns a List of the Secrets that hold generated inputs.
-// The output holds credentials.
+// GenerateInputs returns a List of the Secrets that hold generated inputs,
+// with Labels. The output holds credentials.
 func GenerateInputs(r *Template, namespace string) ([]byte, error) {
 	if !namespaceLabel.MatchString(namespace) || len(namespace) > 63 {
 		return nil, ErrNamespace
@@ -157,7 +160,7 @@ func GenerateInputs(r *Template, namespace string) ([]byte, error) {
 	}
 	items := []any{}
 	for _, n := range slices.Sorted(maps.Keys(grouped)) {
-		items = append(items, map[string]any{"apiVersion": "v1", "kind": "Secret", "metadata": map[string]any{"name": n, "namespace": namespace}, "type": "Opaque", "stringData": grouped[n]})
+		items = append(items, map[string]any{"apiVersion": "v1", "kind": "Secret", "metadata": map[string]any{"name": n, "namespace": namespace, "labels": Labels(r)}, "type": "Opaque", "stringData": grouped[n]})
 	}
 	return json.MarshalIndent(map[string]any{"apiVersion": "v1", "kind": "List", "items": items}, "", "  ")
 }

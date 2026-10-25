@@ -12,12 +12,13 @@
     "metadata": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "description", "license", "homepage", "categories"],
+      "required": ["name", "description", "version", "license", "homepage", "categories"],
       "properties": {
         "name": { "$ref": "#/$defs/text", "description": "Name for people." },
         "description": { "$ref": "#/$defs/text", "description": "What the application does and how the template runs it, in one or two sentences." },
         "license": { "$ref": "#/$defs/text", "description": "SPDX expression for the application, its images and charts." },
         "homepage": { "type": "string", "format": "uri", "pattern": "^https?://" },
+        "version": { "type": "string", "description": "The application version: the tag of its main image. Objects get it as the label app.kubernetes.io/version." },
         "icon": { "type": "string", "format": "uri", "pattern": "^https://" },
         "categories": {
           "type": "array",
@@ -43,10 +44,9 @@
     "security": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["summary", "egress", "risks"],
+      "required": ["summary", "risks"],
       "properties": {
         "summary": { "$ref": "#/$defs/text" },
-        "egress": { "type": "array", "items": { "$ref": "#/$defs/text" } },
         "risks": {
           "type": "array",
           "items": {
@@ -159,6 +159,14 @@
       "properties": {
         "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
         "description": { "$ref": "#/$defs/text" },
+        "label": { "type": "string", "maxLength": 40, "description": "A short name for the field, in English." },
+        "locales": {
+          "type": "object",
+          "description": "The label and description in other languages.",
+          "additionalProperties": false,
+          "required": ["zh-TW", "zh-CN"],
+          "properties": { "zh-TW": { "$ref": "#/$defs/inputLocale" }, "zh-CN": { "$ref": "#/$defs/inputLocale" } }
+        },
         "required": { "type": "boolean" },
         "generate": { "const": "random" },
         "generateBytes": { "type": "integer", "minimum": 12, "maximum": 64, "default": 32 },
@@ -185,10 +193,17 @@
           "not": { "required": ["required"] }
         },
         {
-          "required": ["required"],
+          "description": "A person gives the value, so the field has a label in every language.",
+          "required": ["required", "label", "locales"],
           "not": { "anyOf": [{ "required": ["generate"] }, { "required": ["secret"] }, { "required": ["generateBytes"] }, { "required": ["generateEncoding"] }] }
         }
       ]
+    },
+    "inputLocale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "description"],
+      "properties": { "label": { "type": "string", "maxLength": 40 }, "description": { "$ref": "#/$defs/text" } }
     }
   }
 }

@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: ntfy
+  version: "v2.33.1"
   description: >-
     ntfy push notification server over HTTP. Topics need an account, and the
     message cache, users and attachments are on a persistent volume.
@@ -30,11 +31,10 @@ inputs:
 
 security:
   summary: >-
-    Runs as UID 1000 with a read-only root filesystem, no service-account
-    token and all capabilities dropped. The namespace denies all traffic by
-    default. Anonymous users cannot read or write topics.
-  egress:
-    - None.
+    Runs as UID 1000 with a read-only root filesystem, no service-account token
+    and all capabilities dropped. Only the ingress controller and the template's
+    own Pods can connect to it. Outbound traffic is not limited. Anonymous users
+    cannot read or write topics.
   risks:
     - risk: By default ntfy lets anyone publish to and read any topic.
       mitigation: >-
@@ -42,12 +42,12 @@ security:
         topics. Create users, access rules and tokens with ntfy user, ntfy
         access and ntfy token in the Pod.
     - risk: >-
-        Instant delivery to the iOS app, Firebase, web push, email and
-        calls need outbound access and are off.
+        Instant delivery to the iOS app, Firebase, web push, email and calls are
+        off.
       mitigation: >-
-        Android and web clients receive messages over their own connection.
-        To use upstream-base-url or another sender, set it and add a
-        NetworkPolicy egress rule for its endpoint.
+        Android and web clients receive messages over their own connection. To
+        use upstream-base-url or another sender, set it in the ntfy
+        configuration.
     - risk: Attachments use disk space on the volume.
       mitigation: >-
         The attachment cache is limited to 2G in total and 15M per file. The

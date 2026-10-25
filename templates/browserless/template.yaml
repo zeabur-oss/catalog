@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Browserless
+  version: "latest"
   description: >-
     Authenticated headless Chromium service for trusted automation clients, with
     restricted container isolation.
@@ -22,6 +23,14 @@ services:
 
 inputs:
   - name: licenseOptIn
+    label: License agreement
+    locales:
+      zh-TW:
+        label: 授權同意
+        description: "Browserless 採用 SSPL，不是 OSI 認可的開源授權；閉源的商業網站、App 或 CI 可能需要買商業授權。確認適用的授權後再同意。"
+      zh-CN:
+        label: 许可协议
+        description: "Browserless 采用 SSPL，不是 OSI 认可的开源许可证；闭源的商业网站、App 或 CI 可能需要购买商业许可。确认适用的许可后再同意。"
     description: >-
       Read Browserless LICENSE: SSPL is not OSI-approved; closed-source
       commercial sites/apps/CI may require a commercial license. Enter
@@ -41,13 +50,8 @@ inputs:
 security:
   summary: >-
     Restricted non-root read-only container; authenticated API, no
-    service-account token, default-deny networking and public HTTP(S)-only
-    destination egress. Do not share one instance between untrusted tenants.
-  egress:
-    - DNS TCP/UDP53 to kube-system kube-dns
-    - >-
-      Public IPv4 TCP80/443 excluding RFC1918, loopback, link-local/metadata,
-      CGNAT, reserved and multicast ranges
+    service-account token, default-deny ingress. Outbound traffic is not
+    limited. Do not share one instance between untrusted tenants.
   risks:
     - risk: >-
         Upstream Chromium launch forces --no-sandbox; a browser exploit can
@@ -62,11 +66,12 @@ security:
         Browser automation can be used for SSRF; application-level
         private-network blocking defaults off.
       mitigation: >-
-        NetworkPolicy denies private, cluster and metadata IPv4 destinations
-        plus all IPv6 egress; only public TCP80/443 and cluster DNS are allowed.
         File protocol, GET-style browser calls and CORS are disabled. The
-        browser cannot open intranet, cluster or IPv6 sites, or public sites on
-        other ports.
+        template does not limit outbound traffic, so the browser can open
+        private, cluster and cloud metadata addresses. Pods of other templates
+        accept connections only from their own peers. Add an egress
+        NetworkPolicy that blocks private ranges before untrusted clients use
+        the API.
     - risk: >-
         SSPL/commercial dual license has non-OSI obligations and restricted
         closed-source commercial scenarios.

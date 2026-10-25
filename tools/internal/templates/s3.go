@@ -16,9 +16,9 @@ import (
 // S3 is the SeaweedFS S3 gateway that template e2e runs use for object
 // storage. cert-manager issues its certificate from a test CA.
 type S3 struct {
-	Endpoint, CIDR, Bucket string
-	accessKey, secretKey   string
-	ca                     []byte
+	Endpoint, Bucket     string
+	accessKey, secretKey string
+	ca                   []byte
 }
 
 const (
@@ -95,12 +95,6 @@ func startS3() (_ *S3, stop func() error, err error) {
 	if s.ca, err = base64.StdEncoding.DecodeString(strings.TrimSpace(ca)); err != nil {
 		return nil, nil, err
 	}
-	ip, err := kubectl(nil, "get", "pods", "-n", s3Namespace, "-l", "app.kubernetes.io/component=s3,app.kubernetes.io/instance=e2e",
-		"--field-selector=status.phase=Running", "-o", "jsonpath={.items[0].status.podIP}")
-	if err != nil {
-		return nil, nil, err
-	}
-	s.CIDR = ip + "/32"
 	return s, del, nil
 }
 

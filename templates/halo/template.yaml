@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Halo
+  version: "2.27.1"
   description: >-
     Halo publishing with persistent site assets and CloudNativePG PostgreSQL 16.
   license: GPL-3.0-only AND PostgreSQL
@@ -25,26 +26,12 @@ services:
     ports: [{name: postgresql, port: 5432}]
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 1Gi}}
 
-inputs:
-  - name: kubeApiCidr
-    description: >-
-      IPv4 destination CIDR of the Kubernetes API reachable from pods; account
-      for CNI Service DNAT.
-    required: true
-    validation: {pattern: '^(?:[0-9]{1,3}\.){3}[0-9]{1,3}/(?:[0-9]|[12][0-9]|3[0-2])$'}
-
 security:
   summary: >-
     Restricted non-root application, read-only root and no API token; PostgreSQL
-    operands are managed by the catalog CloudNativePG operator with
-    their scoped service-account exception. Default-deny networking.
-  egress:
-    - Cluster DNS
-    - >-
-      Halo -> halo-db PostgreSQL TCP 5432; public HTTPS 443 for plugin/theme
-      downloads.
-    - >-
-      CNPG -> explicitly supplied Kubernetes API CIDR TCP 443/6443.
+    operands are managed by the catalog CloudNativePG operator with their scoped
+    service-account exception. Default-deny ingress; outbound traffic is not
+    limited.
   risks:
     - risk: >-
         CNPG instance managers need the Kubernetes API and a scoped
@@ -52,10 +39,7 @@ security:
         operator-generated Pods.
       mitigation: >-
         Trust the pinned catalog operator, enforce namespace Pod Security
-        restricted, inspect the generated Pods, and restrict API egress to
-        kubeApiCidr.
-    - risk: A wrong kubeApiCidr stops database reconciliation.
-      mitigation: Use the IPv4 range that pods reach after CNI Service DNAT.
+        restricted and inspect the generated Pods.
     - risk: The first visitor can initialize the Halo administrator account.
       mitigation: >-
         Finish initialization with kubectl port-forward before publishing
@@ -65,12 +49,6 @@ security:
         Back up the Halo PVC off-node as well as the database, and
         test a coordinated restore. The built-in Halo backup also stays on the
         node.
-    - risk: >-
-        Halo egress allows public HTTPS only. Plugins and themes from private
-        repositories cannot download.
-      mitigation: >-
-        Add a separate NetworkPolicy egress rule scoped to the private
-        repository address.
 
 scalability:
   summary: One writable instance on one volume, with no failover.
@@ -90,9 +68,8 @@ scalability:
 upgradeNotes:
   - >-
     New installs start without database backups. Installs made before this
-    version keep their backups. To turn backups on, open the database in
-    Zeabur and use the Backups tab, then allow the database Pods egress to the
-    S3 endpoint on TCP 443 in the namespace NetworkPolicy.
+    version keep their backups. To turn backups on, open the database in Zeabur
+    and use the Backups tab.
   - >-
     Back up persistent application data and its database to storage outside the
     node before updating the image digest.

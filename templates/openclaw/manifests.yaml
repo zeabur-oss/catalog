@@ -154,9 +154,7 @@ metadata:
     app.kubernetes.io/name: openclaw-default-deny
 spec:
   podSelector: {matchLabels: {templates.zeabur.com/template: openclaw}}
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -170,9 +168,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: openclaw
       app.kubernetes.io/name: openclaw
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress:
   - from:
     - namespaceSelector:
@@ -184,32 +180,6 @@ spec:
     ports:
     - protocol: TCP
       port: 18789
-  egress:
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: openclaw
-          app.kubernetes.io/name: openclaw-sandbox-browser
-    ports:
-    - protocol: TCP
-      port: 9222
-  - {{ dnsEgress }}
-  - to:
-    - ipBlock:
-        cidr: 0.0.0.0/0
-        except:
-        - 0.0.0.0/8
-        - 10.0.0.0/8
-        - 100.64.0.0/10
-        - 127.0.0.0/8
-        - 169.254.0.0/16
-        - 172.16.0.0/12
-        - 192.168.0.0/16
-        - 224.0.0.0/4
-        - 240.0.0.0/4
-    ports:
-    - protocol: TCP
-      port: 443
 ---
 apiVersion: v1
 kind: Service

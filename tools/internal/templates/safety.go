@@ -37,7 +37,7 @@ const (
 	ErrTraefikProvider       Rule = "Traefik Ingress requires exact ingress/traefik provider"
 	ErrClusterIssuerProvider Rule = "ClusterIssuer annotation requires exact certificates/cert-manager provider"
 	ErrCNPGProvider          Rule = "CNPG workload requires exact databases/cloudnative-pg provider"
-	ErrDefaultDeny           Rule = "a NetworkPolicy <id>-default-deny that selects the template's pods and denies ingress and egress is required"
+	ErrDefaultDeny           Rule = "a NetworkPolicy <id>-default-deny that selects the template's pods and denies only ingress is required"
 	ErrTemplateLabel         Rule = "pods must have the label " + TemplateLabel + " set to the template ID"
 	ErrForeignPods           Rule = "NetworkPolicy selectors must select only pods with the label " + TemplateLabel + " set to the template ID"
 	ErrPositiveResource      Rule = "positive resource required"
@@ -238,7 +238,7 @@ func Safety(r *Template, b []byte, namespace string) error {
 			if !ownPods(sel, r.ID) {
 				fail(where, ErrForeignPods, "podSelector")
 			}
-			if name == r.ID+"-default-deny" && len(sel) == 1 && len(object(sel["matchLabels"])) == 1 && contains(array(spec["policyTypes"]), "Ingress") && contains(array(spec["policyTypes"]), "Egress") && len(array(spec["ingress"])) == 0 && len(array(spec["egress"])) == 0 {
+			if name == r.ID+"-default-deny" && len(sel) == 1 && len(object(sel["matchLabels"])) == 1 && len(array(spec["policyTypes"])) == 1 && contains(array(spec["policyTypes"]), "Ingress") && len(array(spec["ingress"])) == 0 {
 				defaultDeny = true
 			}
 			checkPolicyRules(r, spec, namespace, where, fail)
@@ -277,8 +277,8 @@ func checkPolicyRules(r *Template, spec map[string]any, namespace, where string,
 				}
 				ip := object(v["ipBlock"])
 				if text(ip["cidr"]) == "0.0.0.0/0" || text(ip["cidr"]) == "::/0" {
-					if len(r.Security.Egress) == 0 || len(r.Security.Risks) == 0 {
-						fail(where, "public network access requires explicit egress and risk documentation")
+					if len(r.Security.Risks) == 0 {
+						fail(where, "public network access requires risk documentation")
 					}
 				}
 			}

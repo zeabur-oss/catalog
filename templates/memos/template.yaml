@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Memos
+  version: "0.31.0"
   description: Memos note-taking service with SQLite on a persistent volume and a provisioned administrator.
   license: MIT
   homepage: https://usememos.com/
@@ -28,14 +29,10 @@ inputs:
 
 security:
   summary: >-
-    Runs as UID 10001 with a read-only root filesystem, no service-account
-    token and all capabilities dropped. The namespace denies all traffic by
-    default. Public sign-up is off.
-  egress:
-    - Cluster DNS
-    - >-
-      Public IPv4 TCP 80/443 for link previews, webhooks, OAuth sign-in and S3
-      storage; private, loopback, link-local and CGNAT ranges are blocked.
+    Runs as UID 10001 with a read-only root filesystem, no service-account token
+    and all capabilities dropped. Only the ingress controller and the template's
+    own Pods can connect to it. Outbound traffic is not limited. Public sign-up
+    is off.
   risks:
     - risk: The first account on an empty instance becomes the administrator.
       mitigation: >-
@@ -49,11 +46,11 @@ security:
         manages the general settings, edit it to change them, then restart
         the Pod.
     - risk: >-
-        Webhooks and link previews are server-side requests to addresses
-        that users choose.
+        Webhooks and link previews are server-side requests to addresses that
+        users choose.
       mitigation: >-
-        Memos blocks private webhook targets by default, and the NetworkPolicy
-        allows only public IPv4 on TCP 80 and 443.
+        Memos blocks private webhook targets by default. The template does not
+        limit outbound traffic; to limit it, add an egress NetworkPolicy.
 
 scalability:
   summary: One instance with SQLite on a 10Gi volume.

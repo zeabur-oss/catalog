@@ -211,7 +211,7 @@ metadata:
   namespace: '{{ .Namespace }}'
 spec:
   podSelector: {matchLabels: {templates.zeabur.com/template: umami}}
-  policyTypes: [Ingress, Egress]
+  policyTypes: [Ingress]
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -223,7 +223,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: umami
       app.kubernetes.io/name: umami
-  policyTypes: [Ingress, Egress]
+  policyTypes: [Ingress]
   ingress:
   - from:
     - namespaceSelector:
@@ -235,16 +235,6 @@ spec:
     ports:
     - protocol: TCP
       port: 3000
-  egress:
-  - {{ dnsEgress }}
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: umami
-          cnpg.io/cluster: umami-db
-    ports:
-    - protocol: TCP
-      port: 5432
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
@@ -294,7 +284,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: umami
       cnpg.io/cluster: umami-db
-  policyTypes: [Ingress, Egress]
+  policyTypes: [Ingress]
   ingress:
   - from:
     - podSelector:
@@ -326,13 +316,3 @@ spec:
       port: 5432
     - protocol: TCP
       port: 8000
-  egress:
-  - {{ dnsEgress }}
-  - to:
-    - ipBlock:
-        cidr: '{{ .Inputs.kubeApiCidr }}'
-    ports:
-    - protocol: TCP
-      port: 443
-    - protocol: TCP
-      port: 6443

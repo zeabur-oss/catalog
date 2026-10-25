@@ -147,7 +147,7 @@ metadata:
   namespace: '{{ .Namespace }}'
 spec:
   podSelector: {matchLabels: {templates.zeabur.com/template: meilisearch}}
-  policyTypes: [Ingress, Egress]
+  policyTypes: [Ingress]
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

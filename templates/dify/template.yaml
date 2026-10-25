@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Dify
+  version: "1.18.0"
   description: >-
     Dify LLM app development platform with PostgreSQL/pgvector, a Dragonfly
     queue, a code sandbox and S3 object storage.
@@ -64,6 +65,14 @@ services:
 
 inputs:
   - name: dragonflyLicenseOptIn
+    label: Dragonfly license agreement
+    locales:
+      zh-TW:
+        label: Dragonfly 授權同意
+        description: "Dragonfly 採用 BUSL-1.1。要把 Dragonfly 當成託管服務或記憶體資料庫產品提供給別人，需要另外取得授權。讀過授權後再同意。"
+      zh-CN:
+        label: Dragonfly 许可协议
+        description: "Dragonfly 采用 BUSL-1.1。要把 Dragonfly 作为托管服务或内存数据库产品提供给他人，需要另外取得许可。读完许可后再同意。"
     description: >-
       Dragonfly engine is BUSL-1.1 source-available. Offering third parties a
       hosted/managed Dragonfly service or an in-memory data store product needs
@@ -72,6 +81,14 @@ inputs:
     required: true
     validation: {pattern: ^I-ACCEPT-DRAGONFLY-BUSL-1\.1$}
   - name: adminCidr
+    label: Administrator IP range
+    locales:
+      zh-TW:
+        label: 管理員 IP 範圍
+        description: "只有這個 IPv4 範圍能開啟主控台和建立第一個擁有者，以 Traefik 看到的來源位址為準；公開的應用程式和 API 不受影響。建議填你固定 IP 的 /32。"
+      zh-CN:
+        label: 管理员 IP 范围
+        description: "只有这个 IPv4 范围能打开控制台和创建第一个所有者，以 Traefik 看到的来源地址为准；公开的应用和 API 不受影响。建议填你固定 IP 的 /32。"
     description: >-
       Administrator IPv4 source CIDR as Traefik sees it. Restricts all console
       API and first-owner setup; public apps and APIs remain public. Prefer your
@@ -79,10 +96,6 @@ inputs:
     required: true
     validation:
       pattern: ^((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])/([1-9]|[12][0-9]|3[0-2])$
-  - name: kubeApiCidr
-    description: Kubernetes API IPv4 CIDR as seen by the CNI.
-    required: true
-    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
   - name: appKey
     description: Generated app-key; retrieve from Secret dify-secrets, never from a public URL.
     generate: random
@@ -103,35 +116,66 @@ inputs:
     secret: {name: dify-secrets, key: sandbox-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: storageEndpoint
+    label: Storage endpoint
+    locales:
+      zh-TW:
+        label: 儲存空間端點
+        description: "現有的 S3 相容儲存空間 HTTPS 端點（TCP 443），用來存文件、模型加密金鑰和上傳的檔案。"
+      zh-CN:
+        label: 存储端点
+        description: "现有的 S3 兼容存储 HTTPS 端点（TCP 443），用来存文档、模型加密密钥和上传的文件。"
     description: >-
       Existing HTTPS S3-compatible object storage endpoint on TCP443 for
-      documents, model encryption keys and uploaded files. It must be on a
-      public address unless storageCidr is set.
+      documents, model encryption keys and uploaded files.
     required: true
     validation: {pattern: '^https://[A-Za-z0-9.-]+(:443)?$'}
   - name: storageRegion
+    label: Storage region
+    locales:
+      zh-TW:
+        label: 儲存空間區域
+        description: "S3 儲存桶所在的區域。"
+      zh-CN:
+        label: 存储区域
+        description: "S3 存储桶所在的区域。"
     description: Region for the S3-compatible storage bucket.
     required: true
     validation: {pattern: '^[A-Za-z0-9-]+$'}
   - name: storageBucket
+    label: Storage bucket
+    locales:
+      zh-TW:
+        label: 儲存桶
+        description: "現有的私有 S3 儲存桶，只給這個應用程式使用。"
+      zh-CN:
+        label: 存储桶
+        description: "现有的私有 S3 存储桶，只给这个应用使用。"
     description: Existing private S3 bucket dedicated to this application.
     required: true
     validation: {pattern: '^[a-z0-9][a-z0-9.-]+$'}
   - name: storageSecret
+    label: Storage credentials secret
+    locales:
+      zh-TW:
+        label: 儲存空間認證資訊的機密
+        description: "這個專案裡現有的機密，含 access-key 和 secret-key 兩個鍵。"
+      zh-CN:
+        label: 存储凭证的机密
+        description: "这个项目里现有的机密，含 access-key 和 secret-key 两个键。"
     description: >-
       Existing namespaced S3 application credentials Secret with keys access-key
       and secret-key.
     required: true
     validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
-  - name: storageCidr
-    description: >-
-      Optional IPv4 CIDR of a storage endpoint on a private network. Warning:
-      it lets the Dify API, worker and beat reach that private range on TCP443.
-      Keep it as narrow as the endpoint, such as one /32. Leave it empty for
-      public storage.
-    required: false
-    validation: {pattern: '^(([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2]))?$'}
   - name: storageCASecret
+    label: Storage CA secret
+    locales:
+      zh-TW:
+        label: 儲存空間 CA 的機密
+        description: "儲存空間用私有 CA 簽發憑證時才填：這個專案裡現有的機密，鍵 ca.crt 放 PEM 格式的 CA 憑證。公開信任的憑證請留空。"
+      zh-CN:
+        label: 存储 CA 的机密
+        description: "存储使用私有 CA 签发证书时才填：这个项目里现有的机密，键 ca.crt 放 PEM 格式的 CA 证书。公共信任的证书请留空。"
     description: >-
       Optional existing namespaced Secret with key ca.crt, the PEM CA that
       signed the storage endpoint certificate. Set it for a private CA. Leave
@@ -139,6 +183,14 @@ inputs:
     required: false
     validation: {pattern: '^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$'}
   - name: licenseOptIn
+    label: Dify license agreement
+    locales:
+      zh-TW:
+        label: Dify 授權同意
+        description: "Dify 採用修改過的 Apache 授權：沒有書面許可只能用一個工作區，前端的標誌和版權資訊都要保留。確認後再同意。"
+      zh-CN:
+        label: Dify 许可协议
+        description: "Dify 采用修改过的 Apache 许可证：没有书面许可只能用一个工作区，前端的标志和版权信息都要保留。确认后再同意。"
     description: >-
       Dify modified Apache license: one workspace only without written
       permission; keep all frontend logo/copyright. Type
@@ -149,17 +201,10 @@ inputs:
 security:
   summary: >-
     Restricted application/Dragonfly/gateway/proxy pods and a narrowly justified
-    baseline sandbox. Default-deny directional policies, generated secrets, TLS
-    ingress, operator-owned PostgreSQL/pgvector and Dragonfly.
-  egress:
-    - CoreDNS TCP/UDP53.
-    - >-
-      Application integrations and controlled Squid proxy: public IPv4 TCP80/443
-      excluding private/link-local/loopback/reserved targets.
-    - Explicit internal application/database/queue flows only.
-    - >-
-      CNPG operator-managed API TCP443/6443 restricted to the input CIDR.
-    - Storage endpoint TCP443 restricted to storageCidr, only when it is set.
+    baseline sandbox. Default-deny ingress with directional rules; the sandbox
+    reaches only the proxy and DNS, and other outbound traffic is not limited;
+    generated secrets, TLS ingress, operator-owned PostgreSQL/pgvector and
+    Dragonfly.
   risks:
     - risk: >-
         Dragonfly engine is BUSL-1.1 source-available and excludes third-party
@@ -187,12 +232,6 @@ security:
         Only the sandbox gets them, next to SYS_CHROOT/SETUID/SETGID. It still
         drops all other capabilities, permits no escalation and runs user code
         under the upstream seccomp filter with a separate user.
-    - risk: >-
-        With storageCidr set, the API, worker and beat can reach that private
-        range on TCP443.
-      mitigation: >-
-        It is empty by default. Set it to the storage endpoint only, such as
-        one /32.
     - risk: Dify trigger/debug Lua scripts access keys outside their declared KEYS.
       mitigation: >-
         Dragonfly runs with allow-undeclared-keys. These scripts run with global
@@ -225,10 +264,10 @@ security:
         Keep FORCE_VERIFYING_SIGNATURE true, disable remote debugging/install
         listener, only trusted administrator installs; one trust boundary and
         restricted pod identity.
-    - risk: CNPG instance managers require scoped Kubernetes API permissions.
+    - risk: >-
+        CNPG instance managers require scoped Kubernetes API permissions.
       mitigation: >-
-        Use the catalog operator and its scoped service account; API egress
-        uses the input CIDR.
+        Use the catalog operator and its scoped service account.
 
 scalability:
   summary: One instance per trusted owner; do not horizontally scale this deployment.
@@ -245,9 +284,8 @@ scalability:
 upgradeNotes:
   - >-
     New installs start without database backups. Installs made before this
-    version keep their backups. To turn backups on, open the database in
-    Zeabur and use the Backups tab, then allow the database Pods egress to the
-    S3 endpoint on TCP 443 in the namespace NetworkPolicy.
+    version keep their backups. To turn backups on, open the database in Zeabur
+    and use the Backups tab.
   - >-
     Read and explicitly accept the Dify modified Apache license: exactly one
     workspace unless separately authorized; keep frontend logos and copyright

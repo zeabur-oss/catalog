@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: LiteLLM
+  version: "v1.106.3"
   description: >-
     LiteLLM proxy for LLM provider APIs over HTTPS, with keys, models and
     spend in PostgreSQL 18 managed by CloudNativePG.
@@ -31,6 +32,14 @@ services:
 
 inputs:
   - name: licenseOptIn
+    label: License agreement
+    locales:
+      zh-TW:
+        label: 授權同意
+        description: "映像檔含 litellm_enterprise 套件，採用 BerriAI Enterprise 授權，正式環境使用需要訂閱。讀過授權後再同意。"
+      zh-CN:
+        label: 许可协议
+        description: "镜像含 litellm_enterprise 包，采用 BerriAI Enterprise 许可证，生产环境使用需要订阅。读完许可后再同意。"
     description: >-
       The image includes the litellm_enterprise package under the BerriAI
       Enterprise license, which allows production use only with a
@@ -51,23 +60,13 @@ inputs:
     generate: random
     secret: {name: litellm-secrets, key: salt-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
-  - name: kubeApiCidr
-    description: IPv4 CIDR of the Kubernetes API endpoint as the CNI sees it.
-    required: true
-    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
 
 security:
   summary: >-
-    Runs as UID 65534 with a read-only root filesystem, no service-account
-    token and all capabilities dropped. The namespace denies all traffic by
-    default. Every API call needs the master key or a key it issued.
-  egress:
-    - Cluster DNS
-    - LiteLLM to PostgreSQL 5432 with a verified CA
-    - >-
-      Public IPv4 TCP 80/443 for LLM provider APIs; private, loopback,
-      link-local and CGNAT ranges are blocked.
-    - CloudNativePG instances to the Kubernetes API 443/6443
+    Runs as UID 65534 with a read-only root filesystem, no service-account token
+    and all capabilities dropped. Only the ingress controller and the template's
+    own Pods can connect to it. Outbound traffic is not limited. Every API call
+    needs the master key or a key it issued.
   risks:
     - risk: >-
         The master key has full access to the proxy, its keys and the
@@ -80,15 +79,12 @@ security:
         No LITELLM_LICENSE is set, so enterprise features stay off. The
         installer must accept the enterprise license because the code ships in
         the image.
-    - risk: Models on private addresses, such as Ollama in the cluster, are unreachable.
-      mitigation: >-
-        The NetworkPolicy allows only public IPv4 on TCP 80 and 443. Add an
-        egress rule for a private model server you trust.
-    - risk: CloudNativePG instances call the Kubernetes API with an operator-created identity.
+    - risk: >-
+        CloudNativePG instances call the Kubernetes API with an operator-created
+        identity.
       mitigation: >-
         The databases/cloudnative-pg component creates RBAC for each cluster;
-        the LiteLLM Pod has no token. Database egress is limited to the API
-        CIDR.
+        the LiteLLM Pod has no token.
 
 scalability:
   summary: One LiteLLM instance with one PostgreSQL primary.
@@ -103,9 +99,8 @@ scalability:
 upgradeNotes:
   - >-
     New installs start without database backups. Installs made before this
-    version keep their backups. To turn backups on, open the database in
-    Zeabur and use the Backups tab, then allow the database Pods egress to the
-    S3 endpoint on TCP 443 in the namespace NetworkPolicy.
+    version keep their backups. To turn backups on, open the database in Zeabur
+    and use the Backups tab.
   - >-
     LiteLLM migrates the database on start. A rollback needs the database
     backup taken before the upgrade.

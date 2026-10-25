@@ -157,9 +157,7 @@ metadata:
   namespace: '{{ .Namespace }}'
 spec:
   podSelector: {matchLabels: {templates.zeabur.com/template: uptime-kuma}}
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -171,9 +169,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: uptime-kuma
       app.kubernetes.io/name: uptime-kuma
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress:
   - from:
     - namespaceSelector:
@@ -185,8 +181,3 @@ spec:
     ports:
     - protocol: TCP
       port: 3001
-  egress:
-  - {{ dnsEgress }}
-  - to:
-    - ipBlock:
-        cidr: '{{ .Inputs.monitorCidr }}'

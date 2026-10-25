@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: OpenClaw
+  version: "2026.10.7"
   description: >-
     OpenClaw (formerly Clawdbot, Moltbot) is a personal AI assistant that runs
     locally and connects to multiple messaging platforms (WhatsApp, Telegram,
@@ -30,16 +31,40 @@ inputs:
     secret: {name: openclaw-secrets, key: gateway-token}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: providerSecret
+    label: Provider API key secret
+    locales:
+      zh-TW:
+        label: 模型服務 API 金鑰的機密
+        description: "這個專案裡現有的機密，鍵 api-key 放模型服務的 API 金鑰。"
+      zh-CN:
+        label: 模型服务 API 密钥的机密
+        description: "这个项目里现有的机密，键 api-key 放模型服务的 API 密钥。"
     description: >-
       Pre-existing Secret in this namespace containing the model provider API
       key in key api-key.
     required: true
     validation: {pattern: '^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$'}
   - name: llmBaseUrl
+    label: API base URL
+    locales:
+      zh-TW:
+        label: API 網址
+        description: "OpenAI 相容的 HTTPS API 網址，只能是公開網路上的 TCP 443。"
+      zh-CN:
+        label: API 地址
+        description: "OpenAI 兼容的 HTTPS API 地址，只能是公网上的 TCP 443。"
     description: OpenAI-compatible HTTPS API base URL; public network on TCP 443 only.
     required: true
     validation: {pattern: '^https://[A-Za-z0-9.-]+(:443)?/[A-Za-z0-9._~/-]*$'}
   - name: llmModel
+    label: Model
+    locales:
+      zh-TW:
+        label: 模型
+        description: "模型服務上的模型名稱。"
+      zh-CN:
+        label: 模型
+        description: "模型服务上的模型名称。"
     description: Model identifier for the configured compatible provider.
     required: true
     validation: {pattern: '^[A-Za-z0-9._:/-]+$'}
@@ -47,18 +72,8 @@ inputs:
 security:
   summary: >-
     Non-root, read-only root filesystem, restricted PSS, no Kubernetes token,
-    TLS ingress, default-deny with explicit Traefik, DNS and public HTTPS
-    exceptions.
-  egress:
-    - Cluster DNS TCP/UDP 53 to kube-system CoreDNS.
-    - >-
-      Public IPv4 TCP 443 only; private, loopback, link-local, multicast and
-      reserved ranges denied. IPv6 denied.
-    - >-
-      Optional same-namespace openclaw-sandbox-browser companion TCP9222 only;
-      configure its openclaw-browser-sandbox clientApp input as openclaw, then
-      add an attach-only browser profile at
-      http://openclaw-sandbox-browser:9222.
+    TLS ingress, default-deny ingress with Traefik as the only outside client.
+    Outbound traffic is not limited.
   risks:
     - risk: >-
         An AI assistant may execute commands and read all state and model
@@ -66,17 +81,13 @@ security:
         injection.
       mitigation: >-
         One trusted owner per namespace/gateway; no host mounts, service-account
-        token or Docker socket; public HTTPS-only egress and limited resources.
-        Do not share with adversarial users.
+        token or Docker socket; limited resources. Do not share with adversarial
+        users.
     - risk: Agent state and channel credentials reside on one PVC.
       mitigation: >-
         Stop writes, then take encrypted external backups of the whole PVC, the
         gateway Secret and the provider Secret. A node-local StorageClass has no
         HA and no volume snapshots.
-    - risk: >-
-        Egress allows public IPv4 on TCP 443 only. Model providers on private
-        networks or other ports cannot connect.
-      mitigation: Add a separate NetworkPolicy egress rule scoped to that provider.
 
 scalability:
   summary: One instance per trusted owner; do not horizontally scale this deployment.

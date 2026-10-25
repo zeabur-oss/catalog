@@ -399,11 +399,8 @@ metadata:
   namespace: '{{ .Namespace }}'
 spec:
   podSelector: {matchLabels: {templates.zeabur.com/template: wordpress}}
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress: []
-  egress: []
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -415,9 +412,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: wordpress
       app: wordpress
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress:
   - from:
     - namespaceSelector:
@@ -429,30 +424,6 @@ spec:
     ports:
     - protocol: TCP
       port: 8080
-  egress:
-  - {{ dnsEgress }}
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: wordpress
-          app.kubernetes.io/name: mariadb
-          app.kubernetes.io/instance: mariadb
-    ports:
-    - protocol: TCP
-      port: 3306
-  - to:
-    - ipBlock:
-        cidr: 0.0.0.0/0
-        except:
-        - 10.0.0.0/8
-        - 172.16.0.0/12
-        - 192.168.0.0/16
-        - 127.0.0.0/8
-        - 169.254.0.0/16
-        - 100.64.0.0/10
-    ports:
-    - protocol: TCP
-      port: 443
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -468,6 +439,9 @@ spec:
     - podSelector: {matchLabels: {app: wordpress, templates.zeabur.com/template: wordpress}}
     - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: mariadb-operator}}
       podSelector: {matchLabels: {app.kubernetes.io/name: mariadb-operator}}
+    # The Pods of a Backup of the MariaDB. The Backup gives them these labels
+    # in spec.podMetadata.
+    - podSelector: {matchLabels: {app.kubernetes.io/component: backup, templates.zeabur.com/template: wordpress}}
     ports: [{protocol: TCP, port: 3306}]
 ---
 apiVersion: v1

@@ -178,7 +178,7 @@ metadata:
   namespace: '{{ .Namespace }}'
 spec:
   podSelector: {matchLabels: {templates.zeabur.com/template: memos}}
-  policyTypes: [Ingress, Egress]
+  policyTypes: [Ingress]
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -190,7 +190,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: memos
       app.kubernetes.io/name: memos
-  policyTypes: [Ingress, Egress]
+  policyTypes: [Ingress]
   ingress:
   - from:
     - namespaceSelector:
@@ -202,20 +202,3 @@ spec:
     ports:
     - protocol: TCP
       port: 5230
-  egress:
-  - {{ dnsEgress }}
-  - to:
-    - ipBlock:
-        cidr: 0.0.0.0/0
-        except:
-        - 10.0.0.0/8
-        - 172.16.0.0/12
-        - 192.168.0.0/16
-        - 127.0.0.0/8
-        - 169.254.0.0/16
-        - 100.64.0.0/10
-    ports:
-    - protocol: TCP
-      port: 80
-    - protocol: TCP
-      port: 443

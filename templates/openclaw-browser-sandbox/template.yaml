@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: OpenClaw Browser Sandbox
+  version: "edcc8e5"
   description: >-
     Headless Chromium browser sandbox that can be controlled via Chrome DevTools
     Protocol (CDP). Use this with OpenClaw or other services that need browser
@@ -20,6 +21,14 @@ services:
 
 inputs:
   - name: clientApp
+    label: Trusted caller
+    locales:
+      zh-TW:
+        label: 信任的呼叫端
+        description: "同一個專案裡可以呼叫瀏覽器的 Pod，填它的 app.kubernetes.io/name 標籤；搭配 openclaw 就填 openclaw。能偽造這個標籤或在專案裡建立 Pod 的人都會被信任。"
+      zh-CN:
+        label: 信任的调用方
+        description: "同一个项目里可以调用浏览器的 Pod，填它的 app.kubernetes.io/name 标签；搭配 openclaw 就填 openclaw。能伪造这个标签或在项目里创建 Pod 的人都会被信任。"
     description: >-
       Explicitly trusted same-namespace caller pod app.kubernetes.io/name label;
       use openclaw for openclaw. Anyone able to forge this label or create pods
@@ -27,6 +36,14 @@ inputs:
     required: true
     validation: {pattern: '^[a-z][a-z0-9-]{0,62}$'}
   - name: trustOptIn
+    label: Single-owner agreement
+    locales:
+      zh-TW:
+        label: 單一擁有者同意
+        description: "Chromium 以 --no-sandbox 執行，CDP 也沒有應用程式層的驗證，無法隔離惡意網頁或其他使用者。只給一位信任的擁有者和呼叫端使用。確認後再同意。"
+      zh-CN:
+        label: 单一所有者确认
+        description: "Chromium 以 --no-sandbox 运行，CDP 也没有应用层的验证，无法隔离恶意网页或其他用户。只给一位信任的所有者和调用方使用。确认后再同意。"
     description: >-
       Chromium runs with upstream --no-sandbox and CDP has no application
       authentication. Use it for one trusted owner and caller only. It gives no
@@ -38,15 +55,9 @@ inputs:
 security:
   summary: >-
     Private single-owner browser companion: restricted non-root read-only pod,
-    no privileges or API token, explicit approved-caller ingress only and
-    public-only egress. Chromium's renderer sandbox is disabled upstream, so a
-    hostile page can take over the browser pod.
-  egress:
-    - CoreDNS in kube-system TCP/UDP53.
-    - >-
-      Public IPv4 TCP80/443 excluding private, loopback, link-local, multicast
-      and reserved networks; IPv6 denied. Filtering is by IP range, so any
-      public host is reachable.
+    no privileges or API token, explicit approved-caller ingress only; outbound
+    traffic is not limited. Chromium's renderer sandbox is disabled upstream, so
+    a hostile page can take over the browser pod.
   risks:
     - risk: >-
         A malicious webpage compromises an unsandboxed Chromium process with the
@@ -54,9 +65,10 @@ security:
       mitigation: >-
         Explicit single-owner acknowledgement; no application/provider
         credentials, host mounts or Kubernetes token; read-only rootfs and
-        ephemeral state; public-only egress, restricted pod identity and
-        resource limits. Do not share one browser between users who do not trust
-        each other.
+        ephemeral state; restricted pod identity and resource limits. The
+        browser can open private and cloud metadata addresses unless you add an
+        egress NetworkPolicy. Do not share one browser between users who do not
+        trust each other.
     - risk: CDP is full browser control and the source proxy carries no authentication.
       mitigation: >-
         No public Ingress or LoadBalancer; NetworkPolicy admits only explicitly
@@ -83,9 +95,7 @@ upgradeNotes:
     mode, no renderer sandbox and no CDP authentication.
   - >-
     Configure OpenClaw attachOnly browser profile with cdpUrl
-    http://openclaw-sandbox-browser:9222. The approved caller must also allow
-    egress to this pod. The openclaw template includes this rule; other callers
-    need an equivalent rule scoped to this pod.
+    http://openclaw-sandbox-browser:9222.
   - >-
     Browser cookies and sessions are ephemeral and lost on restart; never treat
     this as durable storage or a secure cookie vault. Encrypt any exported

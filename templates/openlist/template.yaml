@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: OpenList
+  version: "latest-aio"
   description: File listing and WebDAV with FFmpeg and authenticated local Aria2 downloads.
   license: AGPL-3.0-only
   homepage: https://github.com/OpenListTeam/OpenList
@@ -36,31 +37,21 @@ inputs:
 security:
   summary: >-
     Namespaced, digest-pinned non-root workloads with read-only roots, no API
-    token, dropped capabilities and default-deny networking.
-  egress:
-    - Cluster DNS
-    - >-
-      Public IPv4 destinations on all ports/protocols for configured storage and
-      peer-to-peer downloads; RFC1918, loopback, metadata and multicast ranges
-      blocked.
+    token, dropped capabilities and default-deny ingress. Outbound traffic is
+    not limited.
   risks:
     - risk: >-
         Upstream AIO Aria2 configuration has no RPC secret; download providers
         can target arbitrary URLs.
       mitigation: >-
         The template starts Aria2 with authenticated RPC on loopback only and
-        keeps FFmpeg, BitTorrent and downloads. Egress to private and metadata
-        ranges is denied.
+        keeps FFmpeg, BitTorrent and downloads. Outbound traffic is not limited,
+        so download URLs can reach private and cloud metadata addresses; add an
+        egress NetworkPolicy to block them.
     - risk: Storage credentials and administrator hashes are held in the SQLite data volume.
       mitigation: >-
         Restrict PVC/Secret/log access, use generated administrator credentials
         and encrypt off-node backups.
-    - risk: >-
-        Egress blocks private ranges. Storage providers inside the cluster or on
-        a private network cannot connect.
-      mitigation: >-
-        Add a separate NetworkPolicy egress rule for that exact destination. Do
-        not open all private networks.
     - risk: >-
         OpenList is AGPL-3.0. A modified version offered over a network must
         offer its source to users.

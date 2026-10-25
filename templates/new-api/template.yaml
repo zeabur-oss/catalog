@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: New API
+  version: "v1.0.0-rc.46"
   description: >-
     OpenAI-compatible model gateway with secure initial owner provisioning and
     CloudNativePG PostgreSQL.
@@ -43,22 +44,11 @@ inputs:
     generate: random
     secret: {name: newapi-secrets, key: crypto-secret}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
-  - name: kubeApiCidr
-    description: IPv4 CIDR for Kubernetes API service/endpoint as seen by CNI.
-    required: true
-    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
 
 security:
   summary: >-
     Namespace-scoped, digest-pinned, non-root workloads with least-privilege
     network access and no default passwords.
-  egress:
-    - DNS TCP/UDP53 to kube-dns
-    - Private PostgreSQL5432 with CA verification
-    - >-
-      Public IPv4 HTTP80/HTTPS443 model-provider endpoints;
-      metadata/private/loopback/CGNAT excluded
-    - CNPG API443/6443 CIDR
   risks:
     - risk: First-visitor administrator takeover during uninitialized public deployment.
       mitigation: >-
@@ -72,17 +62,12 @@ security:
       mitigation: >-
         Restrict administrators and provider definitions;
         nonroot/read-only/token-off app, generated session/crypto secrets,
-        verified TLS PostgreSQL and explicit public-provider egress. Check AGPL
-        source-offer obligations for network use and modification.
-    - risk: >-
-        Egress allows only public IPv4 endpoints on ports 80 and 443. Model
-        providers on private, in-cluster or other-port addresses are
-        unreachable.
-      mitigation: Add a narrow NetworkPolicy egress rule for each private provider.
+        verified TLS PostgreSQL. Check AGPL source-offer obligations for network
+        use and modification.
     - risk: CNPG manager requires projected identity/API access.
       mitigation: >-
         Token access applies only to operator-generated database operands; the
-        New API Pod has automount false. Set the API CIDR.
+        New API Pod has automount false.
 
 scalability:
   summary: >-
@@ -101,9 +86,8 @@ scalability:
 upgradeNotes:
   - >-
     New installs start without database backups. Installs made before this
-    version keep their backups. To turn backups on, open the database in
-    Zeabur and use the Backups tab, then allow the database Pods egress to the
-    S3 endpoint on TCP 443 in the namespace NetworkPolicy.
+    version keep their backups. To turn backups on, open the database in Zeabur
+    and use the Backups tab.
   - >-
     Preserve Secrets and PVCs. Back up data off-node and rehearse a restore
     before changing image digests.

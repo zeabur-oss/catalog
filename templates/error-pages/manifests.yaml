@@ -257,7 +257,7 @@ metadata:
   namespace: {{ .Namespace }}
 spec:
   podSelector: {matchLabels: {templates.zeabur.com/template: error-pages}}
-  policyTypes: [Ingress, Egress]
+  policyTypes: [Ingress]
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -267,7 +267,7 @@ metadata:
 spec:
   podSelector:
     matchLabels: {app.kubernetes.io/name: error-pages, templates.zeabur.com/template: error-pages}
-  policyTypes: [Ingress, Egress]
+  policyTypes: [Ingress]
   ingress:
     - from:
         - namespaceSelector:

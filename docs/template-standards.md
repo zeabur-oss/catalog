@@ -57,6 +57,10 @@ exact versions the template pins.
 - Rendered resources reference Secrets; they never contain passwords, keys or
   tokens. Declare generated values as `generate` inputs and existing credentials
   as required inputs.
+- Give every input that a person gives a short `label`, and a label and
+  description in `locales` for zh-TW and zh-CN. Write them for the person
+  deploying, in everyday words, and keep any exact acknowledgement string as it
+  is.
 - Turn off unauthenticated admin and debug endpoints and insecure first-run
   defaults. Say how the first administrator signs in.
 
@@ -66,16 +70,32 @@ exact versions the template pins.
   pods, set it in the custom resource: `inheritedMetadata` for CloudNativePG,
   `podMetadata` for Dragonfly and MariaDB, and `replsets[].labels` for Percona.
 - Add a NetworkPolicy `<id>-default-deny` that selects these pods and denies
-  all ingress and egress. Then allow only the traffic the application needs:
-  the ingress controller, its own services, DNS and the external endpoints it
-  calls.
+  all ingress. Then allow only the connections the application needs: from the
+  ingress controller to the application, and from the template's own pods to
+  each other. A database accepts connections only from its application and its
+  operator.
+- Do not limit egress. Applications call model providers, webhooks, mail
+  servers and S3 stores that the template cannot know, and NetworkPolicy
+  matches IP ranges, not host names. A person who wants to limit egress adds a
+  NetworkPolicy of their own.
+- Exception: a component that holds sensitive data or runs untrusted code, and
+  never needs outbound connections, may deny egress. Allow only DNS
+  (`{{ dnsEgress }}`) and its own peers. A database that can back up connects to
+  S3, so it does not qualify.
 - Make every NetworkPolicy, and every peer in the template's namespace, select
   pods by that label. Other applications can share the namespace, and the
   template's policies must not change their traffic.
 - Keep databases, metrics and admin interfaces private. Expose only the
   application through the ingress component with a cert-manager certificate.
-- List every outbound destination in `security.egress`. NetworkPolicy matches
-  IP ranges and ports, not host names.
+
+## Labels
+
+- Set `metadata.version` to the tag of the application's main image. The
+  renderer adds `app.kubernetes.io/instance: <id>`,
+  `app.kubernetes.io/version: <version>` and `templates.zeabur.com/template:
+  <id>` to every object it renders and to the Secrets of generated inputs, so
+  `kubectl delete <kinds> -l app.kubernetes.io/instance=<id>` removes one
+  install from its namespace.
 
 ## Data and backups
 

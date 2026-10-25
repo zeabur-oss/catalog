@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: PostgreSQL with pgvector
+  version: "18-standard-trixie"
   description: >-
     CloudNativePG PostgreSQL 18 standard image with pgvector enabled.
   license: PostgreSQL AND Apache-2.0
@@ -18,21 +19,11 @@ services:
     ports: [{name: postgresql, port: 5432}]
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "1", memory: 1Gi}}
 
-inputs:
-  - name: kubeApiCidr
-    description: IPv4 CIDR for Kubernetes API as seen by the enforcing CNI.
-    required: true
-    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
-
 security:
   summary: >-
     CNPG owns non-root database operands and per-cluster RBAC; no public
     database port or superuser login. SQL extension creation runs only during
     initial database bootstrap.
-  egress:
-    - DNS TCP/UDP53
-    - Explicit API CIDR TCP443/6443
-    - Cluster peers TCP5432/8000
   risks:
     - risk: >-
         CNPG instance-manager Pods require scoped Kubernetes API tokens managed
@@ -50,8 +41,6 @@ security:
         A completed backup does not prove that vectors and indexes restore
         correctly.
       mitigation: Run a restore drill with representative vectors before production.
-    - risk: NetworkPolicy inputs are IPv4 only.
-      mitigation: IPv6-only clusters need an extended NetworkPolicy.
 
 scalability:
   summary: >-
@@ -70,9 +59,8 @@ scalability:
 upgradeNotes:
   - >-
     New installs start without database backups. Installs made before this
-    version keep their backups. To turn backups on, open the database in
-    Zeabur and use the Backups tab, then allow the database Pods egress to the
-    S3 endpoint on TCP 443 in the namespace NetworkPolicy.
+    version keep their backups. To turn backups on, open the database in Zeabur
+    and use the Backups tab.
   - >-
     Connect to postgresql-rw:5432, database zeabur, owner app, with credentials
     from the operator-generated postgresql-app Secret. Superuser access is

@@ -242,7 +242,7 @@ inputs:
   #   generate: random
   #   secret: {name: n8n-secrets, key: encryption-key}
 
-security: {...}      # summary, egress destinations, risks with mitigations
+security: {...}      # summary, risks with mitigations
 scalability: {...}   # replica range and what blocks more
 upgradeNotes: []     # what an upgrade needs
 smoke: []            # resource condition, then an HTTP or SQL check
@@ -250,8 +250,8 @@ smoke: []            # resource condition, then an HTTP or SQL check
 
 `manifests.yaml` is a Go template. It gets `.Namespace`, `.Domain`,
 `.ClusterIssuer` and `.Inputs.<name>`, and `{{ dnsEgress }}` inserts the
-NetworkPolicy rule to cluster DNS. Rendered objects reference Secrets and
-never contain generated values.
+NetworkPolicy rule to cluster DNS for a pod that denies egress. Rendered
+objects reference Secrets and never contain generated values.
 
 ## Adding a component
 
@@ -278,8 +278,8 @@ never contain generated values.
    template. The ID is lowercase words joined by hyphens, at most 49
    characters.
 2. Meet the [template standards](docs/template-standards.md): pinned images,
-   Restricted Pod Security, default-deny NetworkPolicy, resource limits,
-   backups for state, and honest scaling limits.
+   Restricted Pod Security, a NetworkPolicy that denies ingress, resource
+   limits, backups for state, and honest scaling limits.
 3. Add smoke checks that prove the application answers: a resource condition,
    and an HTTP or SQL check.
 4. Check locally. `values.json` is a JSON object with a value for each input
@@ -371,9 +371,8 @@ Every value is disposable test data. A value that uses `.S3` starts SeaweedFS
 443 from a test CA. Backups and object storage go to it. The Secret `e2e-s3`
 in the template's namespace holds its credentials and the CA as `ca.crt`.
 Templates take the CA through an optional input such as `backupCASecret`. A
-template that cannot use a custom CA skips only that smoke check. The test sets
-`kubeApiCidr` from the cluster. To test against other storage, change the
-template's values in `config/e2e.yaml`.
+template that cannot use a custom CA skips only that smoke check. To test
+against other storage, change the template's values in `config/e2e.yaml`.
 
 ## Releases
 

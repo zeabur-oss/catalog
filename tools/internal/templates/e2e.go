@@ -70,21 +70,13 @@ func E2E(t *catalog.Tester, r *Template, values E2EValues, measure bool) (usage 
 	useS3 := slices.ContainsFunc(slices.Collect(maps.Values(values.Inputs)), func(v string) bool { return strings.Contains(v, ".S3") })
 	opts := RenderOptions{Namespace: ns, Domain: r.ID + ".example.test", ClusterIssuer: selfSignedIssuer}
 	// Check safety before the cluster work, with a placeholder for the gateway address.
-	s3 := &S3{Endpoint: "https://s3.example.test", CIDR: "192.0.2.1/32", Bucket: "e2e"}
+	s3 := &S3{Endpoint: "https://s3.example.test", Bucket: "e2e"}
 	render := func() ([]byte, error) {
 		inputs, err := expand(r.ID, values.Inputs, s3)
 		if err != nil {
 			return nil, err
 		}
 		opts.Inputs = inputs
-		if needs(r, "kubeApiCidr") && opts.Inputs["kubeApiCidr"] == "" {
-			ip, err := kubectl(nil, "get", "endpointslices", "-n", "default", "-l", "kubernetes.io/service-name=kubernetes",
-				"-o", "jsonpath={.items[0].endpoints[0].addresses[0]}")
-			if err != nil {
-				return nil, err
-			}
-			opts.Inputs["kubeApiCidr"] = ip + "/32"
-		}
 		return Render(r, opts)
 	}
 	manifest, err := render()
@@ -221,15 +213,12 @@ func CreateNamespace(r *Template, ns string) error {
 	return err
 }
 
-// E2EManifest renders r for Namespace(r) with values, a placeholder S3
-// gateway and a placeholder API server address.
+// E2EManifest renders r for Namespace(r) with values and a placeholder S3
+// gateway.
 func E2EManifest(r *Template, values E2EValues) ([]byte, error) {
-	inputs, err := expand(r.ID, values.Inputs, &S3{Endpoint: "https://s3.example.test", CIDR: "192.0.2.1/32", Bucket: "e2e"})
+	inputs, err := expand(r.ID, values.Inputs, &S3{Endpoint: "https://s3.example.test", Bucket: "e2e"})
 	if err != nil {
 		return nil, err
-	}
-	if needs(r, "kubeApiCidr") && inputs["kubeApiCidr"] == "" {
-		inputs["kubeApiCidr"] = "192.0.2.2/32"
 	}
 	return Render(r, RenderOptions{Namespace: Namespace(r), Domain: r.ID + ".example.test", ClusterIssuer: selfSignedIssuer, Inputs: inputs})
 }
@@ -249,15 +238,6 @@ func expand(id string, inputs map[string]string, s3 *S3) (map[string]string, err
 		out[k] = b.String()
 	}
 	return out, nil
-}
-
-func needs(r *Template, input string) bool {
-	for _, in := range r.Inputs {
-		if in.Name == input {
-			return true
-		}
-	}
-	return false
 }
 
 func kubectl(stdin []byte, args ...string) (string, error) {

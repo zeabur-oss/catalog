@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: n8n PostgreSQL
+  version: "2.44.6"
   description: >-
     n8n 2.44.6 with external JavaScript/Python task runner and operator-managed
     PostgreSQL17.
@@ -33,12 +34,28 @@ services:
 
 inputs:
   - name: licenseOptIn
+    label: License agreement
+    locales:
+      zh-TW:
+        label: 授權同意
+        description: "n8n Sustainable Use License 只允許公司內部、個人或非商業用途。讀過授權、確認適用你的部署後再同意。"
+      zh-CN:
+        label: 许可协议
+        description: "n8n Sustainable Use License 只允许公司内部、个人或非商业用途。读完许可、确认适用你的部署后再同意。"
     description: >-
       Read the linked license restrictions and explicitly acknowledge
       applicability to your deployment.
     required: true
     validation: {pattern: ^I-ACCEPT-N8N-SUSTAINABLE-USE$}
   - name: ownerEmail
+    label: Owner email
+    locales:
+      zh-TW:
+        label: 擁有者 Email
+        description: "n8n 擁有者帳號的 Email，第一次有人連進來之前就會建立好。"
+      zh-CN:
+        label: 所有者邮箱
+        description: "n8n 所有者账号的邮箱，第一次有人访问之前就会创建好。"
     description: Owner email; account is provisioned before first public request.
     required: true
     validation: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
@@ -57,23 +74,11 @@ inputs:
     generate: random
     secret: {name: n8n-secrets, key: runner-token}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
-  - name: kubeApiCidr
-    description: IPv4 CIDR for the Kubernetes API service/endpoint as seen by the CNI.
-    required: true
-    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
 
 security:
   summary: >-
     Namespace-scoped, digest-pinned, non-root workloads with least-privilege
     network access and no default passwords.
-  egress:
-    - DNS TCP/UDP53 to kube-dns
-    - Authenticated task runner to broker5679
-    - >-
-      Public IPv4 TCP80/443 for workflows/providers;
-      private/loopback/CGNAT/metadata blocked
-    - App to PostgreSQL5432 with verified CA
-    - CNPG to the Kubernetes API443/6443 CIDR
   risks:
     - risk: >-
         n8n uses the Sustainable Use License. It is source-available and is not
@@ -88,9 +93,9 @@ security:
       mitigation: >-
         Use trusted administrators only; runner is isolated/token-off/read-only,
         env access blocked and dangerous executeCommand/localFileTrigger
-        excluded. Public IPv4 egress80/443 is explicit; private integrations
-        require an added NetworkPolicy. Community package tool usage is enabled;
-        administrators must vet each installed package.
+        excluded. Outbound traffic is not limited; add an egress NetworkPolicy
+        to keep workflows away from private addresses. Community package tool
+        usage is enabled; administrators must vet each installed package.
     - risk: >-
         First-owner signup can be claimed by the first visitor on an
         unconfigured public instance.
@@ -98,11 +103,12 @@ security:
         Use supported v2.17+ managed-owner variables and bcrypt hash of
         generated Secret before process startup. Deployment variables set the
         owner email and password at each restart. Public signup stays closed.
-    - risk: CNPG instance-manager must access Kubernetes API with operator-created identity.
+    - risk: >-
+        CNPG instance-manager must access Kubernetes API with operator-created
+        identity.
       mitigation: >-
         The databases/cloudnative-pg capability creates per-cluster RBAC; this
-        exception never applies to n8n/task-runner Pods. CNPG uses an explicit
-        API CIDR instead of node identity.
+        exception never applies to n8n/task-runner Pods.
     - risk: No SMTP server is configured.
       mitigation: >-
         Email invitations and password-reset mail do not work until you
@@ -124,9 +130,8 @@ scalability:
 upgradeNotes:
   - >-
     New installs start without database backups. Installs made before this
-    version keep their backups. To turn backups on, open the database in
-    Zeabur and use the Backups tab, then allow the database Pods egress to the
-    S3 endpoint on TCP 443 in the namespace NetworkPolicy.
+    version keep their backups. To turn backups on, open the database in Zeabur
+    and use the Backups tab.
   - >-
     Preserve Secrets and PVCs. Back up data off-node and rehearse a restore
     before changing image digests.

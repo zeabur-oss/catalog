@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Qdrant
+  version: "v1.20.0-unprivileged"
   description: Qdrant vector database with API key authentication and data on a persistent volume.
   license: Apache-2.0
   homepage: https://qdrant.tech/
@@ -30,9 +31,8 @@ security:
   summary: >-
     The official unprivileged image runs as UID 1000 with a read-only root
     filesystem, no service-account token and all capabilities dropped. The
-    namespace denies all traffic by default.
-  egress:
-    - None. Telemetry is turned off.
+    namespace lets only the ingress controller and labelled clients connect, and
+    qdrant has no outbound access.
   risks:
     - risk: The REST API and web dashboard are public through the Ingress.
       mitigation: >-

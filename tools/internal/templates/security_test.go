@@ -42,9 +42,8 @@ kind: NetworkPolicy
 metadata: {name: app-default-deny}
 spec:
   podSelector: {matchLabels: {templates.zeabur.com/template: app}}
-  policyTypes: [Ingress, Egress]
+  policyTypes: [Ingress]
   ingress: []
-  egress: []
 `
 
 // allow returns a NetworkPolicy that allows ingress to the template's pods from peer.
@@ -78,7 +77,7 @@ func TestSafetyRejectsPrivilegeAndNetworkEscapes(t *testing.T) {
 		"lifecycle-host":                  {strings.Replace(safeManifest, "          readinessProbe:", "          lifecycle: {preStop: {httpGet: {host: 127.0.0.1, path: /, port: 10250}}}\n          readinessProbe:", 1), templates.ErrPodSecurity},
 		"tag":                             {strings.Replace(safeManifest, "example.test/app@sha256:"+strings.Repeat("a", 64), "example.test/app:latest", 1), templates.ErrImageDigest},
 		"namespace":                       {strings.Replace(safeManifest, "name: app\nspec:", "name: app\n  namespace: kube-system\nspec:", 1), templates.ErrNamespaceEscape},
-		"network":                         {strings.Replace(safeManifest, "policyTypes: [Ingress, Egress]", "policyTypes: [Ingress]", 1), templates.ErrDefaultDeny},
+		"network":                         {strings.Replace(safeManifest, "policyTypes: [Ingress]", "policyTypes: [Ingress, Egress]", 1), templates.ErrDefaultDeny},
 		"pod-label":                       {strings.Replace(safeManifest, "labels: {app: app, templates.zeabur.com/template: app}", "labels: {app: app}", 1), templates.ErrTemplateLabel},
 		"deny-selects-namespace":          {strings.Replace(safeManifest, "podSelector: {matchLabels: {templates.zeabur.com/template: app}}", "podSelector: {}", 1), templates.ErrDefaultDeny},
 		"deny-name":                       {strings.Replace(safeManifest, "name: app-default-deny", "name: default-deny", 1), templates.ErrDefaultDeny},

@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Error pages
+  version: "1.30.5-alpine-slim"
   description: >-
     Serves a maintenance page and error pages (404, 502, 503, 504) from HTML in a
     ConfigMap, for Traefik errors middlewares and Ingress or HTTPRoute backends
@@ -27,7 +28,6 @@ security:
     capabilities. Only Traefik may reach the two ports. No outbound connections.
     The Service and the ConfigMap of pages carry the label
     zeabur.com/page-server=true, which Zeabur uses to find the page server.
-  egress: []
   risks:
     - risk: Anyone who can edit the ConfigMap changes what visitors see.
       mitigation: >-

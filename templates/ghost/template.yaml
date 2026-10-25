@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Ghost
+  version: "6-alpine"
   description: >-
     Ghost 6 publishing with a real MySQL dependency, persistent content and
     external SMTP.
@@ -25,6 +26,14 @@ services:
 
 inputs:
   - name: adminCidr
+    label: Administrator IP range
+    locales:
+      zh-TW:
+        label: 管理員 IP 範圍
+        description: "只有這個 IPv4 範圍能開啟 /ghost 後台、建立擁有者和使用管理 API，以 Traefik 看到的來源位址為準，建議填固定 IP 的 /32。公開的部落格和會員頁不受影響。不要填共用負載平衡器的範圍，那會放行任何人。"
+      zh-CN:
+        label: 管理员 IP 范围
+        description: "只有这个 IPv4 范围能打开 /ghost 后台、创建所有者和使用管理 API，以 Traefik 看到的来源地址为准，建议填固定 IP 的 /32。公开的博客和会员页不受影响。不要填共享负载均衡器的范围，那会放行任何人。"
     description: >-
       Administrator IPv4 source CIDR as Traefik sees it, preferably a fixed /32.
       IPv6 administrator access is not configured. Restricts /ghost owner setup,
@@ -44,18 +53,50 @@ inputs:
     secret: {name: ghost-secrets, key: root-password}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: smtpHost
+    label: SMTP host
+    locales:
+      zh-TW:
+        label: SMTP 主機
+        description: "寄送系統信件用的外部 SMTP 主機名稱。"
+      zh-CN:
+        label: SMTP 主机
+        description: "发送系统邮件用的外部 SMTP 主机名。"
     description: External SMTP hostname for transactional email.
     required: true
     validation: {pattern: '^[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?$'}
   - name: smtpPort
+    label: SMTP port
+    locales:
+      zh-TW:
+        label: SMTP 連接埠
+        description: "465（直接 TLS）或 587（STARTTLS）。"
+      zh-CN:
+        label: SMTP 端口
+        description: "465（直接 TLS）或 587（STARTTLS）。"
     description: 'SMTP TLS port: 465 for implicit TLS or 587 for STARTTLS.'
     required: true
     validation: {pattern: ^(465|587)$}
   - name: smtpFrom
+    label: Sender address
+    locales:
+      zh-TW:
+        label: 寄件人地址
+        description: "系統信件的寄件人 Email。"
+      zh-CN:
+        label: 发件人地址
+        description: "系统邮件的发件人邮箱。"
     description: Transactional mail From address.
     required: true
     validation: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
   - name: smtpSecret
+    label: SMTP credentials secret
+    locales:
+      zh-TW:
+        label: SMTP 認證資訊的機密
+        description: "這個專案裡現有的機密，含 SMTP 服務的 username 和 password。部署前先建立。"
+      zh-CN:
+        label: SMTP 凭证的机密
+        description: "这个项目里现有的机密，含 SMTP 服务的 username 和 password。部署前先创建。"
     description: >-
       Existing namespace Secret containing username and password for your SMTP
       provider. Create it before deploying.
@@ -65,13 +106,8 @@ inputs:
 security:
   summary: >-
     Namespaced, digest-pinned non-root workloads with read-only roots, no API
-    token, dropped capabilities and default-deny networking.
-  egress:
-    - Cluster DNS
-    - Ghost -> its MySQL service on TCP 3306 only.
-    - >-
-      Public HTTPS 443 for Ghost integrations/newsletter delivery; external SMTP
-      on TCP 465/587.
+    token, dropped capabilities and default-deny ingress. MySQL has no outbound
+    access; outbound traffic from Ghost is not limited.
   risks:
     - risk: The initial Ghost setup page allows the first visitor to create the site owner.
       mitigation: >-
@@ -93,13 +129,12 @@ security:
       mitigation: >-
         Keep one replica, protect both MySQL and content backups off-node, and
         add a catalog MySQL operator before promising HA or automated PITR.
-    - risk: Transactional SMTP and newsletter providers are external dependencies.
+    - risk: >-
+        Transactional SMTP and newsletter providers are external dependencies.
       mitigation: >-
         Supply a preexisting SMTP Secret, configure Mailgun in Ghost for bulk
-        newsletters, and protect provider credentials in backups. Egress allows
-        only public SMTP; a private SMTP server needs an added NetworkPolicy for
-        that destination. Self-hosted ActivityPub and Tinybird analytics are not
-        included.
+        newsletters, and protect provider credentials in backups. Self-hosted
+        ActivityPub and Tinybird analytics are not included.
 
 scalability:
   summary: >-

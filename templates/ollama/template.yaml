@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Ollama
+  version: "0.40.10"
   description: Private CPU-only local model runtime. The API has no public ingress.
   license: MIT
   homepage: https://github.com/ollama/ollama
@@ -17,11 +18,6 @@ security:
   summary: >-
     UID 1000, no capabilities, read-only image and private unauthenticated API;
     only explicitly labeled same-namespace clients can connect.
-  egress:
-    - CoreDNS TCP/UDP 53
-    - >-
-      Public HTTPS TCP443 for model registry/blob downloads; private/link-local
-      destinations excluded.
   risks:
     - risk: Ollama API has no application authentication and permits model management.
       mitigation: >-

@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Vaultwarden
+  version: "1.37.4"
   description: >-
     Vaultwarden, a Bitwarden-compatible password manager server, with SQLite
     on a persistent volume. Sign-up is closed; the administrator invites users.
@@ -32,14 +33,10 @@ inputs:
 
 security:
   summary: >-
-    Runs as UID 1000 with a read-only root filesystem, no service-account
-    token and all capabilities dropped. The namespace denies all traffic by
-    default. Sign-up is closed.
-  egress:
-    - Cluster DNS
-    - >-
-      Public IPv4 TCP 80/443 for website icons; private, loopback, link-local
-      and CGNAT ranges are blocked.
+    Runs as UID 1000 with a read-only root filesystem, no service-account token
+    and all capabilities dropped. Only the ingress controller and the template's
+    own Pods can connect to it. Outbound traffic is not limited. Sign-up is
+    closed.
   risks:
     - risk: Anyone who reaches the server could create an account.
       mitigation: >-
@@ -60,11 +57,11 @@ security:
         No SMTP server is configured. Invitation emails, two-factor email and
         emergency access emails are not sent.
       mitigation: >-
-        Configure the SMTP_ variables and add a NetworkPolicy egress rule for
-        the SMTP port of your mail server.
-    - risk: The icon service fetches favicons from websites that users store.
+        Configure the SMTP_ variables.
+    - risk: >-
+        The icon service fetches favicons from websites that users store.
       mitigation: >-
-        Egress allows only public IPv4 on TCP 80 and 443. Set
+        Vaultwarden refuses non-global addresses by default. Set
         ICON_SERVICE=none to turn it off.
 
 scalability:

@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: CLIProxyAPI
+  version: "v8.0.41"
   description: >-
     Authenticated OpenAI/Gemini-compatible API proxy with private OAuth
     onboarding and management.
@@ -36,14 +37,8 @@ inputs:
 security:
   summary: >-
     Restricted non-root workload; read-only root filesystem, no service-account
-    token, dropped capabilities, HTTPS ingress only from Traefik. Default-deny
-    networking permits cluster DNS and public HTTP(S), excluding private and
-    link-local networks.
-  egress:
-    - Cluster DNS UDP/TCP 53
-    - >-
-      Public Internet TCP 80/443; excludes private, loopback, link-local, CGNAT
-      and multicast IPv4 destinations
+    token, dropped capabilities, HTTPS ingress only from Traefik. Outbound
+    traffic is not limited.
   risks:
     - risk: >-
         OAuth refresh tokens grant upstream provider access and may be subject

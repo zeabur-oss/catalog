@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: n8n SQLite
+  version: "2.44.6"
   description: n8n 2.44.6 with external JavaScript/Python task runner and SQLite persistence.
   license: LicenseRef-n8n-sustainable-use
   # Also: https://docs.n8n.io/hosting/, https://docs.n8n.io/sustainable-use-license/
@@ -24,12 +25,28 @@ services:
 
 inputs:
   - name: licenseOptIn
+    label: License agreement
+    locales:
+      zh-TW:
+        label: 授權同意
+        description: "n8n Sustainable Use License 只允許公司內部、個人或非商業用途。讀過授權、確認適用你的部署後再同意。"
+      zh-CN:
+        label: 许可协议
+        description: "n8n Sustainable Use License 只允许公司内部、个人或非商业用途。读完许可、确认适用你的部署后再同意。"
     description: >-
       Read the linked license restrictions and explicitly acknowledge
       applicability to your deployment.
     required: true
     validation: {pattern: ^I-ACCEPT-N8N-SUSTAINABLE-USE$}
   - name: ownerEmail
+    label: Owner email
+    locales:
+      zh-TW:
+        label: 擁有者 Email
+        description: "n8n 擁有者帳號的 Email，第一次有人連進來之前就會建立好。"
+      zh-CN:
+        label: 所有者邮箱
+        description: "n8n 所有者账号的邮箱，第一次有人访问之前就会创建好。"
     description: Owner email; account is provisioned before first public request.
     required: true
     validation: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
@@ -53,12 +70,6 @@ security:
   summary: >-
     Namespace-scoped, digest-pinned, non-root workloads with least-privilege
     network access and no default passwords.
-  egress:
-    - DNS TCP/UDP53 to kube-dns
-    - Authenticated task runner to broker5679
-    - >-
-      Public IPv4 TCP80/443 for workflows/providers;
-      private/loopback/CGNAT/metadata blocked
   risks:
     - risk: >-
         n8n uses the Sustainable Use License. It is source-available and is not
@@ -73,9 +84,9 @@ security:
       mitigation: >-
         Use trusted administrators only; runner is isolated/token-off/read-only,
         env access blocked and dangerous executeCommand/localFileTrigger
-        excluded. Public IPv4 egress80/443 is explicit; private integrations
-        require an added NetworkPolicy. Community package tool usage is enabled;
-        administrators must vet each installed package.
+        excluded. Outbound traffic is not limited; add an egress NetworkPolicy
+        to keep workflows away from private addresses. Community package tool
+        usage is enabled; administrators must vet each installed package.
     - risk: >-
         First-owner signup can be claimed by the first visitor on an
         unconfigured public instance.

@@ -457,11 +457,8 @@ metadata:
   namespace: '{{ .Namespace }}'
 spec:
   podSelector: {matchLabels: {templates.zeabur.com/template: librechat}}
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress: []
-  egress: []
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -473,9 +470,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: librechat
       app.kubernetes.io/name: librechat
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress:
   - from:
     - namespaceSelector:
@@ -486,45 +481,6 @@ spec:
           app.kubernetes.io/name: traefik
     ports:
     - port: 3080
-      protocol: TCP
-  egress:
-  - {{ dnsEgress }}
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: librechat
-          app.kubernetes.io/instance: mongodb
-          app.kubernetes.io/name: percona-server-mongodb
-    ports:
-    - port: 27017
-      protocol: TCP
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: librechat
-          app.kubernetes.io/name: meilisearch
-    ports:
-    - port: 7700
-      protocol: TCP
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: librechat
-          app.kubernetes.io/name: rag-api
-    ports:
-    - port: 8000
-      protocol: TCP
-  - to:
-    - ipBlock:
-        cidr: 0.0.0.0/0
-        except:
-        - 10.0.0.0/8
-        - 172.16.0.0/12
-        - 192.168.0.0/16
-        - 169.254.0.0/16
-        - 127.0.0.0/8
-    ports:
-    - port: 443
       protocol: TCP
 ---
 apiVersion: networking.k8s.io/v1
@@ -537,9 +493,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: librechat
       app.kubernetes.io/name: rag-api
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress:
   - from:
     - podSelector:
@@ -548,28 +502,6 @@ spec:
           app.kubernetes.io/name: librechat
     ports:
     - port: 8000
-      protocol: TCP
-  egress:
-  - {{ dnsEgress }}
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: librechat
-          cnpg.io/cluster: rag-db
-    ports:
-    - port: 5432
-      protocol: TCP
-  - to:
-    - ipBlock:
-        cidr: 0.0.0.0/0
-        except:
-        - 10.0.0.0/8
-        - 172.16.0.0/12
-        - 192.168.0.0/16
-        - 169.254.0.0/16
-        - 127.0.0.0/8
-    ports:
-    - port: 443
       protocol: TCP
 ---
 apiVersion: networking.k8s.io/v1
@@ -607,9 +539,7 @@ spec:
       templates.zeabur.com/template: librechat
       app.kubernetes.io/instance: mongodb
       app.kubernetes.io/name: percona-server-mongodb
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress:
   - from:
     - podSelector:
@@ -635,14 +565,6 @@ spec:
     ports:
     - port: 27017
       protocol: TCP
-  egress:
-  - {{ dnsEgress }}
-  - to:
-    - podSelector:
-        matchLabels: *id001
-    ports:
-    - port: 27017
-      protocol: TCP
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -654,9 +576,7 @@ spec:
     matchLabels: &id001
       templates.zeabur.com/template: librechat
       cnpg.io/cluster: rag-db
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress:
   - from:
     - podSelector:
@@ -689,16 +609,6 @@ spec:
         matchLabels: *id001
     ports:
     - port: 8000
-      protocol: TCP
-  egress:
-  - {{ dnsEgress }}
-  - to:
-    - ipBlock:
-        cidr: '{{ .Inputs.kubeApiCidr }}'
-    ports:
-    - port: 443
-      protocol: TCP
-    - port: 6443
       protocol: TCP
 ---
 apiVersion: apps/v1

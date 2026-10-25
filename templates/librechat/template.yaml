@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: LibreChat
+  version: "latest"
   description: >-
     Authenticated AI chat with Percona-managed MongoDB, CNPG pgvector RAG and
     private community Meilisearch.
@@ -41,12 +42,28 @@ services:
 
 inputs:
   - name: licenseOptIn
+    label: MongoDB license agreement
+    locales:
+      zh-TW:
+        label: MongoDB 授權同意
+        description: "Percona MongoDB 採用 SSPL-1.0。讀過第 13 條提供服務的義務後再同意。"
+      zh-CN:
+        label: MongoDB 许可协议
+        description: "Percona MongoDB 采用 SSPL-1.0。读完第 13 条提供服务的义务后再同意。"
     description: >-
       The Percona MongoDB server uses SSPL-1.0. Read section 13 on
       service-offering obligations, then type I-ACCEPT-MONGODB-SSPL.
     required: true
     validation: {pattern: ^I-ACCEPT-MONGODB-SSPL$}
   - name: adminEmail
+    label: Administrator email
+    locales:
+      zh-TW:
+        label: 管理員 Email
+        description: "第一個管理員的 Email。密碼會自動產生，放在機密 app-secrets 的 admin-password。不開放公開註冊。之後改機密不會重設已有的密碼。"
+      zh-CN:
+        label: 管理员邮箱
+        description: "第一个管理员的邮箱。密码会自动生成，放在机密 app-secrets 的 admin-password。不开放公开注册。之后修改机密不会重置已有的密码。"
     description: >-
       Initial administrator email; password is generated in
       app-secrets/admin-password. Public registration is disabled. Changing the
@@ -54,6 +71,14 @@ inputs:
     required: true
     validation: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
   - name: providerSecret
+    label: OpenAI API key secret
+    locales:
+      zh-TW:
+        label: OpenAI API 金鑰的機密
+        description: "這個專案裡現有的機密，含真實的 OPENAI_API_KEY，聊天和 RAG 嵌入都會用到。"
+      zh-CN:
+        label: OpenAI API 密钥的机密
+        description: "这个项目里现有的机密，含真实的 OPENAI_API_KEY，聊天和 RAG 嵌入都会用到。"
     description: Existing Secret with real OPENAI_API_KEY used by chat and RAG embeddings.
     required: true
     validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
@@ -92,10 +117,6 @@ inputs:
     generate: random
     secret: {name: app-secrets, key: meili-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
-  - name: kubeApiCidr
-    description: Kubernetes API IPv4 CIDR as seen by the CNI.
-    required: true
-    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
 
 security:
   summary: >-
@@ -105,10 +126,6 @@ security:
     tokens. mongod requires client certificates: LibreChat presents a 90-day
     client-auth certificate from the cluster CA, renewed by cert-manager, and
     restarts when it changes.
-  egress:
-    - Explicit internal Mongo27017, Meili7700, RAG8000, PostgreSQL5432 flows.
-    - CoreDNS TCP/UDP53; public HTTPS443 for application providers.
-    - Database peer27017 or5432/8000; CNPG API CIDR443/6443.
   risks:
     - risk: >-
         Percona v1.23.1 entry scripts write hardcoded /tmp/tls.pem and
@@ -126,11 +143,11 @@ security:
         service. The Apache-2.0 operator license covers only the operator.
         Meilisearch uses the MIT community image; BUSL enterprise modules are
         not included.
-    - risk: CNPG instance manager requires Kubernetes API credentials.
+    - risk: >-
+        CNPG instance manager requires Kubernetes API credentials.
       mitigation: >-
-        The catalog operator creates a per-cluster SA/RBAC; permit only the
-        explicit API endpoint CIDR. Ordinary app and Percona operand tokens are
-        disabled.
+        The catalog operator creates a per-cluster SA/RBAC. Ordinary app and
+        Percona operand tokens are disabled.
     - risk: >-
         Meilisearch has no catalog operator, and local files and databases have
         separate recovery points.
@@ -166,9 +183,8 @@ scalability:
 upgradeNotes:
   - >-
     New installs start without database backups. Installs made before this
-    version keep their backups. To turn backups on, open the database in
-    Zeabur and use the Backups tab, then allow the database Pods egress to the
-    S3 endpoint on TCP 443 in the namespace NetworkPolicy.
+    version keep their backups. To turn backups on, open the database in Zeabur
+    and use the Backups tab.
   - >-
     Back up persistent state off-node before accepting an image digest or schema
     migration; restore into a separate namespace before cutover.

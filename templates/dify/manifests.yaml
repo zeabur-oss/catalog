@@ -10,9 +10,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: dify
       cnpg.io/cluster: dify-db
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress:
   - from:
     - podSelector:
@@ -44,16 +42,6 @@ spec:
       port: 5432
     - protocol: TCP
       port: 8000
-  egress:
-  - {{ dnsEgress }}
-  - to:
-    - ipBlock:
-        cidr: '{{ .Inputs.kubeApiCidr }}'
-    ports:
-    - protocol: TCP
-      port: 443
-    - protocol: TCP
-      port: 6443
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -64,9 +52,7 @@ metadata:
     app.kubernetes.io/name: dify-default-deny
 spec:
   podSelector: {matchLabels: {templates.zeabur.com/template: dify}}
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -109,9 +95,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: dify
       app.kubernetes.io/name: dify-api
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress:
   - from:
     - podSelector:
@@ -137,260 +121,6 @@ spec:
     ports:
     - protocol: TCP
       port: 5001
-  egress:
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          app: dify-dragonfly
-    ports:
-    - protocol: TCP
-      port: 6379
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          app.kubernetes.io/name: dify-plugin
-    ports:
-    - protocol: TCP
-      port: 5002
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          app.kubernetes.io/name: dify-sandbox
-    ports:
-    - protocol: TCP
-      port: 8194
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          app.kubernetes.io/name: dify-proxy
-    ports:
-    - protocol: TCP
-      port: 3128
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          cnpg.io/cluster: dify-db
-    ports:
-    - protocol: TCP
-      port: 5432
-  - {{ dnsEgress }}
-{{- if .Inputs.storageCidr }}
-  - to:
-    - ipBlock:
-        cidr: '{{ .Inputs.storageCidr }}'
-    ports:
-    - protocol: TCP
-      port: 443
-{{- end }}
-  - to:
-    - ipBlock:
-        cidr: 0.0.0.0/0
-        except:
-        - 0.0.0.0/8
-        - 10.0.0.0/8
-        - 100.64.0.0/10
-        - 127.0.0.0/8
-        - 169.254.0.0/16
-        - 172.16.0.0/12
-        - 192.168.0.0/16
-        - 224.0.0.0/4
-        - 240.0.0.0/4
-    ports:
-    - protocol: TCP
-      port: 443
-    - protocol: TCP
-      port: 80
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: dify-worker-connections
-  namespace: '{{ .Namespace }}'
-  labels:
-    app.kubernetes.io/name: dify-worker-connections
-spec:
-  podSelector:
-    matchLabels:
-      templates.zeabur.com/template: dify
-      app.kubernetes.io/name: dify-worker
-  policyTypes:
-  - Ingress
-  - Egress
-  ingress: []
-  egress:
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          app: dify-dragonfly
-    ports:
-    - protocol: TCP
-      port: 6379
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          app.kubernetes.io/name: dify-plugin
-    ports:
-    - protocol: TCP
-      port: 5002
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          app.kubernetes.io/name: dify-sandbox
-    ports:
-    - protocol: TCP
-      port: 8194
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          app.kubernetes.io/name: dify-proxy
-    ports:
-    - protocol: TCP
-      port: 3128
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          app.kubernetes.io/name: dify-api
-    ports:
-    - protocol: TCP
-      port: 5001
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          cnpg.io/cluster: dify-db
-    ports:
-    - protocol: TCP
-      port: 5432
-  - {{ dnsEgress }}
-{{- if .Inputs.storageCidr }}
-  - to:
-    - ipBlock:
-        cidr: '{{ .Inputs.storageCidr }}'
-    ports:
-    - protocol: TCP
-      port: 443
-{{- end }}
-  - to:
-    - ipBlock:
-        cidr: 0.0.0.0/0
-        except:
-        - 0.0.0.0/8
-        - 10.0.0.0/8
-        - 100.64.0.0/10
-        - 127.0.0.0/8
-        - 169.254.0.0/16
-        - 172.16.0.0/12
-        - 192.168.0.0/16
-        - 224.0.0.0/4
-        - 240.0.0.0/4
-    ports:
-    - protocol: TCP
-      port: 443
-    - protocol: TCP
-      port: 80
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: dify-beat-connections
-  namespace: '{{ .Namespace }}'
-  labels:
-    app.kubernetes.io/name: dify-beat-connections
-spec:
-  podSelector:
-    matchLabels:
-      templates.zeabur.com/template: dify
-      app.kubernetes.io/name: dify-beat
-  policyTypes:
-  - Ingress
-  - Egress
-  ingress: []
-  egress:
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          app: dify-dragonfly
-    ports:
-    - protocol: TCP
-      port: 6379
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          app.kubernetes.io/name: dify-plugin
-    ports:
-    - protocol: TCP
-      port: 5002
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          app.kubernetes.io/name: dify-sandbox
-    ports:
-    - protocol: TCP
-      port: 8194
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          app.kubernetes.io/name: dify-proxy
-    ports:
-    - protocol: TCP
-      port: 3128
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          app.kubernetes.io/name: dify-api
-    ports:
-    - protocol: TCP
-      port: 5001
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          cnpg.io/cluster: dify-db
-    ports:
-    - protocol: TCP
-      port: 5432
-  - {{ dnsEgress }}
-{{- if .Inputs.storageCidr }}
-  - to:
-    - ipBlock:
-        cidr: '{{ .Inputs.storageCidr }}'
-    ports:
-    - protocol: TCP
-      port: 443
-{{- end }}
-  - to:
-    - ipBlock:
-        cidr: 0.0.0.0/0
-        except:
-        - 0.0.0.0/8
-        - 10.0.0.0/8
-        - 100.64.0.0/10
-        - 127.0.0.0/8
-        - 169.254.0.0/16
-        - 172.16.0.0/12
-        - 192.168.0.0/16
-        - 224.0.0.0/4
-        - 240.0.0.0/4
-    ports:
-    - protocol: TCP
-      port: 443
-    - protocol: TCP
-      port: 80
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -404,9 +134,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: dify
       app: dify-dragonfly
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress:
   - from:
     - podSelector:
@@ -450,8 +178,6 @@ spec:
     ports:
     - protocol: TCP
       port: 9999
-  egress:
-  - {{ dnsEgress }}
 ---
 apiVersion: v1
 kind: Service
@@ -480,9 +206,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: dify
       app.kubernetes.io/name: dify-web
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress:
   - from:
     - podSelector:
@@ -492,34 +216,6 @@ spec:
     ports:
     - protocol: TCP
       port: 3000
-  egress:
-  - {{ dnsEgress }}
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          app.kubernetes.io/name: dify-api
-    ports:
-    - protocol: TCP
-      port: 5001
-  - to:
-    - ipBlock:
-        cidr: 0.0.0.0/0
-        except:
-        - 0.0.0.0/8
-        - 10.0.0.0/8
-        - 100.64.0.0/10
-        - 127.0.0.0/8
-        - 169.254.0.0/16
-        - 172.16.0.0/12
-        - 192.168.0.0/16
-        - 224.0.0.0/4
-        - 240.0.0.0/4
-    ports:
-    - protocol: TCP
-      port: 443
-    - protocol: TCP
-      port: 80
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -562,9 +258,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: dify
       app.kubernetes.io/name: dify-plugin
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress:
   - from:
     - podSelector:
@@ -598,50 +292,6 @@ spec:
     ports:
     - protocol: TCP
       port: 5002
-  egress:
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          app: dify-dragonfly
-    ports:
-    - protocol: TCP
-      port: 6379
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          app.kubernetes.io/name: dify-api
-    ports:
-    - protocol: TCP
-      port: 5001
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          cnpg.io/cluster: dify-db
-    ports:
-    - protocol: TCP
-      port: 5432
-  - {{ dnsEgress }}
-  - to:
-    - ipBlock:
-        cidr: 0.0.0.0/0
-        except:
-        - 0.0.0.0/8
-        - 10.0.0.0/8
-        - 100.64.0.0/10
-        - 127.0.0.0/8
-        - 169.254.0.0/16
-        - 172.16.0.0/12
-        - 192.168.0.0/16
-        - 224.0.0.0/4
-        - 240.0.0.0/4
-    ports:
-    - protocol: TCP
-      port: 443
-    - protocol: TCP
-      port: 80
 ---
 apiVersion: v1
 kind: Service
@@ -789,9 +439,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: dify
       app.kubernetes.io/name: dify-proxy
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress:
   - from:
     - podSelector:
@@ -825,26 +473,6 @@ spec:
     ports:
     - protocol: TCP
       port: 3128
-  egress:
-  - {{ dnsEgress }}
-  - to:
-    - ipBlock:
-        cidr: 0.0.0.0/0
-        except:
-        - 0.0.0.0/8
-        - 10.0.0.0/8
-        - 100.64.0.0/10
-        - 127.0.0.0/8
-        - 169.254.0.0/16
-        - 172.16.0.0/12
-        - 192.168.0.0/16
-        - 224.0.0.0/4
-        - 240.0.0.0/4
-    ports:
-    - protocol: TCP
-      port: 443
-    - protocol: TCP
-      port: 80
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -963,9 +591,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: dify
       app.kubernetes.io/name: dify
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -979,9 +605,7 @@ spec:
     matchLabels:
       templates.zeabur.com/template: dify
       app.kubernetes.io/name: dify
-  policyTypes:
-  - Ingress
-  - Egress
+  policyTypes: [Ingress]
   ingress:
   - from:
     - namespaceSelector:
@@ -993,32 +617,6 @@ spec:
     ports:
     - protocol: TCP
       port: 8080
-  egress:
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          app.kubernetes.io/name: dify-api
-    ports:
-    - protocol: TCP
-      port: 5001
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          app.kubernetes.io/name: dify-web
-    ports:
-    - protocol: TCP
-      port: 3000
-  - to:
-    - podSelector:
-        matchLabels:
-          templates.zeabur.com/template: dify
-          app.kubernetes.io/name: dify-plugin
-    ports:
-    - protocol: TCP
-      port: 5002
-  - {{ dnsEgress }}
 ---
 apiVersion: v1
 kind: Service

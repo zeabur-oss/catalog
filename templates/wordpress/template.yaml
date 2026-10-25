@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: WordPress
+  version: "php8.3-fpm-alpine"
   description: >-
     WordPress PHP 8.3 with TLS MariaDB Operator 11.4 LTS and preinstalled owner.
   license: GPL-2.0-or-later AND GPL-2.0-only AND BSD-2-Clause AND MIT
@@ -28,6 +29,14 @@ services:
 
 inputs:
   - name: adminEmail
+    label: Administrator email
+    locales:
+      zh-TW:
+        label: 管理員 Email
+        description: "WordPress 管理員的 Email。"
+      zh-CN:
+        label: 管理员邮箱
+        description: "WordPress 管理员的邮箱。"
     description: WordPress administrator email.
     required: true
     validation: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
@@ -90,12 +99,8 @@ inputs:
 security:
   summary: >-
     Restricted non-root application and MariaDB Pods, TLS-required database,
-    generated SQL credentials and default-deny networking. Operator helper
-    images are a catalog trust boundary.
-  egress:
-    - >-
-      WordPress to MariaDB3306 using TLS; public IPv4 HTTPS443 for updates with
-      private ranges excluded
+    generated SQL credentials and default-deny ingress. Operator helper images
+    are a catalog trust boundary.
   risks:
     - risk: >-
         WordPress plugins and themes execute code with database and
@@ -134,9 +139,13 @@ scalability:
 upgradeNotes:
   - >-
     New installs start without database backups. Installs made before this
-    version keep their backups. To turn backups on, open the database in
-    Zeabur and use the Backups tab, then allow the database Pods egress to the
-    S3 endpoint on TCP 443 in the namespace NetworkPolicy.
+    version keep their backups. To turn backups on, open the database in Zeabur
+    and use the Backups tab.
+  - >-
+    A Backup of the MariaDB gives its Pods the labels
+    templates.zeabur.com/template: wordpress and app.kubernetes.io/component:
+    backup in spec.podMetadata. MariaDB accepts connections from these Pods.
+    Zeabur adds the labels to the Backups it creates.
   - >-
     Preserve Secrets and PVCs. Back up data off-node and rehearse a restore
     before changing image digests.
