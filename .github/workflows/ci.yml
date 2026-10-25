@@ -40,11 +40,11 @@ jobs:
       - run: nix develop -c go test ./...
       - name: Validate, render, template lint, server-side dry run
         run: nix develop -c go run ./tools/cmd/catalog e2e -tier l0
-      - run: nix develop -c go run ./tools/cmd/catalog index
+      - run: nix build .#release
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: index
-          path: index.json
+          name: release
+          path: result/
 
   l1-matrix:
     if: github.event_name != 'pull_request'

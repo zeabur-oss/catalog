@@ -1,6 +1,6 @@
-# On a semver tag: run L2 (e2e.yml), then validate, build index.json and bundle.tar.gz, write
-# checksums.txt, sign all three with cosign keyless (GitHub OIDC) and publish
-# them on the GitHub release.
+# On a semver tag: run L2 (e2e.yml), validate, then build index.json, bundle.tar.gz and
+# checksums.txt with `nix build .#release` (Zeabur builds the same output at its pinned commit),
+# sign all three with cosign keyless (GitHub OIDC) and publish them on the GitHub release.
 name: release
 
 on:
@@ -28,14 +28,12 @@ jobs:
           nix develop -c sh -c '
             go test ./... &&
             go run ./tools/cmd/catalog validate &&
-            go run ./tools/cmd/catalog index &&
             go run ./tools/cmd/catalog render
           '
+          nix build .#release
           mkdir dist
-          cp index.json dist/
-          tar --sort=name --mtime="@0" --owner=0 --group=0 --numeric-owner -czf dist/bundle.tar.gz \
-            index.json components templates schema config measurements LICENSE README.md
-          (cd dist && sha256sum bundle.tar.gz index.json > checksums.txt)
+          cp result/* dist/
+          chmod u+w dist/*
       - name: Sign
         run: |
           cd dist

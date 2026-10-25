@@ -386,6 +386,10 @@ Tagging `vX.Y.Z` publishes:
   config and measurements;
 - `checksums.txt`, and a cosign keyless Sigstore bundle for each.
 
+`nix build .#release` makes the same three files from any commit, byte for
+byte, so a consumer can build an unreleased commit and later compare it with
+the signed release.
+
 ```sh
 cosign verify-blob index.json --bundle index.json.sigstore.json \
   --certificate-identity-regexp '^https://github.com/zeabur-oss/catalog/.github/workflows/release.yml@refs/tags/v' \
