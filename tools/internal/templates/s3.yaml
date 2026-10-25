@@ -1,11 +1,33 @@
-# SeaweedFS for template e2e: HTTPS S3 on TCP 443 with a test CA.
-apiVersion: v1
-kind: Secret
+# SeaweedFS for template e2e: HTTPS S3 on TCP 443. cert-manager issues the
+# certificate from a test CA. The Secret s3-tls holds the CA as ca.crt.
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata: {name: s3-selfsigned, namespace: '{{ .Namespace }}'}
+spec: {selfSigned: {}}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata: {name: s3-ca, namespace: '{{ .Namespace }}'}
+spec:
+  isCA: true
+  commonName: catalog e2e CA
+  secretName: s3-ca
+  privateKey: {algorithm: ECDSA, size: 256}
+  issuerRef: {name: s3-selfsigned, kind: Issuer}
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata: {name: s3-ca, namespace: '{{ .Namespace }}'}
+spec: {ca: {secretName: s3-ca}}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
 metadata: {name: s3-tls, namespace: '{{ .Namespace }}'}
-type: kubernetes.io/tls
-data:
-  tls.crt: '{{ .Cert }}'
-  tls.key: '{{ .Key }}'
+spec:
+  secretName: s3-tls
+  dnsNames: ['{{ .Host }}']
+  privateKey: {algorithm: ECDSA, size: 256}
+  issuerRef: {name: s3-ca, kind: Issuer}
 ---
 apiVersion: v1
 kind: Secret
@@ -44,7 +66,7 @@ spec:
     containerSecurityContext: *container
   s3:
     replicas: 1
-    # Templates allow backup egress to TCP 443 only. The probes use the HTTP port.
+    # Templates allow S3 egress to TCP 443 only. The probes use the HTTP port.
     podSecurityContext:
       runAsNonRoot: true
       runAsUser: 1000

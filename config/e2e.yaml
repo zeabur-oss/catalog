@@ -38,18 +38,12 @@ replacements:
 # Input values for template e2e runs, for every template that declares the
 # input. A value is a text/template with .ID, the template, and .S3, the
 # SeaweedFS S3 gateway the run starts when a value uses it: .S3.Endpoint
-# (https://<host>), .S3.Host, .S3.CIDR (the gateway Pod) and .S3.Bucket. Its
-# certificate comes from a test CA. The Secret e2e-s3 in the template's
-# namespace holds its credentials (ACCESS_KEY_ID and ACCESS_SECRET_KEY,
-# AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY, access-key and secret-key) and
-# the CA as ca.crt. Every value is disposable test data.
+# (https://<host>), .S3.CIDR (the gateway Pod) and .S3.Bucket. Its certificate
+# comes from a test CA. The Secret e2e-s3 in the template's namespace holds its
+# credentials (access-key and secret-key) and the CA as ca.crt. e2e runs turn
+# off backups, so backup inputs get placeholders. Every value is disposable
+# test data.
 templateInputs:
-  backupDestination: 's3://{{ .S3.Bucket }}/{{ .ID }}/postgresql'
-  backupEndpoint: '{{ .S3.Endpoint }}'
-  backupSecret: e2e-s3
-  backupCASecret: e2e-s3
-  backupCidr: '{{ .S3.CIDR }}'
-  backupRegion: us-east-1
   adminCidr: 192.0.2.10/32
   adminEmail: admin@example.test
   ownerEmail: owner@example.test
@@ -64,10 +58,6 @@ templates:
     inputs:
       licenseOptIn: I-ACCEPT-DIFY-SINGLE-WORKSPACE
       dragonflyLicenseOptIn: I-ACCEPT-DRAGONFLY-BUSL-1.1
-      dragonflyBackupDestination: 's3://{{ .S3.Bucket }}/dify/dragonfly'
-      dragonflyBackupEndpoint: '{{ .S3.Host }}'
-      dragonflyBackupRegion: us-east-1
-      dragonflyBackupCidr: '{{ .S3.CIDR }}'
       storageEndpoint: '{{ .S3.Endpoint }}'
       storageRegion: us-east-1
       storageBucket: '{{ .S3.Bucket }}'
@@ -76,8 +66,7 @@ templates:
       storageCidr: '{{ .S3.CIDR }}'
     skipSmoke:
       Initial Dragonfly S3 snapshot completed: >-
-        Dragonfly takes no custom CA for its S3 snapshots, and the test
-        gateway's certificate comes from a test CA.
+        e2e runs turn off backups, and this Job saves a Dragonfly snapshot.
   ghost:
     inputs:
       smtpHost: smtp.example.test
@@ -103,14 +92,8 @@ templates:
     inputs: {model: e2e-model}
     setup: *provider
   librechat:
-    inputs:
-      licenseOptIn: I-ACCEPT-MONGODB-SSPL
-      mongoBackupBucket: '{{ .S3.Bucket }}'
-      mongoBackupPrefix: librechat/mongodb
-      mongoBackupSecret: e2e-s3
+    inputs: {licenseOptIn: I-ACCEPT-MONGODB-SSPL}
     setup: *provider
-    skipSmoke:
-      mongodb-initial-backup: The e2e test turns off Percona backups.
   litellm:
     inputs: {licenseOptIn: I-ACCEPT-LITELLM-ENTERPRISE-LICENSE}
   lobechat:
@@ -133,10 +116,3 @@ templates:
     inputs: {clientApp: openclaw, trustOptIn: I-ACCEPT-SINGLE-OWNER-BROWSER}
   uptime-kuma:
     inputs: {monitorCidr: 192.0.2.0/24}
-  wordpress:
-    inputs:
-      backupBucket: '{{ .S3.Bucket }}'
-      backupEndpoint: '{{ .S3.Host }}:443'
-      backupEndpointPort: "443"
-      backupEndpointCIDR: '{{ .S3.CIDR }}'
-      backupCredentialsSecret: e2e-s3

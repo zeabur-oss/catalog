@@ -105,9 +105,9 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues,
 	useS3 := slices.ContainsFunc(slices.Collect(maps.Values(values.Inputs)), func(v string) bool { return strings.Contains(v, ".S3") })
 	opts := RenderOptions{Namespace: ns, Domain: r.ID + ".example.test", ClusterIssuer: selfSignedIssuer}
 	// Lint before the cluster work, with a placeholder for the gateway address.
-	s3 := &S3{Endpoint: "https://s3.example.test", Host: "s3.example.test", CIDR: "192.0.2.1/32", Bucket: "e2e"}
+	s3 := &S3{Endpoint: "https://s3.example.test", CIDR: "192.0.2.1/32", Bucket: "e2e"}
 	render := func() ([]byte, error) {
-		inputs, err := expand(r.ID, values.Inputs, s3)
+		inputs, err := expand(r, values.Inputs, s3)
 		if err != nil {
 			return nil, err
 		}
@@ -191,8 +191,9 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues,
 			return nil, err
 		}
 	}
-	if manifest, err = disablePerconaBackups(manifest); err != nil {
-		return err
+	manifest, off, err := disableBackups(manifest)
+	if err != nil {
+		return nil, err
 	}
 	if _, err := kubectl(manifest, "apply", "-n", ns, "-f", "-"); err != nil {
 		return nil, err
@@ -200,6 +201,10 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues,
 	for _, s := range r.Smoke {
 		if reason, ok := values.SkipSmoke[s.Name]; ok {
 			slog.Warn("smoke skipped", "template", r.ID, "check", s.Name, "reason", reason)
+			continue
+		}
+		if slices.ContainsFunc(off, func(o objectRef) bool { return o.is(s.Resource) }) {
+			slog.Info("smoke skipped", "template", r.ID, "check", s.Name, "reason", "backups are off in e2e")
 			continue
 		}
 		slog.Info("smoke", "template", r.ID, "check", s.Name)
@@ -253,7 +258,7 @@ func CreateNamespace(r *Template, ns string) error {
 // E2EManifest renders r for Namespace(r) with values, a placeholder S3
 // gateway and a placeholder API server address.
 func E2EManifest(r *Template, values E2EValues) ([]byte, error) {
-	inputs, err := expand(r.ID, values.Inputs, &S3{Endpoint: "https://s3.example.test", Host: "s3.example.test", CIDR: "192.0.2.1/32", Bucket: "e2e"})
+	inputs, err := expand(r, values.Inputs, &S3{Endpoint: "https://s3.example.test", CIDR: "192.0.2.1/32", Bucket: "e2e"})
 	if err != nil {
 		return nil, err
 	}
@@ -263,8 +268,10 @@ func E2EManifest(r *Template, values E2EValues) ([]byte, error) {
 	return Render(r, RenderOptions{Namespace: Namespace(r), Domain: r.ID + ".example.test", ClusterIssuer: selfSignedIssuer, Inputs: inputs})
 }
 
-// expand executes each input value as a text/template.
-func expand(id string, inputs map[string]string, s3 *S3) (map[string]string, error) {
+// expand executes each input value as a text/template. Then it gives each
+// required backup input without a value a placeholder, because e2e runs turn
+// off backups (see disableBackups).
+func expand(r *Template, inputs map[string]string, s3 *S3) (map[string]string, error) {
 	out := map[string]string{}
 	for k, v := range inputs {
 		t, err := template.New(k).Option("missingkey=error").Parse(v)
@@ -272,10 +279,27 @@ func expand(id string, inputs map[string]string, s3 *S3) (map[string]string, err
 			return nil, fmt.Errorf("input %s: %w", k, err)
 		}
 		var b strings.Builder
-		if err := t.Execute(&b, map[string]any{"ID": id, "S3": s3}); err != nil {
+		if err := t.Execute(&b, map[string]any{"ID": r.ID, "S3": s3}); err != nil {
 			return nil, fmt.Errorf("input %s: %w", k, err)
 		}
 		out[k] = b.String()
+	}
+	patterns, err := validateInputs(r.Inputs)
+	if err != nil {
+		return nil, err
+	}
+	for i, in := range r.Inputs {
+		if _, ok := out[in.Name]; ok || !in.Required || !strings.Contains(strings.ToLower(in.Name), "backup") {
+			continue
+		}
+		// The first value that matches the pattern. A backup Secret input gets
+		// S3Secret, because a Dragonfly Pod reads its keys even without snapshots.
+		for _, v := range []string{"s3://e2e/backup", "https://s3.example.test", "192.0.2.1/32", "s3.example.test:443", S3Secret, "443"} {
+			if patterns[i].MatchString(v) {
+				out[in.Name] = v
+				break
+			}
+		}
 	}
 	return out, nil
 }
@@ -382,37 +406,57 @@ func ReadValues(path string) (map[string]string, error) {
 	return values, nil
 }
 
-// disablePerconaBackups sets spec.backup.enabled to false on each
-// PerconaServerMongoDB. The e2e test does not test backups. Without this
-// change, the cluster stays initializing while the backup agent cannot reach
-// its storage.
-func disablePerconaBackups(manifest []byte) ([]byte, error) {
+// objectRef names an object that disableBackups removed.
+type objectRef struct{ kind, group, name string }
+
+// is reports if resource, in kubectl form such as backup/x or
+// backups.k8s.mariadb.com/x, names o.
+func (o objectRef) is(resource string) bool {
+	typ, name, _ := strings.Cut(strings.ToLower(resource), "/")
+	k := strings.ToLower(o.kind)
+	return name == o.name && slices.Contains([]string{k, k + "s", k + "." + o.group, k + "s." + o.group}, typ)
+}
+
+// disableBackups removes the backup configuration of each database operator
+// from manifest, so that readiness does not wait for backup storage. It
+// returns the objects it removed. The template e2e test does not test backups.
+func disableBackups(manifest []byte) ([]byte, []objectRef, error) {
 	docs, err := DecodeDocuments(manifest)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	patched := false
+	var kept []map[string]any
+	var off []objectRef
 	for _, doc := range docs {
-		if text(doc["apiVersion"]) != "psmdb.percona.com/v1" || text(doc["kind"]) != "PerconaServerMongoDB" {
+		group, _, _ := strings.Cut(text(doc["apiVersion"]), "/")
+		kind := text(doc["kind"])
+		spec := object(doc["spec"])
+		switch group + "/" + kind {
+		case "postgresql.cnpg.io/Backup", "postgresql.cnpg.io/ScheduledBackup", "barmancloud.cnpg.io/ObjectStore",
+			"psmdb.percona.com/PerconaServerMongoDBBackup", "k8s.mariadb.com/Backup":
+			off = append(off, objectRef{kind, group, text(object(doc["metadata"])["name"])})
 			continue
+		case "postgresql.cnpg.io/Cluster":
+			delete(spec, "backup")
+			delete(spec, "plugins")
+		case "psmdb.percona.com/PerconaServerMongoDB":
+			if backup := object(spec["backup"]); backup != nil {
+				backup["enabled"] = false
+			}
+		case "dragonflydb.io/Dragonfly":
+			delete(spec, "snapshot")
 		}
-		if backup := object(object(doc["spec"])["backup"]); backup != nil {
-			backup["enabled"] = false
-			patched = true
-		}
-	}
-	if !patched {
-		return manifest, nil
+		kept = append(kept, doc)
 	}
 	var out bytes.Buffer
-	for _, doc := range docs {
+	for _, doc := range kept {
 		b, err := json.Marshal(doc)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		out.WriteString("---\n")
 		out.Write(b)
 		out.WriteString("\n")
 	}
-	return out.Bytes(), nil
+	return out.Bytes(), off, nil
 }
