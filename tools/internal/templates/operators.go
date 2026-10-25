@@ -105,6 +105,16 @@ func checkPercona(r *Template, d map[string]any, docs []map[string]any, w string
 	for n, part := range parts {
 		p := object(part)
 		where := fmt.Sprintf("%s/operand-%d", w, n)
+		if n < len(array(spec["replsets"])) {
+			if text(object(p["labels"])[PartOf]) != r.ID {
+				fail(where, ErrPartOf)
+			}
+			for _, key := range []string{"arbiter", "nonvoting", "hidden"} {
+				if truth(object(p[key])["enabled"]) {
+					fail(where, ErrUnsupportedOverride, key)
+				}
+			}
+		}
 		checkResources(object(p["resources"]), where, fail)
 		safeOperandContext(object(p["podSecurityContext"]), object(p["containerSecurityContext"]), where, fail)
 		if !declaredServiceAccount(docs, text(p["serviceAccountName"])) {
@@ -187,6 +197,14 @@ func checkMiddleware(r *Template, d map[string]any, w string, fail func(string, 
 }
 
 // onlyKeys rejects each spec field that is not in allowed.
+// checkPodMetadata requires the PartOf label in spec.podMetadata, which the
+// operator copies to the pods it creates.
+func checkPodMetadata(r *Template, spec map[string]any, w string, fail func(string, Rule, ...string)) {
+	if text(object(object(spec["podMetadata"])["labels"])[PartOf]) != r.ID {
+		fail(w+"/podMetadata", ErrPartOf)
+	}
+}
+
 func onlyKeys(spec map[string]any, allowed []string, what, w string, fail func(string, Rule, ...string)) {
 	for key := range spec {
 		if !slices.Contains(allowed, key) {
@@ -212,10 +230,11 @@ func checkDragonfly(r *Template, d map[string]any, docs []map[string]any, w stri
 		fail(w, "security.risks must describe the BUSL-1.1 licence and the operator-generated pods")
 	}
 	spec := object(d["spec"])
-	onlyKeys(spec, []string{"replicas", "image", "imagePullPolicy", "imagePullSecrets", "serviceAccountName", "args", "authentication", "env", "podSecurityContext", "containerSecurityContext", "resources", "snapshot", "tlsSecretRef", "affinity", "nodeSelector", "tolerations", "topologySpreadConstraints"}, "Dragonfly", w, fail)
+	onlyKeys(spec, []string{"replicas", "image", "imagePullPolicy", "imagePullSecrets", "serviceAccountName", "args", "authentication", "env", "podSecurityContext", "containerSecurityContext", "podMetadata", "resources", "snapshot", "tlsSecretRef", "affinity", "nodeSelector", "tolerations", "topologySpreadConstraints"}, "Dragonfly", w, fail)
 	if !digestImage.MatchString(text(spec["image"])) {
 		fail(w, ErrDragonflyDigest)
 	}
+	checkPodMetadata(r, spec, w, fail)
 	checkResources(object(spec["resources"]), w, fail)
 	safeOperandContext(object(spec["podSecurityContext"]), object(spec["containerSecurityContext"]), w, fail)
 	if !declaredServiceAccount(docs, text(spec["serviceAccountName"])) {
@@ -261,10 +280,11 @@ func checkMariaDB(r *Template, d map[string]any, docs []map[string]any, namespac
 		if len(r.Security.Risks) == 0 {
 			fail(w, "security.risks must describe the operator-generated pods and helper images")
 		}
-		onlyKeys(spec, []string{"image", "imagePullPolicy", "imagePullSecrets", "replicas", "rootPasswordSecretKeyRef", "database", "username", "passwordSecretKeyRef", "serviceAccountName", "tls", "storage", "podSecurityContext", "securityContext", "resources", "updateStrategy", "timeZone", "affinity", "nodeSelector", "tolerations", "topologySpreadConstraints"}, "MariaDB", w, fail)
+		onlyKeys(spec, []string{"image", "imagePullPolicy", "imagePullSecrets", "replicas", "rootPasswordSecretKeyRef", "database", "username", "passwordSecretKeyRef", "serviceAccountName", "tls", "storage", "podMetadata", "podSecurityContext", "securityContext", "resources", "updateStrategy", "timeZone", "affinity", "nodeSelector", "tolerations", "topologySpreadConstraints"}, "MariaDB", w, fail)
 		if !digestImage.MatchString(text(spec["image"])) {
 			fail(w, "MariaDB image must use sha256 digest")
 		}
+		checkPodMetadata(r, spec, w, fail)
 		checkResources(object(spec["resources"]), w, fail)
 		safeOperandContext(object(spec["podSecurityContext"]), object(spec["securityContext"]), w, fail)
 		if !declaredServiceAccount(docs, text(spec["serviceAccountName"])) {
@@ -273,6 +293,7 @@ func checkMariaDB(r *Template, d map[string]any, docs []map[string]any, namespac
 	case "Backup":
 		checkMariaDBRef(spec, docs, namespace, w, fail)
 		onlyKeys(spec, []string{"mariaDbRef", "schedule", "timeZone", "successfulJobsHistoryLimit", "failedJobsHistoryLimit", "serviceAccountName", "podMetadata", "podSecurityContext", "securityContext", "resources", "stagingStorage", "storage", "databases", "maxRetention", "compression", "backoffLimit"}, "backup", w, fail)
+		checkPodMetadata(r, spec, w, fail)
 		checkResources(object(spec["resources"]), w, fail)
 		safeOperandContext(object(spec["podSecurityContext"]), object(spec["securityContext"]), w, fail)
 		if !declaredServiceAccount(docs, text(spec["serviceAccountName"])) {

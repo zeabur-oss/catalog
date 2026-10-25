@@ -81,6 +81,7 @@ spec:
   template:
     metadata:
       labels:
+        app.kubernetes.io/part-of: librechat
         app.kubernetes.io/name: librechat
     spec:
       automountServiceAccountToken: false
@@ -452,10 +453,10 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: default-deny
+  name: librechat-default-deny
   namespace: '{{ .Namespace }}'
 spec:
-  podSelector: {}
+  podSelector: {matchLabels: {app.kubernetes.io/part-of: librechat}}
   policyTypes:
   - Ingress
   - Egress
@@ -470,6 +471,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
+      app.kubernetes.io/part-of: librechat
       app.kubernetes.io/name: librechat
   policyTypes:
   - Ingress
@@ -490,6 +492,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
+          app.kubernetes.io/part-of: librechat
           app.kubernetes.io/instance: mongodb
           app.kubernetes.io/name: percona-server-mongodb
     ports:
@@ -498,6 +501,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
+          app.kubernetes.io/part-of: librechat
           app.kubernetes.io/name: meilisearch
     ports:
     - port: 7700
@@ -505,6 +509,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
+          app.kubernetes.io/part-of: librechat
           app.kubernetes.io/name: rag-api
     ports:
     - port: 8000
@@ -530,6 +535,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
+      app.kubernetes.io/part-of: librechat
       app.kubernetes.io/name: rag-api
   policyTypes:
   - Ingress
@@ -538,6 +544,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
+          app.kubernetes.io/part-of: librechat
           app.kubernetes.io/name: librechat
     ports:
     - port: 8000
@@ -547,6 +554,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
+          app.kubernetes.io/part-of: librechat
           cnpg.io/cluster: rag-db
     ports:
     - port: 5432
@@ -572,6 +580,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
+      app.kubernetes.io/part-of: librechat
       app.kubernetes.io/name: meilisearch
   policyTypes:
   - Ingress
@@ -580,6 +589,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
+          app.kubernetes.io/part-of: librechat
           app.kubernetes.io/name: librechat
     ports:
     - port: 7700
@@ -594,6 +604,7 @@ metadata:
 spec:
   podSelector:
     matchLabels: &id001
+      app.kubernetes.io/part-of: librechat
       app.kubernetes.io/instance: mongodb
       app.kubernetes.io/name: percona-server-mongodb
   policyTypes:
@@ -603,6 +614,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
+          app.kubernetes.io/part-of: librechat
           app.kubernetes.io/name: librechat
     ports:
     - port: 27017
@@ -640,6 +652,7 @@ metadata:
 spec:
   podSelector:
     matchLabels: &id001
+      app.kubernetes.io/part-of: librechat
       cnpg.io/cluster: rag-db
   policyTypes:
   - Ingress
@@ -648,6 +661,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
+          app.kubernetes.io/part-of: librechat
           app.kubernetes.io/name: rag-api
     ports:
     - port: 5432
@@ -703,6 +717,7 @@ spec:
   template:
     metadata:
       labels:
+        app.kubernetes.io/part-of: librechat
         app.kubernetes.io/name: rag-api
     spec:
       automountServiceAccountToken: false
@@ -822,6 +837,7 @@ spec:
   template:
     metadata:
       labels:
+        app.kubernetes.io/part-of: librechat
         app.kubernetes.io/name: meilisearch
     spec:
       automountServiceAccountToken: false
@@ -912,6 +928,9 @@ metadata:
   name: rag-db
   namespace: '{{ .Namespace }}'
 spec:
+  inheritedMetadata:
+    labels:
+      app.kubernetes.io/part-of: librechat
   instances: 1
   imageName: ghcr.io/cloudnative-pg/postgresql:17-standard-trixie@sha256:1c80146a60cf8010042616c67370b2861a1877b9fcf9dd6dd2a9395aa406b568
   enableSuperuserAccess: false
@@ -982,6 +1001,8 @@ spec:
   replsets:
   - name: rs0
     size: 1
+    labels:
+      app.kubernetes.io/part-of: librechat
     serviceAccountName: mongodb-operand
     # The image sets glibc.pthread.rseq=0, so TCMalloc takes rseq for per-CPU caches.
     # Kernels 6.19 to 7.0.13 break that, and mongod 8.0 then exits at start (SERVER-121912).

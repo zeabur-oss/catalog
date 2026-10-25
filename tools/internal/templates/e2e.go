@@ -212,6 +212,13 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues,
 			return nil, fmt.Errorf("smoke %s: %w", s.Name, err)
 		}
 	}
+	// The NetworkPolicies select pods by PartOf. A pod without it, such as
+	// an operator pod, has no default deny in a shared namespace.
+	if out, err := kubectl(nil, "get", "pods", "-n", ns, "-l", PartOf+"!="+r.ID, "-o", "name"); err != nil {
+		return nil, err
+	} else if out != "" {
+		return nil, fmt.Errorf("pods without %s=%s: %s", PartOf, r.ID, strings.Join(strings.Fields(out), " "))
+	}
 	if !measure {
 		return nil, nil
 	}

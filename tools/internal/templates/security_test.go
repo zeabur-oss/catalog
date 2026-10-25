@@ -19,7 +19,7 @@ metadata:
 spec:
   template:
     metadata:
-      labels: {app: app}
+      labels: {app: app, app.kubernetes.io/part-of: app}
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -39,13 +39,18 @@ spec:
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
-metadata: {name: default-deny}
+metadata: {name: app-default-deny}
 spec:
-  podSelector: {}
+  podSelector: {matchLabels: {app.kubernetes.io/part-of: app}}
   policyTypes: [Ingress, Egress]
   ingress: []
   egress: []
 `
+
+// allow returns a NetworkPolicy that allows ingress to the template's pods from peer.
+func allow(peer string) string {
+	return "---\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata: {name: allow}\nspec:\n  podSelector: {matchLabels: {app.kubernetes.io/part-of: app}}\n  policyTypes: [Ingress]\n  ingress: [{from: [" + peer + "]}]\n"
+}
 
 // matches reports whether err breaks rule, or is nil when rule is empty.
 func matches(err error, rule templates.Rule) bool {
@@ -56,9 +61,9 @@ func matches(err error, rule templates.Rule) bool {
 }
 
 func TestSafetyRejectsPrivilegeAndNetworkEscapes(t *testing.T) {
-	r := &templates.Template{}
+	r := &templates.Template{ID: "app"}
 	r.Services = []templates.Service{{Name: "app", SecurityProfile: "restricted"}}
-	if err := templates.Safety(r, []byte(safeManifest), "test"); err != nil {
+	if err := templates.Safety(r, []byte(safeManifest+allow("{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: traefik}}, podSelector: {matchLabels: {app: traefik}}}")), "test"); err != nil {
 		t.Fatal(err)
 	}
 	cases := map[string]struct {
@@ -74,6 +79,11 @@ func TestSafetyRejectsPrivilegeAndNetworkEscapes(t *testing.T) {
 		"tag":                             {strings.Replace(safeManifest, "example.test/app@sha256:"+strings.Repeat("a", 64), "example.test/app:latest", 1), templates.ErrImageDigest},
 		"namespace":                       {strings.Replace(safeManifest, "name: app\nspec:", "name: app\n  namespace: kube-system\nspec:", 1), templates.ErrNamespaceEscape},
 		"network":                         {strings.Replace(safeManifest, "policyTypes: [Ingress, Egress]", "policyTypes: [Ingress]", 1), templates.ErrDefaultDeny},
+		"pod-label":                       {strings.Replace(safeManifest, "labels: {app: app, app.kubernetes.io/part-of: app}", "labels: {app: app}", 1), templates.ErrPartOf},
+		"deny-selects-namespace":          {strings.Replace(safeManifest, "podSelector: {matchLabels: {app.kubernetes.io/part-of: app}}", "podSelector: {}", 1), templates.ErrDefaultDeny},
+		"deny-name":                       {strings.Replace(safeManifest, "name: app-default-deny", "name: default-deny", 1), templates.ErrDefaultDeny},
+		"peer-without-label":              {safeManifest + allow("{podSelector: {matchLabels: {app: other}}}"), templates.ErrForeignPods},
+		"peer-whole-namespace":            {safeManifest + allow("{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: test}}}"), templates.ErrForeignPods},
 		"storage-class":                   {safeManifest + "---\napiVersion: v1\nkind: PersistentVolumeClaim\nmetadata: {name: data}\nspec: {storageClassName: local-path}\n", templates.ErrStorageClass},
 		"rbac":                            {safeManifest + "---\napiVersion: rbac.authorization.k8s.io/v1\nkind: RoleBinding\nmetadata: {name: escape}\n", templates.ErrUnsupportedKind},
 	}
@@ -96,7 +106,7 @@ func TestRenderRequiresLicenseAcknowledgement(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "manifests.yaml"), []byte("apiVersion: v1\nkind: ConfigMap\nmetadata: {name: app}\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	r := &templates.Template{}
+	r := &templates.Template{ID: "app"}
 	if err := yaml.Unmarshal([]byte(`{"services":[{"name":"app"}],"inputs":[{"name":"licenseOptIn","description":"license acknowledgement","required":true,"validation":{"pattern":"^I-ACCEPT-LICENSE$"}}]}`), r); err != nil {
 		t.Fatal(err)
 	}
@@ -116,7 +126,7 @@ func TestRenderRequiresLicenseAcknowledgement(t *testing.T) {
 }
 
 func TestRestrictedAllowsIsolatedPingWithoutAllowingHostSysctls(t *testing.T) {
-	r := &templates.Template{}
+	r := &templates.Template{ID: "app"}
 	r.Services = []templates.Service{{Name: "app", SecurityProfile: "restricted"}}
 	for _, tc := range []struct {
 		name, value string

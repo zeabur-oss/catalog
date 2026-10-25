@@ -24,6 +24,7 @@ spec:
   template:
     metadata:
       labels:
+        app.kubernetes.io/part-of: uptime-kuma
         app.kubernetes.io/name: uptime-kuma
     spec:
       automountServiceAccountToken: false
@@ -152,10 +153,10 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: default-deny
+  name: uptime-kuma-default-deny
   namespace: '{{ .Namespace }}'
 spec:
-  podSelector: {}
+  podSelector: {matchLabels: {app.kubernetes.io/part-of: uptime-kuma}}
   policyTypes:
   - Ingress
   - Egress
@@ -168,6 +169,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
+      app.kubernetes.io/part-of: uptime-kuma
       app.kubernetes.io/name: uptime-kuma
   policyTypes:
   - Ingress

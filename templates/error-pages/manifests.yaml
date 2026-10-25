@@ -194,7 +194,7 @@ spec:
     rollingUpdate: {maxSurge: 1, maxUnavailable: 0}
   template:
     metadata:
-      labels: {app.kubernetes.io/name: error-pages}
+      labels: {app.kubernetes.io/name: error-pages, app.kubernetes.io/part-of: error-pages}
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -253,13 +253,12 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: default-deny
+  name: error-pages-default-deny
   namespace: {{ .Namespace }}
 spec:
-  podSelector: {}
+  podSelector: {matchLabels: {app.kubernetes.io/part-of: error-pages}}
   policyTypes: [Ingress, Egress]
 ---
-# Isolates the page server on its own, also in a namespace without default-deny.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -267,7 +266,7 @@ metadata:
   namespace: {{ .Namespace }}
 spec:
   podSelector:
-    matchLabels: {app.kubernetes.io/name: error-pages}
+    matchLabels: {app.kubernetes.io/name: error-pages, app.kubernetes.io/part-of: error-pages}
   policyTypes: [Ingress, Egress]
   ingress:
     - from:

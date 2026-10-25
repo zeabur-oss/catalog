@@ -55,6 +55,7 @@ spec:
   template:
     metadata:
       labels:
+        app.kubernetes.io/part-of: wordpress
         app: wordpress
     spec:
       automountServiceAccountToken: false
@@ -397,10 +398,10 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: default-deny
+  name: wordpress-default-deny
   namespace: '{{ .Namespace }}'
 spec:
-  podSelector: {}
+  podSelector: {matchLabels: {app.kubernetes.io/part-of: wordpress}}
   policyTypes:
   - Ingress
   - Egress
@@ -415,6 +416,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
+      app.kubernetes.io/part-of: wordpress
       app: wordpress
   policyTypes:
   - Ingress
@@ -435,6 +437,7 @@ spec:
   - to:
     - podSelector:
         matchLabels:
+          app.kubernetes.io/part-of: wordpress
           app.kubernetes.io/name: mariadb
           app.kubernetes.io/instance: mariadb
     ports:
@@ -461,11 +464,11 @@ metadata:
   namespace: '{{ .Namespace }}'
 spec:
   podSelector:
-    matchLabels: {app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: mariadb}
+    matchLabels: {app.kubernetes.io/name: mariadb, app.kubernetes.io/instance: mariadb, app.kubernetes.io/part-of: wordpress}
   policyTypes: [Ingress]
   ingress:
   - from:
-    - podSelector: {matchLabels: {app: wordpress}}
+    - podSelector: {matchLabels: {app: wordpress, app.kubernetes.io/part-of: wordpress}}
     - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: mariadb-operator}}
       podSelector: {matchLabels: {app.kubernetes.io/name: mariadb-operator}}
     ports: [{protocol: TCP, port: 3306}]
@@ -483,6 +486,9 @@ metadata:
   name: mariadb
   namespace: '{{ .Namespace }}'
 spec:
+  podMetadata:
+    labels:
+      app.kubernetes.io/part-of: wordpress
   image: docker.io/mariadb:11.4.13@sha256:250e1609e93c0e6aecf64bfbab2d84d5e89d2481540fe77447ff6c855c3b1873
   replicas: 1
   rootPasswordSecretKeyRef:

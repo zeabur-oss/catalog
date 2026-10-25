@@ -24,7 +24,7 @@ func TestPerconaBackupStaysWithinDeclaredClusterAndStorage(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			r := &Template{Requires: []string{tc.provider}}
+			r := &Template{ID: "app", Requires: []string{tc.provider}}
 			doc := map[string]any{"spec": map[string]any{"clusterName": tc.cluster, "storageName": tc.storage, "type": tc.mode, "compressionType": "gzip"}}
 			if tc.override {
 				object(doc["spec"])["backupOptions"] = map[string]any{"args": []any{"--insecure"}}
@@ -56,7 +56,7 @@ func TestPerconaClusterChecksBackupsOnlyWhenEnabled(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			r := &Template{Requires: []string{"databases/percona-mongodb"}}
+			r := &Template{ID: "app", Requires: []string{"databases/percona-mongodb"}}
 			spec := map[string]any{"image": "example.test/mongod@sha256:" + strings.Repeat("a", 64), "initImage": "example.test/init@sha256:" + strings.Repeat("a", 64)}
 			if tc.backup != nil {
 				spec["backup"] = tc.backup

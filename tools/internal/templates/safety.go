@@ -37,7 +37,9 @@ const (
 	ErrTraefikProvider       Rule = "Traefik Ingress requires exact ingress/traefik provider"
 	ErrClusterIssuerProvider Rule = "ClusterIssuer annotation requires exact certificates/cert-manager provider"
 	ErrCNPGProvider          Rule = "CNPG workload requires exact databases/cloudnative-pg provider"
-	ErrDefaultDeny           Rule = "an all-pods default deny for both ingress and egress is required"
+	ErrDefaultDeny           Rule = "a NetworkPolicy <id>-default-deny that selects the template's pods and denies ingress and egress is required"
+	ErrPartOf                Rule = "pods must have the label " + PartOf + " set to the template ID"
+	ErrForeignPods           Rule = "NetworkPolicy selectors must select only pods with the label " + PartOf + " set to the template ID"
 	ErrPositiveResource      Rule = "positive resource required"
 	ErrPodTokenAutomount     Rule = "automountServiceAccountToken must explicitly be false"
 	ErrHostNamespace         Rule = "host namespace forbidden"
@@ -70,6 +72,16 @@ const (
 	ErrStorageClass          Rule = "storage class forbidden; volumes use the cluster's default StorageClass"
 )
 
+// PartOf is the label that every pod of a template has, with the template ID
+// as its value. The NetworkPolicies of a template select only these pods, so
+// other pods in a shared namespace keep their own policies.
+const PartOf = "app.kubernetes.io/part-of"
+
+// ownPods reports whether sel selects only the pods of template id.
+func ownPods(sel map[string]any, id string) bool {
+	return id != "" && text(object(sel["matchLabels"])[PartOf]) == id
+}
+
 // Safety checks the rendered objects themselves.
 func Safety(r *Template, b []byte, namespace string) error {
 	docs, err := DecodeDocuments(b)
@@ -78,7 +90,6 @@ func Safety(r *Template, b []byte, namespace string) error {
 	}
 	var errs []error
 	defaultDeny := false
-	var policies []map[string]any
 	fail := func(where string, rule Rule, detail ...string) {
 		err := fmt.Errorf("%s: %w", where, rule)
 		if len(detail) > 0 {
@@ -164,6 +175,9 @@ func Safety(r *Template, b []byte, namespace string) error {
 					fail(where, "unconfined legacy security annotation forbidden")
 				}
 			}
+			if text(object(pm["labels"])[PartOf]) != r.ID {
+				fail(where, ErrPartOf)
+			}
 			checkPod(p, profile, where, k != "Job" && k != "CronJob", fail)
 		}
 		if k == "Cluster" && api == "postgresql.cnpg.io/v1" {
@@ -171,6 +185,9 @@ func Safety(r *Template, b []byte, namespace string) error {
 				fail(where, "CNPG imageName must use sha256 digest")
 			}
 			checkResources(object(spec["resources"]), where, fail)
+			if text(object(object(spec["inheritedMetadata"])["labels"])[PartOf]) != r.ID {
+				fail(where+"/inheritedMetadata", ErrPartOf)
+			}
 			provider := false
 			for _, ref := range r.Requires {
 				if ref == "databases/cloudnative-pg" {
@@ -224,44 +241,56 @@ func Safety(r *Template, b []byte, namespace string) error {
 			checkMiddleware(r, d, where, fail)
 		}
 		if k == "NetworkPolicy" {
-			policies = append(policies, spec)
 			sel := object(spec["podSelector"])
-			if len(sel) == 0 && contains(array(spec["policyTypes"]), "Ingress") && contains(array(spec["policyTypes"]), "Egress") && len(array(spec["ingress"])) == 0 && len(array(spec["egress"])) == 0 {
+			if !ownPods(sel, r.ID) {
+				fail(where, ErrForeignPods, "podSelector")
+			}
+			if name == r.ID+"-default-deny" && len(sel) == 1 && len(object(sel["matchLabels"])) == 1 && contains(array(spec["policyTypes"]), "Ingress") && contains(array(spec["policyTypes"]), "Egress") && len(array(spec["ingress"])) == 0 && len(array(spec["egress"])) == 0 {
 				defaultDeny = true
 			}
+			checkPolicyRules(r, spec, namespace, where, fail)
 		}
 	}
 	if !defaultDeny {
 		fail("NetworkPolicy", ErrDefaultDeny)
 	}
-	// A policy with empty rules is safe; additive allow rules must not accidentally select everything.
-	for _, p := range policies {
-		for _, direction := range []string{"ingress", "egress"} {
-			for _, rule := range array(p[direction]) {
-				m := object(rule)
-				peer := "from"
-				if direction == "egress" {
-					peer = "to"
+	return errors.Join(errs...)
+}
+
+// checkPolicyRules checks the peers of a NetworkPolicy. A rule with no peer or
+// an empty peer allows all traffic. A pod selector for the template's own
+// namespace selects only the template's pods.
+func checkPolicyRules(r *Template, spec map[string]any, namespace, where string, fail func(string, Rule, ...string)) {
+	for _, direction := range []string{"ingress", "egress"} {
+		peer := "from"
+		if direction == "egress" {
+			peer = "to"
+		}
+		for _, rule := range array(spec[direction]) {
+			peers := array(object(rule)[peer])
+			if len(peers) == 0 {
+				fail(where, "unbounded rule forbidden", direction)
+			}
+			for _, raw := range peers {
+				v := object(raw)
+				if len(v) == 0 {
+					fail(where, "empty peer permits all traffic")
 				}
-				if len(array(m[peer])) == 0 {
-					fail("NetworkPolicy", "unbounded rule forbidden", direction)
+				ns, hasNamespace := v["namespaceSelector"]
+				sel, hasPods := v["podSelector"]
+				own := !hasNamespace || text(object(object(ns)["matchLabels"])["kubernetes.io/metadata.name"]) == namespace
+				if own && (hasNamespace || hasPods) && !ownPods(object(sel), r.ID) {
+					fail(where, ErrForeignPods, direction)
 				}
-				for _, raw := range array(m[peer]) {
-					v := object(raw)
-					if len(v) == 0 {
-						fail("NetworkPolicy", "empty peer permits all traffic")
-					}
-					ip := object(v["ipBlock"])
-					if text(ip["cidr"]) == "0.0.0.0/0" || text(ip["cidr"]) == "::/0" {
-						if len(r.Security.Egress) == 0 || len(r.Security.Risks) == 0 {
-							fail("NetworkPolicy", "public network access requires explicit egress and risk documentation")
-						}
+				ip := object(v["ipBlock"])
+				if text(ip["cidr"]) == "0.0.0.0/0" || text(ip["cidr"]) == "::/0" {
+					if len(r.Security.Egress) == 0 || len(r.Security.Risks) == 0 {
+						fail(where, "public network access requires explicit egress and risk documentation")
 					}
 				}
 			}
 		}
 	}
-	return errors.Join(errs...)
 }
 
 // hasKey reports whether a map anywhere in v has one of keys.

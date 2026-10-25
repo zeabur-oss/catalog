@@ -24,6 +24,7 @@ spec:
   template:
     metadata:
       labels:
+        app.kubernetes.io/part-of: openlist
         app.kubernetes.io/name: openlist
     spec:
       automountServiceAccountToken: false
@@ -181,10 +182,10 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: default-deny
+  name: openlist-default-deny
   namespace: '{{ .Namespace }}'
 spec:
-  podSelector: {}
+  podSelector: {matchLabels: {app.kubernetes.io/part-of: openlist}}
   policyTypes:
   - Ingress
   - Egress
@@ -197,6 +198,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
+      app.kubernetes.io/part-of: openlist
       app.kubernetes.io/name: openlist
   policyTypes:
   - Ingress

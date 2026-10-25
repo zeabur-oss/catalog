@@ -26,6 +26,7 @@ spec:
   template:
     metadata:
       labels:
+        app.kubernetes.io/part-of: ollama
         app.kubernetes.io/name: ollama
     spec:
       automountServiceAccountToken: false
@@ -119,10 +120,10 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: default-deny
+  name: ollama-default-deny
   namespace: '{{ .Namespace }}'
 spec:
-  podSelector: {}
+  podSelector: {matchLabels: {app.kubernetes.io/part-of: ollama}}
   policyTypes:
   - Ingress
   - Egress
@@ -137,6 +138,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
+      app.kubernetes.io/part-of: ollama
       app.kubernetes.io/name: ollama
   policyTypes:
   - Ingress
@@ -145,6 +147,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
+          app.kubernetes.io/part-of: ollama
           templates.zeabur.com/ollama-client: 'true'
     ports:
     - port: 11434

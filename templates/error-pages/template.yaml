@@ -29,12 +29,6 @@ security:
     zeabur.com/page-server=true, which Zeabur uses to find the page server.
   egress: []
   risks:
-    - risk: >-
-        The default-deny NetworkPolicy selects every pod of the namespace. In a
-        namespace that other applications share, it blocks their traffic too.
-      mitigation: >-
-        In a shared namespace, leave out default-deny. The error-pages
-        NetworkPolicy alone isolates the page server for ingress and egress.
     - risk: Anyone who can edit the ConfigMap changes what visitors see.
       mitigation: >-
         Give edit rights on ConfigMaps only to people who may change the site.

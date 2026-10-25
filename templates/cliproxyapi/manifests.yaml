@@ -21,7 +21,7 @@ spec:
     matchLabels: {app.kubernetes.io/name: cliproxyapi}
   template:
     metadata:
-      labels: {app.kubernetes.io/name: cliproxyapi}
+      labels: {app.kubernetes.io/name: cliproxyapi, app.kubernetes.io/part-of: cliproxyapi}
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -153,10 +153,10 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: default-deny
+  name: cliproxyapi-default-deny
   namespace: {{ .Namespace }}
 spec:
-  podSelector: {}
+  podSelector: {matchLabels: {app.kubernetes.io/part-of: cliproxyapi}}
   policyTypes: [Ingress, Egress]
 ---
 apiVersion: networking.k8s.io/v1
@@ -166,7 +166,7 @@ metadata:
   namespace: {{ .Namespace }}
 spec:
   podSelector:
-    matchLabels: {app.kubernetes.io/name: cliproxyapi}
+    matchLabels: {app.kubernetes.io/name: cliproxyapi, app.kubernetes.io/part-of: cliproxyapi}
   policyTypes: [Ingress, Egress]
   ingress:
     - from:

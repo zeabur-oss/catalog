@@ -59,9 +59,16 @@ exact versions the template pins.
 
 ## Network
 
-- Deny all ingress and egress in the namespace, then allow only the traffic the
-  application needs: the ingress controller, its own services, DNS and the
-  external endpoints it calls.
+- Give every pod the label `app.kubernetes.io/part-of: <id>`. For operator
+  pods, set it in the custom resource: `inheritedMetadata` for CloudNativePG,
+  `podMetadata` for Dragonfly and MariaDB, and `replsets[].labels` for Percona.
+- Add a NetworkPolicy `<id>-default-deny` that selects these pods and denies
+  all ingress and egress. Then allow only the traffic the application needs:
+  the ingress controller, its own services, DNS and the external endpoints it
+  calls.
+- Make every NetworkPolicy, and every peer in the template's namespace, select
+  pods by that label. Other applications can share the namespace, and the
+  template's policies must not change their traffic.
 - Keep databases, metrics and admin interfaces private. Expose only the
   application through the ingress component with a cert-manager certificate.
 - List every outbound destination in `security.egress`. NetworkPolicy matches

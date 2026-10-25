@@ -21,7 +21,7 @@ spec:
     matchLabels: {app.kubernetes.io/name: n8n}
   template:
     metadata:
-      labels: {app.kubernetes.io/name: n8n}
+      labels: {app.kubernetes.io/name: n8n, app.kubernetes.io/part-of: n8n-ai-brain}
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -149,10 +149,10 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: default-deny
+  name: n8n-ai-brain-default-deny
   namespace: {{ .Namespace }}
 spec:
-  podSelector: {}
+  podSelector: {matchLabels: {app.kubernetes.io/part-of: n8n-ai-brain}}
   policyTypes: [Ingress, Egress]
 ---
 apiVersion: networking.k8s.io/v1
@@ -162,7 +162,7 @@ metadata:
   namespace: {{ .Namespace }}
 spec:
   podSelector:
-    matchLabels: {app.kubernetes.io/name: n8n}
+    matchLabels: {app.kubernetes.io/name: n8n, app.kubernetes.io/part-of: n8n-ai-brain}
   policyTypes: [Ingress, Egress]
   ingress:
     - from:
@@ -224,17 +224,17 @@ metadata:
   namespace: {{ .Namespace }}
 spec:
   podSelector:
-    matchLabels: {app.kubernetes.io/name: n8n}
+    matchLabels: {app.kubernetes.io/name: n8n, app.kubernetes.io/part-of: n8n-ai-brain}
   policyTypes: [Ingress, Egress]
   ingress:
     - from:
         - podSelector:
-            matchLabels: {app.kubernetes.io/name: n8n-runners}
+            matchLabels: {app.kubernetes.io/name: n8n-runners, app.kubernetes.io/part-of: n8n-ai-brain}
       ports: [{protocol: TCP, port: 5679}]
   egress:
     - to:
         - podSelector:
-            matchLabels: {cnpg.io/cluster: n8n-db}
+            matchLabels: {cnpg.io/cluster: n8n-db, app.kubernetes.io/part-of: n8n-ai-brain}
       ports: [{protocol: TCP, port: 5432}]
 ---
 apiVersion: networking.k8s.io/v1
@@ -244,13 +244,13 @@ metadata:
   namespace: {{ .Namespace }}
 spec:
   podSelector:
-    matchLabels: {app.kubernetes.io/name: n8n-runners}
+    matchLabels: {app.kubernetes.io/name: n8n-runners, app.kubernetes.io/part-of: n8n-ai-brain}
   policyTypes: [Ingress, Egress]
   egress:
     - {{ dnsEgress }}
     - to:
         - podSelector:
-            matchLabels: {app.kubernetes.io/name: n8n}
+            matchLabels: {app.kubernetes.io/name: n8n, app.kubernetes.io/part-of: n8n-ai-brain}
       ports: [{protocol: TCP, port: 5679}]
 ---
 apiVersion: networking.k8s.io/v1
@@ -260,12 +260,12 @@ metadata:
   namespace: {{ .Namespace }}
 spec:
   podSelector:
-    matchLabels: {cnpg.io/cluster: n8n-db}
+    matchLabels: {cnpg.io/cluster: n8n-db, app.kubernetes.io/part-of: n8n-ai-brain}
   policyTypes: [Ingress, Egress]
   ingress:
     - from:
         - podSelector:
-            matchLabels: {app.kubernetes.io/name: n8n}
+            matchLabels: {app.kubernetes.io/name: n8n, app.kubernetes.io/part-of: n8n-ai-brain}
       ports: [{protocol: TCP, port: 5432}]
     - from:
         - namespaceSelector:
@@ -275,7 +275,7 @@ spec:
       ports: [{protocol: TCP, port: 8000}, {protocol: TCP, port: 5432}]
     - from:
         - podSelector:
-            matchLabels: {cnpg.io/cluster: n8n-db}
+            matchLabels: {cnpg.io/cluster: n8n-db, app.kubernetes.io/part-of: n8n-ai-brain}
       ports: [{protocol: TCP, port: 5432}, {protocol: TCP, port: 8000}]
   egress:
     - {{ dnsEgress }}
@@ -296,7 +296,7 @@ spec:
     matchLabels: {app.kubernetes.io/name: n8n-runners}
   template:
     metadata:
-      labels: {app.kubernetes.io/name: n8n-runners}
+      labels: {app.kubernetes.io/name: n8n-runners, app.kubernetes.io/part-of: n8n-ai-brain}
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -346,6 +346,9 @@ metadata:
   name: n8n-db
   namespace: {{ .Namespace }}
 spec:
+  inheritedMetadata:
+    labels:
+      app.kubernetes.io/part-of: n8n-ai-brain
   instances: 1
   imageName: ghcr.io/cloudnative-pg/postgresql:17-minimal-trixie@sha256:1f10c3907a0da5ea3da137a3e79315b5d5a67da64212a2ede38f824cf9014f93
   enableSuperuserAccess: false

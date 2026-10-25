@@ -24,12 +24,12 @@ absolute paths, `..` and links.
 ## 2. Prepare the cluster
 
 - Install each component in the template's `requires` from the same release.
-- Use a CNI that enforces NetworkPolicy. Templates deny all traffic in the
-  namespace, then allow only what each service needs.
+- Use a CNI that enforces NetworkPolicy. Templates deny all traffic to their
+  own pods, then allow only what each service needs.
 - Mark one StorageClass as the default. Templates name no StorageClass, so
   their volumes use the default. Without one, their claims stay `Pending`.
 - For a template with domains, have a cert-manager ClusterIssuer ready.
-- Use a dedicated namespace for each deployment.
+- Install each template once per namespace. Its objects have fixed names.
 
 ## 3. Render and apply
 

@@ -10,7 +10,7 @@ import (
 )
 
 func TestFiniteJobsUseCompletionInsteadOfLongRunningProbes(t *testing.T) {
-	r := &templates.Template{}
+	r := &templates.Template{ID: "app"}
 	r.Services = []templates.Service{{Name: "app", SecurityProfile: "restricted"}}
 	for _, kind := range []string{"Deployment", "Job", "CronJob"} {
 		t.Run(kind, func(t *testing.T) {

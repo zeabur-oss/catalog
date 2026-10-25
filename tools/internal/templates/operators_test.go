@@ -9,9 +9,9 @@ import (
 )
 
 func TestCNPGCannotBorrowUnrelatedProviderTrust(t *testing.T) {
-	r := &templates.Template{Requires: []string{"ingress/traefik"}}
+	r := &templates.Template{ID: "app", Requires: []string{"ingress/traefik"}}
 	r.Security.Risks = []map[string]string{{"risk": "Operator generated pods and SA", "mitigation": "Pinned catalog review"}}
-	b := safeManifest + "---\napiVersion: postgresql.cnpg.io/v1\nkind: Cluster\nmetadata: {name: database}\nspec:\n  imageName: ghcr.io/example/postgres@sha256:" + strings.Repeat("a", 64) + "\n  seccompProfile: {type: RuntimeDefault}\n  resources:\n    requests: {cpu: 10m, memory: 16Mi}\n    limits: {cpu: 100m, memory: 32Mi}\n"
+	b := safeManifest + "---\napiVersion: postgresql.cnpg.io/v1\nkind: Cluster\nmetadata: {name: database}\nspec:\n  inheritedMetadata: {labels: {app.kubernetes.io/part-of: app}}\n  imageName: ghcr.io/example/postgres@sha256:" + strings.Repeat("a", 64) + "\n  seccompProfile: {type: RuntimeDefault}\n  resources:\n    requests: {cpu: 10m, memory: 16Mi}\n    limits: {cpu: 100m, memory: 32Mi}\n"
 	if err := templates.Safety(r, []byte(b), "test"); !errors.Is(err, templates.ErrCNPGProvider) {
 		t.Fatalf("CNPG without its exact catalog provider: got %v", err)
 	}
@@ -19,9 +19,13 @@ func TestCNPGCannotBorrowUnrelatedProviderTrust(t *testing.T) {
 	if err := templates.Safety(r, []byte(b), "test"); err != nil {
 		t.Fatal(err)
 	}
+	unlabelled := strings.Replace(b, "  inheritedMetadata: {labels: {app.kubernetes.io/part-of: app}}\n", "", 1)
+	if err := templates.Safety(r, []byte(unlabelled), "test"); !errors.Is(err, templates.ErrPartOf) {
+		t.Fatalf("CNPG pods without the template label: got %v", err)
+	}
 }
 func TestMiddlewareAdapterOnlyAllowsExplicitIPAllowList(t *testing.T) {
-	r := &templates.Template{Requires: []string{"ingress/traefik"}}
+	r := &templates.Template{ID: "app", Requires: []string{"ingress/traefik"}}
 	prefix := safeManifest + "---\napiVersion: traefik.io/v1alpha1\nkind: Middleware\nmetadata: {name: admin}\nspec:\n"
 	if err := templates.Safety(r, []byte(prefix+"  ipAllowList: {sourceRange: [192.0.2.0/24]}\n"), "test"); err != nil {
 		t.Fatal(err)
@@ -57,7 +61,7 @@ spec:
 		{name: "missing-ingress", providers: []string{"certificates/cert-manager"}, rule: templates.ErrTraefikProvider},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			r := &templates.Template{Requires: tc.providers}
+			r := &templates.Template{ID: "app", Requires: tc.providers}
 			if err := templates.Safety(r, []byte(manifest), "test"); !matches(err, tc.rule) {
 				t.Fatalf("got %v, want %v", err, tc.rule)
 			}
@@ -86,6 +90,7 @@ metadata: {name: queue}
 spec:
   image: docker.dragonflydb.io/dragonflydb/dragonfly` + digest + `
   args: [--cache_mode=false]
+  podMetadata: {labels: {app.kubernetes.io/part-of: app}}
   authentication: {passwordFromSecret: {name: app, key: password}}
   containerSecurityContext: {allowPrivilegeEscalation: false, capabilities: {drop: [ALL]}}` + operand
 	mariadb := safeManifest + `---
@@ -99,6 +104,7 @@ kind: MariaDB
 metadata: {name: mariadb}
 spec:
   image: docker.io/mariadb` + digest + `
+  podMetadata: {labels: {app.kubernetes.io/part-of: app}}
   securityContext: {allowPrivilegeEscalation: false, capabilities: {drop: [ALL]}}` + operand + `---
 apiVersion: k8s.mariadb.com/v1alpha1
 kind: Grant
@@ -114,6 +120,7 @@ kind: Backup
 metadata: {name: daily}
 spec:
   mariaDbRef: {name: mariadb}
+  podMetadata: {labels: {app.kubernetes.io/part-of: app}}
   securityContext: {allowPrivilegeEscalation: false, capabilities: {drop: [ALL]}}` + operand + `  storage:
     s3:
       bucket: backups
@@ -131,6 +138,7 @@ spec:
 		{name: "dragonfly-tag", manifest: strings.Replace(dragonfly, "dragonfly"+digest, "dragonfly:v1", 1), provider: "databases/dragonfly-operator", rule: templates.ErrDragonflyDigest},
 		{name: "dragonfly-no-password", manifest: strings.Replace(dragonfly, "  authentication: {passwordFromSecret: {name: app, key: password}}\n", "", 1), provider: "databases/dragonfly-operator", rule: templates.ErrDragonflyPassword},
 		{name: "dragonfly-memcached", manifest: strings.Replace(dragonfly, "--cache_mode=false", "--memcached_port=11211", 1), provider: "databases/dragonfly-operator", rule: templates.ErrDragonflyFlag},
+		{name: "dragonfly-label", manifest: strings.Replace(dragonfly, "  podMetadata: {labels: {app.kubernetes.io/part-of: app}}\n", "", 1), provider: "databases/dragonfly-operator", rule: templates.ErrPartOf},
 		{name: "dragonfly-sidecar", manifest: dragonfly + "  additionalContainers: [{name: x, image: x}]\n", provider: "databases/dragonfly-operator", rule: templates.ErrUnsupportedOverride},
 		{name: "mariadb", manifest: mariadb, provider: "databases/mariadb-operator"},
 		{name: "mariadb-provider", manifest: mariadb, provider: "databases/dragonfly-operator", rule: templates.ErrMariaDBProvider},
@@ -142,7 +150,7 @@ spec:
 		{name: "mariadb-backup-plain", manifest: strings.Replace(mariadb, "tls: {enabled: true}", "tls: {enabled: false}", 1), provider: "databases/mariadb-operator", rule: templates.ErrMariaDBBackupS3},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			r := &templates.Template{Requires: []string{tc.provider}}
+			r := &templates.Template{ID: "app", Requires: []string{tc.provider}}
 			r.Security.Risks = []map[string]string{{"risk": "Operator generated pods", "mitigation": "Pinned catalog review"}}
 			if err := templates.Safety(r, []byte(tc.manifest), "test"); !matches(err, tc.rule) {
 				t.Fatalf("got %v, want %v", err, tc.rule)
