@@ -161,13 +161,23 @@ releases:
         config.json: null
       # The chart mounts config from its own Secret; no ConfigMap.
       mountConfig: false
-      # The serving certificate, and the certificate whose key signs push
-      # tokens. The pod waits for both Secrets.
+      # The serving certificate. The pod waits for the Secret.
       externalSecrets:
         - secretName: zot-tls
           mountPath: /tls
-        - secretName: zot-token-signer
+      # Only tls.crt of zot-token-signer, to check tokens: zot never gets
+      # the key that signs them. The pod waits for the Secret.
+      extraVolumes:
+        - name: token
+          secret:
+            secretName: zot-token-signer
+            items:
+              - {key: tls.crt, path: tls.crt}
+      # bearer.cert reads it from here.
+      extraVolumeMounts:
+        - name: token
           mountPath: /token
+          readOnly: true
       config:
         # Referrers and artifactType, which source archives use.
         distSpecVersion: 1.1.1
