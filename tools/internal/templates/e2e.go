@@ -160,6 +160,9 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues,
 		if manifest, err = render(); err != nil {
 			return nil, err
 		}
+		if manifest, err = skipPerconaS3Verify(manifest, s3.Endpoint); err != nil {
+			return err
+		}
 	}
 
 	// Pod Security admission applies before anything runs in the namespace.
