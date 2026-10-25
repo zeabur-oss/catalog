@@ -44,6 +44,15 @@ inputs:
     generate: random
     generateBytes: 24
     generateEncoding: base64url
+  - name: file-backup
+    description: >
+      Installs the node agent on every node, so Velero can copy volume files
+      with Kopia. The agent runs as root and holds Velero's cluster-admin
+      token. Set false only if every Backup and Schedule sets
+      defaultVolumesToFsBackup to false. Zeabur's backup schedule sets it to
+      true, so without the agent its backups fail partly.
+    path: deployNodeAgent
+    default: true
 
 releases:
   - name: velero
@@ -82,12 +91,10 @@ releases:
               customerKeyEncryptionSecret: velero-backup-key/key
         # Kopia file-system backups work on any storage class, local-path included.
         uploaderType: kopia
-        # Back up all volumes unless they opt out.
+        # Back up all volumes unless they opt out. Needs the file-backup input.
         defaultVolumesToFsBackup: true
       # CSI snapshots need per-driver setup; use file-system backups instead.
       snapshotsEnabled: false
-      # Needed for file-system backups.
-      deployNodeAgent: true
     profiles:
       single-node: |
         resources:
@@ -108,7 +115,9 @@ detection:
       labels: {app.kubernetes.io/name: velero}
 
 security:
-  summary: Bound to cluster-admin; reads and restores every object.
+  summary: >
+    Bound to cluster-admin; reads and restores every object. With the
+    file-backup input, a root node agent on every node holds the same token.
   clusterWide: true
   privileged: true
   credentials: required

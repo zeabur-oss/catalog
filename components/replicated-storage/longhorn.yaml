@@ -139,7 +139,9 @@ security:
   summary: >
     Privileged pods on every node: they mount /dev, /proc, /boot, /etc and
     /var/lib/longhorn from the host, run iscsiadm and mount in the host's
-    namespaces, and manage pods, PVs and storage classes cluster-wide.
+    namespaces, and manage pods, PVs and storage classes cluster-wide. The
+    chart binds the longhorn-support-bundle ServiceAccount to cluster-admin;
+    only support bundle pods mount its token.
   clusterWide: true
   privileged: true
   egress: [docker.io]

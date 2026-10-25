@@ -56,7 +56,10 @@ detection:
       labels: {app.kubernetes.io/name: victoria-metrics-operator}
 
 security:
-  summary: Manages VictoriaMetrics and VictoriaLogs objects and their workloads in all namespaces.
+  summary: >
+    Manages VictoriaMetrics and VictoriaLogs objects and their workloads in all
+    namespaces. It can read every Secret, create pods in any namespace, and
+    create ClusterRoles and bindings, so its token equals cluster-admin.
   clusterWide: true
   tenants: admin-only
 

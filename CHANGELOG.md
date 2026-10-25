@@ -12,8 +12,12 @@ based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `catalog render` fails on a component image without `@sha256:`, as the
   template lint already does. `unpinnedImages` lists the images a chart cannot
   pin, with the reason.
+- Velero: the `file-backup` input installs the node agent. It is on by default,
+  because Zeabur's backup schedule copies volume files.
 
 ### Changed
 
 - Every component chart, URL manifest and image is pinned by digest.
 - Renovate updates image and OCI chart digests together with their tags.
+- The security summaries of Velero, the VictoriaMetrics operator and Longhorn
+  say which tokens equal cluster-admin.
