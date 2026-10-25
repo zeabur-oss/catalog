@@ -125,9 +125,6 @@ metadata:
   namespace: {{ .Namespace }}
 data:
   # nginx opens each page on each request, so an edited page needs no restart.
-  # A Traefik errors middleware asks the pages port for /{status}.html?down=<hosts>.
-  # For a host in that comma-separated list, or under a listed *.domain, /503.html
-  # answers with maintenance.html. Other hosts keep their 503 page.
   nginx.conf: |
     worker_processes 1;
     pid /tmp/nginx.pid;
@@ -152,18 +149,6 @@ data:
             location = /healthz {
                 default_type text/plain;
                 return 200 "ok\n";
-            }
-            location = /503.html {
-                set $probe "$host ,$arg_down,";
-                if ($probe ~ "^(\S+) .*,\1,") {
-                    rewrite ^ /maintenance.html last;
-                }
-                if ($host ~ "^[^.]+(\..+)$") {
-                    set $probe "*$1 ,$arg_down,";
-                }
-                if ($probe ~ "^(\S+) .*,\1,") {
-                    rewrite ^ /maintenance.html last;
-                }
             }
         }
         server {

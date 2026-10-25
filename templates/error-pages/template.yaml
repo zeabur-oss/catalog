@@ -68,16 +68,6 @@ smoke:
       path: /502.html
       status: 200
       contains: Bad gateway
-  - name: maintenance-for-hosts-in-the-query
-    resource: deployment/error-pages
-    condition: condition=Available
-    timeout: 60s
-    http:
-      service: error-pages
-      port: 8080
-      path: /503.html?down=127.0.0.1
-      status: 200
-      contains: Down for maintenance
   - name: maintenance-port
     resource: deployment/error-pages
     condition: condition=Available
