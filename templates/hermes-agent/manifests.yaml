@@ -79,7 +79,7 @@ spec:
               name: '{{ .Inputs.providerSecret }}'
               key: api-key
         - name: LLM_BASE_URL
-          value: '{{ if .Inputs.providerEndpoint }}{{ .Inputs.providerEndpoint }}{{ else }}https://openrouter.ai/api/v1{{ end }}'
+          value: '{{ .Inputs.providerEndpoint }}'
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
@@ -136,7 +136,7 @@ spec:
               name: '{{ .Inputs.providerSecret }}'
               key: api-key
         - name: LLM_BASE_URL
-          value: '{{ if .Inputs.providerEndpoint }}{{ .Inputs.providerEndpoint }}{{ else }}https://openrouter.ai/api/v1{{ end }}'
+          value: '{{ .Inputs.providerEndpoint }}'
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true

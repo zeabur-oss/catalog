@@ -213,14 +213,24 @@ func CreateNamespace(r *Template, ns string) error {
 	return err
 }
 
-// E2EManifest renders r for Namespace(r) with values and a placeholder S3
-// gateway.
-func E2EManifest(r *Template, values E2EValues) ([]byte, error) {
+// E2EOptions returns the render options of the e2e run of r: Namespace(r), a
+// placeholder domain and issuer, and values with their text/template expanded
+// against a placeholder S3 gateway.
+func E2EOptions(r *Template, values E2EValues) (RenderOptions, error) {
 	inputs, err := expand(r.ID, values.Inputs, &S3{Endpoint: "https://s3.example.test", Bucket: "e2e"})
+	if err != nil {
+		return RenderOptions{}, err
+	}
+	return RenderOptions{Namespace: Namespace(r), Domain: r.ID + ".example.test", ClusterIssuer: selfSignedIssuer, Inputs: inputs}, nil
+}
+
+// E2EManifest renders r with E2EOptions.
+func E2EManifest(r *Template, values E2EValues) ([]byte, error) {
+	opts, err := E2EOptions(r, values)
 	if err != nil {
 		return nil, err
 	}
-	return Render(r, RenderOptions{Namespace: Namespace(r), Domain: r.ID + ".example.test", ClusterIssuer: selfSignedIssuer, Inputs: inputs})
+	return Render(r, opts)
 }
 
 // expand executes each input value as a text/template.

@@ -8,8 +8,10 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"text/template"
+	"text/template/parse"
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
@@ -81,7 +83,9 @@ type Input struct {
 	GenerateBytes    *int   `yaml:"generateBytes" json:"generateBytes,omitempty"`
 	GenerateEncoding string `yaml:"generateEncoding" json:"generateEncoding,omitempty"`
 	Required         bool   `yaml:"required" json:"required,omitempty"`
-	Secret           *struct {
+	// Default is the value of an input that is not given.
+	Default string `yaml:"default" json:"default,omitempty"`
+	Secret  *struct {
 		Name string `yaml:"name" json:"name"`
 		Key  string `yaml:"key" json:"key"`
 	} `yaml:"secret" json:"secret,omitempty"`
@@ -188,7 +192,7 @@ func Check(root string, cat *catalog.Catalog, all []*Template) error {
 		}
 		if data, err := os.ReadFile(filepath.Join(t.Dir, "manifests.yaml")); err != nil {
 			fail("%v", err)
-		} else if _, err := parse(data); err != nil {
+		} else if err := checkActions(data, t.Inputs); err != nil {
 			fail("manifests.yaml: %v", err)
 		} else if !labelValue.MatchString(t.Metadata.Version) || !strings.Contains(string(data), ":"+t.Metadata.Version+"@") {
 			fail("metadata.version must be the tag of an image in manifests.yaml, pinned with a digest")
@@ -212,7 +216,51 @@ func (t *Template) RequiresCertificates() bool {
 	return false
 }
 
-func parse(manifests []byte) (*template.Template, error) {
-	funcs := template.FuncMap{"dnsEgress": func() string { return dnsEgress }}
-	return template.New("manifests").Option("missingkey=error").Funcs(funcs).Parse(string(manifests))
+func parseManifests(manifests []byte) (*template.Template, error) {
+	return template.New("manifests").Option("missingkey=error").Parse(string(manifests))
+}
+
+var trimMarker = regexp.MustCompile(`\{\{-[ \t\r\n]|[ \t\r\n]-\}\}`)
+
+// checkActions accepts only field substitution: {{ .Namespace }}, {{ .Domain }},
+// {{ .ClusterIssuer }} and {{ .Inputs.<name> }} of an input that is not generated.
+func checkActions(manifests []byte, inputs []Input) error {
+	if trimMarker.Match(manifests) {
+		return errors.New("trim markers are not allowed")
+	}
+	t, err := parseManifests(manifests)
+	if err != nil {
+		return err
+	}
+	given := map[string]bool{}
+	for _, in := range inputs {
+		if in.Generate == "" {
+			given[in.Name] = true
+		}
+	}
+	for _, n := range t.Tree.Root.Nodes {
+		switch n := n.(type) {
+		case *parse.TextNode:
+		case *parse.ActionNode:
+			if f := actionField(n); len(f) == 0 || !(len(f) == 1 && slices.Contains([]string{"Namespace", "Domain", "ClusterIssuer"}, f[0]) || len(f) == 2 && f[0] == "Inputs" && given[f[1]]) {
+				return fmt.Errorf("only {{ .Namespace }}, {{ .Domain }}, {{ .ClusterIssuer }} and {{ .Inputs.<name> }} of a given input are allowed, not %s", n)
+			}
+		default:
+			return fmt.Errorf("only field substitution is allowed, not %s", n)
+		}
+	}
+	return nil
+}
+
+// actionField returns the path of the field that a plain {{ .A.B }} action
+// reads, or nil for any other action.
+func actionField(n *parse.ActionNode) []string {
+	p := n.Pipe
+	if len(p.Decl) > 0 || len(p.Cmds) != 1 || len(p.Cmds[0].Args) != 1 {
+		return nil
+	}
+	if f, ok := p.Cmds[0].Args[0].(*parse.FieldNode); ok {
+		return f.Ident
+	}
+	return nil
 }

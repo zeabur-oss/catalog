@@ -108,7 +108,7 @@ spec:
         - name: mail__options__port
           value: '{{ .Inputs.smtpPort }}'
         - name: mail__options__secure
-          value: '{{ eq .Inputs.smtpPort "465" }}'
+          value: '{{ .Inputs.smtpSecure }}'
         - name: mail__options__requireTLS
           value: 'true'
         - name: mail__options__auth__user

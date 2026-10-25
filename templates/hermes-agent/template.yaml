@@ -68,6 +68,7 @@ inputs:
       suffix if required. If it is empty, the template uses OpenRouter
       (https://openrouter.ai/api/v1).
     required: false
+    default: https://openrouter.ai/api/v1
     validation: {pattern: '^https://[A-Za-z0-9.-]+(:443)?(/[A-Za-z0-9._~/-]*)?$'}
   - name: adminDomain
     label: Dashboard domain

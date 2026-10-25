@@ -78,6 +78,19 @@ inputs:
     description: 'SMTP TLS port: 465 for implicit TLS or 587 for STARTTLS.'
     required: true
     validation: {pattern: ^(465|587)$}
+  - name: smtpSecure
+    label: SMTP encryption
+    locales:
+      zh-TW:
+        label: SMTP 加密方式
+        description: "連接埠 465 填 true（直接 TLS），587 不用填（STARTTLS）。"
+      zh-CN:
+        label: SMTP 加密方式
+        description: "端口 465 填 true（直接 TLS），587 不用填（STARTTLS）。"
+    description: 'true for implicit TLS on port 465. Leave empty for STARTTLS on port 587.'
+    required: false
+    default: "false"
+    validation: {pattern: ^(true|false)$}
   - name: smtpFrom
     label: Sender address
     locales:
@@ -144,6 +157,9 @@ scalability:
       replicas without an application-specific storage/database design.
 
 upgradeNotes:
+  - >-
+    The new smtpSecure input replaces the port check: give true with SMTP port
+    465. Port 587 needs no change.
   - >-
     The ghost-setup Job creates the site owner at deploy time. On an existing
     site it finds the setup already done and changes nothing. A Job cannot be

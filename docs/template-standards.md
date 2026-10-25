@@ -79,7 +79,7 @@ exact versions the template pins.
   `catalog template lint` then requires an ingress NetworkPolicy whose
   `podSelector` names that service, and the `security` risks say why it
   exists. A component that runs untrusted code may also limit egress to DNS
-  (`{{ dnsEgress }}`) and its own peers.
+  and its own peers.
 - Do not limit egress otherwise. Applications call model providers, webhooks,
   mail servers and S3 stores that the template cannot know, and NetworkPolicy
   matches IP ranges, not host names.
@@ -129,7 +129,10 @@ exact versions the template pins.
 - Say what deleting the application keeps and what it destroys.
 - Give each S3 endpoint an optional CA input, a Secret with `ca.crt`, for
   storage behind a private CA, when its client takes one. The e2e test uses
-  it.
+  it. Manifests have no conditions: mount the Secret with `optional: true`, and
+  give the CA file path its own input with a `default`.
+- Write only field substitution in `manifests.yaml`. Express a choice as an
+  input with a `default`, not as a condition.
 
 ## Scaling and resources
 

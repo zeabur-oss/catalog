@@ -161,10 +161,28 @@ inputs:
         description: "存储使用私有 CA 签发证书时才填：这个项目里现有的机密，键 ca.crt 放 PEM 格式的 CA 证书。公共信任的证书请留空。"
     description: >-
       Optional existing namespaced Secret with key ca.crt, the PEM CA that
-      signed the storage endpoint certificate. Set it for a private CA. Leave
-      it empty for a publicly trusted certificate.
+      signed the storage endpoint certificate. Set it for a private CA, with
+      storageCAFile set to /storage-ca/ca.crt. Leave it empty for a publicly
+      trusted certificate.
     required: false
-    validation: {pattern: '^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$'}
+    default: dify-storage-ca
+    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: storageCAFile
+    label: Storage CA file
+    locales:
+      zh-TW:
+        label: 儲存空間 CA 檔案
+        description: "要用的 CA 憑證檔案路徑。用私有 CA 時填 /storage-ca/ca.crt（來自上面的機密）；公開信任的憑證請留空。"
+      zh-CN:
+        label: 存储 CA 文件
+        description: "要使用的 CA 证书文件路径。使用私有 CA 时填 /storage-ca/ca.crt（来自上面的机密）；公共信任的证书请留空。"
+    description: >-
+      Path of the PEM CA file the storage client trusts. Set it to
+      /storage-ca/ca.crt for a private CA from storageCASecret. Leave it empty
+      for a publicly trusted certificate, which uses the system CA bundle.
+    required: false
+    default: /etc/ssl/certs/ca-certificates.crt
+    validation: {pattern: '^/[A-Za-z0-9._/-]+$'}
 
 security:
   summary: >-
@@ -257,6 +275,10 @@ scalability:
       or snapshots.
 
 upgradeNotes:
+  - >-
+    A private storage CA now needs two inputs: storageCASecret and
+    storageCAFile set to /storage-ca/ca.crt. The pods mount the Secret when it
+    exists and always set AWS_CA_BUNDLE to storageCAFile.
   - >-
     The dify-api pod now has INIT_PASSWORD from dify-secrets/init-password.
     A new install needs it on the /install page; an installation that already

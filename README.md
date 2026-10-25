@@ -273,10 +273,12 @@ upgradeNotes: []     # what an upgrade needs
 smoke: []            # resource condition, then an HTTP or SQL check
 ```
 
-`manifests.yaml` is a Go template. It gets `.Namespace`, `.Domain`,
-`.ClusterIssuer` and `.Inputs.<name>`, and `{{ dnsEgress }}` inserts the
-NetworkPolicy rule to cluster DNS for a pod that denies egress. Rendered
-objects reference Secrets and never contain generated values.
+`manifests.yaml` allows only field substitution: `{{ .Namespace }}`,
+`{{ .Domain }}`, `{{ .ClusterIssuer }}` and `{{ .Inputs.<name> }}` of an input
+that is not generated. It allows no conditions, functions, pipelines or trim
+markers. An input that is not given takes its `default`, or is empty. Use an
+input with a `default` where a template needs a choice. Rendered objects
+reference Secrets and never contain generated values.
 
 ## Adding a component
 

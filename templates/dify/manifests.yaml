@@ -135,7 +135,7 @@ spec:
     ports:
     - protocol: TCP
       port: 3128
-  - {{ dnsEgress }}
+  - {to: [{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: kube-system}}, podSelector: {matchLabels: {k8s-app: kube-dns}}}], ports: [{protocol: UDP, port: 53}, {protocol: TCP, port: 53}]}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -596,10 +596,8 @@ spec:
             secretKeyRef:
               name: '{{ .Inputs.storageSecret }}'
               key: secret-key
-{{- if .Inputs.storageCASecret }}
         - name: AWS_CA_BUNDLE
-          value: /storage-ca/ca.crt
-{{- end }}
+          value: '{{ .Inputs.storageCAFile }}'
         - name: CELERY_BROKER_URL
           value: redis://:$(REDIS_PASSWORD)@dify-dragonfly:6379/1
         - name: MODE
@@ -624,11 +622,9 @@ spec:
           mountPath: /tmp
         - name: storage
           mountPath: /app/api/storage
-{{- if .Inputs.storageCASecret }}
         - name: storage-ca
           mountPath: /storage-ca
           readOnly: true
-{{- end }}
         readinessProbe:
           tcpSocket:
             port: http
@@ -654,12 +650,11 @@ spec:
       - name: storage
         persistentVolumeClaim:
           claimName: dify-api-storage
-{{- if .Inputs.storageCASecret }}
       - name: storage-ca
         secret:
           secretName: '{{ .Inputs.storageCASecret }}'
+          optional: true
           items: [{key: ca.crt, path: ca.crt}]
-{{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -841,10 +836,8 @@ spec:
             secretKeyRef:
               name: '{{ .Inputs.storageSecret }}'
               key: secret-key
-{{- if .Inputs.storageCASecret }}
         - name: AWS_CA_BUNDLE
-          value: /storage-ca/ca.crt
-{{- end }}
+          value: '{{ .Inputs.storageCAFile }}'
         - name: CELERY_BROKER_URL
           value: redis://:$(REDIS_PASSWORD)@dify-dragonfly:6379/1
         - name: MODE
@@ -869,11 +862,9 @@ spec:
           mountPath: /tmp
         - name: storage
           mountPath: /app/api/storage
-{{- if .Inputs.storageCASecret }}
         - name: storage-ca
           mountPath: /storage-ca
           readOnly: true
-{{- end }}
         readinessProbe:
           exec:
             command:
@@ -908,12 +899,11 @@ spec:
       - name: storage
         emptyDir:
           sizeLimit: 1Gi
-{{- if .Inputs.storageCASecret }}
       - name: storage-ca
         secret:
           secretName: '{{ .Inputs.storageCASecret }}'
+          optional: true
           items: [{key: ca.crt, path: ca.crt}]
-{{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -1095,10 +1085,8 @@ spec:
             secretKeyRef:
               name: '{{ .Inputs.storageSecret }}'
               key: secret-key
-{{- if .Inputs.storageCASecret }}
         - name: AWS_CA_BUNDLE
-          value: /storage-ca/ca.crt
-{{- end }}
+          value: '{{ .Inputs.storageCAFile }}'
         - name: CELERY_BROKER_URL
           value: redis://:$(REDIS_PASSWORD)@dify-dragonfly:6379/1
         - name: MODE
@@ -1123,11 +1111,9 @@ spec:
           mountPath: /tmp
         - name: storage
           mountPath: /app/api/storage
-{{- if .Inputs.storageCASecret }}
         - name: storage-ca
           mountPath: /storage-ca
           readOnly: true
-{{- end }}
         readinessProbe:
           exec:
             command:
@@ -1167,12 +1153,11 @@ spec:
       - name: storage
         emptyDir:
           sizeLimit: 1Gi
-{{- if .Inputs.storageCASecret }}
       - name: storage-ca
         secret:
           secretName: '{{ .Inputs.storageCASecret }}'
+          optional: true
           items: [{key: ca.crt, path: ca.crt}]
-{{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment

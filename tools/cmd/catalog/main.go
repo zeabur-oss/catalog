@@ -6,6 +6,7 @@
 //	catalog e2e -tier l0|l1|l2 [-cluster current] [ids]  run a test tier (see tier.go)
 //	catalog budget                      single-node memory budget
 //	catalog index                       write index.json
+//	catalog crosscheck                  write crosscheck.json, the render of every template with its e2e values
 //	catalog merge <dir>                 merge measurements uploaded by CI jobs into measurements/
 //	catalog template render <id>        expand manifests.yaml
 //	catalog template inputs <id>        print the Secrets of generated inputs
@@ -34,19 +35,20 @@ type repo struct {
 }
 
 var commands = map[string]func(*flag.FlagSet, *repo) error{
-	"validate": validate,
-	"render":   render,
-	"list":     list,
-	"e2e":      e2e,
-	"budget":   budget,
-	"index":    index,
-	"merge":    merge,
-	"template": template,
+	"validate":   validate,
+	"render":     render,
+	"list":       list,
+	"e2e":        e2e,
+	"budget":     budget,
+	"index":      index,
+	"crosscheck": crosscheck,
+	"merge":      merge,
+	"template":   template,
 }
 
 func main() {
 	if len(os.Args) < 2 || commands[os.Args[1]] == nil {
-		fmt.Fprintln(os.Stderr, "usage: catalog validate|render|list|e2e|budget|index|merge|template [flags] [ids]")
+		fmt.Fprintln(os.Stderr, "usage: catalog validate|render|list|e2e|budget|index|crosscheck|merge|template [flags] [ids]")
 		os.Exit(2)
 	}
 	if dir, err := os.UserCacheDir(); err == nil {

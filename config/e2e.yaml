@@ -56,10 +56,12 @@ templates:
       storageBucket: '{{ .S3.Bucket }}'
       storageSecret: e2e-s3
       storageCASecret: e2e-s3
+      storageCAFile: /storage-ca/ca.crt
   ghost:
     inputs:
       smtpHost: smtp.example.test
       smtpPort: "587"
+      smtpSecure: "false"
       smtpFrom: ghost@example.test
       smtpSecret: e2e-smtp
     setup: |

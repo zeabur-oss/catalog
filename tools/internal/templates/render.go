@@ -82,9 +82,6 @@ func (o RenderOptions) validate(r *Template) error {
 	return nil
 }
 
-// dnsEgress is the NetworkPolicy egress rule to cluster DNS. A manifest inserts it with {{ dnsEgress }}.
-const dnsEgress = `{to: [{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: kube-system}}, podSelector: {matchLabels: {k8s-app: kube-dns}}}], ports: [{protocol: UDP, port: 53}, {protocol: TCP, port: 53}]}`
-
 // Render expands manifests.yaml and adds Labels to every object. Generated
 // inputs stay in their Secrets.
 func Render(r *Template, o RenderOptions) ([]byte, error) {
@@ -95,18 +92,18 @@ func Render(r *Template, o RenderOptions) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	t, err := parse(data)
+	t, err := parseManifests(data)
 	if err != nil {
 		return nil, err
 	}
-	// An optional input that is not given is empty.
+	// An input that is not given takes its default, or is empty.
 	inputs := maps.Clone(o.Inputs)
 	if inputs == nil {
 		inputs = map[string]string{}
 	}
 	for _, in := range r.Inputs {
 		if _, ok := inputs[in.Name]; !ok && in.Generate == "" {
-			inputs[in.Name] = ""
+			inputs[in.Name] = in.Default
 		}
 	}
 	o.Inputs = inputs
@@ -181,6 +178,9 @@ func validateInputs(inputs []Input) ([]*regexp.Regexp, error) {
 			return nil, fmt.Errorf("input %s: %w", in.Name, err)
 		}
 		patterns[i] = p
+		if in.Default != "" && !p.MatchString(in.Default) {
+			return nil, fmt.Errorf("input %s: default %w", in.Name, ErrInputPattern)
+		}
 		if in.Secret != nil {
 			key := in.Secret.Name + "/" + in.Secret.Key
 			if secrets[key] {
