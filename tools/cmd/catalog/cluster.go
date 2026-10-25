@@ -2,22 +2,29 @@ package main
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"log/slog"
 	"maps"
+	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"go.yaml.in/yaml/v3"
 )
 
-// cluster is a kind cluster with its own kubeconfig. The tool never uses the
-// contexts in the default kubeconfig.
+// cluster is a kind cluster, or KubeSolo on this host, with its own
+// kubeconfig. The tool never uses the contexts in the default kubeconfig.
 type cluster struct {
 	name, dir string
+	kubesolo  bool
 }
 
 // nodeSetup holds commands that run in every node before the components that
@@ -97,11 +104,142 @@ func (c *cluster) setup(needs []*catalog.Component) error {
 }
 
 func (c *cluster) delete() {
+	if c.kubesolo {
+		// The host is a disposable runner: stop the service and drop its data.
+		catalog.Run(nil, "sudo", "systemctl", "stop", "kubesolo")
+		catalog.Run(nil, "sudo", "rm", "-rf", "/var/lib/kubesolo")
+		os.RemoveAll(c.dir)
+		return
+	}
 	if _, err := catalog.Run(nil, "kind", "delete", "cluster", "--name", c.name,
 		"--kubeconfig", filepath.Join(c.dir, "kubeconfig")); err != nil {
 		slog.Warn("kind delete cluster", "name", c.name, "err", err)
 	}
 	os.RemoveAll(c.dir)
+}
+
+// kubesoloConfig is the kubesolo block of config/kubernetes.yaml.
+type kubesoloConfig struct {
+	Version        string            `yaml:"version"`
+	SHA256         map[string]string `yaml:"sha256"` // by architecture
+	Capabilities   []string          `yaml:"capabilities"`
+	HelmController struct {
+		Version string `yaml:"version"`
+		SHA256  string `yaml:"sha256"`
+	} `yaml:"helmController"`
+}
+
+// runs reports whether the personal install runs c on KubeSolo.
+func (k kubesoloConfig) runs(c *catalog.Component) bool {
+	return slices.Contains(k.Capabilities, c.Capability) &&
+		(len(c.Distributions) == 0 || slices.Contains(c.Distributions, "kubesolo"))
+}
+
+// createKubesolo installs KubeSolo and the standalone helm-controller on this
+// host and points KUBECONFIG at them. Both downloads must match their pinned
+// checksums.
+func createKubesolo(k kubesoloConfig) (*cluster, error) {
+	dir, err := os.MkdirTemp("", "catalog-kubesolo-")
+	if err != nil {
+		return nil, err
+	}
+	c := &cluster{name: "kubesolo", dir: dir, kubesolo: true}
+	if err := c.startKubesolo(k); err != nil {
+		c.delete()
+		return nil, err
+	}
+	return c, nil
+}
+
+func (c *cluster) startKubesolo(k kubesoloConfig) error {
+	arch := runtime.GOARCH
+	archive := filepath.Join(c.dir, "kubesolo.tar.gz")
+	if err := download("https://github.com/portainer/kubesolo/releases/download/"+k.Version+"/kubesolo-"+k.Version+"-linux-"+arch+".tar.gz",
+		k.SHA256[arch], archive); err != nil {
+		return err
+	}
+	if _, err := catalog.Run(nil, "tar", "-xzf", archive, "-C", c.dir, "kubesolo"); err != nil {
+		return err
+	}
+	slog.Info("starting KubeSolo", "version", k.Version)
+	for _, args := range [][]string{
+		{"install", "-m", "0755", filepath.Join(c.dir, "kubesolo"), "/usr/local/bin/kubesolo"},
+		// The API server cannot reach the kubelet when the hostname maps to 127.0.1.1.
+		{"sh", "-c", `sed -i '/^127\.0\.1\.1/d' /etc/hosts && echo "$(hostname -I | cut -d' ' -f1) $(hostname)" >> /etc/hosts`},
+		// KillMode=process and Delegate=yes are the settings of KubeSolo's own unit.
+		{"systemd-run", "--unit=kubesolo", "-p", "KillMode=process", "-p", "Delegate=yes", "-p", "OOMScoreAdjust=-500",
+			"/usr/local/bin/kubesolo", "--path=/var/lib/kubesolo"},
+	} {
+		if _, err := catalog.Run(nil, "sudo", args...); err != nil {
+			return err
+		}
+	}
+	kubeconfig := filepath.Join(c.dir, "kubeconfig")
+	os.Setenv("KUBECONFIG", kubeconfig)
+	deadline := time.Now().Add(5 * time.Minute)
+	for {
+		out, err := catalog.Run(nil, "sudo", "cat", "/var/lib/kubesolo/pki/admin/admin.kubeconfig")
+		if err == nil && os.WriteFile(kubeconfig, []byte(out), 0o600) == nil {
+			// KubeSolo adds CoreDNS and its storage provisioner after the node is ready.
+			// They must exist before the tests take their baseline of objects.
+			if err = kubesoloReady(); err == nil {
+				break
+			}
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("KubeSolo is not ready: %w", err)
+		}
+		time.Sleep(5 * time.Second)
+	}
+	manifest := filepath.Join(c.dir, "helm-controller.yaml")
+	if err := download("https://github.com/k3s-io/helm-controller/releases/download/"+k.HelmController.Version+"/deploy-cluster-scoped.yaml",
+		k.HelmController.SHA256, manifest); err != nil {
+		return err
+	}
+	slog.Info("installing helm-controller", "version", k.HelmController.Version)
+	if _, err := catalog.Run(nil, "kubectl", "apply", "--server-side", "-f", manifest); err != nil {
+		return err
+	}
+	_, err := catalog.Run(nil, "kubectl", "-n", "helm-controller", "rollout", "status", "deployment/helm-controller", "--timeout=5m")
+	return err
+}
+
+func kubesoloReady() error {
+	for _, args := range [][]string{
+		{"wait", "--for=condition=Ready", "node", "--all"},
+		{"-n", "kube-system", "wait", "--for=condition=Available", "deployment/coredns"},
+		{"-n", "local-path-storage", "wait", "--for=condition=Available", "deployment/local-path-provisioner"},
+	} {
+		if _, err := catalog.Run(nil, "kubectl", append(args, "--timeout=10s")...); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// download saves url to path and fails unless its SHA-256 is sum.
+func download(url, sum, path string) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("%s: %s", url, resp.Status)
+	}
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	h := sha256.New()
+	if _, err := io.Copy(io.MultiWriter(f, h), resp.Body); err != nil {
+		return err
+	}
+	if got := hex.EncodeToString(h.Sum(nil)); got != sum {
+		return fmt.Errorf("%s: sha256 is %s, want %q", url, got, sum)
+	}
+	return nil
 }
 
 // writeMirrorHosts writes a containerd hosts.toml for each entry of spec, a

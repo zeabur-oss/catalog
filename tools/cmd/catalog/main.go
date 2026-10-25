@@ -20,6 +20,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
@@ -86,7 +87,7 @@ func validate(fs *flag.FlagSet, r *repo) error {
 // list prints the e2e CI matrix of a tier. For l1: one job per group, with
 // the IDs it tests. For l2: every profile × architecture × component it
 // supports, and every template on single-node amd64. Both carry the kind node
-// version.
+// version. The kubesolo profile lists the components of a personal install.
 func list(fs *flag.FlagSet, r *repo) error {
 	since := fs.String("since", "", "only what changed since this git commit")
 	tier := fs.String("tier", "l2", "l1 or l2")
@@ -117,8 +118,8 @@ func list(fs *flag.FlagSet, r *repo) error {
 			jobs = append(jobs, job{IDs: strings.Join(g.IDs, " ")})
 		}
 	case "l2":
-		for _, p := range catalog.Profiles {
-			subs, err := subjects(r, p, selected)
+		for _, p := range append(slices.Clone(catalog.Profiles), kubesoloProfile) {
+			subs, err := profileSubjects(r, cfg, p, selected)
 			if err != nil {
 				return err
 			}
@@ -182,6 +183,7 @@ type config struct {
 	E2E      struct {
 		Version string `yaml:"version"` // kindest/node
 	} `yaml:"e2e"`
+	Kubesolo kubesoloConfig `yaml:"kubesolo"`
 }
 
 func loadConfig() (config, error) {

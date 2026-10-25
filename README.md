@@ -156,7 +156,8 @@ known differences:
   an NFSv4 client on every node, and multipathd kept off its disks; see the
   comments in its file. CI installs them into kind's nodes.
 - `distributions` limits a component to some distributions
-  (system-upgrade-controller: k3s).
+  (system-upgrade-controller: k3s). The kubesolo e2e profile skips a component
+  whose list omits kubesolo.
 - Templates name no StorageClass, so their volumes use the cluster's default
   StorageClass. Without a default, their claims stay `Pending`.
 
@@ -349,6 +350,14 @@ recommended set, measured on amd64, fits `config/budget.yaml`.
 `nightly.yml` opens a pull request with fresh `measurements/`; run it by hand
 to measure now. Renovate opens a pull request for every new upstream version
 and image digest.
+
+The `kubesolo` profile (`-profile kubesolo`, on a Linux host with root) installs
+the KubeSolo and helm-controller releases pinned in `config/kubernetes.yaml`
+on the host, with their checksums, and runs the L2 test for the capabilities
+listed there (ingress, certificates, databases) with the single-node values.
+Templates do not run on it: they need NetworkPolicy. Components whose
+`distributions` omit `kubesolo` do not run either. Its measurements are keyed
+`kubesolo-<architecture>-<version>`, beside the kind ones.
 
 L0 starts its own API server, and L1 and L2 create their own kind clusters,
 each with its own kubeconfig. Each tier deletes them (`-keep` keeps them) and

@@ -33,7 +33,7 @@ type environment struct {
 func e2e(fs *flag.FlagSet, r *repo) error {
 	tier := fs.String("tier", "l2", strings.Join(tiers, ", ")+" (see tier.go)")
 	cluster := fs.String("cluster", "kind", "l1, l2: kind creates a cluster for each group or test; current uses the cluster that KUBECONFIG names")
-	profile := fs.String("profile", templateProfile, "l2: single-node or multi-node")
+	profile := fs.String("profile", templateProfile, "l2: single-node, multi-node or kubesolo (KubeSolo on this host)")
 	write := fs.Bool("write", false, "l2: update measurements/ for passing tests")
 	previous := fs.String("previous", "", "l2: previous release's index.json, for upgrade tests")
 	since := fs.String("since", "", "l1, l2: without ids, only what changed since this git commit")

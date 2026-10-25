@@ -187,6 +187,25 @@ func subjects(r *repo, profile string, sel func(string, []*catalog.Component) bo
 	return out, nil
 }
 
+// kubesoloProfile is the profile that tests a personal install on KubeSolo. It
+// installs with the single-node values.
+const kubesoloProfile = "kubesolo"
+
+// profileSubjects is subjects for a catalog profile or kubesoloProfile.
+func profileSubjects(r *repo, cfg config, profile string, sel func(string, []*catalog.Component) bool) ([]subject, error) {
+	if profile != kubesoloProfile {
+		return subjects(r, profile, sel)
+	}
+	subs, err := subjects(r, templateProfile, sel)
+	if err != nil {
+		return nil, err
+	}
+	return slices.DeleteFunc(subs, func(s subject) bool {
+		c, ok := r.cat.Get(s.id)
+		return !ok || !cfg.Kubesolo.runs(c)
+	}), nil
+}
+
 // selection returns a function that reports whether a test runs: one that
 // args names or, without args, one that changed since ref (see selector).
 func selection(r *repo, since string, args []string) (func(string, []*catalog.Component) bool, error) {
@@ -568,14 +587,15 @@ func testTemplate(r *repo, t *catalog.Tester, id string, write bool) (status str
 // l2 tests each component and template in a fresh cluster with the full
 // checks.
 func l2(r *repo, cfg config, o tierOptions, args []string) error {
-	if !slices.Contains(catalog.Profiles, o.profile) {
-		return fmt.Errorf("unknown -profile %q; use %s", o.profile, strings.Join(catalog.Profiles, " or "))
+	profiles := append(slices.Clone(catalog.Profiles), kubesoloProfile)
+	if !slices.Contains(profiles, o.profile) {
+		return fmt.Errorf("unknown -profile %q; use %s", o.profile, strings.Join(profiles, " or "))
 	}
 	sel, err := selection(r, o.since, args)
 	if err != nil {
 		return err
 	}
-	subs, err := subjects(r, o.profile, sel)
+	subs, err := profileSubjects(r, cfg, o.profile, sel)
 	if err != nil {
 		return err
 	}
@@ -584,7 +604,11 @@ func l2(r *repo, cfg config, o tierOptions, args []string) error {
 			return fmt.Errorf("%s is not tested on %s", id, o.profile)
 		}
 	}
-	t, err := newTester(r.cat, o.profile)
+	values := o.profile
+	if values == kubesoloProfile {
+		values = templateProfile
+	}
+	t, err := newTester(r.cat, values)
 	if err != nil {
 		return err
 	}
@@ -599,7 +623,11 @@ func l2(r *repo, cfg config, o tierOptions, args []string) error {
 		var c *cluster
 		if !o.current {
 			start := time.Now()
-			c, err = createCluster(o.profile, cfg.E2E.Version, s.order)
+			if o.profile == kubesoloProfile {
+				c, err = createKubesolo(cfg.Kubesolo)
+			} else {
+				c, err = createCluster(o.profile, cfg.E2E.Version, s.order)
+			}
 			t.Timings.Since("cluster", start)
 			if err != nil {
 				rows = append(rows, row{subject: s.id, timings: t.Timings, err: err})
@@ -608,7 +636,7 @@ func l2(r *repo, cfg config, o tierOptions, args []string) error {
 		}
 		rw := row{subject: s.id}
 		if strings.Contains(s.id, "/") {
-			rw.status, rw.err = testComponent(t, s.id, o.write)
+			rw.status, rw.err = testComponent(t, o.profile, s.id, o.write)
 		} else {
 			rw.status, rw.err = testTemplate(r, t, s.id, o.write)
 		}
@@ -622,9 +650,9 @@ func l2(r *repo, cfg config, o tierOptions, args []string) error {
 }
 
 // testComponent runs the full component test on the current cluster and
-// writes the measurement if write is set.
-func testComponent(t *catalog.Tester, id string, write bool) (status string, err error) {
-	key, err := currentEnvironment(t.Profile)
+// writes the measurement under profile if write is set.
+func testComponent(t *catalog.Tester, profile, id string, write bool) (status string, err error) {
+	key, err := currentEnvironment(profile)
 	if err != nil {
 		return "", err
 	}

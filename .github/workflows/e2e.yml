@@ -4,6 +4,9 @@
 # memory and CPU once they are stable, smoke test, uninstall and residue
 # check. Installs every template on single-node amd64 with the components it
 # requires, runs its smoke checks, then measures its idle memory and CPU.
+# The kubesolo profile installs KubeSolo and the standalone helm-controller on
+# the runner and tests the components of a personal install, on amd64 and
+# arm64; its measurements are keyed kubesolo-<architecture>-<version>.
 # nightly.yml and release.yml call it.
 name: e2e
 
@@ -40,6 +43,9 @@ jobs:
       - name: iSCSI module for Longhorn
         if: matrix.component == 'replicated-storage/longhorn'
         run: sudo modprobe iscsi_tcp
+      - name: Stop Docker for KubeSolo
+        if: matrix.profile == 'kubesolo'
+        run: sudo systemctl stop docker.socket docker.service
       - name: Previous release (upgrade test)
         if: matrix.component
         env:

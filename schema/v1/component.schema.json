@@ -39,7 +39,7 @@
     },
     "distributions": {
       "type": "array",
-      "description": "Kubernetes distributions it applies to; omitted means any. Information for consumers; e2e runs on kind regardless.",
+      "description": "Kubernetes distributions it applies to; omitted means any. Information for consumers; e2e runs on kind regardless, and on KubeSolo only when the list is empty or names kubesolo.",
       "minItems": 1,
       "uniqueItems": true,
       "items": { "enum": ["k3s", "rke2", "k0s", "kubesolo", "microk8s", "kubeadm"] }
