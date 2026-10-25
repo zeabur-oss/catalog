@@ -27,27 +27,10 @@ inputs:
       to it. Left out: an address is assigned and only pods reach the registry.
     release: zot
     path: service.clusterIP
-  # Builder pushes and reads source archives with the account of each build
-  # namespace. Without an account, nobody reads a source repository.
-  - name: htpasswd
-    description: >
-      The registry's accounts as an htpasswd file with bcrypt hashes, one line
-      per build namespace, named after it. An empty file is valid: then no one
-      reads source archives.
-    secret: {name: zot-htpasswd, key: htpasswd, namespace: zot}
-    required: true
-    testValue: "ci:$2y$05$s4ySHqIe7D/T1cjpIzr91OyAkbXYw.lO9/zWLsnzvJjeu26wBQR.W"
-  - name: access-control
-    description: >
-      Replaces the registry's accessControl. Keep the "**" and "**/source"
-      rules, and add one rule per build namespace, such as "team-a/**/source"
-      with policies [{users: [team-a], actions: [read, create, update,
-      delete]}]. Left out: the two rules alone, so source archives stay
-      closed.
-    path: config.http.accessControl
 
 releases:
-  # Before the chart: the CA that signs zot-tls.
+  # Before the chart: the CA that signs zot-tls, and the key that signs push
+  # tokens.
   - name: tls
     namespace: zot
     manifests: |
@@ -89,6 +72,29 @@ releases:
       spec:
         ca:
           secretName: zot-ca
+      ---
+      # The key that signs push tokens. Zeabur Builder reads tls.key and signs
+      # a short-lived token for each push; zot checks it with tls.crt. Only
+      # the key matters, so a renewal keeps it (rotationPolicy: Never). zot
+      # reads tls.crt once at start: to rotate the key, delete the Secret
+      # zot-token-signer, wait for cert-manager to issue it again, and restart
+      # zot.
+      apiVersion: cert-manager.io/v1
+      kind: Certificate
+      metadata:
+        name: zot-token-signer
+        namespace: zot
+      spec:
+        commonName: zot-token-signer
+        secretName: zot-token-signer
+        duration: 87600h
+        privateKey:
+          algorithm: Ed25519
+          encoding: PKCS8
+          rotationPolicy: Never
+        issuerRef:
+          kind: Issuer
+          name: zot-selfsigned
 
   - name: zot
     namespace: zot
@@ -97,7 +103,7 @@ releases:
     version: 0.1.128
     values: |
       service:
-        # The registry is unauthenticated: never on node ports (the chart's
+        # Anyone may pull: never on node ports (the chart's
         # default is NodePort).
         type: ClusterIP
         port: 5000
@@ -140,12 +146,13 @@ releases:
         config.json: null
       # The chart mounts config from its own Secret; no ConfigMap.
       mountConfig: false
-      # The accounts for accessControl, from the htpasswd input.
+      # The serving certificate, and the certificate whose key signs push
+      # tokens. The pod waits for both Secrets.
       externalSecrets:
         - secretName: zot-tls
           mountPath: /tls
-        - secretName: zot-htpasswd
-          mountPath: /auth
+        - secretName: zot-token-signer
+          mountPath: /token
       config:
         # Referrers and artifactType, which source archives use.
         distSpecVersion: 1.1.1
@@ -178,21 +185,24 @@ releases:
           tls:
             cert: /tls/tls.crt
             key: /tls/tls.key
-          # Accounts from the zot-htpasswd Secret.
+          # Pushes, deletes and source reads need a token from Zeabur Builder,
+          # signed with the key of zot-token-signer. A token names each
+          # repository exactly, such as team-a/api and team-a/api/source, and
+          # expires. zot checks such a request against the token alone, not
+          # against accessControl. realm is required, but clients send the
+          # token without asking it.
           auth:
-            htpasswd:
-              path: /auth/htpasswd
-          # zot applies the rule with the longest pattern, not the union of
-          # matches. Images: everyone reads and writes, as before. Source
-          # archives (<namespace>/<build>/source): nobody, unless a rule
-          # <namespace>/**/source names the account of that namespace. Such a
-          # pattern is always longer than **/source. Never add <namespace>/**
-          # rules: one of them can be as long as **/source.
+            bearer:
+              realm: https://zot.zot.svc:5000/zot/auth/token
+              service: zot
+              cert: /token/tls.crt
+          # Requests without a token. zot applies the rule with the longest
+          # pattern, not the union of matches. Everyone pulls images. Nobody
+          # reads source archives (<namespace>/<build>/source).
           accessControl:
             repositories:
               "**":
-                defaultPolicy: [read, create, update, delete]
-                anonymousPolicy: [read, create, update, delete]
+                anonymousPolicy: [read]
               "**/source":
                 policies: []
         # Requests and errors only.
@@ -232,16 +242,19 @@ security:
     No RBAC: a ServiceAccount without roles. Serves the OCI registry API over
     TLS on port 5000 inside the cluster.
   risks:
-    - risk: Any pod in the cluster can push, overwrite and pull any image anonymously.
+    - risk: Any pod in the cluster can pull any image anonymously.
       mitigation: >
-        Narrow the "**" rule of accessControl to one repository path per
-        namespace, and give Builder the push credential and nodes a pull
-        credential. A NetworkPolicy can limit pushes to Builder's namespace.
-    - risk: Source archives (repositories ending in /source) hold uploaded code. Only the account of the namespace in the path reads them.
+        Keep secrets out of images; give them to the workload as Secrets.
+        Pushes, deletes and source reads need a token from Zeabur Builder.
+    - risk: Whoever reads the Secret zot-token-signer can sign a token for any repository.
       mitigation: >
-        Add an htpasswd line and a "<namespace>/**/source" rule for each build
-        namespace (the htpasswd and access-control inputs). Without the rule,
-        that namespace's account cannot read its own archives.
+        Keep the zot namespace admin-only. Zeabur Builder reads only this
+        Secret there. If the key leaks, delete the Secret and restart zot once
+        cert-manager has issued a new one.
+    - risk: Deleting the last tag of an image repository also removes the repositories below it, such as its source archives in <repository>/source.
+      mitigation: >
+        Zeabur Builder does this on purpose when a Build is deleted. Do not
+        delete every tag of an image by hand unless its sources may go too.
     - risk: Nodes refuse to pull until they trust its CA, and a node told to skip verification trusts anything at that address.
       mitigation: >
         Set the cluster-ip input, and on every node mirror zot.zot.svc:5000 to
