@@ -170,7 +170,7 @@ func (t *Tester) Test(id string) (res Result) {
 		for _, rel := range c.Releases {
 			namespaces[rel.Namespace] = true
 		}
-		res.IdleMemoryMiB, res.IdleCPUm, err = idleUsage(func(ns, name string) bool {
+		res.IdleMemoryMiB, res.IdleCPUm, err = IdleUsage(func(ns, name string) bool {
 			return namespaces[ns] && !existing[ns+"/"+name]
 		})
 		if err != nil {
@@ -546,11 +546,11 @@ func retry(timeout time.Duration, f func() error) error {
 	}
 }
 
-// idleUsage samples the working set (MiB) and CPU (millicores) of matching
+// IdleUsage samples the working set (MiB) and CPU (millicores) of matching
 // pods every 10s from the kubelet summary API. It returns the medians of the
 // last five samples when they are stable, or after 3 minutes. Memory is stable
 // within 5% and CPU within 10m or 25%.
-func idleUsage(match func(ns, name string) bool) (mem, cpu float64, err error) {
+func IdleUsage(match func(ns, name string) bool) (mem, cpu float64, err error) {
 	const window = 5
 	var mems, cpus []float64
 	deadline := time.Now().Add(3 * time.Minute)

@@ -76,7 +76,8 @@ func template(fs *flag.FlagSet, r *repo) error {
 			}
 			values.Setup += "\n---\n" + string(objects)
 		}
-		return templates.E2E(r.cat, tester, t, values, cfg.Versions)
+		_, err = templates.E2E(r.cat, tester, t, values, cfg.Versions, false)
+		return err
 	}
 	return fmt.Errorf("unknown template action %q", action)
 }

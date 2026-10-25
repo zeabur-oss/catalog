@@ -7,6 +7,7 @@
 //	catalog e2e -profile <p> [ids]      install, measure, smoke test, uninstall on the current cluster
 //	catalog budget                      single-node memory budget
 //	catalog index                       write index.json
+//	catalog merge <dir>                 merge measurements uploaded by CI jobs into measurements/
 //	catalog template render <id>        expand manifests.yaml
 //	catalog template inputs <id>        print the Secrets of generated inputs
 //	catalog template lint <id>          render, then safety rules and kubeconform
@@ -40,12 +41,13 @@ var commands = map[string]func(*flag.FlagSet, *repo) error{
 	"e2e":      e2e,
 	"budget":   budget,
 	"index":    index,
+	"merge":    merge,
 	"template": template,
 }
 
 func main() {
 	if len(os.Args) < 2 || commands[os.Args[1]] == nil {
-		fmt.Fprintln(os.Stderr, "usage: catalog validate|render|list|e2e|budget|index|template [flags] [ids]")
+		fmt.Fprintln(os.Stderr, "usage: catalog validate|render|list|e2e|budget|index|merge|template [flags] [ids]")
 		os.Exit(2)
 	}
 	if dir, err := os.UserCacheDir(); err == nil {

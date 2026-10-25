@@ -85,13 +85,20 @@ type E2EValues struct {
 	SkipSmoke map[string]string `yaml:"skipSmoke"`
 }
 
+// Usage is the idle memory and CPU of a template's pods.
+type Usage struct {
+	IdleMemoryMiB float64
+	IdleCPUm      float64
+}
+
 // E2E installs a template and what it requires with t, runs its smoke checks
-// and uninstalls everything.
-func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues, versions []string) (err error) {
+// and uninstalls everything. If measure is set, E2E also returns the idle
+// usage of the pods in the template's namespace after the smoke checks.
+func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues, versions []string, measure bool) (usage *Usage, err error) {
 	ns := Namespace(r)
 	for name := range values.SkipSmoke {
 		if !slices.ContainsFunc(r.Smoke, func(s Smoke) bool { return s.Name == name }) {
-			return fmt.Errorf("skipSmoke: unknown smoke check %q", name)
+			return nil, fmt.Errorf("skipSmoke: unknown smoke check %q", name)
 		}
 	}
 	useS3 := slices.ContainsFunc(slices.Collect(maps.Values(values.Inputs)), func(v string) bool { return strings.Contains(v, ".S3") })
@@ -116,10 +123,10 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues,
 	}
 	manifest, err := render()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if err := Lint(cat, r, manifest, ns, t.Profile, versions); err != nil {
-		return err
+		return nil, err
 	}
 
 	refs := r.Requires
@@ -129,35 +136,35 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues,
 	uninstall, err := t.Install(refs)
 	defer func() { err = errors.Join(err, uninstall()) }()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if r.RequiresCertificates() {
 		issuer := []byte(`{"apiVersion": "cert-manager.io/v1", "kind": "ClusterIssuer", "metadata": {"name": "` + selfSignedIssuer + `"}, "spec": {"selfSigned": {}}}`)
 		if _, err := kubectl(issuer, "apply", "-f", "-"); err != nil {
-			return err
+			return nil, err
 		}
 		defer func() {
 			_, e := kubectl(nil, "delete", "clusterissuer", selfSignedIssuer, "--wait", "--timeout=2m")
 			err = errors.Join(err, e)
 		}()
 		if _, err := kubectl(nil, "wait", "clusterissuer/"+selfSignedIssuer, "--for=condition=Ready", "--timeout=3m"); err != nil {
-			return err
+			return nil, err
 		}
 	}
 	if useS3 {
 		var stop func() error
 		if s3, stop, err = startS3(); err != nil {
-			return err
+			return nil, err
 		}
 		defer func() { err = errors.Join(err, stop()) }()
 		if manifest, err = render(); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	// Pod Security admission applies before anything runs in the namespace.
 	if err := CreateNamespace(r, ns); err != nil {
-		return err
+		return nil, err
 	}
 	defer func() {
 		_, e := kubectl(nil, "delete", "namespace", ns, "--wait", "--timeout=5m")
@@ -165,26 +172,26 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues,
 	}()
 	if useS3 {
 		if _, err := kubectl(s3.secret(ns), "apply", "-f", "-"); err != nil {
-			return err
+			return nil, err
 		}
 	}
 	if setup := strings.TrimSpace(values.Setup); setup != "" {
 		if _, err := kubectl([]byte(setup), "apply", "-n", ns, "-f", "-"); err != nil {
-			return fmt.Errorf("setup: %w", err)
+			return nil, fmt.Errorf("setup: %w", err)
 		}
 	}
 	secrets, err := GenerateInputs(r, ns)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	// kubectl refuses to apply an empty List.
 	if slices.ContainsFunc(r.Inputs, func(in Input) bool { return in.Generate != "" }) {
 		if _, err := kubectl(secrets, "apply", "-n", ns, "-f", "-"); err != nil {
-			return err
+			return nil, err
 		}
 	}
 	if _, err := kubectl(manifest, "apply", "-n", ns, "-f", "-"); err != nil {
-		return err
+		return nil, err
 	}
 	for _, s := range r.Smoke {
 		if reason, ok := values.SkipSmoke[s.Name]; ok {
@@ -193,7 +200,7 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues,
 		}
 		slog.Info("smoke", "template", r.ID, "check", s.Name)
 		if _, err := kubectl(nil, "wait", "-n", ns, s.Resource, "--for="+s.Condition, "--timeout="+s.Timeout); err != nil {
-			return fmt.Errorf("smoke %s: %w", s.Name, err)
+			return nil, fmt.Errorf("smoke %s: %w", s.Name, err)
 		}
 		if s.HTTP != nil {
 			err = httpSmoke(ns, s)
@@ -202,10 +209,22 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues,
 			err = sqlSmoke(ns, s)
 		}
 		if err != nil {
-			return fmt.Errorf("smoke %s: %w", s.Name, err)
+			return nil, fmt.Errorf("smoke %s: %w", s.Name, err)
 		}
 	}
-	return nil
+	if !measure {
+		return nil, nil
+	}
+	slog.Info("smoke passed; waiting for idle usage to settle", "template", r.ID)
+	start := time.Now()
+	// The namespace is new, so every pod in it belongs to the template.
+	mem, cpu, err := catalog.IdleUsage(func(podNS, _ string) bool { return podNS == ns })
+	if err != nil {
+		return nil, err
+	}
+	t.Timings.Since("settle", start)
+	slog.Info("measured", "template", r.ID, "memoryMiB", int(mem), "cpuM", int(cpu))
+	return &Usage{IdleMemoryMiB: mem, IdleCPUm: cpu}, nil
 }
 
 // Namespace is the namespace E2E installs r in.

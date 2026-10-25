@@ -3,7 +3,8 @@
 # first, the previous release when its version differs (upgrade test), idle
 # memory and CPU once they are stable, smoke test, uninstall and residue
 # check. Installs every template on single-node amd64 with the components it
-# requires, then runs its smoke checks. nightly.yml and release.yml call it.
+# requires, runs its smoke checks, then measures its idle memory and CPU.
+# nightly.yml and release.yml call it.
 name: e2e
 
 on:
@@ -52,14 +53,15 @@ jobs:
           previous=()
           [ -f previous.json ] && previous=(-previous previous.json)
           nix develop -c go run ./tools/cmd/catalog e2e -tier l2 -profile "$PROFILE" -write "${previous[@]}" "$ID"
-      - name: Keep only this component's measurement
-        if: always() && matrix.component
-        run: find measurements -type f ! -path 'measurements/${{ matrix.component }}.json' -delete
+      - name: Keep only this job's measurement
+        if: always()
+        env:
+          FILE: measurements/${{ matrix.component || format('templates/{0}', matrix.template) }}.json
+        run: find measurements -type f ! -path "$FILE" -delete
       - id: name
-        if: matrix.component
-        run: echo "name=$(echo '${{ matrix.profile }}-${{ matrix.arch }}-${{ matrix.component }}' | tr / -)" >> "$GITHUB_OUTPUT"
+        run: echo "name=$(echo '${{ matrix.profile }}-${{ matrix.arch }}-${{ matrix.component || format('template-{0}', matrix.template) }}' | tr / -)" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: always() && matrix.component
+        if: always()
         with:
           name: measurements-${{ steps.name.outputs.name }}
           path: measurements/

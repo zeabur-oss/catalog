@@ -341,7 +341,9 @@ amd64 and arm64:
 Components listed under `unready` in `config/e2e.yaml` need credentials CI
 lacks: they are installed without waiting, smoke tested and uninstalled, not
 measured. L2 installs every template on single-node amd64 with the components
-it requires, then runs its smoke checks. It checks that the single-node
+it requires, runs its smoke checks, then measures the idle memory and CPU of
+the pods in its namespace the same way (`measurements/templates/<id>.json`).
+It checks that the single-node
 recommended set, measured on amd64, fits `config/budget.yaml`.
 `nightly.yml` opens a pull request with fresh `measurements/`; run it by hand
 to measure now. Renovate opens a pull request for every new upstream version
@@ -378,8 +380,8 @@ template that cannot use a custom CA skips only that smoke check. The test sets
 Tagging `vX.Y.Z` publishes:
 
 - `index.json`: every component with its install order per profile and
-  measurements, recommended components per capability, every template, the
-  budget and the Kubernetes versions;
+  measurements, recommended components per capability, every template with
+  its measurements, the budget and the Kubernetes versions;
 - `bundle.tar.gz`: `index.json` plus `components/`, `templates/`, schemas,
   config and measurements;
 - `checksums.txt`, and a cosign keyless Sigstore bundle for each.

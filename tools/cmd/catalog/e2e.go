@@ -14,12 +14,15 @@ import (
 	"time"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
+	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
 
-// measurement is measurements/<capability>/<upstream>.json. Environments are
-// keyed "<profile>-<architecture>-<server version>".
+// measurement is measurements/<capability>/<upstream>.json for a component and
+// measurements/templates/<id>.json for a template. Environments are keyed
+// "<profile>-<architecture>-<server version>".
 type measurement struct {
 	Component    string                 `json:"component,omitempty"`
+	Template     string                 `json:"template,omitempty"`
 	Environments map[string]environment `json:"environments"`
 }
 
@@ -155,6 +158,10 @@ func readPrevious(path string) (map[string]*catalog.Component, error) {
 
 func measurementPath(id string) string { return filepath.Join("measurements", id+".json") }
 
+func templateMeasurementPath(id string) string {
+	return filepath.Join("measurements", "templates", id+".json")
+}
+
 func writeMeasurement(c *catalog.Component, key string, res catalog.Result) error {
 	m := readMeasurement(measurementPath(c.ID))
 	m.Component = c.ID
@@ -171,6 +178,37 @@ func writeMeasurement(c *catalog.Component, key string, res catalog.Result) erro
 		MeasuredAt:    time.Now().UTC().Format(time.DateOnly),
 	}
 	return writeJSON(measurementPath(c.ID), m)
+}
+
+// writeTemplateMeasurement records the usage of template id in environment
+// key. Versions are the tags or digests of the images in its manifest.
+func writeTemplateMeasurement(id, key string, usage templates.Usage, images []string) error {
+	path := templateMeasurementPath(id)
+	m := readMeasurement(path)
+	m.Template = id
+	m.Environments[key] = environment{
+		IdleMemoryMiB: math.Round(usage.IdleMemoryMiB),
+		IdleCPUm:      math.Round(usage.IdleCPUm),
+		Versions:      imageVersions(images),
+		MeasuredAt:    time.Now().UTC().Format(time.DateOnly),
+	}
+	return writeJSON(path, m)
+}
+
+// imageVersions maps each image name to its tag, or to its digest when the
+// reference has no tag.
+func imageVersions(images []string) map[string]string {
+	out := map[string]string{}
+	for _, ref := range images {
+		name, digest, _ := strings.Cut(ref, "@")
+		version := digest
+		// A colon after the last slash starts a tag. A colon before it is a registry port.
+		if i := strings.LastIndex(name, ":"); i > strings.LastIndex(name, "/") {
+			name, version = name[:i], name[i+1:]
+		}
+		out[name] = version
+	}
+	return out
 }
 
 func readMeasurement(path string) measurement {

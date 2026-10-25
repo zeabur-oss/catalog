@@ -516,7 +516,7 @@ func l1Group(r *repo, cfg config, o tierOptions, g *group) []row {
 			slog.Info("testing", "component", id)
 			err = t.Quick(id, g.deps[id])
 		} else {
-			err = runTemplate(r, t, id, cfg.Versions)
+			_, err = runTemplate(r, t, id, cfg.Versions, false)
 		}
 		rows = append(rows, row{subject: id, timings: t.Timings, err: err})
 	}
@@ -524,25 +524,54 @@ func l1Group(r *repo, cfg config, o tierOptions, g *group) []row {
 }
 
 // runTemplate runs a template's e2e and records the time after its
-// dependencies as the template phase.
-func runTemplate(r *repo, t *catalog.Tester, id string, versions []string) error {
+// dependencies as the template phase. If measure is set, it returns the idle
+// usage of the template.
+func runTemplate(r *repo, t *catalog.Tester, id string, versions []string, measure bool) (*templates.Usage, error) {
 	slog.Info("testing", "template", id)
 	tmpl, err := templates.Get(r.templates, id)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	values, err := e2eValues(r.templates, tmpl)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	start := time.Now()
-	err = templates.E2E(r.cat, t, tmpl, values, versions)
+	usage, err := templates.E2E(r.cat, t, tmpl, values, versions, measure)
 	took := time.Since(start)
 	for _, p := range t.Timings {
 		took -= p.Took
 	}
 	t.Timings = append(t.Timings, catalog.Phase{Name: "template", Took: took.Round(time.Second)})
-	return err
+	return usage, err
+}
+
+// testTemplate runs the full template test on the current cluster and writes
+// the measurement if write is set.
+func testTemplate(r *repo, t *catalog.Tester, id string, versions []string, write bool) (status string, err error) {
+	key, err := currentEnvironment(t.Profile)
+	if err != nil {
+		return "", err
+	}
+	usage, err := runTemplate(r, t, id, versions, true)
+	if err != nil {
+		return "", err
+	}
+	if write {
+		tmpl, _ := templates.Get(r.templates, id)
+		values, err := e2eValues(r.templates, tmpl)
+		if err != nil {
+			return "", err
+		}
+		manifest, err := templates.E2EManifest(tmpl, values)
+		if err != nil {
+			return "", err
+		}
+		if err := writeTemplateMeasurement(id, key, *usage, imagesOf(manifest)); err != nil {
+			return "", err
+		}
+	}
+	return fmt.Sprintf("PASS %4.0f MiB %3.0fm CPU", usage.IdleMemoryMiB, usage.IdleCPUm), nil
 }
 
 // l2 tests each component and template in a fresh cluster with the full
@@ -579,7 +608,7 @@ func l2(r *repo, cfg config, o tierOptions, args []string) error {
 		if strings.Contains(id, "/") {
 			rw.status, rw.err = testComponent(t, id, o.write)
 		} else {
-			rw.err = runTemplate(r, t, id, cfg.Versions)
+			rw.status, rw.err = testTemplate(r, t, id, cfg.Versions, o.write)
 		}
 		rw.timings = t.Timings
 		rows = append(rows, rw)
@@ -593,11 +622,7 @@ func l2(r *repo, cfg config, o tierOptions, args []string) error {
 // testComponent runs the full component test on the current cluster and
 // writes the measurement if write is set.
 func testComponent(t *catalog.Tester, id string, write bool) (status string, err error) {
-	out, err := catalog.Run(nil, "kubectl", "version", "-o", "json")
-	if err != nil {
-		return "", err
-	}
-	key, err := environmentKey(t.Profile, out)
+	key, err := currentEnvironment(t.Profile)
 	if err != nil {
 		return "", err
 	}
@@ -619,4 +644,13 @@ func testComponent(t *catalog.Tester, id string, write bool) (status string, err
 		status += " (upgraded from " + res.UpgradedFrom + ")"
 	}
 	return status, nil
+}
+
+// currentEnvironment returns the environment key of the current cluster.
+func currentEnvironment(profile string) (string, error) {
+	out, err := catalog.Run(nil, "kubectl", "version", "-o", "json")
+	if err != nil {
+		return "", err
+	}
+	return environmentKey(profile, out)
 }

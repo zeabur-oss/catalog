@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
+	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
 
 // indexVersion changes only on incompatible changes to index.json.
@@ -22,8 +23,8 @@ type budgetConfig struct {
 }
 
 // index writes index.json: every component with its install order and
-// measurements, recommended components per capability, every template, the
-// budget and the Kubernetes versions.
+// measurements, recommended components per capability, every template with
+// its measurements, the budget and the Kubernetes versions.
 func index(fs *flag.FlagSet, r *repo) error {
 	cat := r.cat
 	out := fs.String("out", "index.json", "output file")
@@ -80,8 +81,22 @@ func index(fs *flag.FlagSet, r *repo) error {
 		"budget":       budget,
 		"capabilities": capabilities, // capability -> profile -> recommended IDs
 		"components":   comps,
-		"templates":    r.templates,
+		"templates":    indexTemplates(r.templates),
 	})
+}
+
+// indexTemplate is a template in index.json, with its measurements.
+type indexTemplate struct {
+	*templates.Template
+	Measured map[string]environment `json:"measured,omitempty"`
+}
+
+func indexTemplates(ts []*templates.Template) []indexTemplate {
+	out := make([]indexTemplate, 0, len(ts))
+	for _, t := range ts {
+		out = append(out, indexTemplate{Template: t, Measured: readMeasurement(templateMeasurementPath(t.ID)).Environments})
+	}
+	return out
 }
 
 // budget sums the idle memory of every component recommended on single-node,
