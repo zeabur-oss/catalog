@@ -3,10 +3,9 @@ kind: Template
 metadata:
   name: Hermes Agent
   description: >-
-    Supervised Hermes gateway, authenticated API and protected dashboard with
+    Hermes gateway, authenticated API and protected dashboard with
     OpenRouter or another OpenAI-compatible provider.
   license: MIT
-  # Also: https://github.com/just-containers/s6-overlay
   homepage: https://github.com/NousResearch/hermes-agent
   icon: https://raw.githubusercontent.com/NousResearch/hermes-agent/main/website/static/img/logo.png
   categories: [ai, automation]
@@ -15,14 +14,9 @@ requires: [ingress/traefik, certificates/cert-manager]
 
 services:
   - name: hermes-agent
-    securityProfile: baseline
-    baselineJustification: >-
-      Pinned /init starts as root, owns state and drops services to UID10000.
-      Drop ALL then add CHOWN/SETUID/SETGID/FOWNER/KILL only for ownership,
-      explicit privilege drop and graceful cross-UID shutdown. No escalation or
-      host/privileged access.
+    securityProfile: restricted
     ports: [{name: dashboard, port: 9119}, {name: api, port: 5000}]
-    resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+    resources: {requests: {cpu: 300m, memory: 768Mi}, limits: {cpu: 2500m, memory: 3Gi}}
     domains: ['{{ .Inputs.adminDomain }}', '{{ .Domain }}']
 
 inputs:
@@ -71,8 +65,8 @@ inputs:
 
 security:
   summary: >-
-    Baseline root supervisor with UID10000 services, minimal capabilities, no
-    escalation, read-only root, bounded writable paths, authenticated API,
+    Restricted pod as UID 10000 with no capabilities, no escalation,
+    read-only root, bounded writable paths, authenticated API,
     messaging deny-by-default and default-deny networking.
   egress:
     - Cluster DNS TCP/UDP53 to kube-system kube-dns
@@ -80,13 +74,6 @@ security:
       Public IPv4 TCP80/443 excluding private, loopback, link-local/metadata,
       CGNAT and reserved ranges
   risks:
-    - risk: >-
-        The upstream root supervisor owns state and explicitly changes
-        user/group IDs before starting services as UID10000.
-      mitigation: >-
-        Baseline exception: drop ALL, add CHOWN/SETUID/SETGID/FOWNER/KILL only;
-        retain no escalation, RuntimeDefault, read-only root, no UID remapping
-        and no host access.
     - risk: Agent tools invoke subprocesses and execute code from high-trust users.
       mitigation: >-
         No host socket/path, privileged mode or service-account credentials.
@@ -148,12 +135,13 @@ upgradeNotes:
     configuration during startup, and an older image may not read migrated
     state. Roll back by restoring the backup.
   - >-
-    Preserve /init/main-wrapper supervision and check capabilities and writable
-    paths after each image update. Do not enable UID remapping under this
-    read-only-root configuration.
+    The pod does not use the image's /init supervisor. The gateway and the
+    dashboard run as separate containers as UID 10000, which owns /opt/data.
+    After each image update, check that both start without root.
   - >-
-    At startup a hook writes the provider, endpoint, key and model into the
-    config. Startup fails when that config is invalid.
+    Before the gateway starts, an init container writes the provider,
+    endpoint, key and model into the config. Startup fails when that config is
+    invalid.
   - >-
     The smoke check tests the API listener only. Send one request through the
     provider to confirm inference.

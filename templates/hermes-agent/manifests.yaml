@@ -4,15 +4,21 @@ metadata:
   name: hermes-bootstrap
   namespace: '{{ .Namespace }}'
 data:
-  99-provider-config: "#!/command/with-contenv sh\nset -eu\nexec s6-setuidgid hermes\
-    \ /opt/hermes/.venv/bin/python - <<'PYCONFIG'\nimport os\nfrom pathlib import\
-    \ Path\nimport yaml\npath = Path(os.environ.get(\"HERMES_HOME\", \"/opt/data\"\
-    )) / \"config.yaml\"\nwith path.open() as stream:\n    config = yaml.safe_load(stream)\
-    \ or {}\nmodel = config.get(\"model\") or {}\nmodel[\"provider\"] = \"custom\"\
-    \nmodel[\"base_url\"] = os.environ[\"LLM_BASE_URL\"]\nmodel[\"api_key\"] = os.environ[\"\
-    LLM_API_KEY\"]\nmodel[\"default\"] = os.environ[\"LLM_MODEL\"]\nconfig[\"model\"\
-    ] = model\nwith path.open(\"w\") as stream:\n    yaml.safe_dump(config, stream,\
-    \ sort_keys=False, allow_unicode=True)\npath.chmod(0o600)\nPYCONFIG\n"
+  provider-config.py: |
+    import os
+    from pathlib import Path
+    import yaml
+    path = Path(os.environ["HERMES_HOME"]) / "config.yaml"
+    config = yaml.safe_load(path.read_text()) if path.exists() else None
+    config = config or {}
+    model = config.get("model") or {}
+    model["provider"] = "custom"
+    model["base_url"] = os.environ["LLM_BASE_URL"]
+    model["api_key"] = os.environ["LLM_API_KEY"]
+    model["default"] = os.environ["LLM_MODEL"]
+    config["model"] = model
+    path.write_text(yaml.safe_dump(config, sort_keys=False, allow_unicode=True))
+    path.chmod(0o600)
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -48,25 +54,66 @@ spec:
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 90
       securityContext:
+        runAsUser: 10000
+        runAsGroup: 10000
+        runAsNonRoot: true
         fsGroup: 10000
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+      - name: provider-config
+        image: nousresearch/hermes-agent:v2026.7.7.2@sha256:9c841866021c54c4596849f6135717e8a4d52ba510b7f52c50aef1de1a283973
+        command:
+        - /opt/hermes/.venv/bin/python
+        - /bootstrap/provider-config.py
+        env:
+        - name: HOME
+          value: /opt/data
+        - name: HERMES_HOME
+          value: /opt/data
+        - name: LLM_MODEL
+          value: '{{ .Inputs.model }}'
+        - name: LLM_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: '{{ .Inputs.providerSecret }}'
+              key: api-key
+        - name: LLM_BASE_URL
+          value: '{{ if .Inputs.providerEndpoint }}{{ .Inputs.providerEndpoint }}{{ else }}https://openrouter.ai/api/v1{{ end }}'
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+        volumeMounts:
+        - name: data
+          mountPath: /opt/data
+        - name: bootstrap
+          mountPath: /bootstrap
+          readOnly: true
       containers:
       - name: hermes-agent
         image: nousresearch/hermes-agent:v2026.7.7.2@sha256:9c841866021c54c4596849f6135717e8a4d52ba510b7f52c50aef1de1a283973
         command:
-        - /init
-        - /opt/hermes/docker/main-wrapper.sh
+        - /opt/hermes/.venv/bin/hermes
         - gateway
         - run
         env:
+        - name: HOME
+          value: /opt/data
         - name: HERMES_HOME
           value: /opt/data
         - name: HERMES_WRITE_SAFE_ROOT
           value: /opt/data
         - name: HERMES_DISABLE_LAZY_INSTALLS
-          value: '1'
-        - name: S6_READ_ONLY_ROOT
           value: '1'
         - name: API_SERVER_ENABLED
           value: 'true'
@@ -76,15 +123,13 @@ spec:
           value: '5000'
         - name: GATEWAY_ALLOW_ALL_USERS
           value: 'false'
-        - name: LLM_MODEL
-          value: '{{ .Inputs.model }}'
-        - name: HERMES_DASHBOARD
-          value: 'true'
         - name: API_SERVER_KEY
           valueFrom:
             secretKeyRef:
               name: hermes-secrets
               key: api-key
+        - name: LLM_MODEL
+          value: '{{ .Inputs.model }}'
         - name: LLM_API_KEY
           valueFrom:
             secretKeyRef:
@@ -92,40 +137,13 @@ spec:
               key: api-key
         - name: LLM_BASE_URL
           value: '{{ if .Inputs.providerEndpoint }}{{ .Inputs.providerEndpoint }}{{ else }}https://openrouter.ai/api/v1{{ end }}'
-        - name: HERMES_DASHBOARD_HOST
-          value: 0.0.0.0
-        - name: HERMES_DASHBOARD_PORT
-          value: '9119'
-        - name: HERMES_DASHBOARD_BASIC_AUTH_USERNAME
-          value: admin
-        - name: HERMES_DASHBOARD_BASIC_AUTH_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: hermes-secrets
-              key: dashboard-password
-        - name: HERMES_DASHBOARD_BASIC_AUTH_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: hermes-secrets
-              key: dashboard-session-key
         securityContext:
-          runAsUser: 0
-          runAsGroup: 0
-          runAsNonRoot: false
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
           capabilities:
             drop:
             - ALL
-            add:
-            - CHOWN
-            - SETUID
-            - SETGID
-            - FOWNER
-            - KILL
         ports:
-        - name: dashboard
-          containerPort: 9119
         - name: api
           containerPort: 5000
         resources:
@@ -159,28 +177,84 @@ spec:
         volumeMounts:
         - name: data
           mountPath: /opt/data
-        - name: run
-          mountPath: /run
         - name: tmp
           mountPath: /tmp
-        - name: bootstrap
-          mountPath: /etc/cont-init.d/99-provider-config
-          subPath: 99-provider-config
-          readOnly: true
+      - name: dashboard
+        image: nousresearch/hermes-agent:v2026.7.7.2@sha256:9c841866021c54c4596849f6135717e8a4d52ba510b7f52c50aef1de1a283973
+        command:
+        - /opt/hermes/.venv/bin/hermes
+        - dashboard
+        - --host
+        - 0.0.0.0
+        - --port
+        - '9119'
+        - --no-open
+        env:
+        - name: HOME
+          value: /opt/data
+        - name: HERMES_HOME
+          value: /opt/data
+        - name: HERMES_WRITE_SAFE_ROOT
+          value: /opt/data
+        - name: HERMES_DISABLE_LAZY_INSTALLS
+          value: '1'
+        - name: HERMES_DASHBOARD_BASIC_AUTH_USERNAME
+          value: admin
+        - name: HERMES_DASHBOARD_BASIC_AUTH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: hermes-secrets
+              key: dashboard-password
+        - name: HERMES_DASHBOARD_BASIC_AUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: hermes-secrets
+              key: dashboard-session-key
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        ports:
+        - name: dashboard
+          containerPort: 9119
+        resources:
+          requests:
+            cpu: 50m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+        startupProbe:
+          tcpSocket:
+            port: dashboard
+          periodSeconds: 5
+          failureThreshold: 60
+        readinessProbe:
+          tcpSocket:
+            port: dashboard
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: dashboard
+          periodSeconds: 30
+          failureThreshold: 5
+        volumeMounts:
+        - name: data
+          mountPath: /opt/data
+        - name: tmp
+          mountPath: /tmp
       volumes:
       - name: data
         persistentVolumeClaim:
           claimName: hermes-data
-      - name: run
-        emptyDir:
-          sizeLimit: 256Mi
       - name: tmp
         emptyDir:
           sizeLimit: 1Gi
       - name: bootstrap
         configMap:
           name: hermes-bootstrap
-          defaultMode: 365
 ---
 apiVersion: v1
 kind: Service
