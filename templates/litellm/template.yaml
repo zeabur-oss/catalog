@@ -5,7 +5,10 @@ metadata:
   version: "v1.106.3"
   description: >-
     LiteLLM proxy for LLM provider APIs over HTTPS, with keys, models and
-    spend in PostgreSQL 18 managed by CloudNativePG.
+    spend in PostgreSQL 18 managed by CloudNativePG. The image includes the
+    litellm_enterprise package under the BerriAI Enterprise license
+    (https://github.com/BerriAI/litellm/blob/main/enterprise/LICENSE.md),
+    which allows production use only with a subscription.
   # enterprise/ and the bundled litellm_enterprise package use the BerriAI
   # Enterprise license; the rest of LiteLLM is MIT.
   license: MIT AND LicenseRef-LiteLLM-Enterprise AND PostgreSQL AND Apache-2.0
@@ -31,21 +34,6 @@ services:
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "1", memory: 1Gi}}
 
 inputs:
-  - name: licenseOptIn
-    label: License agreement
-    locales:
-      zh-TW:
-        label: 授權同意
-        description: "映像檔含 litellm_enterprise 套件，採用 BerriAI Enterprise 授權，正式環境使用需要訂閱。讀過授權後再同意。"
-      zh-CN:
-        label: 许可协议
-        description: "镜像含 litellm_enterprise 包，采用 BerriAI Enterprise 许可证，生产环境使用需要订阅。读完许可后再同意。"
-    description: >-
-      The image includes the litellm_enterprise package under the BerriAI
-      Enterprise license, which allows production use only with a
-      subscription. Read it and type I-ACCEPT-LITELLM-ENTERPRISE-LICENSE.
-    required: true
-    validation: {pattern: ^I-ACCEPT-LITELLM-ENTERPRISE-LICENSE$}
   - name: masterKey
     description: >-
       Admin API key without the sk- prefix. The key is sk- followed by this
@@ -97,6 +85,9 @@ scalability:
       separate step.
 
 upgradeNotes:
+  - >-
+    Breaking change: the licenseOptIn input is removed. The license is named in
+    the template description. Remove licenseOptIn from saved values.
   - >-
     New installs start without database backups. Installs made before this
     version keep their backups. To turn backups on, open the database in Zeabur

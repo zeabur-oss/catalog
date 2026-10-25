@@ -5,7 +5,13 @@ metadata:
   version: "1.18.0"
   description: >-
     Dify LLM app development platform with PostgreSQL/pgvector, a Dragonfly
-    queue, a code sandbox and S3 object storage.
+    queue, a code sandbox and S3 object storage. Dify uses a modified Apache
+    license (https://github.com/langgenius/dify/blob/main/LICENSE): one
+    workspace only without written permission, and keep the frontend logo and
+    copyright. The Dragonfly engine is BUSL-1.1
+    (https://github.com/dragonflydb/dragonfly/blob/main/LICENSE.md): offering
+    it to third parties as a hosted service or in-memory data store product
+    needs a separate license.
   license: LicenseRef-Dify-Modified-Apache-2.0 AND BUSL-1.1 AND Apache-2.0 AND PostgreSQL
   # Also: https://github.com/langgenius/dify-sandbox, https://cloudnative-pg.io/docs/, https://github.com/dragonflydb/dragonfly, https://github.com/dragonflydb/dragonfly-operator
   homepage: https://github.com/langgenius/dify
@@ -64,38 +70,6 @@ services:
     resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
 
 inputs:
-  - name: dragonflyLicenseOptIn
-    label: Dragonfly license agreement
-    locales:
-      zh-TW:
-        label: Dragonfly 授權同意
-        description: "Dragonfly 採用 BUSL-1.1。要把 Dragonfly 當成託管服務或記憶體資料庫產品提供給別人，需要另外取得授權。讀過授權後再同意。"
-      zh-CN:
-        label: Dragonfly 许可协议
-        description: "Dragonfly 采用 BUSL-1.1。要把 Dragonfly 作为托管服务或内存数据库产品提供给他人，需要另外取得许可。读完许可后再同意。"
-    description: >-
-      Dragonfly engine is BUSL-1.1 source-available. Offering third parties a
-      hosted/managed Dragonfly service or an in-memory data store product needs
-      a separate license. Read the pinned license and type
-      I-ACCEPT-DRAGONFLY-BUSL-1.1.
-    required: true
-    validation: {pattern: ^I-ACCEPT-DRAGONFLY-BUSL-1\.1$}
-  - name: adminCidr
-    label: Administrator IP range
-    locales:
-      zh-TW:
-        label: 管理員 IP 範圍
-        description: "只有這個 IPv4 範圍能開啟主控台和建立第一個擁有者，以 Traefik 看到的來源位址為準；公開的應用程式和 API 不受影響。建議填你固定 IP 的 /32。"
-      zh-CN:
-        label: 管理员 IP 范围
-        description: "只有这个 IPv4 范围能打开控制台和创建第一个所有者，以 Traefik 看到的来源地址为准；公开的应用和 API 不受影响。建议填你固定 IP 的 /32。"
-    description: >-
-      Administrator IPv4 source CIDR as Traefik sees it. Restricts all console
-      API and first-owner setup; public apps and APIs remain public. Prefer your
-      fixed IP /32.
-    required: true
-    validation:
-      pattern: ^((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])/([1-9]|[12][0-9]|3[0-2])$
   - name: appKey
     description: Generated app-key; retrieve from Secret dify-secrets, never from a public URL.
     generate: random
@@ -182,21 +156,6 @@ inputs:
       it empty for a publicly trusted certificate.
     required: false
     validation: {pattern: '^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$'}
-  - name: licenseOptIn
-    label: Dify license agreement
-    locales:
-      zh-TW:
-        label: Dify 授權同意
-        description: "Dify 採用修改過的 Apache 授權：沒有書面許可只能用一個工作區，前端的標誌和版權資訊都要保留。確認後再同意。"
-      zh-CN:
-        label: Dify 许可协议
-        description: "Dify 采用修改过的 Apache 许可证：没有书面许可只能用一个工作区，前端的标志和版权信息都要保留。确认后再同意。"
-    description: >-
-      Dify modified Apache license: one workspace only without written
-      permission; keep all frontend logo/copyright. Type
-      I-ACCEPT-DIFY-SINGLE-WORKSPACE.
-    required: true
-    validation: {pattern: ^I-ACCEPT-DIFY-SINGLE-WORKSPACE$}
 
 security:
   summary: >-
@@ -211,8 +170,7 @@ security:
         hosted/managed service or in-memory data store product offerings under
         its Additional Use Grant.
       mitigation: >-
-        Required exact dragonflyLicenseOptIn=I-ACCEPT-DRAGONFLY-BUSL-1.1.
-        Operate only within the pinned license grant or obtain a separate
+        The template description names the license. Operate only within the pinned license grant or obtain a separate
         license; the Apache-2.0 operator does not relicense its engine. The
         pinned engine license changes to Apache-2.0 on 2030-11-01.
     - risk: >-
@@ -240,16 +198,13 @@ security:
         Unauthenticated first-owner setup and console administration must not be
         reachable by arbitrary public clients.
       mitigation: >-
-        Required adminCidr restricts /console/api through a higher-priority
-        Traefik ipAllowList router; other public app/API routes remain
-        unchanged. The allowlist uses the source address Traefik sees and
-        ignores client X-Forwarded-For. Check NAT and proxy source preservation;
-        allowing a shared load-balancer CIDR admits every client. Use a fixed
-        administrator address or a private ingress. Before you create the owner,
-        check that a request from outside adminCidr gets a Traefik denial.
+        Create the first owner right after the deploy finishes. The console
+        is open to anyone who can reach the domain; Dify has its own sign-in.
+        To limit who can reach it, add an IP limit in the service's network
+        settings.
     - risk: Dify license restricts multi-workspace operation and frontend branding changes.
       mitigation: >-
-        Required exact acknowledgement limits deployment to one workspace unless
+        The template description names the license. Use one workspace unless
         written upstream permission exists. Unmodified frontend images retain
         branding.
     - risk: >-
@@ -287,9 +242,12 @@ upgradeNotes:
     version keep their backups. To turn backups on, open the database in Zeabur
     and use the Backups tab.
   - >-
-    Read and explicitly accept the Dify modified Apache license: exactly one
-    workspace unless separately authorized; keep frontend logos and copyright
-    unchanged.
+    Breaking change: the adminCidr, licenseOptIn and dragonflyLicenseOptIn
+    inputs are removed, and so are the console allowlist and its route. The
+    console is now open on the domain; add an IP limit in the service's
+    network settings if you need one. Remove the three inputs from saved
+    values. The Dify license still limits you to one workspace unless
+    separately authorized; keep frontend logos and copyright unchanged.
   - >-
     From Dify 1.13: back up the database first, because migration 5578e028b2f2
     (1.17.1) cannot be reversed. Scale dify-worker and dify-beat to 0 before
@@ -325,7 +283,7 @@ upgradeNotes:
     Valkey AOF, RDB or PVC data is not imported. Dragonfly does not provide
     Redis Stack modules; data that depends on them needs a separate migration.
   - >-
-    Dragonfly requires a separate BUSL-1.1 acknowledgement. Offering third
+    Dragonfly is BUSL-1.1. Offering third
     parties a hosted/managed Dragonfly or an in-memory data store product needs
     a separate license.
 

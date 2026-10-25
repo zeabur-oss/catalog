@@ -24,8 +24,9 @@ exact versions the template pins.
 ## Licenses and images
 
 - Name the license of the application and its images. Use the exact
-  license name for source-available software such as BUSL-1.1 or SSPL, and add a
-  required input that only accepts an exact acknowledgement string.
+  license name for source-available software such as BUSL-1.1 or SSPL, and link
+  the license in the template description. Do not add an input that asks the
+  person to type an acceptance string.
 - Pin every image, including init, migration and backup images, to a digest, and
   keep the readable tag next to it.
 - Install nothing at runtime: no package managers, no downloads of mutable code,
@@ -59,8 +60,7 @@ exact versions the template pins.
   as required inputs.
 - Give every input that a person gives a short `label`, and a label and
   description in `locales` for zh-TW and zh-CN. Write them for the person
-  deploying, in everyday words, and keep any exact acknowledgement string as it
-  is.
+  deploying, in everyday words.
 - Turn off unauthenticated admin and debug endpoints and insecure first-run
   defaults. Say how the first administrator signs in.
 

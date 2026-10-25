@@ -42,7 +42,6 @@ replacements:
 # Secret e2e-s3 in the template's namespace holds its credentials (access-key
 # and secret-key) and the CA as ca.crt. Every value is disposable test data.
 templateInputs:
-  adminCidr: 192.0.2.10/32
   adminEmail: admin@example.test
   ownerEmail: owner@example.test
   providerSecret: e2e-provider
@@ -50,12 +49,8 @@ templateInputs:
 # Per template: input values (they replace templateInputs), objects to apply
 # in the namespace first, and smoke checks to skip with the reason.
 templates:
-  browserless:
-    inputs: {licenseOptIn: I-ACCEPT-BROWSERLESS-LICENSE}
   dify:
     inputs:
-      licenseOptIn: I-ACCEPT-DIFY-SINGLE-WORKSPACE
-      dragonflyLicenseOptIn: I-ACCEPT-DRAGONFLY-BUSL-1.1
       storageEndpoint: '{{ .S3.Endpoint }}'
       storageRegion: us-east-1
       storageBucket: '{{ .S3.Bucket }}'
@@ -83,25 +78,13 @@ templates:
       metadata: {name: e2e-provider}
       stringData: {api-key: e2e, OPENAI_API_KEY: e2e}
   librechat:
-    inputs: {licenseOptIn: I-ACCEPT-MONGODB-SSPL}
     setup: *provider
-  litellm:
-    inputs: {licenseOptIn: I-ACCEPT-LITELLM-ENTERPRISE-LICENSE}
   lobechat:
-    inputs: {licenseOptIn: I-ACCEPT-LOBEHUB-COMMUNITY}
     setup: *provider
-  n8n:
-    inputs: {licenseOptIn: I-ACCEPT-N8N-SUSTAINABLE-USE}
-  n8n-ai-brain:
-    inputs: {licenseOptIn: I-ACCEPT-N8N-SUSTAINABLE-USE}
-  n8n-sqlite:
-    inputs: {licenseOptIn: I-ACCEPT-N8N-SUSTAINABLE-USE}
-  open-webui:
-    inputs: {licenseOptIn: I-ACCEPT-OPENWEBUI-LICENSE}
   openclaw:
     inputs:
       llmBaseUrl: https://llm.example.test/v1
       llmModel: e2e-model
     setup: *provider
   openclaw-browser-sandbox:
-    inputs: {clientApp: openclaw, trustOptIn: I-ACCEPT-SINGLE-OWNER-BROWSER}
+    inputs: {clientApp: openclaw}

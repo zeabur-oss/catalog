@@ -5,7 +5,10 @@ metadata:
   version: "latest"
   description: >-
     Authenticated headless Chromium service for trusted automation clients, with
-    restricted container isolation.
+    restricted container isolation. Browserless is SSPL-1.0
+    (https://github.com/browserless/browserless/blob/main/LICENSE), which is
+    not OSI-approved; closed-source commercial sites, apps or CI may need a
+    commercial license.
   license: SSPL-1.0 OR LicenseRef-Browserless-Commercial
   # Also: https://docs.browserless.io/
   homepage: https://github.com/browserless/browserless
@@ -22,22 +25,6 @@ services:
     domains: ['{{ .Domain }}']
 
 inputs:
-  - name: licenseOptIn
-    label: License agreement
-    locales:
-      zh-TW:
-        label: 授權同意
-        description: "Browserless 採用 SSPL，不是 OSI 認可的開源授權；閉源的商業網站、App 或 CI 可能需要買商業授權。確認適用的授權後再同意。"
-      zh-CN:
-        label: 许可协议
-        description: "Browserless 采用 SSPL，不是 OSI 认可的开源许可证；闭源的商业网站、App 或 CI 可能需要购买商业许可。确认适用的许可后再同意。"
-    description: >-
-      Read Browserless LICENSE: SSPL is not OSI-approved; closed-source
-      commercial sites/apps/CI may require a commercial license. Enter
-      I-ACCEPT-BROWSERLESS-LICENSE after you confirm which license applies to
-      your use.
-    required: true
-    validation: {pattern: ^I-ACCEPT-BROWSERLESS-LICENSE$}
   - name: token
     description: >-
       Generated Browserless bearer/query token. Retrieve from
@@ -76,8 +63,8 @@ security:
         SSPL/commercial dual license has non-OSI obligations and restricted
         closed-source commercial scenarios.
       mitigation: >-
-        Deployment requires the license acknowledgment. The acknowledgment does
-        not grant a license. Confirm the applicable license, and get legal
+        The template description names the license; deploying does not grant
+        one. Confirm the applicable license, and get legal
         advice for commercial integration.
     - risk: >-
         A shared token authorizes high-trust automation and may appear in client
@@ -105,6 +92,9 @@ scalability:
       termination window drains short work only.
 
 upgradeNotes:
+  - >-
+    Breaking change: the licenseOptIn input is removed. The license is named in
+    the template description. Remove licenseOptIn from saved values.
   - >-
     Before each digest update, check the upstream license, browser security
     fixes, and changes to the start command, paths or UID. Keep the previous

@@ -5,7 +5,11 @@ metadata:
   version: "1.143.3"
   description: >-
     LobeChat chatbot UI in client-storage mode. Chats stay in each browser; a
-    generated access code protects the server model key.
+    generated access code protects the server model key. The LobeHub Community
+    License
+    (https://github.com/lobehub/lobe-chat/blob/d718de7e1af2dd7281c4eaca70f627e4b9deddb1/LICENSE)
+    allows unmodified commercial use; developing or distributing derivative
+    works needs a commercial license.
   license: LicenseRef-LobeHub-Community
   # Also: https://github.com/lobehub/lobe-chat/blob/d718de7e1af2dd7281c4eaca70f627e4b9deddb1/LICENSE
   homepage: https://github.com/lobehub/lobe-chat
@@ -41,22 +45,6 @@ inputs:
     description: Pre-existing Secret with key api-key for the OpenAI provider.
     required: true
     validation: {pattern: '^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$'}
-  - name: licenseOptIn
-    label: License agreement
-    locales:
-      zh-TW:
-        label: 授權同意
-        description: "LobeHub Community License 允許不修改直接商用；開發或散布衍生作品需要商業授權。確認後再同意。"
-      zh-CN:
-        label: 许可协议
-        description: "LobeHub Community License 允许不修改直接商用；开发或分发衍生作品需要商业许可。确认后再同意。"
-    description: >-
-      Read LobeHub Community License: unmodified commercial use permitted;
-      developing/distributing derivative works requires a commercial license.
-      Type I-ACCEPT-LOBEHUB-COMMUNITY.
-    required: true
-    validation: {pattern: ^I-ACCEPT-LOBEHUB-COMMUNITY$}
-
 security:
   summary: >-
     Non-root, read-only root filesystem, restricted PSS, no Kubernetes token,
@@ -65,7 +53,7 @@ security:
   risks:
     - risk: The LobeHub Community License restricts distribution of derivative works.
       mitigation: >-
-        Deployment requires the license acknowledgement. The template runs the
+        The template description names the license. The template runs the
         unmodified image with notices intact. Get commercial permission before
         you distribute a derivative.
     - risk: >-
@@ -87,12 +75,15 @@ scalability:
 
 upgradeNotes:
   - >-
+    Breaking change: the licenseOptIn input is removed. The license is named in
+    the template description. Remove licenseOptIn from saved values.
+  - >-
     This template runs LobeChat 1.143.3 in client-storage mode. LobeHub server
     mode uses different database, identity and storage. Do not switch the image
     to server mode without migrating user data and authentication.
   - >-
-    Unmodified upstream image only. License acknowledgement is required;
-    derivative-work distribution needs upstream commercial permission.
+    Unmodified upstream image only. The license is named in the template
+    description; derivative-work distribution needs upstream commercial permission.
   - >-
     Access code is generated; use the UI settings to supply it. Chats live in
     each browser. Export and import browser data for backups. Keep the

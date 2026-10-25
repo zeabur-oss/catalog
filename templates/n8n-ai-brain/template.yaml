@@ -4,8 +4,10 @@ metadata:
   name: n8n (AI Brain)
   version: "2.44.6"
   description: >-
-    Workflow automation with PostgreSQL17 and isolated external code runners;
-    Sustainable Use License opt-in.
+    Workflow automation with PostgreSQL17 and isolated external code runners.
+    Licensed under the n8n Sustainable Use License
+    (https://docs.n8n.io/sustainable-use-license/): internal business,
+    personal or noncommercial use only.
   license: LicenseRef-n8n-Sustainable-Use AND PostgreSQL AND Apache-2.0
   # Also: https://cloudnative-pg.io/
   homepage: https://github.com/n8n-io/n8n
@@ -47,62 +49,32 @@ inputs:
     generate: random
     secret: {name: app-secrets, key: jwt-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
-  - name: licenseOptIn
-    label: License agreement
-    locales:
-      zh-TW:
-        label: 授權同意
-        description: "n8n Sustainable Use License 只允許公司內部、個人或非商業用途；當成託管服務轉售需要另外取得授權。確認後再同意。"
-      zh-CN:
-        label: 许可协议
-        description: "n8n Sustainable Use License 只允许公司内部、个人或非商业用途；作为托管服务转售需要另外取得许可。确认后再同意。"
-    description: >-
-      Read the n8n Sustainable Use License. It allows use only for internal
-      business, personal or noncommercial purposes; hosted resale needs a
-      separate license. Type I-ACCEPT-N8N-SUSTAINABLE-USE.
-    required: true
-    validation: {pattern: ^I-ACCEPT-N8N-SUSTAINABLE-USE$}
-  - name: adminCidr
-    label: Administrator IP range
-    locales:
-      zh-TW:
-        label: 管理員 IP 範圍
-        description: "只有這個 IPv4 範圍能開啟 n8n 介面和建立第一個擁有者，以 Traefik 看到的來源位址為準；公開的工作流程 Webhook 不受影響。建議填你固定 IP 的 /32。"
-      zh-CN:
-        label: 管理员 IP 范围
-        description: "只有这个 IPv4 范围能打开 n8n 界面和创建第一个所有者，以 Traefik 看到的来源地址为准；公开的工作流 Webhook 不受影响。建议填你固定 IP 的 /32。"
-    description: >-
-      Administrator IPv4 source CIDR as seen by Traefik. Restricts UI and
-      first-owner setup; public workflow webhooks remain open. Prefer your fixed
-      IP /32.
-    required: true
-    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$'}
 
 security:
   summary: >-
     Non-root restricted app and isolated external runners, no app API tokens,
-    read-only roots. UI source-CIDR restricted before owner setup; public HTTPS
-    webhooks only. Runners reach only n8n and DNS; other outbound traffic is not
+    read-only roots. The editor, webhooks and forms are open on the public HTTPS
+    domain. Runners reach only n8n and DNS; other outbound traffic is not
     limited. CNPG owns scoped database RBAC/tokens.
   risks:
     - risk: >-
         n8n is fair-code under the Sustainable Use License, which restricts use
         and distribution. It is not OSI open source.
       mitigation: >-
-        Required exact licenseOptIn acknowledgment blocks rendering until
-        accepted. Use only under applicable
-        internal-business/personal/noncommercial grants or obtain a separate
-        license.
+        The template description names the license. Use only under the
+        internal-business, personal or noncommercial grants, or obtain a
+        separate license.
     - risk: >-
         Initial owner signup is unauthenticated; workflow authors can access
         connected credentials and public webhook triggers can be abused.
       mitigation: >-
-        Required source-CIDR allowlist protects UI/owner creation. Public
-        ingress exposes only the production /webhook and /webhook-waiting paths;
-        editor, test webhooks and forms stay behind adminCidr. Authenticate each
-        webhook in workflow design. Limit authors to trusted operators; the
-        instance is no sandbox for untrusted tenant workflows. Community package
-        installation is disabled.
+        Create the first owner right after the deploy finishes. The editor,
+        webhooks and forms are open to anyone who can reach the domain; n8n has
+        its own sign-in. To limit who can reach them, add an IP limit in the
+        service's network settings. Authenticate each webhook in workflow
+        design. Limit authors to trusted operators; the instance is no sandbox
+        for untrusted tenant workflows. Community package installation is
+        disabled.
     - risk: >-
         CNPG instance managers require Kubernetes API permissions.
       mitigation: >-
@@ -148,9 +120,10 @@ upgradeNotes:
     through an ordinary digest update. Do not downgrade n8n after it has
     migrated the database.
   - >-
-    Complete native owner setup from adminCidr. Behind an external load
-    balancer, check the source IP that Traefik sees; the allowlist ignores
-    X-Forwarded-For.
+    Breaking change: the adminCidr and licenseOptIn inputs are removed, and so
+    are the admin allowlist and the separate webhook route. The editor and all
+    routes are now open on the domain; add an IP limit in the service's
+    network settings if you need one. Remove both inputs from saved values.
   - >-
     GENERIC_TIMEZONE and TZ are Asia/Taipei. Change them in the manifest if
     schedule triggers must use another timezone.

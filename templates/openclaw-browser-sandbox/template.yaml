@@ -6,7 +6,9 @@ metadata:
   description: >-
     Headless Chromium browser sandbox that can be controlled via Chrome DevTools
     Protocol (CDP). Use this with OpenClaw or other services that need browser
-    automation capabilities.
+    automation capabilities. For one trusted owner and caller only: Chromium
+    runs with --no-sandbox and CDP has no application authentication, so it
+    gives no isolation from hostile pages or other users.
   license: MIT
   # Also: https://docs.openclaw.ai/tools/browser
   homepage: https://github.com/canyugs/openclaw-sandbox-browser
@@ -35,23 +37,6 @@ inputs:
       in the namespace is trusted.
     required: true
     validation: {pattern: '^[a-z][a-z0-9-]{0,62}$'}
-  - name: trustOptIn
-    label: Single-owner agreement
-    locales:
-      zh-TW:
-        label: 單一擁有者同意
-        description: "Chromium 以 --no-sandbox 執行，CDP 也沒有應用程式層的驗證，無法隔離惡意網頁或其他使用者。只給一位信任的擁有者和呼叫端使用。確認後再同意。"
-      zh-CN:
-        label: 单一所有者确认
-        description: "Chromium 以 --no-sandbox 运行，CDP 也没有应用层的验证，无法隔离恶意网页或其他用户。只给一位信任的所有者和调用方使用。确认后再同意。"
-    description: >-
-      Chromium runs with upstream --no-sandbox and CDP has no application
-      authentication. Use it for one trusted owner and caller only. It gives no
-      isolation from hostile pages or tenants. Type
-      I-ACCEPT-SINGLE-OWNER-BROWSER.
-    required: true
-    validation: {pattern: ^I-ACCEPT-SINGLE-OWNER-BROWSER$}
-
 security:
   summary: >-
     Private single-owner browser companion: restricted non-root read-only pod,
@@ -63,7 +48,7 @@ security:
         A malicious webpage compromises an unsandboxed Chromium process with the
         full pod identity and browser-session data.
       mitigation: >-
-        Explicit single-owner acknowledgement; no application/provider
+        Documented as single-owner in the description; no application/provider
         credentials, host mounts or Kubernetes token; read-only rootfs and
         ephemeral state; restricted pod identity and resource limits. The
         browser can open private and cloud metadata addresses unless you add an
@@ -87,6 +72,10 @@ scalability:
       profiles.
 
 upgradeNotes:
+  - >-
+    Breaking change: the trustOptIn input is removed. The template description
+    now says the browser sandbox is for one owner. Remove trustOptIn from saved
+    values.
   - >-
     Update the launch script, Chromium, base packages and the Caddy CDP proxy
     together. Check the new image digest and license.

@@ -643,7 +643,6 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.priority: '10'
 spec:
   ingressClassName: traefik
   tls:
@@ -655,43 +654,6 @@ spec:
     http:
       paths:
       - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: dify
-            port:
-              name: http
----
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: dify-admin
-  namespace: '{{ .Namespace }}'
-spec:
-  ipAllowList:
-    sourceRange: ['{{ .Inputs.adminCidr }}']
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: dify-console
-  namespace: '{{ .Namespace }}'
-  annotations:
-    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.priority: '100'
-    traefik.ingress.kubernetes.io/router.middlewares: '{{ .Namespace }}-dify-admin@kubernetescrd'
-spec:
-  ingressClassName: traefik
-  tls:
-  - hosts:
-    - '{{ .Domain }}'
-    secretName: dify-tls
-  rules:
-  - host: '{{ .Domain }}'
-    http:
-      paths:
-      - path: /console/api
         pathType: Prefix
         backend:
           service:

@@ -417,7 +417,7 @@ and applies `manifests.yaml` rendered for the project's namespace.
 The tools and original files are licensed under Apache-2.0. Each upstream,
 application, image and chart keeps its own license, named in
 `metadata.license`. Some use source-available licenses such as BUSL-1.1 or
-SSPL; those components are opt-in only, and those templates ask the person
-installing to accept the license before they render. Contributions use the
+SSPL; those components are opt-in only, and those templates name and link the
+license in their description. Contributions use the
 [Developer Certificate of Origin](https://developercertificate.org/); see
 [CONTRIBUTING.md](CONTRIBUTING.md).

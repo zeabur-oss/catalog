@@ -4,8 +4,9 @@ metadata:
   name: Open WebUI
   version: "main"
   description: >-
-    Authenticated LLM interface with private pipelines; requires acceptance of
-    the branding-preservation license.
+    Authenticated LLM interface with private pipelines. Open WebUI's license
+    (https://github.com/open-webui/open-webui/blob/main/LICENSE) requires you
+    to keep its branding.
   license: LicenseRef-Open-WebUI AND MIT
   # Also: https://github.com/open-webui/pipelines
   homepage: https://github.com/open-webui/open-webui
@@ -25,20 +26,6 @@ services:
     resources: {requests: {cpu: 200m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
 
 inputs:
-  - name: licenseOptIn
-    label: License agreement
-    locales:
-      zh-TW:
-        label: 授權同意
-        description: "讀過 Open WebUI 授權（包含品牌標示的義務）後再同意。"
-      zh-CN:
-        label: 许可协议
-        description: "读完 Open WebUI 许可证（包含品牌标识的义务）后再同意。"
-    description: >-
-      Read the upstream Open WebUI License, including branding obligations; type
-      I-ACCEPT-OPENWEBUI-LICENSE to accept.
-    required: true
-    validation: {pattern: ^I-ACCEPT-OPENWEBUI-LICENSE$}
   - name: adminEmail
     label: Administrator email
     locales:
@@ -79,7 +66,7 @@ security:
         Open WebUI uses a custom source-available license with branding
         obligations. It is not OSI-approved.
       mitigation: >-
-        Required exact license acknowledgment; retain all upstream branding.
+        The template description names the license; retain all upstream branding.
         Section 4 allows branding changes only for at most 50 end users in a
         rolling 30-day period, or with written or enterprise permission. This
         template keeps the upstream branding.
@@ -113,6 +100,9 @@ scalability:
       writer.
 
 upgradeNotes:
+  - >-
+    Breaking change: the licenseOptIn input is removed. The license is named in
+    the template description. Remove licenseOptIn from saved values.
   - >-
     Back up persistent state off-node before accepting an image digest or schema
     migration; restore into a separate namespace before cutover.

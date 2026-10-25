@@ -100,25 +100,25 @@ func TestSafetyRejectsPrivilegeAndNetworkEscapes(t *testing.T) {
 		t.Fatalf("baseline service downgraded unrelated restricted app: %v", err)
 	}
 }
-func TestRenderRequiresLicenseAcknowledgement(t *testing.T) {
+func TestRenderChecksRequiredInputPattern(t *testing.T) {
 	dir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dir, "manifests.yaml"), []byte("apiVersion: v1\nkind: ConfigMap\nmetadata: {name: app}\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
 	r := &templates.Template{ID: "app"}
-	if err := yaml.Unmarshal([]byte(`{"services":[{"name":"app"}],"inputs":[{"name":"licenseOptIn","description":"license acknowledgement","required":true,"validation":{"pattern":"^I-ACCEPT-LICENSE$"}}]}`), r); err != nil {
+	if err := yaml.Unmarshal([]byte(`{"services":[{"name":"app"}],"inputs":[{"name":"region","description":"region name","required":true,"validation":{"pattern":"^eu-[a-z]+$"}}]}`), r); err != nil {
 		t.Fatal(err)
 	}
 	r.Dir = dir
 	opts := templates.RenderOptions{Namespace: "test", Inputs: map[string]string{}}
 	if _, err := templates.Render(r, opts); !errors.Is(err, templates.ErrMissingInput) {
-		t.Fatalf("missing acknowledgement: got %v", err)
+		t.Fatalf("missing input: got %v", err)
 	}
-	opts.Inputs["licenseOptIn"] = "no"
+	opts.Inputs["region"] = "no"
 	if _, err := templates.Render(r, opts); !errors.Is(err, templates.ErrInputPattern) {
-		t.Fatalf("invalid acknowledgement: got %v", err)
+		t.Fatalf("invalid input: got %v", err)
 	}
-	opts.Inputs["licenseOptIn"] = "I-ACCEPT-LICENSE"
+	opts.Inputs["region"] = "eu-west"
 	if _, err := templates.Render(r, opts); err != nil {
 		t.Fatal(err)
 	}

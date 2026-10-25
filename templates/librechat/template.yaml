@@ -5,7 +5,9 @@ metadata:
   version: "latest"
   description: >-
     Authenticated AI chat with Percona-managed MongoDB, CNPG pgvector RAG and
-    private community Meilisearch.
+    private community Meilisearch. The Percona MongoDB server is SSPL-1.0
+    (https://www.mongodb.com/legal/licensing/server-side-public-license); read
+    section 13 on service-offering obligations before you offer this to others.
   license: MIT AND SSPL-1.0 AND PostgreSQL AND Apache-2.0
   # Also: https://github.com/danny-avila/rag_api, https://github.com/percona/percona-server-mongodb-operator, https://cloudnative-pg.io/, https://github.com/meilisearch/meilisearch
   homepage: https://github.com/danny-avila/LibreChat
@@ -41,20 +43,6 @@ services:
     resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
 
 inputs:
-  - name: licenseOptIn
-    label: MongoDB license agreement
-    locales:
-      zh-TW:
-        label: MongoDB 授權同意
-        description: "Percona MongoDB 採用 SSPL-1.0。讀過第 13 條提供服務的義務後再同意。"
-      zh-CN:
-        label: MongoDB 许可协议
-        description: "Percona MongoDB 采用 SSPL-1.0。读完第 13 条提供服务的义务后再同意。"
-    description: >-
-      The Percona MongoDB server uses SSPL-1.0. Read section 13 on
-      service-offering obligations, then type I-ACCEPT-MONGODB-SSPL.
-    required: true
-    validation: {pattern: ^I-ACCEPT-MONGODB-SSPL$}
   - name: adminEmail
     label: Administrator email
     locales:
@@ -181,6 +169,9 @@ scalability:
       install locations.
 
 upgradeNotes:
+  - >-
+    Breaking change: the licenseOptIn input is removed. The SSPL-1.0 license is
+    named in the template description. Remove licenseOptIn from saved values.
   - >-
     New installs start without database backups. Installs made before this
     version keep their backups. To turn backups on, open the database in Zeabur
