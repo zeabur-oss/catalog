@@ -23,12 +23,19 @@ releases:
     urls:
       - https://github.com/kubernetes-sigs/gateway-api/releases/download/{version}/standard-install.yaml
     version: v1.6.3
+    urlDigests:
+      - sha256:356c2b8e286a964dc20995435659ad1095386329974793af10bbfe3eff977fe5
 
   - name: traefik
     namespace: traefik
     chart: oci://ghcr.io/traefik/helm/traefik
     version: 42.1.3
+    chartDigest: sha256:49458ccd9673cd828ee0b091030f5747f5d95f205bbd0cf0b6c3bf757398cae1
     values: |
+      # Pinned by digest; a tag alone can move.
+      image:
+        repository: traefik
+        tag: v3.7.16@sha256:c8a121e4bb1347e8fd52657fab12f2cb70b68f8a018895e2068f92c9e519b9c2
       providers:
         kubernetesGateway:
           # Route web services with HTTPRoute.

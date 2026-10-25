@@ -183,10 +183,14 @@ releases:                         # installed in order
     namespace: traefik
     chart: oci://ghcr.io/traefik/helm/traefik   # or repo: https://… plus chart: <name>
     version: 41.7.1                             # exact; Renovate bumps it
+    chartDigest: sha256:…                       # required with chart; see Digests
     values: |                                   # shared by every profile
       gatewayClass:
         # Every value has a comment saying why; `catalog validate` enforces it.
         enabled: true
+      image:
+        # Every image is <tag>@sha256:<digest>; `catalog render` enforces it.
+        tag: v3.7.16@sha256:…
     profiles:                                   # merged over values like helm -f
       single-node: |
         deployment:
@@ -196,6 +200,7 @@ releases:                         # installed in order
     namespace: kube-system
     urls: [https://github.com/…/releases/download/{version}/standard-install.yaml]
     version: v1.6.2
+    urlDigests: [sha256:…]                      # one per URL, in order
   # or: manifests: |  objects applied as written
 
 inputs: []        # values to ask for or generate; Secrets are created from them
@@ -205,6 +210,25 @@ security: {...}   # RBAC summary, cluster-wide, privileged, egress, credentials,
 smoke: []         # extra e2e checks
 leftovers: []     # what the upstream keeps on uninstall (e.g. CRDs)
 ```
+
+### Digests
+
+Each release pins its content. The installer and `catalog render` stop when a
+chart or URL does not match its digest.
+
+- `chartDigest` of an HTTP chart is the `digest` of its entry in the
+  repository's `index.yaml`, the sha256 of the `.tgz`.
+- `chartDigest` of an OCI chart is its manifest digest, as `helm push`
+  prints it; `helm pull <chart>:<version>@sha256:…` checks it.
+- `urlDigests` are the sha256 of each downloaded file.
+- Images go in values as `<tag>@sha256:<digest>`, including images a chart
+  passes to its operator in arguments. A chart that cannot take a digest
+  lists its images in `unpinnedImages`, with a comment saying why. URL
+  releases are exempt: `urlDigests` pin what the upstream wrote.
+
+Renovate updates the tag and digest of images and OCI charts. It cannot read
+the digest of an HTTP chart or a URL: after it bumps `version`, `catalog
+render` fails and prints the new digest to copy in.
 
 Installs are deterministic: charts never generate secrets or certificates.
 Generated values are `inputs` (stored in Secrets), certificates come from

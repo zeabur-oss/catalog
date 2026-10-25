@@ -37,6 +37,7 @@ releases:
     repo: https://pkgs.tailscale.com/helmcharts
     chart: tailscale-operator
     version: 1.104.2
+    chartDigest: sha256:cf215d52f3a20fae4c77b14a191957ccb12e46b0f2ff2263c6f51c8a472cd505
     values: |
       oauth:
         # Empty, so the chart renders no Secret; the operator mounts
@@ -45,8 +46,15 @@ releases:
         clientSecret: ""
       operatorConfig:
         image:
-          # The tag is pinned to the chart's appVersion; Always pulls on every restart.
+          # Pinned by digest; a tag alone can move. Always pulls on every restart.
+          repository: tailscale/k8s-operator
+          tag: v1.104.2@sha256:9cddfcbe75a7eab2b46d610966d519a28699a5e38235a2cb3aec960487c4aa48
           pullPolicy: IfNotPresent
+      proxyConfig:
+        # The proxies the operator creates, pinned by digest.
+        image:
+          repository: tailscale/tailscale
+          tag: v1.104.2@sha256:b11583ad2e93e4671128538c88cf11f460444a5d7e449311dd1933a400ab849d
       apiServerProxyConfig:
         # No Kubernetes API proxy and no impersonation ClusterRole.
         mode: "false"

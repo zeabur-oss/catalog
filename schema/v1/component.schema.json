@@ -213,6 +213,21 @@
           "items": { "type": "string", "pattern": "\\{version\\}" }
         },
         "version": { "type": "string" },
+        "chartDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "description": "The chart at version: for an oci:// chart, its OCI manifest digest; for a chart in an HTTP repository, the SHA-256 of the chart archive, as the repository's index.yaml records it."
+        },
+        "urlDigests": {
+          "type": "array",
+          "description": "The SHA-256 of each file in urls, in the same order.",
+          "items": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+        },
+        "unpinnedImages": {
+          "type": "array",
+          "description": "Images, without tag, that the chart cannot pin by digest. A comment says why.",
+          "items": { "type": "string" }
+        },
         "manifests": { "type": "string", "description": "Objects applied as written." },
         "values": { "$ref": "#/$defs/values", "description": "Values for every profile." },
         "profiles": {
@@ -226,11 +241,11 @@
         }
       },
       "oneOf": [
-        { "required": ["chart", "version"] },
-        { "required": ["urls", "version"] },
+        { "required": ["chart", "version", "chartDigest"] },
+        { "required": ["urls", "version", "urlDigests"] },
         { "required": ["manifests"] }
       ],
-      "dependentRequired": { "repo": ["chart"], "values": ["chart"], "profiles": ["chart"] }
+      "dependentRequired": { "repo": ["chart"], "values": ["chart"], "profiles": ["chart"], "chartDigest": ["chart"], "urlDigests": ["urls"] }
     }
   }
 }

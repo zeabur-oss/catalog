@@ -63,6 +63,9 @@ type Release struct {
 	Repo          string            `yaml:"repo" json:"repo,omitempty"`
 	URLs          []string          `yaml:"urls" json:"urls,omitempty"`
 	Version       string            `yaml:"version" json:"version,omitempty"`
+	ChartDigest   string            `yaml:"chartDigest" json:"chartDigest,omitempty"`
+	URLDigests    []string          `yaml:"urlDigests" json:"urlDigests,omitempty"`
+	Unpinned      []string          `yaml:"unpinnedImages" json:"unpinnedImages,omitempty"`
 	Manifests     string            `yaml:"manifests" json:"manifests,omitempty"`
 	Values        string            `yaml:"values" json:"values,omitempty"`
 	Profiles      map[string]string `yaml:"profiles" json:"profiles,omitempty"`

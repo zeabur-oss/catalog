@@ -24,7 +24,12 @@ releases:
     repo: https://cloudnative-pg.github.io/charts
     chart: cloudnative-pg
     version: 0.29.1
+    chartDigest: sha256:b53d3991fe84bcf38767e7702cae78666265427a127a26fff168ab4207d2b1df
     values: |
+      # Pinned by digest; a tag alone can move.
+      image:
+        repository: ghcr.io/cloudnative-pg/cloudnative-pg
+        tag: 1.30.1@sha256:923c267ec29636db3bee20f993d0ec4973fa22998e1adad37da79e4d32b5bc07
       config:
         # Reconcile Clusters in every namespace.
         clusterWide: true
@@ -53,7 +58,14 @@ releases:
     repo: https://cloudnative-pg.github.io/charts
     chart: plugin-barman-cloud
     version: 0.8.1
+    chartDigest: sha256:9ad0b9e56da2777a1a0269feaf7215e18297e9c8b5730e04acb27b5d462e9456
     values: |
+      # Pinned by digest; a tag alone can move. The chart joins registry and
+      # repository. registry comes second, so Renovate reads both.
+      image:
+        repository: cloudnative-pg/plugin-barman-cloud
+        registry: ghcr.io
+        tag: v0.15.1@sha256:c75acad19a36e8176cfe2885761ff1b836c6ef977d7257e298c99a28b5c302ef
       certificate:
         # Self-signed issuer for the operator-plugin mTLS, made by the chart.
         createIssuer: true

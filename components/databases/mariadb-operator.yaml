@@ -27,17 +27,27 @@ releases:
     repo: https://helm.mariadb.com/mariadb-operator
     chart: mariadb-operator-crds
     version: 26.10.1
+    chartDigest: sha256:2a0c8ae8ec848e18144eb2606d7860f01d08c783a512066d2cf8b784d13a64d4
 
   - name: mariadb-operator
     namespace: mariadb-operator
     repo: https://helm.mariadb.com/mariadb-operator
     chart: mariadb-operator
     version: 26.10.1
+    chartDigest: sha256:c569d8ae12fcd62c21c5b9c5e0acf33a5895d60ac040eb68ce7f5c55c8b8b81a
     values: |
+      # Pinned by digest; a tag alone can move.
+      image:
+        repository: ghcr.io/mariadb-operator/mariadb-operator
+        tag: 26.10.1@sha256:37714fb240a53b2a496fd77d784879961b098bdbe0ef344ac7ba703ee3632017
       crds:
         # From the mariadb-operator-crds release.
         enabled: false
       webhook:
+        # The operator image, pinned by digest.
+        image:
+          repository: ghcr.io/mariadb-operator/mariadb-operator
+          tag: 26.10.1@sha256:37714fb240a53b2a496fd77d784879961b098bdbe0ef344ac7ba703ee3632017
         cert:
           certManager:
             # cert-manager issues the webhook certificate, so the chart's

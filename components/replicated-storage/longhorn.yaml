@@ -42,7 +42,20 @@ releases:
     repo: https://charts.longhorn.io
     chart: longhorn
     version: 1.13.0
+    chartDigest: sha256:e57f010d2a8bcf0da5b8b03ffecf49c5bc35ddc2663588ce8f22b7567b6133ed
     values: |
+      # Pinned by digest; a tag alone can move.
+      image:
+        longhorn:
+          manager:
+            repository: longhornio/longhorn-manager
+            tag: v1.13.0@sha256:7372f3c59239e9a67c0017b3af32fabdf08c4dcc0631140161da9a47e3b142f0
+          shareManager:
+            repository: longhornio/longhorn-share-manager
+            tag: v1.13.0@sha256:53950f78b7af38b8a943c298cd3020622191a4661a13036f69d83c154cc8690d
+          ui:
+            repository: longhornio/longhorn-ui
+            tag: v1.13.0@sha256:f22fb0254ae50195c1635ce428dfae26375956b3d7bd39640fae8fe33a236023
       persistence:
         # One copy per node, up to three: losing a node leaves two while the
         # third rebuilds. Two nodes give two copies; with one down, volumes

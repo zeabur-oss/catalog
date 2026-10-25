@@ -55,6 +55,12 @@ func renderComponents(cat *catalog.Catalog, comps []*catalog.Component, out stri
 						errs = append(errs, fmt.Errorf("%s/%s %s %s: %w", c.ID, rel.Name, p, kv, err))
 						continue
 					}
+					// urlDigests pin a URL release. Its images are the upstream's choice.
+					if kv == versions[0] && rel.Kind() != "manifest" {
+						for _, u := range catalog.UnpinnedImages(manifest, rel.Unpinned) {
+							errs = append(errs, fmt.Errorf("%s/%s %s: %s needs a sha256 digest (<tag>@sha256:<digest>)", c.ID, rel.Name, p, u))
+						}
+					}
 					// Charts must not generate secrets or certificates: the same
 					// values must give the same objects on every install.
 					if kv == versions[0] && rel.Kind() == "helm" {

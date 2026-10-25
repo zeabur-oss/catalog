@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 
 	"go.yaml.in/yaml/v3"
@@ -32,27 +34,48 @@ func Run(stdin []byte, name string, args ...string) (string, error) {
 	return stdout.String(), nil
 }
 
-// pull fetches a chart into the cache once and returns the .tgz path.
+// pull fetches a chart into the cache once and returns the .tgz path. If the
+// release has a chartDigest, pull fails unless the chart matches it.
 func pull(rel Release) (string, error) {
-	dir := filepath.Join(CacheDir, "charts", safe(rel.Repo+rel.Chart), rel.Version)
-	if m, _ := filepath.Glob(filepath.Join(dir, "*.tgz")); len(m) == 1 {
-		return m[0], nil
-	}
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return "", err
-	}
-	args := []string{"pull", rel.Chart, "--version", rel.Version, "--destination", dir}
-	if rel.Repo != "" {
-		args = append(args, "--repo", rel.Repo)
-	}
-	if _, err := Run(nil, "helm", args...); err != nil {
-		return "", err
-	}
+	dir := filepath.Join(CacheDir, "charts", safe(rel.Repo+rel.Chart), rel.Version, safe(rel.ChartDigest))
 	m, _ := filepath.Glob(filepath.Join(dir, "*.tgz"))
 	if len(m) != 1 {
-		return "", fmt.Errorf("helm pull %s: expected one chart in %s", rel.Chart, dir)
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return "", err
+		}
+		args := []string{"pull", rel.Chart, "--version", rel.Version, "--destination", dir}
+		if rel.Repo != "" {
+			args = append(args, "--repo", rel.Repo)
+		} else if rel.ChartDigest != "" {
+			// Helm refuses an OCI chart whose manifest digest differs.
+			args = []string{"pull", rel.Chart + ":" + rel.Version + "@" + rel.ChartDigest, "--destination", dir}
+		}
+		if _, err := Run(nil, "helm", args...); err != nil {
+			return "", err
+		}
+		if m, _ = filepath.Glob(filepath.Join(dir, "*.tgz")); len(m) != 1 {
+			return "", fmt.Errorf("helm pull %s: expected one chart in %s", rel.Chart, dir)
+		}
+	}
+	if rel.Repo != "" && rel.ChartDigest != "" {
+		data, err := os.ReadFile(m[0])
+		if err != nil {
+			return "", err
+		}
+		if err := checkDigest(rel.Chart+" "+rel.Version, data, rel.ChartDigest); err != nil {
+			os.RemoveAll(dir)
+			return "", err
+		}
 	}
 	return m[0], nil
+}
+
+// checkDigest fails unless data has the SHA-256 digest want.
+func checkDigest(what string, data []byte, want string) error {
+	if got := fmt.Sprintf("sha256:%x", sha256.Sum256(data)); got != want {
+		return fmt.Errorf("%s: the digest is %s, not %s", what, got, want)
+	}
+	return nil
 }
 
 // valuesFiles writes values documents to temporary files and returns -f
@@ -87,10 +110,16 @@ func releaseManifest(rel Release) ([]byte, error) {
 		return []byte(rel.Manifests), nil
 	}
 	var buf bytes.Buffer
-	for _, u := range rel.URLs {
-		data, err := download(strings.ReplaceAll(u, "{version}", rel.Version))
+	for i, u := range rel.URLs {
+		u = strings.ReplaceAll(u, "{version}", rel.Version)
+		data, err := download(u)
 		if err != nil {
 			return nil, err
+		}
+		if i < len(rel.URLDigests) {
+			if err := checkDigest(u, data, rel.URLDigests[i]); err != nil {
+				return nil, err
+			}
 		}
 		buf.Write(data)
 		buf.WriteString("\n---\n")
@@ -235,4 +264,61 @@ func strict(node any) {
 			}
 		}
 	}
+}
+
+// PinnedImage is an image reference with a sha256 digest.
+var PinnedImage = regexp.MustCompile(`^[^\s]+@sha256:[a-f0-9]{64}$`)
+
+// UnpinnedImages returns each container in manifest whose image has no digest,
+// as <kind>/<name> <container>: <image>. It skips images named in allowed, and
+// Helm test hooks, because only helm test creates them.
+func UnpinnedImages(manifest []byte, allowed []string) []string {
+	var out []string
+	for _, doc := range strings.Split(string(manifest), "\n---") {
+		var obj struct {
+			Kind     string
+			Metadata struct {
+				Name        string
+				Annotations map[string]string
+			}
+			Spec map[string]any
+		}
+		if yaml.Unmarshal([]byte(doc), &obj) != nil || strings.Contains(obj.Metadata.Annotations["helm.sh/hook"], "test") {
+			continue
+		}
+		var pod any
+		switch obj.Kind {
+		case "Pod":
+			pod = obj.Spec
+		case "Deployment", "StatefulSet", "DaemonSet", "ReplicaSet", "Job":
+			pod = dig(obj.Spec, "template", "spec")
+		case "CronJob":
+			pod = dig(obj.Spec, "jobTemplate", "spec", "template", "spec")
+		}
+		p, _ := pod.(map[string]any)
+		for _, k := range []string{"initContainers", "containers", "ephemeralContainers"} {
+			list, _ := p[k].([]any)
+			for _, v := range list {
+				c, _ := v.(map[string]any)
+				image, _ := c["image"].(string)
+				name := image
+				if i := strings.LastIndex(image, ":"); i > strings.LastIndex(image, "/") {
+					name = image[:i]
+				}
+				if !PinnedImage.MatchString(image) && !slices.Contains(allowed, name) {
+					out = append(out, fmt.Sprintf("%s/%s %v: %s", obj.Kind, obj.Metadata.Name, c["name"], image))
+				}
+			}
+		}
+	}
+	return out
+}
+
+func dig(m map[string]any, path ...string) any {
+	var v any = m
+	for _, k := range path {
+		mm, _ := v.(map[string]any)
+		v = mm[k]
+	}
+	return v
 }

@@ -34,7 +34,12 @@ releases:
     namespace: crowdsec
     chart: oci://ghcr.io/crowdsecurity/helm-charts/crowdsec
     version: 0.24.2
+    chartDigest: sha256:9078b83a6ba27a9a258cbdb4d8aefba6992a833041ba07317133fd61c5e6b446
     values: |
+      # Pinned by digest; a tag alone can move.
+      image:
+        repository: crowdsecurity/crowdsec
+        tag: v1.8.1@sha256:0f2523fa61ef507f15d953045cface490cc880670c62f2755ced17524107f71a
       # The runtime on k3s and mainstream distributions.
       container_runtime: containerd
       secrets:

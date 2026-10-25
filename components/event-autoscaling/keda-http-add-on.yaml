@@ -22,6 +22,13 @@ releases:
     repo: https://kedacore.github.io/charts
     chart: keda-add-ons-http
     version: 0.16.0
+    chartDigest: sha256:363f7250851f948661f7301c7e3bcb33c2cf19f4e26e2247f71ae61d339abe82
+    # The chart writes each image as <name>:<images.tag> and also puts
+    # images.tag in labels, so no value can add a digest.
+    unpinnedImages:
+      - ghcr.io/kedacore/http-add-on-operator
+      - ghcr.io/kedacore/http-add-on-scaler
+      - ghcr.io/kedacore/http-add-on-interceptor
     profiles:
       single-node: |
         interceptor:

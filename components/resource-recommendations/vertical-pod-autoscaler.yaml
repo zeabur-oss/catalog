@@ -19,10 +19,15 @@ releases:
     repo: https://kubernetes.github.io/autoscaler
     chart: vertical-pod-autoscaler
     version: 0.15.0
+    chartDigest: sha256:dc9682d3d41a92b535e01d0fc2726e9d595eacd22f676ccc3f5333b4c6425624
     values: |
       recommender:
         # Produces suggestions from metrics.k8s.io.
         enabled: true
+        # Pinned by digest; a tag alone can move.
+        image:
+          repository: registry.k8s.io/autoscaling/vpa-recommender
+          tag: 1.8.1@sha256:edf874b830984d1df9d60f839874eba42de3465051922b929754edc42ea0f69b
       updater:
         # Evicts pods to apply suggestions; keep changes manual.
         enabled: false

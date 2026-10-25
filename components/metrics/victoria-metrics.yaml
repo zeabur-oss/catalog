@@ -25,7 +25,23 @@ releases:
     releaseName: vm
     chart: oci://ghcr.io/victoriametrics/helm-charts/victoria-metrics-k8s-stack
     version: 0.96.0
+    chartDigest: sha256:5f3e783289f25f6498a9f0f66a8d1b2aa54256df48452863f449bc36dae0ee39
     values: |
+      prometheus-node-exporter:
+        # Pinned by digest; a tag alone can move. The chart joins registry and
+        # repository. registry comes second, so Renovate reads both.
+        image:
+          repository: prometheus/node-exporter
+          registry: quay.io
+          tag: v1.12.1@sha256:1b4e4438faca4dd7e001dd445d161a4a2091b0fededa84093b3a8dfeae1f1be0
+        # The chart compares this version, not the tag above, with semver; any
+        # release from 1.4.0 on renders the same.
+        version: 1.12.1
+      syncJob:
+        # Pinned by digest; a tag alone can move.
+        image:
+          repository: ghcr.io/victoriametrics/sync-job
+          tag: v0.0.17@sha256:b6f233532a85cda65e645264d24f995e5ee97f88b60610643f01f170516f444b
       victoria-metrics-operator:
         # The operator is its own component, shared with logs.
         enabled: false
@@ -38,6 +54,12 @@ releases:
       kube-state-metrics:
         # Maps pods to workloads and exposes requests, limits and object state.
         enabled: true
+        # Pinned by digest; a tag alone can move. The chart joins registry and
+        # repository. registry comes second, so Renovate reads both.
+        image:
+          repository: kube-state-metrics/kube-state-metrics
+          registry: registry.k8s.io
+          tag: v2.20.0@sha256:42cfe3723a5f058171c627537fb57a3ea0f26e4380fa18555a95cb1a1b4cfc5b
         metricLabelsAllowlist:
           # Pods: map pods to apps. Jobs: a notification test names its channel in
           # this label. Namespaces: tell projects from the cluster's own namespaces.

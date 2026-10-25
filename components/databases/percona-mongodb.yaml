@@ -24,7 +24,12 @@ releases:
     repo: https://percona.github.io/percona-helm-charts
     chart: psmdb-operator
     version: 1.23.2
+    chartDigest: sha256:80e629dc31f8cfe2615a5efb8b0d1d2ed418f25e8c0b168f981412c8594a07e9
     values: |
+      # Pinned by digest; a tag alone can move.
+      image:
+        repository: percona/percona-server-mongodb-operator
+        tag: 1.23.1@sha256:78c87b933e184b9af36dbb0078751862c75934c1521c33d3be4d0a38aa58dd0a
       # Reconcile clusters in every namespace.
       watchAllNamespaces: true
       # Telemetry is on by default and reports to Percona.

@@ -7,6 +7,8 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 )
 
 func object(v any) map[string]any { m, _ := v.(map[string]any); return m }
@@ -22,7 +24,7 @@ func contains(a []any, s string) bool {
 	return false
 }
 
-var digestImage = regexp.MustCompile(`^[^\s]+@sha256:[a-f0-9]{64}$`)
+var digestImage = catalog.PinnedImage
 var resourceQuantity = regexp.MustCompile(`^([0-9]+(?:\.[0-9]+)?)(?:m|[KMGTPE]i?|[kMGTPE]|[eE][+-]?[0-9]+)?$`)
 
 // Rule is a safety rule that a rendered object breaks. Safety wraps each one it finds.

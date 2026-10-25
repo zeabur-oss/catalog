@@ -20,7 +20,14 @@ releases:
     repo: https://k8up-io.github.io/k8up
     chart: k8up
     version: 4.10.1
+    chartDigest: sha256:6d8a2e69ea3b75e25de80b4d173b2858e337586edf603c485567c5bf1ec8697a
     values: |
+      # Pinned by digest; a tag alone can move. The chart joins registry and
+      # repository. registry comes second, so Renovate reads both.
+      image:
+        repository: k8up-io/k8up
+        registry: ghcr.io
+        tag: v2.16.1@sha256:f59bfa37c51511d5ad67e53816fb55c62d0e6411890e59bb6b965923129f30b5
       k8up:
         # Back up only PVCs annotated for backup.
         skipWithoutAnnotation: true

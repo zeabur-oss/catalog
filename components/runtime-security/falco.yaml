@@ -25,6 +25,9 @@ releases:
       - https://raw.githubusercontent.com/kubernetes-retired/wg-policy-prototypes/{version}/policy-report/crd/wgpolicyk8s.io/v1alpha2/wgpolicyk8s.io_clusterpolicyreports.yaml
     # The repository is archived; this is its last commit.
     version: ed0ca5a1c7788055074c7500915b76fc4518ed33
+    urlDigests:
+      - sha256:04cae1b4158ba59debed7c702e8dee4434d583cff9aa8ab00add54b6a63c56b5
+      - sha256:8bb518a3f12e6cb199c8cc252970d9a8383f419e0b59e8312f4a2c1105710919
 
   - name: alert-readers
     namespace: falco
@@ -47,7 +50,12 @@ releases:
     namespace: falco
     chart: oci://ghcr.io/falcosecurity/charts/falco
     version: 9.2.1
+    chartDigest: sha256:0e1fb8c9a069659f19427ee96695416dc4152bb43c8fd5234108dd05c34ef3b1
     values: |
+      # Pinned by digest; a tag alone can move.
+      image:
+        repository: falcosecurity/falco
+        tag: 0.45.1@sha256:69e957f91b3a6beb5c82e2afae33ec3e4479dab2d4421475d288d0cd113cedf6
       driver:
         # Built-in CO-RE eBPF probe: no kernel module or headers.
         kind: modern_ebpf
@@ -56,6 +64,10 @@ releases:
         json_output: true
         json_include_output_property: true
       falcoctl:
+        # Pinned by digest; a tag alone can move.
+        image:
+          repository: falcosecurity/falcoctl
+          tag: 0.14.2@sha256:90ba9627886e8f26b746fa52465d755b28ee49b76eb1d047a0fefd8cadb21907
         artifact:
           follow:
             # Rules change only with chart upgrades; no background downloads.
@@ -70,8 +82,8 @@ releases:
           # The chart's default repository. Renovate reads it to update the tag.
           repository: falcosecurity/falcosidekick
           # 2.35.0 writes the alert's time; earlier versions only its seconds
-          # within the minute.
-          tag: 2.35.0
+          # within the minute. Pinned by digest; a tag alone can move.
+          tag: 2.35.0@sha256:216ddb75229dcbf78cf57b1cf2140bd1b9092fcd72e4fd20b4d3057395d6765b
         resources:
           # Idle most of the time; one report update per alert.
           requests: {cpu: 10m, memory: 32Mi}

@@ -21,7 +21,18 @@ releases:
     namespace: dragonfly-operator-system
     chart: oci://ghcr.io/dragonflydb/dragonfly-operator/helm/dragonfly-operator
     version: v1.7.1
+    chartDigest: sha256:334cdd6cd58e08e77289b87ec8756b9f65fd085929ac8bb31e8b847981023376
     values: |
+      manager:
+        # Pinned by digest; a tag alone can move.
+        image:
+          repository: docker.dragonflydb.io/dragonflydb/operator
+          tag: v1.7.1@sha256:bc0067369a456810d00715d7292da32b82f6df491fd51d6c57f2b2b3193ab490
+      rbacProxy:
+        # Pinned by digest; a tag alone can move.
+        image:
+          repository: quay.io/brancz/kube-rbac-proxy
+          tag: v0.20.2@sha256:ad0fa9f0adc928b557663297bd22c610533960d77acdec289ce8a636f0ea2114
       crds:
         # The chart's default, stated: CRDs outlive the release, and with them
         # every Dragonfly object.

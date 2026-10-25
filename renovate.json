@@ -16,7 +16,7 @@
   },
   "customManagers": [
     {
-      "description": "Helm charts from HTTP repositories",
+      "description": "Helm charts from HTTP repositories. Renovate cannot read their chartDigest: catalog render prints the new one",
       "customType": "regex",
       "managerFilePatterns": [
         "/^components/.+\\.yaml$/"
@@ -27,18 +27,18 @@
       "datasourceTemplate": "helm"
     },
     {
-      "description": "Helm charts from OCI registries",
+      "description": "Helm charts from OCI registries, with chartDigest as their manifest digest",
       "customType": "regex",
       "managerFilePatterns": [
         "/^components/.+\\.yaml$/"
       ],
       "matchStrings": [
-        "chart: oci://(?<depName>\\S+)\\n\\s+version: (?<currentValue>\\S+)"
+        "chart: oci://(?<depName>\\S+)\\n\\s+version: (?<currentValue>\\S+)\\n\\s+chartDigest: (?<currentDigest>sha256:[a-f0-9]{64})"
       ],
       "datasourceTemplate": "docker"
     },
     {
-      "description": "Manifests from GitHub releases",
+      "description": "Manifests from GitHub releases. Renovate cannot read their urlDigests: catalog render prints the new ones",
       "customType": "regex",
       "managerFilePatterns": [
         "/^components/.+\\.yaml$/"
@@ -79,6 +79,18 @@
       "matchStrings": [
         "repository: (?<depName>[a-z0-9][a-z0-9./_-]*)\\n(?:\\s*#.*\\n)*\\s+tag: [\"']?(?<currentValue>v?[0-9][^\\s\"'@]*)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?"
       ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "description": "Container images under a chart's image.repository, with image.registry on the line after it",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^components/.+\\.yaml$/"
+      ],
+      "matchStrings": [
+        "repository: (?<depName>[a-z0-9][a-z0-9./_-]*)\\n\\s+registry: (?<registryUrl>[a-z0-9.-]+)\\n(?:\\s*#.*\\n)*\\s+tag: [\"']?(?<currentValue>v?[0-9][^\\s\"'@]*)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?"
+      ],
+      "registryUrlTemplate": "https://{{{registryUrl}}}",
       "datasourceTemplate": "docker"
     },
     {
@@ -126,11 +138,12 @@
       ]
     },
     {
-      "description": "Each upstream gets its own pull request, so CI tests one change at a time",
+      "description": "Each upstream gets its own pull request, so CI tests one change at a time. Every image carries a digest",
       "matchFileNames": [
         "components/**"
       ],
-      "groupName": null
+      "groupName": null,
+      "pinDigests": true
     },
     {
       "description": "Pre-1.0 upstreams change behaviour in minor releases; never automerge them",

@@ -19,10 +19,13 @@ releases:
     repo: https://keel-hq.github.io/keel/
     chart: keel
     version: v1.2.3
+    chartDigest: sha256:ba5b56c43064f653759f81f99f6c42ec97feba98224b5dc26e414c91295c4b8b
     values: |
       image:
-        # The tag defaults to the chart's appVersion (0.22.4), so it is
-        # pinned; Always would hit the registry on every restart.
+        # Pinned by digest; a tag alone can move. Always would hit the
+        # registry on every restart.
+        repository: ghcr.io/keel-hq/keel
+        tag: 0.22.4@sha256:09872633675df8da591fd2c2a7a37fbe8f08e19f9972c8f64a4c1e473876ac05
         pullPolicy: IfNotPresent
       helmProvider:
         # Workload annotations only. The Helm provider rewrites release

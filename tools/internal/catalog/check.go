@@ -49,6 +49,9 @@ func Check(root string, cat *Catalog) error {
 			fail(c.Path, "%s", p)
 		}
 		for _, r := range c.Releases {
+			if len(r.URLDigests) != len(r.URLs) {
+				fail(c.Path, "%s: urlDigests needs one digest for each of the %d urls", r.Name, len(r.URLs))
+			}
 			check := func(where, values string) {
 				for _, p := range unexplained(values) {
 					fail(c.Path, "%s: %s has no comment saying why", where, p)

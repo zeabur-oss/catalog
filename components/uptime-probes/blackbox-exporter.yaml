@@ -19,7 +19,14 @@ releases:
     namespace: observability
     chart: oci://ghcr.io/prometheus-community/charts/prometheus-blackbox-exporter
     version: 11.20.2
+    chartDigest: sha256:dff2a707004310c712745e884f548c4c63e6af43be14b831673b519b530c0fe8
     values: |
+      # Pinned by digest; a tag alone can move. The chart joins registry and
+      # repository. registry comes second, so Renovate reads both.
+      image:
+        repository: prometheus/blackbox-exporter
+        registry: quay.io
+        tag: v0.29.1@sha256:ea1c7aa3ef3f307cd03e85f34abb604478ccb90b567fc690da0cd9776da76b13
       config:
         modules:
           # Uptime: a 2xx after redirects, IPv6 then IPv4.

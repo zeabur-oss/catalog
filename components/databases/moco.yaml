@@ -25,6 +25,12 @@ releases:
     repo: https://cybozu-go.github.io/moco/
     chart: moco
     version: 0.27.0
+    chartDigest: sha256:c0d02d0c8081bcb8b640bb69c88506002d6374b14644a6ab15f89f16054cce0a
+    values: |
+      # Pinned by digest; a tag alone can move.
+      image:
+        repository: ghcr.io/cybozu-go/moco
+        tag: 0.37.0@sha256:32e7cab1bdd8ea302e570685696287a9524017f26eaf4ed63d5929e8053d6fce
     profiles:
       single-node: |
         # One node: a second replica gains nothing.

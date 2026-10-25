@@ -22,7 +22,12 @@ releases:
     releaseName: victoria-metrics-operator
     chart: oci://ghcr.io/victoriametrics/helm-charts/victoria-metrics-operator
     version: 0.68.1
+    chartDigest: sha256:1817be5446c975a306e404d6b605eafc45dbe6512a64d25b80d72f458fa4664a
     values: |
+      # Pinned by digest; a tag alone can move.
+      image:
+        repository: victoriametrics/operator
+        tag: v0.75.0@sha256:78da26b41a819093707be2ab6a65a5dc19f43d58ec52f30b49a545c2c6b7bd55
       admissionWebhooks:
         certManager:
           # cert-manager issues the webhook certificate, so every render is identical.
@@ -31,6 +36,11 @@ releases:
         # Delete VM objects before uninstall so finalizers don't block the namespace.
         cleanup:
           enabled: true
+          # Pinned by digest; a tag alone can move. The chart's default tag
+          # follows the cluster's Kubernetes version.
+          image:
+            repository: registry.k8s.io/kubectl
+            tag: v1.36.0@sha256:63e5e76b746bb8b891a94968d380736c035e768dab0d56ddad1f50c750a4be39
     profiles:
       single-node: |
         resources:

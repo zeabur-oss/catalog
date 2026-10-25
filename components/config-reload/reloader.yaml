@@ -19,7 +19,12 @@ releases:
     repo: https://stakater.github.io/stakater-charts
     chart: reloader
     version: 2.2.18
+    chartDigest: sha256:5eb4576ba75a0e165897e8a98a6ffef15d68939430da6eb8fe80796bba75cb17
     values: |
+      # Pinned by digest; a tag alone can move.
+      image:
+        repository: ghcr.io/stakater/reloader
+        tag: v1.4.22@sha256:def2480040adc164b3a57340e77674eadfd88fb7f0593df25e93297f29c7fd7c
       reloader:
         # Only workloads annotated reloader.stakater.com/auto or */reload restart.
         autoReloadAll: false
