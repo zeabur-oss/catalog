@@ -74,19 +74,16 @@ templates:
       kind: Secret
       metadata: {name: e2e-smtp}
       stringData: {username: e2e, password: e2e}
-  hermes-agent-custom-provider:
+  hermes-agent:
+    # No providerEndpoint: the test renders the OpenRouter default.
     inputs:
       model: e2e-model
-      providerEndpoint: https://llm.example.test/v1
-      adminDomain: admin.hermes-agent-custom-provider.example.test
+      adminDomain: admin.hermes-agent.example.test
     setup: &provider |
       apiVersion: v1
       kind: Secret
       metadata: {name: e2e-provider}
       stringData: {api-key: e2e, OPENAI_API_KEY: e2e}
-  hermes-agent-openrouter:
-    inputs: {model: e2e-model}
-    setup: *provider
   librechat:
     inputs: {licenseOptIn: I-ACCEPT-MONGODB-SSPL}
     setup: *provider

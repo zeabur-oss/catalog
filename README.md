@@ -106,8 +106,7 @@ it can be reused instead.
 | ghost | Ghost | cms |
 | gitea | Gitea | developer-tools |
 | halo | Halo | cms |
-| hermes-agent-custom-provider | Hermes Agent | ai, automation |
-| hermes-agent-openrouter | Hermes Agent | ai, automation |
+| hermes-agent | Hermes Agent | ai, automation |
 | librechat | LibreChat | ai |
 | litellm | LiteLLM | ai |
 | lobechat | LobeChat | ai |

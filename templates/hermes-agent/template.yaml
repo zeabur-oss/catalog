@@ -2,11 +2,13 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Hermes Agent
-  description: Supervised Hermes gateway and authenticated OpenRouter-backed API.
+  description: >-
+    Supervised Hermes gateway, authenticated API and protected dashboard with
+    OpenRouter or another OpenAI-compatible provider.
   license: MIT
   # Also: https://github.com/just-containers/s6-overlay
   homepage: https://github.com/NousResearch/hermes-agent
-  icon: https://raw.githubusercontent.com/NousResearch/hermes-agent/main/landingpage/nous-logo.png
+  icon: https://raw.githubusercontent.com/NousResearch/hermes-agent/main/website/static/img/logo.png
   categories: [ai, automation]
 
 requires: [ingress/traefik, certificates/cert-manager]
@@ -19,13 +21,15 @@ services:
       Drop ALL then add CHOWN/SETUID/SETGID/FOWNER/KILL only for ownership,
       explicit privilege drop and graceful cross-UID shutdown. No escalation or
       host/privileged access.
-    ports: [{name: api, port: 8642}]
+    ports: [{name: dashboard, port: 9119}, {name: api, port: 5000}]
     resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
-    domains: ['{{ .Domain }}']
+    domains: ['{{ .Inputs.adminDomain }}', '{{ .Domain }}']
 
 inputs:
   - name: providerSecret
-    description: Existing namespaced Secret with key api-key that holds the OpenRouter API key.
+    description: >-
+      Existing namespaced Secret with key api-key that holds the provider API
+      key, an OpenRouter key when providerEndpoint is empty.
     required: true
     validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
   - name: model
@@ -38,6 +42,31 @@ inputs:
       authorized Kubernetes access.
     generate: random
     secret: {name: hermes-secrets, key: api-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: providerEndpoint
+    description: >-
+      Public OpenAI-compatible HTTPS endpoint on TCP443, including its /v1
+      suffix if required. If it is empty, the template uses OpenRouter
+      (https://openrouter.ai/api/v1).
+    required: false
+    validation: {pattern: '^https://[A-Za-z0-9.-]+(:443)?(/[A-Za-z0-9._~/-]*)?$'}
+  - name: adminDomain
+    description: Separate HTTPS dashboard hostname.
+    required: true
+    validation: {pattern: '^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$'}
+  - name: adminCidr
+    description: Administrator IPv4 source CIDR as seen by Traefik; /0 is not accepted.
+    required: true
+    validation: {pattern: '^([0-9]{1,3}\.){3}[0-9]{1,3}/([1-9]|[12][0-9]|3[0-2])$'}
+  - name: dashboardPassword
+    description: Independent generated dashboard password for user admin.
+    generate: random
+    secret: {name: hermes-secrets, key: dashboard-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: dashboardSessionKey
+    description: Independent generated dashboard session-signing key.
+    generate: random
+    secret: {name: hermes-secrets, key: dashboard-session-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 
 security:
@@ -73,9 +102,20 @@ security:
         backups taken with the gateway stopped, and restore rehearsal. After a
         restore, check file ownership, provider access and messaging allowlists
         before routing clients. local-path is node-local without HA/snapshots.
+    - risk: Dashboard exposes high-trust administration of tools, profiles and secrets.
+      mitigation: >-
+        Separate generated Basic-auth and session keys, separate hostname, and
+        administrator source-CIDR middleware.
     - risk: >-
-        Egress allows public IPv4 on TCP 80/443 only. Agent tasks that need
-        private addresses, custom ports or IPv6 cannot connect.
+        The adminCidr allowlist matches the source address that Traefik sees. A
+        proxy or load balancer that hides client addresses makes the allowlist
+        match the proxy.
+      mitigation: >-
+        Deliver the real client address to Traefik. Do not set an ipStrategy
+        that trusts forwarded headers.
+    - risk: >-
+        Egress allows public IPv4 on TCP 80/443 only. Providers and agent tasks
+        on private addresses, custom ports or IPv6 cannot connect.
       mitigation: Add a separate NetworkPolicy egress rule scoped to that destination.
 
 scalability:
@@ -93,6 +133,17 @@ scalability:
 
 upgradeNotes:
   - >-
+    This template replaces hermes-agent-custom-provider and
+    hermes-agent-openrouter. From hermes-agent-custom-provider, install
+    hermes-agent in the same namespace with the same inputs. The objects keep
+    their names, so the hermes-data PVC and the hermes-secrets Secret stay.
+  - >-
+    From hermes-agent-openrouter, leave providerEndpoint empty and give
+    adminDomain and adminCidr for the dashboard. Add the keys
+    dashboard-password and dashboard-session-key to hermes-secrets, and keep
+    api-key. The API moves from TCP 8642 to TCP 5000, so update clients that
+    connect to the Service.
+  - >-
     Back up /opt/data consistently before upgrades. Upstream migrates persisted
     configuration during startup, and an older image may not read migrated
     state. Roll back by restoring the backup.
@@ -101,12 +152,11 @@ upgradeNotes:
     paths after each image update. Do not enable UID remapping under this
     read-only-root configuration.
   - >-
-    At startup a hook sets provider openrouter and the model in the config.
-    Startup fails when that config is invalid. The Hermes dashboard is off in
-    this template.
+    At startup a hook writes the provider, endpoint, key and model into the
+    config. Startup fails when that config is invalid.
   - >-
-    The smoke check tests the API listener only. Send one request through
-    OpenRouter to confirm inference.
+    The smoke check tests the API listener only. Send one request through the
+    provider to confirm inference.
   - >-
     Keep messaging deny-by-default; configure explicit allowed messaging
     identities before enabling any external channel. Never restore
@@ -121,4 +171,4 @@ smoke:
     resource: deployment/hermes-agent
     condition: condition=Available
     timeout: 600s
-    http: {service: hermes-agent, port: 8642, path: /health, status: 200}
+    http: {service: hermes-agent, port: 5000, path: /health, status: 200}
