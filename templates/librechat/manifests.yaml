@@ -10,7 +10,7 @@ data:
     process.chdir('/app');
     process.env.CREDS_KEY = Buffer.from(process.env.CREDS_KEY_SEED, 'base64url').toString('hex');
     process.env.CREDS_IV = Buffer.from(process.env.CREDS_IV_SEED, 'base64url').subarray(0, 16).toString('hex');
-    process.env.MONGO_URI = `mongodb://librechat:${encodeURIComponent(process.env.MONGO_PASSWORD)}@mongodb-rs0-0.mongodb-rs0.{{ .Namespace }}.svc.cluster.local:27017,mongodb-rs0-1.mongodb-rs0.{{ .Namespace }}.svc.cluster.local:27017,mongodb-rs0-2.mongodb-rs0.{{ .Namespace }}.svc.cluster.local:27017/LibreChat?authSource=admin&replicaSet=rs0&tls=true&tlsCAFile=/mongo-tls/ca.crt`;
+    process.env.MONGO_URI = `mongodb://librechat:${encodeURIComponent(process.env.MONGO_PASSWORD)}@mongodb-rs0-0.mongodb-rs0.{{ .Namespace }}.svc.cluster.local:27017/LibreChat?authSource=admin&replicaSet=rs0&tls=true&tlsCAFile=/mongo-tls/ca.crt`;
     if (process.argv[2] === 'init') {
       for (const name of ['data', 'uploads', 'logs', 'images', 'skill']) require('node:fs').mkdirSync('/persistent/' + name, {recursive: true});
       // The upstream administrative CLI uses the same registration service as the app.
@@ -1004,6 +1004,8 @@ metadata:
   namespace: '{{ .Namespace }}'
 spec:
   crVersion: 1.23.1
+  unsafeFlags:
+    replsetSize: true
   image: docker.io/percona/percona-server-mongodb:8.0.32-14@sha256:5ba5f240d2dc98bc6236ab1d79c0862c4b62dba9d98cd0ffdf716c30473d2d11
   initImage: docker.io/percona/percona-server-mongodb-operator:1.23.1@sha256:78c87b933e184b9af36dbb0078751862c75934c1521c33d3be4d0a38aa58dd0a
   initContainerSecurityContext:
@@ -1039,7 +1041,7 @@ spec:
       db: LibreChat
   replsets:
   - name: rs0
-    size: 3
+    size: 1
     serviceAccountName: mongodb-operand
     # The image sets glibc.pthread.rseq=0, so TCMalloc takes rseq for per-CPU caches.
     # Kernels 6.19 to 7.0.13 break that, and mongod 8.0 then exits at start (SERVER-121912).
