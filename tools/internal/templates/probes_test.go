@@ -59,7 +59,7 @@ func TestFiniteJobsUseCompletionInsteadOfLongRunningProbes(t *testing.T) {
 			pod := spec["template"].(map[string]any)["spec"].(map[string]any)
 			container := pod["containers"].([]any)[0].(map[string]any)
 			container["securityContext"].(map[string]any)["privileged"] = true
-			if err := templates.Safety(r, encode(), "test"); !errors.Is(err, templates.ErrPrivilegedContainer) {
+			if err := templates.Safety(r, encode(), "test"); !errors.Is(err, templates.ErrPodSecurity) {
 				t.Fatalf("finite workload bypassed container security: %v", err)
 			}
 			delete(container["securityContext"].(map[string]any), "privileged")

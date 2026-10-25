@@ -142,7 +142,7 @@ spec:
 		{name: "dragonfly-sidecar", manifest: dragonfly + "  additionalContainers: [{name: x, image: x}]\n", provider: "databases/dragonfly-operator", rule: templates.ErrUnsupportedOverride},
 		{name: "mariadb", manifest: mariadb, provider: "databases/mariadb-operator"},
 		{name: "mariadb-provider", manifest: mariadb, provider: "databases/dragonfly-operator", rule: templates.ErrMariaDBProvider},
-		{name: "mariadb-root", manifest: strings.Replace(mariadb, "runAsUser: 999", "runAsUser: 0", 1), provider: "databases/mariadb-operator", rule: templates.ErrOperandUIDZero},
+		{name: "mariadb-root", manifest: strings.Replace(mariadb, "runAsUser: 999", "runAsUser: 0", 1), provider: "databases/mariadb-operator", rule: templates.ErrPodSecurity},
 		{name: "mariadb-config", manifest: strings.Replace(mariadb, "kind: MariaDB\nmetadata: {name: mariadb}\nspec:\n", "kind: MariaDB\nmetadata: {name: mariadb}\nspec:\n  myCnf: skip-grant-tables\n", 1), provider: "databases/mariadb-operator", rule: templates.ErrUnsupportedOverride},
 		{name: "mariadb-other-namespace", manifest: strings.Replace(mariadb, "mariaDbRef: {name: mariadb}", "mariaDbRef: {name: mariadb, namespace: other}", 1), provider: "databases/mariadb-operator", rule: templates.ErrMariaDBRefNamespace},
 		{name: "mariadb-undeclared", manifest: strings.Replace(mariadb, "mariaDbRef: {name: mariadb}", "mariaDbRef: {name: shared}", 1), provider: "databases/mariadb-operator", rule: templates.ErrMariaDBRefUndeclared},

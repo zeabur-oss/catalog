@@ -42,15 +42,10 @@ const (
 	ErrForeignPods           Rule = "NetworkPolicy selectors must select only pods with the label " + PartOf + " set to the template ID"
 	ErrPositiveResource      Rule = "positive resource required"
 	ErrPodTokenAutomount     Rule = "automountServiceAccountToken must explicitly be false"
-	ErrHostNamespace         Rule = "host namespace forbidden"
-	ErrHostPathVolume        Rule = "hostPath volume forbidden"
+	ErrPodSecurity           Rule = "pod breaks the Pod Security Standard of its service"
 	ErrUnsafeSysctl          Rule = "sysctl not in safe allowlist"
 	ErrImageDigest           Rule = "image must use immutable sha256 digest"
-	ErrPrivilegedContainer   Rule = "privileged container forbidden"
-	ErrHostLifecycleHook     Rule = "host lifecycle hook override forbidden"
-	ErrRunAsNonRoot          Rule = "effective runAsNonRoot must be true"
 	ErrProbesRequired        Rule = "readiness and liveness probes required"
-	ErrOperandUIDZero        Rule = "operand UID zero forbidden"
 	ErrIPAllowListOnly       Rule = "only explicit ipAllowList Middleware supported"
 	ErrIPAllowListCIDR       Rule = "ipAllowList requires non-public, valid explicit CIDR"
 	ErrUnsupportedOverride   Rule = "unsupported override forbidden"
@@ -170,15 +165,11 @@ func Safety(r *Template, b []byte, namespace string) error {
 					profile = "baseline"
 				}
 			}
-			for key, v := range object(pm["annotations"]) {
-				if (strings.Contains(key, "apparmor") || strings.Contains(key, "seccomp")) && strings.Contains(strings.ToLower(text(v)), "unconfined") {
-					fail(where, "unconfined legacy security annotation forbidden")
-				}
-			}
 			if text(object(pm["labels"])[PartOf]) != r.ID {
 				fail(where, ErrPartOf)
 			}
-			checkPod(p, profile, where, k != "Job" && k != "CronJob", fail)
+			checkPodSecurity(pm, p, profile, where, fail)
+			checkPod(p, where, k != "Job" && k != "CronJob", fail)
 		}
 		if k == "Cluster" && api == "postgresql.cnpg.io/v1" {
 			if !digestImage.MatchString(text(spec["imageName"])) {
@@ -329,37 +320,22 @@ func checkResources(r map[string]any, w string, fail func(string, Rule, ...strin
 		}
 	}
 }
-func checkPod(p map[string]any, profile, w string, requireProbes bool, fail func(string, Rule, ...string)) {
+
+// checkPod checks what Pod Security Admission does not.
+func checkPod(p map[string]any, w string, requireProbes bool, fail func(string, Rule, ...string)) {
 	if p["automountServiceAccountToken"] != false {
 		fail(w, ErrPodTokenAutomount)
 	}
-	for _, k := range []string{"hostNetwork", "hostPID", "hostIPC"} {
-		if truth(p[k]) {
-			fail(w, ErrHostNamespace, k)
-		}
-	}
 	for _, v := range array(p["volumes"]) {
-		m := object(v)
-		if _, ok := m["hostPath"]; ok {
-			fail(w, ErrHostPathVolume)
-		}
-		if profile == "restricted" {
-			for typ := range m {
-				switch typ {
-				case "name", "configMap", "downwardAPI", "emptyDir", "ephemeral", "persistentVolumeClaim", "projected", "secret":
-				default:
-					fail(w, "volume type not permitted by restricted profile", typ)
-				}
-			}
-		}
-		for _, source := range array(object(m["projected"])["sources"]) {
+		for _, source := range array(object(object(v)["projected"])["sources"]) {
 			if _, ok := object(source)["serviceAccountToken"]; ok {
 				fail(w, "projected service account tokens forbidden")
 			}
 		}
 	}
-	psc := object(p["securityContext"])
-	for _, v := range array(psc["sysctls"]) {
+	// Stricter than baseline, which also allows the kernel.shm_rmid_forced,
+	// net.ipv4.ip_local_port_range and net.ipv4.tcp_* sysctls.
+	for _, v := range array(object(p["securityContext"])["sysctls"]) {
 		n := text(object(v)["name"])
 		if n != "net.ipv4.ip_unprivileged_port_start" && n != "net.ipv4.ping_group_range" {
 			fail(w, ErrUnsafeSysctl, n)
@@ -369,94 +345,12 @@ func checkPod(p map[string]any, profile, w string, requireProbes bool, fail func
 		for _, v := range array(p[k]) {
 			c := object(v)
 			cw := w + "/" + text(c["name"])
-			sc := object(c["securityContext"])
 			if !digestImage.MatchString(text(c["image"])) {
 				fail(cw, ErrImageDigest)
-			}
-			if truth(sc["privileged"]) {
-				fail(cw, ErrPrivilegedContainer)
-			}
-			if truth(sc["procMount"]) || text(sc["procMount"]) == "Unmasked" {
-				fail(cw, "unmasked proc mount forbidden")
-			}
-			for _, port := range array(c["ports"]) {
-				if n := object(port)["hostPort"]; n != nil && fmt.Sprint(n) != "0" {
-					fail(cw, "hostPort forbidden")
-				}
-			}
-			for _, probe := range []string{"readinessProbe", "livenessProbe", "startupProbe"} {
-				pr := object(c[probe])
-				if text(object(pr["httpGet"])["host"]) != "" || text(object(pr["tcpSocket"])["host"]) != "" {
-					fail(cw, "host probe override forbidden")
-				}
-			}
-			for _, hook := range []string{"postStart", "preStop"} {
-				handler := object(object(c["lifecycle"])[hook])
-				if text(object(handler["httpGet"])["host"]) != "" || text(object(handler["tcpSocket"])["host"]) != "" {
-					fail(cw, ErrHostLifecycleHook)
-				}
 			}
 			for _, v := range array(c["volumeMounts"]) {
 				if text(object(v)["mountPropagation"]) == "Bidirectional" {
 					fail(cw, "bidirectional mount propagation forbidden")
-				}
-			}
-			caps := object(sc["capabilities"])
-			for _, cap := range array(caps["add"]) {
-				s := text(cap)
-				if profile == "restricted" && s != "NET_BIND_SERVICE" {
-					fail(cw, "restricted capability forbidden", s)
-				}
-				if profile == "baseline" && !strings.Contains(" CHOWN DAC_OVERRIDE FOWNER FSETID KILL MKNOD NET_BIND_SERVICE SETFCAP SETGID SETPCAP SETUID SYS_CHROOT AUDIT_WRITE ", " "+s+" ") {
-					fail(cw, "baseline capability forbidden", s)
-				}
-			}
-			for _, ctx := range []map[string]any{psc, sc} {
-				if v := object(ctx["seLinuxOptions"]); len(v) > 0 {
-					typ := text(v["type"])
-					if typ != "" && typ != "container_t" && typ != "container_init_t" && typ != "container_kvm_t" && typ != "container_engine_t" {
-						fail(cw, "forbidden SELinux type")
-					}
-					if text(v["user"]) != "" || text(v["role"]) != "" {
-						fail(cw, "SELinux user/role overrides forbidden")
-					}
-				}
-				a := object(ctx["appArmorProfile"])
-				if text(a["type"]) == "Unconfined" {
-					fail(cw, "unconfined AppArmor forbidden")
-				}
-				if text(object(ctx["seccompProfile"])["type"]) == "Unconfined" {
-					fail(cw, "unconfined seccomp forbidden")
-				}
-				if truth(object(ctx["windowsOptions"])["hostProcess"]) {
-					fail(cw, "Windows hostProcess forbidden")
-				}
-			}
-			if profile == "restricted" {
-				if sc["allowPrivilegeEscalation"] != false {
-					fail(cw, "allowPrivilegeEscalation must be false")
-				}
-				if !contains(array(caps["drop"]), "ALL") {
-					fail(cw, "capabilities.drop must include ALL")
-				}
-				nonroot, explicit := sc["runAsNonRoot"]
-				if !explicit {
-					nonroot = psc["runAsNonRoot"]
-				}
-				if nonroot != true {
-					fail(cw, ErrRunAsNonRoot)
-				}
-				for _, ctx := range []map[string]any{psc, sc} {
-					if uid, ok := ctx["runAsUser"]; ok && fmt.Sprint(uid) == "0" {
-						fail(cw, "runAsUser 0 forbidden")
-					}
-				}
-				sec := text(object(sc["seccompProfile"])["type"])
-				if sec == "" {
-					sec = text(object(psc["seccompProfile"])["type"])
-				}
-				if sec != "RuntimeDefault" && sec != "Localhost" {
-					fail(cw, "restricted seccomp must be RuntimeDefault or Localhost")
 				}
 			}
 			checkResources(object(c["resources"]), cw, fail)

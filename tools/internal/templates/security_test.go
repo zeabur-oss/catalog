@@ -71,11 +71,11 @@ func TestSafetyRejectsPrivilegeAndNetworkEscapes(t *testing.T) {
 		rule     templates.Rule
 	}{
 		"token":                           {strings.Replace(safeManifest, "automountServiceAccountToken: false", "automountServiceAccountToken: true", 1), templates.ErrPodTokenAutomount},
-		"privileged":                      {strings.Replace(safeManifest, "allowPrivilegeEscalation: false", "allowPrivilegeEscalation: false\n            privileged: true", 1), templates.ErrPrivilegedContainer},
-		"container-overrides-pod-nonroot": {strings.Replace(safeManifest, "allowPrivilegeEscalation: false", "allowPrivilegeEscalation: false\n            runAsNonRoot: false", 1), templates.ErrRunAsNonRoot},
-		"hostnamespace":                   {strings.Replace(safeManifest, "automountServiceAccountToken: false", "automountServiceAccountToken: false\n      hostPID: true", 1), templates.ErrHostNamespace},
-		"hostpath":                        {strings.Replace(safeManifest, "automountServiceAccountToken: false", "automountServiceAccountToken: false\n      volumes: [{name: host, hostPath: {path: /}}]", 1), templates.ErrHostPathVolume},
-		"lifecycle-host":                  {strings.Replace(safeManifest, "          readinessProbe:", "          lifecycle: {preStop: {httpGet: {host: 127.0.0.1, path: /, port: 10250}}}\n          readinessProbe:", 1), templates.ErrHostLifecycleHook},
+		"privileged":                      {strings.Replace(safeManifest, "allowPrivilegeEscalation: false", "allowPrivilegeEscalation: false\n            privileged: true", 1), templates.ErrPodSecurity},
+		"container-overrides-pod-nonroot": {strings.Replace(safeManifest, "allowPrivilegeEscalation: false", "allowPrivilegeEscalation: false\n            runAsNonRoot: false", 1), templates.ErrPodSecurity},
+		"hostnamespace":                   {strings.Replace(safeManifest, "automountServiceAccountToken: false", "automountServiceAccountToken: false\n      hostPID: true", 1), templates.ErrPodSecurity},
+		"hostpath":                        {strings.Replace(safeManifest, "automountServiceAccountToken: false", "automountServiceAccountToken: false\n      volumes: [{name: host, hostPath: {path: /}}]", 1), templates.ErrPodSecurity},
+		"lifecycle-host":                  {strings.Replace(safeManifest, "          readinessProbe:", "          lifecycle: {preStop: {httpGet: {host: 127.0.0.1, path: /, port: 10250}}}\n          readinessProbe:", 1), templates.ErrPodSecurity},
 		"tag":                             {strings.Replace(safeManifest, "example.test/app@sha256:"+strings.Repeat("a", 64), "example.test/app:latest", 1), templates.ErrImageDigest},
 		"namespace":                       {strings.Replace(safeManifest, "name: app\nspec:", "name: app\n  namespace: kube-system\nspec:", 1), templates.ErrNamespaceEscape},
 		"network":                         {strings.Replace(safeManifest, "policyTypes: [Ingress, Egress]", "policyTypes: [Ingress]", 1), templates.ErrDefaultDeny},
@@ -97,7 +97,7 @@ func TestSafetyRejectsPrivilegeAndNetworkEscapes(t *testing.T) {
 	// One baseline service must not downgrade an unrelated restricted workload.
 	r.Services = append(r.Services, templates.Service{Name: "legacy", SecurityProfile: "baseline", BaselineJustification: "legacy UID"})
 	b := strings.Replace(safeManifest, "runAsNonRoot: true", "runAsNonRoot: false", 1)
-	if err := templates.Safety(r, []byte(b), "test"); !errors.Is(err, templates.ErrRunAsNonRoot) {
+	if err := templates.Safety(r, []byte(b), "test"); !errors.Is(err, templates.ErrPodSecurity) {
 		t.Fatalf("baseline service downgraded unrelated restricted app: %v", err)
 	}
 }

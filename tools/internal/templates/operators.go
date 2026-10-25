@@ -15,30 +15,11 @@ func hasProvider(r *Template, id string) bool {
 	}
 	return false
 }
+
+// safeOperandContext checks the security contexts that an operator copies
+// into the pods it creates.
 func safeOperandContext(p, c map[string]any, w string, fail func(string, Rule, ...string)) {
-	if truth(c["privileged"]) || truth(object(c["windowsOptions"])["hostProcess"]) || truth(object(p["windowsOptions"])["hostProcess"]) {
-		fail(w, "privileged operator operand forbidden")
-	}
-	if c["allowPrivilegeEscalation"] != false {
-		fail(w, "operand allowPrivilegeEscalation must be false")
-	}
-	nonroot, ok := c["runAsNonRoot"]
-	if !ok {
-		nonroot = p["runAsNonRoot"]
-	}
-	if nonroot != true {
-		fail(w, "operand effective runAsNonRoot must be true")
-	}
 	for _, v := range []map[string]any{p, c} {
-		if uid, ok := v["runAsUser"]; ok && fmt.Sprint(uid) == "0" {
-			fail(w, ErrOperandUIDZero)
-		}
-		if text(object(v["seccompProfile"])["type"]) == "Unconfined" {
-			fail(w, "operand unconfined seccomp forbidden")
-		}
-		if text(object(v["appArmorProfile"])["type"]) == "Unconfined" {
-			fail(w, "operand unconfined AppArmor forbidden")
-		}
 		if len(array(v["sysctls"])) > 0 {
 			fail(w, "operand sysctl overrides forbidden")
 		}
@@ -46,22 +27,11 @@ func safeOperandContext(p, c map[string]any, w string, fail func(string, Rule, .
 			fail(w, "operand SELinux overrides require separate review")
 		}
 	}
-	sec := text(object(c["seccompProfile"])["type"])
-	if sec == "" {
-		sec = text(object(p["seccompProfile"])["type"])
+	pod := map[string]any{"containers": []any{map[string]any{"name": "operand", "securityContext": c}}}
+	if p != nil {
+		pod["securityContext"] = p
 	}
-	if sec != "RuntimeDefault" && sec != "Localhost" {
-		fail(w, "operand restricted seccomp required")
-	}
-	caps := object(c["capabilities"])
-	if !contains(array(caps["drop"]), "ALL") {
-		fail(w, "operand capabilities.drop ALL required")
-	}
-	for _, v := range array(caps["add"]) {
-		if v != "NET_BIND_SERVICE" {
-			fail(w, "operand elevated capability forbidden")
-		}
-	}
+	checkPodSecurity(nil, pod, "restricted", w, fail)
 }
 func checkPercona(r *Template, d map[string]any, docs []map[string]any, w string, fail func(string, Rule, ...string)) {
 	if !hasProvider(r, "databases/percona-mongodb") {
