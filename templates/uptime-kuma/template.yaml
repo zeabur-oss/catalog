@@ -25,10 +25,13 @@ security:
   risks:
     - risk: The first visitor can claim an uninitialized installation.
       mitigation: >-
-        Create the first owner account right after the deploy finishes. The
-        monitor UI, setup and status pages are open to anyone who can reach
-        the domain; the application has its own sign-in. To limit who can
-        reach it, add an IP limit in the service's network settings.
+        Uptime Kuma has no environment variable or init step that creates the
+        owner, so the template cannot do it at deploy time. Open the domain
+        and create the owner account right after the deploy finishes; until
+        then, whoever visits first becomes the owner. The monitor UI, setup and
+        status pages are open to anyone who can reach the domain; the
+        application has its own sign-in. To limit who can reach it, add an IP
+        limit in the service's network settings.
     - risk: >-
         Monitoring targets can become an SSRF path into cluster or private
         infrastructure.
@@ -60,6 +63,10 @@ scalability:
       an application-specific storage/database design.
 
 upgradeNotes:
+  - >-
+    A new install has no owner until someone creates it on the first visit.
+    Do that right after the deploy; Uptime Kuma cannot create it from a
+    Secret.
   - >-
     Breaking change: the template no longer ships its default-deny and per-pod
     NetworkPolicies, because the installer isolates project namespaces. Applying
