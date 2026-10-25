@@ -26,6 +26,15 @@ services:
     ports: [{name: postgresql, port: 5432}]
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 1Gi}}
 
+inputs:
+  - name: adminPassword
+    description: >-
+      Generated password of the Halo super administrator admin; retrieve it
+      from Secret halo-secrets, key admin-password.
+    generate: random
+    secret: {name: halo-secrets, key: admin-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
 security:
   summary: >-
     Restricted non-root application, read-only root and no API token; PostgreSQL
@@ -39,10 +48,12 @@ security:
       mitigation: >-
         Trust the pinned catalog operator, enforce namespace Pod Security
         restricted and inspect the generated Pods.
-    - risk: The first visitor can initialize the Halo administrator account.
+    - risk: The first visitor to an uninitialized Halo can create the administrator account.
       mitigation: >-
-        Finish initialization with kubectl port-forward before publishing
-        Ingress DNS and restrict Traefik externally during provisioning.
+        The template sets the super administrator admin with a generated
+        password from Secret halo-secrets at the first start, so there is no
+        open setup step. Sign in as admin and change the password in the
+        console.
     - risk: Database backups do not include local Halo attachments, plugins or themes.
       mitigation: >-
         Back up the Halo PVC off-node as well as the database, and
@@ -65,6 +76,10 @@ scalability:
       replicated storage; a replica count edit alone is not enough.
 
 upgradeNotes:
+  - >-
+    The super administrator admin is now created at the first start with the
+    password in halo-secrets/admin-password. An existing installation keeps
+    its administrators; the password is used only when none exists.
   - >-
     Breaking change: the template no longer ships its default-deny and per-pod
     NetworkPolicies, because the installer isolates project namespaces. Applying

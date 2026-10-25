@@ -67,6 +67,13 @@ spec:
           value: r2dbc:pool:postgresql://halo-db-rw:5432/halo
         - name: SPRING_SQL_INIT_PLATFORM
           value: postgresql
+        - name: HALO_SECURITY_INITIALIZER_SUPERADMINUSERNAME
+          value: admin
+        - name: HALO_SECURITY_INITIALIZER_SUPERADMINPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: halo-secrets
+              key: admin-password
         - name: JVM_OPTS
           value: -XX:MaxRAMPercentage=70 -Djava.io.tmpdir=/tmp
         - name: SPRING_R2DBC_USERNAME
