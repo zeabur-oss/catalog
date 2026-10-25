@@ -31,58 +31,41 @@ func (r Rule) Error() string { return string(r) }
 
 // Rules that callers can match with errors.Is.
 const (
-	ErrNamespaceEscape               Rule = "resource escapes target namespace"
-	ErrClusterScoped                 Rule = "cluster-scoped resources and RBAC are forbidden"
-	ErrTraefikProvider               Rule = "Traefik Ingress requires exact ingress/traefik provider"
-	ErrClusterIssuerProvider         Rule = "ClusterIssuer annotation requires exact certificates/cert-manager provider"
-	ErrCNPGProvider                  Rule = "CNPG workload requires exact databases/cloudnative-pg provider"
-	ErrDefaultDeny                   Rule = "an all-pods default deny for both ingress and egress is required"
-	ErrPositiveResource              Rule = "positive resource required"
-	ErrPodTokenAutomount             Rule = "automountServiceAccountToken must explicitly be false"
-	ErrHostNamespace                 Rule = "host namespace forbidden"
-	ErrHostPathVolume                Rule = "hostPath volume forbidden"
-	ErrUnsafeSysctl                  Rule = "sysctl not in safe allowlist"
-	ErrImageDigest                   Rule = "image must use immutable sha256 digest"
-	ErrPrivilegedContainer           Rule = "privileged container forbidden"
-	ErrHostLifecycleHook             Rule = "host lifecycle hook override forbidden"
-	ErrRunAsNonRoot                  Rule = "effective runAsNonRoot must be true"
-	ErrProbesRequired                Rule = "readiness and liveness probes required"
-	ErrOperandUIDZero                Rule = "operand UID zero forbidden"
-	ErrIPAllowListOnly               Rule = "only explicit ipAllowList Middleware supported"
-	ErrIPAllowListCIDR               Rule = "ipAllowList requires non-public, valid explicit CIDR"
-	ErrUnsupportedOverride           Rule = "unsupported override forbidden"
-	ErrDragonflyProvider             Rule = "Dragonfly requires exact databases/dragonfly-operator"
-	ErrDragonflyDigest               Rule = "Dragonfly image must use sha256 digest"
-	ErrDragonflyPassword             Rule = "Dragonfly authentication.passwordFromSecret required"
-	ErrDragonflyFlag                 Rule = "unauthenticated Dragonfly flag forbidden"
-	ErrMariaDBRefNamespace           Rule = "mariaDbRef escapes target namespace"
-	ErrMariaDBRefUndeclared          Rule = "mariaDbRef must name a MariaDB declared in this template"
-	ErrMariaDBProvider               Rule = "MariaDB Operator resources require exact databases/mariadb-operator"
-	ErrMariaDBBackupS3               Rule = "backup must use S3 with explicit credentials and TLS verification"
-	ErrGlobalGrant                   Rule = "Grant must name one database; global privileges forbidden"
-	ErrPerconaBackupProvider         Rule = "Percona backup requires exact databases/percona-mongodb"
-	ErrPerconaBackupOverride         Rule = "unsupported backup override forbidden"
-	ErrPerconaBackupMode             Rule = "only gzip-compressed logical Percona backups supported"
-	ErrPerconaBackupStorage          Rule = "backup must use the declared cluster's enabled S3 storage with explicit credentials and TLS verification"
-	ErrPerconaBackupCluster          Rule = "backup cluster must be declared in this template"
-	ErrMaintenanceBindingScope       Rule = "maintenance RoleBinding must use rbac.authorization.k8s.io/v1 in the target namespace with a name"
-	ErrMaintenanceBindingRole        Rule = "maintenance RoleBinding must reference a declared valid scale-only Role"
-	ErrMaintenanceSubjects           Rule = "maintenance subjects must be same-render token-off ServiceAccounts in the target namespace"
-	ErrMaintenanceJobsOnly           Rule = "maintenance API credentials are restricted to Jobs and CronJobs, not long-running workloads"
-	ErrMaintenanceTokenBinding       Rule = "projected API token requires a validated same-render maintenance RoleBinding and ServiceAccount"
-	ErrMaintenancePodAutomount       Rule = "maintenance Pod must disable token automount"
-	ErrMaintenanceServiceAccountName Rule = "maintenance Pod must use only serviceAccountName"
-	ErrMaintenanceTokenRequired      Rule = "bound maintenance ServiceAccount must consume an explicit short-lived projected API token"
-	ErrMaintenanceRisk               Rule = "maintenance API-token and application-scaling trust must be disclosed in security.risks"
-	ErrMaintenanceTokenShape         Rule = "maintenance token requires a safe basename path and explicit expirationSeconds between 600 and 3600"
-	ErrMaintenanceTokenAudience      Rule = "maintenance API token must use the cluster's default API audience (omit audience)"
-	ErrMaintenanceTokenMounted       Rule = "maintenance projected API-token volume must be consumed by a job container"
-	ErrMaintenanceSubjectUnused      Rule = "every maintenance subject must consume its grant in a validated Job or CronJob"
-	ErrMaintenanceRoleUnused         Rule = "maintenance Role must be bound and consumed by a validated Job or CronJob"
-	ErrMaintenanceRoleScope          Rule = "maintenance Role must use rbac.authorization.k8s.io/v1 in the target namespace with a name"
-	ErrMaintenanceRoleRules          Rule = "maintenance Role permits only apps deployments/scale rules without extra fields"
-	ErrMaintenanceVerbs              Rule = "maintenance scale verbs must be a nonempty subset of get/update/patch"
-	ErrMaintenanceResourceNames      Rule = "maintenance scale resourceNames must name same-render Deployments"
+	ErrNamespaceEscape       Rule = "resource escapes target namespace"
+	ErrClusterScoped         Rule = "cluster-scoped resources and RBAC are forbidden"
+	ErrTraefikProvider       Rule = "Traefik Ingress requires exact ingress/traefik provider"
+	ErrClusterIssuerProvider Rule = "ClusterIssuer annotation requires exact certificates/cert-manager provider"
+	ErrCNPGProvider          Rule = "CNPG workload requires exact databases/cloudnative-pg provider"
+	ErrDefaultDeny           Rule = "an all-pods default deny for both ingress and egress is required"
+	ErrPositiveResource      Rule = "positive resource required"
+	ErrPodTokenAutomount     Rule = "automountServiceAccountToken must explicitly be false"
+	ErrHostNamespace         Rule = "host namespace forbidden"
+	ErrHostPathVolume        Rule = "hostPath volume forbidden"
+	ErrUnsafeSysctl          Rule = "sysctl not in safe allowlist"
+	ErrImageDigest           Rule = "image must use immutable sha256 digest"
+	ErrPrivilegedContainer   Rule = "privileged container forbidden"
+	ErrHostLifecycleHook     Rule = "host lifecycle hook override forbidden"
+	ErrRunAsNonRoot          Rule = "effective runAsNonRoot must be true"
+	ErrProbesRequired        Rule = "readiness and liveness probes required"
+	ErrOperandUIDZero        Rule = "operand UID zero forbidden"
+	ErrIPAllowListOnly       Rule = "only explicit ipAllowList Middleware supported"
+	ErrIPAllowListCIDR       Rule = "ipAllowList requires non-public, valid explicit CIDR"
+	ErrUnsupportedOverride   Rule = "unsupported override forbidden"
+	ErrDragonflyProvider     Rule = "Dragonfly requires exact databases/dragonfly-operator"
+	ErrDragonflyDigest       Rule = "Dragonfly image must use sha256 digest"
+	ErrDragonflyPassword     Rule = "Dragonfly authentication.passwordFromSecret required"
+	ErrDragonflyFlag         Rule = "unauthenticated Dragonfly flag forbidden"
+	ErrMariaDBRefNamespace   Rule = "mariaDbRef escapes target namespace"
+	ErrMariaDBRefUndeclared  Rule = "mariaDbRef must name a MariaDB declared in this template"
+	ErrMariaDBProvider       Rule = "MariaDB Operator resources require exact databases/mariadb-operator"
+	ErrMariaDBBackupS3       Rule = "backup must use S3 with explicit credentials and TLS verification"
+	ErrGlobalGrant           Rule = "Grant must name one database; global privileges forbidden"
+	ErrPerconaBackupProvider Rule = "Percona backup requires exact databases/percona-mongodb"
+	ErrPerconaBackupOverride Rule = "unsupported backup override forbidden"
+	ErrPerconaBackupMode     Rule = "only gzip-compressed logical Percona backups supported"
+	ErrPerconaBackupStorage  Rule = "backup must use the declared cluster's enabled S3 storage with explicit credentials and TLS verification"
+	ErrPerconaBackupCluster  Rule = "backup cluster must be declared in this template"
+	ErrUnsupportedKind       Rule = "unsupported resource kind; the linter needs a namespaced safety adapter for it"
 )
 
 // Safety checks the rendered objects themselves.
@@ -102,7 +85,6 @@ func Safety(r *Template, b []byte, namespace string) error {
 		errs = append(errs, err)
 	}
 	seen := map[string]bool{}
-	maintenance := checkMaintenance(r, docs, namespace, fail)
 	for _, d := range docs {
 		k := text(d["kind"])
 		api := text(d["apiVersion"])
@@ -127,9 +109,8 @@ func Safety(r *Template, b []byte, namespace string) error {
 		case "psmdb.percona.com/v1/PerconaServerMongoDBBackup":
 		case "dragonflydb.io/v1alpha1/Dragonfly":
 		case "k8s.mariadb.com/v1alpha1/MariaDB", "k8s.mariadb.com/v1alpha1/Backup", "k8s.mariadb.com/v1alpha1/Database", "k8s.mariadb.com/v1alpha1/User", "k8s.mariadb.com/v1alpha1/Grant":
-		case "rbac.authorization.k8s.io/v1/Role", "rbac.authorization.k8s.io/v1/RoleBinding":
 		default:
-			fail(where, "unsupported resource kind; the linter needs a namespaced safety adapter for it")
+			fail(where, ErrUnsupportedKind)
 		}
 		if k == "Secret" {
 			fail(where, "rendered Secrets forbidden; use explicit inputs and preexisting Secrets")
@@ -178,7 +159,7 @@ func Safety(r *Template, b []byte, namespace string) error {
 					fail(where, "unconfined legacy security annotation forbidden")
 				}
 			}
-			checkPod(p, profile, where, k != "Job" && k != "CronJob", maintenance[where], fail)
+			checkPod(p, profile, where, k != "Job" && k != "CronJob", fail)
 		}
 		if k == "Cluster" && api == "postgresql.cnpg.io/v1" {
 			if !digestImage.MatchString(text(spec["imageName"])) {
@@ -294,7 +275,7 @@ func checkResources(r map[string]any, w string, fail func(string, Rule, ...strin
 		}
 	}
 }
-func checkPod(p map[string]any, profile, w string, requireProbes, allowMaintenanceToken bool, fail func(string, Rule, ...string)) {
+func checkPod(p map[string]any, profile, w string, requireProbes bool, fail func(string, Rule, ...string)) {
 	if p["automountServiceAccountToken"] != false {
 		fail(w, ErrPodTokenAutomount)
 	}
@@ -318,7 +299,7 @@ func checkPod(p map[string]any, profile, w string, requireProbes, allowMaintenan
 			}
 		}
 		for _, source := range array(object(m["projected"])["sources"]) {
-			if _, ok := object(source)["serviceAccountToken"]; ok && !allowMaintenanceToken {
+			if _, ok := object(source)["serviceAccountToken"]; ok {
 				fail(w, "projected service account tokens forbidden")
 			}
 		}
