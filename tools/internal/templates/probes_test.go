@@ -2,6 +2,7 @@ package templates_test
 
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 	"testing"
 
@@ -43,8 +44,8 @@ func TestFiniteJobsUseCompletionInsteadOfLongRunningProbes(t *testing.T) {
 			}
 			err = templates.Safety(r, encode(), "test")
 			if kind == "Deployment" {
-				if err == nil {
-					t.Fatal("long-running Deployment without probes accepted")
+				if !errors.Is(err, templates.ErrProbesRequired) {
+					t.Fatalf("long-running Deployment without probes: got %v", err)
 				}
 				return
 			}
@@ -58,18 +59,18 @@ func TestFiniteJobsUseCompletionInsteadOfLongRunningProbes(t *testing.T) {
 			pod := spec["template"].(map[string]any)["spec"].(map[string]any)
 			container := pod["containers"].([]any)[0].(map[string]any)
 			container["securityContext"].(map[string]any)["privileged"] = true
-			if templates.Safety(r, encode(), "test") == nil {
-				t.Fatal("finite workload bypassed container security")
+			if err := templates.Safety(r, encode(), "test"); !errors.Is(err, templates.ErrPrivilegedContainer) {
+				t.Fatalf("finite workload bypassed container security: %v", err)
 			}
 			delete(container["securityContext"].(map[string]any), "privileged")
 			container["image"] = "example.test/app:latest"
-			if templates.Safety(r, encode(), "test") == nil {
-				t.Fatal("finite workload bypassed digest requirement")
+			if err := templates.Safety(r, encode(), "test"); !errors.Is(err, templates.ErrImageDigest) {
+				t.Fatalf("finite workload bypassed digest requirement: %v", err)
 			}
 			container["image"] = "example.test/app@sha256:" + strings.Repeat("a", 64)
 			delete(container, "resources")
-			if templates.Safety(r, encode(), "test") == nil {
-				t.Fatal("finite workload bypassed resource requirement")
+			if err := templates.Safety(r, encode(), "test"); !errors.Is(err, templates.ErrPositiveResource) {
+				t.Fatalf("finite workload bypassed resource requirement: %v", err)
 			}
 		})
 	}

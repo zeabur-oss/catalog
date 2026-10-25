@@ -24,22 +24,33 @@ type RenderOptions struct {
 	Inputs                           map[string]string
 }
 
+// Errors from Render and GenerateInputs.
+var (
+	ErrNamespace     = errors.New("namespace must be a DNS label")
+	ErrDomain        = errors.New("domain must be a lowercase DNS hostname, not an IP address")
+	ErrClusterIssuer = errors.New("cluster issuer must be a DNS subdomain name")
+	ErrNoDomain      = errors.New("services with domains need -domain and -cluster-issuer")
+	ErrGenerated     = errors.New("is generated into a Secret; render does not take it")
+	ErrMissingInput  = errors.New("is required")
+	ErrInputPattern  = errors.New("does not match its validation pattern")
+)
+
 var namespaceLabel = regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`)
 var dnsSubdomain = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$`)
 
 func (o RenderOptions) validate(r *Template) error {
 	if !namespaceLabel.MatchString(o.Namespace) || len(o.Namespace) > 63 {
-		return errors.New("namespace must be a DNS label")
+		return ErrNamespace
 	}
 	if o.Domain != "" && (!dnsSubdomain.MatchString(o.Domain) || len(o.Domain) > 253 || net.ParseIP(o.Domain) != nil) {
-		return errors.New("domain must be a lowercase DNS hostname, not an IP address")
+		return ErrDomain
 	}
 	if o.ClusterIssuer != "" && (!dnsSubdomain.MatchString(o.ClusterIssuer) || len(o.ClusterIssuer) > 253) {
-		return errors.New("cluster issuer must be a DNS subdomain name")
+		return ErrClusterIssuer
 	}
 	for _, s := range r.Services {
 		if len(s.Domains) > 0 && (o.Domain == "" || o.ClusterIssuer == "") {
-			return errors.New("services with domains need -domain and -cluster-issuer")
+			return ErrNoDomain
 		}
 	}
 	patterns, err := validateInputs(r.Inputs)
@@ -52,15 +63,15 @@ func (o RenderOptions) validate(r *Template) error {
 		v, ok := o.Inputs[in.Name]
 		if in.Generate != "" {
 			if ok {
-				return fmt.Errorf("input %s is generated into a Secret; render does not take it", in.Name)
+				return fmt.Errorf("input %s %w", in.Name, ErrGenerated)
 			}
 			continue
 		}
 		if in.Required && !ok {
-			return fmt.Errorf("required input %s missing", in.Name)
+			return fmt.Errorf("input %s %w", in.Name, ErrMissingInput)
 		}
 		if ok && !patterns[i].MatchString(v) {
-			return fmt.Errorf("input %s does not match its validation pattern", in.Name)
+			return fmt.Errorf("input %s %w", in.Name, ErrInputPattern)
 		}
 	}
 	for k := range o.Inputs {
@@ -107,7 +118,7 @@ func Render(r *Template, o RenderOptions) ([]byte, error) {
 // The output holds credentials.
 func GenerateInputs(r *Template, namespace string) ([]byte, error) {
 	if !namespaceLabel.MatchString(namespace) || len(namespace) > 63 {
-		return nil, errors.New("namespace must be a DNS label")
+		return nil, ErrNamespace
 	}
 	patterns, err := validateInputs(r.Inputs)
 	if err != nil {
@@ -137,7 +148,7 @@ func GenerateInputs(r *Template, namespace string) ([]byte, error) {
 		}
 		v := values[in.Name]
 		if !patterns[i].MatchString(v) {
-			return nil, fmt.Errorf("generated %s does not match its validation pattern", in.Name)
+			return nil, fmt.Errorf("generated %s %w", in.Name, ErrInputPattern)
 		}
 		if grouped[in.Secret.Name] == nil {
 			grouped[in.Secret.Name] = map[string]string{}

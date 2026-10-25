@@ -118,16 +118,30 @@ func (l Licenses) NotOSIApproved(expr string) []string {
 	return out
 }
 
-func (l Licenses) problems(c *Component) []string {
-	var out []string
+// licenseProblem is a licence that a component cannot use as it is set up. An
+// empty Profile means the licence is not OSI-approved; otherwise the licence is
+// opt-in only and Profile recommends the component.
+type licenseProblem struct {
+	License, Profile string
+}
+
+func (p licenseProblem) Error() string {
+	if p.Profile == "" {
+		return fmt.Sprintf("license %s is not OSI-approved", p.License)
+	}
+	return fmt.Sprintf("license %s is opt-in only, so %s cannot be recommended", p.License, p.Profile)
+}
+
+func (l Licenses) problems(c *Component) []licenseProblem {
+	var out []licenseProblem
 	for _, id := range l.NotOSIApproved(c.Metadata.License) {
 		if !slices.Contains(l.OptInOnly, id) {
-			out = append(out, fmt.Sprintf("license %s is not OSI-approved", id))
+			out = append(out, licenseProblem{License: id})
 			continue
 		}
 		for _, p := range Profiles {
 			if c.Defaults[p] == "recommended" {
-				out = append(out, fmt.Sprintf("license %s is opt-in only, so %s cannot be recommended", id, p))
+				out = append(out, licenseProblem{License: id, Profile: p})
 			}
 		}
 	}

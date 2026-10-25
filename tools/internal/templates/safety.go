@@ -24,6 +24,67 @@ func contains(a []any, s string) bool {
 var digestImage = regexp.MustCompile(`^[^\s]+@sha256:[a-f0-9]{64}$`)
 var resourceQuantity = regexp.MustCompile(`^([0-9]+(?:\.[0-9]+)?)(?:m|[KMGTPE]i?|[kMGTPE]|[eE][+-]?[0-9]+)?$`)
 
+// Rule is a safety rule that a rendered object breaks. Safety wraps each one it finds.
+type Rule string
+
+func (r Rule) Error() string { return string(r) }
+
+// Rules that callers can match with errors.Is.
+const (
+	ErrNamespaceEscape               Rule = "resource escapes target namespace"
+	ErrClusterScoped                 Rule = "cluster-scoped resources and RBAC are forbidden"
+	ErrTraefikProvider               Rule = "Traefik Ingress requires exact ingress/traefik provider"
+	ErrClusterIssuerProvider         Rule = "ClusterIssuer annotation requires exact certificates/cert-manager provider"
+	ErrCNPGProvider                  Rule = "CNPG workload requires exact databases/cloudnative-pg provider"
+	ErrDefaultDeny                   Rule = "an all-pods default deny for both ingress and egress is required"
+	ErrPositiveResource              Rule = "positive resource required"
+	ErrPodTokenAutomount             Rule = "automountServiceAccountToken must explicitly be false"
+	ErrHostNamespace                 Rule = "host namespace forbidden"
+	ErrHostPathVolume                Rule = "hostPath volume forbidden"
+	ErrUnsafeSysctl                  Rule = "sysctl not in safe allowlist"
+	ErrImageDigest                   Rule = "image must use immutable sha256 digest"
+	ErrPrivilegedContainer           Rule = "privileged container forbidden"
+	ErrHostLifecycleHook             Rule = "host lifecycle hook override forbidden"
+	ErrRunAsNonRoot                  Rule = "effective runAsNonRoot must be true"
+	ErrProbesRequired                Rule = "readiness and liveness probes required"
+	ErrOperandUIDZero                Rule = "operand UID zero forbidden"
+	ErrIPAllowListOnly               Rule = "only explicit ipAllowList Middleware supported"
+	ErrIPAllowListCIDR               Rule = "ipAllowList requires non-public, valid explicit CIDR"
+	ErrUnsupportedOverride           Rule = "unsupported override forbidden"
+	ErrDragonflyProvider             Rule = "Dragonfly requires exact databases/dragonfly-operator"
+	ErrDragonflyDigest               Rule = "Dragonfly image must use sha256 digest"
+	ErrDragonflyPassword             Rule = "Dragonfly authentication.passwordFromSecret required"
+	ErrDragonflyFlag                 Rule = "unauthenticated Dragonfly flag forbidden"
+	ErrMariaDBRefNamespace           Rule = "mariaDbRef escapes target namespace"
+	ErrMariaDBRefUndeclared          Rule = "mariaDbRef must name a MariaDB declared in this template"
+	ErrMariaDBProvider               Rule = "MariaDB Operator resources require exact databases/mariadb-operator"
+	ErrMariaDBBackupS3               Rule = "backup must use S3 with explicit credentials and TLS verification"
+	ErrGlobalGrant                   Rule = "Grant must name one database; global privileges forbidden"
+	ErrPerconaBackupProvider         Rule = "Percona backup requires exact databases/percona-mongodb"
+	ErrPerconaBackupOverride         Rule = "unsupported backup override forbidden"
+	ErrPerconaBackupMode             Rule = "only gzip-compressed logical Percona backups supported"
+	ErrPerconaBackupStorage          Rule = "backup must use the declared cluster's enabled S3 storage with explicit credentials and TLS verification"
+	ErrPerconaBackupCluster          Rule = "backup cluster must be declared in this template"
+	ErrMaintenanceBindingScope       Rule = "maintenance RoleBinding must use rbac.authorization.k8s.io/v1 in the target namespace with a name"
+	ErrMaintenanceBindingRole        Rule = "maintenance RoleBinding must reference a declared valid scale-only Role"
+	ErrMaintenanceSubjects           Rule = "maintenance subjects must be same-render token-off ServiceAccounts in the target namespace"
+	ErrMaintenanceJobsOnly           Rule = "maintenance API credentials are restricted to Jobs and CronJobs, not long-running workloads"
+	ErrMaintenanceTokenBinding       Rule = "projected API token requires a validated same-render maintenance RoleBinding and ServiceAccount"
+	ErrMaintenancePodAutomount       Rule = "maintenance Pod must disable token automount"
+	ErrMaintenanceServiceAccountName Rule = "maintenance Pod must use only serviceAccountName"
+	ErrMaintenanceTokenRequired      Rule = "bound maintenance ServiceAccount must consume an explicit short-lived projected API token"
+	ErrMaintenanceRisk               Rule = "maintenance API-token and application-scaling trust must be disclosed in security.risks"
+	ErrMaintenanceTokenShape         Rule = "maintenance token requires a safe basename path and explicit expirationSeconds between 600 and 3600"
+	ErrMaintenanceTokenAudience      Rule = "maintenance API token must use the cluster's default API audience (omit audience)"
+	ErrMaintenanceTokenMounted       Rule = "maintenance projected API-token volume must be consumed by a job container"
+	ErrMaintenanceSubjectUnused      Rule = "every maintenance subject must consume its grant in a validated Job or CronJob"
+	ErrMaintenanceRoleUnused         Rule = "maintenance Role must be bound and consumed by a validated Job or CronJob"
+	ErrMaintenanceRoleScope          Rule = "maintenance Role must use rbac.authorization.k8s.io/v1 in the target namespace with a name"
+	ErrMaintenanceRoleRules          Rule = "maintenance Role permits only apps deployments/scale rules without extra fields"
+	ErrMaintenanceVerbs              Rule = "maintenance scale verbs must be a nonempty subset of get/update/patch"
+	ErrMaintenanceResourceNames      Rule = "maintenance scale resourceNames must name same-render Deployments"
+)
+
 // Safety checks the rendered objects themselves.
 func Safety(r *Template, b []byte, namespace string) error {
 	docs, err := DecodeDocuments(b)
@@ -33,7 +94,13 @@ func Safety(r *Template, b []byte, namespace string) error {
 	var errs []error
 	defaultDeny := false
 	var policies []map[string]any
-	fail := func(where, msg string) { errs = append(errs, fmt.Errorf("%s: %s", where, msg)) }
+	fail := func(where string, rule Rule, detail ...string) {
+		err := fmt.Errorf("%s: %w", where, rule)
+		if len(detail) > 0 {
+			err = fmt.Errorf("%w: %s", err, strings.Join(detail, " "))
+		}
+		errs = append(errs, err)
+	}
 	seen := map[string]bool{}
 	maintenance := checkMaintenance(r, docs, namespace, fail)
 	for _, d := range docs {
@@ -49,11 +116,11 @@ func Safety(r *Template, b []byte, namespace string) error {
 		seen[key] = true
 		ns := text(meta["namespace"])
 		if ns != "" && ns != namespace {
-			fail(where, "resource escapes target namespace")
+			fail(where, ErrNamespaceEscape)
 		}
 		switch k {
 		case "Namespace", "Node", "PersistentVolume", "StorageClass", "CustomResourceDefinition", "ClusterRole", "ClusterRoleBinding", "MutatingWebhookConfiguration", "ValidatingWebhookConfiguration", "APIService", "PriorityClass", "CertificateSigningRequest":
-			fail(where, "cluster-scoped resources and RBAC are forbidden")
+			fail(where, ErrClusterScoped)
 		}
 		switch api + "/" + k {
 		case "v1/Pod", "v1/Service", "v1/ConfigMap", "v1/Secret", "v1/ServiceAccount", "v1/PersistentVolumeClaim", "apps/v1/Deployment", "apps/v1/StatefulSet", "apps/v1/DaemonSet", "apps/v1/ReplicaSet", "batch/v1/Job", "batch/v1/CronJob", "networking.k8s.io/v1/Ingress", "networking.k8s.io/v1/NetworkPolicy", "policy/v1/PodDisruptionBudget", "autoscaling/v2/HorizontalPodAutoscaler", "cert-manager.io/v1/Certificate", "postgresql.cnpg.io/v1/Cluster", "postgresql.cnpg.io/v1/Backup", "postgresql.cnpg.io/v1/ScheduledBackup", "barmancloud.cnpg.io/v1/ObjectStore", "psmdb.percona.com/v1/PerconaServerMongoDB", "traefik.io/v1alpha1/Middleware":
@@ -79,10 +146,10 @@ func Safety(r *Template, b []byte, namespace string) error {
 		spec := object(d["spec"])
 		if k == "Ingress" {
 			if text(spec["ingressClassName"]) == "traefik" && !hasProvider(r, "ingress/traefik") {
-				fail(where, "Traefik Ingress requires exact ingress/traefik provider")
+				fail(where, ErrTraefikProvider)
 			}
 			if text(object(meta["annotations"])["cert-manager.io/cluster-issuer"]) != "" && !hasProvider(r, "certificates/cert-manager") {
-				fail(where, "ClusterIssuer annotation requires exact certificates/cert-manager provider")
+				fail(where, ErrClusterIssuerProvider)
 			}
 		}
 		var p, pm map[string]any
@@ -125,7 +192,7 @@ func Safety(r *Template, b []byte, namespace string) error {
 				}
 			}
 			if !provider {
-				fail(where, "CNPG workload requires exact databases/cloudnative-pg provider")
+				fail(where, ErrCNPGProvider)
 			}
 			if len(r.Security.Risks) == 0 {
 				fail(where, "operator-managed workload must document generated pod and service-account trust")
@@ -179,7 +246,7 @@ func Safety(r *Template, b []byte, namespace string) error {
 		}
 	}
 	if !defaultDeny {
-		fail("NetworkPolicy", "an all-pods default deny for both ingress and egress is required")
+		fail("NetworkPolicy", ErrDefaultDeny)
 	}
 	// A policy with empty rules is safe; additive allow rules must not accidentally select everything.
 	for _, p := range policies {
@@ -191,7 +258,7 @@ func Safety(r *Template, b []byte, namespace string) error {
 					peer = "to"
 				}
 				if len(array(m[peer])) == 0 {
-					fail("NetworkPolicy", "unbounded "+direction+" rule is forbidden")
+					fail("NetworkPolicy", "unbounded rule forbidden", direction)
 				}
 				for _, raw := range array(m[peer]) {
 					v := object(raw)
@@ -210,7 +277,7 @@ func Safety(r *Template, b []byte, namespace string) error {
 	}
 	return errors.Join(errs...)
 }
-func checkResources(r map[string]any, w string, fail func(string, string)) {
+func checkResources(r map[string]any, w string, fail func(string, Rule, ...string)) {
 	for _, level := range []string{"requests", "limits"} {
 		m := object(r[level])
 		for _, key := range []string{"cpu", "memory"} {
@@ -222,31 +289,31 @@ func checkResources(r map[string]any, w string, fail func(string, string)) {
 				positive = e == nil && n > 0
 			}
 			if !positive {
-				fail(w, "positive resource "+level+"."+key+" required")
+				fail(w, ErrPositiveResource, level+"."+key)
 			}
 		}
 	}
 }
-func checkPod(p map[string]any, profile, w string, requireProbes, allowMaintenanceToken bool, fail func(string, string)) {
+func checkPod(p map[string]any, profile, w string, requireProbes, allowMaintenanceToken bool, fail func(string, Rule, ...string)) {
 	if p["automountServiceAccountToken"] != false {
-		fail(w, "automountServiceAccountToken must explicitly be false")
+		fail(w, ErrPodTokenAutomount)
 	}
 	for _, k := range []string{"hostNetwork", "hostPID", "hostIPC"} {
 		if truth(p[k]) {
-			fail(w, k+" forbidden")
+			fail(w, ErrHostNamespace, k)
 		}
 	}
 	for _, v := range array(p["volumes"]) {
 		m := object(v)
 		if _, ok := m["hostPath"]; ok {
-			fail(w, "hostPath volume forbidden")
+			fail(w, ErrHostPathVolume)
 		}
 		if profile == "restricted" {
 			for typ := range m {
 				switch typ {
 				case "name", "configMap", "downwardAPI", "emptyDir", "ephemeral", "persistentVolumeClaim", "projected", "secret":
 				default:
-					fail(w, "volume type not permitted by restricted profile: "+typ)
+					fail(w, "volume type not permitted by restricted profile", typ)
 				}
 			}
 		}
@@ -260,7 +327,7 @@ func checkPod(p map[string]any, profile, w string, requireProbes, allowMaintenan
 	for _, v := range array(psc["sysctls"]) {
 		n := text(object(v)["name"])
 		if n != "net.ipv4.ip_unprivileged_port_start" && n != "net.ipv4.ping_group_range" {
-			fail(w, "sysctl not in safe allowlist: "+n)
+			fail(w, ErrUnsafeSysctl, n)
 		}
 	}
 	for _, k := range []string{"containers", "initContainers", "ephemeralContainers"} {
@@ -269,10 +336,10 @@ func checkPod(p map[string]any, profile, w string, requireProbes, allowMaintenan
 			cw := w + "/" + text(c["name"])
 			sc := object(c["securityContext"])
 			if !digestImage.MatchString(text(c["image"])) {
-				fail(cw, "image must use immutable sha256 digest")
+				fail(cw, ErrImageDigest)
 			}
 			if truth(sc["privileged"]) {
-				fail(cw, "privileged container forbidden")
+				fail(cw, ErrPrivilegedContainer)
 			}
 			if truth(sc["procMount"]) || text(sc["procMount"]) == "Unmasked" {
 				fail(cw, "unmasked proc mount forbidden")
@@ -291,7 +358,7 @@ func checkPod(p map[string]any, profile, w string, requireProbes, allowMaintenan
 			for _, hook := range []string{"postStart", "preStop"} {
 				handler := object(object(c["lifecycle"])[hook])
 				if text(object(handler["httpGet"])["host"]) != "" || text(object(handler["tcpSocket"])["host"]) != "" {
-					fail(cw, "host lifecycle hook override forbidden")
+					fail(cw, ErrHostLifecycleHook)
 				}
 			}
 			for _, v := range array(c["volumeMounts"]) {
@@ -303,10 +370,10 @@ func checkPod(p map[string]any, profile, w string, requireProbes, allowMaintenan
 			for _, cap := range array(caps["add"]) {
 				s := text(cap)
 				if profile == "restricted" && s != "NET_BIND_SERVICE" {
-					fail(cw, "restricted capability forbidden: "+s)
+					fail(cw, "restricted capability forbidden", s)
 				}
 				if profile == "baseline" && !strings.Contains(" CHOWN DAC_OVERRIDE FOWNER FSETID KILL MKNOD NET_BIND_SERVICE SETFCAP SETGID SETPCAP SETUID SYS_CHROOT AUDIT_WRITE ", " "+s+" ") {
-					fail(cw, "baseline capability forbidden: "+s)
+					fail(cw, "baseline capability forbidden", s)
 				}
 			}
 			for _, ctx := range []map[string]any{psc, sc} {
@@ -342,7 +409,7 @@ func checkPod(p map[string]any, profile, w string, requireProbes, allowMaintenan
 					nonroot = psc["runAsNonRoot"]
 				}
 				if nonroot != true {
-					fail(cw, "effective runAsNonRoot must be true")
+					fail(cw, ErrRunAsNonRoot)
 				}
 				for _, ctx := range []map[string]any{psc, sc} {
 					if uid, ok := ctx["runAsUser"]; ok && fmt.Sprint(uid) == "0" {
@@ -360,7 +427,7 @@ func checkPod(p map[string]any, profile, w string, requireProbes, allowMaintenan
 			checkResources(object(c["resources"]), cw, fail)
 			if k == "containers" && requireProbes {
 				if len(object(c["readinessProbe"])) == 0 || len(object(c["livenessProbe"])) == 0 {
-					fail(cw, "readiness and liveness probes required")
+					fail(cw, ErrProbesRequired)
 				}
 			}
 		}

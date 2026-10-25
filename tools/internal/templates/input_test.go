@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,14 +25,20 @@ func TestRenderRequiresValidDomainAndIssuer(t *testing.T) {
 		t.Fatal(err)
 	}
 	r.Dir = dir
-	for _, domain := range []string{"", "example.test:443", "example.test#fragment", "example.test\t", "127.0.0.1", "UPPER.test", "-bad.test"} {
-		if _, err := templates.Render(r, templates.RenderOptions{Namespace: "test", Domain: domain, ClusterIssuer: "issuer"}); err == nil {
-			t.Errorf("invalid domain %q accepted", domain)
+	if _, err := templates.Render(r, templates.RenderOptions{Namespace: "test", ClusterIssuer: "issuer"}); !errors.Is(err, templates.ErrNoDomain) {
+		t.Errorf("no domain: got %v", err)
+	}
+	for _, domain := range []string{"example.test:443", "example.test#fragment", "example.test\t", "127.0.0.1", "UPPER.test", "-bad.test"} {
+		if _, err := templates.Render(r, templates.RenderOptions{Namespace: "test", Domain: domain, ClusterIssuer: "issuer"}); !errors.Is(err, templates.ErrDomain) {
+			t.Errorf("invalid domain %q: got %v", domain, err)
 		}
 	}
-	for _, issuer := range []string{"", "issuer:bad", "issuer#bad", "issuer\t"} {
-		if _, err := templates.Render(r, templates.RenderOptions{Namespace: "test", Domain: "app.example.test", ClusterIssuer: issuer}); err == nil {
-			t.Errorf("invalid issuer %q accepted", issuer)
+	if _, err := templates.Render(r, templates.RenderOptions{Namespace: "test", Domain: "app.example.test"}); !errors.Is(err, templates.ErrNoDomain) {
+		t.Errorf("no issuer: got %v", err)
+	}
+	for _, issuer := range []string{"issuer:bad", "issuer#bad", "issuer\t"} {
+		if _, err := templates.Render(r, templates.RenderOptions{Namespace: "test", Domain: "app.example.test", ClusterIssuer: issuer}); !errors.Is(err, templates.ErrClusterIssuer) {
+			t.Errorf("invalid issuer %q: got %v", issuer, err)
 		}
 	}
 	if _, err := templates.Render(r, templates.RenderOptions{Namespace: "test", Domain: "app.example.test", ClusterIssuer: "test-issuer"}); err != nil {
@@ -62,8 +69,8 @@ func TestRenderingNeverGeneratesSecretValues(t *testing.T) {
 		t.Fatal("render generated secret material")
 	}
 	opts.Inputs = map[string]string{"password": "do-not-render"}
-	if _, err = templates.Render(r, opts); err == nil {
-		t.Fatal("generated input override accepted by renderer")
+	if _, err = templates.Render(r, opts); !errors.Is(err, templates.ErrGenerated) {
+		t.Fatalf("generated input override: got %v", err)
 	}
 }
 
@@ -145,8 +152,8 @@ func TestRandomInputsMeetComponentByteAndASCIIConstraints(t *testing.T) {
 
 func TestGeneratedValuesRequireFullPatternMatch(t *testing.T) {
 	r := inputRecord(t, `[{"name":"seed","generate":"random","secret":{"name":"app","key":"secret"},"validation":{"pattern":"[A-Za-z0-9_-]{42}"}}]`)
-	if b, err := templates.GenerateInputs(r, "test"); err == nil || len(b) != 0 {
-		t.Fatal("partial random value match accepted")
+	if b, err := templates.GenerateInputs(r, "test"); !errors.Is(err, templates.ErrInputPattern) || len(b) != 0 {
+		t.Fatalf("partial random value match: got %v", err)
 	}
 	r.Inputs[0].Validation.Pattern = "[A-Za-z0-9_-]{42}|[A-Za-z0-9_-]{43}"
 	generatedSecrets(t, r)
@@ -155,8 +162,8 @@ func TestGeneratedValuesRequireFullPatternMatch(t *testing.T) {
 func TestGenerateInputsRejectsInvalidNamespaces(t *testing.T) {
 	r := inputRecord(t, `[{"name":"seed","generate":"random","secret":{"name":"app","key":"secret"},"validation":{"pattern":".+"}}]`)
 	for _, namespace := range []string{"", "UPPER", "bad/name", "-bad", strings.Repeat("a", 64)} {
-		if b, err := templates.GenerateInputs(r, namespace); err == nil || len(b) != 0 {
-			t.Fatal("invalid namespace produced credentials")
+		if b, err := templates.GenerateInputs(r, namespace); !errors.Is(err, templates.ErrNamespace) || len(b) != 0 {
+			t.Fatalf("invalid namespace %q: got %v", namespace, err)
 		}
 	}
 }
@@ -164,8 +171,8 @@ func TestGenerateInputsRejectsInvalidNamespaces(t *testing.T) {
 func TestAskInputsRequireFullPatternMatch(t *testing.T) {
 	r := inputRecord(t, `[{"name":"ack","required":true,"validation":{"pattern":"yes"}}]`)
 	for _, value := range []string{"yes-no", "not-yes", "yes\n"} {
-		if b, err := templates.Render(r, templates.RenderOptions{Namespace: "test", Inputs: map[string]string{"ack": value}}); err == nil || len(b) != 0 {
-			t.Fatal("partial ask-input match accepted")
+		if b, err := templates.Render(r, templates.RenderOptions{Namespace: "test", Inputs: map[string]string{"ack": value}}); !errors.Is(err, templates.ErrInputPattern) || len(b) != 0 {
+			t.Fatalf("partial ask-input match %q: got %v", value, err)
 		}
 	}
 }

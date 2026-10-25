@@ -11,7 +11,7 @@ var maintenanceTokenPath = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]*$`)
 // grants consumed by token-off Jobs or CronJobs. The returned workload keys are
 // the only exceptions to checkPod's projected-token prohibition. A failed
 // validation always reaches Safety's fail callback; this is not an RBAC bypass.
-func checkMaintenance(r *Template, docs []map[string]any, namespace string, fail func(string, string)) map[string]bool {
+func checkMaintenance(r *Template, docs []map[string]any, namespace string, fail func(string, Rule, ...string)) map[string]bool {
 	deployments := map[string]bool{}
 	accounts := map[string]bool{}
 	roles := map[string]bool{}
@@ -55,9 +55,9 @@ func checkMaintenance(r *Template, docs []map[string]any, namespace string, fail
 		}
 		where := "RoleBinding/" + text(object(d["metadata"])["name"])
 		valid := true
-		reject := func(msg string) { valid = false; fail(where, msg) }
+		reject := func(rule Rule) { valid = false; fail(where, rule) }
 		if text(d["apiVersion"]) != "rbac.authorization.k8s.io/v1" || text(object(d["metadata"])["namespace"]) != namespace || text(object(d["metadata"])["name"]) == "" {
-			reject("maintenance RoleBinding must use rbac.authorization.k8s.io/v1 in the target namespace with a name")
+			reject(ErrMaintenanceBindingScope)
 		}
 		if !maintenanceFields(d, "apiVersion", "kind", "metadata", "roleRef", "subjects") {
 			reject("unsupported maintenance RoleBinding fields forbidden")
@@ -65,7 +65,7 @@ func checkMaintenance(r *Template, docs []map[string]any, namespace string, fail
 		ref := object(d["roleRef"])
 		role := text(ref["name"])
 		if !maintenanceFields(ref, "apiGroup", "kind", "name") || text(ref["apiGroup"]) != "rbac.authorization.k8s.io" || text(ref["kind"]) != "Role" || !roles[role] {
-			reject("maintenance RoleBinding must reference a declared valid scale-only Role")
+			reject(ErrMaintenanceBindingRole)
 		}
 		subjects := array(d["subjects"])
 		if len(subjects) == 0 {
@@ -76,7 +76,7 @@ func checkMaintenance(r *Template, docs []map[string]any, namespace string, fail
 			subject := object(raw)
 			name := text(subject["name"])
 			if !maintenanceFields(subject, "kind", "name", "namespace", "apiGroup") || text(subject["kind"]) != "ServiceAccount" || text(subject["namespace"]) != namespace || text(subject["apiGroup"]) != "" || !accounts[name] {
-				reject("maintenance subjects must be same-render token-off ServiceAccounts in the target namespace")
+				reject(ErrMaintenanceSubjects)
 			}
 			names = append(names, name)
 		}
@@ -104,25 +104,25 @@ func checkMaintenance(r *Template, docs []map[string]any, namespace string, fail
 			continue
 		}
 		valid := true
-		reject := func(msg string) { valid = false; fail(where, msg) }
+		reject := func(rule Rule) { valid = false; fail(where, rule) }
 		kind := text(d["kind"])
 		if text(d["apiVersion"]) != "batch/v1" || (kind != "Job" && kind != "CronJob") {
-			reject("maintenance API credentials are restricted to Jobs and CronJobs, not long-running workloads")
+			reject(ErrMaintenanceJobsOnly)
 		}
 		if !inNamespace(d) || !bound[sa] || !accounts[sa] {
-			reject("projected API token requires a validated same-render maintenance RoleBinding and ServiceAccount")
+			reject(ErrMaintenanceTokenBinding)
 		}
 		if p["automountServiceAccountToken"] != false {
-			reject("maintenance Pod must disable token automount")
+			reject(ErrMaintenancePodAutomount)
 		}
 		if _, legacy := p["serviceAccount"]; legacy {
-			reject("maintenance Pod must use only serviceAccountName")
+			reject(ErrMaintenanceServiceAccountName)
 		}
 		if !projected {
-			reject("bound maintenance ServiceAccount must consume an explicit short-lived projected API token")
+			reject(ErrMaintenanceTokenRequired)
 		}
 		if len(r.Security.Risks) == 0 {
-			reject("maintenance API-token and application-scaling trust must be disclosed in security.risks")
+			reject(ErrMaintenanceRisk)
 		}
 		for _, raw := range array(p["volumes"]) {
 			volume := object(raw)
@@ -134,10 +134,10 @@ func checkMaintenance(r *Template, docs []map[string]any, namespace string, fail
 				spec := object(token)
 				expiry, integer := spec["expirationSeconds"].(int)
 				if !maintenanceFields(spec, "path", "expirationSeconds", "audience") || !integer || expiry < 600 || expiry > 3600 || !maintenanceTokenPath.MatchString(text(spec["path"])) {
-					reject("maintenance token requires a safe basename path and explicit expirationSeconds between 600 and 3600")
+					reject(ErrMaintenanceTokenShape)
 				}
 				if audience, exists := spec["audience"]; exists && audience != "" {
-					reject("maintenance API token must use the cluster's default API audience (omit audience)")
+					reject(ErrMaintenanceTokenAudience)
 				}
 				mounted := false
 				for _, key := range []string{"containers", "initContainers"} {
@@ -150,7 +150,7 @@ func checkMaintenance(r *Template, docs []map[string]any, namespace string, fail
 					}
 				}
 				if !mounted {
-					reject("maintenance projected API-token volume must be consumed by a job container")
+					reject(ErrMaintenanceTokenMounted)
 				}
 			}
 		}
@@ -163,7 +163,7 @@ func checkMaintenance(r *Template, docs []map[string]any, namespace string, fail
 	for _, b := range bindings {
 		for _, sa := range b.accounts {
 			if !consumed[sa] {
-				fail(b.where, "every maintenance subject must consume its grant in a validated Job or CronJob")
+				fail(b.where, ErrMaintenanceSubjectUnused)
 			} else {
 				usedRoles[b.role] = true
 			}
@@ -171,18 +171,18 @@ func checkMaintenance(r *Template, docs []map[string]any, namespace string, fail
 	}
 	for role, valid := range roles {
 		if valid && !usedRoles[role] {
-			fail("Role/"+role, "maintenance Role must be bound and consumed by a validated Job or CronJob")
+			fail("Role/"+role, ErrMaintenanceRoleUnused)
 		}
 	}
 	return allowed
 }
 
-func validMaintenanceRole(d map[string]any, namespace string, deployments map[string]bool, fail func(string, string)) bool {
+func validMaintenanceRole(d map[string]any, namespace string, deployments map[string]bool, fail func(string, Rule, ...string)) bool {
 	where := "Role/" + text(object(d["metadata"])["name"])
 	valid := true
-	reject := func(msg string) { valid = false; fail(where, msg) }
+	reject := func(rule Rule) { valid = false; fail(where, rule) }
 	if text(d["apiVersion"]) != "rbac.authorization.k8s.io/v1" || text(object(d["metadata"])["namespace"]) != namespace || text(object(d["metadata"])["name"]) == "" {
-		reject("maintenance Role must use rbac.authorization.k8s.io/v1 in the target namespace with a name")
+		reject(ErrMaintenanceRoleScope)
 	}
 	if !maintenanceFields(d, "apiVersion", "kind", "metadata", "rules") {
 		reject("unsupported maintenance Role fields forbidden")
@@ -195,24 +195,24 @@ func validMaintenanceRole(d map[string]any, namespace string, deployments map[st
 		rule := object(raw)
 		groups, resources := array(rule["apiGroups"]), array(rule["resources"])
 		if !maintenanceFields(rule, "apiGroups", "resources", "verbs", "resourceNames") || len(groups) != 1 || groups[0] != "apps" || len(resources) != 1 || resources[0] != "deployments/scale" {
-			reject("maintenance Role permits only apps deployments/scale rules without extra fields")
+			reject(ErrMaintenanceRoleRules)
 		}
 		verbs := array(rule["verbs"])
 		if len(verbs) == 0 {
-			reject("maintenance scale verbs must be a nonempty subset of get/update/patch")
+			reject(ErrMaintenanceVerbs)
 		}
 		for _, verb := range verbs {
 			if verb != "get" && verb != "update" && verb != "patch" {
-				reject("maintenance scale verbs must be a nonempty subset of get/update/patch")
+				reject(ErrMaintenanceVerbs)
 			}
 		}
 		names := array(rule["resourceNames"])
 		if len(names) == 0 {
-			reject("maintenance scale resourceNames must name same-render Deployments")
+			reject(ErrMaintenanceResourceNames)
 		}
 		for _, name := range names {
 			if strings.ContainsAny(text(name), "*?") || !deployments[text(name)] {
-				reject("maintenance scale resourceNames must name same-render Deployments")
+				reject(ErrMaintenanceResourceNames)
 			}
 		}
 	}

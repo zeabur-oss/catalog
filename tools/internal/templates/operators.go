@@ -15,7 +15,7 @@ func hasProvider(r *Template, id string) bool {
 	}
 	return false
 }
-func safeOperandContext(p, c map[string]any, w string, fail func(string, string)) {
+func safeOperandContext(p, c map[string]any, w string, fail func(string, Rule, ...string)) {
 	if truth(c["privileged"]) || truth(object(c["windowsOptions"])["hostProcess"]) || truth(object(p["windowsOptions"])["hostProcess"]) {
 		fail(w, "privileged operator operand forbidden")
 	}
@@ -31,7 +31,7 @@ func safeOperandContext(p, c map[string]any, w string, fail func(string, string)
 	}
 	for _, v := range []map[string]any{p, c} {
 		if uid, ok := v["runAsUser"]; ok && fmt.Sprint(uid) == "0" {
-			fail(w, "operand UID zero forbidden")
+			fail(w, ErrOperandUIDZero)
 		}
 		if text(object(v["seccompProfile"])["type"]) == "Unconfined" {
 			fail(w, "operand unconfined seccomp forbidden")
@@ -63,7 +63,7 @@ func safeOperandContext(p, c map[string]any, w string, fail func(string, string)
 		}
 	}
 }
-func checkPercona(r *Template, d map[string]any, docs []map[string]any, w string, fail func(string, string)) {
+func checkPercona(r *Template, d map[string]any, docs []map[string]any, w string, fail func(string, Rule, ...string)) {
 	if !hasProvider(r, "databases/percona-mongodb") {
 		fail(w, "Percona operand requires exact databases/percona-mongodb")
 	}
@@ -76,7 +76,7 @@ func checkPercona(r *Template, d map[string]any, docs []map[string]any, w string
 		value any
 	}{{"image", spec["image"]}, {"initImage", spec["initImage"]}, {"backup.image", object(spec["backup"])["image"]}} {
 		if !digestImage.MatchString(text(entry.value)) {
-			fail(w, "Percona "+entry.name+" must use sha256 digest")
+			fail(w, "Percona image must use sha256 digest", entry.name)
 		}
 	}
 	if truth(object(spec["sharding"])["enabled"]) {
@@ -84,7 +84,7 @@ func checkPercona(r *Template, d map[string]any, docs []map[string]any, w string
 	}
 	for key, v := range object(spec["unsafeFlags"]) {
 		if truth(v) && key != "replsetSize" {
-			fail(w, "unsafe Percona flag forbidden: "+key)
+			fail(w, "unsafe Percona flag forbidden", key)
 		}
 	}
 	safeOperandContext(nil, object(spec["initContainerSecurityContext"]), w+"/init", fail)
@@ -109,26 +109,26 @@ func checkPercona(r *Template, d map[string]any, docs []map[string]any, w string
 		}
 		for _, key := range []string{"sidecars", "sidecarVolumes", "hostAliases", "initContainers"} {
 			if len(array(p[key])) > 0 {
-				fail(where, "unsupported operand override forbidden: "+key)
+				fail(where, ErrUnsupportedOverride, key)
 			}
 		}
 	}
 }
 
-func checkPerconaBackup(r *Template, d map[string]any, docs []map[string]any, w string, fail func(string, string)) {
+func checkPerconaBackup(r *Template, d map[string]any, docs []map[string]any, w string, fail func(string, Rule, ...string)) {
 	if !hasProvider(r, "databases/percona-mongodb") {
-		fail(w, "Percona backup requires exact databases/percona-mongodb")
+		fail(w, ErrPerconaBackupProvider)
 	}
 	spec := object(d["spec"])
 	for key := range spec {
 		switch key {
 		case "clusterName", "storageName", "type", "compressionType", "startingDeadlineSeconds":
 		default:
-			fail(w, "unsupported backup override forbidden: "+key)
+			fail(w, ErrPerconaBackupOverride, key)
 		}
 	}
 	if text(spec["type"]) != "logical" || text(spec["compressionType"]) != "gzip" {
-		fail(w, "only gzip-compressed logical Percona backups supported")
+		fail(w, ErrPerconaBackupMode)
 	}
 	clusterName, storageName := text(spec["clusterName"]), text(spec["storageName"])
 	if clusterName == "" || storageName == "" {
@@ -143,19 +143,19 @@ func checkPerconaBackup(r *Template, d map[string]any, docs []map[string]any, w 
 		storage := object(object(backup["storages"])[storageName])
 		s3 := object(storage["s3"])
 		if !truth(backup["enabled"]) || text(storage["type"]) != "s3" || text(s3["credentialsSecret"]) == "" || !strings.HasPrefix(text(s3["endpointUrl"]), "https://") || truth(s3["insecureSkipTLSVerify"]) {
-			fail(w, "backup must use the declared cluster's enabled S3 storage with explicit credentials and TLS verification")
+			fail(w, ErrPerconaBackupStorage)
 		}
 		return
 	}
-	fail(w, "backup cluster must be declared in this template")
+	fail(w, ErrPerconaBackupCluster)
 }
-func checkMiddleware(r *Template, d map[string]any, w string, fail func(string, string)) {
+func checkMiddleware(r *Template, d map[string]any, w string, fail func(string, Rule, ...string)) {
 	if !hasProvider(r, "ingress/traefik") {
 		fail(w, "Middleware requires ingress/traefik")
 	}
 	spec := object(d["spec"])
 	if len(spec) != 1 || spec["ipAllowList"] == nil {
-		fail(w, "only explicit ipAllowList Middleware supported")
+		fail(w, ErrIPAllowListOnly)
 		return
 	}
 	allow := object(spec["ipAllowList"])
@@ -169,16 +169,16 @@ func checkMiddleware(r *Template, d map[string]any, w string, fail func(string, 
 	for _, v := range ranges {
 		cidr, e := netip.ParsePrefix(text(v))
 		if e != nil || cidr.Bits() == 0 || strings.TrimSpace(text(v)) != text(v) {
-			fail(w, "ipAllowList requires non-public, valid explicit CIDR")
+			fail(w, ErrIPAllowListCIDR)
 		}
 	}
 }
 
 // onlyKeys rejects each spec field that is not in allowed.
-func onlyKeys(spec map[string]any, allowed []string, what, w string, fail func(string, string)) {
+func onlyKeys(spec map[string]any, allowed []string, what, w string, fail func(string, Rule, ...string)) {
 	for key := range spec {
 		if !slices.Contains(allowed, key) {
-			fail(w, "unsupported "+what+" override forbidden: "+key)
+			fail(w, ErrUnsupportedOverride, what+" "+key)
 		}
 	}
 }
@@ -192,9 +192,9 @@ func declaredServiceAccount(docs []map[string]any, name string) bool {
 	return false
 }
 
-func checkDragonfly(r *Template, d map[string]any, docs []map[string]any, w string, fail func(string, string)) {
+func checkDragonfly(r *Template, d map[string]any, docs []map[string]any, w string, fail func(string, Rule, ...string)) {
 	if !hasProvider(r, "databases/dragonfly-operator") {
-		fail(w, "Dragonfly requires exact databases/dragonfly-operator")
+		fail(w, ErrDragonflyProvider)
 	}
 	if len(r.Security.Risks) == 0 {
 		fail(w, "security.risks must describe the BUSL-1.1 licence and the operator-generated pods")
@@ -202,7 +202,7 @@ func checkDragonfly(r *Template, d map[string]any, docs []map[string]any, w stri
 	spec := object(d["spec"])
 	onlyKeys(spec, []string{"replicas", "image", "imagePullPolicy", "imagePullSecrets", "serviceAccountName", "args", "authentication", "env", "podSecurityContext", "containerSecurityContext", "resources", "snapshot", "tlsSecretRef", "affinity", "nodeSelector", "tolerations", "topologySpreadConstraints"}, "Dragonfly", w, fail)
 	if !digestImage.MatchString(text(spec["image"])) {
-		fail(w, "Dragonfly image must use sha256 digest")
+		fail(w, ErrDragonflyDigest)
 	}
 	checkResources(object(spec["resources"]), w, fail)
 	safeOperandContext(object(spec["podSecurityContext"]), object(spec["containerSecurityContext"]), w, fail)
@@ -211,13 +211,13 @@ func checkDragonfly(r *Template, d map[string]any, docs []map[string]any, w stri
 	}
 	auth := object(object(spec["authentication"])["passwordFromSecret"])
 	if text(auth["name"]) == "" || text(auth["key"]) == "" {
-		fail(w, "Dragonfly authentication.passwordFromSecret required")
+		fail(w, ErrDragonflyPassword)
 	}
 	// These flags open a port or the admin console without a password.
 	for _, arg := range array(spec["args"]) {
 		for _, flag := range []string{"--admin_nopass", "--memcached_port"} {
 			if text(arg) == flag || strings.HasPrefix(text(arg), flag+"=") {
-				fail(w, "unauthenticated Dragonfly flag forbidden: "+flag)
+				fail(w, ErrDragonflyFlag, flag)
 			}
 		}
 	}
@@ -225,23 +225,23 @@ func checkDragonfly(r *Template, d map[string]any, docs []map[string]any, w stri
 
 // checkMariaDBRef requires a reference to a MariaDB in this template. The operator
 // is cluster-wide, so a reference to another namespace reaches another tenant.
-func checkMariaDBRef(spec map[string]any, docs []map[string]any, namespace, w string, fail func(string, string)) {
+func checkMariaDBRef(spec map[string]any, docs []map[string]any, namespace, w string, fail func(string, Rule, ...string)) {
 	ref := object(spec["mariaDbRef"])
 	onlyKeys(ref, []string{"name", "namespace", "waitForIt"}, "mariaDbRef", w, fail)
 	if ns := text(ref["namespace"]); ns != "" && ns != namespace {
-		fail(w, "mariaDbRef escapes target namespace")
+		fail(w, ErrMariaDBRefNamespace)
 	}
 	for _, doc := range docs {
 		if text(doc["apiVersion"]) == "k8s.mariadb.com/v1alpha1" && text(doc["kind"]) == "MariaDB" && text(object(doc["metadata"])["name"]) == text(ref["name"]) {
 			return
 		}
 	}
-	fail(w, "mariaDbRef must name a MariaDB declared in this template")
+	fail(w, ErrMariaDBRefUndeclared)
 }
 
-func checkMariaDB(r *Template, d map[string]any, docs []map[string]any, namespace, w string, fail func(string, string)) {
+func checkMariaDB(r *Template, d map[string]any, docs []map[string]any, namespace, w string, fail func(string, Rule, ...string)) {
 	if !hasProvider(r, "databases/mariadb-operator") {
-		fail(w, "MariaDB Operator resources require exact databases/mariadb-operator")
+		fail(w, ErrMariaDBProvider)
 	}
 	spec := object(d["spec"])
 	switch text(d["kind"]) {
@@ -274,7 +274,7 @@ func checkMariaDB(r *Template, d map[string]any, docs []map[string]any, namespac
 		storage := object(spec["storage"])
 		s3 := object(storage["s3"])
 		if len(storage) != 1 || text(s3["bucket"]) == "" || text(s3["endpoint"]) == "" || len(object(s3["accessKeyIdSecretKeyRef"])) == 0 || len(object(s3["secretAccessKeySecretKeyRef"])) == 0 || !truth(object(s3["tls"])["enabled"]) {
-			fail(w, "backup must use S3 with explicit credentials and TLS verification")
+			fail(w, ErrMariaDBBackupS3)
 		}
 	case "Database":
 		checkMariaDBRef(spec, docs, namespace, w, fail)
@@ -290,7 +290,7 @@ func checkMariaDB(r *Template, d map[string]any, docs []map[string]any, namespac
 		checkMariaDBRef(spec, docs, namespace, w, fail)
 		onlyKeys(spec, []string{"mariaDbRef", "username", "host", "database", "table", "privileges", "grantOption", "cleanupPolicy", "requeueInterval", "retryInterval"}, "Grant", w, fail)
 		if db := text(spec["database"]); db == "" || db == "*" {
-			fail(w, "Grant must name one database; global privileges forbidden")
+			fail(w, ErrGlobalGrant)
 		}
 		if truth(spec["grantOption"]) {
 			fail(w, "Grant grantOption forbidden")
