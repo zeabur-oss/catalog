@@ -3,15 +3,13 @@
 //	catalog validate                    schema, licenses, references, value comments
 //	catalog render [ids]                helm template every profile and Kubernetes version, then kubeconform
 //	catalog list -tier l1|l2 [-since <ref>]  e2e CI matrix as JSON
-//	catalog e2e -tier l0|l1|l2 [ids]    run a test tier on kind clusters it creates (see tier.go)
-//	catalog e2e -profile <p> [ids]      install, measure, smoke test, uninstall on the current cluster
+//	catalog e2e -tier l0|l1|l2 [-cluster current] [ids]  run a test tier (see tier.go)
 //	catalog budget                      single-node memory budget
 //	catalog index                       write index.json
 //	catalog merge <dir>                 merge measurements uploaded by CI jobs into measurements/
 //	catalog template render <id>        expand manifests.yaml
 //	catalog template inputs <id>        print the Secrets of generated inputs
 //	catalog template lint <id>          render, then safety rules and kubeconform
-//	catalog template e2e <id>           install with what it requires, smoke test, uninstall
 package main
 
 import (
@@ -120,28 +118,18 @@ func list(fs *flag.FlagSet, r *repo) error {
 		}
 	case "l2":
 		for _, p := range catalog.Profiles {
-			for _, c := range r.cat.Components {
-				if c.Defaults[p] == "unsupported" {
-					continue
-				}
-				order, err := r.cat.InstallOrder([]string{c.ID}, p)
-				if err != nil {
-					return err
-				}
-				if selected(c.ID, order) {
-					for _, arch := range []string{"amd64", "arm64"} {
-						jobs = append(jobs, job{Profile: p, Arch: arch, Component: c.ID})
-					}
-				}
-			}
-		}
-		for _, t := range r.templates {
-			order, err := installOrder(r, t.ID, templateProfile)
+			subs, err := subjects(r, p, selected)
 			if err != nil {
 				return err
 			}
-			if selected(t.ID, order) {
-				jobs = append(jobs, job{Profile: templateProfile, Arch: "amd64", Template: t.ID})
+			for _, s := range subs {
+				if !strings.Contains(s.id, "/") {
+					jobs = append(jobs, job{Profile: p, Arch: "amd64", Template: s.id})
+					continue
+				}
+				for _, arch := range []string{"amd64", "arm64"} {
+					jobs = append(jobs, job{Profile: p, Arch: arch, Component: s.id})
+				}
 			}
 		}
 	default:

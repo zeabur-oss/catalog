@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"slices"
 	"strings"
 	"text/template"
@@ -22,43 +21,10 @@ import (
 )
 
 // Lint runs Safety, then kubeconform for every Kubernetes version. Custom
-// resources are checked against the CRDs of the components the template
-// requires, rendered for profile.
-func Lint(cat *catalog.Catalog, r *Template, manifest []byte, namespace, profile string, versions []string) error {
+// resources are checked against the CRD schemas in schemas (see
+// catalog.CRDSchemas).
+func Lint(r *Template, manifest []byte, namespace, schemas string, versions []string) error {
 	if err := Safety(r, manifest, namespace); err != nil {
-		return err
-	}
-	dir, err := os.MkdirTemp("", "catalog-template-")
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(dir)
-	// A template without requires renders no components. CRDSchemas needs the directory.
-	if err := os.Mkdir(filepath.Join(dir, "components"), 0o755); err != nil {
-		return err
-	}
-	order, err := cat.InstallOrder(r.Requires, profile)
-	if err != nil {
-		return err
-	}
-	newest := versions[len(versions)-1]
-	for _, c := range order {
-		for _, rel := range c.Releases {
-			out, err := catalog.Template(c, rel, profile, newest)
-			if err != nil {
-				return fmt.Errorf("%s/%s: %w", c.ID, rel.Name, err)
-			}
-			f := filepath.Join(dir, "components", c.ID, rel.Name+".yaml")
-			if err := os.MkdirAll(filepath.Dir(f), 0o755); err != nil {
-				return err
-			}
-			if err := os.WriteFile(f, out, 0o644); err != nil {
-				return err
-			}
-		}
-	}
-	schemas := filepath.Join(dir, "schemas")
-	if err := catalog.CRDSchemas(filepath.Join(dir, "components"), schemas); err != nil {
 		return err
 	}
 	var errs []error
@@ -94,7 +60,7 @@ type Usage struct {
 // E2E installs a template and what it requires with t, runs its smoke checks
 // and uninstalls everything. If measure is set, E2E also returns the idle
 // usage of the pods in the template's namespace after the smoke checks.
-func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues, versions []string, measure bool) (usage *Usage, err error) {
+func E2E(t *catalog.Tester, r *Template, values E2EValues, measure bool) (usage *Usage, err error) {
 	ns := Namespace(r)
 	for name := range values.SkipSmoke {
 		if !slices.ContainsFunc(r.Smoke, func(s Smoke) bool { return s.Name == name }) {
@@ -103,7 +69,7 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues,
 	}
 	useS3 := slices.ContainsFunc(slices.Collect(maps.Values(values.Inputs)), func(v string) bool { return strings.Contains(v, ".S3") })
 	opts := RenderOptions{Namespace: ns, Domain: r.ID + ".example.test", ClusterIssuer: selfSignedIssuer}
-	// Lint before the cluster work, with a placeholder for the gateway address.
+	// Check safety before the cluster work, with a placeholder for the gateway address.
 	s3 := &S3{Endpoint: "https://s3.example.test", CIDR: "192.0.2.1/32", Bucket: "e2e"}
 	render := func() ([]byte, error) {
 		inputs, err := expand(r.ID, values.Inputs, s3)
@@ -125,7 +91,7 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues,
 	if err != nil {
 		return nil, err
 	}
-	if err := Lint(cat, r, manifest, ns, t.Profile, versions); err != nil {
+	if err := Safety(r, manifest, ns); err != nil {
 		return nil, err
 	}
 
@@ -237,7 +203,9 @@ func E2E(cat *catalog.Catalog, t *catalog.Tester, r *Template, values E2EValues,
 // Namespace is the namespace E2E installs r in.
 func Namespace(r *Template) string { return "templates-e2e-" + r.ID }
 
-// CreateNamespace creates ns with the Pod Security level that r needs.
+// CreateNamespace creates ns with the Pod Security level that r needs. It
+// warns at the same level, so a workload whose pods would be rejected gives a
+// warning when it is applied.
 func CreateNamespace(r *Template, ns string) error {
 	profile := "restricted"
 	for _, s := range r.Services {
@@ -249,7 +217,7 @@ func CreateNamespace(r *Template, ns string) error {
 		return err
 	}
 	_, err := kubectl(nil, "label", "namespace", ns, "pod-security.kubernetes.io/enforce="+profile,
-		"pod-security.kubernetes.io/audit=restricted", "pod-security.kubernetes.io/warn=restricted")
+		"pod-security.kubernetes.io/audit=restricted", "pod-security.kubernetes.io/warn="+profile)
 	return err
 }
 

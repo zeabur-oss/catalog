@@ -106,6 +106,17 @@
   ],
   "packageRules": [
     {
+      "description": "The kind node follows the Kubernetes minor that the Zeabur installer pins; a minor bump changes both together",
+      "matchPackageNames": [
+        "kindest/node"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor"
+      ],
+      "enabled": false
+    },
+    {
       "description": "go.sum changes the vendorHash in flake.nix; CI's nix build .#release prints the new one.",
       "matchManagers": [
         "gomod"

@@ -2,14 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
-	"log/slog"
 	"math"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
 	"time"
 
@@ -34,76 +31,19 @@ type environment struct {
 }
 
 func e2e(fs *flag.FlagSet, r *repo) error {
-	cat := r.cat
-	tier := fs.String("tier", "", "l0, l1 or l2: create kind clusters and run that tier; without it, test on the current cluster")
-	profile := fs.String("profile", "", "single-node or multi-node; without -tier the current cluster must match it")
-	write := fs.Bool("write", false, "update measurements/ for passing components")
-	previous := fs.String("previous", "", "previous release's index.json, for upgrade tests")
-	since := fs.String("since", "", "l1: only what changed since this git commit")
-	keep := fs.Bool("keep", false, "keep the kind clusters")
+	tier := fs.String("tier", "l2", strings.Join(tiers, ", ")+" (see tier.go)")
+	cluster := fs.String("cluster", "kind", "l1, l2: kind creates a cluster for each group or test; current uses the cluster that KUBECONFIG names")
+	profile := fs.String("profile", templateProfile, "l2: single-node or multi-node")
+	write := fs.Bool("write", false, "l2: update measurements/ for passing tests")
+	previous := fs.String("previous", "", "l2: previous release's index.json, for upgrade tests")
+	since := fs.String("since", "", "l1, l2: without ids, only what changed since this git commit")
+	keep := fs.Bool("keep", false, "keep the clusters and the L0 API server")
 	fs.Parse(os.Args[2:])
-	if *tier != "" {
-		return runTier(r, *tier, tierOptions{profile: *profile, since: *since, previous: *previous, write: *write, keep: *keep}, fs.Args())
+	if *cluster != "kind" && *cluster != "current" {
+		return fmt.Errorf("unknown -cluster %q; use kind or current", *cluster)
 	}
-
-	if !slices.Contains(catalog.Profiles, *profile) {
-		return fmt.Errorf("unknown -profile %q; use %s", *profile, strings.Join(catalog.Profiles, " or "))
-	}
-	out, err := catalog.Run(nil, "kubectl", "version", "-o", "json")
-	if err != nil {
-		return err
-	}
-	key, err := environmentKey(*profile, out)
-	if err != nil {
-		return err
-	}
-
-	t, err := newTester(cat, *profile)
-	if err != nil {
-		return err
-	}
-	if *previous != "" {
-		if t.Previous, err = readPrevious(*previous); err != nil {
-			return err
-		}
-	}
-	comps, err := selectComponents(cat, fs.Args())
-	if err != nil {
-		return err
-	}
-
-	var results []catalog.Result
-	for _, c := range comps {
-		if c.Defaults[*profile] == "unsupported" {
-			continue
-		}
-		slog.Info("testing", "component", c.ID, "env", key)
-		res := t.Test(c.ID)
-		results = append(results, res)
-		if res.Err == nil && !res.Unmeasured && *write {
-			if err := writeMeasurement(c, key, res); err != nil {
-				return err
-			}
-		}
-	}
-
-	fmt.Printf("\n%s:\n", key)
-	var errs []error
-	for _, r := range results {
-		status := fmt.Sprintf("PASS %4.0f MiB %3.0fm CPU", r.IdleMemoryMiB, r.IdleCPUm)
-		if r.Unmeasured {
-			status = "PASS (installed without credentials; not measured)"
-		}
-		if r.Err != nil {
-			status = "FAIL " + r.Err.Error()
-			errs = append(errs, fmt.Errorf("%s: %w", r.ID, r.Err))
-		}
-		if r.UpgradedFrom != "" {
-			status += " (upgraded from " + r.UpgradedFrom + ")"
-		}
-		fmt.Printf("  %-48s %s\n", r.ID, status)
-	}
-	return errors.Join(errs...)
+	return runTier(r, *tier, tierOptions{profile: *profile, since: *since, previous: *previous, write: *write, keep: *keep,
+		current: *cluster == "current"}, fs.Args())
 }
 
 // environmentKey returns "<profile>-<architecture>-<server version>" from

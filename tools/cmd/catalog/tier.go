@@ -20,11 +20,12 @@ import (
 )
 
 // Tiers. L0 runs on every pull request: static checks, then a server-side dry
-// run on kind with only the CRDs. L1 runs on main and in the merge queue: it
-// installs and smoke tests what changed, single-node amd64, in groups that
-// share their dependencies. L2 runs nightly and before a release: every
-// profile and architecture in a fresh cluster each, with idle usage,
-// uninstall, residue and upgrade checks.
+// run on a local API server with only the CRDs and no nodes. L1 runs on main
+// and in the merge queue: it installs and smoke tests what changed,
+// single-node amd64, in groups that share their dependencies. L2 runs nightly
+// and before a release: every profile and architecture in a fresh cluster
+// each, with idle usage, uninstall, residue and upgrade checks. With -cluster
+// current, L1 and L2 use the current cluster instead of kind.
 var tiers = []string{"l0", "l1", "l2"}
 
 // row is one line of the tier report.
@@ -85,42 +86,15 @@ type group struct {
 // about 40 seconds.
 const groupCost = 20
 
-// l1Groups returns the components and templates that sel selects, in groups
-// that share dependencies. The grouping is deterministic.
+// l1Groups returns the single-node subjects that sel selects, in groups that
+// share dependencies. The grouping is deterministic.
 func l1Groups(r *repo, sel func(string, []*catalog.Component) bool) ([]*group, error) {
-	type item struct {
-		id   string
-		deps []string
-		cost int
-	}
-	var items []item
-	for _, c := range r.cat.Components {
-		if c.Defaults[templateProfile] == "unsupported" {
-			continue
-		}
-		order, err := r.cat.InstallOrder([]string{c.ID}, templateProfile)
-		if err != nil {
-			return nil, err
-		}
-		if sel(c.ID, order) {
-			items = append(items, item{c.ID, ids(order[:len(order)-1]), 1})
-		}
-	}
-	for _, t := range r.templates {
-		refs, err := templateRefs(r, t)
-		if err != nil {
-			return nil, err
-		}
-		order, err := r.cat.InstallOrder(refs, templateProfile)
-		if err != nil {
-			return nil, err
-		}
-		if sel(t.ID, order) {
-			items = append(items, item{t.ID, ids(order), len(t.Services) + len(t.Requires)})
-		}
+	items, err := subjects(r, templateProfile, sel)
+	if err != nil {
+		return nil, err
 	}
 	// Place the items with the most dependencies first.
-	slices.SortStableFunc(items, func(a, b item) int { return len(b.deps) - len(a.deps) })
+	slices.SortStableFunc(items, func(a, b subject) int { return len(b.deps) - len(a.deps) })
 	var groups []*group
 	for _, it := range items {
 		var best *group
@@ -174,29 +148,57 @@ func templateRefs(r *repo, t *templates.Template) ([]string, error) {
 	return refs, nil
 }
 
-// subjects returns the components and templates that ids name, or every
-// component that profile supports and, on single-node, every template.
-func subjects(r *repo, profile string, args []string) ([]string, error) {
-	if len(args) > 0 {
-		for _, id := range args {
-			if _, err := installOrder(r, id, profile); err != nil {
-				return nil, err
-			}
-		}
-		return args, nil
-	}
-	var out []string
+// subject is one component or template test.
+type subject struct {
+	id    string
+	order []*catalog.Component // what the test installs, in order
+	deps  []string             // the IDs in order, without the component under test
+	cost  int                  // see groupCost
+}
+
+// subjects returns every component that profile supports and, on
+// single-node, every template, that sel selects.
+func subjects(r *repo, profile string, sel func(string, []*catalog.Component) bool) ([]subject, error) {
+	var out []subject
 	for _, c := range r.cat.Components {
-		if c.Defaults[profile] != "unsupported" {
-			out = append(out, c.ID)
+		if c.Defaults[profile] == "unsupported" {
+			continue
+		}
+		order, err := r.cat.InstallOrder([]string{c.ID}, profile)
+		if err != nil {
+			return nil, err
+		}
+		if sel(c.ID, order) {
+			out = append(out, subject{c.ID, order, ids(order[:len(order)-1]), 1})
 		}
 	}
-	if profile == templateProfile {
-		for _, t := range r.templates {
-			out = append(out, t.ID)
+	if profile != templateProfile {
+		return out, nil
+	}
+	for _, t := range r.templates {
+		order, err := installOrder(r, t.ID, profile)
+		if err != nil {
+			return nil, err
+		}
+		if sel(t.ID, order) {
+			out = append(out, subject{t.ID, order, ids(order), len(t.Services) + len(t.Requires)})
 		}
 	}
 	return out, nil
+}
+
+// selection returns a function that reports whether a test runs: one that
+// args names or, without args, one that changed since ref (see selector).
+func selection(r *repo, since string, args []string) (func(string, []*catalog.Component) bool, error) {
+	if len(args) == 0 {
+		return selector(r, since)
+	}
+	for _, id := range args {
+		if _, err := installOrder(r, id, templateProfile); err != nil {
+			return nil, err
+		}
+	}
+	return func(id string, _ []*catalog.Component) bool { return slices.Contains(args, id) }, nil
 }
 
 // installOrder returns what testing id installs. Component IDs contain a
@@ -222,6 +224,7 @@ func installOrder(r *repo, id, profile string) ([]*catalog.Component, error) {
 type tierOptions struct {
 	profile, since, previous string
 	write, keep              bool
+	current                  bool // test on the cluster that KUBECONFIG names instead of kind
 }
 
 func runTier(r *repo, tier string, o tierOptions, args []string) error {
@@ -241,7 +244,7 @@ func runTier(r *repo, tier string, o tierOptions, args []string) error {
 }
 
 // l0 validates, renders and lints everything, then sends every rendered
-// component and template to a kind API server with --dry-run=server.
+// component and template to a local API server with --dry-run=server.
 func l0(r *repo, cfg config, o tierOptions) error {
 	var ts catalog.Timings
 	step := func(name string, f func() error) error {
@@ -262,24 +265,30 @@ func l0(r *repo, cfg config, o tierOptions) error {
 	if err := step("render", func() error { return renderComponents(r.cat, r.cat.Components, out, cfg.Versions) }); err != nil {
 		return err
 	}
-	if err := step("template lint", func() error { return lintTemplates(r, cfg.Versions) }); err != nil {
+	if err := step("template lint", func() error { return lintTemplates(r, out+"-schemas", cfg.Versions) }); err != nil {
 		return err
 	}
-	var c *cluster
-	if err := step("cluster", func() (err error) {
-		c, err = createCluster(templateProfile, cfg.E2E.Version, nil)
+	var api *apiServer
+	if err := step("api server", func() (err error) {
+		api, err = startAPIServer()
 		return err
 	}); err != nil {
 		return err
 	}
 	if !o.keep {
-		defer c.delete()
+		defer api.stop()
 	}
-	kv := strings.TrimPrefix(cfg.E2E.Version, "v")
-	if !slices.Contains(cfg.Versions, kv) {
-		kv = cfg.Versions[len(cfg.Versions)-1]
+	server, err := api.version()
+	if err != nil {
+		return err
 	}
-	err := step("dry run", func() error { return dryRun(r, filepath.Join(out, kv)) })
+	minor := func(v string) string { return strings.Join(strings.SplitN(v, ".", 3)[:2], ".") }
+	i := slices.IndexFunc(cfg.Versions, func(v string) bool { return minor(v) == minor(server) })
+	if i < 0 {
+		return fmt.Errorf("the API server is Kubernetes %s; config/kubernetes.yaml renders no version with the same minor", server)
+	}
+	kv := cfg.Versions[i]
+	err = step("dry run", func() error { return dryRun(r, filepath.Join(out, kv)) })
 	if err == nil {
 		err = report("l0", []row{{subject: "l0", timings: ts}})
 	}
@@ -287,8 +296,8 @@ func l0(r *repo, cfg config, o tierOptions) error {
 }
 
 // lintTemplates runs the safety rules and kubeconform on every template,
-// rendered with its e2e values.
-func lintTemplates(r *repo, versions []string) error {
+// rendered with its e2e values. schemas holds the CRD schemas that render wrote.
+func lintTemplates(r *repo, schemas string, versions []string) error {
 	errs := make([]error, len(r.templates))
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, 4)
@@ -303,7 +312,7 @@ func lintTemplates(r *repo, versions []string) error {
 			}
 			manifest, err := templates.E2EManifest(t, v)
 			if err == nil {
-				err = templates.Lint(r.cat, t, manifest, templates.Namespace(t), templateProfile, versions)
+				err = templates.Lint(t, manifest, templates.Namespace(t), schemas, versions)
 			}
 			if err != nil {
 				errs[i] = fmt.Errorf("templates/%s: %w", t.ID, err)
@@ -317,10 +326,12 @@ func lintTemplates(r *repo, versions []string) error {
 // dryRun applies every CRD under dir, creates the namespaces, then applies
 // every rendered component and template with --dry-run=server. The API
 // server checks fields, defaults, CEL rules and Pod Security; nothing runs.
+// A warning on a template fails it.
 func dryRun(r *repo, dir string) error {
 	type file struct {
 		subject, namespace string
 		data               []byte
+		strict             bool
 	}
 	var files []file
 	crds := map[string]string{}
@@ -361,7 +372,7 @@ func dryRun(r *repo, dir string) error {
 					byNamespace[ns].WriteString(doc + "\n---\n")
 				}
 				for _, ns := range slices.Sorted(maps.Keys(byNamespace)) {
-					files = append(files, file{p + " " + c.ID + "/" + rel.Name, ns, []byte(byNamespace[ns].String())})
+					files = append(files, file{p + " " + c.ID + "/" + rel.Name, ns, []byte(byNamespace[ns].String()), false})
 				}
 			}
 		}
@@ -407,7 +418,7 @@ func dryRun(r *repo, dir string) error {
 		}
 		for _, d := range docs {
 			if len(bytes.TrimSpace(d)) > 0 {
-				files = append(files, file{"templates/" + t.ID, ns, d})
+				files = append(files, file{"templates/" + t.ID, ns, d, true})
 			}
 		}
 	}
@@ -418,8 +429,13 @@ func dryRun(r *repo, dir string) error {
 		wg.Go(func() {
 			sem <- struct{}{}
 			defer func() { <-sem }()
-			_, err := catalog.Run(f.data, "kubectl", "apply", "--server-side", "--force-conflicts", "--dry-run=server",
-				"--field-manager=catalog", "-n", f.namespace, "-f", "-")
+			args := []string{"apply", "--server-side", "--force-conflicts", "--dry-run=server",
+				"--field-manager=catalog", "-n", f.namespace, "-f", "-"}
+			if f.strict {
+				// Pod Security warns on workloads whose pods its enforce level rejects.
+				args = append(args, "--warnings-as-errors")
+			}
+			_, err := catalog.Run(f.data, "kubectl", args...)
 			if err != nil {
 				errs[i] = fmt.Errorf("%s: %w", f.subject, err)
 			}
@@ -433,12 +449,9 @@ func dryRun(r *repo, dir string) error {
 // l1 installs and smoke tests each group in its own single-node cluster.
 // Without ids it tests what changed since o.since.
 func l1(r *repo, cfg config, o tierOptions, args []string) error {
-	sel, err := selector(r, o.since)
+	sel, err := selection(r, o.since, args)
 	if err != nil {
 		return err
-	}
-	if len(args) > 0 {
-		sel = func(id string, _ []*catalog.Component) bool { return slices.Contains(args, id) }
 	}
 	groups, err := l1Groups(r, sel)
 	if err != nil {
@@ -458,22 +471,25 @@ func l1Group(r *repo, cfg config, o tierOptions, g *group) []row {
 		order, _ := installOrder(r, id, templateProfile)
 		needs = append(needs, order...)
 	}
-	start := time.Now()
-	c, err := createCluster(templateProfile, cfg.E2E.Version, needs)
-	setup := row{subject: "cluster for " + g.IDs[0] + " and others", err: err}
-	setup.timings.Since("cluster", start)
-	if err != nil {
-		return []row{setup}
-	}
-	if !o.keep {
-		defer c.delete()
+	var rows []row
+	if !o.current {
+		start := time.Now()
+		c, err := createCluster(templateProfile, cfg.E2E.Version, needs)
+		setup := row{subject: "cluster for " + g.IDs[0] + " and others", err: err}
+		setup.timings.Since("cluster", start)
+		rows = append(rows, setup)
+		if err != nil {
+			return rows
+		}
+		if !o.keep {
+			defer c.delete()
+		}
 	}
 	t, err := newTester(r.cat, templateProfile)
 	if err != nil {
-		return []row{setup, {subject: g.IDs[0], err: err}}
+		return append(rows, row{subject: g.IDs[0], err: err})
 	}
 	t.Share()
-	rows := []row{setup}
 	for _, id := range g.IDs {
 		t.Timings = nil
 		var err error
@@ -481,7 +497,7 @@ func l1Group(r *repo, cfg config, o tierOptions, g *group) []row {
 			slog.Info("testing", "component", id)
 			err = t.Quick(id, g.deps[id])
 		} else {
-			_, err = runTemplate(r, t, id, cfg.Versions, false)
+			_, err = runTemplate(r, t, id, false)
 		}
 		rows = append(rows, row{subject: id, timings: t.Timings, err: err})
 	}
@@ -491,7 +507,7 @@ func l1Group(r *repo, cfg config, o tierOptions, g *group) []row {
 // runTemplate runs a template's e2e and records the time after its
 // dependencies as the template phase. If measure is set, it returns the idle
 // usage of the template.
-func runTemplate(r *repo, t *catalog.Tester, id string, versions []string, measure bool) (*templates.Usage, error) {
+func runTemplate(r *repo, t *catalog.Tester, id string, measure bool) (*templates.Usage, error) {
 	slog.Info("testing", "template", id)
 	tmpl, err := templates.Get(r.templates, id)
 	if err != nil {
@@ -502,7 +518,7 @@ func runTemplate(r *repo, t *catalog.Tester, id string, versions []string, measu
 		return nil, err
 	}
 	start := time.Now()
-	usage, err := templates.E2E(r.cat, t, tmpl, values, versions, measure)
+	usage, err := templates.E2E(t, tmpl, values, measure)
 	took := time.Since(start)
 	for _, p := range t.Timings {
 		took -= p.Took
@@ -513,12 +529,12 @@ func runTemplate(r *repo, t *catalog.Tester, id string, versions []string, measu
 
 // testTemplate runs the full template test on the current cluster and writes
 // the measurement if write is set.
-func testTemplate(r *repo, t *catalog.Tester, id string, versions []string, write bool) (status string, err error) {
+func testTemplate(r *repo, t *catalog.Tester, id string, write bool) (status string, err error) {
 	key, err := currentEnvironment(t.Profile)
 	if err != nil {
 		return "", err
 	}
-	usage, err := runTemplate(r, t, id, versions, true)
+	usage, err := runTemplate(r, t, id, true)
 	if err != nil {
 		return "", err
 	}
@@ -545,9 +561,18 @@ func l2(r *repo, cfg config, o tierOptions, args []string) error {
 	if !slices.Contains(catalog.Profiles, o.profile) {
 		return fmt.Errorf("unknown -profile %q; use %s", o.profile, strings.Join(catalog.Profiles, " or "))
 	}
-	ids, err := subjects(r, o.profile, args)
+	sel, err := selection(r, o.since, args)
 	if err != nil {
 		return err
+	}
+	subs, err := subjects(r, o.profile, sel)
+	if err != nil {
+		return err
+	}
+	for _, id := range args {
+		if !slices.ContainsFunc(subs, func(s subject) bool { return s.id == id }) {
+			return fmt.Errorf("%s is not tested on %s", id, o.profile)
+		}
 	}
 	t, err := newTester(r.cat, o.profile)
 	if err != nil {
@@ -559,25 +584,27 @@ func l2(r *repo, cfg config, o tierOptions, args []string) error {
 		}
 	}
 	var rows []row
-	for _, id := range ids {
-		order, _ := installOrder(r, id, o.profile)
+	for _, s := range subs {
 		t.Timings = nil
-		start := time.Now()
-		c, err := createCluster(o.profile, cfg.E2E.Version, order)
-		t.Timings.Since("cluster", start)
-		if err != nil {
-			rows = append(rows, row{subject: id, timings: t.Timings, err: err})
-			continue
+		var c *cluster
+		if !o.current {
+			start := time.Now()
+			c, err = createCluster(o.profile, cfg.E2E.Version, s.order)
+			t.Timings.Since("cluster", start)
+			if err != nil {
+				rows = append(rows, row{subject: s.id, timings: t.Timings, err: err})
+				continue
+			}
 		}
-		rw := row{subject: id}
-		if strings.Contains(id, "/") {
-			rw.status, rw.err = testComponent(t, id, o.write)
+		rw := row{subject: s.id}
+		if strings.Contains(s.id, "/") {
+			rw.status, rw.err = testComponent(t, s.id, o.write)
 		} else {
-			rw.status, rw.err = testTemplate(r, t, id, cfg.Versions, o.write)
+			rw.status, rw.err = testTemplate(r, t, s.id, o.write)
 		}
 		rw.timings = t.Timings
 		rows = append(rows, rw)
-		if !o.keep {
+		if c != nil && !o.keep {
 			c.delete()
 		}
 	}

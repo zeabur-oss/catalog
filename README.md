@@ -140,8 +140,9 @@ explains how to install one by hand.
 
 ## Distributions
 
-Components and templates are tested on kind: one node for single-node, three
-for multi-node. They behave the same on other distributions apart from these
+Components and templates are tested on kind, with the Kubernetes minor of
+the RKE2 release that the Zeabur installer pins: one node for single-node,
+three for multi-node. They behave the same on other distributions apart from these
 known differences:
 
 - k3s: run it with `--disable=traefik,metrics-server` so both come from their
@@ -259,14 +260,14 @@ never contain generated values.
    allowed only with `optional` or `unsupported` in every profile.
 2. Create `components/<capability>/<upstream>.yaml` from a similar file. Give
    both profiles values, each with a comment saying why.
-3. Check locally (`nix develop` provides Go, Helm, kubectl, kubeconform and
-   kind; the e2e tiers also need Docker on Linux):
+3. Check locally (`nix develop` provides Go, Helm, kubectl, kubeconform,
+   etcd, kube-apiserver and kind; L1 and L2 also need Docker on Linux):
 
    ```sh
    go run ./tools/cmd/catalog validate          # schema, license, references, comments
    go run ./tools/cmd/catalog render            # helm template + kubeconform
    go run ./tools/cmd/catalog e2e -tier l0      # what every pull request runs
-   go run ./tools/cmd/catalog e2e -tier l2 -profile single-node <id>
+   go run ./tools/cmd/catalog e2e -tier l2 <id>
    ```
 
 4. Open a pull request with signed-off commits (`git commit -s`).
@@ -288,7 +289,7 @@ never contain generated values.
    go run ./tools/cmd/catalog validate
    go run ./tools/cmd/catalog template lint -values values.json \
      -domain app.example.test -cluster-issuer letsencrypt <id>
-   go run ./tools/cmd/catalog e2e -tier l2 -profile single-node <id>
+   go run ./tools/cmd/catalog e2e -tier l2 <id>
    ```
 
 5. Open a pull request with signed-off commits (`git commit -s`).
@@ -296,8 +297,9 @@ never contain generated values.
 ## CI
 
 Tests run in three tiers. A check that one tier leaves out runs in a later
-tier. `catalog e2e -tier l0|l1|l2` runs a tier on a Linux machine with Docker,
-as CI does.
+tier. `catalog e2e -tier l0|l1|l2` runs a tier as CI does. L0 needs no Docker.
+L1 and L2 create kind clusters, so they need Docker on Linux; with
+`-cluster current` they use the cluster that `KUBECONFIG` names instead.
 
 **L0, every pull request** (`ci.yml`, one job):
 
@@ -310,11 +312,13 @@ as CI does.
    with kubeconform for each version in `config/kubernetes.yaml`, checking
    custom resources against the CRDs rendered with them;
 5. checks every template, rendered with its test inputs, against the safety
-   rules and kubeconform;
-6. starts kind with only the rendered CRDs, then sends every rendered
-   component (both profiles) and template to the API server with
-   `kubectl apply --dry-run=server`. The API server checks fields, defaults,
-   CEL rules and Pod Security, and nothing runs.
+   rules, the upstream Pod Security checks and kubeconform;
+6. starts etcd and kube-apiserver from `flake.nix` (the Kubernetes release
+   that the Zeabur installer pins) with only the rendered CRDs, then sends
+   every rendered component (both profiles) and template to the API server
+   with `kubectl apply --dry-run=server`. The API server checks fields,
+   defaults, CEL rules and Pod Security, and nothing runs. Each template
+   namespace warns at its enforce level, and a warning fails the template.
 
 **L1, in the merge queue and after a merge to main** (`ci.yml`): installs each
 changed component and template, and each one that installs a changed
@@ -346,8 +350,9 @@ recommended set, measured on amd64, fits `config/budget.yaml`.
 to measure now. Renovate opens a pull request for every new upstream version
 and image digest.
 
-Each tier creates its own kind clusters with their own kubeconfig and deletes
-them (`-keep` keeps them), and prints how long each phase took. With
+L0 starts its own API server, and L1 and L2 create their own kind clusters,
+each with its own kubeconfig. Each tier deletes them (`-keep` keeps them) and
+prints how long each phase took. With
 `ZEABUR_REGISTRY_MIRRORS` (`docker.io=http://mirror:5001,ghcr.io=...`), the
 nodes pull through those mirrors.
 
@@ -367,8 +372,8 @@ Every value is disposable test data. A value that uses `.S3` starts SeaweedFS
 in the template's namespace holds its credentials and the CA as `ca.crt`.
 Templates take the CA through an optional input such as `backupCASecret`. A
 template that cannot use a custom CA skips only that smoke check. The test sets
-`kubeApiCidr` from the kind cluster. To test against other storage, pass
-`-values` and `-setup` to `catalog template e2e`.
+`kubeApiCidr` from the cluster. To test against other storage, change the
+template's values in `config/e2e.yaml`.
 
 ## Releases
 

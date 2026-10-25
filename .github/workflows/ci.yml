@@ -1,5 +1,5 @@
 # L0 on every pull request: unit tests, validate, render, template lint and a
-# server-side dry run on kind. L1 in the merge queue and on main: install and
+# server-side dry run on a local API server. L1 in the merge queue and on main: install and
 # smoke test what changed and what installs it, in groups. CONTRIBUTING.md
 # lists what each tier checks. L2 is nightly.yml.
 name: ci

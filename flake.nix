@@ -16,12 +16,35 @@
           src = self;
           subPackages = [ "tools/cmd/catalog" ];
           # Change it when go.sum changes: nix build prints the new value.
-          vendorHash = "sha256-3BY8xtnl4+1muLx8+4ZHYFW3dT/ZP1/3d2dn9yOofV8=";
+          vendorHash = "sha256-lktpc0ItHMfBT3QusicuURuwAWFCIEgsN6ODQ/9M6YI=";
+          doCheck = false;
+        };
+        # L0 runs this API server with etcd and no nodes. Keep the version equal to the RKE2
+        # release that the Zeabur installer pins.
+        kube-apiserver = pkgs.buildGoModule rec {
+          pname = "kube-apiserver";
+          version = "1.36.5";
+          src = pkgs.fetchFromGitHub {
+            owner = "kubernetes";
+            repo = "kubernetes";
+            rev = "v${version}";
+            hash = "sha256-M5wVu5678Eow6xMLNZXcfPLlS9z11RpwwzvmYd8NEeE=";
+          };
+          vendorHash = null;
+          subPackages = [ "cmd/kube-apiserver" ];
+          ldflags = [
+            "-s"
+            "-w"
+            "-X k8s.io/component-base/version.gitVersion=v${version}"
+            "-X k8s.io/component-base/version.gitMajor=1"
+            "-X k8s.io/component-base/version.gitMinor=36"
+            "-X k8s.io/client-go/pkg/version.gitVersion=v${version}"
+          ];
           doCheck = false;
         };
       in {
         packages = {
-          inherit catalog;
+          inherit catalog kube-apiserver;
           # The files that release.yml signs and publishes. Zeabur builds this output at its
           # pinned commit, so it embeds the same bytes as the release.
           release = pkgs.runCommand "catalog-release" { nativeBuildInputs = [ catalog ]; } ''
@@ -46,6 +69,8 @@
             kubectl
             kubeconform
             kind
+            kube-apiserver
+            etcd
             cosign
             jq
             yq-go

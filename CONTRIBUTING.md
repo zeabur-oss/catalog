@@ -43,9 +43,9 @@ existing branch: `git rebase --signoff main`, then force-push.
   nodes, amd64 and arm64, with upgrades from the last release, idle memory and
   CPU, uninstall and leftover checks.
 
-Run the same tiers on a Linux machine with Docker:
-`go run ./tools/cmd/catalog e2e -tier l0`, `-tier l1 <ids>`, or
-`-tier l2 -profile single-node <id>`.
+Run the same tiers with `go run ./tools/cmd/catalog e2e -tier l0`,
+`-tier l1 <ids>` or `-tier l2 <id>`. L0 needs no Docker; L1 and L2 create kind
+clusters on a Linux machine with Docker.
 
 ## License
 

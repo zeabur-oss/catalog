@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"maps"
 	"os"
+	"path/filepath"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"github.com/zeabur-oss/catalog/tools/internal/templates"
@@ -16,14 +17,13 @@ const templateProfile = "single-node"
 
 func template(fs *flag.FlagSet, r *repo) error {
 	if len(os.Args) < 3 {
-		return errors.New("usage: catalog template render|inputs|lint|e2e [flags] <id>")
+		return errors.New("usage: catalog template render|inputs|lint [flags] <id>")
 	}
 	action := os.Args[2]
 	namespace := fs.String("namespace", "default", "namespace to render for")
 	domain := fs.String("domain", "", "hostname for services with domains")
 	issuer := fs.String("cluster-issuer", "", "cert-manager ClusterIssuer for services with domains")
 	values := fs.String("values", "", "JSON object of input values")
-	setup := fs.String("setup", "", "objects to apply in the namespace first (e2e)")
 	fs.Parse(os.Args[3:])
 	if fs.NArg() != 1 {
 		return errors.New("give one template ID")
@@ -48,7 +48,12 @@ func template(fs *flag.FlagSet, r *repo) error {
 			return err
 		}
 		if action == "lint" {
-			return templates.Lint(r.cat, t, manifest, *namespace, templateProfile, cfg.Versions)
+			schemas, err := requiredSchemas(r.cat, t, cfg.Versions)
+			if err != nil {
+				return err
+			}
+			defer os.RemoveAll(schemas)
+			return templates.Lint(t, manifest, *namespace, schemas, cfg.Versions)
 		}
 		_, err = os.Stdout.Write(manifest)
 		return err
@@ -59,27 +64,50 @@ func template(fs *flag.FlagSet, r *repo) error {
 		}
 		_, err = fmt.Println(string(out))
 		return err
-	case "e2e":
-		tester, err := newTester(r.cat, templateProfile)
-		if err != nil {
-			return err
-		}
-		values, err := e2eValues(r.templates, t)
-		if err != nil {
-			return err
-		}
-		maps.Copy(values.Inputs, inputs)
-		if *setup != "" {
-			objects, err := os.ReadFile(*setup)
-			if err != nil {
-				return err
-			}
-			values.Setup += "\n---\n" + string(objects)
-		}
-		_, err = templates.E2E(r.cat, tester, t, values, cfg.Versions, false)
-		return err
 	}
 	return fmt.Errorf("unknown template action %q", action)
+}
+
+// requiredSchemas renders the components that t requires and writes the
+// schemas of their CRDs to a new directory.
+func requiredSchemas(cat *catalog.Catalog, t *templates.Template, versions []string) (string, error) {
+	dir, err := os.MkdirTemp("", "catalog-template-")
+	if err != nil {
+		return "", err
+	}
+	defer os.RemoveAll(dir)
+	order, err := cat.InstallOrder(t.Requires, templateProfile)
+	if err != nil {
+		return "", err
+	}
+	// A template without requires renders no components. CRDSchemas needs the directory.
+	if err := os.Mkdir(filepath.Join(dir, "components"), 0o755); err != nil {
+		return "", err
+	}
+	for _, c := range order {
+		for _, rel := range c.Releases {
+			out, err := catalog.Template(c, rel, templateProfile, versions[len(versions)-1])
+			if err != nil {
+				return "", fmt.Errorf("%s/%s: %w", c.ID, rel.Name, err)
+			}
+			f := filepath.Join(dir, "components", c.ID, rel.Name+".yaml")
+			if err := os.MkdirAll(filepath.Dir(f), 0o755); err != nil {
+				return "", err
+			}
+			if err := os.WriteFile(f, out, 0o644); err != nil {
+				return "", err
+			}
+		}
+	}
+	schemas, err := os.MkdirTemp("", "catalog-schemas-")
+	if err != nil {
+		return "", err
+	}
+	if err := catalog.CRDSchemas(filepath.Join(dir, "components"), schemas); err != nil {
+		os.RemoveAll(schemas)
+		return "", err
+	}
+	return schemas, nil
 }
 
 // e2eValues reads the test values for t from config/e2e.yaml: the shared

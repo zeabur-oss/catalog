@@ -16,12 +16,13 @@ nix develop -c go run ./tools/cmd/catalog index
 nix develop -c go run ./tools/cmd/catalog render     # helm template every profile, kubeconform
 nix develop -c go run ./tools/cmd/catalog template lint -values values.json <id>   # safety rules, kubeconform
 ```
-Cluster tests come in tiers (README, "CI"). Run them on a Linux machine with Docker, never
-on a kubeconfig context you did not create; each tier creates its own kind clusters:
+Cluster tests come in tiers (README, "CI"). L0 starts its own etcd and kube-apiserver and
+needs no Docker. L1 and L2 create their own kind clusters: run them on a Linux machine with
+Docker, never on a kubeconfig context you did not create:
 ```sh
 nix develop -c go run ./tools/cmd/catalog e2e -tier l0               # every pull request
 nix develop -c go run ./tools/cmd/catalog e2e -tier l1 <ids>         # merge queue: install, smoke
-nix develop -c go run ./tools/cmd/catalog e2e -tier l2 -profile single-node <id>   # nightly: full
+nix develop -c go run ./tools/cmd/catalog e2e -tier l2 <id>          # nightly: full
 ```
 
 ## Standards
