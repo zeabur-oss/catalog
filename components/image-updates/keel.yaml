@@ -79,6 +79,28 @@ releases:
           requests: {cpu: 20m, memory: 64Mi}
           limits: {memory: 256Mi}
 
+  # Port 9300 takes webhooks without credentials. Only Zeabur Builder's
+  # namespace may call it, and Keel's own namespace for checks.
+  - name: webhook-policy
+    namespace: keel
+    manifests: |
+      apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: keel-webhook
+        namespace: keel
+      spec:
+        podSelector:
+          matchLabels: {app: keel}
+        policyTypes: [Ingress]
+        ingress:
+          - from:
+              - namespaceSelector:
+                  matchLabels: {kubernetes.io/metadata.name: builder-system}
+              - podSelector: {}
+            ports:
+              - {port: 9300, protocol: TCP}
+
 detection:
   helmCharts: [keel]
   workloads:
@@ -96,14 +118,16 @@ security:
     - risk: It reads every Secret in the cluster, so its token exposes all of them.
       mitigation: Keep its namespace admin-only; it runs as non-root with the RuntimeDefault seccomp profile and no capabilities.
     - risk: >
-        Port 9300 is reachable from any pod, and its webhooks take no
-        credentials: whoever can call it rolls any annotated workload, in any
-        namespace, to any tag of that workload's repository.
+        Port 9300 takes webhooks without credentials: whoever can call it
+        rolls any annotated workload, in any namespace, to any tag of that
+        workload's repository.
       mitigation: >
-        A NetworkPolicy allowing ingress to 9300 only from Builder's
-        namespace. basicauth with AUTHENTICATED_WEBHOOKS=true (extraEnv) makes
-        every webhook but /v1/webhooks/registry require it; basicauth also
-        enables the admin UI, which otherwise does not exist.
+        The NetworkPolicy keel-webhook lets only pods in builder-system and
+        keel reach 9300; the cluster's CNI must enforce NetworkPolicy. If
+        Zeabur Builder runs in another namespace, change the policy.
+        basicauth with AUTHENTICATED_WEBHOOKS=true (extraEnv) makes every
+        webhook but /v1/webhooks/registry require it; basicauth also enables
+        the admin UI, which otherwise does not exist.
 
 smoke:
   - name: rolls-on-native-webhook
@@ -124,9 +148,10 @@ smoke:
                 image: registry.k8s.io/pause:3.9
       ---
       # Retries until Keel has seen the Deployment; a repeated event is a no-op.
+      # In Keel's namespace: the NetworkPolicy refuses catalog-smoke.
       apiVersion: batch/v1
       kind: Job
-      metadata: {name: webhook, namespace: catalog-smoke}
+      metadata: {name: webhook, namespace: keel}
       spec:
         template:
           spec:
