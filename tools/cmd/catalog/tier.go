@@ -219,37 +219,6 @@ func installOrder(r *repo, id, profile string) ([]*catalog.Component, error) {
 	return r.cat.InstallOrder(refs, profile)
 }
 
-// images returns the images in the rendered manifests of what ids install.
-func images(r *repo, profile, kubeVersion string, testIDs []string) []string {
-	var manifests [][]byte
-	seen := map[string]bool{}
-	for _, id := range testIDs {
-		order, err := installOrder(r, id, profile)
-		if err != nil {
-			continue
-		}
-		for _, c := range order {
-			if seen[c.ID] {
-				continue
-			}
-			seen[c.ID] = true
-			for _, rel := range c.Releases {
-				if m, err := catalog.Template(c, rel, profile, kubeVersion); err == nil {
-					manifests = append(manifests, m)
-				}
-			}
-		}
-		if t, err := templates.Get(r.templates, id); err == nil {
-			if v, err := e2eValues(r.templates, t); err == nil {
-				if m, err := templates.E2EManifest(t, v); err == nil {
-					manifests = append(manifests, m)
-				}
-			}
-		}
-	}
-	return imagesOf(manifests...)
-}
-
 type tierOptions struct {
 	profile, since, previous string
 	write, keep              bool
@@ -298,7 +267,7 @@ func l0(r *repo, cfg config, o tierOptions) error {
 	}
 	var c *cluster
 	if err := step("cluster", func() (err error) {
-		c, err = createCluster(templateProfile, cfg.E2E.Version, nil, nil)
+		c, err = createCluster(templateProfile, cfg.E2E.Version, nil)
 		return err
 	}); err != nil {
 		return err
@@ -490,11 +459,7 @@ func l1Group(r *repo, cfg config, o tierOptions, g *group) []row {
 		needs = append(needs, order...)
 	}
 	start := time.Now()
-	var imgs []string
-	if os.Getenv("CATALOG_E2E_IMAGES") != "" {
-		imgs = images(r, templateProfile, strings.TrimPrefix(cfg.E2E.Version, "v"), g.IDs)
-	}
-	c, err := createCluster(templateProfile, cfg.E2E.Version, needs, imgs)
+	c, err := createCluster(templateProfile, cfg.E2E.Version, needs)
 	setup := row{subject: "cluster for " + g.IDs[0] + " and others", err: err}
 	setup.timings.Since("cluster", start)
 	if err != nil {
@@ -598,7 +563,7 @@ func l2(r *repo, cfg config, o tierOptions, args []string) error {
 		order, _ := installOrder(r, id, o.profile)
 		t.Timings = nil
 		start := time.Now()
-		c, err := createCluster(o.profile, cfg.E2E.Version, order, nil)
+		c, err := createCluster(o.profile, cfg.E2E.Version, order)
 		t.Timings.Since("cluster", start)
 		if err != nil {
 			rows = append(rows, row{subject: id, timings: t.Timings, err: err})

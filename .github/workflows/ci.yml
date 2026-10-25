@@ -78,20 +78,8 @@ jobs:
       - name: iSCSI module for Longhorn
         if: contains(matrix.ids, 'replicated-storage/longhorn')
         run: sudo modprobe iscsi_tcp
-      - id: group
-        env:
-          IDS: ${{ matrix.ids }}
-        run: echo "key=$(echo "$IDS" | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
-      # One image tarball per group. The tool pulls the images again when the
-      # image list changes.
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: .cache/images
-          key: images-${{ steps.group.outputs.key }}-${{ hashFiles('components/**', 'templates/**') }}
-          restore-keys: images-${{ steps.group.outputs.key }}-
       - name: e2e
         env:
-          CATALOG_E2E_IMAGES: .cache/images
           IDS: ${{ matrix.ids }}
         run: |
           # shellcheck disable=SC2086 # IDS is a list of IDs

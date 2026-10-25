@@ -351,9 +351,7 @@ and image digest.
 Each tier creates its own kind clusters with their own kubeconfig and deletes
 them (`-keep` keeps them), and prints how long each phase took. With
 `ZEABUR_REGISTRY_MIRRORS` (`docker.io=http://mirror:5001,ghcr.io=...`), the
-nodes pull through those mirrors. With `CATALOG_E2E_IMAGES` set to a
-directory, L1 keeps one image tarball per image list there and loads it into
-the nodes; CI caches the directory.
+nodes pull through those mirrors.
 
 ### Test inputs for templates
 

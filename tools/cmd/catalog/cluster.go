@@ -2,8 +2,6 @@ package main
 
 import (
 	"crypto/rand"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"log/slog"
 	"maps"
@@ -11,7 +9,6 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
-	"sync"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"go.yaml.in/yaml/v3"
@@ -32,9 +29,8 @@ var nodeSetup = map[string]string{
 }
 
 // createCluster creates a kind cluster for profile and points KUBECONFIG at
-// it. images are the images to load from CATALOG_E2E_IMAGES, and needs is the
-// install order of what the cluster tests.
-func createCluster(profile, version string, needs []*catalog.Component, images []string) (*cluster, error) {
+// it. needs is the install order of what the cluster tests.
+func createCluster(profile, version string, needs []*catalog.Component) (*cluster, error) {
 	dir, err := os.MkdirTemp("", "catalog-kind-")
 	if err != nil {
 		return nil, err
@@ -74,14 +70,14 @@ func createCluster(profile, version string, needs []*catalog.Component, images [
 		return nil, err
 	}
 	os.Setenv("KUBECONFIG", kubeconfig)
-	if err := c.setup(needs, images); err != nil {
+	if err := c.setup(needs); err != nil {
 		c.delete()
 		return nil, err
 	}
 	return c, nil
 }
 
-func (c *cluster) setup(needs []*catalog.Component, images []string) error {
+func (c *cluster) setup(needs []*catalog.Component) error {
 	// Templates name the local-path StorageClass. kind's default StorageClass
 	// uses the same provisioner.
 	sc := `{"apiVersion": "storage.k8s.io/v1", "kind": "StorageClass", "metadata": {"name": "local-path"},
@@ -104,7 +100,7 @@ func (c *cluster) setup(needs []*catalog.Component, images []string) error {
 			}
 		}
 	}
-	return c.loadImages(images)
+	return nil
 }
 
 func (c *cluster) delete() {
@@ -133,56 +129,6 @@ func writeMirrorHosts(dir, spec string) (string, error) {
 		}
 	}
 	return dir, nil
-}
-
-// loadImages loads images into the nodes from a tarball in the directory
-// CATALOG_E2E_IMAGES. The tarball name is the digest of the image list. If it
-// is missing, docker pulls the images and saves the tarball, and older
-// tarballs are deleted. CI caches the directory.
-func (c *cluster) loadImages(images []string) error {
-	dir := os.Getenv("CATALOG_E2E_IMAGES")
-	if dir == "" || len(images) == 0 || os.Getenv("ZEABUR_REGISTRY_MIRRORS") != "" {
-		return nil
-	}
-	sum := sha256.Sum256([]byte(strings.Join(images, "\n")))
-	tarball := filepath.Join(dir, hex.EncodeToString(sum[:8])+".tar")
-	if _, err := os.Stat(tarball); err != nil {
-		slog.Info("pulling images for the image cache", "count", len(images))
-		var mu sync.Mutex
-		var pulled []string
-		var wg sync.WaitGroup
-		sem := make(chan struct{}, 4)
-		for _, img := range images {
-			wg.Go(func() {
-				sem <- struct{}{}
-				defer func() { <-sem }()
-				if _, err := catalog.Run(nil, "docker", "pull", "-q", img); err != nil {
-					slog.Warn("not cached", "image", img, "err", err)
-					return
-				}
-				mu.Lock()
-				pulled = append(pulled, img)
-				mu.Unlock()
-			})
-		}
-		wg.Wait()
-		if len(pulled) == 0 {
-			return nil
-		}
-		old, _ := filepath.Glob(filepath.Join(dir, "*.tar"))
-		for _, f := range old {
-			os.Remove(f)
-		}
-		if err := os.MkdirAll(dir, 0o755); err != nil {
-			return err
-		}
-		if _, err := catalog.Run(nil, "docker", append([]string{"save", "-o", tarball}, pulled...)...); err != nil {
-			return err
-		}
-	}
-	slog.Info("loading images", "tarball", tarball)
-	_, err := catalog.Run(nil, "kind", "load", "image-archive", tarball, "--name", c.name)
-	return err
 }
 
 // imagesOf returns the images in the manifests, sorted and unique.
