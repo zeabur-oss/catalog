@@ -152,6 +152,83 @@ spec:
           sizeLimit: 512Mi
       terminationGracePeriodSeconds: 60
 ---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ghost-setup
+  namespace: '{{ .Namespace }}'
+spec:
+  backoffLimit: 6
+  template:
+    metadata:
+      labels:
+        templates.zeabur.com/template: ghost
+        app.kubernetes.io/name: ghost-setup
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: OnFailure
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: setup
+        image: ghost:6-alpine@sha256:cd617a0901e659cda978b9063f449535d105f5f1a0340ffac415db2c42d22606
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 10m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+        env:
+        - name: DOMAIN
+          value: '{{ .Domain }}'
+        - name: OWNER_EMAIL
+          value: '{{ .Inputs.ownerEmail }}'
+        - name: OWNER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ghost-secrets
+              key: admin-password
+        command:
+        - node
+        - -e
+        - |
+          const http = require('http');
+          const call = (method, body) => new Promise((ok, fail) => {
+            const r = http.request({host: 'ghost', port: 2368, path: '/ghost/api/admin/authentication/setup/', method,
+              headers: {Host: process.env.DOMAIN, 'X-Forwarded-Proto': 'https', 'Content-Type': 'application/json'}},
+              (res) => { let d = ''; res.on('data', (c) => d += c); res.on('end', () => ok({status: res.statusCode, body: d})); });
+            r.on('error', fail);
+            r.end(body);
+          });
+          (async () => {
+            for (let i = 0; i < 300; i++) {
+              try {
+                const g = await call('GET');
+                if (g.status === 200) {
+                  if (JSON.parse(g.body).setup[0].status) return;
+                  const p = await call('POST', JSON.stringify({setup: [{name: 'Owner', email: process.env.OWNER_EMAIL,
+                    password: process.env.OWNER_PASSWORD, blogTitle: process.env.DOMAIN}]}));
+                  if (p.status === 200 || p.status === 201) return;
+                  console.error('setup answered', p.status);
+                }
+              } catch (e) {}
+              await new Promise((r) => setTimeout(r, 2000));
+            }
+            process.exit(1);
+          })();
+---
 apiVersion: v1
 kind: Service
 metadata:
