@@ -1,0 +1,37 @@
+{
+  "component": "intrusion-prevention/crowdsec",
+  "environments": {
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 119,
+      "idleCPUm": 1,
+      "versions": {
+        "crowdsec": "0.24.2"
+      },
+      "measuredAt": "2026-10-11"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 82,
+      "idleCPUm": 1,
+      "versions": {
+        "crowdsec": "0.24.2"
+      },
+      "measuredAt": "2026-10-13"
+    },
+    "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 117,
+      "idleCPUm": 2,
+      "versions": {
+        "crowdsec": "0.24.2"
+      },
+      "measuredAt": "2026-10-11"
+    },
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 76,
+      "idleCPUm": 1,
+      "versions": {
+        "crowdsec": "0.24.2"
+      },
+      "measuredAt": "2026-10-11"
+    }
+  }
+}

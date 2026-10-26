@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zeabur-oss/catalog/schema/v1/template.schema.json",
+  "title": "Template",
+  "description": "One application, at templates/<slug>/template.yaml with its objects in manifests.yaml next to it. A project member installs it into one namespace.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "services", "security", "scalability", "smoke"],
+  "properties": {
+    "apiVersion": { "const": "catalog.zeabur.com/v1" },
+    "kind": { "const": "Template" },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "description", "version", "license", "homepage", "categories"],
+      "properties": {
+        "name": { "$ref": "#/$defs/text", "description": "Name for people." },
+        "description": { "$ref": "#/$defs/text", "description": "What the application does and how the template runs it, in one or two sentences." },
+        "license": { "$ref": "#/$defs/text", "description": "SPDX expression for the application, its images and charts." },
+        "homepage": { "type": "string", "format": "uri", "pattern": "^https?://" },
+        "version": { "type": "string", "description": "The application version: the tag of its main image. Objects get it as the label app.kubernetes.io/version." },
+        "icon": { "type": "string", "format": "uri", "pattern": "^https://" },
+        "categories": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["ai", "analytics", "automation", "cms", "databases", "developer-tools", "monitoring", "productivity", "search", "security", "storage", "web-servers"] }
+        }
+      }
+    },
+    "requires": {
+      "type": "array",
+      "description": "Components the cluster must have: <capability> (its recommended upstream, else an optional one) or <capability>/<upstream>.",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z0-9-]+(/[a-z0-9-]+)?$" }
+    },
+    "services": {
+      "type": "array",
+      "description": "The workloads in manifests.yaml, for people and for the Pod Security profile of each.",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/service" }
+    },
+    "inputs": { "type": "array", "items": { "$ref": "#/$defs/input" } },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "risks"],
+      "properties": {
+        "summary": { "$ref": "#/$defs/text" },
+        "locales": {
+          "type": "object",
+          "description": "The summary in other languages.",
+          "additionalProperties": false,
+          "required": ["zh-TW", "zh-CN"],
+          "properties": { "zh-TW": { "$ref": "#/$defs/summaryLocale" }, "zh-CN": { "$ref": "#/$defs/summaryLocale" } }
+        },
+        "unauthenticated": {
+          "type": "array",
+          "description": "Services with no sign-in or key of their own. Each needs an ingress NetworkPolicy; the risks say why.",
+          "uniqueItems": true,
+          "items": { "type": "string" }
+        },
+        "risks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["risk", "mitigation", "locales"],
+            "properties": {
+              "risk": { "$ref": "#/$defs/text" },
+              "mitigation": { "$ref": "#/$defs/text" },
+              "locales": {
+                "type": "object",
+                "description": "The risk and mitigation in other languages.",
+                "additionalProperties": false,
+                "required": ["zh-TW", "zh-CN"],
+                "properties": { "zh-TW": { "$ref": "#/$defs/riskLocale" }, "zh-CN": { "$ref": "#/$defs/riskLocale" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "scalability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "replicas", "maxReplicas", "blockers"],
+      "properties": {
+        "summary": { "$ref": "#/$defs/text" },
+        "replicas": { "type": "integer", "minimum": 0 },
+        "maxReplicas": { "type": "integer", "minimum": 0 },
+        "blockers": { "type": "array", "items": { "$ref": "#/$defs/text" } }
+      }
+    },
+    "upgradeNotes": { "type": "array", "items": { "$ref": "#/$defs/text" } },
+    "smoke": {
+      "type": "array",
+      "description": "e2e checks after install, in the template's namespace.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "resource", "condition", "timeout"],
+        "properties": {
+          "name": { "$ref": "#/$defs/text" },
+          "resource": { "type": "string", "pattern": "^[a-zA-Z0-9.-]+/[a-z0-9][a-z0-9.-]*$" },
+          "condition": { "type": "string", "pattern": "^(condition=[A-Za-z][A-Za-z0-9]*(=(True|False|Unknown))?|jsonpath=.+)$" },
+          "timeout": { "type": "string", "pattern": "^[1-9][0-9]*(s|m)$" },
+          "http": {
+            "type": "object",
+            "description": "GET through a port-forward to the Service.",
+            "additionalProperties": false,
+            "required": ["service", "port", "path", "status"],
+            "properties": {
+              "service": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+              "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+              "path": { "type": "string", "pattern": "^/" },
+              "status": { "type": "integer", "minimum": 100, "maximum": 599 },
+              "contains": { "type": "string" }
+            }
+          },
+          "sql": {
+            "type": "object",
+            "description": "One read-only SELECT on the CloudNativePG primary.",
+            "additionalProperties": false,
+            "required": ["cluster", "database", "query", "expect"],
+            "properties": {
+              "cluster": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+              "database": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
+              "query": { "type": "string", "pattern": "^[Ss][Ee][Ll][Ee][Cc][Tt] " },
+              "expect": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1 },
+    "resourceValues": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cpu", "memory"],
+      "properties": {
+        "cpu": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?m?$" },
+        "memory": { "type": "string", "pattern": "^[1-9][0-9]*(Ki|Mi|Gi|Ti|K|M|G|T)?$" }
+      }
+    },
+    "service": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "securityProfile", "resources"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$", "maxLength": 53 },
+        "securityProfile": { "enum": ["restricted", "baseline"] },
+        "baselineJustification": { "$ref": "#/$defs/text", "description": "The Restricted control it fails, and why." },
+        "ports": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "port"],
+            "properties": { "name": { "$ref": "#/$defs/text" }, "port": { "type": "integer", "minimum": 1, "maximum": 65535 } }
+          }
+        },
+        "resources": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["requests", "limits"],
+          "properties": { "requests": { "$ref": "#/$defs/resourceValues" }, "limits": { "$ref": "#/$defs/resourceValues" } }
+        },
+        "domains": { "type": "array", "description": "Public hostnames; rendering then needs a domain and a ClusterIssuer.", "items": { "$ref": "#/$defs/text" } }
+      },
+      "if": { "properties": { "securityProfile": { "const": "baseline" } } },
+      "then": { "required": ["baselineJustification"] }
+    },
+    "input": {
+      "type": "object",
+      "description": "A value the person installing gives (required) or the installer generates into a Secret (generate).",
+      "additionalProperties": false,
+      "required": ["name", "description", "validation"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
+        "description": { "$ref": "#/$defs/text" },
+        "label": { "type": "string", "maxLength": 40, "description": "A short name for the field, in English." },
+        "locales": {
+          "type": "object",
+          "description": "The label and description in other languages.",
+          "additionalProperties": false,
+          "required": ["zh-TW", "zh-CN"],
+          "properties": { "zh-TW": { "$ref": "#/$defs/inputLocale" }, "zh-CN": { "$ref": "#/$defs/inputLocale" } }
+        },
+        "required": { "type": "boolean" },
+        "default": { "type": "string", "description": "The value when a deploy does not give the input." },
+        "generate": { "const": "random" },
+        "generateBytes": { "type": "integer", "minimum": 12, "maximum": 64, "default": 32 },
+        "generateEncoding": { "enum": ["base64url", "hex"], "default": "base64url" },
+        "secret": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "key"],
+          "properties": {
+            "name": { "type": "string", "pattern": "^[a-z0-9][a-z0-9.-]*$" },
+            "key": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+$" }
+          }
+        },
+        "validation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pattern"],
+          "properties": { "pattern": { "$ref": "#/$defs/text", "description": "Regular expression the whole value matches." } }
+        }
+      },
+      "oneOf": [
+        {
+          "required": ["generate", "secret"],
+          "not": { "anyOf": [{ "required": ["required"] }, { "required": ["default"] }] }
+        },
+        {
+          "description": "A person gives the value, so the field has a label in every language.",
+          "required": ["required", "label", "locales"],
+          "not": { "anyOf": [{ "required": ["generate"] }, { "required": ["secret"] }, { "required": ["generateBytes"] }, { "required": ["generateEncoding"] }] }
+        }
+      ]
+    },
+    "summaryLocale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary"],
+      "properties": { "summary": { "$ref": "#/$defs/text" } }
+    },
+    "riskLocale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["risk", "mitigation"],
+      "properties": { "risk": { "$ref": "#/$defs/text" }, "mitigation": { "$ref": "#/$defs/text" } }
+    },
+    "inputLocale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "description"],
+      "properties": { "label": { "type": "string", "maxLength": 40 }, "description": { "$ref": "#/$defs/text" } }
+    }
+  }
+}

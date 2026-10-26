@@ -1,0 +1,231 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: WordPress
+  version: "php8.3-fpm-alpine"
+  description: >-
+    WordPress PHP 8.3 with TLS MariaDB Operator 11.4 LTS and preinstalled owner.
+  license: GPL-2.0-or-later AND GPL-2.0-only AND BSD-2-Clause AND MIT
+  # Also: https://github.com/docker-library/wordpress, https://mariadb.org/, https://github.com/nginx/docker-nginx-unprivileged, https://github.com/mariadb-operator/mariadb-operator
+  homepage: https://wordpress.org/
+  icon: https://cdn.zeabur.com/marketplace/wordpress.png
+  categories: [cms]
+
+requires:
+  - ingress/traefik
+  - certificates/cert-manager
+  - databases/mariadb-operator
+
+services:
+  - name: wordpress
+    securityProfile: restricted
+    ports: [{name: http, port: 8080}]
+    resources: {requests: {cpu: 125m, memory: 320Mi}, limits: {cpu: 1500m, memory: 1280Mi}}
+    domains: ['{{ .Domain }}']
+  - name: mariadb
+    securityProfile: restricted
+    ports: [{name: database, port: 3306}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}
+
+inputs:
+  - name: adminEmail
+    label: Administrator email
+    locales:
+      zh-TW:
+        label: 管理員 Email
+        description: "WordPress 管理員的 Email。"
+      zh-CN:
+        label: 管理员邮箱
+        description: "WordPress 管理员的邮箱。"
+    description: WordPress administrator email.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
+  - name: databasePassword
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: database-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: databaseRootPassword
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: database-root-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: adminPassword
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: admin-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: wordpressAuthKey
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: auth-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: wordpressSecureAuthKey
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: secure-auth-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: wordpressLoggedInKey
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: logged-in-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: wordpressNonceKey
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: nonce-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: wordpressAuthSalt
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: auth-salt}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: wordpressSecureAuthSalt
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: secure-auth-salt}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: wordpressLoggedInSalt
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: logged-in-salt}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: wordpressNonceSalt
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: wordpress-secrets, key: nonce-salt}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: >-
+    The WordPress and MariaDB pods run without root rights under restricted
+    settings. The database requires TLS, and the SQL credentials are
+    generated. The operator's helper images are part of what you trust when you
+    use this catalog.
+  locales:
+    zh-TW:
+      summary: "WordPress 和 MariaDB 的 Pod 都不用 root 權限執行，並套用嚴格限制。資料庫一律要用 TLS 連線，SQL 帳密是自動產生的。運算子的輔助映像檔，是你使用這個目錄時必須信任的一部分。"
+    zh-CN:
+      summary: "WordPress 和 MariaDB 的 Pod 都不用 root 权限运行，并应用严格限制。数据库一律要用 TLS 连接，SQL 账号密码是自动生成的。运算符的辅助镜像，是你使用这个目录时必须信任的一部分。"
+  risks:
+    - risk: >-
+        WordPress plugins and themes run code that can reach the database and
+        the uploaded files.
+      mitigation: >-
+        Limit who is an administrator, check plugins before you install them
+        and keep them updated. There is no public FastCGI port. PHP cannot run
+        in the uploads folder, and requests for wp-config, hidden files and raw
+        backup files are denied.
+      locales:
+        zh-TW:
+          risk: "WordPress 的外掛和佈景主題會執行程式，這些程式碰得到資料庫和上傳的檔案。"
+          mitigation: "限制管理員人數，安裝外掛前先檢查，並且持續更新。FastCGI 連接埠沒有對外開放。上傳資料夾裡不能執行 PHP，wp-config、隱藏檔和原始備份檔的請求也會被擋下來。"
+        zh-CN:
+          risk: "WordPress 的插件和主题会运行代码，这些代码碰得到数据库和上传的文件。"
+          mitigation: "限制管理员人数，安装插件前先检查，并且持续更新。FastCGI 端口没有对外开放。上传文件夹里不能运行 PHP，wp-config、隐藏文件和原始备份文件的请求也会被挡下来。"
+    - risk: On a WordPress site that is not set up yet, the first visitor can claim the site.
+      mitigation: >-
+        An init container (official WP-CLI, pinned by digest) creates the admin
+        account with a generated password before the web pods become ready.
+        Nothing is downloaded while it runs.
+      locales:
+        zh-TW:
+          risk: "WordPress 還沒設定好的時候，第一個打開網站的人就能認領這個網站。"
+          mitigation: "網頁 Pod 準備好之前，初始化容器（官方的 WP-CLI，用 digest 固定版本）會先用自動產生的密碼建立管理員帳號。執行過程中不會下載任何東西。"
+        zh-CN:
+          risk: "WordPress 还没设置好的时候，第一个打开网站的人就能认领这个网站。"
+          mitigation: "网页 Pod 准备好之前，初始化容器（官方的 WP-CLI，用 digest 固定版本）会先用自动生成的密码创建管理员账号。运行过程中不会下载任何东西。"
+    - risk: >-
+        The MariaDB Operator works across namespaces, so you have to trust it
+        with the whole cluster.
+      mitigation: >-
+        Install the exact catalog provider and pin its image settings before
+        you use it. The engine init container uses the template's image
+        digest. MaxScale and Galera are not installed.
+      locales:
+        zh-TW:
+          risk: "MariaDB Operator 會跨命名空間運作，所以你得信任它能管整個叢集。"
+          mitigation: "使用之前，裝上目錄指定的那個提供者，並固定它的映像檔設定。引擎的初始化容器沿用範本的映像檔 digest。MaxScale 和 Galera 都沒有安裝。"
+        zh-CN:
+          risk: "MariaDB Operator 会跨命名空间运作，所以你得信任它能管整个集群。"
+          mitigation: "使用之前，装上目录指定的那个提供者，并固定它的镜像设置。引擎的初始化容器沿用模板的镜像 digest。MaxScale 和 Galera 都没有安装。"
+    - risk: >-
+        Database backups do not include the uploads, plugins and themes on the
+        wordpress-data volume.
+      mitigation: >-
+        Keep the SQL Secrets and the TLS certificates, and run restore drills.
+        Pause WordPress, then archive the wordpress-data volume and the Secrets
+        at the same recovery point as the database.
+      locales:
+        zh-TW:
+          risk: "資料庫備份不含 wordpress-data 磁碟區裡的上傳檔案、外掛和佈景主題。"
+          mitigation: "保留 SQL 機密和 TLS 憑證，並且定期演練還原。先讓 WordPress 暫停寫入，再把 wordpress-data 磁碟區和機密，跟資料庫備份在同一個還原時間點一起封存。"
+        zh-CN:
+          risk: "数据库备份不含 wordpress-data 卷里的上传文件、插件和主题。"
+          mitigation: "保留 SQL 机密和 TLS 证书，并且定期演练恢复。先让 WordPress 暂停写入，再把 wordpress-data 卷和机密，跟数据库备份在同一个恢复时间点一起归档。"
+
+scalability:
+  summary: >-
+    One WordPress Pod and one MariaDB writer, each on a 10Gi volume. There is
+    no automatic horizontal scaling.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - A node-local default StorageClass has no HA, snapshots or cross-node failover.
+
+upgradeNotes:
+  - >-
+    Database backups are off when the template is installed. To turn them on,
+    open the database in Zeabur and use the Backups tab.
+  - >-
+    A Backup of the MariaDB gives its Pods the labels
+    templates.zeabur.com/template: wordpress and app.kubernetes.io/component:
+    backup in spec.podMetadata. MariaDB accepts connections from these Pods.
+    Zeabur adds the labels to the Backups it creates.
+  - >-
+    Preserve Secrets and PVCs. Back up data off-node and rehearse a restore
+    before changing image digests.
+  - >-
+    WordPress runs PHP 8.3 on PHP-FPM (UID 82) behind unprivileged NGINX (UID
+    101). MariaDB is 11.4 LTS. Uploads are capped at 256MiB, PHP memory at 1GiB
+    and execution time at 300s.
+  - >-
+    WordPress connects to MariaDB with TLS and verifies the server certificate
+    against mariadb-ca-bundle/ca.crt. The trust bundle is built at Pod start;
+    restart WordPress after a MariaDB CA rotation.
+  - >-
+    The wordpress SQL user has SELECT, INSERT, UPDATE, DELETE, CREATE, DROP,
+    ALTER and INDEX on zeabur.* only, without GRANT OPTION. Plugins that need
+    other privileges or MySQL-only SQL can fail.
+  - >-
+    WordPress core/plugins/themes on the persistent HTML volume update through
+    WordPress; changing the seed image does not overwrite existing content.
+    Apply security updates in the admin UI or via /tools/wp inside the WordPress
+    container; retain backups for rollback.
+  - >-
+    Admin username is admin; retrieve wordpress-secrets/admin-password securely.
+    Initial installation is automatic; do not rerun core install against an
+    existing database. Domain is fixed via WP_HOME/WP_SITEURL; use pinned
+    /tools/wp search-replace for stored links.
+  - >-
+    Database storage uses operator-owned PVCs. To move from another WordPress
+    deployment, restore a logical dump and the uploads into a separate
+    namespace; do not adopt, mount or downgrade an old datadir. Verify
+    URLs, plugins, TLS and admin login, then move traffic. Keep old PVCs,
+    Secrets and backups until a restore and application acceptance test
+    succeeds.
+  - >-
+    MariaDB Operator chart26.10.1 retains PVCs on scale/delete via explicit
+    Retain policy. Keep the CRD release installed while any data exists. Engine
+    auto-update is off; check exact-version compatibility before each engine
+    upgrade. Image changes do not reverse SQL migrations.
+
+smoke:
+  - name: workload-ready
+    resource: deployment/wordpress
+    condition: condition=Available
+    timeout: 900s
+  - name: database-ready
+    resource: mariadb/mariadb
+    condition: condition=Ready
+    timeout: 900s

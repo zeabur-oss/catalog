@@ -1,0 +1,141 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: uptime-kuma-data
+  namespace: '{{ .Namespace }}'
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: uptime-kuma
+  namespace: '{{ .Namespace }}'
+spec:
+  serviceName: uptime-kuma
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: uptime-kuma
+  template:
+    metadata:
+      labels:
+        templates.zeabur.com/template: uptime-kuma
+        app.kubernetes.io/name: uptime-kuma
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+        sysctls:
+        - name: net.ipv4.ping_group_range
+          value: 1000 1000
+      containers:
+      - name: uptime-kuma
+        image: louislam/uptime-kuma:2.5.7-rootless@sha256:71e9994591d6606efce490cd133e3a89b5e755cbac0d50b8b466a42e9f8fa915
+        ports:
+        - name: http
+          containerPort: 3001
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: '2'
+            memory: 1Gi
+        env:
+        - name: UPTIME_KUMA_DB_TYPE
+          value: sqlite
+        - name: UPTIME_KUMA_ENABLE_EMBEDDED_MARIADB
+          value: '0'
+        - name: HOME
+          value: /home/node
+        volumeMounts:
+        - name: data
+          mountPath: /app/data
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /home/node/.cache
+        startupProbe:
+          httpGet:
+            path: /
+            port: http
+          failureThreshold: 90
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+          periodSeconds: 20
+          failureThreshold: 6
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: uptime-kuma-data
+      - name: tmp
+        emptyDir:
+          sizeLimit: 512Mi
+      - name: cache
+        emptyDir:
+          sizeLimit: 512Mi
+      terminationGracePeriodSeconds: 60
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: uptime-kuma
+  namespace: '{{ .Namespace }}'
+spec:
+  selector:
+    app.kubernetes.io/name: uptime-kuma
+  ports:
+  - name: http
+    port: 3001
+    targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: uptime-kuma
+  namespace: '{{ .Namespace }}'
+  annotations:
+    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - '{{ .Domain }}'
+    secretName: uptime-kuma-tls
+  rules:
+  - host: '{{ .Domain }}'
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: uptime-kuma
+            port:
+              number: 3001

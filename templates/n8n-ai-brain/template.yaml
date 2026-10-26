@@ -1,0 +1,218 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: n8n (AI Brain)
+  version: "2.44.6"
+  description: >-
+    Workflow automation with PostgreSQL17 and isolated external code runners.
+    Licensed under the n8n Sustainable Use License
+    (https://docs.n8n.io/sustainable-use-license/): internal business,
+    personal or noncommercial use only.
+  license: LicenseRef-n8n-Sustainable-Use AND PostgreSQL AND Apache-2.0
+  # Also: https://cloudnative-pg.io/
+  homepage: https://github.com/n8n-io/n8n
+  icon: https://github.com/n8n-io.png
+  categories: [ai, automation]
+
+requires:
+  - ingress/traefik
+  - certificates/cert-manager
+  - databases/cloudnative-pg
+
+services:
+  - name: n8n
+    securityProfile: restricted
+    ports: [{name: http, port: 5678}, {name: broker, port: 5679}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}
+    domains: ['{{ .Domain }}']
+  - {name: n8n-runners, securityProfile: restricted, ports: [{name: health, port: 5680}], resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}}
+  - name: n8n-db
+    securityProfile: restricted
+    ports: [{name: postgresql, port: 5432}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}
+
+inputs:
+  - name: ownerEmail
+    label: Owner email
+    locales:
+      zh-TW:
+        label: 擁有者 Email
+        description: "n8n 擁有者帳號的 Email，第一次有人連進來之前就會建立好。密碼會自動產生，放在機密 app-secrets 的 owner-password。"
+      zh-CN:
+        label: 所有者邮箱
+        description: "n8n 所有者账号的邮箱，第一次有人访问之前就会创建好。密码会自动生成，放在机密 app-secrets 的 owner-password。"
+    description: >-
+      Owner email; the account is provisioned before the first public request.
+      The password is generated in app-secrets/owner-password.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
+  - name: ownerPassword
+    description: Generated owner password; preserve it across upgrades.
+    generate: random
+    secret: {name: app-secrets, key: owner-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: encryptionKey
+    description: >-
+      Encryption key for stored workflow credentials. Preserve permanently with
+      encrypted backups.
+    generate: random
+    secret: {name: app-secrets, key: encryption-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: runnerToken
+    description: Shared authentication token for isolated external JavaScript/Python runners.
+    generate: random
+    secret: {name: app-secrets, key: runner-token}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: jwtKey
+    description: Persistent user-management JWT secret.
+    generate: random
+    secret: {name: app-secrets, key: jwt-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: >-
+    The app runs as a non-root user with restricted settings. The external
+    runners are isolated. The app has no Kubernetes API tokens and its root
+    filesystems are read-only. The editor, webhooks and forms are open on the
+    public HTTPS domain. The runners can reach only n8n and DNS; other
+    outbound traffic is not limited. The database operator (CloudNativePG)
+    owns narrowly scoped database permissions and tokens.
+  locales:
+    zh-TW:
+      summary: "應用程式用非 root 使用者執行，限制很嚴。外部執行器是隔離的。應用程式沒有 Kubernetes API 權杖，根檔案系統唯讀。編輯器、webhook 和表單都開放在公開的 HTTPS 網域上。執行器只能連到 n8n 和 DNS，其他對外連線沒有限制。資料庫 operator（CloudNativePG）自己管範圍很小的資料庫權限和權杖。"
+    zh-CN:
+      summary: "应用用非 root 用户运行，限制很严。外部执行器是隔离的。应用没有 Kubernetes API 令牌，根文件系统只读。编辑器、webhook 和表单都开放在公开的 HTTPS 域名上。执行器只能连到 n8n 和 DNS，其他对外连接没有限制。数据库 operator（CloudNativePG）自己管范围很小的数据库权限和令牌。"
+  unauthenticated: [n8n-runners]
+  risks:
+    - risk: >-
+        n8n uses the Sustainable Use License, which limits how you can use and
+        share it. It is not OSI-approved open source.
+      mitigation: >-
+        The template description names the license. Use it only for internal
+        business, personal or noncommercial purposes, or get a separate
+        license.
+      locales:
+        zh-TW:
+          risk: "n8n 用的是 Sustainable Use License，使用和散布都有限制，不算 OSI 認可的開源授權。"
+          mitigation: "範本說明裡有寫明授權。只能用在公司內部業務、個人或非商業用途，不然就要另外取得授權。"
+        zh-CN:
+          risk: "n8n 用的是 Sustainable Use License，使用和分发都有限制，不算 OSI 认可的开源许可。"
+          mitigation: "模板说明里有写明许可。只能用在公司内部业务、个人或非商业用途，不然就要另外取得许可。"
+    - risk: >-
+        Workflow authors can reach the connected credentials, and attackers
+        can abuse public webhook triggers.
+      mitigation: >-
+        The owner account is created before n8n starts, from ownerEmail and a
+        generated password in app-secrets/owner-password, so no visitor can
+        claim it. The editor, webhooks and forms are open to anyone who can
+        reach the domain, and n8n has its own sign-in. To limit who can reach
+        them, add an IP limit in the service's network settings. Add
+        authentication to each webhook when you build the workflow. Give
+        author access only to trusted operators. This instance is not a
+        sandbox for workflows from untrusted tenants. Installing community
+        packages is disabled.
+      locales:
+        zh-TW:
+          risk: "工作流程的作者可以用到已連接的憑證，公開的 webhook 觸發器也可能被濫用。"
+          mitigation: "擁有者帳號在 n8n 啟動前就建好了，用的是 ownerEmail 和自動產生、放在 app-secrets/owner-password 的密碼，所以沒有訪客能搶走它。編輯器、webhook 和表單，只要連得到網域的人都能開，n8n 本身有登入。想限制誰連得進來，請在服務的網路設定裡加 IP 限制。設計工作流程時，每個 webhook 都要加上驗證。作者權限只給信任的操作人員。這個實例不能當沙箱，不要拿來跑不信任租戶的工作流程。安裝社群套件的功能已關閉。"
+        zh-CN:
+          risk: "工作流的作者可以用到已连接的凭据，公开的 webhook 触发器也可能被滥用。"
+          mitigation: "所有者账号在 n8n 启动前就建好了，用的是 ownerEmail 和自动生成、放在 app-secrets/owner-password 的密码，所以没有访客能抢走它。编辑器、webhook 和表单，只要连得到域名的人都能打开，n8n 本身有登录。想限制谁能连进来，请在服务的网络设置里加 IP 限制。设计工作流时，每个 webhook 都要加上验证。作者权限只给信任的操作人员。这个实例不能当沙箱，不要拿来跑不信任租户的工作流。安装社区包的功能已关闭。"
+    - risk: >-
+        The runners execute workflow code and have no sign-in of their own.
+      mitigation: >-
+        They have a NetworkPolicy that accepts no incoming connections and lets
+        them reach only n8n and DNS. It is the only NetworkPolicy in the
+        template. Namespace isolation covers everything else.
+      locales:
+        zh-TW:
+          risk: "執行器會跑工作流程的程式碼，本身沒有登入驗證。"
+          mitigation: "它們有一條 NetworkPolicy，不接受任何進來的連線，只讓它們連到 n8n 和 DNS。這是範本裡唯一的 NetworkPolicy，其他部分靠命名空間隔離。"
+        zh-CN:
+          risk: "执行器会运行工作流的代码，本身没有登录验证。"
+          mitigation: "它们有一条 NetworkPolicy，不接受任何进来的连接，只让它们连到 n8n 和 DNS。这是模板里唯一的 NetworkPolicy，其他部分靠命名空间隔离。"
+    - risk: >-
+        The database pods (CloudNativePG) need Kubernetes API permissions.
+      mitigation: >-
+        Use the catalog's CloudNativePG installation. The operator creates
+        narrowly scoped service accounts for these pods.
+      locales:
+        zh-TW:
+          risk: "資料庫 Pod（CloudNativePG）需要 Kubernetes API 的權限。"
+          mitigation: "請用目錄裡的 CloudNativePG 安裝方式，由 operator 為這些 Pod 建立範圍很小的服務帳號。"
+        zh-CN:
+          risk: "数据库 Pod（CloudNativePG）需要 Kubernetes API 的权限。"
+          mitigation: "请用目录里的 CloudNativePG 安装方式，由 operator 为这些 Pod 创建范围很小的服务账号。"
+    - risk: N8N_PROXY_HOPS=1 assumes Traefik is the only proxy in front of n8n.
+      mitigation: >-
+        If you add another proxy or load balancer that sets forwarding
+        headers, change N8N_PROXY_HOPS.
+      locales:
+        zh-TW:
+          risk: "N8N_PROXY_HOPS=1 假設 n8n 前面只有 Traefik 一層代理。"
+          mitigation: "如果你又加了別的代理或負載平衡器，而且它會設定轉發標頭，請改 N8N_PROXY_HOPS。"
+        zh-CN:
+          risk: "N8N_PROXY_HOPS=1 假设 n8n 前面只有 Traefik 一层代理。"
+          mitigation: "如果你又加了别的代理或负载均衡器，而且它会设置转发头，请改 N8N_PROXY_HOPS。"
+
+scalability:
+  summary: >-
+    One n8n main, one runner and one PostgreSQL primary. RWO volumes on a
+    node-local StorageClass have no HA.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      Horizontal n8n execution requires separately designed queue mode, worker
+      runners, shared binary storage and Redis/Valkey; no naive replica
+      increase.
+    - >-
+      A node-local StorageClass has no snapshots. Database backups do not
+      include the application PVC or the encryption key: stop n8n and copy the
+      PVC and encrypted app-secrets off-node.
+
+upgradeNotes:
+  - >-
+    Database backups are off when the template is installed. To turn them on,
+    open the database in Zeabur and use the Backups tab.
+  - >-
+    PostgreSQL 17 runs as a CNPG Cluster with generated least-privilege app
+    credentials and CA-verified TLS.
+  - >-
+    Back up PostgreSQL, restore it to a separate cluster and preserve n8n
+    encryption/JWT keys plus application PVC before upgrade. After restore,
+    check that stored credentials decrypt and workflows run. Never rotate the
+    encryption key without upstream credential migration.
+  - >-
+    Keep n8n and external runner image versions identical. Read n8n database
+    migration notes and PostgreSQL minor changes; never change database major
+    through an ordinary digest update. Do not downgrade n8n after it has
+    migrated the database.
+  - >-
+    The owner comes from deployment variables, as in the n8n template: change
+    the password by editing app-secrets/owner-password and restarting n8n.
+  - >-
+    The editor and all routes are open on the domain; add an IP limit in the
+    service's network settings if you need one.
+  - >-
+    GENERIC_TIMEZONE and TZ are Asia/Taipei. Change them in the manifest if
+    schedule triggers must use another timezone.
+  - >-
+    No SMTP server is configured. Invitations and password-reset mail need SMTP
+    settings.
+
+smoke:
+  - name: database-ready
+    resource: cluster/n8n-db
+    condition: condition=Ready
+    timeout: 600s
+    sql: {cluster: n8n-db, database: n8n, query: SELECT 1, expect: "1"}
+  - name: n8n-ready
+    resource: deployment/n8n
+    condition: condition=Available
+    timeout: 600s
+    http: {service: n8n, port: 5678, path: /healthz/readiness, status: 200}
+  - name: runners-ready
+    resource: deployment/n8n-runners
+    condition: condition=Available
+    timeout: 600s

@@ -1,0 +1,50 @@
+# Every night and on demand: L2, the full e2e matrix. Opens a pull request
+# with the idle memory and CPU it measured for components and templates, so
+# measurements/ is only ever written by CI.
+name: nightly
+
+on:
+  schedule:
+    - cron: "0 18 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    uses: ./.github/workflows/e2e.yml
+
+  pull-request:
+    needs: e2e
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-slim
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: measurements-*
+          path: downloaded/
+      - name: Merge measurements from every job
+        run: |
+          mkdir -p downloaded
+          go run ./tools/cmd/catalog merge downloaded
+      - uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          branch: ci/measurements
+          # The author defaults to whoever triggered the run; it must match the
+          # sign-off for the DCO check.
+          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          title: "chore: update measured resource usage"
+          commit-message: |
+            chore: update measured resource usage
+
+            Signed-off-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          body: Idle memory and CPU of components and templates, measured by the e2e workflow on single-node and multi-node kind.
+          add-paths: measurements/

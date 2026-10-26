@@ -1,0 +1,117 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: Meilisearch
+  version: "v1.55.0"
+  description: Meilisearch Community Edition search engine with a master key and indexes on a persistent volume.
+  # The getmeili/meilisearch image is built without the enterprise feature, so
+  # it ships only the MIT-licensed code. Enterprise Edition code (BUSL-1.1) is
+  # in getmeili/meilisearch-enterprise.
+  license: MIT
+  homepage: https://www.meilisearch.com/
+  icon: https://github.com/meilisearch.png
+  categories: [search]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: meilisearch
+    securityProfile: restricted
+    ports: [{name: http, port: 7700}]
+    resources: {requests: {cpu: 200m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+    domains: ['{{ .Domain }}']
+
+inputs:
+  - name: masterKey
+    description: >-
+      Master key. Use it only to manage API keys, and give clients the search
+      or admin keys from GET /keys. Generated at installation.
+    generate: random
+    secret: {name: meilisearch-secrets, key: master-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: >-
+    The container runs as UID 1000 with a read-only filesystem, no Kubernetes
+    token and all extra system privileges removed. Production mode needs the
+    master key. The ingress route is public.
+  locales:
+    zh-TW:
+      summary: "以 UID 1000 執行，檔案系統唯讀，沒有 Kubernetes 權杖，也拿掉了所有額外的系統權限。正式模式一定要有主金鑰。Ingress 路由是公開的。"
+    zh-CN:
+      summary: "以 UID 1000 运行，文件系统只读，没有 Kubernetes 令牌，也去掉了所有额外的系统权限。生产模式必须有主密钥。Ingress 路由是公开的。"
+  risks:
+    - risk: Anyone on the internet can reach the API through the Ingress.
+      mitigation: >-
+        Without a valid key, Meilisearch rejects requests. The search preview
+        page is off. Give browsers only a search key or a tenant token. Never
+        give them the master key.
+      locales:
+        zh-TW:
+          risk: "任何人都能從網路連到 Ingress 上的 API。"
+          mitigation: "沒有有效金鑰的請求都會被拒絕，搜尋預覽頁面也已關閉。給瀏覽器的只能是搜尋金鑰或租戶權杖，千萬不要把主金鑰給它。"
+        zh-CN:
+          risk: "任何人都能从网络访问 Ingress 上的 API。"
+          mitigation: "没有有效密钥的请求都会被拒绝，搜索预览页面也已关闭。给浏览器的只能是搜索密钥或租户令牌，千万不要把主密钥给它。"
+    - risk: >-
+        AI-powered search embedders, webhooks and network search make outbound
+        calls, and the template does not limit them. Someone could point one
+        at a private address.
+      mitigation: >-
+        Set up only provider endpoints you trust. You can also add an egress
+        NetworkPolicy (a rule that limits outbound traffic) to restrict them.
+      locales:
+        zh-TW:
+          risk: "AI 搜尋的嵌入服務、webhook 和網路搜尋都會對外連線，範本沒有限制。有人可能把其中一個設定指向內部的私有位址。"
+          mitigation: "只設定你信任的服務商位址。也可以加一條 egress NetworkPolicy（限制對外連線的規則）來限制。"
+        zh-CN:
+          risk: "AI 搜索的嵌入服务、webhook 和网络搜索都会对外连接，模板没有限制。有人可能把其中一个设置指向内部的私有地址。"
+          mitigation: "只设置你信任的服务商地址。也可以加一条 egress NetworkPolicy（限制对外连接的规则）来限制。"
+    - risk: Enterprise Edition features are not in this image.
+      mitigation: >-
+        Sharding, replication and S3 snapshots return a
+        requires_enterprise_edition error. They need the separate Enterprise
+        image, which uses the BUSL-1.1 license and needs a commercial license
+        for production use.
+      locales:
+        zh-TW:
+          risk: "這個映像檔不含企業版功能。"
+          mitigation: "分片、複寫和 S3 快照會回傳 requires_enterprise_edition 錯誤。要用這些功能得另外使用企業版映像檔，它採用 BUSL-1.1 授權，正式環境使用要買商業授權。"
+        zh-CN:
+          risk: "这个镜像不含企业版功能。"
+          mitigation: "分片、复制和 S3 快照会返回 requires_enterprise_edition 错误。要用这些功能得另外使用企业版镜像，它采用 BUSL-1.1 许可，生产环境使用要买商业许可。"
+
+scalability:
+  summary: One instance on a 20Gi volume. Indexing uses at most 1 GiB of memory.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      Each instance keeps its own LMDB indexes on its volume. Replication needs
+      the Enterprise Edition.
+    - A node-local default StorageClass, such as local-path, has no snapshots or failover.
+
+upgradeNotes:
+  - >-
+    Create a dump with POST /dumps and copy it off the node before you change
+    the image digest. Dumps are the supported path between versions.
+  - >-
+    Meilisearch migrates the database on start for most upgrades. Read the
+    release notes for each version in between; some need a dump import.
+    A rollback needs the dump taken before the upgrade.
+  - >-
+    The master key in meilisearch-secrets protects all derived API keys. If
+    you rotate it, every API key changes.
+  - Deleting the namespace deletes the PVC and all indexes.
+
+smoke:
+  - name: meilisearch-ready
+    resource: statefulset/meilisearch
+    condition: jsonpath={.status.readyReplicas}=1
+    timeout: 600s
+    http: {service: meilisearch, port: 7700, path: /health, status: 200, contains: available}
+  - name: master-key-required
+    resource: statefulset/meilisearch
+    condition: jsonpath={.status.readyReplicas}=1
+    timeout: 120s
+    http: {service: meilisearch, port: 7700, path: /keys, status: 401}

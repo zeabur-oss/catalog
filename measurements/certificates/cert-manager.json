@@ -1,0 +1,37 @@
+{
+  "component": "certificates/cert-manager",
+  "environments": {
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 92,
+      "idleCPUm": 2,
+      "versions": {
+        "cert-manager": "v1.21.2"
+      },
+      "measuredAt": "2026-10-11"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 50,
+      "idleCPUm": 1,
+      "versions": {
+        "cert-manager": "v1.21.2"
+      },
+      "measuredAt": "2026-10-13"
+    },
+    "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 88,
+      "idleCPUm": 2,
+      "versions": {
+        "cert-manager": "v1.21.2"
+      },
+      "measuredAt": "2026-10-11"
+    },
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 51,
+      "idleCPUm": 1,
+      "versions": {
+        "cert-manager": "v1.21.2"
+      },
+      "measuredAt": "2026-10-11"
+    }
+  }
+}

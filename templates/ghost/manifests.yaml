@@ -1,0 +1,375 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ghost-data
+  namespace: '{{ .Namespace }}'
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ghost-mysql-data
+  namespace: '{{ .Namespace }}'
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ghost-mysql
+  namespace: '{{ .Namespace }}'
+spec:
+  selector:
+    app.kubernetes.io/name: ghost-mysql
+  ports:
+  - name: mysql
+    port: 3306
+    targetPort: mysql
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ghost
+  namespace: '{{ .Namespace }}'
+spec:
+  serviceName: ghost
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ghost
+  template:
+    metadata:
+      labels:
+        templates.zeabur.com/template: ghost
+        app.kubernetes.io/name: ghost
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: ghost
+        image: ghost:6-alpine@sha256:cd617a0901e659cda978b9063f449535d105f5f1a0340ffac415db2c42d22606
+        ports:
+        - name: http
+          containerPort: 2368
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: '2'
+            memory: 1Gi
+        env:
+        - name: url
+          value: https://{{ .Domain }}
+        - name: database__client
+          value: mysql
+        - name: database__connection__host
+          value: ghost-mysql
+        - name: database__connection__database
+          value: ghost
+        - name: database__connection__user
+          value: ghost
+        - name: database__connection__port
+          value: '3306'
+        - name: database__connection__password
+          valueFrom:
+            secretKeyRef:
+              name: ghost-secrets
+              key: database-password
+        - name: mail__transport
+          value: SMTP
+        - name: mail__from
+          value: '{{ .Inputs.smtpFrom }}'
+        - name: mail__options__host
+          value: '{{ .Inputs.smtpHost }}'
+        - name: mail__options__port
+          value: '{{ .Inputs.smtpPort }}'
+        - name: mail__options__secure
+          value: '{{ .Inputs.smtpSecure }}'
+        - name: mail__options__requireTLS
+          value: 'true'
+        - name: mail__options__auth__user
+          valueFrom:
+            secretKeyRef:
+              name: '{{ .Inputs.smtpSecret }}'
+              key: username
+        - name: mail__options__auth__pass
+          valueFrom:
+            secretKeyRef:
+              name: '{{ .Inputs.smtpSecret }}'
+              key: password
+        - name: logging__transports
+          value: '["stdout"]'
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/ghost/content
+        - name: tmp
+          mountPath: /tmp
+        startupProbe:
+          tcpSocket:
+            port: http
+          failureThreshold: 120
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /ghost/api/admin/site/
+            port: http
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: http
+          periodSeconds: 20
+          failureThreshold: 6
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: ghost-data
+      - name: tmp
+        emptyDir:
+          sizeLimit: 512Mi
+      terminationGracePeriodSeconds: 60
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ghost-setup
+  namespace: '{{ .Namespace }}'
+spec:
+  backoffLimit: 6
+  template:
+    metadata:
+      labels:
+        templates.zeabur.com/template: ghost
+        app.kubernetes.io/name: ghost-setup
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: OnFailure
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: setup
+        image: ghost:6-alpine@sha256:cd617a0901e659cda978b9063f449535d105f5f1a0340ffac415db2c42d22606
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 10m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+        env:
+        - name: DOMAIN
+          value: '{{ .Domain }}'
+        - name: OWNER_EMAIL
+          value: '{{ .Inputs.ownerEmail }}'
+        - name: OWNER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ghost-secrets
+              key: admin-password
+        command:
+        - node
+        - -e
+        - |
+          const http = require('http');
+          const call = (method, body) => new Promise((ok, fail) => {
+            const r = http.request({host: 'ghost', port: 2368, path: '/ghost/api/admin/authentication/setup/', method,
+              headers: {Host: process.env.DOMAIN, 'X-Forwarded-Proto': 'https', 'Content-Type': 'application/json'}},
+              (res) => { let d = ''; res.on('data', (c) => d += c); res.on('end', () => ok({status: res.statusCode, body: d})); });
+            r.on('error', fail);
+            r.end(body);
+          });
+          (async () => {
+            for (let i = 0; i < 300; i++) {
+              try {
+                const g = await call('GET');
+                if (g.status === 200) {
+                  if (JSON.parse(g.body).setup[0].status) return;
+                  const p = await call('POST', JSON.stringify({setup: [{name: 'Owner', email: process.env.OWNER_EMAIL,
+                    password: process.env.OWNER_PASSWORD, blogTitle: process.env.DOMAIN}]}));
+                  if (p.status === 200 || p.status === 201) return;
+                  console.error('setup answered', p.status);
+                }
+              } catch (e) {}
+              await new Promise((r) => setTimeout(r, 2000));
+            }
+            process.exit(1);
+          })();
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ghost
+  namespace: '{{ .Namespace }}'
+spec:
+  selector:
+    app.kubernetes.io/name: ghost
+  ports:
+  - name: http
+    port: 2368
+    targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ghost
+  namespace: '{{ .Namespace }}'
+  annotations:
+    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - '{{ .Domain }}'
+    secretName: ghost-tls
+  rules:
+  - host: '{{ .Domain }}'
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ghost
+            port:
+              number: 2368
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ghost-mysql
+  namespace: '{{ .Namespace }}'
+spec:
+  serviceName: ghost-mysql
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ghost-mysql
+  template:
+    metadata:
+      labels:
+        templates.zeabur.com/template: ghost
+        app.kubernetes.io/name: ghost-mysql
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: ghost-mysql
+        image: mysql:8.4@sha256:76f0358884cb92d9a086d24e5671c38048d3fef40f2588703d73eb55392d6b69
+        ports:
+        - name: mysql
+          containerPort: 3306
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: '2'
+            memory: 1Gi
+        env:
+        - name: MYSQL_DATABASE
+          value: ghost
+        - name: MYSQL_USER
+          value: ghost
+        - name: MYSQL_ROOT_HOST
+          value: localhost
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ghost-secrets
+              key: database-password
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ghost-secrets
+              key: root-password
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/mysql
+        - name: tmp
+          mountPath: /tmp
+        - name: run
+          mountPath: /var/run/mysqld
+        args:
+        - --socket=/var/run/mysqld/mysqld.sock
+        - --pid-file=/var/run/mysqld/mysqld.pid
+        - --skip-name-resolve
+        - --host-cache-size=0
+        - --max-allowed-packet=10M
+        - --performance-schema=OFF
+        startupProbe:
+          tcpSocket:
+            port: mysql
+          failureThreshold: 90
+          periodSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -ec
+            - MYSQL_PWD="$MYSQL_PASSWORD" mysql --protocol=TCP -h127.0.0.1 -ughost -Dghost -e "SELECT 1"
+          periodSeconds: 10
+          timeoutSeconds: 5
+        livenessProbe:
+          tcpSocket:
+            port: mysql
+          periodSeconds: 20
+          failureThreshold: 6
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: ghost-mysql-data
+      - name: tmp
+        emptyDir:
+          sizeLimit: 512Mi
+      - name: run
+        emptyDir:
+          sizeLimit: 32Mi
+      terminationGracePeriodSeconds: 60

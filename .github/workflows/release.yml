@@ -1,0 +1,46 @@
+# On a semver tag: run L2 (e2e.yml), validate, then build index.json, bundle.tar.gz and
+# checksums.txt with `nix build .#release` (Zeabur builds the same output at its pinned commit),
+# sign all three with cosign keyless (GitHub OIDC) and publish them on the GitHub release.
+name: release
+
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+
+permissions:
+  contents: write
+  id-token: write # cosign keyless signing
+
+jobs:
+  e2e:
+    uses: ./.github/workflows/e2e.yml
+    permissions:
+      contents: read
+
+  release:
+    needs: e2e
+    runs-on: ubuntu-26.04-arm
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: DeterminateSystems/determinate-nix-action@f296148a827001a9a82d3685b53210c06e5d3b67 # v3.24.0
+      - name: Validate and build
+        run: |
+          nix develop -c sh -c '
+            go test ./... &&
+            go run ./tools/cmd/catalog validate &&
+            go run ./tools/cmd/catalog render
+          '
+          nix build .#release
+          mkdir dist
+          cp result/* dist/
+          chmod u+w dist/*
+      - name: Sign
+        run: |
+          cd dist
+          for f in bundle.tar.gz index.json checksums.txt; do
+            nix develop .. -c cosign sign-blob --yes --bundle "$f.sigstore.json" "$f"
+          done
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create '${{ github.ref_name }}' dist/* --title '${{ github.ref_name }}' --generate-notes --verify-tag

@@ -1,0 +1,261 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "commitBody": "Signed-off-by: Renovate Bot <bot@renovateapp.com>",
+  "labels": [
+    "dependencies"
+  ],
+  "nix": {
+    "enabled": true
+  },
+  "lockFileMaintenance": {
+    "enabled": true
+  },
+  "customManagers": [
+    {
+      "description": "Helm charts from HTTP repositories. Renovate cannot read their chartDigest: catalog render prints the new one",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^components/.+\\.yaml$/"
+      ],
+      "matchStrings": [
+        "repo: (?<registryUrl>https://\\S+)\\n\\s+chart: (?<depName>\\S+)\\n\\s+version: (?<currentValue>\\S+)"
+      ],
+      "datasourceTemplate": "helm"
+    },
+    {
+      "description": "Helm charts from OCI registries, with chartDigest as their manifest digest",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^components/.+\\.yaml$/"
+      ],
+      "matchStrings": [
+        "chart: oci://(?<depName>\\S+)\\n\\s+version: (?<currentValue>\\S+)\\n\\s+chartDigest: (?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "description": "Manifests from GitHub releases. Renovate cannot read their urlDigests: catalog render prints the new ones",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^components/.+\\.yaml$/"
+      ],
+      "matchStrings": [
+        "- https://github\\.com/(?<depName>[^/\\s]+/[^/\\s]+)/releases/download/\\{version\\}/\\S+\\n\\s+version: (?<currentValue>\\S+)"
+      ],
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "description": "Traefik plugins pinned in contributed values",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^components/.+\\.yaml$/"
+      ],
+      "matchStrings": [
+        "moduleName: github\\.com/(?<depName>\\S+)\\n\\s+version: (?<currentValue>\\S+)"
+      ],
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "description": "Container images pinned inside values",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^components/.+\\.yaml$/"
+      ],
+      "matchStrings": [
+        "image: (?<depName>[a-z0-9][a-z0-9./_-]*):(?<currentValue>v?[0-9][^\\s\"@]*)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?"
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "description": "Container image tags pinned under a chart's image.repository",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^components/.+\\.yaml$/"
+      ],
+      "matchStrings": [
+        "repository: (?<depName>[a-z0-9][a-z0-9./_-]*)\\n(?:\\s*#.*\\n)*\\s+tag: [\"']?(?<currentValue>v?[0-9][^\\s\"'@]*)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?"
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "description": "Container images under a chart's image.repository, with image.registry on the line after it",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^components/.+\\.yaml$/"
+      ],
+      "matchStrings": [
+        "repository: (?<depName>[a-z0-9][a-z0-9./_-]*)\\n\\s+registry: (?<registryUrl>[a-z0-9.-]+)\\n(?:\\s*#.*\\n)*\\s+tag: [\"']?(?<currentValue>v?[0-9][^\\s\"'@]*)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?"
+      ],
+      "registryUrlTemplate": "https://{{{registryUrl}}}",
+      "datasourceTemplate": "docker"
+    },
+    {
+      "description": "Container images in template manifests",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^templates/[^/]+/manifests\\.yaml$/"
+      ],
+      "matchStrings": [
+        "(?:image|imageName|initImage):\\s*[\"']?(?<depName>[a-z0-9][a-z0-9./_-]*):(?<currentValue>[a-zA-Z0-9._-]+)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?"
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    },
+    {
+      "description": "Cluster versions e2e runs on",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^config/kubernetes\\.yaml$/"
+      ],
+      "matchStrings": [
+        "version: (?<currentValue>\\S+) # renovate: (?<datasource>\\S+) (?<depName>\\S+)"
+      ]
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "The kind node follows the Kubernetes minor that the Zeabur installer pins; a minor bump changes both together",
+      "matchPackageNames": [
+        "kindest/node"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "go.sum changes the vendorHash in flake.nix; CI's nix build .#release prints the new one.",
+      "matchManagers": [
+        "gomod"
+      ],
+      "postUpdateOptions": [
+        "gomodTidy"
+      ]
+    },
+    {
+      "description": "Each component file gets its own pull request, with its chart and images together, so CI tests one component at a time. Every image carries a digest",
+      "matchFileNames": [
+        "components/**"
+      ],
+      "groupName": "{{{packageFile}}}",
+      "pinDigests": true
+    },
+    {
+      "description": "Pre-1.0 upstreams change behaviour in minor releases; never automerge them",
+      "matchFileNames": [
+        "components/**"
+      ],
+      "matchCurrentVersion": "/^v?0\\./",
+      "automerge": false
+    },
+    {
+      "description": "Each template gets its own pull request, and a person reviews every image change",
+      "matchFileNames": [
+        "templates/**"
+      ],
+      "groupName": null,
+      "pinDigests": true,
+      "automerge": false
+    },
+    {
+      "description": "Keel's smoke test starts on pause 3.9 so that Keel can update it to 3.10",
+      "matchFileNames": [
+        "components/image-updates/keel.yaml"
+      ],
+      "matchPackageNames": [
+        "registry.k8s.io/pause"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Database images change their data format in a major release; a person approves each major upgrade",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "/^(docker\\.io/)?(library/)?(mariadb|mysql)$/",
+        "ghcr.io/cloudnative-pg/postgresql",
+        "ghcr.io/cybozu-go/moco/mysql",
+        "/^(docker\\.io/)?percona/percona-server-mongodb$/"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "A MariaDB or MongoDB minor is a new release series with its own upgrade steps. Propose its patches separately",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "/^(docker\\.io/)?(library/)?mariadb$/",
+        "/^(docker\\.io/)?percona/percona-server-mongodb$/"
+      ],
+      "separateMinorPatch": true
+    },
+    {
+      "description": "MariaDB and MongoDB minor releases wait for approval",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "/^(docker\\.io/)?(library/)?mariadb$/",
+        "/^(docker\\.io/)?percona/percona-server-mongodb$/"
+      ],
+      "matchUpdateTypes": [
+        "minor"
+      ],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "The Percona operator supports only the MongoDB and PBM versions in its version service (check.percona.com); a person checks each update against it",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "/^(docker\\.io/)?percona/percona-server-mongodb$/",
+        "/^(docker\\.io/)?percona/percona-backup-mongodb$/"
+      ],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Ghost supports MySQL 8 only; later MySQL tags such as 26.10 are innovation releases",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchFileNames": [
+        "templates/ghost/**"
+      ],
+      "matchPackageNames": [
+        "/^(docker\\.io/)?(library/)?mysql$/"
+      ],
+      "allowedVersions": "/^8\\./"
+    },
+    {
+      "description": "Percona Server for MongoDB tags are <version>-<build>",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "/^(docker\\.io/)?percona/percona-server-mongodb$/"
+      ],
+      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-(?<build>\\d+)$"
+    },
+    {
+      "description": "SearXNG tags are <year>.<month>.<day>-<commit>",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "/^(docker\\.io/)?searxng/searxng$/"
+      ],
+      "versioning": "regex:^(?<major>\\d{4})\\.(?<minor>\\d{1,2})\\.(?<patch>\\d{1,2})-[0-9a-f]+$"
+    }
+  ]
+}

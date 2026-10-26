@@ -1,0 +1,67 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: nginx
+  version: "1.31-alpine"
+  description: >-
+    An unprivileged stateless NGINX web server with private service and Traefik
+    HTTPS ingress.
+  license: BSD-2-Clause AND Apache-2.0
+  # Also: https://github.com/nginx/docker-nginx-unprivileged
+  homepage: https://nginx.org/
+  icon: https://www.svgrepo.com/show/373924/nginx.svg
+  categories: [web-servers]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: nginx
+    securityProfile: restricted
+    ports: [{name: http, port: 8080}]
+    domains: ['{{ .Domain }}']
+    resources: {requests: {cpu: 10m, memory: 32Mi}, limits: {cpu: 500m, memory: 128Mi}}
+
+security:
+  summary: >-
+    The Pod has no Kubernetes API access. It runs as non-root UID 101 with a
+    read-only filesystem and no extra system privileges. It makes no outbound
+    connections.
+  locales:
+    zh-TW:
+      summary: "Pod 不能存取 Kubernetes API。以非 root 的 UID 101 執行，檔案系統唯讀，沒有任何額外的系統權限，也不會對外連線。"
+    zh-CN:
+      summary: "Pod 不能访问 Kubernetes API。以非 root 的 UID 101 运行，文件系统只读，没有任何额外的系统权限，也不会对外连接。"
+  risks: []
+
+scalability:
+  summary: >-
+    Stateless responses; replicas can scale horizontally. No sessions or shared
+    storage. HPA is not enabled. To add it, install metrics-server and define an
+    autoscaling policy.
+  replicas: 1
+  maxReplicas: 20
+  blockers:
+    - >-
+      Single replica has no availability during node loss; PDB cannot create
+      node redundancy.
+    - With one replica, the PDB blocks node drain until you add a replica.
+
+upgradeNotes:
+  - >-
+    Check nginx configuration compatibility and image vulnerability reports
+    before you accept a digest update.
+  - >-
+    No database or storage migration. RollingUpdate permits one extra pod; PDB
+    permits no voluntary outage of the last replica.
+
+smoke:
+  - name: nginx-ready
+    resource: deployment/nginx
+    condition: condition=Available
+    timeout: 180s
+    http:
+      service: nginx
+      port: 8080
+      path: /
+      status: 200
+      contains: Hello from Nginx deployed on Zeabur!

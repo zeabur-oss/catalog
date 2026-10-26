@@ -1,0 +1,252 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zeabur-oss/catalog/schema/v1/component.schema.json",
+  "title": "Component",
+  "description": "One upstream for one capability, at components/<capability>/<upstream>.yaml. A cluster administrator installs it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "maturity", "defaults", "releases", "detection", "security"],
+  "properties": {
+    "apiVersion": { "const": "catalog.zeabur.com/v1" },
+    "kind": { "const": "Component" },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "description", "license", "homepage"],
+      "properties": {
+        "name": { "type": "string", "description": "Name for people." },
+        "description": { "type": "string", "description": "What it does and why the catalog recommends it, in one or two sentences." },
+        "license": { "type": "string", "description": "SPDX expression; every identifier must be OSI-approved, or listed under optInOnly in config/licenses.yaml with no profile recommending the component." },
+        "homepage": { "type": "string", "format": "uri" }
+      }
+    },
+    "maturity": { "enum": ["cncf-graduated", "cncf-incubating", "cncf-sandbox", "kubernetes-sig", "independent"] },
+    "stability": { "enum": ["stable", "beta"], "default": "stable" },
+    "alternatives": {
+      "type": "object",
+      "description": "Other upstreams for this capability, with a one-line note each.",
+      "additionalProperties": { "type": "string" }
+    },
+    "defaults": {
+      "type": "object",
+      "description": "Per profile: recommended (on by default), optional (off by default) or unsupported.",
+      "additionalProperties": false,
+      "required": ["single-node", "multi-node"],
+      "properties": {
+        "single-node": { "$ref": "#/$defs/mode" },
+        "multi-node": { "$ref": "#/$defs/mode" }
+      }
+    },
+    "distributions": {
+      "type": "array",
+      "description": "Kubernetes distributions it applies to; omitted means any. Information for consumers; e2e runs on kind regardless, and on KubeSolo only when the list is empty or names kubesolo.",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["k3s", "rke2", "k0s", "kubesolo", "microk8s", "kubeadm"] }
+    },
+    "persistsData": { "type": "boolean", "description": "Keeps state in volumes; uninstalling loses data." },
+    "disruptsTraffic": { "type": "boolean", "description": "Changes to it can interrupt serving traffic." },
+    "requires": {
+      "type": "array",
+      "description": "Components installed first: <capability> (its recommended upstream, else an optional one) or <capability>/<upstream>.",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z0-9-]+(/[a-z0-9-]+)?$" }
+    },
+    "inputs": {
+      "type": "array",
+      "description": "Values the installer asks for or generates.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "description"],
+        "properties": {
+          "name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "description": { "type": "string" },
+          "release": { "type": "string", "description": "Release whose values receive the input; defaults to the first chart release." },
+          "path": { "type": "string", "description": "Dotted values path; numbers index lists." },
+          "secret": {
+            "type": "object",
+            "description": "Store the input in this Secret, created before install.",
+            "additionalProperties": false,
+            "required": ["name", "key", "namespace"],
+            "properties": {
+              "name": { "type": "string" },
+              "key": { "type": "string" },
+              "namespace": { "type": "string" }
+            }
+          },
+          "generate": { "const": "random", "description": "Generate a random value instead of asking: generateBytes random bytes in generateEncoding." },
+          "generateBytes": { "type": "integer", "minimum": 12, "maximum": 64, "default": 64, "description": "Random bytes to generate." },
+          "generateEncoding": { "enum": ["hex", "base64url"], "default": "hex", "description": "hex, or base64url without padding." },
+          "required": { "type": "boolean" },
+          "default": {},
+          "testValue": { "description": "Value CI installs with." }
+        },
+        "oneOf": [{ "required": ["path"] }, { "required": ["secret"] }],
+        "dependentRequired": { "generateBytes": ["generate"], "generateEncoding": ["generate"] }
+      }
+    },
+    "releases": {
+      "type": "array",
+      "description": "Installed in order.",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/release" }
+    },
+    "contributes": {
+      "type": "array",
+      "description": "Values this component adds to another component's release.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["target", "release", "values"],
+        "properties": {
+          "target": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+$" },
+          "release": { "type": "string" },
+          "values": { "$ref": "#/$defs/values" }
+        }
+      }
+    },
+    "detection": {
+      "type": "object",
+      "description": "How to recognise an existing installation.",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "crds": { "$ref": "#/$defs/strings" },
+        "apiServices": { "$ref": "#/$defs/strings" },
+        "gatewayControllers": { "$ref": "#/$defs/strings" },
+        "ingressControllers": { "$ref": "#/$defs/strings" },
+        "helmCharts": { "$ref": "#/$defs/strings" },
+        "k3sAddons": { "$ref": "#/$defs/strings" },
+        "workloads": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "labels"],
+            "properties": {
+              "kind": { "enum": ["Deployment", "StatefulSet", "DaemonSet"] },
+              "labels": { "type": "object", "additionalProperties": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary"],
+      "properties": {
+        "summary": { "type": "string", "description": "What its RBAC lets it do." },
+        "clusterWide": { "type": "boolean", "description": "Has cluster-scoped RBAC." },
+        "privileged": { "type": "boolean" },
+        "podSecurity": { "enum": ["baseline"], "description": "The Pod Security level its namespaces need when it cannot run under restricted; omitted means restricted." },
+        "egress": { "$ref": "#/$defs/strings" },
+        "credentials": { "enum": ["optional", "required"], "description": "External credentials; omitted means none." },
+        "credentialsNote": { "type": "string" },
+        "tenants": { "enum": ["namespaced", "admin-only"], "description": "Who may use its CRDs; omitted means tenants never do." },
+        "tenantCRDs": { "$ref": "#/$defs/strings" },
+        "risks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["risk", "mitigation"],
+            "properties": {
+              "risk": { "type": "string" },
+              "mitigation": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "smoke": {
+      "type": "array",
+      "description": "Extra e2e checks after install.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "wait"],
+        "properties": {
+          "name": { "type": "string" },
+          "manifest": { "type": "string", "description": "Objects to apply first, in namespace catalog-smoke." },
+          "wait": { "type": "array", "items": { "type": "string" }, "description": "`kubectl wait` arguments." },
+          "timeout": { "type": "string", "default": "180s" }
+        }
+      }
+    },
+    "leftovers": {
+      "type": "array",
+      "description": "What the upstream keeps on uninstall: a kind (customresourcedefinitions) or <resource>/<name>.",
+      "items": { "type": "string" }
+    },
+    "upgradeNotes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["versions", "note"],
+        "properties": {
+          "versions": { "type": "string", "description": "Semver range the note applies to." },
+          "note": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "mode": { "enum": ["recommended", "optional", "unsupported"] },
+    "strings": { "type": "array", "items": { "type": "string" } },
+    "values": { "type": "string", "description": "Helm values (YAML). Every value needs a comment saying why." },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "namespace"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "namespace": { "type": "string" },
+        "releaseName": { "type": "string", "description": "Helm release name; defaults to name." },
+        "skipIfPresent": { "$ref": "#/$defs/strings", "description": "Skip when these CRDs already exist." },
+        "chart": { "type": "string", "description": "oci://registry/path/chart, or a chart name with repo." },
+        "repo": { "type": "string", "pattern": "^https://", "description": "HTTP chart repository." },
+        "urls": {
+          "type": "array",
+          "description": "Manifest URLs; {version} is replaced.",
+          "items": { "type": "string", "pattern": "\\{version\\}" }
+        },
+        "version": { "type": "string" },
+        "chartDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "description": "The chart at version: for an oci:// chart, its OCI manifest digest; for a chart in an HTTP repository, the SHA-256 of the chart archive, as the repository's index.yaml records it."
+        },
+        "urlDigests": {
+          "type": "array",
+          "description": "The SHA-256 of each file in urls, in the same order.",
+          "items": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+        },
+        "unpinnedImages": {
+          "type": "array",
+          "description": "Images, without tag, that the chart cannot pin by digest. A comment says why.",
+          "items": { "type": "string" }
+        },
+        "manifests": { "type": "string", "description": "Objects applied as written." },
+        "values": { "$ref": "#/$defs/values", "description": "Values for every profile." },
+        "profiles": {
+          "type": "object",
+          "description": "Per-profile values merged over values (maps merge, lists replace).",
+          "additionalProperties": false,
+          "properties": {
+            "single-node": { "$ref": "#/$defs/values" },
+            "multi-node": { "$ref": "#/$defs/values" }
+          }
+        }
+      },
+      "oneOf": [
+        { "required": ["chart", "version", "chartDigest"] },
+        { "required": ["urls", "version", "urlDigests"] },
+        { "required": ["manifests"] }
+      ],
+      "dependentRequired": { "repo": ["chart"], "values": ["chart"], "profiles": ["chart"], "chartDigest": ["chart"], "urlDigests": ["urls"] }
+    }
+  }
+}

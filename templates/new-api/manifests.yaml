@@ -1,0 +1,204 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: new-api
+  namespace: '{{ .Namespace }}'
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: new-api
+  template:
+    metadata:
+      labels:
+        templates.zeabur.com/template: new-api
+        app: new-api
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: new-api
+        image: docker.io/calciumion/new-api:v1.0.0-rc.46@sha256:abf1f675efa1847b90c049c03766e2daaf62a78998aae3625cf34b6a045b1b97
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 2000m
+            memory: 1Gi
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: tmp
+          mountPath: /tmp
+        - name: db-ca
+          mountPath: /db-ca
+          readOnly: true
+        ports:
+        - name: http
+          containerPort: 3000
+        startupProbe:
+          tcpSocket:
+            port: 3000
+          periodSeconds: 5
+          failureThreshold: 120
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -ec
+            - test -f /tmp/setup-complete && wget -q -O /dev/null http://127.0.0.1:3000/api/status
+          periodSeconds: 5
+          timeoutSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /api/status
+            port: 3000
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 6
+        env:
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: newapi-db-app
+              key: password
+        - name: SQL_DSN
+          value: postgres://newapi:$(DATABASE_PASSWORD)@newapi-db-rw:5432/newapi?sslmode=verify-full&sslrootcert=/db-ca/ca.crt
+        - name: SESSION_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: newapi-secrets
+              key: session-secret
+        - name: CRYPTO_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: newapi-secrets
+              key: crypto-secret
+        - name: INITIAL_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: newapi-secrets
+              key: admin-password
+        - name: TZ
+          value: Asia/Taipei
+        args:
+        - --log-dir
+        - /data/logs
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - /bin/sh
+              - -ec
+              - "set -eu\nn=0\nuntil wget -q -O /tmp/setup-state.json http://127.0.0.1:3000/api/setup; do\n  n=$((n+1));\
+                \ [ \"$n\" -lt 120 ] || exit 1; sleep 2\ndone\nif ! grep -Eq '\"status\"[[:space:]]*:[[:space:]]*true'\
+                \ /tmp/setup-state.json; then\n  payload=$(printf '{\"username\":\"admin\",\"password\":\"Aa1-%s\"\
+                ,\"confirmPassword\":\"Aa1-%s\",\"SelfUseModeEnabled\":true,\"DemoSiteEnabled\":false}' \"$INITIAL_ADMIN_PASSWORD\"\
+                \ \"$INITIAL_ADMIN_PASSWORD\")\n  wget -q -O /tmp/setup-result.json --header='Content-Type: application/json'\
+                \ --post-data=\"$payload\" http://127.0.0.1:3000/api/setup\n  grep -Eq '\"success\"[[:space:]]*:[[:space:]]*true'\
+                \ /tmp/setup-result.json\nfi\nrm -f /tmp/setup-state.json /tmp/setup-result.json\ntouch /tmp/setup-complete\n"
+      volumes:
+      - name: data
+        emptyDir:
+          sizeLimit: 512Mi
+      - name: tmp
+        emptyDir:
+          sizeLimit: 256Mi
+      - name: db-ca
+        secret:
+          secretName: newapi-db-ca
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: new-api
+  namespace: '{{ .Namespace }}'
+spec:
+  selector:
+    app: new-api
+  ports:
+  - name: http
+    port: 3000
+    targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: new-api
+  namespace: '{{ .Namespace }}'
+  annotations:
+    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: 'true'
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - '{{ .Domain }}'
+    secretName: new-api-tls
+  rules:
+  - host: '{{ .Domain }}'
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: new-api
+            port:
+              number: 3000
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: newapi-db
+  namespace: '{{ .Namespace }}'
+spec:
+  inheritedMetadata:
+    labels:
+      templates.zeabur.com/template: new-api
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17@sha256:70664ebcfa1100361b5bdc28bbf06fdbe08db2dc4ad7bd14de33c5e05fe8ea8e
+  enableSuperuserAccess: false
+  enablePDB: true
+  postgresUID: 26
+  postgresGID: 26
+  seccompProfile:
+    type: RuntimeDefault
+  bootstrap:
+    initdb:
+      database: newapi
+      owner: newapi
+      encoding: UTF8
+  storage:
+    size: 10Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  postgresql:
+    parameters:
+      shared_buffers: 128MB
+      max_connections: '100'

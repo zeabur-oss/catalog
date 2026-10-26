@@ -1,0 +1,304 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: n8n-data
+  namespace: '{{ .Namespace }}'
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n
+  namespace: '{{ .Namespace }}'
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: n8n
+  template:
+    metadata:
+      labels:
+        templates.zeabur.com/template: n8n-sqlite
+        app: n8n
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: n8n
+        image: docker.io/n8nio/n8n:2.44.6@sha256:d02752c6ab446ae9db8deec2f9cc887c378f77cdcad31650814df936b7386dfb
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+        volumeMounts:
+        - name: data
+          mountPath: /home/node/.n8n
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /home/node/.cache
+        ports:
+        - name: http
+          containerPort: 5678
+        - name: broker
+          containerPort: 5679
+        startupProbe:
+          tcpSocket:
+            port: 5678
+          periodSeconds: 5
+          failureThreshold: 120
+        readinessProbe:
+          httpGet:
+            path: /healthz/readiness
+            port: 5678
+          periodSeconds: 10
+          timeoutSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 5678
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 6
+        env:
+        - name: DB_TYPE
+          value: sqlite
+        - name: GENERIC_TIMEZONE
+          value: Asia/Taipei
+        - name: N8N_BLOCK_ENV_ACCESS_IN_NODE
+          value: 'true'
+        - name: N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE
+          value: 'true'
+        - name: N8N_DEFAULT_BINARY_DATA_MODE
+          value: filesystem
+        - name: N8N_DIAGNOSTICS_ENABLED
+          value: 'false'
+        - name: N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS
+          value: 'true'
+        - name: N8N_HOST
+          value: '{{ .Domain }}'
+        - name: N8N_PROTOCOL
+          value: https
+        - name: N8N_PROXY_HOPS
+          value: '1'
+        - name: WEBHOOK_URL
+          value: https://{{ .Domain }}/
+        - name: N8N_EDITOR_BASE_URL
+          value: https://{{ .Domain }}/
+        - name: N8N_RUNNERS_MODE
+          value: external
+        - name: N8N_RUNNERS_BROKER_LISTEN_ADDRESS
+          value: 0.0.0.0
+        - name: N8N_RUNNERS_BROKER_PORT
+          value: '5679'
+        - name: N8N_RUNNERS_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: n8n-secrets
+              key: runner-token
+        - name: N8N_ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: n8n-secrets
+              key: encryption-key
+        - name: NODE_ENV
+          value: production
+        - name: NODES_EXCLUDE
+          value: '["n8n-nodes-base.executeCommand","n8n-nodes-base.localFileTrigger"]'
+        - name: N8N_INSTANCE_OWNER_MANAGED_BY_ENV
+          value: 'true'
+        - name: N8N_INSTANCE_OWNER_EMAIL
+          value: '{{ .Inputs.ownerEmail }}'
+        - name: N8N_INSTANCE_OWNER_FIRST_NAME
+          value: Instance
+        - name: N8N_INSTANCE_OWNER_LAST_NAME
+          value: Owner
+        - name: OWNER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: n8n-secrets
+              key: owner-password
+        - name: N8N_USER_FOLDER
+          value: /home/node
+        - name: DB_SQLITE_POOL_SIZE
+          value: '1'
+        - name: DB_SQLITE_VACUUM_ON_STARTUP
+          value: 'true'
+        command:
+        - tini
+        - --
+        - /bin/sh
+        - -ec
+        - export N8N_INSTANCE_OWNER_PASSWORD_HASH="$(node -e 'process.stdout.write(require("/usr/local/lib/node_modules/n8n/node_modules/bcryptjs").hashSync(process.env.OWNER_PASSWORD,12))')";
+          unset OWNER_PASSWORD; exec /docker-entrypoint.sh start
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: n8n-data
+      - name: tmp
+        emptyDir:
+          sizeLimit: 512Mi
+      - name: cache
+        emptyDir:
+          sizeLimit: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: n8n
+  namespace: '{{ .Namespace }}'
+spec:
+  selector:
+    app: n8n
+  ports:
+  - name: http
+    port: 5678
+    targetPort: 5678
+  - name: broker
+    port: 5679
+    targetPort: 5679
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: n8n
+  namespace: '{{ .Namespace }}'
+  annotations:
+    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: 'true'
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - '{{ .Domain }}'
+    secretName: n8n-tls
+  rules:
+  - host: '{{ .Domain }}'
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: n8n
+            port:
+              number: 5678
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: task-runner
+  namespace: '{{ .Namespace }}'
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: task-runner
+  template:
+    metadata:
+      labels:
+        templates.zeabur.com/template: n8n-sqlite
+        app: task-runner
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: task-runner
+        image: docker.io/n8nio/runners:2.44.6@sha256:255e69ed23d8b3866e593f6e105e7e12cafc81c4d1966a8f8702115af1032461
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: home
+          mountPath: /home/runner
+        ports:
+        - name: database
+          containerPort: 5680
+        startupProbe:
+          tcpSocket:
+            port: 5680
+          periodSeconds: 5
+          failureThreshold: 120
+        readinessProbe:
+          tcpSocket:
+            port: 5680
+          periodSeconds: 10
+          timeoutSeconds: 3
+        livenessProbe:
+          tcpSocket:
+            port: 5680
+          periodSeconds: 20
+          timeoutSeconds: 3
+          failureThreshold: 6
+        env:
+        - name: N8N_RUNNERS_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: n8n-secrets
+              key: runner-token
+        - name: N8N_RUNNERS_TASK_BROKER_URI
+          value: http://n8n:5679
+        - name: N8N_RUNNERS_LAUNCHER_HEALTH_CHECK_PORT
+          value: '5680'
+        - name: GENERIC_TIMEZONE
+          value: Asia/Taipei
+        - name: N8N_BLOCK_RUNNER_ENV_ACCESS
+          value: 'true'
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 512Mi
+      - name: home
+        emptyDir:
+          sizeLimit: 256Mi

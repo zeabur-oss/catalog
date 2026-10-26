@@ -1,0 +1,160 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: Open WebUI
+  version: "main"
+  description: >-
+    Authenticated LLM interface with private pipelines. Open WebUI's license
+    (https://github.com/open-webui/open-webui/blob/main/LICENSE) requires you
+    to keep its branding.
+  license: LicenseRef-Open-WebUI AND MIT
+  # Also: https://github.com/open-webui/pipelines
+  homepage: https://github.com/open-webui/open-webui
+  categories: [ai]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: open-webui
+    securityProfile: restricted
+    ports: [{name: http, port: 8080}]
+    resources: {requests: {cpu: 500m, memory: 1Gi}, limits: {cpu: "2", memory: 4Gi}}
+    domains: ['{{ .Domain }}']
+  - name: pipeline
+    securityProfile: restricted
+    ports: [{name: http, port: 9099}]
+    resources: {requests: {cpu: 200m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+
+inputs:
+  - name: adminEmail
+    label: Administrator email
+    locales:
+      zh-TW:
+        label: 管理員 Email
+        description: "第一個管理員的 Email。密碼會自動產生，放在機密 app-secrets 的 admin-password。"
+      zh-CN:
+        label: 管理员邮箱
+        description: "第一个管理员的邮箱。密码会自动生成，放在机密 app-secrets 的 admin-password。"
+    description: >-
+      Initial administrator email; password is generated in
+      app-secrets/admin-password.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
+  - name: adminPassword
+    description: adminPassword generated credential; retain during upgrades.
+    generate: random
+    secret: {name: app-secrets, key: admin-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: sessionKey
+    description: sessionKey generated credential; retain during upgrades.
+    generate: random
+    secret: {name: app-secrets, key: session-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: pipelineKey
+    description: pipelineKey generated credential; retain during upgrades.
+    generate: random
+    secret: {name: app-secrets, key: pipeline-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: >-
+    The web interface and the pipeline service both run as UID 1000 with no
+    extra system privileges and read-only images. The first admin
+    credentials and the pipeline API key are generated. Sign-up is disabled.
+  locales:
+    zh-TW:
+      summary: "網頁介面和 pipeline 服務都以 UID 1000 執行，沒有額外的系統權限，映像檔唯讀。第一組管理員帳密和 pipeline API 金鑰都是自動產生的。註冊功能已關閉。"
+    zh-CN:
+      summary: "网页界面和 pipeline 服务都以 UID 1000 运行，没有额外的系统权限，镜像只读。第一组管理员账号密码和 pipeline API 密钥都是自动生成的。注册功能已关闭。"
+  risks:
+    - risk: >-
+        Open WebUI uses a custom license. You can read the source, but it is
+        not OSI-approved, and it has branding rules.
+      mitigation: >-
+        The template description names the license. Keep all the upstream
+        branding. Section 4 allows branding changes only for at most 50 end
+        users in a rolling 30-day period, or with written or enterprise
+        permission. This template keeps the upstream branding.
+      locales:
+        zh-TW:
+          risk: "Open WebUI 用的是自訂授權。原始碼看得到，但不算 OSI 認可，而且對品牌標示有規定。"
+          mitigation: "範本說明裡有寫明授權。請保留上游所有的品牌標示。第 4 節只允許在 30 天內最多 50 位終端使用者的情況下改品牌，或是取得書面或企業授權。這個範本保留了上游的品牌標示。"
+        zh-CN:
+          risk: "Open WebUI 用的是自定义许可。源码看得到，但不算 OSI 认可，而且对品牌标识有规定。"
+          mitigation: "模板说明里有写明许可。请保留上游所有的品牌标识。第 4 节只允许在 30 天内最多 50 位终端用户的情况下改品牌，或是取得书面或企业授权。这个模板保留了上游的品牌标识。"
+    - risk: >-
+        Pipelines and tools added by administrators run Python code with
+        access to provider credentials.
+      mitigation: >-
+        Treat every installed pipeline and dependency as application code and
+        trust it fully. Keep the pipeline service private so only the web
+        interface can reach it. It has no Kubernetes tokens or host sockets.
+        Outbound traffic is not limited, so add an egress NetworkPolicy (a
+        rule that limits outbound traffic) to keep pipelines away from private
+        addresses. Python packages install to the writable pipeline volume.
+        Packages that need root (apt or system libraries for a browser) cannot
+        install at runtime. Build them into your own pinned image.
+      locales:
+        zh-TW:
+          risk: "Pipeline 和管理員加的工具會執行 Python 程式碼，而且拿得到服務商的憑證。"
+          mitigation: "每個安裝的 pipeline 和相依套件，都要當成應用程式的程式碼，完全信任了才裝。pipeline 服務要保持私有，只讓網頁介面連得到。它沒有 Kubernetes 權杖，也沒有主機 socket。對外連線沒有限制，所以請加一條 egress NetworkPolicy（限制對外連線的規則），讓 pipeline 連不到私有位址。Python 套件會裝到可寫入的 pipeline 儲存空間。需要 root 的套件（apt 或瀏覽器用的系統函式庫）無法在執行時安裝，請自己打包進固定版本的映像檔。"
+        zh-CN:
+          risk: "Pipeline 和管理员添加的工具会运行 Python 代码，而且拿得到服务商的凭据。"
+          mitigation: "每个安装的 pipeline 和依赖包，都要当成应用代码，完全信任了才装。pipeline 服务要保持私有，只让网页界面连得到。它没有 Kubernetes 令牌，也没有主机 socket。对外连接没有限制，所以请加一条 egress NetworkPolicy（限制对外连接的规则），让 pipeline 连不到私有地址。Python 包会装到可写入的 pipeline 存储卷。需要 root 的包（apt 或浏览器用的系统库）无法在运行时安装，请自己打包进固定版本的镜像。"
+    - risk: >-
+        External model providers receive your chat content and the data from
+        documents you upload.
+      mitigation: >-
+        Read each provider's privacy terms before you connect it. Ollama is
+        disabled. Add provider connections in the admin settings.
+      locales:
+        zh-TW:
+          risk: "外部的模型服務商會收到你的對話內容和上傳文件的資料。"
+          mitigation: "連接每個服務商之前，請先讀過它的隱私條款。Ollama 已停用，服務商的連線請到管理員設定裡自己加。"
+        zh-CN:
+          risk: "外部的模型服务商会收到你的对话内容和上传文档的数据。"
+          mitigation: "连接每个服务商之前，请先读过它的隐私条款。Ollama 已停用，服务商的连接请到管理员设置里自己加。"
+
+scalability:
+  summary: >-
+    Single replica with persistent storage. The template has no high
+    availability.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - A node-local default StorageClass, such as local-path, has no snapshots or failover.
+    - >-
+      The UI stores data in SQLite on its volume; the pipeline volume holds
+      installed pipeline code and packages. Neither supports more than one
+      writer.
+
+upgradeNotes:
+  - >-
+    Back up persistent state off-node before accepting an image digest or schema
+    migration; restore into a separate namespace before cutover.
+  - >-
+    Stop both Deployments, then back up the UI volume, the pipeline volume and
+    app-secrets together. Keep the previous image digest pair; UI schema
+    migrations and pipeline dependency changes can prevent rollback.
+  - >-
+    Keep app-secrets/session-key (WEBUI_SECRET_KEY). A new value signs out all
+    users.
+  - >-
+    ENABLE_PERSISTENT_CONFIG is false. Settings from the manifest environment
+    apply again at each restart.
+  - A change of embedding model requires you to re-embed stored documents.
+  - >-
+    Both images pin a digest of the upstream main branch. Read the upstream
+    changes and the license before you move to a newer digest.
+
+smoke:
+  - name: open-webui-ready
+    resource: deployment/open-webui
+    condition: condition=Available
+    timeout: 600s
+    http: {service: open-webui, port: 8080, path: /health, status: 200}
+  - name: pipeline-ready
+    resource: deployment/pipeline
+    condition: condition=Available
+    timeout: 600s
+    http: {service: pipeline, port: 9099, path: /, status: 200}

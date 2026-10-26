@@ -1,0 +1,106 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: SearXNG
+  version: "2026.10.24-ef0ec03da"
+  description: >-
+    Privacy-respecting metasearch with generated signing secret and HTML/JSON
+    search.
+  license: AGPL-3.0-or-later
+  homepage: https://github.com/searxng/searxng
+  icon: https://github.com/searxng.png
+  categories: [search]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: searxng
+    securityProfile: restricted
+    ports: [{name: http, port: 8080}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}
+    domains: ['{{ .Domain }}']
+
+inputs:
+  - name: signingKey
+    description: Persistent server signing key; generated at installation.
+    generate: random
+    secret: {name: app-secrets, key: signing-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: >-
+    SearXNG runs without root rights, with a read-only root filesystem, no
+    service-account token and no extra Linux capabilities. Only Traefik can
+    reach it, over HTTPS. Outbound traffic is not limited.
+  locales:
+    zh-TW:
+      summary: "SearXNG 不用 root 權限執行，根檔案系統唯讀，沒有 service-account token，也沒有額外的 Linux 權限。只有 Traefik 能透過 HTTPS 連到它。往外的網路流量沒有限制。"
+    zh-CN:
+      summary: "SearXNG 不用 root 权限运行，根文件系统只读，没有 service-account token，也没有额外的 Linux 权限。只有 Traefik 能通过 HTTPS 连到它。向外的网络流量没有限制。"
+  risks:
+    - risk: >-
+        If the search is open to the public, others can abuse it, and the
+        upstream search engines may slow down or block this server.
+      mitigation: >-
+        Public instance mode is off, and the Valkey-backed rate limiter is not
+        turned on. Use this instance for private, low-volume search. Before you
+        publish it, add sign-in and rate limiting at the ingress.
+      locales:
+        zh-TW:
+          risk: "搜尋如果對外公開，可能被人濫用，上游的搜尋引擎也可能限速或封鎖這台伺服器。"
+          mitigation: "公開實例模式是關閉的，用 Valkey 的流量限制器也沒有開。請只用在私人、查詢量小的搜尋。要對外公開之前，先在 ingress 加上登入驗證和流量限制。"
+        zh-CN:
+          risk: "搜索如果对外公开，可能被人滥用，上游的搜索引擎也可能限速或封禁这台服务器。"
+          mitigation: "公开实例模式是关闭的，基于 Valkey 的流量限制器也没有开。请只用于私人、查询量小的搜索。要对外公开之前，先在 ingress 加上登录验证和流量限制。"
+    - risk: >-
+        SearXNG must reach many search engines on the public Internet, so your
+        search terms leave this cluster.
+      mitigation: >-
+        The template does not limit outbound traffic. Read the privacy policy
+        of each search engine you turn on.
+      locales:
+        zh-TW:
+          risk: "SearXNG 要連到公開網路上的許多搜尋引擎，所以你的搜尋關鍵字會離開這個叢集。"
+          mitigation: "這個範本不限制往外的網路流量。請讀過你開啟的每個搜尋引擎的隱私權政策。"
+        zh-CN:
+          risk: "SearXNG 要连到公共网络上的许多搜索引擎，所以你的搜索关键词会离开这个集群。"
+          mitigation: "这个模板不限制向外的网络流量。请读过你开启的每个搜索引擎的隐私政策。"
+    - risk: SearXNG uses the AGPL-3.0-or-later license.
+      mitigation: >-
+        If you change the code or offer it to other users, publish the matching
+        source code as the license requires.
+      locales:
+        zh-TW:
+          risk: "SearXNG 採用 AGPL-3.0-or-later 授權。"
+          mitigation: "如果你改過程式碼，或是提供給其他人使用，依授權要求公開對應的原始碼。"
+        zh-CN:
+          risk: "SearXNG 采用 AGPL-3.0-or-later 许可。"
+          mitigation: "如果你改过代码，或者提供给其他人使用，按许可要求公开对应的源代码。"
+
+scalability:
+  summary: >-
+    One replica. Cache is ephemeral and a restart clears it. The instance stores
+    no user data.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - More replicas need a shared rate limiter. The template does not provide one.
+
+upgradeNotes:
+  - >-
+    Pinned image version 2026.10.19-81371861f. On updates, check settings,
+    entrypoint and search engine compatibility.
+  - >-
+    Settings are in a ConfigMap. Change them there; changes inside the container
+    are lost on restart. Cache is disposable. No database or PVC backup is
+    needed.
+  - >-
+    The signing key in app-secrets persists for the installation. Include it in
+    encrypted secret backups.
+
+smoke:
+  - name: searxng-ready
+    resource: deployment/searxng
+    condition: condition=Available
+    timeout: 300s
+    http: {service: searxng, port: 8080, path: /healthz, status: 200}

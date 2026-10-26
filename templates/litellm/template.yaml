@@ -1,0 +1,131 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: LiteLLM
+  version: "v1.106.3"
+  description: >-
+    LiteLLM proxy for LLM provider APIs over HTTPS, with keys, models and
+    spend in PostgreSQL 18 managed by CloudNativePG. The image includes the
+    litellm_enterprise package under the BerriAI Enterprise license
+    (https://github.com/BerriAI/litellm/blob/main/enterprise/LICENSE.md),
+    which allows production use only with a subscription.
+  # enterprise/ and the bundled litellm_enterprise package use the BerriAI
+  # Enterprise license; the rest of LiteLLM is MIT.
+  license: MIT AND LicenseRef-LiteLLM-Enterprise AND PostgreSQL AND Apache-2.0
+  # Also: https://github.com/BerriAI/litellm/blob/main/enterprise/LICENSE.md, https://cloudnative-pg.io/
+  homepage: https://www.litellm.ai/
+  icon: https://github.com/BerriAI.png
+  categories: [ai]
+
+requires:
+  - ingress/traefik
+  - certificates/cert-manager
+  - databases/cloudnative-pg
+
+services:
+  - name: litellm
+    securityProfile: restricted
+    ports: [{name: http, port: 4000}]
+    resources: {requests: {cpu: 200m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+    domains: ['{{ .Domain }}']
+  - name: litellm-db
+    securityProfile: restricted
+    ports: [{name: postgresql, port: 5432}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "1", memory: 1Gi}}
+
+inputs:
+  - name: masterKey
+    description: >-
+      Admin API key without the sk- prefix. The key is sk- followed by this
+      value; it is also the password of the admin user in the UI.
+    generate: random
+    secret: {name: litellm-secrets, key: master-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: saltKey
+    description: >-
+      Encrypts provider credentials stored in the database. Never change it
+      after you add a model.
+    generate: random
+    secret: {name: litellm-secrets, key: salt-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: "LiteLLM runs as UID 65534 with a read-only root filesystem, no service-account token and all extra capabilities dropped. Outbound traffic is not limited. Every API call needs the master key or a key that the master key issued."
+  locales:
+    zh-TW:
+      summary: "LiteLLM 以 UID 65534 執行，根檔案系統唯讀，沒有服務帳號 token，多餘的權限都拿掉了。對外連線沒有限制。每個 API 呼叫都要帶主金鑰，或由主金鑰發出的金鑰。"
+    zh-CN:
+      summary: "LiteLLM 以 UID 65534 运行，根文件系统只读，没有服务账号 token，多余的权限都去掉了。对外连接没有限制。每个 API 调用都要带主密钥，或由主密钥发出的密钥。"
+  risks:
+    - risk: "The master key gives full access to the proxy, to its keys and to the provider credentials it stores."
+      mitigation: "Keep the master key for administration only. Give applications virtual keys with budgets and model limits."
+      locales:
+        zh-TW:
+          risk: "主金鑰可以完整存取代理、代理發出的金鑰，以及它保存的服務商憑證。"
+          mitigation: "主金鑰只留給管理用。給應用程式使用的，請發出有預算和模型限制的虛擬金鑰。"
+        zh-CN:
+          risk: "主密钥可以完整访问代理、代理发出的密钥，以及它保存的服务商凭证。"
+          mitigation: "主密钥只留给管理用。给应用使用的，请发出有预算和模型限制的虚拟密钥。"
+    - risk: "Enterprise features need a license from BerriAI."
+      mitigation: "No LITELLM_LICENSE is set, so enterprise features stay off. Because the enterprise code ships in the image, the person who installs the template must accept the enterprise license."
+      locales:
+        zh-TW:
+          risk: "企業版功能需要 BerriAI 的授權。"
+          mitigation: "範本沒有設定 LITELLM_LICENSE，所以企業版功能是關閉的。因為企業版程式碼包含在映像檔裡，安裝範本的人必須接受企業版授權。"
+        zh-CN:
+          risk: "企业版功能需要 BerriAI 的许可。"
+          mitigation: "模板没有设置 LITELLM_LICENSE，所以企业版功能是关闭的。因为企业版代码包含在镜像里，安装模板的人必须接受企业版许可。"
+    - risk: "The CloudNativePG database instances call the Kubernetes API with an identity that the operator creates."
+      mitigation: "The databases/cloudnative-pg component creates the RBAC permissions for each cluster. The LiteLLM Pod has no token."
+      locales:
+        zh-TW:
+          risk: "CloudNativePG 的資料庫實例會用 operator 建立的身分呼叫 Kubernetes API。"
+          mitigation: "databases/cloudnative-pg 元件會為每個叢集建立對應的 RBAC 權限。LiteLLM 的 Pod 沒有 token。"
+        zh-CN:
+          risk: "CloudNativePG 的数据库实例会用 operator 创建的身份调用 Kubernetes API。"
+          mitigation: "databases/cloudnative-pg 组件会为每个集群创建对应的 RBAC 权限。LiteLLM 的 Pod 没有 token。"
+
+scalability:
+  summary: One LiteLLM instance with one PostgreSQL primary.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      LiteLLM migrates the database at start, and rate limits and caches are
+      per process. More replicas need Redis and the migration moved to a
+      separate step.
+
+upgradeNotes:
+  - >-
+    Database backups are off when the template is installed. To turn them on,
+    open the database in Zeabur and use the Backups tab.
+  - >-
+    LiteLLM migrates the database on start. A rollback needs the database
+    backup taken before the upgrade.
+  - Keep litellm-secrets. Without salt-key, stored provider credentials cannot be decrypted.
+  - Deleting the namespace deletes the database. Backups in S3 stay.
+
+smoke:
+  - name: postgresql-ready
+    resource: cluster/litellm-db
+    condition: condition=Ready
+    timeout: 900s
+  - name: litellm-ready
+    resource: deployment/litellm
+    condition: condition=Available
+    timeout: 900s
+    http: {service: litellm, port: 4000, path: /health/readiness, status: 200, contains: connected}
+  - name: authentication-required
+    resource: deployment/litellm
+    condition: condition=Available
+    timeout: 120s
+    http: {service: litellm, port: 4000, path: /key/list, status: 401}
+  - name: migrations-applied
+    resource: cluster/litellm-db
+    condition: condition=Ready
+    timeout: 120s
+    sql:
+      cluster: litellm-db
+      database: litellm
+      query: SELECT count(*) > 0 FROM _prisma_migrations WHERE finished_at IS NOT NULL
+      expect: "t"

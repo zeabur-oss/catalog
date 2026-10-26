@@ -1,0 +1,144 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qdrant-data
+  namespace: '{{ .Namespace }}'
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: qdrant
+  namespace: '{{ .Namespace }}'
+spec:
+  serviceName: qdrant
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: qdrant
+  template:
+    metadata:
+      labels:
+        templates.zeabur.com/template: qdrant
+        app.kubernetes.io/name: qdrant
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: qdrant
+        image: qdrant/qdrant:v1.20.0-unprivileged@sha256:8c215051dc7bc15221b5f89c100a84a4b04d0dd8497fb73e6fa86fc948d1a41d
+        ports:
+        - name: http
+          containerPort: 6333
+        - name: grpc
+          containerPort: 6334
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: [ALL]
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: '2'
+            memory: 2Gi
+        env:
+        - name: QDRANT__SERVICE__API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: qdrant-secrets
+              key: api-key
+        - name: QDRANT__STORAGE__STORAGE_PATH
+          value: /qdrant/data/storage
+        - name: QDRANT__STORAGE__SNAPSHOTS_PATH
+          value: /qdrant/data/snapshots
+        - name: QDRANT__STORAGE__TEMP_PATH
+          value: /qdrant/data/tmp
+        - name: QDRANT_INIT_FILE_PATH
+          value: /qdrant/data/.qdrant-initialized
+        - name: QDRANT__TELEMETRY_DISABLED
+          value: 'true'
+        volumeMounts:
+        - name: data
+          mountPath: /qdrant/data
+        - name: tmp
+          mountPath: /tmp
+        startupProbe:
+          httpGet:
+            path: /healthz
+            port: http
+          periodSeconds: 5
+          failureThreshold: 120
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: http
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /livez
+            port: http
+          periodSeconds: 20
+          failureThreshold: 6
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: qdrant-data
+      - name: tmp
+        emptyDir:
+          sizeLimit: 256Mi
+      terminationGracePeriodSeconds: 60
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qdrant
+  namespace: '{{ .Namespace }}'
+spec:
+  selector:
+    app.kubernetes.io/name: qdrant
+  ports:
+  - name: http
+    port: 6333
+    targetPort: http
+  - name: grpc
+    port: 6334
+    targetPort: grpc
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: qdrant
+  namespace: '{{ .Namespace }}'
+  annotations:
+    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts: ['{{ .Domain }}']
+    secretName: qdrant-tls
+  rules:
+  - host: '{{ .Domain }}'
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: qdrant
+            port:
+              number: 6333

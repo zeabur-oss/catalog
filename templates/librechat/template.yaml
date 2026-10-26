@@ -1,0 +1,249 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: LibreChat
+  version: "latest"
+  description: >-
+    Authenticated AI chat with Percona-managed MongoDB, CNPG pgvector RAG and
+    private community Meilisearch. The Percona MongoDB server is SSPL-1.0
+    (https://www.mongodb.com/legal/licensing/server-side-public-license); read
+    section 13 on service-offering obligations before you offer this to others.
+  license: MIT AND SSPL-1.0 AND PostgreSQL AND Apache-2.0
+  # Also: https://github.com/danny-avila/rag_api, https://github.com/percona/percona-server-mongodb-operator, https://cloudnative-pg.io/, https://github.com/meilisearch/meilisearch
+  homepage: https://github.com/danny-avila/LibreChat
+  categories: [ai]
+
+requires:
+  - databases/percona-mongodb
+  - databases/cloudnative-pg
+  - ingress/traefik
+  - certificates/cert-manager
+
+services:
+  - name: librechat
+    securityProfile: restricted
+    ports: [{name: http, port: 3080}]
+    resources: {requests: {cpu: 500m, memory: 1Gi}, limits: {cpu: "2", memory: 3Gi}}
+    domains: ['{{ .Domain }}']
+  - name: rag-api
+    securityProfile: restricted
+    ports: [{name: http, port: 8000}]
+    resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+  - name: meilisearch
+    securityProfile: restricted
+    ports: [{name: http, port: 7700}]
+    resources: {requests: {cpu: 200m, memory: 512Mi}, limits: {cpu: "1", memory: 2Gi}}
+  - name: rag-db
+    securityProfile: restricted
+    ports: [{name: postgresql, port: 5432}]
+    resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+  - name: mongodb
+    securityProfile: restricted
+    ports: [{name: mongodb, port: 27017}]
+    resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+
+inputs:
+  - name: adminEmail
+    label: Administrator email
+    locales:
+      zh-TW:
+        label: 管理員 Email
+        description: "第一個管理員的 Email。密碼會自動產生，放在機密 app-secrets 的 admin-password。不開放公開註冊。之後改機密不會重設已有的密碼。"
+      zh-CN:
+        label: 管理员邮箱
+        description: "第一个管理员的邮箱。密码会自动生成，放在机密 app-secrets 的 admin-password。不开放公开注册。之后修改机密不会重置已有的密码。"
+    description: >-
+      Initial administrator email; password is generated in
+      app-secrets/admin-password. Public registration is disabled. Changing the
+      Secret later does not reset an existing password.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
+  - name: providerSecret
+    label: OpenAI API key secret
+    locales:
+      zh-TW:
+        label: OpenAI API 金鑰的機密
+        description: "這個專案裡現有的機密，含真實的 OPENAI_API_KEY，聊天和 RAG 嵌入都會用到。"
+      zh-CN:
+        label: OpenAI API 密钥的机密
+        description: "这个项目里现有的机密，含真实的 OPENAI_API_KEY，聊天和 RAG 嵌入都会用到。"
+    description: Existing Secret with real OPENAI_API_KEY used by chat and RAG embeddings.
+    required: true
+    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: adminPassword
+    description: adminPassword generated credential; retain during upgrades.
+    generate: random
+    secret: {name: app-secrets, key: admin-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: mongoPassword
+    description: mongoPassword generated credential; retain during upgrades.
+    generate: random
+    secret: {name: app-secrets, key: mongo-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: jwtSecret
+    description: jwtSecret generated credential; retain during upgrades.
+    generate: random
+    secret: {name: app-secrets, key: jwt-secret}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: jwtRefreshSecret
+    description: jwtRefreshSecret generated credential; retain during upgrades.
+    generate: random
+    secret: {name: app-secrets, key: jwt-refresh-secret}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: credsKey
+    description: credsKey generated credential; retain during upgrades.
+    generate: random
+    secret: {name: app-secrets, key: creds-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: credsIv
+    description: credsIv generated credential; retain during upgrades.
+    generate: random
+    secret: {name: app-secrets, key: creds-iv}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: meiliKey
+    description: meiliKey generated credential; retain during upgrades.
+    generate: random
+    secret: {name: app-secrets, key: meili-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: "The app pods run as non-root with read-only images and no API token. The Percona MongoDB pods use TLS and authentication and stay restricted, with one exception: a writable root filesystem for TLS files that are hardcoded to /tmp. CloudNativePG uses limited tokens that the operator manages. MongoDB requires client certificates. LibreChat presents a 90-day client certificate from the cluster CA, cert-manager renews it, and LibreChat restarts when it changes."
+  locales:
+    zh-TW:
+      summary: "應用程式 Pod 以非 root 身分執行，映像檔唯讀，沒有 API token。使用 TLS 和驗證的 Percona MongoDB Pod 維持受限設定，只有一個例外：根檔案系統可寫入，因為 TLS 檔案寫死放在 /tmp。CloudNativePG 使用 operator 管理、權限受限的 token。MongoDB 要求用戶端憑證。LibreChat 會出示叢集 CA 簽發、有效期 90 天的用戶端憑證，由 cert-manager 負責更新，憑證一換，LibreChat 就會重新啟動。"
+    zh-CN:
+      summary: "应用 Pod 以非 root 身份运行，镜像只读，没有 API token。使用 TLS 和认证的 Percona MongoDB Pod 保持受限配置，只有一个例外：根文件系统可写入，因为 TLS 文件写死放在 /tmp。CloudNativePG 使用 operator 管理、权限受限的 token。MongoDB 要求客户端证书。LibreChat 会出示集群 CA 签发、有效期 90 天的客户端证书，由 cert-manager 负责更新，证书一换，LibreChat 就会重启。"
+  risks:
+    - risk: "The Percona v1.23.1 entry scripts write TLS files to the hardcoded paths /tmp/tls.pem and /tmp/tls-internal.pem. The custom resource has no way to mount /tmp separately in the main container."
+      mitigation: "Only the operator-managed pods get this explicit exception, readOnlyRootFilesystem=false. They still require TLS, run as UID 1001, drop all capabilities, allow no escalation and use RuntimeDefault. All ordinary application images stay read-only. Nothing is changed after reconcile, and TLS is never turned off."
+      locales:
+        zh-TW:
+          risk: "Percona v1.23.1 的啟動腳本，會把 TLS 檔案寫到寫死的路徑 /tmp/tls.pem 和 /tmp/tls-internal.pem。自訂資源也沒辦法替主容器另外掛載 /tmp。"
+          mitigation: "只有 operator 管理的 Pod 拿到這個明確的例外：readOnlyRootFilesystem=false。它們仍然強制使用 TLS，以 UID 1001 執行，拿掉所有額外權限，不允許提升權限，並使用 RuntimeDefault。所有一般應用程式的映像檔都維持唯讀。協調完成後不會再改動任何東西，TLS 也不會被關掉。"
+        zh-CN:
+          risk: "Percona v1.23.1 的启动脚本，会把 TLS 文件写到写死的路径 /tmp/tls.pem 和 /tmp/tls-internal.pem。自定义资源也没办法为主容器单独挂载 /tmp。"
+          mitigation: "只有 operator 管理的 Pod 拿到这个明确的例外：readOnlyRootFilesystem=false。它们仍然强制使用 TLS，以 UID 1001 运行，去掉所有额外权限，不允许提升权限，并使用 RuntimeDefault。所有普通应用的镜像都保持只读。协调完成后不会再改动任何东西，TLS 也不会被关掉。"
+    - risk: "The MongoDB server uses the SSPL-1.0 license, which sets duties for anyone who offers MongoDB as a service. SSPL is not OSI-approved."
+      mitigation: "You must acknowledge the exact license when you deploy. The Mongo service is private and reachable only by the app. The Apache-2.0 license of the operator covers only the operator. Meilisearch uses the MIT community image, and the BUSL enterprise modules are not included."
+      locales:
+        zh-TW:
+          risk: "MongoDB 伺服器採用 SSPL-1.0 授權，把 MongoDB 當成服務提供給別人的話，要負擔額外義務。SSPL 並未通過 OSI 認可。"
+          mitigation: "部署時必須明確確認這份授權。Mongo 服務是私有的，只有應用程式連得到。operator 的 Apache-2.0 授權只涵蓋 operator 本身。Meilisearch 使用 MIT 授權的社群版映像檔，不含 BUSL 授權的企業版模組。"
+        zh-CN:
+          risk: "MongoDB 服务器采用 SSPL-1.0 许可，把 MongoDB 作为服务提供给别人的话，要承担额外义务。SSPL 并未通过 OSI 认可。"
+          mitigation: "部署时必须明确确认这份许可。Mongo 服务是私有的，只有应用能访问。operator 的 Apache-2.0 许可只涵盖 operator 本身。Meilisearch 使用 MIT 许可的社区版镜像，不含 BUSL 许可的企业版模块。"
+    - risk: "The CloudNativePG instance manager needs Kubernetes API credentials."
+      mitigation: "The catalog operator creates a service account and RBAC permissions for each cluster. The ordinary app pods and the Percona pods have their tokens turned off."
+      locales:
+        zh-TW:
+          risk: "CloudNativePG 的 instance manager 需要 Kubernetes API 憑證。"
+          mitigation: "目錄裡的 operator 會為每個叢集建立服務帳號和 RBAC 權限。一般應用程式 Pod 和 Percona Pod 的 token 都已停用。"
+        zh-CN:
+          risk: "CloudNativePG 的 instance manager 需要 Kubernetes API 凭证。"
+          mitigation: "目录里的 operator 会为每个集群创建服务账号和 RBAC 权限。普通应用 Pod 和 Percona Pod 的 token 都已停用。"
+    - risk: "Meilisearch has no operator in the catalog. The local files and the databases are also restored from separate points in time."
+      mitigation: "Meilisearch runs as a hardened single-replica StatefulSet. Back up the files, MongoDB, pgvector, Meilisearch dumps and the generated Secrets together. Stop the writers so the file backup is consistent. Test a full restore in an isolated namespace, and check login, saved credentials, search and document retrieval."
+      locales:
+        zh-TW:
+          risk: "Meilisearch 在目錄裡沒有 operator。本機檔案和各個資料庫的還原時間點也各不相同。"
+          mitigation: "Meilisearch 以加固過的單副本 StatefulSet 執行。檔案、MongoDB、pgvector、Meilisearch 傾印檔和產生的機密，請一起備份。為了讓檔案備份一致，備份時要先停掉寫入的程式。請在獨立的命名空間測試完整還原，並檢查登入、已儲存的憑證、搜尋和文件擷取是否正常。"
+        zh-CN:
+          risk: "Meilisearch 在目录里没有 operator。本地文件和各个数据库的恢复时间点也各不相同。"
+          mitigation: "Meilisearch 以加固过的单副本 StatefulSet 运行。文件、MongoDB、pgvector、Meilisearch 转储文件和生成的机密，请一起备份。为了让文件备份一致，备份时要先停掉写入的程序。请在独立的命名空间测试完整恢复，并检查登录、已保存的凭证、搜索和文档检索是否正常。"
+    - risk: "The app shows the upstream LibreChat privacy policy and terms links."
+      mitigation: "Set your own privacy policy and terms of service before you open the site to the public."
+      locales:
+        zh-TW:
+          risk: "應用程式顯示的是上游 LibreChat 的隱私權政策和服務條款連結。"
+          mitigation: "公開使用之前，請先設定你自己的隱私權政策和服務條款。"
+        zh-CN:
+          risk: "应用显示的是上游 LibreChat 的隐私政策和服务条款链接。"
+          mitigation: "公开使用之前，请先设置你自己的隐私政策和服务条款。"
+    - risk: "MongoDB 8.0.32 does not start on Linux kernel 6.19 or newer (SERVER-121912). The template sets GLIBC_TUNABLES as a workaround, and this has not been verified on a real cluster."
+      mitigation: "If MongoDB crashes at start on a new kernel, check that the Percona pods carry GLIBC_TUNABLES=glibc.pthread.rseq=1."
+      locales:
+        zh-TW:
+          risk: "MongoDB 8.0.32 在 Linux 核心 6.19 以上無法啟動（SERVER-121912）。範本設定了 GLIBC_TUNABLES 來繞過，但還沒有在真實叢集上驗證過。"
+          mitigation: "新核心上 MongoDB 一啟動就當掉的話，請確認 Percona Pod 有帶 GLIBC_TUNABLES=glibc.pthread.rseq=1。"
+        zh-CN:
+          risk: "MongoDB 8.0.32 在 Linux 内核 6.19 以上无法启动（SERVER-121912）。模板设置了 GLIBC_TUNABLES 来绕过，但还没有在真实集群上验证过。"
+          mitigation: "新内核上 MongoDB 一启动就崩溃的话，请确认 Percona Pod 带有 GLIBC_TUNABLES=glibc.pthread.rseq=1。"
+
+scalability:
+  summary: >-
+    One application/RAG/Meili/PG replica and one operator-managed MongoDB
+    member, like the single CNPG instance. The stack has no HA.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - A node-local default StorageClass, such as local-path, has no snapshots or failover.
+    - >-
+      MongoDB runs one replica set member (unsafeFlags.replsetSize). Explicit
+      MongoDB FQDNs assume the cluster DNS suffix cluster.local.
+    - >-
+      Application file PVC, Meili state and pgvector database are
+      single-instance; no app HPA.
+    - >-
+      Compatible catalog CNPG and Percona operators plus real provider Secrets
+      must exist.
+
+upgradeNotes:
+  - >-
+    Database backups are off when the template is installed. To turn them on,
+    open the database in Zeabur and use the Backups tab.
+  - >-
+    Back up persistent state off-node before accepting an image digest or schema
+    migration; restore into a separate namespace before cutover.
+  - >-
+    Keep credsKey, credsIv, the JWT secrets and the database passwords. A new
+    creds key or IV makes stored provider credentials unreadable.
+  - >-
+    Upgrade the app, RAG API and Meilisearch together and test sign-in, saved
+    credentials, search and RAG. Restoring the previous image does not undo
+    database schema or index migrations.
+  - >-
+    Meilisearch migrates its database in place at start (MEILI_UPGRADE_DB).
+    The migration is not atomic, so take a snapshot of its volume first.
+  - >-
+    MongoDB feature-compatibility upgrades and Percona auto-update are off. Keep
+    the operator at CR version 1.23.1 with MongoDB 8.0.32. Change
+    PostgreSQL major versions through a CNPG migration and check pgvector
+    compatibility.
+  - >-
+    mongod runs with GLIBC_TUNABLES=glibc.pthread.rseq=1, so TCMalloc uses
+    per-thread caches. Without it, MongoDB 8.0 exits at start on Linux 6.19
+    to 7.0.13 and on Ubuntu 7.0 kernels (SERVER-121912, SERVER-136848).
+  - >-
+    This version reduces the MongoDB replica set from three members to one.
+    Back up MongoDB first. The operator removes rs0-1 and rs0-2 and keeps their
+    PVCs. Delete those PVCs after you check the data on rs0-0.
+
+smoke:
+  - name: librechat-ready
+    resource: deployment/librechat
+    condition: condition=Available
+    timeout: 600s
+    http: {service: librechat, port: 3080, path: /health, status: 200}
+  - name: rag-api-ready
+    resource: deployment/rag-api
+    condition: condition=Available
+    timeout: 600s
+    http: {service: rag-api, port: 8000, path: /health, status: 200}
+  - name: meilisearch-ready
+    resource: statefulset/meilisearch
+    condition: jsonpath={.status.readyReplicas}=1
+    timeout: 600s
+    http: {service: meilisearch, port: 7700, path: /health, status: 200}
+  - name: mongodb-ready
+    resource: perconaservermongodb/mongodb
+    condition: jsonpath={.status.state}=ready
+    timeout: 1200s
+  - name: pgvector-ready
+    resource: cluster/rag-db
+    condition: condition=Ready
+    timeout: 600s
+    sql:
+      cluster: rag-db
+      database: rag
+      query: SELECT count(*) FROM pg_extension WHERE extname='vector'
+      expect: "1"

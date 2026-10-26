@@ -1,0 +1,331 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: open-webui-data
+  namespace: '{{ .Namespace }}'
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pipeline-data
+  namespace: '{{ .Namespace }}'
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: open-webui
+  namespace: '{{ .Namespace }}'
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: open-webui
+  template:
+    metadata:
+      labels:
+        templates.zeabur.com/template: open-webui
+        app.kubernetes.io/name: open-webui
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: open-webui
+        image: ghcr.io/open-webui/open-webui:main@sha256:4860ba005ae8f19f08d1e12b0868855b7b339ea0dad9927f196820fc0de04575
+        ports:
+        - name: http
+          containerPort: 8080
+        env:
+        - name: HOME
+          value: /app/backend/data/home
+        - name: PYTHONDONTWRITEBYTECODE
+          value: '1'
+        - name: WEBUI_URL
+          value: https://{{ .Domain }}
+        - name: WEBUI_ADMIN_EMAIL
+          value: '{{ .Inputs.adminEmail }}'
+        - name: WEBUI_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: admin-password
+        - name: WEBUI_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: session-key
+        - name: ENABLE_SIGNUP
+          value: 'false'
+        - name: ENABLE_PERSISTENT_CONFIG
+          value: 'false'
+        - name: ENABLE_OLLAMA_API
+          value: 'false'
+        - name: OPENAI_API_BASE_URL
+          value: http://pipeline:9099
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: pipeline-key
+        - name: SCARF_NO_ANALYTICS
+          value: 'true'
+        - name: DO_NOT_TRACK
+          value: 'true'
+        - name: ANONYMIZED_TELEMETRY
+          value: 'false'
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources: &id001
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: '2'
+            memory: 4Gi
+        volumeMounts:
+        - name: data
+          mountPath: /app/backend/data
+        - name: static
+          mountPath: /app/backend/open_webui/static
+        - name: tmp
+          mountPath: /tmp
+        startupProbe:
+          httpGet:
+            path: /health
+            port: http
+          failureThreshold: 90
+          periodSeconds: 5
+          timeoutSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          periodSeconds: 30
+          timeoutSeconds: 3
+          failureThreshold: 6
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: open-webui-data
+      - name: static
+        emptyDir:
+          sizeLimit: 100Mi
+      - name: tmp
+        emptyDir:
+          sizeLimit: 1Gi
+      initContainers:
+      - name: seed-runtime-assets
+        image: ghcr.io/open-webui/open-webui:main@sha256:4860ba005ae8f19f08d1e12b0868855b7b339ea0dad9927f196820fc0de04575
+        command:
+        - python
+        - -c
+        - 'import shutil,subprocess
+
+          from pathlib import Path
+
+          subprocess.run([''cp'',''-R'',''/app/backend/open_webui/static/.'',''/seed-static/''],check=True)
+
+          cache=Path(''/seed-data/cache'')
+
+          if not cache.exists(): shutil.copytree(''/app/backend/data/cache'',cache)
+
+          Path(''/seed-data/home'').mkdir(exist_ok=True)
+
+          '
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources: *id001
+        volumeMounts:
+        - name: data
+          mountPath: /seed-data
+        - name: static
+          mountPath: /seed-static
+        - name: tmp
+          mountPath: /tmp
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: open-webui
+  namespace: '{{ .Namespace }}'
+spec:
+  selector:
+    app.kubernetes.io/name: open-webui
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pipeline
+  namespace: '{{ .Namespace }}'
+spec:
+  selector:
+    app.kubernetes.io/name: pipeline
+  ports:
+  - name: http
+    port: 9099
+    targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: open-webui
+  namespace: '{{ .Namespace }}'
+  annotations:
+    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - '{{ .Domain }}'
+    secretName: open-webui-tls
+  rules:
+  - host: '{{ .Domain }}'
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: open-webui
+            port:
+              number: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pipeline
+  namespace: '{{ .Namespace }}'
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pipeline
+  template:
+    metadata:
+      labels:
+        templates.zeabur.com/template: open-webui
+        app.kubernetes.io/name: pipeline
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: pipeline
+        image: ghcr.io/open-webui/pipelines:main@sha256:b48e9bc338ce2be0acfbeff01810db72408a12f07739f9e3879c1f2b00952d6e
+        ports:
+        - name: http
+          containerPort: 9099
+        env:
+        - name: HOME
+          value: /app/pipelines/home
+        - name: PYTHONDONTWRITEBYTECODE
+          value: '1'
+        - name: PYTHONPATH
+          value: /app/pipelines/.packages
+        - name: PIP_TARGET
+          value: /app/pipelines/.packages
+        - name: PIP_CACHE_DIR
+          value: /app/pipelines/.cache
+        - name: PIPELINES_DIR
+          value: /app/pipelines
+        - name: PIPELINES_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: pipeline-key
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: '2'
+            memory: 2Gi
+        volumeMounts:
+        - name: data
+          mountPath: /app/pipelines
+        - name: tmp
+          mountPath: /tmp
+        startupProbe:
+          httpGet:
+            path: /
+            port: http
+          failureThreshold: 90
+          periodSeconds: 5
+          timeoutSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+          periodSeconds: 30
+          timeoutSeconds: 3
+          failureThreshold: 6
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: pipeline-data
+      - name: tmp
+        emptyDir:
+          sizeLimit: 1Gi

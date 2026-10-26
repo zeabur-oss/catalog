@@ -1,0 +1,124 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: Browserless
+  version: "latest"
+  description: >-
+    Authenticated headless Chromium service for trusted automation clients, with
+    restricted container isolation. Browserless is SSPL-1.0
+    (https://github.com/browserless/browserless/blob/main/LICENSE), which is
+    not OSI-approved; closed-source commercial sites, apps or CI may need a
+    commercial license.
+  license: SSPL-1.0 OR LicenseRef-Browserless-Commercial
+  # Also: https://docs.browserless.io/
+  homepage: https://github.com/browserless/browserless
+  icon: https://avatars.githubusercontent.com/u/51244358?s=500&v=4
+  categories: [automation]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: browserless
+    securityProfile: restricted
+    ports: [{name: web, port: 3000}]
+    resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+    domains: ['{{ .Domain }}']
+
+inputs:
+  - name: token
+    description: >-
+      Generated Browserless bearer/query token. Retrieve from
+      browserless-secrets/token through authorized Kubernetes access; never put
+      the value in a URL logged by a proxy.
+    generate: random
+    secret: {name: browserless-secrets, key: token}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: "Browserless runs as a restricted non-root container with a read-only filesystem. Its API needs a token, and the pod has no Kubernetes service-account token. Outbound traffic is not limited. Do not share one instance between tenants you do not trust."
+  locales:
+    zh-TW:
+      summary: "Browserless 以受限的非 root 身分執行，檔案系統唯讀。API 需要 token 才能呼叫，Pod 也沒有 Kubernetes 服務帳號 token。對外連線沒有限制。不要讓彼此不信任的租戶共用同一個實例。"
+    zh-CN:
+      summary: "Browserless 以受限的非 root 身份运行，文件系统只读。API 需要 token 才能调用，Pod 也没有 Kubernetes 服务账号 token。对外连接没有限制。不要让互不信任的租户共用同一个实例。"
+  risks:
+    - risk: "The browser starts with --no-sandbox, because upstream launches Chromium that way. If a website exploits the browser, the attacker can take over the container, read its Browserless token and see what other browser sessions show."
+      mitigation: "Let only trusted clients call the API. Keep the image patched. For sensitive browsing, run this service in its own tenant namespace on dedicated nodes. Keep the restricted admission policy, and do not grant SYS_ADMIN or host access. Do not share one instance between tenants you do not trust."
+      locales:
+        zh-TW:
+          risk: "瀏覽器啟動時帶有 --no-sandbox，因為上游就是這樣啟動 Chromium。如果有網站攻破瀏覽器，攻擊者就能控制容器，拿到 Browserless token，也能看到其他瀏覽器工作階段的內容。"
+          mitigation: "只讓信任的用戶端呼叫 API。映像檔要持續更新。處理敏感內容時，請把這個服務放在自己的租戶命名空間，並使用專用節點。保留受限的准入政策，不要給 SYS_ADMIN 或主機存取權。不要讓彼此不信任的租戶共用同一個實例。"
+        zh-CN:
+          risk: "浏览器启动时带有 --no-sandbox，因为上游就是这样启动 Chromium。如果有网站攻破浏览器，攻击者就能控制容器，拿到 Browserless token，也能看到其他浏览器会话的内容。"
+          mitigation: "只让可信的客户端调用 API。镜像要持续更新。处理敏感内容时，请把这个服务放在自己的租户命名空间，并使用专用节点。保留受限的准入策略，不要授予 SYS_ADMIN 或主机访问权限。不要让互不信任的租户共用同一个实例。"
+    - risk: "Anyone who can use the browser API can make the server open internal addresses (SSRF). Browserless can block private networks by itself, but that is off by default."
+      mitigation: "The file protocol, GET-style browser calls and CORS are disabled. The template does not limit outbound traffic, so the browser can still open private, cluster and cloud metadata addresses. Before untrusted clients use the API, add an egress NetworkPolicy that blocks private address ranges."
+      locales:
+        zh-TW:
+          risk: "只要能用瀏覽器 API，就可以讓伺服器去連內部網址（SSRF）。Browserless 本身可以擋掉私有網路，但預設是關的。"
+          mitigation: "檔案協定、GET 形式的瀏覽器呼叫和 CORS 都已關閉。範本沒有限制對外連線，瀏覽器仍然可以連到私有網路、叢集內部和雲端 metadata 位址。在讓不受信任的用戶端使用 API 之前，請先加上 egress NetworkPolicy，擋掉私有位址範圍。"
+        zh-CN:
+          risk: "只要能用浏览器 API，就可以让服务器去访问内部地址（SSRF）。Browserless 本身可以拦截私有网络，但默认是关闭的。"
+          mitigation: "文件协议、GET 形式的浏览器调用和 CORS 都已关闭。模板没有限制对外连接，浏览器仍然可以访问私有网络、集群内部和云端 metadata 地址。在让不可信的客户端使用 API 之前，请先添加 egress NetworkPolicy，拦截私有地址范围。"
+    - risk: "Browserless uses an SSPL and commercial dual license. SSPL is not an OSI-approved open source license, and closed-source commercial use is restricted."
+      mitigation: "The template description names the license. Deploying does not give you a license. Check which license applies to you, and ask a lawyer before using it in a commercial product."
+      locales:
+        zh-TW:
+          risk: "Browserless 採用 SSPL 與商業雙重授權。SSPL 不是 OSI 認可的開源授權，閉源的商業用途也受到限制。"
+          mitigation: "範本說明裡有寫明授權。部署並不代表你取得了授權。請先確認自己適用哪一種授權，要用在商業產品時，先請教法律專業人士。"
+        zh-CN:
+          risk: "Browserless 采用 SSPL 与商业双重许可。SSPL 不是 OSI 认可的开源许可证，闭源的商业用途也受到限制。"
+          mitigation: "模板说明里有写明许可证。部署并不代表你获得了授权。请先确认自己适用哪一种许可证，要用在商业产品时，先咨询法律专业人士。"
+    - risk: "One shared token allows powerful automation. It can also show up in client URLs and access logs."
+      mitigation: "The token is generated at deploy time. Send it in the Authorization header where the client supports it. Limit who can read the Kubernetes Secret and the logs. Strip query strings in any external proxy logs. Rotate the token if it leaks."
+      locales:
+        zh-TW:
+          risk: "共用的 token 可以執行很強的自動化操作，也可能出現在用戶端網址和存取紀錄裡。"
+          mitigation: "token 在部署時自動產生。用戶端支援的話，請改用 Authorization 標頭傳送。限制誰能讀取 Kubernetes 機密和紀錄。外部代理伺服器的紀錄要去掉查詢字串。token 一旦外洩就要更換。"
+        zh-CN:
+          risk: "共用的 token 可以执行很强的自动化操作，也可能出现在客户端 URL 和访问日志里。"
+          mitigation: "token 在部署时自动生成。客户端支持的话，请改用 Authorization 请求头传送。限制谁能读取 Kubernetes 机密和日志。外部代理的日志要去掉查询字符串。token 一旦泄露就要更换。"
+
+scalability:
+  summary: >-
+    One stateless instance, four concurrent and four queued sessions; active
+    browser sessions cannot migrate.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      Session and CDP/WebSocket connections are process-local; reconnect/retry
+      policy is the caller responsibility.
+    - CPU, memory and shared-memory usage bound browser concurrency.
+    - No HPA is enabled. More replicas need session-aware routing.
+    - Concurrency is set to four sessions. Load-test the node before you raise it.
+    - >-
+      Readiness removes the endpoint while the queue is full. The 90-second
+      termination window drains short work only.
+
+upgradeNotes:
+  - >-
+    Before each digest update, check the upstream license, browser security
+    fixes, and changes to the start command, paths or UID. Keep the previous
+    digest for rollback.
+  - >-
+    Drain/reconnect clients before replacing the Pod; running browser sessions
+    and ephemeral downloads are lost.
+  - >-
+    No persistent browser profiles, cookies, metrics or downloads are retained;
+    export any needed artifacts through the authenticated API before restart.
+  - >-
+    The only state to back up is the token in browserless-secrets. Back it up
+    with access control. Rotate the token if a browser compromise or a log
+    exposed it.
+
+smoke:
+  - name: browserless-ready
+    resource: deployment/browserless
+    condition: condition=Available
+    timeout: 300s
+  - name: authentication-required
+    resource: deployment/browserless
+    condition: condition=Available
+    timeout: 300s
+    http: {service: browserless, port: 3000, path: /pressure, status: 401}

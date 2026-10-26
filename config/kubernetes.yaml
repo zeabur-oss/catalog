@@ -1,0 +1,28 @@
+# Kubernetes versions every profile is rendered and schema-checked against
+# (helm template --kube-version, then kubeconform). Keep the newest four minors.
+versions: ["1.34.0", "1.35.0", "1.36.0", "1.37.0"]
+
+# L1 and L2 clusters are kind: one node for single-node, three for multi-node.
+# Keep the minor equal to the RKE2 release that the Zeabur installer pins
+# (crates/zeabur-installer-plan/src/pins.rs); kube-apiserver in flake.nix, which
+# L0 runs, follows the same release. Distributions differ little for these
+# components; see README.
+e2e:
+  version: v1.36.4 # renovate: docker kindest/node
+
+# The kubesolo profile installs KubeSolo on the runner and tests the components
+# of a personal Zeabur install: the capabilities below, minus components whose
+# distributions leave out kubesolo. KubeSolo enforces no NetworkPolicy and has
+# one node, so templates and multi-node checks do not run on it. The helm
+# controller is the standalone k3s-io one that the Zeabur installer deploys.
+# sha256 is the checksum of the release asset for each architecture; change it
+# with the version.
+kubesolo:
+  version: v1.2.2 # renovate: github-releases portainer/kubesolo
+  sha256:
+    amd64: 081db3dec1cf6924001a33c890419647496a6581f1518594b8b439500ef79437
+    arm64: 476a7523a5de4bd261f87384fb8a86c6fec2e73f501429a798a6680a78ecf323
+  capabilities: [ingress, certificates, container-registry]
+  helmController:
+    version: v0.17.9 # renovate: github-releases k3s-io/helm-controller
+    sha256: 53da110ca271b6d6415e84bfc5ffe47d726fa35d1fb3acda47e6649ee05d4791 # deploy-cluster-scoped.yaml

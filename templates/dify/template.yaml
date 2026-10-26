@@ -1,0 +1,394 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: Dify
+  version: "1.18.0"
+  description: >-
+    Dify LLM app development platform with PostgreSQL/pgvector, a Dragonfly
+    queue, a code sandbox and S3 object storage. Dify uses a modified Apache
+    license (https://github.com/langgenius/dify/blob/main/LICENSE): one
+    workspace only without written permission, and keep the frontend logo and
+    copyright. The Dragonfly engine is BUSL-1.1
+    (https://github.com/dragonflydb/dragonfly/blob/main/LICENSE.md): offering
+    it to third parties as a hosted service or in-memory data store product
+    needs a separate license.
+  license: LicenseRef-Dify-Modified-Apache-2.0 AND BUSL-1.1 AND Apache-2.0 AND PostgreSQL
+  # Also: https://github.com/langgenius/dify-sandbox, https://cloudnative-pg.io/docs/, https://github.com/dragonflydb/dragonfly, https://github.com/dragonflydb/dragonfly-operator
+  homepage: https://github.com/langgenius/dify
+  icon: https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/dark/dify-color.png
+  categories: [ai]
+
+requires:
+  - databases/cloudnative-pg
+  - databases/dragonfly-operator
+  - ingress/traefik
+  - certificates/cert-manager
+
+services:
+  - name: dify
+    securityProfile: restricted
+    ports: [{name: http, port: 8080}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 2Gi}}
+    domains: ['{{ .Domain }}']
+  - name: dify-api
+    securityProfile: restricted
+    ports: [{name: http, port: 5001}]
+    resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+  - {name: dify-worker, securityProfile: restricted, resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}}
+  - {name: dify-beat, securityProfile: restricted, resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}}
+  - name: dify-web
+    securityProfile: restricted
+    ports: [{name: http, port: 3000}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 2Gi}}
+  - name: dify-plugin
+    securityProfile: restricted
+    ports: [{name: http, port: 5002}]
+    resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+  - name: dify-sandbox
+    securityProfile: baseline
+    ports: [{name: http, port: 8194}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 2Gi}}
+    baselineJustification: >-
+      Only this isolated code runner runs as root: SYS_CHROOT/SETUID/SETGID
+      establish the chroot and per-execution identities before upstream inner
+      seccomp, CHOWN gives each Python script to the run user and DAC_OVERRIDE
+      lets root open it. The
+      prepare-runner init alone uses CHOWN/DAC_OVERRIDE/FOWNER/FSETID to copy image-bundled runtime ownership
+      and modes into emptyDir. Neither container permits escalation or
+      privileged mode; all ordinary pods remain restricted.
+  - name: dify-proxy
+    securityProfile: restricted
+    ports: [{name: http, port: 3128}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 2Gi}}
+  - name: dify-dragonfly
+    securityProfile: restricted
+    ports: [{name: redis, port: 6379}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 2Gi}}
+  - name: dify-db
+    securityProfile: restricted
+    ports: [{name: postgresql, port: 5432}]
+    resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
+
+inputs:
+  - name: initPassword
+    description: >-
+      Generated password that Dify asks for before it creates the first
+      administrator; retrieve it from Secret dify-secrets, key init-password.
+    generate: random
+    generateBytes: 14
+    generateEncoding: hex
+    secret: {name: dify-secrets, key: init-password}
+    validation: {pattern: '^[0-9a-f]{28}$'}
+  - name: appKey
+    description: Generated app-key; retrieve from Secret dify-secrets, never from a public URL.
+    generate: random
+    secret: {name: dify-secrets, key: app-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: redisPassword
+    description: >-
+      Generated redis-password; retrieve from Secret dify-secrets, never from a
+      public URL.
+    generate: random
+    secret: {name: dify-secrets, key: redis-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: sandboxKey
+    description: >-
+      Generated sandbox-key; retrieve from Secret dify-secrets, never from a
+      public URL.
+    generate: random
+    secret: {name: dify-secrets, key: sandbox-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: storageEndpoint
+    label: Storage endpoint
+    locales:
+      zh-TW:
+        label: 儲存空間端點
+        description: "現有的 S3 相容儲存空間 HTTPS 端點（TCP 443），用來存文件、模型加密金鑰和上傳的檔案。"
+      zh-CN:
+        label: 存储端点
+        description: "现有的 S3 兼容存储 HTTPS 端点（TCP 443），用来存文档、模型加密密钥和上传的文件。"
+    description: >-
+      Existing HTTPS S3-compatible object storage endpoint on TCP443 for
+      documents, model encryption keys and uploaded files.
+    required: true
+    validation: {pattern: '^https://[A-Za-z0-9.-]+(:443)?$'}
+  - name: storageRegion
+    label: Storage region
+    locales:
+      zh-TW:
+        label: 儲存空間區域
+        description: "S3 儲存桶所在的區域。"
+      zh-CN:
+        label: 存储区域
+        description: "S3 存储桶所在的区域。"
+    description: Region for the S3-compatible storage bucket.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9-]+$'}
+  - name: storageBucket
+    label: Storage bucket
+    locales:
+      zh-TW:
+        label: 儲存桶
+        description: "現有的私有 S3 儲存桶，只給這個應用程式使用。"
+      zh-CN:
+        label: 存储桶
+        description: "现有的私有 S3 存储桶，只给这个应用使用。"
+    description: Existing private S3 bucket dedicated to this application.
+    required: true
+    validation: {pattern: '^[a-z0-9][a-z0-9.-]+$'}
+  - name: storageSecret
+    label: Storage credentials secret
+    locales:
+      zh-TW:
+        label: 儲存空間認證資訊的機密
+        description: "這個專案裡現有的機密，含 access-key 和 secret-key 兩個鍵。"
+      zh-CN:
+        label: 存储凭证的机密
+        description: "这个项目里现有的机密，含 access-key 和 secret-key 两个键。"
+    description: >-
+      Existing namespaced S3 application credentials Secret with keys access-key
+      and secret-key.
+    required: true
+    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: storageCASecret
+    label: Storage CA secret
+    locales:
+      zh-TW:
+        label: 儲存空間 CA 的機密
+        description: "儲存空間用私有 CA 簽發憑證時才填：這個專案裡現有的機密，鍵 ca.crt 放 PEM 格式的 CA 憑證。公開信任的憑證請留空。"
+      zh-CN:
+        label: 存储 CA 的机密
+        description: "存储使用私有 CA 签发证书时才填：这个项目里现有的机密，键 ca.crt 放 PEM 格式的 CA 证书。公共信任的证书请留空。"
+    description: >-
+      Optional existing namespaced Secret with key ca.crt, the PEM CA that
+      signed the storage endpoint certificate. Set it for a private CA, with
+      storageCAFile set to /storage-ca/ca.crt. Leave it empty for a publicly
+      trusted certificate.
+    required: false
+    default: dify-storage-ca
+    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: storageCAFile
+    label: Storage CA file
+    locales:
+      zh-TW:
+        label: 儲存空間 CA 檔案
+        description: "要用的 CA 憑證檔案路徑。用私有 CA 時填 /storage-ca/ca.crt（來自上面的機密）；公開信任的憑證請留空。"
+      zh-CN:
+        label: 存储 CA 文件
+        description: "要使用的 CA 证书文件路径。使用私有 CA 时填 /storage-ca/ca.crt（来自上面的机密）；公共信任的证书请留空。"
+    description: >-
+      Path of the PEM CA file the storage client trusts. Set it to
+      /storage-ca/ca.crt for a private CA from storageCASecret. Leave it empty
+      for a publicly trusted certificate, which uses the system CA bundle.
+    required: false
+    default: /etc/ssl/certs/ca-certificates.crt
+    validation: {pattern: '^/[A-Za-z0-9._/-]+$'}
+
+security:
+  summary: "The application, Dragonfly, gateway and proxy pods are restricted. The sandbox gets a narrow, justified exception to the baseline policy. The sandbox and the proxy have no sign-in, so NetworkPolicies limit who can call them: the sandbox can reach only the proxy and DNS. Other outbound traffic is not limited. Secrets are generated, ingress uses TLS, and PostgreSQL/pgvector and Dragonfly are run by operators."
+  locales:
+    zh-TW:
+      summary: "應用程式、Dragonfly、閘道和代理的 Pod 都是受限的。沙盒只拿到一個有理由的小例外，使用基準等級的政策。沙盒和代理沒有登入機制，所以用 NetworkPolicy 限制誰能呼叫它們：沙盒只能連到代理和 DNS。其他對外連線沒有限制。機密都是自動產生的，Ingress 使用 TLS，PostgreSQL/pgvector 和 Dragonfly 由 operator 管理。"
+    zh-CN:
+      summary: "应用、Dragonfly、网关和代理的 Pod 都是受限的。沙箱只拿到一个有理由的小例外，使用基线级别的策略。沙箱和代理没有登录机制，所以用 NetworkPolicy 限制谁能调用它们：沙箱只能访问代理和 DNS。其他对外连接没有限制。机密都是自动生成的，Ingress 使用 TLS，PostgreSQL/pgvector 和 Dragonfly 由 operator 管理。"
+  unauthenticated: [dify-sandbox, dify-proxy]
+  risks:
+    - risk: "The Dragonfly engine uses the BUSL-1.1 license, which is source-available. Its Additional Use Grant excludes offering Dragonfly to third parties as a hosted or managed service or as an in-memory data store product."
+      mitigation: "The template description names the license. Use it only within the pinned license grant, or get a separate license. The Apache-2.0 operator does not change the engine's license. The pinned engine version changes to Apache-2.0 on 2030-11-01."
+      locales:
+        zh-TW:
+          risk: "Dragonfly 引擎採用 BUSL-1.1 授權，原始碼可看但不算開源。它的額外使用授權不允許你把 Dragonfly 當成託管服務或記憶體資料庫產品提供給第三方。"
+          mitigation: "範本說明裡有寫明授權。請只在固定版本的授權範圍內使用，或另外取得授權。Apache-2.0 的 operator 並不會改變引擎的授權。固定的引擎版本會在 2030-11-01 改成 Apache-2.0。"
+        zh-CN:
+          risk: "Dragonfly 引擎采用 BUSL-1.1 许可，源码可看但不算开源。它的附加使用授权不允许你把 Dragonfly 作为托管服务或内存数据库产品提供给第三方。"
+          mitigation: "模板说明里有写明许可证。请只在固定版本的授权范围内使用，或另外获得授权。Apache-2.0 的 operator 并不会改变引擎的许可。固定的引擎版本会在 2030-11-01 改为 Apache-2.0。"
+    - risk: "Dragonfly keeps data in memory only, until you turn on snapshots. A restart loses queued or unacknowledged tasks, locks and cache."
+      mitigation: "Turn on Dragonfly backups in Zeabur. DB0 (cache) and DB1 (Celery) stay separate, and cache_mode=false stops the queue from being evicted. Before a restart, stop beat and the producers, and let the workers finish their jobs. After it, check that jobs ran once and only once. Old Valkey AOF, RDB or PVC data is not imported."
+      locales:
+        zh-TW:
+          risk: "Dragonfly 的資料只放在記憶體裡，除非你開啟快照。重新啟動後，排隊中或還沒確認的任務、鎖和快取都會不見。"
+          mitigation: "請在 Zeabur 開啟 Dragonfly 備份。DB0（快取）和 DB1（Celery）是分開的，cache_mode=false 可以避免佇列被清掉。重新啟動前，先停掉 beat 和產生任務的程式，讓 worker 把手上的工作做完。重啟後，要檢查任務有沒有漏跑或重跑。舊的 Valkey AOF、RDB 或 PVC 資料不會被匯入。"
+        zh-CN:
+          risk: "Dragonfly 的数据只放在内存里，除非你开启快照。重启后，排队中或还没确认的任务、锁和缓存都会丢失。"
+          mitigation: "请在 Zeabur 开启 Dragonfly 备份。DB0（缓存）和 DB1（Celery）是分开的，cache_mode=false 可以避免队列被清掉。重启前，先停掉 beat 和产生任务的程序，让 worker 把手上的工作做完。重启后，要检查任务有没有漏跑或重跑。旧的 Valkey AOF、RDB 或 PVC 数据不会被导入。"
+    - risk: "The sandbox container has CAP_CHOWN and CAP_DAC_OVERRIDE. Dify's sandbox hands each Python script to its run user and then opens it as root. With DAC_OVERRIDE, root inside the sandbox can read and write files it does not own in the container."
+      mitigation: "Only the sandbox gets these two, next to SYS_CHROOT, SETUID and SETGID. It still drops all other capabilities, allows no privilege escalation, and runs user code as a separate user under the upstream seccomp filter."
+      locales:
+        zh-TW:
+          risk: "沙盒容器有 CAP_CHOWN 和 CAP_DAC_OVERRIDE 權限。Dify 的沙盒會把每個 Python 腳本交給執行用的使用者，再以 root 開啟它。有了 DAC_OVERRIDE，沙盒裡的 root 就能讀寫容器內不屬於它的檔案。"
+          mitigation: "只有沙盒拿到這兩個權限，另外還有 SYS_CHROOT、SETUID 和 SETGID。其他權限全部拿掉，也不允許提升權限，使用者的程式碼會以另一個使用者身分，在上游的 seccomp 過濾下執行。"
+        zh-CN:
+          risk: "沙箱容器有 CAP_CHOWN 和 CAP_DAC_OVERRIDE 权限。Dify 的沙箱会把每个 Python 脚本交给运行用的用户，再以 root 打开它。有了 DAC_OVERRIDE，沙箱里的 root 就能读写容器内不属于它的文件。"
+          mitigation: "只有沙箱拿到这两个权限，另外还有 SYS_CHROOT、SETUID 和 SETGID。其他权限全部去掉，也不允许提升权限，用户的代码会以另一个用户身份，在上游的 seccomp 过滤下运行。"
+    - risk: "Dify's trigger and debug Lua scripts access keys that they did not declare in KEYS."
+      mitigation: "Dragonfly runs with allow-undeclared-keys. These scripts run one at a time, so they can lower queue throughput."
+      locales:
+        zh-TW:
+          risk: "Dify 的觸發和除錯用 Lua 腳本，會存取沒有在 KEYS 裡宣告的 key。"
+          mitigation: "Dragonfly 以 allow-undeclared-keys 執行。這些腳本一次只跑一個，可能會讓佇列的處理速度變慢。"
+        zh-CN:
+          risk: "Dify 的触发和调试用 Lua 脚本，会访问没有在 KEYS 里声明的 key。"
+          mitigation: "Dragonfly 以 allow-undeclared-keys 运行。这些脚本一次只跑一个，可能会让队列的处理速度变慢。"
+    - risk: "Until Dify is set up, the first visitor can create the owner account. The console is also reachable by anyone on the internet."
+      mitigation: "Dify asks for INIT_PASSWORD, generated in dify-secrets/init-password, before it creates the first administrator. A visitor cannot claim the instance without it. Right after the deploy, open /install, enter that password and create the owner. The console is open to anyone who can reach the domain, and Dify has its own sign-in. To limit who can reach it, add an IP limit in the service's network settings."
+      locales:
+        zh-TW:
+          risk: "Dify 在完成初始設定之前，第一個來的訪客就能建立擁有者帳號。任何人從網際網路也都連得到控制台。"
+          mitigation: "Dify 在建立第一個管理員之前，會要求輸入 INIT_PASSWORD，這組密碼產生在 dify-secrets/init-password。沒有它，訪客就搶不走這個實例。部署完成後，請馬上打開 /install，輸入這組密碼並建立擁有者。任何連得到網域的人都能開啟控制台，Dify 本身有登入機制。想限制誰能連進來，請在服務的網路設定裡加上 IP 限制。"
+        zh-CN:
+          risk: "Dify 在完成初始设置之前，第一个来的访客就能创建所有者账号。任何人从互联网也都能访问控制台。"
+          mitigation: "Dify 在创建第一个管理员之前，会要求输入 INIT_PASSWORD，这个密码生成在 dify-secrets/init-password。没有它，访客就抢不走这个实例。部署完成后，请马上打开 /install，输入这个密码并创建所有者。任何能访问该域名的人都能打开控制台，Dify 本身有登录机制。想限制谁能访问，请在服务的网络设置里添加 IP 限制。"
+    - risk: "The Dify license restricts running more than one workspace and changing the frontend branding."
+      mitigation: "The template description names the license. Use one workspace unless you have written permission from upstream. The frontend images are unmodified, so they keep the branding."
+      locales:
+        zh-TW:
+          risk: "Dify 的授權限制你開多個工作區，也限制修改前端的品牌標示。"
+          mitigation: "範本說明裡有寫明授權。除非取得上游的書面許可，否則只使用一個工作區。前端映像檔沒有被修改，所以品牌標示都保留著。"
+        zh-CN:
+          risk: "Dify 的许可限制你开多个工作区，也限制修改前端的品牌标识。"
+          mitigation: "模板说明里有写明许可证。除非取得上游的书面许可，否则只使用一个工作区。前端镜像没有被修改，所以品牌标识都保留着。"
+    - risk: "The sandbox runs code that other people write, and the SSRF proxy has no sign-in. A pod in the same namespace could call either one."
+      mitigation: "Each has an ingress NetworkPolicy that lets in only the Dify API, worker and beat pods. The sandbox can also reach only the proxy and DNS. These are the only NetworkPolicies in the template. Namespace isolation covers everything else."
+      locales:
+        zh-TW:
+          risk: "沙盒會執行別人寫的程式，SSRF 代理又沒有登入機制。同一個命名空間裡的任何 Pod 都有可能呼叫它們。"
+          mitigation: "兩者各有一條 ingress NetworkPolicy，只放行 Dify 的 API、worker 和 beat Pod 進來。沙盒也只能連到代理和 DNS。範本裡只有這幾條 NetworkPolicy，其餘的部分靠命名空間隔離。"
+        zh-CN:
+          risk: "沙箱会运行别人写的代码，SSRF 代理又没有登录机制。同一个命名空间里的任何 Pod 都有可能调用它们。"
+          mitigation: "两者各有一条 ingress NetworkPolicy，只放行 Dify 的 API、worker 和 beat Pod 进来。沙箱也只能访问代理和 DNS。模板里只有这几条 NetworkPolicy，其余的部分靠命名空间隔离。"
+    - risk: "The code runner needs root to set up a chroot and to switch to a unique identity for each run."
+      mitigation: "This is the only exception to the baseline policy. It gets minimal capabilities, RuntimeDefault, and the upstream inner seccomp filter. It also has a generated API key, a pod with no database credentials, egress to the proxy only, and bounded resources."
+      locales:
+        zh-TW:
+          risk: "程式執行器需要 root，才能建立 chroot，並在每次執行時切換成獨立的身分。"
+          mitigation: "這是基準政策唯一的例外。它只拿到最少的權限，使用 RuntimeDefault 和上游內層的 seccomp 過濾。API 金鑰是自動產生的，Pod 裡沒有資料庫憑證，對外只能連到代理，資源也有上限。"
+        zh-CN:
+          risk: "代码运行器需要 root，才能建立 chroot，并在每次运行时切换成独立的身份。"
+          mitigation: "这是基线策略唯一的例外。它只拿到最少的权限，使用 RuntimeDefault 和上游内层的 seccomp 过滤。API 密钥是自动生成的，Pod 里没有数据库凭证，对外只能访问代理，资源也有上限。"
+    - risk: "Plugins are third-party code that you trust. They can use the model integrations you have configured."
+      mitigation: "Keep FORCE_VERIFYING_SIGNATURE set to true. The remote debugging and remote install listener are turned off. Let only trusted administrators install plugins. All plugins share one trust boundary, and the plugin pod has a restricted identity."
+      locales:
+        zh-TW:
+          risk: "外掛是你要信任的第三方程式，可以使用你設定好的模型整合。"
+          mitigation: "請讓 FORCE_VERIFYING_SIGNATURE 維持 true。遠端除錯和遠端安裝的監聽都已關閉。只讓信任的管理員安裝外掛。所有外掛共用同一個信任範圍，外掛 Pod 的身分也受到限制。"
+        zh-CN:
+          risk: "插件是你要信任的第三方代码，可以使用你配置好的模型集成。"
+          mitigation: "请让 FORCE_VERIFYING_SIGNATURE 保持 true。远程调试和远程安装的监听都已关闭。只让可信的管理员安装插件。所有插件共用同一个信任范围，插件 Pod 的身份也受到限制。"
+    - risk: "The PostgreSQL manager (CloudNativePG instance manager) needs limited permissions on the Kubernetes API."
+      mitigation: "Use the catalog operator and its limited service account."
+      locales:
+        zh-TW:
+          risk: "PostgreSQL 的管理程式（CloudNativePG instance manager）需要 Kubernetes API 的部分權限。"
+          mitigation: "請使用目錄裡的 operator 和它權限受限的服務帳號。"
+        zh-CN:
+          risk: "PostgreSQL 的管理程序（CloudNativePG instance manager）需要 Kubernetes API 的部分权限。"
+          mitigation: "请使用目录里的 operator 和它权限受限的服务账号。"
+
+scalability:
+  summary: One instance per trusted owner; do not horizontally scale this deployment.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      One API migrator, one beat scheduler, single Dragonfly instance,
+      plugin state on one RWO volume, and one supported licensed workspace.
+    - >-
+      External S3 object storage must exist. A node-local StorageClass has no HA
+      or snapshots.
+
+upgradeNotes:
+  - >-
+    The dify-api pod has INIT_PASSWORD from dify-secrets/init-password. The
+    /install page asks for it before it creates the owner.
+  - >-
+    Database backups are off when the template is installed. To turn them on,
+    open the database in Zeabur and use the Backups tab.
+  - >-
+    The console is open on the domain; add an IP limit in the service's network
+    settings if you need one. The Dify license still limits you to one workspace
+    unless separately authorized; keep frontend logos and copyright unchanged.
+  - >-
+    From Dify 1.13: back up the database first, because migration 5578e028b2f2
+    (1.17.1) cannot be reversed. Scale dify-worker and dify-beat to 0 before
+    the upgrade, so that old workers do not take new queue entries; the API
+    migrates the database at start. Then run
+    `flask backfill-plugin-auto-upgrade` once in dify-api (1.15), or plugin
+    auto-upgrade settings stop working. Keep PASSWORD_PEPPER unset: setting it
+    makes every existing password fail. The plugin daemon now migrates its own
+    database at start.
+  - >-
+    Sandbox 0.2.15 runs each Python and JavaScript execution under its own UID.
+    Check code-runner protocol and syscall changes during upgrades.
+  - >-
+    Preserve CNPG application credentials, generated encryption/queue/sandbox
+    Secrets, PostgreSQL backups, external S3 documents/keys, and
+    plugin storage PVC before updates. The Dify app key and the S3 key objects
+    are needed to decrypt model provider configuration. Stop writers before
+    filesystem exports.
+  - >-
+    PostgreSQL uses the CNPG standard image with pgvector as the vector store.
+    To migrate an existing instance that uses Weaviate, reindex its data into
+    pgvector. Do not change the PostgreSQL major version with an image-only
+    rollout; migrate logically or use a CNPG major upgrade.
+  - >-
+    Application object storage is an existing S3-compatible bucket with your
+    credentials. To migrate an existing instance, copy its objects into the
+    bucket.
+  - >-
+    Only API runs migrations; beat remains a single scheduler; plugin storage
+    remains a single-node PVC. Preserve queue credentials and DB0/DB1
+    separation; stop beat/producers, drain workers and checkpoint before
+    cutover. Reconcile lost/replayed tasks and expired locks after recovery. Old
+    Valkey AOF, RDB or PVC data is not imported. Dragonfly does not provide
+    Redis Stack modules; data that depends on them needs a separate migration.
+  - >-
+    Dragonfly is BUSL-1.1. Offering third
+    parties a hosted/managed Dragonfly or an in-memory data store product needs
+    a separate license.
+
+smoke:
+  - name: dify available
+    resource: deployment/dify
+    condition: condition=Available
+    timeout: 15m
+  - name: dify-api available
+    resource: deployment/dify-api
+    condition: condition=Available
+    timeout: 15m
+  - name: dify-worker available
+    resource: deployment/dify-worker
+    condition: condition=Available
+    timeout: 15m
+  - name: dify-beat available
+    resource: deployment/dify-beat
+    condition: condition=Available
+    timeout: 15m
+  - name: dify-web available
+    resource: deployment/dify-web
+    condition: condition=Available
+    timeout: 15m
+  - name: dify-plugin available
+    resource: deployment/dify-plugin
+    condition: condition=Available
+    timeout: 15m
+  - name: dify-sandbox available
+    resource: deployment/dify-sandbox
+    condition: condition=Available
+    timeout: 15m
+  - name: dify-web reads system features from dify-api
+    resource: deployment/dify-web
+    condition: condition=Available
+    timeout: 15m
+    http: {service: dify-web, port: 3000, path: /signin, status: 200, contains: sso_enforced_for_signin}
+  - name: dify-proxy available
+    resource: deployment/dify-proxy
+    condition: condition=Available
+    timeout: 15m
+  - name: Database ready
+    resource: cluster/dify-db
+    condition: condition=Ready
+    timeout: 15m
+  - name: Queue ready
+    resource: dragonfly/dify-dragonfly
+    condition: jsonpath={.status.phase}=Ready
+    timeout: 10m

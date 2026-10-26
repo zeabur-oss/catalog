@@ -1,0 +1,41 @@
+{
+  "component": "node-updates/system-upgrade-controller",
+  "environments": {
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 11,
+      "idleCPUm": 0,
+      "versions": {
+        "controller": "v0.20.2",
+        "crds": "v0.20.2"
+      },
+      "measuredAt": "2026-10-11"
+    },
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 11,
+      "idleCPUm": 0,
+      "versions": {
+        "controller": "v0.20.2",
+        "crds": "v0.20.2"
+      },
+      "measuredAt": "2026-10-11"
+    },
+    "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 11,
+      "idleCPUm": 0,
+      "versions": {
+        "controller": "v0.20.2",
+        "crds": "v0.20.2"
+      },
+      "measuredAt": "2026-10-11"
+    },
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 12,
+      "idleCPUm": 0,
+      "versions": {
+        "controller": "v0.20.2",
+        "crds": "v0.20.2"
+      },
+      "measuredAt": "2026-10-11"
+    }
+  }
+}

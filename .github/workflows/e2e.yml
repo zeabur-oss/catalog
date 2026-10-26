@@ -1,0 +1,89 @@
+# L2: installs every component on kind, one node for single-node and three
+# for multi-node, on amd64 and arm64, each in a fresh cluster: dependencies
+# first, the previous release when its version differs (upgrade test), idle
+# memory and CPU once they are stable, smoke test, uninstall and residue
+# check. Installs every template on single-node amd64 with the components it
+# requires, runs its smoke checks, then measures its idle memory and CPU.
+# The kubesolo profile installs KubeSolo and the standalone helm-controller on
+# the runner and tests the components of a personal install, on amd64 and
+# arm64; its measurements are keyed kubesolo-<architecture>-<version>.
+# nightly.yml and release.yml call it.
+name: e2e
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  matrix:
+    runs-on: ubuntu-slim
+    outputs:
+      matrix: ${{ steps.list.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - id: list
+        run: echo "matrix=$(go run ./tools/cmd/catalog list -tier l2)" >> "$GITHUB_OUTPUT"
+
+  e2e:
+    needs: matrix
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.matrix.outputs.matrix).include }}
+    name: ${{ matrix.profile }} ${{ matrix.arch }} ${{ matrix.component || matrix.template }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - name: iSCSI module for Longhorn
+        if: matrix.component == 'replicated-storage/longhorn'
+        run: sudo modprobe iscsi_tcp
+      - name: Stop Docker for KubeSolo
+        if: matrix.profile == 'kubesolo'
+        run: sudo systemctl stop docker.socket docker.service
+      - name: Previous release (upgrade test)
+        if: matrix.component
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download --pattern index.json --output previous.json || true
+      - name: e2e
+        env:
+          PROFILE: ${{ matrix.profile }}
+          ID: ${{ matrix.component || matrix.template }}
+        run: |
+          previous=()
+          [ -f previous.json ] && previous=(-previous previous.json)
+          nix develop -c go run ./tools/cmd/catalog e2e -tier l2 -profile "$PROFILE" -write "${previous[@]}" "$ID"
+      - name: Keep only this job's measurement
+        if: always()
+        env:
+          FILE: measurements/${{ matrix.component || format('templates/{0}', matrix.template) }}.json
+        run: find measurements -type f ! -path "$FILE" -delete
+      - id: name
+        run: echo "name=$(echo '${{ matrix.profile }}-${{ matrix.arch }}-${{ matrix.component || format('template-{0}', matrix.template) }}' | tr / -)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: measurements-${{ steps.name.outputs.name }}
+          path: measurements/
+          if-no-files-found: ignore
+
+  budget:
+    needs: e2e
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: measurements-single-node-amd64-*
+          path: measurements/
+          merge-multiple: true
+      - run: go run ./tools/cmd/catalog budget

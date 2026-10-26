@@ -1,0 +1,243 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: umami-setup
+  namespace: '{{ .Namespace }}'
+data:
+  # The first migration creates admin with the published password "umami".
+  # Replace it once; a password changed in Umami no longer matches.
+  set-admin-password.mjs: |
+    import { PrismaPg } from '@prisma/adapter-pg';
+    import { PrismaClient } from './generated/prisma/client.js';
+
+    const prisma = new PrismaClient({
+      adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
+    });
+    const changed = await prisma.$executeRaw`
+      UPDATE "user" SET password = crypt(${process.env.ADMIN_PASSWORD}, gen_salt('bf', 10))
+      WHERE username = 'admin'
+        AND password = '$2b$10$BUli0c.muyCW1ErNJc3jL.vFRFtFJWrT8/GcR4A.sUdCznaXiqFXa'`;
+    console.log(`default admin password replaced: ${changed}`);
+    await prisma.$disconnect();
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: umami
+  namespace: '{{ .Namespace }}'
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: umami
+  template:
+    metadata:
+      labels:
+        templates.zeabur.com/template: umami
+        app.kubernetes.io/name: umami
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 65533
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+      - name: setup
+        image: ghcr.io/umami-software/umami:3.4.1@sha256:e69d1a7932e9dab0fc523edc7be1f3a53f3c261f57856fc2167ae74a8fc022e8
+        command:
+        - /bin/sh
+        - -ec
+        - |
+          export PATH="$PWD/node_modules/.bin:$PATH"
+          node scripts/check-db.js
+          node --input-type=module < /setup/set-admin-password.mjs
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: [ALL]
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: '1'
+            memory: 1Gi
+        env: &env
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: umami-db-app
+              key: password
+        - name: DATABASE_URL
+          value: postgresql://umami:$(DATABASE_PASSWORD)@umami-db-rw:5432/umami?sslmode=verify-full&sslrootcert=/db-ca/ca.crt
+        # prisma migrate uses the schema engine, which takes sslcert for the CA.
+        - name: DIRECT_DATABASE_URL
+          value: postgresql://umami:$(DATABASE_PASSWORD)@umami-db-rw:5432/umami?sslmode=require&sslcert=/db-ca/ca.crt&sslaccept=strict
+        - name: ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: umami-secrets
+              key: admin-password
+        - name: APP_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: umami-secrets
+              key: app-secret
+        - name: DISABLE_TELEMETRY
+          value: '1'
+        - name: CHECKPOINT_DISABLE
+          value: '1'
+        - name: HOME
+          value: /tmp
+        volumeMounts:
+        - name: setup
+          mountPath: /setup
+          readOnly: true
+        - name: db-ca
+          mountPath: /db-ca
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+      containers:
+      - name: umami
+        image: ghcr.io/umami-software/umami:3.4.1@sha256:e69d1a7932e9dab0fc523edc7be1f3a53f3c261f57856fc2167ae74a8fc022e8
+        command: [node, server.js]
+        ports:
+        - name: http
+          containerPort: 3000
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: [ALL]
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: '1'
+            memory: 1Gi
+        env: *env
+        volumeMounts:
+        - name: db-ca
+          mountPath: /db-ca
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+        - name: next-cache
+          mountPath: /app/.next/cache
+        startupProbe:
+          httpGet:
+            path: /api/heartbeat
+            port: http
+          periodSeconds: 5
+          failureThreshold: 60
+        readinessProbe:
+          httpGet:
+            path: /api/heartbeat
+            port: http
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /api/heartbeat
+            port: http
+          periodSeconds: 20
+          failureThreshold: 6
+      volumes:
+      - name: setup
+        configMap:
+          name: umami-setup
+      - name: db-ca
+        secret:
+          secretName: umami-db-ca
+          items:
+          - {key: ca.crt, path: ca.crt}
+      - name: tmp
+        emptyDir:
+          sizeLimit: 256Mi
+      - name: next-cache
+        emptyDir:
+          sizeLimit: 512Mi
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: umami
+  namespace: '{{ .Namespace }}'
+spec:
+  selector:
+    app.kubernetes.io/name: umami
+  ports:
+  - name: http
+    port: 3000
+    targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: umami
+  namespace: '{{ .Namespace }}'
+  annotations:
+    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts: ['{{ .Domain }}']
+    secretName: umami-tls
+  rules:
+  - host: '{{ .Domain }}'
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: umami
+            port:
+              number: 3000
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: umami-db
+  namespace: '{{ .Namespace }}'
+spec:
+  inheritedMetadata:
+    labels:
+      templates.zeabur.com/template: umami
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:18-minimal-trixie@sha256:0675340b02be838319b9b6f323c206693e519dcd62ec729d539be9f46bb7a2f9
+  enableSuperuserAccess: false
+  enablePDB: true
+  postgresUID: 26
+  postgresGID: 26
+  seccompProfile:
+    type: RuntimeDefault
+  bootstrap:
+    initdb:
+      database: umami
+      owner: umami
+      postInitApplicationSQL:
+      - CREATE EXTENSION IF NOT EXISTS pgcrypto
+      encoding: UTF8
+  storage:
+    size: 10Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: '1'
+      memory: 1Gi
+  postgresql:
+    parameters:
+      shared_buffers: 128MB
+      max_connections: '100'

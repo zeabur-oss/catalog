@@ -1,0 +1,147 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: OpenClaw
+  version: "2026.10.7"
+  description: >-
+    OpenClaw (formerly Clawdbot, Moltbot) is a personal AI assistant that runs
+    locally and connects to multiple messaging platforms (WhatsApp, Telegram,
+    Slack, Discord, etc.) via a WebSocket-based Gateway architecture.
+  license: MIT
+  # Also: https://docs.openclaw.ai/gateway/security
+  homepage: https://github.com/openclaw/openclaw
+  icon: https://raw.githubusercontent.com/openclaw/openclaw/main/docs/assets/pixel-lobster.svg
+  categories: [ai]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: openclaw
+    securityProfile: restricted
+    ports: [{name: http, port: 18789}]
+    resources: {requests: {cpu: 500m, memory: 1Gi}, limits: {cpu: "2", memory: 4Gi}}
+    domains: ['{{ .Domain }}']
+
+inputs:
+  - name: gatewayToken
+    description: >-
+      Generated gateway-token; retrieve from Secret openclaw-secrets, never from
+      a public URL.
+    generate: random
+    secret: {name: openclaw-secrets, key: gateway-token}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: providerSecret
+    label: Provider API key secret
+    locales:
+      zh-TW:
+        label: 模型服務 API 金鑰的機密
+        description: "這個專案裡現有的機密，鍵 api-key 放模型服務的 API 金鑰。"
+      zh-CN:
+        label: 模型服务 API 密钥的机密
+        description: "这个项目里现有的机密，键 api-key 放模型服务的 API 密钥。"
+    description: >-
+      Pre-existing Secret in this namespace containing the model provider API
+      key in key api-key.
+    required: true
+    validation: {pattern: '^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$'}
+  - name: llmBaseUrl
+    label: API base URL
+    locales:
+      zh-TW:
+        label: API 網址
+        description: "OpenAI 相容的 HTTPS API 網址，只能是公開網路上的 TCP 443。"
+      zh-CN:
+        label: API 地址
+        description: "OpenAI 兼容的 HTTPS API 地址，只能是公网上的 TCP 443。"
+    description: OpenAI-compatible HTTPS API base URL; public network on TCP 443 only.
+    required: true
+    validation: {pattern: '^https://[A-Za-z0-9.-]+(:443)?/[A-Za-z0-9._~/-]*$'}
+  - name: llmModel
+    label: Model
+    locales:
+      zh-TW:
+        label: 模型
+        description: "模型服務上的模型名稱。"
+      zh-CN:
+        label: 模型
+        description: "模型服务上的模型名称。"
+    description: Model identifier for the configured compatible provider.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9._:/-]+$'}
+
+security:
+  summary: >-
+    OpenClaw runs without root rights, with a read-only root filesystem, the
+    strictest Kubernetes pod security profile and no Kubernetes token. Traffic
+    comes in over HTTPS. Outbound traffic is not limited.
+  locales:
+    zh-TW:
+      summary: "OpenClaw 不用 root 權限執行，根檔案系統唯讀，套用最嚴格的 Kubernetes Pod 安全設定，也沒有 Kubernetes token。對外連線一律走 HTTPS。往外的網路流量沒有限制。"
+    zh-CN:
+      summary: "OpenClaw 不用 root 权限运行，根文件系统只读，应用最严格的 Kubernetes Pod 安全设置，也没有 Kubernetes token。对外连接一律走 HTTPS。向外的网络流量没有限制。"
+  risks:
+    - risk: >-
+        The AI assistant can run commands and read everything its pod can
+        reach, including its state and model credentials. Pod security
+        settings do not stop prompt injection, where a hostile message tricks
+        the assistant into acting.
+      mitigation: >-
+        Use one trusted owner per namespace and gateway. The pod has no host
+        mounts, no service-account token and no Docker socket, and its
+        resources are limited. Do not share it with users you do not trust.
+      locales:
+        zh-TW:
+          risk: "AI 助理可以執行指令，也能讀到它的 Pod 碰得到的所有東西，包括狀態資料和模型的憑證。Pod 的安全設定擋不住提示注入，也就是有人用惡意訊息騙助理去做事。"
+          mitigation: "每個命名空間和閘道只給一位可信任的擁有者使用。Pod 沒有掛載主機目錄，沒有 service-account token，也沒有 Docker socket，資源也有上限。不要分享給你不信任的人。"
+        zh-CN:
+          risk: "AI 助理可以执行命令，也能读到它的 Pod 碰得到的所有东西，包括状态数据和模型的凭证。Pod 的安全设置挡不住提示注入，也就是有人用恶意消息骗助理去做事。"
+          mitigation: "每个命名空间和网关只给一位可信任的所有者使用。Pod 没有挂载主机目录，没有 service-account token，也没有 Docker socket，资源也有上限。不要分享给你不信任的人。"
+    - risk: >-
+        The agent's state and channel credentials are stored together on one
+        PVC (one data volume).
+      mitigation: >-
+        Stop writes, then make encrypted backups outside the cluster of the
+        whole PVC, the gateway Secret and the provider Secret. A node-local
+        StorageClass has no high availability and no volume snapshots.
+      locales:
+        zh-TW:
+          risk: "代理程式的狀態和頻道憑證都放在同一個 PVC（一個資料磁碟區）裡。"
+          mitigation: "先停止寫入，再把整個 PVC、閘道機密和供應商機密做加密備份，存到叢集外面。節點本機的 StorageClass 沒有高可用，也不能做磁碟區快照。"
+        zh-CN:
+          risk: "代理程序的状态和频道凭证都放在同一个 PVC（一个数据卷）里。"
+          mitigation: "先停止写入，再把整个 PVC、网关机密和供应商机密做加密备份，存到集群外面。节点本地的 StorageClass 没有高可用，也不能做卷快照。"
+
+scalability:
+  summary: One instance per trusted owner; do not horizontally scale this deployment.
+  replicas: 1
+  maxReplicas: 1
+  blockers: [Single-owner gateway and persistent state on one volume.]
+
+upgradeNotes:
+  - >-
+    Back up the complete openclaw-home PVC and generated gateway-token Secret
+    before changing the pinned image.
+  - >-
+    Configuration is seeded only on first start; edit persisted configuration
+    through the Control UI or CLI. Changing provider inputs does not overwrite
+    existing user configuration.
+  - >-
+    Use https://<domain> and the generated token; approve device pairing with
+    the CLI inside the pod. Never put the token in a public URL.
+  - >-
+    Config schema and pairing behaviour change quickly. Read the upstream
+    migration notes before each upgrade. Restoring the PVC with the old image
+    rolls back only when the new version did not migrate data one-way.
+  - >-
+    Readiness uses /startupz and liveness uses /healthz. /readyz depends on
+    channels and can stay false until you configure one.
+  - >-
+    No runtime Homebrew/Go installs, Docker socket, host filesystem, local
+    Chromium, or unsafe origin-fallback flag. Tools run with the same restricted
+    pod identity as this one trusted owner.
+
+smoke:
+  - name: Application available
+    resource: deployment/openclaw
+    condition: condition=Available
+    timeout: 10m

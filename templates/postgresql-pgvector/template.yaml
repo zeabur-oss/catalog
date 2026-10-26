@@ -1,0 +1,118 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: PostgreSQL with pgvector
+  version: "18-standard-trixie"
+  description: >-
+    CloudNativePG PostgreSQL 18 standard image with pgvector enabled.
+  license: PostgreSQL AND Apache-2.0
+  # Also: https://github.com/cloudnative-pg/postgres-containers, https://cloudnative-pg.io/
+  homepage: https://github.com/pgvector/pgvector
+  icon: https://cdn.zeabur.com/marketplace/postgresql.svg
+  categories: [databases]
+
+requires: [databases/cloudnative-pg]
+
+services:
+  - name: postgresql
+    securityProfile: restricted
+    ports: [{name: postgresql, port: 5432}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "1", memory: 1Gi}}
+
+security:
+  summary: >-
+    The CloudNativePG operator (CNPG) runs the database pods without root
+    rights and sets up permissions for each cluster. There is no public
+    database port and no superuser login. SQL extensions are created only when
+    the database is first set up.
+  locales:
+    zh-TW:
+      summary: "CloudNativePG 運算子（CNPG）讓資料庫 Pod 不用 root 權限執行，並替每個叢集設好權限。資料庫沒有對外的連接埠，也不能用超級使用者登入。SQL 擴充套件只在資料庫第一次建立時安裝。"
+    zh-CN:
+      summary: "CloudNativePG 运算符（CNPG）让数据库 Pod 不用 root 权限运行，并为每个集群设好权限。数据库没有对外的端口，也不能用超级用户登录。SQL 扩展只在数据库第一次创建时安装。"
+  risks:
+    - risk: >-
+        The database pods need a Kubernetes API token, which the operator
+        manages. The template itself creates no Role or binding.
+      mitigation: >-
+        Check the permissions the catalog operator creates and the pods it
+        generates. Leave token automount on for the database pods, because the
+        operator needs it.
+      locales:
+        zh-TW:
+          risk: "資料庫 Pod 需要一個 Kubernetes API token，由運算子負責管理。這個範本本身不會建立任何 Role 或綁定。"
+          mitigation: "檢查目錄裡的運算子建立了哪些權限，以及它產生的 Pod。資料庫 Pod 的 token 自動掛載要保持開啟，因為運算子需要它。"
+        zh-CN:
+          risk: "数据库 Pod 需要一个 Kubernetes API token，由运算符负责管理。这个模板本身不会创建任何 Role 或绑定。"
+          mitigation: "检查目录里的运算符创建了哪些权限，以及它生成的 Pod。数据库 Pod 的 token 自动挂载要保持开启，因为运算符需要它。"
+    - risk: >-
+        Local-path storage has no snapshots and no availability across nodes.
+        The extension and plugin images are extra software you have to trust.
+      mitigation: >-
+        Check the operator release, the database image digest and your
+        backups. Test a restore with pgvector before you go to production and
+        before upgrades.
+      locales:
+        zh-TW:
+          risk: "Local-path 儲存沒有快照，也不能跨節點維持可用。擴充套件和外掛的映像檔是額外要信任的軟體。"
+          mitigation: "檢查運算子的版本、資料庫映像檔的 digest 和備份。正式上線前和升級前，都要用 pgvector 實際測試還原。"
+        zh-CN:
+          risk: "Local-path 存储没有快照，也不能跨节点保持可用。扩展和插件的镜像是额外要信任的软件。"
+          mitigation: "检查运算符的版本、数据库镜像的 digest 和备份。正式上线前和升级前，都要用 pgvector 实际测试恢复。"
+    - risk: >-
+        A backup that finished without errors does not prove that your vectors
+        and indexes restore correctly.
+      mitigation: Run a restore drill with representative vectors before production.
+      locales:
+        zh-TW:
+          risk: "備份順利跑完，不代表向量和索引一定能正確還原。"
+          mitigation: "正式上線前，用有代表性的向量資料實際演練一次還原。"
+        zh-CN:
+          risk: "备份顺利跑完，不代表向量和索引一定能正确恢复。"
+          mitigation: "正式上线前，用有代表性的向量数据实际演练一次恢复。"
+
+scalability:
+  summary: >-
+    Single primary with a 10Gi volume; vector indexes may need
+    substantially more memory and disk. No HPA. Read replicas require separate
+    nodes and a CNPG capacity check.
+  replicas: 1
+  maxReplicas: 3
+  blockers:
+    - On a node-local StorageClass, node loss requires a restore from a remote backup.
+    - Vector dimensions, index memory and extension versions constrain migrations.
+    - >-
+      The PodDisruptionBudget (enablePDB) protects the single instance from
+      voluntary eviction and can block node drains.
+
+upgradeNotes:
+  - >-
+    Database backups are off when the template is installed. To turn them on,
+    open the database in Zeabur and use the Backups tab.
+  - >-
+    Connect to postgresql-rw:5432, database zeabur, owner app, with credentials
+    from the operator-generated postgresql-app Secret. Superuser access is
+    disabled. Client Pods in the same namespace need the label
+    templates.zeabur.com/postgresql-client=true.
+  - >-
+    Check PostgreSQL and pgvector release compatibility; back up and test
+    restore with representative vectors.
+  - >-
+    Do not treat a major PostgreSQL image change as a rolling minor update; plan
+    the CNPG major upgrade or logical migration.
+  - >-
+    postInitApplicationSQL only runs on initial bootstrap. To upgrade the
+    extension, check pg_extension.extversion, pgvector release notes and index
+    compatibility, then run ALTER EXTENSION vector UPDATE as a planned
+    migration.
+
+smoke:
+  - name: cluster-ready
+    resource: cluster/postgresql
+    condition: condition=Ready
+    timeout: 600s
+    sql:
+      cluster: postgresql
+      database: zeabur
+      query: SELECT '[1,2,3]'::vector <-> '[1,2,4]'::vector
+      expect: "1"

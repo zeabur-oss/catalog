@@ -1,0 +1,133 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: Umami
+  version: "3.4.1"
+  description: >-
+    Umami web analytics over HTTPS, with PostgreSQL 18 managed by
+    CloudNativePG.
+  license: MIT AND PostgreSQL AND Apache-2.0
+  # Also: https://cloudnative-pg.io/
+  homepage: https://umami.is/
+  icon: https://github.com/umami-software.png
+  categories: [analytics]
+
+requires:
+  - ingress/traefik
+  - certificates/cert-manager
+  - databases/cloudnative-pg
+
+services:
+  - name: umami
+    securityProfile: restricted
+    ports: [{name: http, port: 3000}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "1", memory: 1Gi}}
+    domains: ['{{ .Domain }}']
+  - name: umami-db
+    securityProfile: restricted
+    ports: [{name: postgresql, port: 5432}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "1", memory: 1Gi}}
+
+inputs:
+  - name: adminPassword
+    description: >-
+      Password of the admin user. It replaces the default password once, at
+      the first start. Change it in Umami after you sign in.
+    generate: random
+    secret: {name: umami-secrets, key: admin-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: appSecret
+    description: Signs sign-in tokens and share links. Rotating it signs everyone out.
+    generate: random
+    secret: {name: umami-secrets, key: app-secret}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: >-
+    Umami runs as an unprivileged user (UID 1001) with a read-only root
+    filesystem, no service-account token and no extra Linux capabilities.
+    Outbound traffic is not limited, but Umami makes no outbound requests.
+  locales:
+    zh-TW:
+      summary: "Umami 以一般使用者（UID 1001）執行，根檔案系統唯讀，沒有 service-account token，也沒有額外的 Linux 權限。往外的網路流量沒有限制，不過 Umami 本身不會對外發出請求。"
+    zh-CN:
+      summary: "Umami 以普通用户（UID 1001）运行，根文件系统只读，没有 service-account token，也没有额外的 Linux 权限。向外的网络流量没有限制，不过 Umami 本身不会对外发出请求。"
+  risks:
+    - risk: Umami creates the admin account with the published password umami.
+      mitigation: >-
+        An init container replaces that password with a generated one before
+        Umami starts. It replaces only the default password, so a password you
+        set in Umami stays.
+      locales:
+        zh-TW:
+          risk: "Umami 會用公開的密碼 umami 建立管理員帳號。"
+          mitigation: "Umami 啟動之前，初始化容器會把這個密碼換成自動產生的密碼。它只會換掉預設密碼，所以你在 Umami 裡自己設的密碼不會被改掉。"
+        zh-CN:
+          risk: "Umami 会用公开的密码 umami 创建管理员账号。"
+          mitigation: "Umami 启动之前，初始化容器会把这个密码换成自动生成的密码。它只会换掉默认密码，所以你在 Umami 里自己设的密码不会被改掉。"
+    - risk: The tracking endpoint accepts events from any website.
+      mitigation: >-
+        Umami stores events only for website IDs that exist in Umami.
+      locales:
+        zh-TW:
+          risk: "追蹤端點會接受任何網站送來的事件。"
+          mitigation: "Umami 只會儲存 Umami 裡已經存在的網站 ID 的事件。"
+        zh-CN:
+          risk: "跟踪端点会接受任何网站发来的事件。"
+          mitigation: "Umami 只会保存 Umami 里已经存在的网站 ID 的事件。"
+    - risk: >-
+        The database pods (CloudNativePG) call the Kubernetes API with an
+        identity that the operator creates.
+      mitigation: >-
+        The databases/cloudnative-pg component creates the permissions (RBAC)
+        for each cluster. The Umami pod itself has no token.
+      locales:
+        zh-TW:
+          risk: "資料庫 Pod（CloudNativePG）會用運算子建立的身分去呼叫 Kubernetes API。"
+          mitigation: "databases/cloudnative-pg 元件會替每個叢集建立對應的權限（RBAC）。Umami 的 Pod 本身沒有 token。"
+        zh-CN:
+          risk: "数据库 Pod（CloudNativePG）会用运算符创建的身份去调用 Kubernetes API。"
+          mitigation: "databases/cloudnative-pg 组件会为每个集群创建对应的权限（RBAC）。Umami 的 Pod 本身没有 token。"
+
+scalability:
+  summary: One Umami instance with one PostgreSQL primary.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      The init container migrates the database. More replicas need the
+      migration moved to a separate step.
+
+upgradeNotes:
+  - >-
+    Database backups are off when the template is installed. To turn them on,
+    open the database in Zeabur and use the Backups tab.
+  - >-
+    The init container runs prisma migrate deploy before the new version
+    starts. A rollback needs the database backup taken before the upgrade.
+  - Deleting the namespace deletes the database. Backups in S3 stay.
+
+smoke:
+  - name: postgresql-ready
+    resource: cluster/umami-db
+    condition: condition=Ready
+    timeout: 900s
+  - name: umami-ready
+    resource: deployment/umami
+    condition: condition=Available
+    timeout: 600s
+    http: {service: umami, port: 3000, path: /api/heartbeat, status: 200, contains: '"ok":true'}
+  - name: authentication-required
+    resource: deployment/umami
+    condition: condition=Available
+    timeout: 120s
+    http: {service: umami, port: 3000, path: /api/websites, status: 401}
+  - name: default-password-replaced
+    resource: cluster/umami-db
+    condition: condition=Ready
+    timeout: 120s
+    sql:
+      cluster: umami-db
+      database: umami
+      query: SELECT count(*) FROM "user" WHERE username = 'admin' AND password LIKE '$2a$%'
+      expect: "1"

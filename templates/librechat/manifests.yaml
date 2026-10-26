@@ -1,0 +1,796 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: librechat-config
+  namespace: '{{ .Namespace }}'
+data:
+  start.cjs: |
+    const { spawnSync } = require('node:child_process');
+    const path = require('node:path');
+    process.chdir('/app');
+    process.env.CREDS_KEY = Buffer.from(process.env.CREDS_KEY_SEED, 'base64url').toString('hex');
+    process.env.CREDS_IV = Buffer.from(process.env.CREDS_IV_SEED, 'base64url').subarray(0, 16).toString('hex');
+    process.env.MONGO_URI = `mongodb://librechat:${encodeURIComponent(process.env.MONGO_PASSWORD)}@mongodb-rs0-0.mongodb-rs0.{{ .Namespace }}.svc.cluster.local:27017/LibreChat?authSource=admin&replicaSet=rs0&tls=true&tlsCAFile=/mongo-tls/ca.crt&tlsCertificateKeyFile=/mongo-client/client.pem`;
+    if (process.argv[2] === 'init') {
+      for (const name of ['data', 'uploads', 'logs', 'images', 'skill']) require('node:fs').mkdirSync('/persistent/' + name, {recursive: true});
+      // The upstream administrative CLI uses the same registration service as the app.
+      // Check existence first so a container restart does not reset the account password.
+      const mongoose = require('/app/node_modules/mongoose');
+      (async () => {
+        await mongoose.connect(process.env.MONGO_URI, {serverSelectionTimeoutMS: 30000});
+        const existing = await mongoose.connection.db.collection('users').findOne({email: process.env.BOOTSTRAP_EMAIL});
+        await mongoose.disconnect();
+        if (existing) return;
+        const child = spawnSync(process.execPath, ['/app/config/create-user.js', process.env.BOOTSTRAP_EMAIL, 'Administrator', 'admin', process.env.BOOTSTRAP_PASSWORD, '--email-verified=true'], {stdio: 'inherit', env: process.env, cwd: '/app'});
+        if (child.error) throw child.error;
+        if (child.status !== 0) throw new Error('Upstream account creation failed');
+      })().catch(error => { console.error(error.message); process.exitCode = 1; });
+    } else {
+      // The driver reads the client certificate once. Exit after cert-manager renews it, so that the container restarts with the new one.
+      const fs = require('node:fs');
+      const loaded = fs.readFileSync('/mongo-client/client.pem');
+      setInterval(() => {
+        try {
+          if (fs.readFileSync('/mongo-client/client.pem').equals(loaded)) return;
+        } catch {
+          return;
+        }
+        console.log('MongoDB client certificate renewed; restarting');
+        process.exit(0);
+      }, 60000).unref();
+      require('/app/api/server/index.js');
+    }
+  librechat.yaml: 'version: 1.2.1
+
+    cache: true
+
+    '
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: librechat-data
+  namespace: '{{ .Namespace }}'
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mongodb-operand
+  namespace: '{{ .Namespace }}'
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: librechat
+  namespace: '{{ .Namespace }}'
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: librechat
+  template:
+    metadata:
+      labels:
+        templates.zeabur.com/template: librechat
+        app.kubernetes.io/name: librechat
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: librechat
+        image: ghcr.io/danny-avila/librechat-dev:latest@sha256:b278c620834c5653801030091072cad1974b47d0fc15a5009ed1a7d6e4c4f0d7
+        ports:
+        - name: http
+          containerPort: 3080
+        env:
+        - &id001
+          name: HOST
+          value: 0.0.0.0
+        - &id002
+          name: PORT
+          value: '3080'
+        - &id003
+          name: NODE_ENV
+          value: production
+        - &id004
+          name: HOME
+          value: /app/data/home
+        - &id005
+          name: CONFIG_PATH
+          value: /bootstrap/librechat.yaml
+        - &id006
+          name: DOMAIN_CLIENT
+          value: https://{{ .Domain }}
+        - &id007
+          name: DOMAIN_SERVER
+          value: https://{{ .Domain }}
+        - &id008
+          name: ALLOW_REGISTRATION
+          value: 'false'
+        - &id009
+          name: ALLOW_EMAIL_LOGIN
+          value: 'true'
+        - &id010
+          name: ALLOW_UNVERIFIED_EMAIL_LOGIN
+          value: 'true'
+        - &id011
+          name: MEILI_HOST
+          value: http://meilisearch:7700
+        - &id012
+          name: SEARCH
+          value: 'true'
+        - &id013
+          name: MEILI_MASTER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: meili-key
+        - &id014
+          name: RAG_API_URL
+          value: http://rag-api:8000
+        - &id015
+          name: RAG_PORT
+          value: '8000'
+        - &id016
+          name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: jwt-secret
+        - &id017
+          name: JWT_REFRESH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: jwt-refresh-secret
+        - &id018
+          name: CREDS_KEY_SEED
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: creds-key
+        - &id019
+          name: CREDS_IV_SEED
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: creds-iv
+        - &id020
+          name: MONGO_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: mongo-password
+        - &id021
+          name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: '{{ .Inputs.providerSecret }}'
+              key: OPENAI_API_KEY
+        - &id022
+          name: LIBRECHAT_TEMP_CREDENTIALS_PATH
+          value: /app/data/.env.temp
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources: &id024
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: '2'
+            memory: 3Gi
+        volumeMounts:
+        - &id025
+          name: persistent
+          mountPath: /app/data
+          subPath: data
+        - &id026
+          name: persistent
+          mountPath: /app/uploads
+          subPath: uploads
+        - &id027
+          name: persistent
+          mountPath: /app/logs
+          subPath: logs
+        - &id028
+          name: persistent
+          mountPath: /app/client/public/images
+          subPath: images
+        - &id029
+          name: persistent
+          mountPath: /app/skill
+          subPath: skill
+        - &id030
+          name: bootstrap
+          mountPath: /bootstrap
+          readOnly: true
+        - &id031
+          name: mongo-tls
+          mountPath: /mongo-tls
+        - &id033
+          name: mongo-client
+          mountPath: /mongo-client
+          readOnly: true
+        - &id032
+          name: tmp
+          mountPath: /tmp
+        startupProbe:
+          httpGet:
+            path: /health
+            port: http
+          failureThreshold: 90
+          periodSeconds: 5
+          timeoutSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          periodSeconds: 30
+          timeoutSeconds: 3
+          failureThreshold: 6
+        command:
+        - node
+        - /bootstrap/start.cjs
+      volumes:
+      - name: persistent
+        persistentVolumeClaim:
+          claimName: librechat-data
+      - name: bootstrap
+        configMap:
+          name: librechat-config
+      - name: mongo-tls
+        secret:
+          secretName: mongodb-ssl
+          items:
+          - key: ca.crt
+            path: ca.crt
+      - name: mongo-client
+        secret:
+          secretName: librechat-mongodb-client
+          items:
+          - key: tls-combined.pem
+            path: client.pem
+      - name: tmp
+        emptyDir:
+          sizeLimit: 1Gi
+      initContainers:
+      - name: prepare-storage
+        image: ghcr.io/danny-avila/librechat-dev:latest@sha256:b278c620834c5653801030091072cad1974b47d0fc15a5009ed1a7d6e4c4f0d7
+        command:
+        - node
+        - -e
+        - const fs=require('node:fs');for(const n of ['data','uploads','logs','images','skill']){const
+          p='/persistent/'+n;if(!fs.existsSync(p)){if(n==='images')fs.cpSync('/app/client/public/images',p,{recursive:true});else
+          fs.mkdirSync(p,{recursive:true});}}fs.mkdirSync('/persistent/data/home',{recursive:true});
+        securityContext: &id023
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+        volumeMounts:
+        - name: persistent
+          mountPath: /persistent
+        - name: tmp
+          mountPath: /tmp
+      - name: initialize-account-and-storage
+        image: ghcr.io/danny-avila/librechat-dev:latest@sha256:b278c620834c5653801030091072cad1974b47d0fc15a5009ed1a7d6e4c4f0d7
+        command:
+        - node
+        - /bootstrap/start.cjs
+        - init
+        env:
+        - *id001
+        - *id002
+        - *id003
+        - *id004
+        - *id005
+        - *id006
+        - *id007
+        - *id008
+        - *id009
+        - *id010
+        - *id011
+        - *id012
+        - *id013
+        - *id014
+        - *id015
+        - *id016
+        - *id017
+        - *id018
+        - *id019
+        - *id020
+        - *id021
+        - *id022
+        - name: BOOTSTRAP_EMAIL
+          value: '{{ .Inputs.adminEmail }}'
+        - name: BOOTSTRAP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: admin-password
+        securityContext: *id023
+        resources: *id024
+        volumeMounts:
+        - name: persistent
+          mountPath: /persistent
+        - *id025
+        - *id026
+        - *id027
+        - *id028
+        - *id029
+        - *id030
+        - *id031
+        - *id032
+        - *id033
+---
+# mongod requires a client certificate. Percona's operator issues the cluster TLS from the Issuer mongodb-psmdb-issuer.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: librechat-mongodb-client
+  namespace: '{{ .Namespace }}'
+spec:
+  secretName: librechat-mongodb-client
+  commonName: librechat
+  duration: 2160h
+  renewBefore: 720h
+  usages:
+  - client auth
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+  additionalOutputFormats:
+  - type: CombinedPEM
+  issuerRef:
+    group: cert-manager.io
+    kind: Issuer
+    name: mongodb-psmdb-issuer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: librechat
+  namespace: '{{ .Namespace }}'
+spec:
+  selector:
+    app.kubernetes.io/name: librechat
+  ports:
+  - name: http
+    port: 3080
+    targetPort: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rag-api
+  namespace: '{{ .Namespace }}'
+spec:
+  selector:
+    app.kubernetes.io/name: rag-api
+  ports:
+  - name: http
+    port: 8000
+    targetPort: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: meilisearch
+  namespace: '{{ .Namespace }}'
+spec:
+  selector:
+    app.kubernetes.io/name: meilisearch
+  ports:
+  - name: http
+    port: 7700
+    targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: librechat
+  namespace: '{{ .Namespace }}'
+  annotations:
+    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - '{{ .Domain }}'
+    secretName: librechat-tls
+  rules:
+  - host: '{{ .Domain }}'
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: librechat
+            port:
+              number: 3080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rag-api
+  namespace: '{{ .Namespace }}'
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rag-api
+  template:
+    metadata:
+      labels:
+        templates.zeabur.com/template: librechat
+        app.kubernetes.io/name: rag-api
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: rag-api
+        image: ghcr.io/danny-avila/librechat-rag-api-dev-lite:latest@sha256:a62ce2221b43a9bb57fa6cb733e7047c80132960272c33d5704028f3071a1251
+        ports:
+        - name: http
+          containerPort: 8000
+        env:
+        - name: HOME
+          value: /tmp
+        - name: PYTHONDONTWRITEBYTECODE
+          value: '1'
+        - name: RAG_HOST
+          value: 0.0.0.0
+        - name: RAG_PORT
+          value: '8000'
+        - name: DB_HOST
+          value: rag-db-rw
+        - name: DB_PORT
+          value: '5432'
+        - name: POSTGRES_DB
+          value: rag
+        - name: POSTGRES_USER
+          value: app
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: rag-db-app
+              key: password
+        - name: PGVECTOR_CREATE_EXTENSION
+          value: 'false'
+        - name: PGSSLMODE
+          value: verify-full
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: '{{ .Inputs.providerSecret }}'
+              key: OPENAI_API_KEY
+        - name: RAG_UPLOAD_DIR
+          value: /tmp/uploads
+        - name: SCARF_NO_ANALYTICS
+          value: 'true'
+        - name: PGSSLROOTCERT
+          value: /pg-tls/ca.crt
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: '2'
+            memory: 2Gi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: pg-tls
+          mountPath: /pg-tls
+          readOnly: true
+        startupProbe:
+          httpGet:
+            path: /health
+            port: http
+          failureThreshold: 90
+          periodSeconds: 5
+          timeoutSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          periodSeconds: 30
+          timeoutSeconds: 3
+          failureThreshold: 6
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: pg-tls
+        secret:
+          secretName: rag-db-ca
+          items:
+          - key: ca.crt
+            path: ca.crt
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: meilisearch
+  namespace: '{{ .Namespace }}'
+spec:
+  serviceName: meilisearch
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: meilisearch
+  template:
+    metadata:
+      labels:
+        templates.zeabur.com/template: librechat
+        app.kubernetes.io/name: meilisearch
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: meilisearch
+        image: docker.io/getmeili/meilisearch:v1.55.0@sha256:ff546679970126f8822e15d1b6a06bfbff1f2ce2e43f810cfb5258012f92de5c
+        ports:
+        - name: http
+          containerPort: 7700
+        env:
+        - name: MEILI_MASTER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: meili-key
+        - name: MEILI_ENV
+          value: production
+        - name: MEILI_NO_ANALYTICS
+          value: 'true'
+        - name: MEILI_UPGRADE_DB
+          value: 'true'
+        - name: HOME
+          value: /meili_data
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: '1'
+            memory: 2Gi
+        volumeMounts:
+        - name: data
+          mountPath: /meili_data
+        - name: tmp
+          mountPath: /tmp
+        startupProbe:
+          httpGet:
+            path: /health
+            port: http
+          failureThreshold: 90
+          periodSeconds: 5
+          timeoutSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 3
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          periodSeconds: 30
+          timeoutSeconds: 3
+          failureThreshold: 6
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 1Gi
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: rag-db
+  namespace: '{{ .Namespace }}'
+spec:
+  inheritedMetadata:
+    labels:
+      templates.zeabur.com/template: librechat
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:17-standard-trixie@sha256:1c80146a60cf8010042616c67370b2861a1877b9fcf9dd6dd2a9395aa406b568
+  enableSuperuserAccess: false
+  enablePDB: true
+  postgresUID: 26
+  postgresGID: 26
+  seccompProfile:
+    type: RuntimeDefault
+  bootstrap:
+    initdb:
+      database: rag
+      owner: app
+      encoding: UTF8
+      postInitApplicationSQL:
+      - CREATE EXTENSION IF NOT EXISTS vector;
+  storage:
+    size: 10Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: '2'
+      memory: 2Gi
+---
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: mongodb
+  namespace: '{{ .Namespace }}'
+spec:
+  crVersion: 1.23.1
+  unsafeFlags:
+    replsetSize: true
+  image: docker.io/percona/percona-server-mongodb:8.0.32-14@sha256:5ba5f240d2dc98bc6236ab1d79c0862c4b62dba9d98cd0ffdf716c30473d2d11
+  initImage: docker.io/percona/percona-server-mongodb-operator:1.23.1@sha256:78c87b933e184b9af36dbb0078751862c75934c1521c33d3be4d0a38aa58dd0a
+  initContainerSecurityContext:
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities: &id001
+      drop:
+      - ALL
+    seccompProfile: &id002
+      type: RuntimeDefault
+  imagePullPolicy: IfNotPresent
+  updateStrategy: SmartUpdate
+  upgradeOptions:
+    apply: disabled
+    setFCV: false
+  tls:
+    mode: requireTLS
+    allowInvalidCertificates: false
+  secrets:
+    users: mongodb-system-users
+    encryptionKey: mongodb-encryption-key
+  sharding:
+    enabled: false
+  users:
+  - name: librechat
+    db: admin
+    passwordSecretRef:
+      name: app-secrets
+      key: mongo-password
+    roles:
+    - name: readWrite
+      db: LibreChat
+  replsets:
+  - name: rs0
+    size: 1
+    labels:
+      templates.zeabur.com/template: librechat
+    serviceAccountName: mongodb-operand
+    # The image sets glibc.pthread.rseq=0, so TCMalloc takes rseq for per-CPU caches.
+    # Kernels 6.19 to 7.0.13 break that, and mongod 8.0 then exits at start (SERVER-121912).
+    # With rseq kept by glibc, TCMalloc uses per-thread caches and mongod starts.
+    env:
+    - name: GLIBC_TUNABLES
+      value: glibc.pthread.rseq=1
+    affinity:
+      antiAffinityTopologyKey: kubernetes.io/hostname
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1001
+      runAsGroup: 1001
+      fsGroup: 1001
+      seccompProfile:
+        type: RuntimeDefault
+    containerSecurityContext: &id003
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: false
+      capabilities: *id001
+      seccompProfile: *id002
+      runAsUser: 1001
+      runAsGroup: 1001
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: '2'
+        memory: 2Gi
+    podDisruptionBudget:
+      maxUnavailable: 1
+    expose:
+      enabled: false
+    volumeSpec:
+      persistentVolumeClaim:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi

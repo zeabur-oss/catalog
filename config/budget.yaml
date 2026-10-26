@@ -1,0 +1,6 @@
+# Memory budget for the single-node profile: the idle memory of every
+# component recommended on single-node, as measured on single-node kind on
+# amd64.
+# The cluster itself is not included. Over budget fails CI.
+singleNode:
+  budgetMiB: 512

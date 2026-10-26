@@ -1,0 +1,86 @@
+# L0 on every pull request: unit tests, validate, render, template lint and a
+# server-side dry run on a local API server. L1 in the merge queue and on main: install and
+# smoke test what changed and what installs it, in groups. CONTRIBUTING.md
+# lists what each tier checks. L2 is nightly.yml.
+name: ci
+
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  l0:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: DCO sign-off
+        if: github.event_name == 'pull_request'
+        run: |
+          fail=0
+          for c in $(git rev-list --no-merges '${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}'); do
+            author=$(git log -1 --format='%an <%ae>' "$c")
+            if ! git log -1 --format='%(trailers:key=Signed-off-by,valueonly)' "$c" | grep -qF "$author"; then
+              echo "::error::commit $c has no 'Signed-off-by: $author' (use git commit -s)"
+              fail=1
+            fi
+          done
+          exit $fail
+      - uses: ./.github/actions/setup
+      - run: nix develop -c go test ./...
+      - name: Validate, render, template lint, server-side dry run
+        run: nix develop -c go run ./tools/cmd/catalog e2e -tier l0
+      - run: nix build .#release
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release
+          path: result/
+
+  l1-matrix:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-slim
+    outputs:
+      matrix: ${{ steps.list.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - id: list
+        env:
+          SINCE: ${{ github.event.merge_group.base_sha || github.event.before }}
+        run: echo "matrix=$(go run ./tools/cmd/catalog list -tier l1 -since "$SINCE")" >> "$GITHUB_OUTPUT"
+
+  l1:
+    needs: [l0, l1-matrix]
+    if: fromJSON(needs.l1-matrix.outputs.matrix).include[0]
+    runs-on: ubuntu-26.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.l1-matrix.outputs.matrix).include }}
+    name: l1 ${{ matrix.ids }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - name: iSCSI module for Longhorn
+        if: contains(matrix.ids, 'replicated-storage/longhorn')
+        run: sudo modprobe iscsi_tcp
+      - name: e2e
+        env:
+          IDS: ${{ matrix.ids }}
+        run: |
+          # shellcheck disable=SC2086 # IDS is a list of IDs
+          nix develop -c go run ./tools/cmd/catalog e2e -tier l1 $IDS

@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openclaw-sandbox-browser
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: openclaw-sandbox-browser
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: openclaw-sandbox-browser
+  template:
+    metadata:
+      labels:
+        templates.zeabur.com/template: openclaw-browser-sandbox
+        app.kubernetes.io/name: openclaw-sandbox-browser
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: openclaw-sandbox-browser
+        image: ghcr.io/canyugs/openclaw-sandbox-browser:edcc8e5@sha256:e6fcd2cb4272498709d16ad6a12526363559ed5846eb2ff0f775f15d62365ef7
+        ports:
+        - name: cdp
+          containerPort: 9222
+        env:
+        - name: OPENCLAW_BROWSER_CDP_PORT
+          value: '9222'
+        - name: OPENCLAW_BROWSER_HEADLESS
+          value: '1'
+        - name: OPENCLAW_BROWSER_ENABLE_NOVNC
+          value: '0'
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: '2'
+            memory: 2Gi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: shm
+          mountPath: /dev/shm
+        readinessProbe:
+          tcpSocket:
+            port: cdp
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 6
+        livenessProbe:
+          tcpSocket:
+            port: cdp
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 6
+        startupProbe:
+          tcpSocket:
+            port: cdp
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 60
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: shm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 256Mi
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: openclaw-sandbox-browser-allow
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: openclaw-sandbox-browser-allow
+spec:
+  podSelector:
+    matchLabels:
+      templates.zeabur.com/template: openclaw-browser-sandbox
+      app.kubernetes.io/name: openclaw-sandbox-browser
+  policyTypes: [Ingress]
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          templates.zeabur.com/template: openclaw-browser-sandbox
+          app.kubernetes.io/name: '{{ .Inputs.clientApp }}'
+    ports:
+    - protocol: TCP
+      port: 9222
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openclaw-sandbox-browser
+  namespace: '{{ .Namespace }}'
+  labels:
+    app.kubernetes.io/name: openclaw-sandbox-browser
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: openclaw-sandbox-browser
+  ports:
+  - name: cdp
+    port: 9222
+    targetPort: cdp

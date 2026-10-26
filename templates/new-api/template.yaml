@@ -1,0 +1,150 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: New API
+  version: "v1.0.0-rc.46"
+  description: >-
+    OpenAI-compatible model gateway with secure initial owner provisioning and
+    CloudNativePG PostgreSQL.
+  license: AGPL-3.0-only AND PostgreSQL AND Apache-2.0
+  # Also: https://docs.newapi.pro/
+  homepage: https://github.com/QuantumNous/new-api
+  icon: https://i.imgur.com/3pRJ59s.png
+  categories: [ai]
+
+requires:
+  - ingress/traefik
+  - certificates/cert-manager
+  - databases/cloudnative-pg
+
+services:
+  - name: new-api
+    securityProfile: restricted
+    ports: [{name: http, port: 3000}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 2000m, memory: 1Gi}}
+    domains: ['{{ .Domain }}']
+  - name: newapi-db
+    securityProfile: restricted
+    ports: [{name: postgresql, port: 5432}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}
+
+inputs:
+  - name: initialAdminPassword
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: newapi-secrets, key: admin-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: sessionSecret
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: newapi-secrets, key: session-secret}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: cryptoSecret
+    description: Deploy-time random secret; preserve it across upgrades.
+    generate: random
+    secret: {name: newapi-secrets, key: crypto-secret}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: >-
+    Everything runs in its own namespace. Images are pinned by digest and
+    workloads run as non-root users. Network access is kept to the minimum.
+    There are no default passwords.
+  locales:
+    zh-TW:
+      summary: "所有東西都在自己的命名空間裡執行。映像檔以 digest 固定版本，工作負載都用非 root 使用者執行，網路存取壓到最低，也沒有預設密碼。"
+    zh-CN:
+      summary: "所有东西都在自己的命名空间里运行。镜像以 digest 固定版本，工作负载都用非 root 用户运行，网络访问压到最低，也没有默认密码。"
+  risks:
+    - risk: >-
+        If the public site is not set up yet, the first visitor could take
+        over the administrator account.
+      mitigation: >-
+        A PostStart hook calls the supported /api/setup endpoint with a
+        generated password before the Pod is ready to receive traffic. The
+        setup creates no known root credential.
+      locales:
+        zh-TW:
+          risk: "公開網站如果還沒完成初始設定，第一個來的訪客就能接管管理員帳號。"
+          mitigation: "Pod 準備好接收流量之前，PostStart hook 會先用自動產生的密碼呼叫官方支援的 /api/setup。這個設定流程不會留下任何已知的 root 憑證。"
+        zh-CN:
+          risk: "公开网站如果还没完成初始设置，第一个来的访客就能接管管理员账号。"
+          mitigation: "Pod 就绪可以接收流量之前，PostStart hook 会先用自动生成的密码调用官方支持的 /api/setup。这个设置流程不会留下任何已知的 root 凭据。"
+    - risk: >-
+        The gateway handles provider API keys, accounts and billing data. The
+        providers you configure can send sensitive prompts to outside
+        services.
+      mitigation: >-
+        Limit who can be an administrator and who can define providers. The
+        app runs as non-root with a read-only filesystem and no Kubernetes
+        token. Session and encryption secrets are generated, and PostgreSQL
+        uses verified TLS. Check the AGPL obligation to offer your source code
+        if you let others use a modified version over the network.
+      locales:
+        zh-TW:
+          risk: "閘道會處理服務商的 API 金鑰、帳號和計費資料。你設定的服務商可能把敏感的提示詞傳到外部。"
+          mitigation: "管理員和服務商的設定權限要嚴格控管。應用程式用非 root 執行，檔案系統唯讀，也沒有 Kubernetes 權杖。登入工作階段和加密用的機密都是自動產生，PostgreSQL 連線使用經過驗證的 TLS。如果你改過程式碼又讓別人透過網路使用，請確認 AGPL 要求你提供原始碼的義務。"
+        zh-CN:
+          risk: "网关会处理服务商的 API 密钥、账号和计费数据。你配置的服务商可能把敏感的提示词发到外部。"
+          mitigation: "管理员和服务商的配置权限要严格控制。应用以非 root 运行，文件系统只读，也没有 Kubernetes 令牌。会话和加密用的机密都是自动生成，PostgreSQL 连接使用经过验证的 TLS。如果你改过代码又让别人通过网络使用，请确认 AGPL 要求你提供源码的义务。"
+    - risk: >-
+        The database pods (CloudNativePG) need a token to call the Kubernetes
+        API.
+      mitigation: >-
+        Only the database pods created by the operator get a token. The New
+        API Pod has token mounting turned off.
+      locales:
+        zh-TW:
+          risk: "資料庫 Pod（CloudNativePG）需要權杖才能呼叫 Kubernetes API。"
+          mitigation: "只有 operator 建立的資料庫 Pod 拿得到權杖。New API 的 Pod 已關閉自動掛載權杖。"
+        zh-CN:
+          risk: "数据库 Pod（CloudNativePG）需要令牌才能调用 Kubernetes API。"
+          mitigation: "只有 operator 创建的数据库 Pod 拿得到令牌。New API 的 Pod 已关闭自动挂载令牌。"
+
+scalability:
+  summary: >-
+    One gateway Pod and one PostgreSQL primary on a 10Gi volume; no
+    automatic horizontal scaling.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      On a node-local StorageClass, ReadWriteOnce storage has no HA or snapshots.
+      The database is unavailable while its node is down.
+    - >-
+      More gateway replicas need shared session and crypto secrets, a cache
+      design and a single schema-migration leader.
+
+upgradeNotes:
+  - >-
+    Database backups are off when the template is installed. To turn them on,
+    open the database in Zeabur and use the Backups tab.
+  - >-
+    Preserve Secrets and PVCs. Back up data off-node and rehearse a restore
+    before changing image digests.
+  - >-
+    The image is the upstream release candidate v1.0.0-rc.46. Read upstream
+    release notes and schema migrations before each upgrade. Schema migrations
+    may not be reversible.
+  - >-
+    The database is PostgreSQL 17 managed by CloudNativePG.
+    Data from a MySQL-based New API deployment needs a logical migration; MySQL
+    data files cannot be attached to PostgreSQL.
+  - >-
+    Fresh admin username admin; initial password is literal prefix Aa1- followed
+    by newapi-secrets/admin-password. Setup runs only if /api/setup reports
+    uninitialized. Later user password changes are application-managed.
+  - >-
+    Logs and temporary files go to bounded emptyDir volumes and are lost on
+    restart. Accounts, channels and tokens live in PostgreSQL. Preserve
+    session/crypto Secrets and back up the database.
+
+smoke:
+  - name: workload-ready
+    resource: deployment/new-api
+    condition: condition=Available
+    timeout: 900s
+  - name: database-ready
+    resource: cluster/newapi-db
+    condition: condition=Ready
+    timeout: 900s

@@ -1,0 +1,203 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: Ghost
+  version: "6-alpine"
+  description: >-
+    Ghost 6 publishing with a real MySQL dependency, persistent content and
+    external SMTP.
+  license: MIT AND GPL-2.0-only
+  # Also: https://github.com/docker-library/mysql, https://github.com/TryGhost/ghost-docker
+  homepage: https://github.com/TryGhost/Ghost
+  icon: https://github.com/TryGhost.png
+  categories: [cms]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: ghost
+    securityProfile: restricted
+    ports: [{name: http, port: 2368}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 1Gi}}
+  - name: ghost-mysql
+    securityProfile: restricted
+    ports: [{name: mysql, port: 3306}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 1Gi}}
+
+inputs:
+  - name: ownerEmail
+    label: Owner email
+    locales:
+      zh-TW:
+        label: 擁有者 Email
+        description: "Ghost 網站擁有者的 Email，部署時就會建立好。密碼會自動產生，放在機密 ghost-secrets 的 admin-password。"
+      zh-CN:
+        label: 所有者邮箱
+        description: "Ghost 网站所有者的邮箱，部署时就会创建好。密码会自动生成，放在机密 ghost-secrets 的 admin-password。"
+    description: >-
+      Email of the site owner, created at deploy time. The password is
+      generated in ghost-secrets/admin-password.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
+  - name: adminPassword
+    description: Generated password of the Ghost site owner.
+    generate: random
+    secret: {name: ghost-secrets, key: admin-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: databasePassword
+    description: Password for the least-privilege ghost MySQL application user.
+    generate: random
+    secret: {name: ghost-secrets, key: database-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: mysqlRootPassword
+    description: Local MySQL administrator password; never used by Ghost.
+    generate: random
+    secret: {name: ghost-secrets, key: root-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: smtpHost
+    label: SMTP host
+    locales:
+      zh-TW:
+        label: SMTP 主機
+        description: "寄送系統信件用的外部 SMTP 主機名稱。"
+      zh-CN:
+        label: SMTP 主机
+        description: "发送系统邮件用的外部 SMTP 主机名。"
+    description: External SMTP hostname for transactional email.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?$'}
+  - name: smtpPort
+    label: SMTP port
+    locales:
+      zh-TW:
+        label: SMTP 連接埠
+        description: "465（直接 TLS）或 587（STARTTLS）。"
+      zh-CN:
+        label: SMTP 端口
+        description: "465（直接 TLS）或 587（STARTTLS）。"
+    description: 'SMTP TLS port: 465 for implicit TLS or 587 for STARTTLS.'
+    required: true
+    validation: {pattern: ^(465|587)$}
+  - name: smtpSecure
+    label: SMTP encryption
+    locales:
+      zh-TW:
+        label: SMTP 加密方式
+        description: "連接埠 465 填 true（直接 TLS），587 不用填（STARTTLS）。"
+      zh-CN:
+        label: SMTP 加密方式
+        description: "端口 465 填 true（直接 TLS），587 不用填（STARTTLS）。"
+    description: 'true for implicit TLS on port 465. Leave empty for STARTTLS on port 587.'
+    required: false
+    default: "false"
+    validation: {pattern: ^(true|false)$}
+  - name: smtpFrom
+    label: Sender address
+    locales:
+      zh-TW:
+        label: 寄件人地址
+        description: "系統信件的寄件人 Email。"
+      zh-CN:
+        label: 发件人地址
+        description: "系统邮件的发件人邮箱。"
+    description: Transactional mail From address.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
+  - name: smtpSecret
+    label: SMTP credentials secret
+    locales:
+      zh-TW:
+        label: SMTP 認證資訊的機密
+        description: "這個專案裡現有的機密，含 SMTP 服務的 username 和 password。部署前先建立。"
+      zh-CN:
+        label: SMTP 凭证的机密
+        description: "这个项目里现有的机密，含 SMTP 服务的 username 和 password。部署前先创建。"
+    description: >-
+      Existing namespace Secret containing username and password for your SMTP
+      provider. Create it before deploying.
+    required: true
+    validation: {pattern: '^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$'}
+
+security:
+  summary: "Ghost's workloads run in their own namespace, pinned by image digest, as non-root with a read-only root filesystem, no API token and extra capabilities dropped. Outbound traffic is not limited."
+  locales:
+    zh-TW:
+      summary: "Ghost 的工作負載在自己的命名空間裡執行，映像檔以 digest 固定版本，以非 root 身分執行，根檔案系統唯讀，沒有 API token，多餘的權限也都拿掉了。對外連線沒有限制。"
+    zh-CN:
+      summary: "Ghost 的工作负载在自己的命名空间里运行，镜像以 digest 固定版本，以非 root 身份运行，根文件系统只读，没有 API token，多余的权限也都去掉了。对外连接没有限制。"
+  risks:
+    - risk: "If Ghost has not been set up yet, the first visitor can create the site owner."
+      mitigation: "As soon as Ghost answers, the ghost-setup Job creates the owner from ownerEmail and the generated password in ghost-secrets/admin-password. It checks every two seconds, so the window before it runs is short. /ghost and its APIs are open to anyone who can reach the domain, and Ghost has its own sign-in. To limit who can reach /ghost, add an IP limit in the service's network settings."
+      locales:
+        zh-TW:
+          risk: "如果 Ghost 還沒完成初始化，第一個來的訪客就能建立網站擁有者。"
+          mitigation: "Ghost 一能回應，ghost-setup Job 就會用 ownerEmail 和 ghost-secrets/admin-password 裡產生的密碼建立擁有者。它每兩秒檢查一次，所以空窗期很短。任何連得到網域的人都能打開 /ghost 和它的 API，Ghost 本身有登入機制。想限制誰能連到 /ghost，請在服務的網路設定裡加上 IP 限制。"
+        zh-CN:
+          risk: "如果 Ghost 还没完成初始化，第一个来的访客就能创建网站所有者。"
+          mitigation: "Ghost 一能响应，ghost-setup Job 就会用 ownerEmail 和 ghost-secrets/admin-password 里生成的密码创建所有者。它每两秒检查一次，所以空窗期很短。任何能访问该域名的人都能打开 /ghost 和它的 API，Ghost 本身有登录机制。想限制谁能访问 /ghost，请在服务的网络设置里添加 IP 限制。"
+    - risk: "MySQL runs as a plain StatefulSet, with no operator to manage it."
+      mitigation: "Keep one replica. Store both the MySQL backups and the content backups off the node, and protect them. Add a MySQL operator from the catalog before you promise high availability or automatic point-in-time recovery."
+      locales:
+        zh-TW:
+          risk: "MySQL 是以單純的 StatefulSet 執行，沒有 operator 在管理。"
+          mitigation: "只保留一個副本。MySQL 備份和內容備份都要存在節點以外的地方，並妥善保護。在承諾高可用或自動還原到任意時間點之前，請先從目錄加入 MySQL operator。"
+        zh-CN:
+          risk: "MySQL 是以普通的 StatefulSet 运行，没有 operator 在管理。"
+          mitigation: "只保留一个副本。MySQL 备份和内容备份都要存放在节点之外，并妥善保护。在承诺高可用或自动恢复到任意时间点之前，请先从目录添加 MySQL operator。"
+    - risk: "Ghost depends on outside services to send transactional email and newsletters."
+      mitigation: "Provide an existing SMTP Secret. Set up Mailgun in Ghost for bulk newsletters. Protect the provider credentials in your backups. Self-hosted ActivityPub and Tinybird analytics are not included."
+      locales:
+        zh-TW:
+          risk: "Ghost 寄交易通知信和電子報，要靠外部服務。"
+          mitigation: "請提供現成的 SMTP 機密。大量寄送電子報時，在 Ghost 裡設定 Mailgun。備份裡的服務商憑證要妥善保護。範本不含自架的 ActivityPub 和 Tinybird 分析。"
+        zh-CN:
+          risk: "Ghost 发送事务邮件和电子报，要依赖外部服务。"
+          mitigation: "请提供现成的 SMTP 机密。大量发送电子报时，在 Ghost 里设置 Mailgun。备份里的服务商凭证要妥善保护。模板不含自托管的 ActivityPub 和 Tinybird 分析。"
+
+scalability:
+  summary: >-
+    One writable instance backed by one volume. The template has no high
+    availability.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      A node-local default StorageClass, such as local-path, has no snapshots
+      or failover.
+    - >-
+      A single writable application instance is intentional; do not increase
+      replicas without an application-specific storage/database design.
+
+upgradeNotes:
+  - >-
+    The ghost-setup Job creates the site owner at deploy time. On an existing
+    site it finds the setup already done and changes nothing. A Job cannot be
+    changed after it ran; delete it before you apply a new version.
+  - >-
+    Back up persistent application data and its database to storage outside the
+    node before updating the image digest.
+  - >-
+    Restore into a separate namespace before upgrading. Image rollback does not
+    reverse Ghost or MySQL schema migrations.
+  - >-
+    Fresh deployments use MySQL 8.4 LTS, which Ghost's official hosting guide
+    supports. Existing 8.0 volumes require a rehearsed backup/restore or
+    supported upgrade. MySQL 8.4 disables mysql_native_password by default;
+    migrate those users to caching_sha2_password before upgrading.
+  - >-
+    MySQL initialization credentials apply only to empty data directories; use
+    SQL for subsequent rotation. Back up MySQL and Ghost content together.
+
+smoke:
+  - name: owner-created
+    resource: job/ghost-setup
+    condition: condition=Complete
+    timeout: 600s
+  - name: application-ready
+    resource: statefulset/ghost
+    condition: jsonpath={.status.readyReplicas}=1
+    timeout: 600s
+  - name: mysql-ready
+    resource: statefulset/ghost-mysql
+    condition: jsonpath={.status.readyReplicas}=1
+    timeout: 600s

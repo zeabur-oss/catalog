@@ -1,0 +1,104 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: CLIProxyAPI
+  version: "v8.0.41"
+  description: >-
+    Authenticated OpenAI/Gemini-compatible API proxy with private OAuth
+    onboarding and management.
+  license: MIT
+  homepage: https://github.com/router-for-me/CLIProxyAPI
+  icon: https://github.com/router-for-me.png
+  categories: [ai]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: cliproxyapi
+    securityProfile: restricted
+    ports: [{name: http, port: 8317}]
+    resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}
+    domains: ['{{ .Domain }}']
+
+inputs:
+  - name: apiKey
+    description: Client Bearer API key for /v1 requests. Provider credentials are separate.
+    generate: random
+    secret: {name: app-secrets, key: api-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: managementKey
+    description: >-
+      Management API key; management remains localhost-only and never receives
+      public ingress.
+    generate: random
+    secret: {name: app-secrets, key: management-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: "CLIProxyAPI runs as a restricted non-root workload. The root filesystem is read-only, there is no service-account token, and extra capabilities are dropped. HTTPS ingress comes only from Traefik. Outbound traffic is not limited."
+  locales:
+    zh-TW:
+      summary: "CLIProxyAPI 以受限的非 root 身分執行。根檔案系統唯讀，沒有服務帳號 token，多餘的權限也都拿掉了。HTTPS 流量只從 Traefik 進來。對外連線沒有限制。"
+    zh-CN:
+      summary: "CLIProxyAPI 以受限的非 root 身份运行。根文件系统只读，没有服务账号 token，多余的权限也都去掉了。HTTPS 流量只从 Traefik 进来。对外连接没有限制。"
+  risks:
+    - risk: "OAuth refresh tokens give access to your upstream provider accounts. The provider's subscription terms may also limit proxying."
+      mitigation: "Use only accounts that you own and are allowed to proxy. The credentials sit on the private PVC, so encrypt any backup of it. Sign in with the native device login through kubectl exec. The callback ports are not exposed."
+      locales:
+        zh-TW:
+          risk: "OAuth refresh token 可以存取你在上游服務商的帳號。服務商的訂閱條款也可能不允許轉接代理。"
+          mitigation: "只使用你自己擁有、而且允許代理的帳號。憑證放在私有的 PVC 上，備份時要加密。請透過 kubectl exec 用原生的裝置登入來完成授權。回呼連接埠沒有對外開放。"
+        zh-CN:
+          risk: "OAuth refresh token 可以访问你在上游服务商的账号。服务商的订阅条款也可能不允许转接代理。"
+          mitigation: "只使用你自己拥有、并且允许代理的账号。凭证放在私有的 PVC 上，备份时要加密。请通过 kubectl exec 用原生的设备登录来完成授权。回调端口没有对外开放。"
+    - risk: "API keys can use up your account quotas. The management interface can read and change sensitive proxy settings."
+      mitigation: "Client keys and management keys are generated separately. The ingress exposes only /v1 and /v1beta. Remote management and the downloadable control panel are turned off. To manage the proxy, run kubectl -n NAMESPACE port-forward deployment/cliproxyapi 8317:8317 --address 127.0.0.1 and do not publish the tunnel."
+      locales:
+        zh-TW:
+          risk: "API 金鑰會消耗你帳號的額度。管理介面可以讀取和修改敏感的代理設定。"
+          mitigation: "用戶端金鑰和管理金鑰是分開產生的。Ingress 只開放 /v1 和 /v1beta。遠端管理和可下載的控制面板都已關閉。要管理時，請執行 kubectl -n NAMESPACE port-forward deployment/cliproxyapi 8317:8317 --address 127.0.0.1，而且不要把這個通道公開出去。"
+        zh-CN:
+          risk: "API 密钥会消耗你账号的额度。管理界面可以读取和修改敏感的代理设置。"
+          mitigation: "客户端密钥和管理密钥是分开生成的。Ingress 只开放 /v1 和 /v1beta。远程管理和可下载的控制面板都已关闭。要管理时，请执行 kubectl -n NAMESPACE port-forward deployment/cliproxyapi 8317:8317 --address 127.0.0.1，并且不要把这个隧道公开出去。"
+
+scalability:
+  summary: >-
+    One replica. On a node-local StorageClass, node loss requires manual
+    recovery from off-node backups.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - More replicas would write the same OAuth file store concurrently.
+    - >-
+      A node-local StorageClass, such as local-path, has no snapshots. Copy the
+      volume off the node for backups
+
+upgradeNotes:
+  - >-
+    The container runs /CLIProxyAPI/CLIProxyAPI --config /runtime/config.yaml
+    --local-model with v8 configuration. No callback ports or management UI are
+    exposed.
+  - >-
+    Native OAuth credentials persist under /data/auth on the PVC. Stop the
+    pod and back up that PVC and app-secrets encrypted off-node before digest
+    changes. Test a restore before production use.
+  - >-
+    Before upgrading, check v8 configuration compatibility, provider terms and
+    the stored token format. A rollback can fail after credentials migrate.
+  - >-
+    An init container regenerates the runtime config from the template settings
+    and generated keys at each pod start. Management config edits are lost when
+    the pod is replaced. Change settings in the template.
+  - >-
+    Inference fails until you connect a provider. Run native device-code login
+    with an account you own and are permitted to proxy: kubectl -n NAMESPACE
+    exec -it deployment/cliproxyapi -- /CLIProxyAPI/CLIProxyAPI --config
+    /runtime/config.yaml --codex-device-login --no-browser. Callback-based
+    provider logins need a localhost-only tunnel.
+
+smoke:
+  - name: cliproxyapi-ready
+    resource: deployment/cliproxyapi
+    condition: condition=Available
+    timeout: 300s
+    http: {service: cliproxyapi, port: 8317, path: /v1/models, status: 401}

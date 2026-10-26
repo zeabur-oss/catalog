@@ -1,0 +1,199 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: litellm
+  namespace: '{{ .Namespace }}'
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: litellm
+  template:
+    metadata:
+      labels:
+        templates.zeabur.com/template: litellm
+        app.kubernetes.io/name: litellm
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: litellm
+        image: ghcr.io/berriai/litellm-non_root:v1.106.3@sha256:4fe2270c8b66d25654514744ee6629445c255c0303c292fcbd2d973117a04207
+        args: [--port, '4000']
+        ports:
+        - name: http
+          containerPort: 4000
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: [ALL]
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: '2'
+            memory: 2Gi
+        env:
+        - name: MASTER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: litellm-secrets
+              key: master-key
+        - name: LITELLM_MASTER_KEY
+          value: sk-$(MASTER_KEY)
+        - name: LITELLM_SALT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: litellm-secrets
+              key: salt-key
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: litellm-db-app
+              key: password
+        # Prisma takes the CA as sslcert; sslaccept=strict verifies it.
+        - name: DATABASE_URL
+          value: postgresql://litellm:$(DATABASE_PASSWORD)@litellm-db-rw:5432/litellm?sslmode=require&sslcert=/db-ca/ca.crt&sslaccept=strict
+        - name: STORE_MODEL_IN_DB
+          value: 'True'
+        - name: LITELLM_LOCAL_MODEL_COST_MAP
+          value: 'True'
+        - name: LITELLM_MIGRATION_DIR
+          value: /var/lib/litellm/migrations
+        - name: UI_USERNAME
+          value: admin
+        volumeMounts:
+        - name: db-ca
+          mountPath: /db-ca
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /app/.cache
+        - name: runtime
+          mountPath: /var/lib/litellm/ui
+          subPath: ui
+        - name: runtime
+          mountPath: /var/lib/litellm/assets
+          subPath: assets
+        - name: runtime
+          mountPath: /var/lib/litellm/migrations
+          subPath: migrations
+        startupProbe:
+          httpGet:
+            path: /health/liveliness
+            port: http
+          periodSeconds: 5
+          failureThreshold: 120
+        readinessProbe:
+          httpGet:
+            path: /health/readiness
+            port: http
+          periodSeconds: 10
+          timeoutSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /health/liveliness
+            port: http
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 6
+      volumes:
+      - name: db-ca
+        secret:
+          secretName: litellm-db-ca
+          items:
+          - {key: ca.crt, path: ca.crt}
+      - name: tmp
+        emptyDir:
+          sizeLimit: 512Mi
+      - name: cache
+        emptyDir:
+          sizeLimit: 256Mi
+      - name: runtime
+        emptyDir:
+          sizeLimit: 512Mi
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: litellm
+  namespace: '{{ .Namespace }}'
+spec:
+  selector:
+    app.kubernetes.io/name: litellm
+  ports:
+  - name: http
+    port: 4000
+    targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: litellm
+  namespace: '{{ .Namespace }}'
+  annotations:
+    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts: ['{{ .Domain }}']
+    secretName: litellm-tls
+  rules:
+  - host: '{{ .Domain }}'
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: litellm
+            port:
+              number: 4000
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: litellm-db
+  namespace: '{{ .Namespace }}'
+spec:
+  inheritedMetadata:
+    labels:
+      templates.zeabur.com/template: litellm
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:18-minimal-trixie@sha256:0675340b02be838319b9b6f323c206693e519dcd62ec729d539be9f46bb7a2f9
+  enableSuperuserAccess: false
+  enablePDB: true
+  postgresUID: 26
+  postgresGID: 26
+  seccompProfile:
+    type: RuntimeDefault
+  bootstrap:
+    initdb:
+      database: litellm
+      owner: litellm
+      encoding: UTF8
+  storage:
+    size: 10Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: '1'
+      memory: 1Gi
+  postgresql:
+    parameters:
+      shared_buffers: 128MB
+      max_connections: '100'

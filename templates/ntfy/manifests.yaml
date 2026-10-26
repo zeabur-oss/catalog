@@ -1,0 +1,158 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ntfy-data
+  namespace: '{{ .Namespace }}'
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ntfy
+  namespace: '{{ .Namespace }}'
+spec:
+  serviceName: ntfy
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ntfy
+  template:
+    metadata:
+      labels:
+        templates.zeabur.com/template: ntfy
+        app.kubernetes.io/name: ntfy
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: ntfy
+        image: binwiederhier/ntfy:v2.33.1@sha256:29bc952294d58957f6ca6638eca9a653a33555989224edbdf4bb9433ee606497
+        # auth-users takes a bcrypt hash. Hash the generated password at each
+        # start, so the Secret stays the source of the admin password.
+        command:
+        - /bin/sh
+        - -ec
+        - |
+          hash="$(printf '%s\n%s\n' "$ADMIN_PASSWORD" "$ADMIN_PASSWORD" | ntfy user hash | sed -n 's/.*\(\$2[aby]\$.*\)/\1/p')"
+          [ -n "$hash" ]
+          unset ADMIN_PASSWORD
+          export NTFY_AUTH_USERS="admin:$hash:admin"
+          exec ntfy serve
+        ports:
+        - name: http
+          containerPort: 8080
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: [ALL]
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: '1'
+            memory: 512Mi
+        env:
+        - name: ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ntfy-secrets
+              key: admin-password
+        - name: NTFY_BASE_URL
+          value: https://{{ .Domain }}
+        - name: NTFY_LISTEN_HTTP
+          value: :8080
+        - name: NTFY_BEHIND_PROXY
+          value: 'true'
+        - name: NTFY_CACHE_FILE
+          value: /var/lib/ntfy/cache.db
+        - name: NTFY_AUTH_FILE
+          value: /var/lib/ntfy/user.db
+        - name: NTFY_AUTH_DEFAULT_ACCESS
+          value: deny-all
+        - name: NTFY_ENABLE_LOGIN
+          value: 'true'
+        - name: NTFY_ATTACHMENT_CACHE_DIR
+          value: /var/lib/ntfy/attachments
+        - name: NTFY_ATTACHMENT_TOTAL_SIZE_LIMIT
+          value: 2G
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/ntfy
+        - name: tmp
+          mountPath: /tmp
+        startupProbe:
+          httpGet:
+            path: /v1/health
+            port: http
+          periodSeconds: 5
+          failureThreshold: 60
+        readinessProbe:
+          httpGet:
+            path: /v1/health
+            port: http
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /v1/health
+            port: http
+          periodSeconds: 20
+          failureThreshold: 6
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: ntfy-data
+      - name: tmp
+        emptyDir:
+          sizeLimit: 256Mi
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ntfy
+  namespace: '{{ .Namespace }}'
+spec:
+  selector:
+    app.kubernetes.io/name: ntfy
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ntfy
+  namespace: '{{ .Namespace }}'
+  annotations:
+    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts: ['{{ .Domain }}']
+    secretName: ntfy-tls
+  rules:
+  - host: '{{ .Domain }}'
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ntfy
+            port:
+              number: 8080

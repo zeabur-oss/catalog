@@ -1,0 +1,188 @@
+apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: Hermes Agent
+  version: "v2026.7.7.2"
+  description: >-
+    Hermes gateway, authenticated API and protected dashboard with
+    OpenRouter or another OpenAI-compatible provider.
+  license: MIT
+  homepage: https://github.com/NousResearch/hermes-agent
+  icon: https://raw.githubusercontent.com/NousResearch/hermes-agent/main/website/static/img/logo.png
+  categories: [ai, automation]
+
+requires: [ingress/traefik, certificates/cert-manager]
+
+services:
+  - name: hermes-agent
+    securityProfile: restricted
+    ports: [{name: dashboard, port: 9119}, {name: api, port: 5000}]
+    resources: {requests: {cpu: 300m, memory: 768Mi}, limits: {cpu: 2500m, memory: 3Gi}}
+    domains: ['{{ .Inputs.adminDomain }}', '{{ .Domain }}']
+
+inputs:
+  - name: providerSecret
+    label: Provider API key secret
+    locales:
+      zh-TW:
+        label: 模型服務 API 金鑰的機密
+        description: "這個專案裡現有的機密，鍵 api-key 放模型服務的 API 金鑰；沒有填 API 端點時放 OpenRouter 的金鑰。"
+      zh-CN:
+        label: 模型服务 API 密钥的机密
+        description: "这个项目里现有的机密，键 api-key 放模型服务的 API 密钥；没有填 API 端点时放 OpenRouter 的密钥。"
+    description: >-
+      Existing namespaced Secret with key api-key that holds the provider API
+      key, an OpenRouter key when providerEndpoint is empty.
+    required: true
+    validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
+  - name: model
+    label: Model
+    locales:
+      zh-TW:
+        label: 模型
+        description: "模型服務上的模型名稱，需要時包含擁有者或路徑。"
+      zh-CN:
+        label: 模型
+        description: "模型服务上的模型名称，需要时包含所有者或路径。"
+    description: Provider model identifier including owner/path where required.
+    required: true
+    validation: {pattern: '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}$'}
+  - name: apiKey
+    description: >-
+      Generated API bearer key; retrieve hermes-secrets/api-key through
+      authorized Kubernetes access.
+    generate: random
+    secret: {name: hermes-secrets, key: api-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: providerEndpoint
+    label: API endpoint
+    locales:
+      zh-TW:
+        label: API 端點
+        description: "公開的 OpenAI 相容 HTTPS 端點（TCP 443），需要的話包含 /v1。留空就用 OpenRouter（https://openrouter.ai/api/v1）。"
+      zh-CN:
+        label: API 端点
+        description: "公网的 OpenAI 兼容 HTTPS 端点（TCP 443），需要的话包含 /v1。留空就用 OpenRouter（https://openrouter.ai/api/v1）。"
+    description: >-
+      Public OpenAI-compatible HTTPS endpoint on TCP443, including its /v1
+      suffix if required. If it is empty, the template uses OpenRouter
+      (https://openrouter.ai/api/v1).
+    required: false
+    default: https://openrouter.ai/api/v1
+    validation: {pattern: '^https://[A-Za-z0-9.-]+(:443)?(/[A-Za-z0-9._~/-]*)?$'}
+  - name: adminDomain
+    label: Dashboard domain
+    locales:
+      zh-TW:
+        label: 管理介面網域
+        description: "管理介面另外使用的 HTTPS 網域。"
+      zh-CN:
+        label: 管理界面域名
+        description: "管理界面单独使用的 HTTPS 域名。"
+    description: Separate HTTPS dashboard hostname.
+    required: true
+    validation: {pattern: '^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$'}
+  - name: dashboardPassword
+    description: Independent generated dashboard password for user admin.
+    generate: random
+    secret: {name: hermes-secrets, key: dashboard-password}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+  - name: dashboardSessionKey
+    description: Independent generated dashboard session-signing key.
+    generate: random
+    secret: {name: hermes-secrets, key: dashboard-session-key}
+    validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
+
+security:
+  summary: "The pod runs as UID 10000 with no extra capabilities, no privilege escalation and a read-only root filesystem. Only a few paths are writable, and they have size limits. The API needs authentication, and messaging platforms are denied by default. Outbound traffic is not limited."
+  locales:
+    zh-TW:
+      summary: "Pod 以 UID 10000 執行，沒有多餘的權限，不能提升權限，根檔案系統唯讀。可寫入的路徑只有少數幾個，而且有大小上限。API 需要驗證，通訊平台預設全部拒絕。對外連線沒有限制。"
+    zh-CN:
+      summary: "Pod 以 UID 10000 运行，没有多余的权限，不能提升权限，根文件系统只读。可写入的路径只有少数几个，而且有大小上限。API 需要认证，消息平台默认全部拒绝。对外连接没有限制。"
+  risks:
+    - risk: "The agent's tools start subprocesses and run code for highly trusted users."
+      mitigation: "There is no host socket or host path, no privileged mode and no service-account credentials. Outbound traffic is not limited, so agent tasks can reach private and cloud metadata addresses. Add an egress NetworkPolicy to block them. A malicious skill, prompt or web page can take over the agent's state and credentials. Give each trust boundary its own namespace, and use dedicated nodes for users you do not trust."
+      locales:
+        zh-TW:
+          risk: "代理的工具會啟動子程序，並替高度受信任的使用者執行程式碼。"
+          mitigation: "沒有掛載主機的 socket 或路徑，不用特權模式，也沒有服務帳號憑證。對外連線沒有限制，所以代理的任務可以連到私有位址和雲端 metadata 位址，請加上 egress NetworkPolicy 擋掉它們。惡意的技能、提示詞或網頁內容，可能接管代理的狀態和憑證。每個信任範圍請各用一個命名空間，不信任的使用者請用專用節點。"
+        zh-CN:
+          risk: "代理的工具会启动子进程，并替高度可信的用户运行代码。"
+          mitigation: "没有挂载主机的 socket 或路径，不用特权模式，也没有服务账号凭证。对外连接没有限制，所以代理的任务可以访问私有地址和云端 metadata 地址，请添加 egress NetworkPolicy 拦截它们。恶意的技能、提示词或网页内容，可能接管代理的状态和凭证。每个信任范围请各用一个命名空间，不可信的用户请用专用节点。"
+    - risk: "The saved state holds provider credentials, conversations, memories and skills that can run code."
+      mitigation: "Allow only one writer, and install only skills you trust. Lazy installs are turned off. Take encrypted backups off the node while the gateway is stopped, and rehearse a restore. After a restore, check file ownership, provider access and the messaging allowlists before you send clients back to it. A node-local StorageClass has no high availability and no snapshots."
+      locales:
+        zh-TW:
+          risk: "保存的狀態裡有服務商憑證、對話、記憶，還有能執行程式碼的技能。"
+          mitigation: "只允許一個寫入者，只安裝你信任的技能。延遲安裝已關閉。在閘道停止時，做加密的備份並存到節點以外的地方，也要演練還原。還原之後，先檢查檔案擁有者、服務商存取權和通訊白名單，再讓用戶端連回來。只存在節點本機的 StorageClass 沒有高可用，也沒有快照。"
+        zh-CN:
+          risk: "保存的状态里有服务商凭证、对话、记忆，还有能运行代码的技能。"
+          mitigation: "只允许一个写入者，只安装你信任的技能。延迟安装已关闭。在网关停止时，做加密的备份并存到节点之外的地方，也要演练恢复。恢复之后，先检查文件所有者、服务商访问权限和消息白名单，再让客户端连回来。只存在节点本地的 StorageClass 没有高可用，也没有快照。"
+    - risk: "The dashboard can manage tools, profiles and secrets, so whoever gets in has a lot of power."
+      mitigation: "The Basic-auth password and the session key are generated separately, and the dashboard has its own hostname. Anyone who can reach that hostname can open the dashboard, so keep the generated password private. To limit who can reach it, add an IP limit in the service's network settings."
+      locales:
+        zh-TW:
+          risk: "儀表板可以管理工具、設定檔和機密，能進去的人權力很大。"
+          mitigation: "Basic-auth 密碼和工作階段金鑰是分開產生的，儀表板也有自己獨立的主機名稱。任何連得到那個主機名稱的人都能開啟儀表板，所以請保管好產生的密碼。想限制誰能連進來，請在服務的網路設定裡加上 IP 限制。"
+        zh-CN:
+          risk: "仪表板可以管理工具、配置文件和机密，能进去的人权力很大。"
+          mitigation: "Basic-auth 密码和会话密钥是分开生成的，仪表板也有自己独立的主机名。任何能访问那个主机名的人都能打开仪表板，所以请保管好生成的密码。想限制谁能访问，请在服务的网络设置里添加 IP 限制。"
+    - risk: "The pod does not run the image's s6 /init, because /init needs the DAC_OVERRIDE capability. So the image's first-boot skill setup does not run, and newer versions write a random API_SERVER_KEY to /opt/data/.env."
+      mitigation: "That key overrides the one from hermes-secrets, so API calls with the Secret key may get 401. If that happens, use the API_SERVER_KEY in /opt/data/.env. The bundled skills are not set up."
+      locales:
+        zh-TW:
+          risk: "Pod 不執行映像檔的 s6 /init，因為 /init 需要 DAC_OVERRIDE 權限。所以映像檔第一次啟動時的技能初始化不會跑，而且新版本會把隨機的 API_SERVER_KEY 寫進 /opt/data/.env。"
+          mitigation: "這把金鑰會蓋過 hermes-secrets 裡的金鑰，用 Secret 裡的金鑰呼叫 API 可能會得到 401。遇到的話，改用 /opt/data/.env 裡的 API_SERVER_KEY。映像檔內建的技能不會自動設定。"
+        zh-CN:
+          risk: "Pod 不运行镜像的 s6 /init，因为 /init 需要 DAC_OVERRIDE 权限。所以镜像第一次启动时的技能初始化不会跑，而且新版本会把随机的 API_SERVER_KEY 写进 /opt/data/.env。"
+          mitigation: "这个密钥会盖过 hermes-secrets 里的密钥，用 Secret 里的密钥调用 API 可能会得到 401。遇到的话，改用 /opt/data/.env 里的 API_SERVER_KEY。镜像内置的技能不会自动设置。"
+
+scalability:
+  summary: >-
+    One supervised writer with a 10Gi PVC; profile/session state is
+    local to this instance.
+  replicas: 1
+  maxReplicas: 1
+  blockers:
+    - >-
+      Profile gateways, scheduler, locks and sessions are not distributed
+      shared-nothing state.
+    - A node-local StorageClass has no snapshots or cross-node HA.
+    - Provider quotas and CPU/memory limit concurrent browser/tool subprocesses.
+
+upgradeNotes:
+  - >-
+    The dashboard is open to anyone who can reach adminDomain and signs in with
+    the generated password; add an IP limit in the service's network settings if
+    you need one.
+  - >-
+    Back up /opt/data consistently before upgrades. Upstream migrates persisted
+    configuration during startup, and an older image may not read migrated
+    state. Roll back by restoring the backup.
+  - >-
+    The pod does not use the image's /init supervisor. The gateway and the
+    dashboard run as separate containers as UID 10000, which owns /opt/data.
+    After each image update, check that both start without root.
+  - >-
+    Before the gateway starts, an init container writes the provider,
+    endpoint, key and model into the config. Startup fails when that config is
+    invalid.
+  - >-
+    The smoke check tests the API listener only. Send one request through the
+    provider to confirm inference.
+  - >-
+    Keep messaging deny-by-default; configure explicit allowed messaging
+    identities before enabling any external channel. Never restore
+    GATEWAY_ALLOW_ALL_USERS=true.
+  - >-
+    Only trusted skills/plugins; lazy dependency installation is disabled and
+    application code remains read-only. Integrations that need extra packages
+    need a custom image.
+
+smoke:
+  - name: hermes-api-ready
+    resource: deployment/hermes-agent
+    condition: condition=Available
+    timeout: 600s
+    http: {service: hermes-agent, port: 5000, path: /health, status: 200}

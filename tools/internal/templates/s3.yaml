@@ -1,0 +1,97 @@
+# SeaweedFS for template e2e: HTTPS S3 on TCP 443. cert-manager issues the
+# certificate from a test CA. The Secret s3-tls holds the CA as ca.crt.
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata: {name: s3-selfsigned, namespace: '{{ .Namespace }}'}
+spec: {selfSigned: {}}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata: {name: s3-ca, namespace: '{{ .Namespace }}'}
+spec:
+  isCA: true
+  commonName: catalog e2e CA
+  secretName: s3-ca
+  privateKey: {algorithm: ECDSA, size: 256}
+  issuerRef: {name: s3-selfsigned, kind: Issuer}
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata: {name: s3-ca, namespace: '{{ .Namespace }}'}
+spec: {ca: {secretName: s3-ca}}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata: {name: s3-tls, namespace: '{{ .Namespace }}'}
+spec:
+  secretName: s3-tls
+  dnsNames: ['{{ .Host }}']
+  privateKey: {algorithm: ECDSA, size: 256}
+  issuerRef: {name: s3-ca, kind: Issuer}
+---
+apiVersion: v1
+kind: Secret
+metadata: {name: s3-config, namespace: '{{ .Namespace }}'}
+stringData:
+  s3.json: '{{ .Config }}'
+---
+apiVersion: seaweed.seaweedfs.com/v1
+kind: Seaweed
+metadata: {name: e2e, namespace: '{{ .Namespace }}'}
+spec:
+  image: chrislusf/seaweedfs:4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d
+  volumeServerDiskCount: 1
+  master:
+    replicas: 1
+    # Small volumes, so that the test disk has free volume slots.
+    volumeSizeLimitMB: 64
+    podSecurityContext: &pod
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
+      seccompProfile: {type: RuntimeDefault}
+    containerSecurityContext: &container
+      allowPrivilegeEscalation: false
+      capabilities: {drop: [ALL]}
+  volume:
+    replicas: 1
+    requests: {storage: 2Gi}
+    maxVolumeCounts: 30
+    podSecurityContext: *pod
+    containerSecurityContext: *container
+  filer:
+    replicas: 1
+    podSecurityContext: *pod
+    containerSecurityContext: *container
+  s3:
+    replicas: 1
+    # Templates allow S3 egress to TCP 443 only. The probes use the HTTP port.
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
+      seccompProfile: {type: RuntimeDefault}
+      sysctls: [{name: net.ipv4.ip_unprivileged_port_start, value: "443"}]
+    containerSecurityContext: *container
+    configSecret: {name: s3-config, key: s3.json}
+    extraArgs: [-port.https=443, -cert.file=/tls/tls.crt, -key.file=/tls/tls.key]
+    volumes: [{name: tls, secret: {secretName: s3-tls}}]
+    volumeMounts: [{name: tls, mountPath: /tls, readOnly: true}]
+---
+apiVersion: v1
+kind: Service
+metadata: {name: s3, namespace: '{{ .Namespace }}'}
+spec:
+  selector:
+    app.kubernetes.io/component: s3
+    app.kubernetes.io/instance: e2e
+  ports: [{name: https, port: 443, targetPort: 443}]
+---
+apiVersion: seaweed.seaweedfs.com/v1
+kind: Bucket
+metadata: {name: e2e, namespace: '{{ .Namespace }}'}
+spec:
+  name: '{{ .Bucket }}'
+  clusterRef: {name: e2e}
