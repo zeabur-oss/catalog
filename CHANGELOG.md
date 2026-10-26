@@ -28,3 +28,8 @@ based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Renovate updates image and OCI chart digests together with their tags.
 - The security summaries of Velero, the VictoriaMetrics operator and Longhorn
   say which tokens equal cluster-admin.
+
+### Removed
+
+- The `gotify-notifications` component (Alertmanager Gotify bridge). Use ntfy
+  or a webhook channel instead.
