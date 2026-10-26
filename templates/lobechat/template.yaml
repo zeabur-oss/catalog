@@ -46,22 +46,31 @@ inputs:
     required: true
     validation: {pattern: '^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$'}
 security:
-  summary: >-
-    Non-root, read-only root filesystem, restricted PSS, no Kubernetes token,
-    TLS ingress. Outbound traffic is not limited.
+  summary: "LobeChat runs as non-root with a read-only root filesystem and the restricted Pod Security level. It has no Kubernetes token, and ingress uses TLS. Outbound traffic is not limited."
+  locales:
+    zh-TW:
+      summary: "LobeChat 以非 root 身分執行，根檔案系統唯讀，套用 restricted 等級的 Pod Security。它沒有 Kubernetes token，Ingress 使用 TLS。對外連線沒有限制。"
+    zh-CN:
+      summary: "LobeChat 以非 root 身份运行，根文件系统只读，应用 restricted 级别的 Pod Security。它没有 Kubernetes token，Ingress 使用 TLS。对外连接没有限制。"
   risks:
-    - risk: The LobeHub Community License restricts distribution of derivative works.
-      mitigation: >-
-        The template description names the license. The template runs the
-        unmodified image with notices intact. Get commercial permission before
-        you distribute a derivative.
-    - risk: >-
-        All users who know the shared access code share the server-funded model
-        key and the instance.
-      mitigation: >-
-        Share a deployment only between mutually trusted users. The code is
-        generated with high entropy, upstream auth protection is on and ingress
-        is TLS-only.
+    - risk: "The LobeHub Community License limits how you may distribute derivative works."
+      mitigation: "The template description names the license. The template runs the unmodified image with its notices intact. Get commercial permission before you distribute a derivative."
+      locales:
+        zh-TW:
+          risk: "LobeHub 社群授權限制你散布衍生作品的方式。"
+          mitigation: "範本說明裡有寫明授權。範本執行的是未經修改的映像檔，聲明都完整保留。要散布衍生作品之前，請先取得商業授權許可。"
+        zh-CN:
+          risk: "LobeHub 社区许可限制你分发衍生作品的方式。"
+          mitigation: "模板说明里有写明许可证。模板运行的是未经修改的镜像，声明都完整保留。要分发衍生作品之前，请先取得商业授权许可。"
+    - risk: "Everyone who knows the shared access code uses the same instance and the same model key, and the server pays for it."
+      mitigation: "Share a deployment only with users who trust each other. The code is generated with high entropy, the upstream sign-in protection is on, and ingress allows TLS only."
+      locales:
+        zh-TW:
+          risk: "知道共用存取碼的人，都會共用同一個實例和同一把模型金鑰，費用由伺服器這邊負擔。"
+          mitigation: "只把部署分享給彼此信任的使用者。存取碼是高強度隨機產生的，上游的登入保護已開啟，Ingress 只允許 TLS 連線。"
+        zh-CN:
+          risk: "知道共用访问码的人，都会共用同一个实例和同一把模型密钥，费用由服务器这边承担。"
+          mitigation: "只把部署分享给彼此信任的用户。访问码是高强度随机生成的，上游的登录保护已开启，Ingress 只允许 TLS 连接。"
 
 scalability:
   summary: One instance per trusted owner; do not horizontally scale this deployment.

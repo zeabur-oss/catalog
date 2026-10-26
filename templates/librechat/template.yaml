@@ -107,46 +107,58 @@ inputs:
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 
 security:
-  summary: >-
-    Restricted non-root app pods with read-only images and no API token.
-    TLS/authenticated Percona operands remain restricted with one writable-root
-    exception for hardcoded /tmp TLS material. CNPG uses scoped operator-managed
-    tokens. mongod requires client certificates: LibreChat presents a 90-day
-    client-auth certificate from the cluster CA, renewed by cert-manager, and
-    restarts when it changes.
+  summary: "The app pods run as non-root with read-only images and no API token. The Percona MongoDB pods use TLS and authentication and stay restricted, with one exception: a writable root filesystem for TLS files that are hardcoded to /tmp. CloudNativePG uses limited tokens that the operator manages. MongoDB requires client certificates. LibreChat presents a 90-day client certificate from the cluster CA, cert-manager renews it, and LibreChat restarts when it changes."
+  locales:
+    zh-TW:
+      summary: "應用程式 Pod 以非 root 身分執行，映像檔唯讀，沒有 API token。使用 TLS 和驗證的 Percona MongoDB Pod 維持受限設定，只有一個例外：根檔案系統可寫入，因為 TLS 檔案寫死放在 /tmp。CloudNativePG 使用 operator 管理、權限受限的 token。MongoDB 要求用戶端憑證。LibreChat 會出示叢集 CA 簽發、有效期 90 天的用戶端憑證，由 cert-manager 負責更新，憑證一換，LibreChat 就會重新啟動。"
+    zh-CN:
+      summary: "应用 Pod 以非 root 身份运行，镜像只读，没有 API token。使用 TLS 和认证的 Percona MongoDB Pod 保持受限配置，只有一个例外：根文件系统可写入，因为 TLS 文件写死放在 /tmp。CloudNativePG 使用 operator 管理、权限受限的 token。MongoDB 要求客户端证书。LibreChat 会出示集群 CA 签发、有效期 90 天的客户端证书，由 cert-manager 负责更新，证书一换，LibreChat 就会重启。"
   risks:
-    - risk: >-
-        Percona v1.23.1 entry scripts write hardcoded /tmp/tls.pem and
-        tls-internal.pem; CR lacks a main-container /tmp mount override.
-      mitigation: >-
-        Explicit operator-only readOnlyRootFilesystem=false exception; keep TLS
-        requireTLS, UID1001, drop ALL, no escalation, RuntimeDefault. All
-        ordinary application images remain read-only; no post-reconcile mutation
-        or TLS disablement.
-    - risk: >-
-        The MongoDB server license (SSPL-1.0) imposes service-offering
-        obligations. SSPL is not OSI-approved.
-      mitigation: >-
-        Required exact license acknowledgment and private app-only Mongo
-        service. The Apache-2.0 operator license covers only the operator.
-        Meilisearch uses the MIT community image; BUSL enterprise modules are
-        not included.
-    - risk: >-
-        CNPG instance manager requires Kubernetes API credentials.
-      mitigation: >-
-        The catalog operator creates a per-cluster SA/RBAC. Ordinary app and
-        Percona operand tokens are disabled.
-    - risk: >-
-        Meilisearch has no catalog operator, and local files and databases have
-        separate recovery points.
-      mitigation: >-
-        Hardened single-replica StatefulSet. Take coordinated backups of files,
-        MongoDB, pgvector, Meilisearch dumps and generated Secrets; stop writers
-        for a consistent file backup. Test a complete restore in an isolated
-        namespace, including login, saved credentials, search and document
-        retrieval.
-    - risk: The app shows the upstream LibreChat privacy policy and terms links.
-      mitigation: Configure your own privacy policy and terms of service before public use.
+    - risk: "The Percona v1.23.1 entry scripts write TLS files to the hardcoded paths /tmp/tls.pem and /tmp/tls-internal.pem. The custom resource has no way to mount /tmp separately in the main container."
+      mitigation: "Only the operator-managed pods get this explicit exception, readOnlyRootFilesystem=false. They still require TLS, run as UID 1001, drop all capabilities, allow no escalation and use RuntimeDefault. All ordinary application images stay read-only. Nothing is changed after reconcile, and TLS is never turned off."
+      locales:
+        zh-TW:
+          risk: "Percona v1.23.1 的啟動腳本，會把 TLS 檔案寫到寫死的路徑 /tmp/tls.pem 和 /tmp/tls-internal.pem。自訂資源也沒辦法替主容器另外掛載 /tmp。"
+          mitigation: "只有 operator 管理的 Pod 拿到這個明確的例外：readOnlyRootFilesystem=false。它們仍然強制使用 TLS，以 UID 1001 執行，拿掉所有額外權限，不允許提升權限，並使用 RuntimeDefault。所有一般應用程式的映像檔都維持唯讀。協調完成後不會再改動任何東西，TLS 也不會被關掉。"
+        zh-CN:
+          risk: "Percona v1.23.1 的启动脚本，会把 TLS 文件写到写死的路径 /tmp/tls.pem 和 /tmp/tls-internal.pem。自定义资源也没办法为主容器单独挂载 /tmp。"
+          mitigation: "只有 operator 管理的 Pod 拿到这个明确的例外：readOnlyRootFilesystem=false。它们仍然强制使用 TLS，以 UID 1001 运行，去掉所有额外权限，不允许提升权限，并使用 RuntimeDefault。所有普通应用的镜像都保持只读。协调完成后不会再改动任何东西，TLS 也不会被关掉。"
+    - risk: "The MongoDB server uses the SSPL-1.0 license, which sets duties for anyone who offers MongoDB as a service. SSPL is not OSI-approved."
+      mitigation: "You must acknowledge the exact license when you deploy. The Mongo service is private and reachable only by the app. The Apache-2.0 license of the operator covers only the operator. Meilisearch uses the MIT community image, and the BUSL enterprise modules are not included."
+      locales:
+        zh-TW:
+          risk: "MongoDB 伺服器採用 SSPL-1.0 授權，把 MongoDB 當成服務提供給別人的話，要負擔額外義務。SSPL 並未通過 OSI 認可。"
+          mitigation: "部署時必須明確確認這份授權。Mongo 服務是私有的，只有應用程式連得到。operator 的 Apache-2.0 授權只涵蓋 operator 本身。Meilisearch 使用 MIT 授權的社群版映像檔，不含 BUSL 授權的企業版模組。"
+        zh-CN:
+          risk: "MongoDB 服务器采用 SSPL-1.0 许可，把 MongoDB 作为服务提供给别人的话，要承担额外义务。SSPL 并未通过 OSI 认可。"
+          mitigation: "部署时必须明确确认这份许可。Mongo 服务是私有的，只有应用能访问。operator 的 Apache-2.0 许可只涵盖 operator 本身。Meilisearch 使用 MIT 许可的社区版镜像，不含 BUSL 许可的企业版模块。"
+    - risk: "The CloudNativePG instance manager needs Kubernetes API credentials."
+      mitigation: "The catalog operator creates a service account and RBAC permissions for each cluster. The ordinary app pods and the Percona pods have their tokens turned off."
+      locales:
+        zh-TW:
+          risk: "CloudNativePG 的 instance manager 需要 Kubernetes API 憑證。"
+          mitigation: "目錄裡的 operator 會為每個叢集建立服務帳號和 RBAC 權限。一般應用程式 Pod 和 Percona Pod 的 token 都已停用。"
+        zh-CN:
+          risk: "CloudNativePG 的 instance manager 需要 Kubernetes API 凭证。"
+          mitigation: "目录里的 operator 会为每个集群创建服务账号和 RBAC 权限。普通应用 Pod 和 Percona Pod 的 token 都已停用。"
+    - risk: "Meilisearch has no operator in the catalog. The local files and the databases are also restored from separate points in time."
+      mitigation: "Meilisearch runs as a hardened single-replica StatefulSet. Back up the files, MongoDB, pgvector, Meilisearch dumps and the generated Secrets together. Stop the writers so the file backup is consistent. Test a full restore in an isolated namespace, and check login, saved credentials, search and document retrieval."
+      locales:
+        zh-TW:
+          risk: "Meilisearch 在目錄裡沒有 operator。本機檔案和各個資料庫的還原時間點也各不相同。"
+          mitigation: "Meilisearch 以加固過的單副本 StatefulSet 執行。檔案、MongoDB、pgvector、Meilisearch 傾印檔和產生的機密，請一起備份。為了讓檔案備份一致，備份時要先停掉寫入的程式。請在獨立的命名空間測試完整還原，並檢查登入、已儲存的憑證、搜尋和文件擷取是否正常。"
+        zh-CN:
+          risk: "Meilisearch 在目录里没有 operator。本地文件和各个数据库的恢复时间点也各不相同。"
+          mitigation: "Meilisearch 以加固过的单副本 StatefulSet 运行。文件、MongoDB、pgvector、Meilisearch 转储文件和生成的机密，请一起备份。为了让文件备份一致，备份时要先停掉写入的程序。请在独立的命名空间测试完整恢复，并检查登录、已保存的凭证、搜索和文档检索是否正常。"
+    - risk: "The app shows the upstream LibreChat privacy policy and terms links."
+      mitigation: "Set your own privacy policy and terms of service before you open the site to the public."
+      locales:
+        zh-TW:
+          risk: "應用程式顯示的是上游 LibreChat 的隱私權政策和服務條款連結。"
+          mitigation: "公開使用之前，請先設定你自己的隱私權政策和服務條款。"
+        zh-CN:
+          risk: "应用显示的是上游 LibreChat 的隐私政策和服务条款链接。"
+          mitigation: "公开使用之前，请先设置你自己的隐私政策和服务条款。"
 
 scalability:
   summary: >-

@@ -23,8 +23,14 @@ services:
 
 security:
   summary: >-
-    No Kubernetes API access; non-root UID 101, read-only filesystem, no
-    capabilities. The pod makes no outbound connections.
+    The Pod has no Kubernetes API access. It runs as non-root UID 101 with a
+    read-only filesystem and no extra system privileges. It makes no outbound
+    connections.
+  locales:
+    zh-TW:
+      summary: "Pod 不能存取 Kubernetes API。以非 root 的 UID 101 執行，檔案系統唯讀，沒有任何額外的系統權限，也不會對外連線。"
+    zh-CN:
+      summary: "Pod 不能访问 Kubernetes API。以非 root 的 UID 101 运行，文件系统只读，没有任何额外的系统权限，也不会对外连接。"
   risks: []
 
 scalability:

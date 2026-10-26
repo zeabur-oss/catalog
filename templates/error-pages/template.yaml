@@ -23,16 +23,22 @@ services:
     resources: {requests: {cpu: 5m, memory: 8Mi}, limits: {cpu: 100m, memory: 32Mi}}
 
 security:
-  summary: >-
-    No Kubernetes API access; non-root UID 101, read-only filesystem, no
-    capabilities. The pod makes no outbound connections.
-    The Service and the ConfigMap of pages carry the label
-    zeabur.com/page-server=true, which Zeabur uses to find the page server.
+  summary: "The pod cannot reach the Kubernetes API. It runs as non-root UID 101 with a read-only filesystem and no extra capabilities, and it makes no outbound connections. The Service and the ConfigMap of pages carry the label zeabur.com/page-server=true, which Zeabur uses to find the page server."
+  locales:
+    zh-TW:
+      summary: "Pod 無法存取 Kubernetes API。它以非 root 的 UID 101 執行，檔案系統唯讀，沒有多餘的權限，也不會主動對外連線。Service 和放頁面的 ConfigMap 都帶有 zeabur.com/page-server=true 標籤，Zeabur 靠這個標籤找到頁面伺服器。"
+    zh-CN:
+      summary: "Pod 无法访问 Kubernetes API。它以非 root 的 UID 101 运行，文件系统只读，没有多余的权限，也不会主动对外连接。Service 和存放页面的 ConfigMap 都带有 zeabur.com/page-server=true 标签，Zeabur 靠这个标签找到页面服务器。"
   risks:
-    - risk: Anyone who can edit the ConfigMap changes what visitors see.
-      mitigation: >-
-        Give edit rights on ConfigMaps only to people who may change the site.
-        The server sends the HTML as is and runs no code.
+    - risk: "Anyone who can edit the ConfigMap changes what visitors see."
+      mitigation: "Give edit rights on ConfigMaps only to people who may change the site. The server sends the HTML as is and runs no code."
+      locales:
+        zh-TW:
+          risk: "能編輯 ConfigMap 的人，就能改變訪客看到的內容。"
+          mitigation: "只把 ConfigMap 的編輯權限給可以修改網站的人。伺服器會原封不動送出 HTML，不會執行任何程式。"
+        zh-CN:
+          risk: "能编辑 ConfigMap 的人，就能改变访客看到的内容。"
+          mitigation: "只把 ConfigMap 的编辑权限给可以修改网站的人。服务器会原样送出 HTML，不会执行任何代码。"
 
 scalability:
   summary: >-

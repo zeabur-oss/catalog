@@ -61,6 +61,9 @@ exact versions the template pins.
 - Give every input that a person gives a short `label`, and a label and
   description in `locales` for zh-TW and zh-CN. Write them for the person
   deploying, in everyday words.
+- Write the `security` summary and every risk in plain words that a person who
+  self-hosts for the first time understands: what can go wrong, and for whom.
+  Give each of them `locales` for zh-TW and zh-CN.
 - Turn off unauthenticated admin and debug endpoints and insecure first-run
   defaults. Say how the first administrator signs in.
 

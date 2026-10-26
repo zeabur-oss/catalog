@@ -58,36 +58,74 @@ inputs:
 
 security:
   summary: >-
-    Namespace-scoped, digest-pinned, non-root workloads with least-privilege
-    network access and no default passwords.
+    Everything runs in its own namespace. Images are pinned by digest and
+    workloads run as non-root users. Network access is kept to the minimum.
+    There are no default passwords.
+  locales:
+    zh-TW:
+      summary: "所有東西都在自己的命名空間裡執行。映像檔以 digest 固定版本，工作負載都用非 root 使用者執行，網路存取壓到最低，也沒有預設密碼。"
+    zh-CN:
+      summary: "所有东西都在自己的命名空间里运行。镜像以 digest 固定版本，工作负载都用非 root 用户运行，网络访问压到最低，也没有默认密码。"
   risks:
     - risk: >-
-        n8n uses the Sustainable Use License. It is source-available and is not
-        OSI open source. Enterprise files have separate terms.
+        n8n uses the Sustainable Use License. You can read the source, but it
+        is not OSI-approved open source. Enterprise files have separate terms.
       mitigation: >-
-        The template description names the license. Deploy only for
-        permitted internal business, personal or noncommercial use. Reselling
-        hosted n8n requires a separate agreement with n8n.
+        The template description names the license. Deploy only for permitted
+        internal business, personal or noncommercial use. To resell hosted
+        n8n, you need a separate agreement with n8n.
+      locales:
+        zh-TW:
+          risk: "n8n 用的是 Sustainable Use License。原始碼看得到，但不算 OSI 認可的開源授權。企業版檔案另有條款。"
+          mitigation: "範本說明裡有寫明授權。只能用在允許的範圍：公司內部業務、個人或非商業用途。想把 n8n 當託管服務轉賣，要另外跟 n8n 簽約。"
+        zh-CN:
+          risk: "n8n 用的是 Sustainable Use License。源码看得到，但不算 OSI 认可的开源许可。企业版文件另有条款。"
+          mitigation: "模板说明里有写明许可。只能用在允许的范围：公司内部业务、个人或非商业用途。想把 n8n 当托管服务转售，要另外跟 n8n 签约。"
     - risk: >-
-        Workflow authors can invoke providers, install code or create powerful
-        integrations.
+        Workflow authors can call outside providers, install code or build
+        powerful integrations.
       mitigation: >-
-        Use trusted administrators only; runner is isolated/token-off/read-only,
-        env access blocked and dangerous executeCommand/localFileTrigger
-        excluded. Outbound traffic is not limited; add an egress NetworkPolicy
-        to keep workflows away from private addresses. Community package tool
-        usage is enabled; administrators must vet each installed package.
+        Only let trusted people be administrators. The task runner (the part
+        that runs workflow code) is isolated, has no Kubernetes token and has a
+        read-only filesystem. It cannot read environment variables. The
+        dangerous executeCommand and localFileTrigger nodes are removed.
+        Outbound traffic is not limited, so add an egress NetworkPolicy (a
+        rule that limits outbound traffic) to keep workflows away from private
+        addresses. Community package tools are enabled, so administrators must
+        check each package they install.
+      locales:
+        zh-TW:
+          risk: "工作流程的作者可以呼叫外部服務、安裝程式碼，或做出權限很大的整合。"
+          mitigation: "管理員只給信任的人。任務執行器（跑工作流程程式碼的部分）是隔離的，沒有 Kubernetes 權杖，檔案系統唯讀，也讀不到環境變數。危險的 executeCommand 和 localFileTrigger 節點已經移除。對外連線沒有限制，所以請加一條 egress NetworkPolicy（限制對外連線的規則），讓工作流程連不到私有位址。社群套件工具是開啟的，管理員要自己檢查每個安裝的套件。"
+        zh-CN:
+          risk: "工作流的作者可以调用外部服务、安装代码，或做出权限很大的集成。"
+          mitigation: "管理员只给信任的人。任务执行器（运行工作流代码的部分）是隔离的，没有 Kubernetes 令牌，文件系统只读，也读不到环境变量。危险的 executeCommand 和 localFileTrigger 节点已经移除。对外连接没有限制，所以请加一条 egress NetworkPolicy（限制对外连接的规则），让工作流连不到私有地址。社区包工具是开启的，管理员要自己检查每个安装的包。"
     - risk: >-
-        First-owner signup can be claimed by the first visitor on an
-        unconfigured public instance.
+        On a public instance that is not set up yet, the first visitor could
+        claim the owner account.
       mitigation: >-
-        Use supported v2.17+ managed-owner variables and bcrypt hash of
-        generated Secret before process startup. Deployment variables set the
-        owner email and password at each restart. Public signup stays closed.
+        The template uses the managed-owner variables (n8n v2.17 and later). A
+        bcrypt hash (a one-way scrambled form) of the generated Secret is set
+        before n8n starts. The deployment variables set the owner email and
+        password again at each restart. Public sign-up stays closed.
+      locales:
+        zh-TW:
+          risk: "公開的實例如果還沒設定好，第一個來的訪客就能搶走擁有者帳號。"
+          mitigation: "範本用的是 n8n v2.17 以後支援的託管擁有者變數。n8n 啟動前，就先把自動產生的機密做成 bcrypt 雜湊（單向打亂的形式）設好。每次重啟，部署變數都會再設定一次擁有者的 Email 和密碼。公開註冊維持關閉。"
+        zh-CN:
+          risk: "公开的实例如果还没设置好，第一个来的访客就能抢走所有者账号。"
+          mitigation: "模板用的是 n8n v2.17 以后支持的托管所有者变量。n8n 启动前，就先把自动生成的机密做成 bcrypt 哈希（单向打乱的形式）设好。每次重启，部署变量都会再设置一次所有者的邮箱和密码。公开注册保持关闭。"
     - risk: No SMTP server is configured.
       mitigation: >-
         Email invitations and password-reset mail do not work until you
         configure SMTP in n8n.
+      locales:
+        zh-TW:
+          risk: "沒有設定 SMTP 伺服器。"
+          mitigation: "你在 n8n 裡設定好 SMTP 之前，邀請信和重設密碼信都寄不出去。"
+        zh-CN:
+          risk: "没有设置 SMTP 服务器。"
+          mitigation: "你在 n8n 里设置好 SMTP 之前，邀请邮件和重置密码邮件都发不出去。"
 
 scalability:
   summary: Single-writer deployment; no automatic horizontal scaling.

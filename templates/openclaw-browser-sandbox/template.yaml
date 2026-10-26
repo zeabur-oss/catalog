@@ -39,27 +39,53 @@ inputs:
     validation: {pattern: '^[a-z][a-z0-9-]{0,62}$'}
 security:
   summary: >-
-    Private single-owner browser companion: restricted non-root read-only pod,
-    no privileges or API token, explicit approved-caller ingress only; outbound
-    traffic is not limited. Chromium's renderer sandbox is disabled upstream, so
-    a hostile page can take over the browser pod.
+    This is a private browser for one owner. It runs without root rights, with
+    a read-only filesystem, no extra privileges and no API token. Only callers
+    you approve can reach it. Outbound traffic is not limited. Upstream turns
+    off Chromium's built-in renderer sandbox, so a hostile web page can take
+    over the browser pod.
+  locales:
+    zh-TW:
+      summary: "這是給單一擁有者用的私人瀏覽器。它不用 root 權限執行，檔案系統唯讀，沒有額外權限，也沒有 API token。只有你核准的呼叫端連得進來。往外的網路流量沒有限制。上游把 Chromium 內建的渲染沙箱關掉了，所以惡意網頁可以接管瀏覽器 Pod。"
+    zh-CN:
+      summary: "这是给单个所有者用的私人浏览器。它不用 root 权限运行，文件系统只读，没有额外权限，也没有 API token。只有你批准的调用方连得进来。向外的网络流量没有限制。上游把 Chromium 内置的渲染沙箱关掉了，所以恶意网页可以接管浏览器 Pod。"
   unauthenticated: [openclaw-sandbox-browser]
   risks:
     - risk: >-
-        A malicious webpage compromises an unsandboxed Chromium process with the
-        full pod identity and browser-session data.
+        A malicious web page can take over the Chromium process, which has no
+        sandbox. The attacker then gets the pod's full identity and the
+        browser session data.
       mitigation: >-
-        Documented as single-owner in the description; no application/provider
-        credentials, host mounts or Kubernetes token; read-only rootfs and
-        ephemeral state; restricted pod identity and resource limits. The
-        browser can open private and cloud metadata addresses unless you add an
+        The description says to use it for a single owner. The pod holds no
+        application or provider credentials, no host mounts and no Kubernetes
+        token. Its filesystem is read-only, its state is temporary, its
+        identity is restricted and its resources are limited. The browser can
+        still open private and cloud metadata addresses unless you add an
         egress NetworkPolicy. Do not share one browser between users who do not
         trust each other.
-    - risk: CDP is full browser control and the source proxy carries no authentication.
+      locales:
+        zh-TW:
+          risk: "惡意網頁可以接管沒有沙箱保護的 Chromium 程序。攻擊者就能拿到這個 Pod 的完整身分和瀏覽器的工作階段資料。"
+          mitigation: "說明裡已寫明只給單一擁有者使用。Pod 裡沒有應用程式或供應商的憑證，沒有掛載主機目錄，也沒有 Kubernetes token。檔案系統唯讀，狀態只暫存，身分權限受限，資源也有上限。除非你另外加上 egress NetworkPolicy，否則瀏覽器還是能開啟內網和雲端 metadata 位址。不要讓互不信任的人共用同一個瀏覽器。"
+        zh-CN:
+          risk: "恶意网页可以接管没有沙箱保护的 Chromium 进程。攻击者就能拿到这个 Pod 的完整身份和浏览器的会话数据。"
+          mitigation: "说明里已写明只给单个所有者使用。Pod 里没有应用或供应商的凭证，没有挂载主机目录，也没有 Kubernetes token。文件系统只读，状态只临时保存，身份权限受限，资源也有上限。除非你另外加上 egress NetworkPolicy，否则浏览器还是能打开内网和云端 metadata 地址。不要让互不信任的人共用同一个浏览器。"
+    - risk: >-
+        The CDP port gives full control of the browser, and the proxy in front
+        of it checks no password.
       mitigation: >-
-        No public Ingress or LoadBalancer; NetworkPolicy admits only explicitly
-        approved same-namespace caller label on CDP9222. Pod/label writers in
-        the namespace are trusted. Headless mode only; VNC/noVNC is disabled.
+        There is no public Ingress or LoadBalancer. A NetworkPolicy lets in
+        only callers in the same namespace that carry the approved label, and
+        only on port 9222. Anyone who can write pods or labels in that
+        namespace is trusted. The browser runs headless only, and VNC and noVNC
+        are turned off.
+      locales:
+        zh-TW:
+          risk: "CDP 連接埠可以完全控制瀏覽器，而前面的代理不會檢查任何密碼。"
+          mitigation: "沒有對外的 Ingress 或 LoadBalancer。NetworkPolicy 只放行同一個命名空間裡帶有核准標籤的呼叫端，而且只開 9222 連接埠。能在該命名空間建立 Pod 或改標籤的人都視為可信任。瀏覽器只以無頭模式執行，VNC 和 noVNC 都已關閉。"
+        zh-CN:
+          risk: "CDP 端口可以完全控制浏览器，而前面的代理不会检查任何密码。"
+          mitigation: "没有对外的 Ingress 或 LoadBalancer。NetworkPolicy 只放行同一个命名空间里带有批准标签的调用方，而且只开 9222 端口。能在该命名空间创建 Pod 或改标签的人都视为可信任。浏览器只以无头模式运行，VNC 和 noVNC 都已关闭。"
 
 scalability:
   summary: >-

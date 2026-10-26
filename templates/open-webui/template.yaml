@@ -58,33 +58,62 @@ inputs:
 
 security:
   summary: >-
-    Both UI and pipeline service run as UID1000 without capabilities, on
-    read-only images. Initial admin credentials and pipeline API key are
-    generated; signup is disabled.
+    The web interface and the pipeline service both run as UID 1000 with no
+    extra system privileges and read-only images. The first admin
+    credentials and the pipeline API key are generated. Sign-up is disabled.
+  locales:
+    zh-TW:
+      summary: "網頁介面和 pipeline 服務都以 UID 1000 執行，沒有額外的系統權限，映像檔唯讀。第一組管理員帳密和 pipeline API 金鑰都是自動產生的。註冊功能已關閉。"
+    zh-CN:
+      summary: "网页界面和 pipeline 服务都以 UID 1000 运行，没有额外的系统权限，镜像只读。第一组管理员账号密码和 pipeline API 密钥都是自动生成的。注册功能已关闭。"
   risks:
     - risk: >-
-        Open WebUI uses a custom source-available license with branding
-        obligations. It is not OSI-approved.
+        Open WebUI uses a custom license. You can read the source, but it is
+        not OSI-approved, and it has branding rules.
       mitigation: >-
-        The template description names the license; retain all upstream branding.
-        Section 4 allows branding changes only for at most 50 end users in a
-        rolling 30-day period, or with written or enterprise permission. This
-        template keeps the upstream branding.
+        The template description names the license. Keep all the upstream
+        branding. Section 4 allows branding changes only for at most 50 end
+        users in a rolling 30-day period, or with written or enterprise
+        permission. This template keeps the upstream branding.
+      locales:
+        zh-TW:
+          risk: "Open WebUI 用的是自訂授權。原始碼看得到，但不算 OSI 認可，而且對品牌標示有規定。"
+          mitigation: "範本說明裡有寫明授權。請保留上游所有的品牌標示。第 4 節只允許在 30 天內最多 50 位終端使用者的情況下改品牌，或是取得書面或企業授權。這個範本保留了上游的品牌標示。"
+        zh-CN:
+          risk: "Open WebUI 用的是自定义许可。源码看得到，但不算 OSI 认可，而且对品牌标识有规定。"
+          mitigation: "模板说明里有写明许可。请保留上游所有的品牌标识。第 4 节只允许在 30 天内最多 50 位终端用户的情况下改品牌，或是取得书面或企业授权。这个模板保留了上游的品牌标识。"
     - risk: >-
-        Pipelines and administrator-added tools execute Python with provider
-        credentials.
+        Pipelines and tools added by administrators run Python code with
+        access to provider credentials.
       mitigation: >-
-        Trust every installed pipeline and dependency as application code; keep
-        service private to UI; no Kubernetes tokens or host sockets. Outbound
-        traffic is not limited; add an egress NetworkPolicy to keep pipelines
-        away from private addresses. Python packages install to the writable
-        pipeline volume. Packages that need root (apt or browser system
-        libraries) cannot install at runtime; build them into your own pinned
-        image.
-    - risk: External model providers receive chat content and uploaded document data.
+        Treat every installed pipeline and dependency as application code and
+        trust it fully. Keep the pipeline service private so only the web
+        interface can reach it. It has no Kubernetes tokens or host sockets.
+        Outbound traffic is not limited, so add an egress NetworkPolicy (a
+        rule that limits outbound traffic) to keep pipelines away from private
+        addresses. Python packages install to the writable pipeline volume.
+        Packages that need root (apt or system libraries for a browser) cannot
+        install at runtime. Build them into your own pinned image.
+      locales:
+        zh-TW:
+          risk: "Pipeline 和管理員加的工具會執行 Python 程式碼，而且拿得到服務商的憑證。"
+          mitigation: "每個安裝的 pipeline 和相依套件，都要當成應用程式的程式碼，完全信任了才裝。pipeline 服務要保持私有，只讓網頁介面連得到。它沒有 Kubernetes 權杖，也沒有主機 socket。對外連線沒有限制，所以請加一條 egress NetworkPolicy（限制對外連線的規則），讓 pipeline 連不到私有位址。Python 套件會裝到可寫入的 pipeline 儲存空間。需要 root 的套件（apt 或瀏覽器用的系統函式庫）無法在執行時安裝，請自己打包進固定版本的映像檔。"
+        zh-CN:
+          risk: "Pipeline 和管理员添加的工具会运行 Python 代码，而且拿得到服务商的凭据。"
+          mitigation: "每个安装的 pipeline 和依赖包，都要当成应用代码，完全信任了才装。pipeline 服务要保持私有，只让网页界面连得到。它没有 Kubernetes 令牌，也没有主机 socket。对外连接没有限制，所以请加一条 egress NetworkPolicy（限制对外连接的规则），让 pipeline 连不到私有地址。Python 包会装到可写入的 pipeline 存储卷。需要 root 的包（apt 或浏览器用的系统库）无法在运行时安装，请自己打包进固定版本的镜像。"
+    - risk: >-
+        External model providers receive your chat content and the data from
+        documents you upload.
       mitigation: >-
         Read each provider's privacy terms before you connect it. Ollama is
-        disabled; add provider connections in the admin settings.
+        disabled. Add provider connections in the admin settings.
+      locales:
+        zh-TW:
+          risk: "外部的模型服務商會收到你的對話內容和上傳文件的資料。"
+          mitigation: "連接每個服務商之前，請先讀過它的隱私條款。Ollama 已停用，服務商的連線請到管理員設定裡自己加。"
+        zh-CN:
+          risk: "外部的模型服务商会收到你的对话内容和上传文档的数据。"
+          mitigation: "连接每个服务商之前，请先读过它的隐私条款。Ollama 已停用，服务商的连接请到管理员设置里自己加。"
 
 scalability:
   summary: >-

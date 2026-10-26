@@ -98,34 +98,71 @@ inputs:
 
 security:
   summary: >-
-    Restricted non-root application and MariaDB Pods, TLS-required database,
-    generated SQL credentials. Operator helper images
-    are a catalog trust boundary.
+    The WordPress and MariaDB pods run without root rights under restricted
+    settings. The database requires TLS, and the SQL credentials are
+    generated. The operator's helper images are part of what you trust when you
+    use this catalog.
+  locales:
+    zh-TW:
+      summary: "WordPress 和 MariaDB 的 Pod 都不用 root 權限執行，並套用嚴格限制。資料庫一律要用 TLS 連線，SQL 帳密是自動產生的。運算子的輔助映像檔，是你使用這個目錄時必須信任的一部分。"
+    zh-CN:
+      summary: "WordPress 和 MariaDB 的 Pod 都不用 root 权限运行，并应用严格限制。数据库一律要用 TLS 连接，SQL 账号密码是自动生成的。运算符的辅助镜像，是你使用这个目录时必须信任的一部分。"
   risks:
     - risk: >-
-        WordPress plugins and themes execute code with database and
-        uploaded-file access.
+        WordPress plugins and themes run code that can reach the database and
+        the uploaded files.
       mitigation: >-
-        Restrict administrators, vet plugins and keep them patched. No public
-        FastCGI port; deny PHP execution in uploads and deny
-        wp-config/hidden/raw backup files.
-    - risk: An unconfigured WordPress installation lets the first visitor claim the site.
+        Limit who is an administrator, check plugins before you install them
+        and keep them updated. There is no public FastCGI port. PHP cannot run
+        in the uploads folder, and requests for wp-config, hidden files and raw
+        backup files are denied.
+      locales:
+        zh-TW:
+          risk: "WordPress 的外掛和佈景主題會執行程式，這些程式碰得到資料庫和上傳的檔案。"
+          mitigation: "限制管理員人數，安裝外掛前先檢查，並且持續更新。FastCGI 連接埠沒有對外開放。上傳資料夾裡不能執行 PHP，wp-config、隱藏檔和原始備份檔的請求也會被擋下來。"
+        zh-CN:
+          risk: "WordPress 的插件和主题会运行代码，这些代码碰得到数据库和上传的文件。"
+          mitigation: "限制管理员人数，安装插件前先检查，并且持续更新。FastCGI 端口没有对外开放。上传文件夹里不能运行 PHP，wp-config、隐藏文件和原始备份文件的请求也会被挡下来。"
+    - risk: On a WordPress site that is not set up yet, the first visitor can claim the site.
       mitigation: >-
-        A digest-pinned official WP-CLI init container creates the admin with a
-        generated password before web Pods become ready. Nothing is downloaded
-        at runtime.
-    - risk: MariaDB Operator is namespace-spanning trusted infrastructure.
-      mitigation: >-
-        Install the exact catalog provider and pin its image configuration
-        before use. The engine init container inherits the template digest.
-        MaxScale and Galera are not installed.
+        An init container (official WP-CLI, pinned by digest) creates the admin
+        account with a generated password before the web pods become ready.
+        Nothing is downloaded while it runs.
+      locales:
+        zh-TW:
+          risk: "WordPress 還沒設定好的時候，第一個打開網站的人就能認領這個網站。"
+          mitigation: "網頁 Pod 準備好之前，初始化容器（官方的 WP-CLI，用 digest 固定版本）會先用自動產生的密碼建立管理員帳號。執行過程中不會下載任何東西。"
+        zh-CN:
+          risk: "WordPress 还没设置好的时候，第一个打开网站的人就能认领这个网站。"
+          mitigation: "网页 Pod 准备好之前，初始化容器（官方的 WP-CLI，用 digest 固定版本）会先用自动生成的密码创建管理员账号。运行过程中不会下载任何东西。"
     - risk: >-
-        Database backups do not include uploads, plugins or themes on the
+        The MariaDB Operator works across namespaces, so you have to trust it
+        with the whole cluster.
+      mitigation: >-
+        Install the exact catalog provider and pin its image settings before
+        you use it. The engine init container uses the template's image
+        digest. MaxScale and Galera are not installed.
+      locales:
+        zh-TW:
+          risk: "MariaDB Operator 會跨命名空間運作，所以你得信任它能管整個叢集。"
+          mitigation: "使用之前，裝上目錄指定的那個提供者，並固定它的映像檔設定。引擎的初始化容器沿用範本的映像檔 digest。MaxScale 和 Galera 都沒有安裝。"
+        zh-CN:
+          risk: "MariaDB Operator 会跨命名空间运作，所以你得信任它能管整个集群。"
+          mitigation: "使用之前，装上目录指定的那个提供者，并固定它的镜像设置。引擎的初始化容器沿用模板的镜像 digest。MaxScale 和 Galera 都没有安装。"
+    - risk: >-
+        Database backups do not include the uploads, plugins and themes on the
         wordpress-data volume.
       mitigation: >-
-        Preserve SQL Secrets and TLS PKI and run restore drills. Quiesce
-        WordPress and archive the wordpress-data volume and Secrets at the same
-        recovery point as the database.
+        Keep the SQL Secrets and the TLS certificates, and run restore drills.
+        Pause WordPress, then archive the wordpress-data volume and the Secrets
+        at the same recovery point as the database.
+      locales:
+        zh-TW:
+          risk: "資料庫備份不含 wordpress-data 磁碟區裡的上傳檔案、外掛和佈景主題。"
+          mitigation: "保留 SQL 機密和 TLS 憑證，並且定期演練還原。先讓 WordPress 暫停寫入，再把 wordpress-data 磁碟區和機密，跟資料庫備份在同一個還原時間點一起封存。"
+        zh-CN:
+          risk: "数据库备份不含 wordpress-data 卷里的上传文件、插件和主题。"
+          mitigation: "保留 SQL 机密和 TLS 证书，并且定期演练恢复。先让 WordPress 暂停写入，再把 wordpress-data 卷和机密，跟数据库备份在同一个恢复时间点一起归档。"
 
 scalability:
   summary: >-

@@ -44,24 +44,50 @@ inputs:
 
 security:
   summary: >-
-    Runs as UID 1001 with a read-only root filesystem, no service-account token
-    and all capabilities dropped. Outbound traffic is not limited. Umami makes no
-    outbound requests.
+    Umami runs as an unprivileged user (UID 1001) with a read-only root
+    filesystem, no service-account token and no extra Linux capabilities.
+    Outbound traffic is not limited, but Umami makes no outbound requests.
+  locales:
+    zh-TW:
+      summary: "Umami 以一般使用者（UID 1001）執行，根檔案系統唯讀，沒有 service-account token，也沒有額外的 Linux 權限。往外的網路流量沒有限制，不過 Umami 本身不會對外發出請求。"
+    zh-CN:
+      summary: "Umami 以普通用户（UID 1001）运行，根文件系统只读，没有 service-account token，也没有额外的 Linux 权限。向外的网络流量没有限制，不过 Umami 本身不会对外发出请求。"
   risks:
-    - risk: Umami creates the account admin with the published password umami.
+    - risk: Umami creates the admin account with the published password umami.
       mitigation: >-
-        An init container replaces that password with the generated one before
-        Umami starts. Only the default password is replaced, so a password set
-        in Umami stays.
+        An init container replaces that password with a generated one before
+        Umami starts. It replaces only the default password, so a password you
+        set in Umami stays.
+      locales:
+        zh-TW:
+          risk: "Umami 會用公開的密碼 umami 建立管理員帳號。"
+          mitigation: "Umami 啟動之前，初始化容器會把這個密碼換成自動產生的密碼。它只會換掉預設密碼，所以你在 Umami 裡自己設的密碼不會被改掉。"
+        zh-CN:
+          risk: "Umami 会用公开的密码 umami 创建管理员账号。"
+          mitigation: "Umami 启动之前，初始化容器会把这个密码换成自动生成的密码。它只会换掉默认密码，所以你在 Umami 里自己设的密码不会被改掉。"
     - risk: The tracking endpoint accepts events from any website.
       mitigation: >-
         Umami stores events only for website IDs that exist in Umami.
+      locales:
+        zh-TW:
+          risk: "追蹤端點會接受任何網站送來的事件。"
+          mitigation: "Umami 只會儲存 Umami 裡已經存在的網站 ID 的事件。"
+        zh-CN:
+          risk: "跟踪端点会接受任何网站发来的事件。"
+          mitigation: "Umami 只会保存 Umami 里已经存在的网站 ID 的事件。"
     - risk: >-
-        CloudNativePG instances call the Kubernetes API with an operator-created
-        identity.
+        The database pods (CloudNativePG) call the Kubernetes API with an
+        identity that the operator creates.
       mitigation: >-
-        The databases/cloudnative-pg component creates RBAC for each cluster;
-        the Umami Pod has no token.
+        The databases/cloudnative-pg component creates the permissions (RBAC)
+        for each cluster. The Umami pod itself has no token.
+      locales:
+        zh-TW:
+          risk: "資料庫 Pod（CloudNativePG）會用運算子建立的身分去呼叫 Kubernetes API。"
+          mitigation: "databases/cloudnative-pg 元件會替每個叢集建立對應的權限（RBAC）。Umami 的 Pod 本身沒有 token。"
+        zh-CN:
+          risk: "数据库 Pod（CloudNativePG）会用运算符创建的身份去调用 Kubernetes API。"
+          mitigation: "databases/cloudnative-pg 组件会为每个集群创建对应的权限（RBAC）。Umami 的 Pod 本身没有 token。"
 
 scalability:
   summary: One Umami instance with one PostgreSQL primary.

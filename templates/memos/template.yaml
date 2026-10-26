@@ -29,27 +29,54 @@ inputs:
 
 security:
   summary: >-
-    Runs as UID 10001 with a read-only root filesystem, no service-account token
-    and all capabilities dropped. Outbound traffic is not limited. Public sign-up
-    is off.
+    The container runs as UID 10001 with a read-only filesystem, no Kubernetes
+    token and all extra system privileges removed. Outbound traffic is not
+    limited. Public sign-up is off.
+  locales:
+    zh-TW:
+      summary: "以 UID 10001 執行，檔案系統唯讀，沒有 Kubernetes 權杖，也拿掉了所有額外的系統權限。對外連線沒有限制。公開註冊已關閉。"
+    zh-CN:
+      summary: "以 UID 10001 运行，文件系统只读，没有 Kubernetes 令牌，也去掉了所有额外的系统权限。对外连接没有限制。公开注册已关闭。"
   risks:
-    - risk: The first account on an empty instance becomes the administrator.
+    - risk: On an empty instance, the first account created becomes the administrator.
       mitigation: >-
         A postStart hook creates the account admin with the generated password
-        before the Pod becomes ready. If the hook fails, the kubelet restarts
+        before the Pod becomes ready. If the hook fails, Kubernetes restarts
         the container and the Pod receives no traffic.
+      locales:
+        zh-TW:
+          risk: "全新的實例上，第一個建立的帳號會變成管理員。"
+          mitigation: "Pod 準備好之前，postStart hook 會先用自動產生的密碼建立 admin 帳號。如果 hook 失敗，Kubernetes 會重啟容器，Pod 也不會收到任何流量。"
+        zh-CN:
+          risk: "全新的实例上，第一个创建的账号会变成管理员。"
+          mitigation: "Pod 就绪之前，postStart hook 会先用自动生成的密码创建 admin 账号。如果 hook 失败，Kubernetes 会重启容器，Pod 也不会收到任何流量。"
     - risk: Anyone could register an account.
       mitigation: >-
-        The memos-settings ConfigMap sets disallowUserRegistration. The
-        administrator creates accounts in Settings. Because the ConfigMap
-        manages the general settings, edit it to change them, then restart
-        the Pod.
+        The memos-settings ConfigMap turns on disallowUserRegistration. The
+        administrator creates accounts in Settings. This ConfigMap controls
+        the general settings, so to change them, edit the ConfigMap and
+        restart the Pod.
+      locales:
+        zh-TW:
+          risk: "任何人都可能自己註冊帳號。"
+          mitigation: "ConfigMap memos-settings 已開啟 disallowUserRegistration。帳號由管理員在設定裡建立。一般設定由這個 ConfigMap 管，要改的話請編輯它，再重啟 Pod。"
+        zh-CN:
+          risk: "任何人都可能自己注册账号。"
+          mitigation: "ConfigMap memos-settings 已开启 disallowUserRegistration。账号由管理员在设置里创建。常规设置由这个 ConfigMap 管，要改的话请编辑它，再重启 Pod。"
     - risk: >-
-        Webhooks and link previews are server-side requests to addresses that
+        Webhooks and link previews make the server request addresses that
         users choose.
       mitigation: >-
         Memos blocks private webhook targets by default. The template does not
-        limit outbound traffic; to limit it, add an egress NetworkPolicy.
+        limit outbound traffic. To limit it, add an egress NetworkPolicy (a
+        rule that limits outbound traffic).
+      locales:
+        zh-TW:
+          risk: "Webhook 和連結預覽會讓伺服器去連使用者指定的位址。"
+          mitigation: "Memos 預設會擋掉指向私有位址的 webhook。範本沒有限制對外連線，想限制的話，請加一條 egress NetworkPolicy（限制對外連線的規則）。"
+        zh-CN:
+          risk: "Webhook 和链接预览会让服务器去访问用户指定的地址。"
+          mitigation: "Memos 默认会拦掉指向私有地址的 webhook。模板没有限制对外连接，想限制的话，请加一条 egress NetworkPolicy（限制对外连接的规则）。"
 
 scalability:
   summary: One instance with SQLite on a 10Gi volume.

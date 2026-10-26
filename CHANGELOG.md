@@ -12,8 +12,9 @@ based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `catalog render` fails on a component image without `@sha256:`, as the
   template lint already does. `unpinnedImages` lists the images a chart cannot
   pin, with the reason.
-- Velero: the `file-backup` input installs the node agent. It is on by default,
-  because Zeabur's backup schedule copies volume files.
+- Velero: the `file-backup` input installs the node agent. It is off by default,
+  so the velero namespace needs no privileged Pod Security level. Turn it on for
+  Backups that copy volume files, such as Zeabur's backup schedule.
 
 ### Changed
 

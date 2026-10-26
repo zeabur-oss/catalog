@@ -36,28 +36,57 @@ inputs:
 
 security:
   summary: >-
-    Namespaced, digest-pinned non-root workloads with read-only roots, no API
-    token, dropped capabilities. Outbound traffic is
-    not limited.
+    The workloads live in their own namespace, run without root rights, use
+    pinned image versions and have read-only root filesystems. They have no
+    Kubernetes token and no extra Linux capabilities. Outbound traffic is not
+    limited.
+  locales:
+    zh-TW:
+      summary: "所有工作負載都放在自己的命名空間，不用 root 權限執行，映像檔版本固定，根檔案系統唯讀。它們沒有 Kubernetes token，也沒有額外的 Linux 權限。往外的網路流量沒有限制。"
+    zh-CN:
+      summary: "所有工作负载都放在自己的命名空间，不用 root 权限运行，镜像版本固定，根文件系统只读。它们没有 Kubernetes token，也没有额外的 Linux 权限。向外的网络流量没有限制。"
   risks:
     - risk: >-
-        Upstream AIO Aria2 configuration has no RPC secret; download providers
-        can target arbitrary URLs.
+        The upstream all-in-one Aria2 setup has no RPC password, and download
+        providers can point it at any URL.
       mitigation: >-
-        The template starts Aria2 with authenticated RPC on loopback only and
-        keeps FFmpeg, BitTorrent and downloads. Outbound traffic is not limited,
-        so download URLs can reach private and cloud metadata addresses; add an
-        egress NetworkPolicy to block them.
-    - risk: Storage credentials and administrator hashes are held in the SQLite data volume.
-      mitigation: >-
-        Restrict PVC/Secret/log access, use generated administrator credentials
-        and encrypt off-node backups.
+        The template starts Aria2 with a password-protected RPC that listens on
+        loopback only, and it keeps FFmpeg, BitTorrent and downloads working.
+        Outbound traffic is not limited, so download URLs can reach private and
+        cloud metadata addresses. Add an egress NetworkPolicy to block them.
+      locales:
+        zh-TW:
+          risk: "上游的一體式 Aria2 設定沒有 RPC 密碼，下載來源可以叫它去抓任何網址。"
+          mitigation: "這個範本啟動 Aria2 時有開 RPC 密碼驗證，而且只監聽本機迴路，同時保留 FFmpeg、BitTorrent 和下載功能。往外的網路流量沒有限制，所以下載網址可以連到內網和雲端 metadata 位址。請加上 egress NetworkPolicy 把它們擋掉。"
+        zh-CN:
+          risk: "上游的一体式 Aria2 设置没有 RPC 密码，下载来源可以让它去抓任何网址。"
+          mitigation: "这个模板启动 Aria2 时开启了 RPC 密码验证，而且只监听本机回环，同时保留 FFmpeg、BitTorrent 和下载功能。向外的网络流量没有限制，所以下载网址可以连到内网和云端 metadata 地址。请加上 egress NetworkPolicy 把它们挡掉。"
     - risk: >-
-        OpenList is AGPL-3.0. A modified version offered over a network must
-        offer its source to users.
+        Storage credentials and administrator password hashes are kept in the
+        SQLite data volume.
+      mitigation: >-
+        Limit who can read the PVC, the Secrets and the logs. Use the generated
+        administrator credentials. Encrypt any backup you store off the node.
+      locales:
+        zh-TW:
+          risk: "儲存空間的憑證和管理員密碼的雜湊值都放在 SQLite 資料磁碟區裡。"
+          mitigation: "限制誰能讀取 PVC、機密和日誌。使用自動產生的管理員帳密。存到節點外的備份要加密。"
+        zh-CN:
+          risk: "存储空间的凭证和管理员密码的哈希值都放在 SQLite 数据卷里。"
+          mitigation: "限制谁能读取 PVC、机密和日志。使用自动生成的管理员账号密码。存到节点外的备份要加密。"
+    - risk: >-
+        OpenList uses the AGPL-3.0 license. If you change it and offer it over
+        a network, you must give your users the source code.
       mitigation: >-
         Run the unmodified image, or publish your changes under AGPL-3.0. Keep
         the license notices.
+      locales:
+        zh-TW:
+          risk: "OpenList 採用 AGPL-3.0 授權。如果你改過程式，又透過網路提供給別人用，就必須把原始碼提供給使用者。"
+          mitigation: "使用沒改過的映像檔，或是把你的修改用 AGPL-3.0 公開。保留授權聲明。"
+        zh-CN:
+          risk: "OpenList 采用 AGPL-3.0 许可。如果你改过代码，又通过网络提供给别人用，就必须把源代码提供给用户。"
+          mitigation: "使用没改过的镜像，或者把你的修改用 AGPL-3.0 公开。保留许可声明。"
 
 scalability:
   summary: One writable instance on one volume, with no failover.

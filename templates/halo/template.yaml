@@ -36,29 +36,40 @@ inputs:
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 
 security:
-  summary: >-
-    Restricted non-root application, read-only root and no API token; PostgreSQL
-    operands are managed by the catalog CloudNativePG operator with their scoped
-    service-account exception. Outbound traffic is not limited.
+  summary: "The Halo app runs as non-root with a restricted profile, a read-only root filesystem and no API token. The catalog CloudNativePG operator manages PostgreSQL, and its pods have one exception: a limited service-account token. Outbound traffic is not limited."
+  locales:
+    zh-TW:
+      summary: "Halo 應用程式以非 root 身分執行，套用受限設定，根檔案系統唯讀，沒有 API token。PostgreSQL 由目錄裡的 CloudNativePG operator 管理，它的 Pod 有一個例外：一個權限受限的服務帳號 token。對外連線沒有限制。"
+    zh-CN:
+      summary: "Halo 应用以非 root 身份运行，套用受限配置，根文件系统只读，没有 API token。PostgreSQL 由目录里的 CloudNativePG operator 管理，它的 Pod 有一个例外：一个权限受限的服务账号 token。对外连接没有限制。"
   risks:
-    - risk: >-
-        CNPG instance managers need the Kubernetes API and a scoped
-        service-account token; the template cannot directly harden
-        operator-generated Pods.
-      mitigation: >-
-        Trust the pinned catalog operator, enforce namespace Pod Security
-        restricted and inspect the generated Pods.
-    - risk: The first visitor to an uninitialized Halo can create the administrator account.
-      mitigation: >-
-        The template sets the super administrator admin with a generated
-        password from Secret halo-secrets at the first start, so there is no
-        open setup step. Sign in as admin and change the password in the
-        console.
-    - risk: Database backups do not include local Halo attachments, plugins or themes.
-      mitigation: >-
-        Back up the Halo PVC off-node as well as the database, and
-        test a coordinated restore. The built-in Halo backup also stays on the
-        node.
+    - risk: "The CloudNativePG instance manager needs the Kubernetes API and a limited service-account token. The template cannot harden the Pods that the operator creates."
+      mitigation: "Trust the pinned catalog operator. Enforce the restricted Pod Security level on the namespace, and inspect the Pods the operator generates."
+      locales:
+        zh-TW:
+          risk: "CloudNativePG 的 instance manager 需要使用 Kubernetes API 和一個權限受限的服務帳號 token。範本沒辦法直接加固 operator 產生的 Pod。"
+          mitigation: "信任固定版本的目錄 operator。在命名空間套用 restricted 等級的 Pod Security，並檢查 operator 產生的 Pod。"
+        zh-CN:
+          risk: "CloudNativePG 的 instance manager 需要使用 Kubernetes API 和一个权限受限的服务账号 token。模板没办法直接加固 operator 生成的 Pod。"
+          mitigation: "信任固定版本的目录 operator。在命名空间应用 restricted 级别的 Pod Security，并检查 operator 生成的 Pod。"
+    - risk: "If Halo has not been set up yet, the first visitor can create the administrator account."
+      mitigation: "At the first start, the template creates the super administrator admin with a generated password from the Secret halo-secrets, so there is no open setup step. Sign in as admin and change the password in the console."
+      locales:
+        zh-TW:
+          risk: "如果 Halo 還沒完成初始化，第一個來的訪客就能建立管理員帳號。"
+          mitigation: "第一次啟動時，範本會用 halo-secrets 機密裡產生的密碼建立超級管理員 admin，所以沒有開放的設定步驟。請以 admin 登入，並在控制台改掉密碼。"
+        zh-CN:
+          risk: "如果 Halo 还没完成初始化，第一个来的访客就能创建管理员账号。"
+          mitigation: "第一次启动时，模板会用 halo-secrets 机密里生成的密码创建超级管理员 admin，所以没有开放的设置步骤。请以 admin 登录，并在控制台修改密码。"
+    - risk: "Database backups do not include Halo's local attachments, plugins or themes."
+      mitigation: "Back up the Halo PVC off the node as well as the database, and test a restore of both together. The built-in Halo backup also stays on the node."
+      locales:
+        zh-TW:
+          risk: "資料庫備份不包含 Halo 的本機附件、外掛和主題。"
+          mitigation: "除了資料庫，也要把 Halo 的 PVC 備份到節點以外的地方，並測試兩者一起還原。Halo 內建的備份同樣只存在節點上。"
+        zh-CN:
+          risk: "数据库备份不包含 Halo 的本地附件、插件和主题。"
+          mitigation: "除了数据库，也要把 Halo 的 PVC 备份到节点之外的地方，并测试两者一起恢复。Halo 内置的备份同样只存在节点上。"
 
 scalability:
   summary: One writable instance on one volume, with no failover.

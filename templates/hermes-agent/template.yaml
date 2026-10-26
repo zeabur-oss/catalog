@@ -94,33 +94,40 @@ inputs:
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 
 security:
-  summary: >-
-    Restricted pod as UID 10000 with no capabilities, no escalation, read-only
-    root, bounded writable paths, authenticated API, messaging deny-by-default. Outbound traffic is not limited.
+  summary: "The pod runs as UID 10000 with no extra capabilities, no privilege escalation and a read-only root filesystem. Only a few paths are writable, and they have size limits. The API needs authentication, and messaging platforms are denied by default. Outbound traffic is not limited."
+  locales:
+    zh-TW:
+      summary: "Pod 以 UID 10000 執行，沒有多餘的權限，不能提升權限，根檔案系統唯讀。可寫入的路徑只有少數幾個，而且有大小上限。API 需要驗證，通訊平台預設全部拒絕。對外連線沒有限制。"
+    zh-CN:
+      summary: "Pod 以 UID 10000 运行，没有多余的权限，不能提升权限，根文件系统只读。可写入的路径只有少数几个，而且有大小上限。API 需要认证，消息平台默认全部拒绝。对外连接没有限制。"
   risks:
-    - risk: >-
-        Agent tools invoke subprocesses and execute code from high-trust users.
-      mitigation: >-
-        No host socket/path, privileged mode or service-account credentials.
-        Outbound traffic is not limited, so agent tasks can reach private and
-        cloud metadata addresses; add an egress NetworkPolicy to block them.
-        Malicious skills, prompts or web content can take over agent state and
-        credentials. Give each trust boundary its own namespace, and use
-        dedicated nodes for untrusted users.
-    - risk: >-
-        Persistent state contains provider credentials, conversations, memories
-        and executable skills.
-      mitigation: >-
-        One writer, trusted skills, disabled lazy installs, encrypted off-node
-        backups taken with the gateway stopped, and restore rehearsal. After a
-        restore, check file ownership, provider access and messaging allowlists
-        before routing clients. A node-local StorageClass has no HA or snapshots.
-    - risk: Dashboard exposes high-trust administration of tools, profiles and secrets.
-      mitigation: >-
-        Separate generated Basic-auth and session keys, and a separate
-        hostname. The dashboard is open to anyone who can reach that hostname,
-        so keep the generated password private. To limit who can reach it, add
-        an IP limit in the service's network settings.
+    - risk: "The agent's tools start subprocesses and run code for highly trusted users."
+      mitigation: "There is no host socket or host path, no privileged mode and no service-account credentials. Outbound traffic is not limited, so agent tasks can reach private and cloud metadata addresses. Add an egress NetworkPolicy to block them. A malicious skill, prompt or web page can take over the agent's state and credentials. Give each trust boundary its own namespace, and use dedicated nodes for users you do not trust."
+      locales:
+        zh-TW:
+          risk: "代理的工具會啟動子程序，並替高度受信任的使用者執行程式碼。"
+          mitigation: "沒有掛載主機的 socket 或路徑，不用特權模式，也沒有服務帳號憑證。對外連線沒有限制，所以代理的任務可以連到私有位址和雲端 metadata 位址，請加上 egress NetworkPolicy 擋掉它們。惡意的技能、提示詞或網頁內容，可能接管代理的狀態和憑證。每個信任範圍請各用一個命名空間，不信任的使用者請用專用節點。"
+        zh-CN:
+          risk: "代理的工具会启动子进程，并替高度可信的用户运行代码。"
+          mitigation: "没有挂载主机的 socket 或路径，不用特权模式，也没有服务账号凭证。对外连接没有限制，所以代理的任务可以访问私有地址和云端 metadata 地址，请添加 egress NetworkPolicy 拦截它们。恶意的技能、提示词或网页内容，可能接管代理的状态和凭证。每个信任范围请各用一个命名空间，不可信的用户请用专用节点。"
+    - risk: "The saved state holds provider credentials, conversations, memories and skills that can run code."
+      mitigation: "Allow only one writer, and install only skills you trust. Lazy installs are turned off. Take encrypted backups off the node while the gateway is stopped, and rehearse a restore. After a restore, check file ownership, provider access and the messaging allowlists before you send clients back to it. A node-local StorageClass has no high availability and no snapshots."
+      locales:
+        zh-TW:
+          risk: "保存的狀態裡有服務商憑證、對話、記憶，還有能執行程式碼的技能。"
+          mitigation: "只允許一個寫入者，只安裝你信任的技能。延遲安裝已關閉。在閘道停止時，做加密的備份並存到節點以外的地方，也要演練還原。還原之後，先檢查檔案擁有者、服務商存取權和通訊白名單，再讓用戶端連回來。只存在節點本機的 StorageClass 沒有高可用，也沒有快照。"
+        zh-CN:
+          risk: "保存的状态里有服务商凭证、对话、记忆，还有能运行代码的技能。"
+          mitigation: "只允许一个写入者，只安装你信任的技能。延迟安装已关闭。在网关停止时，做加密的备份并存到节点之外的地方，也要演练恢复。恢复之后，先检查文件所有者、服务商访问权限和消息白名单，再让客户端连回来。只存在节点本地的 StorageClass 没有高可用，也没有快照。"
+    - risk: "The dashboard can manage tools, profiles and secrets, so whoever gets in has a lot of power."
+      mitigation: "The Basic-auth password and the session key are generated separately, and the dashboard has its own hostname. Anyone who can reach that hostname can open the dashboard, so keep the generated password private. To limit who can reach it, add an IP limit in the service's network settings."
+      locales:
+        zh-TW:
+          risk: "儀表板可以管理工具、設定檔和機密，能進去的人權力很大。"
+          mitigation: "Basic-auth 密碼和工作階段金鑰是分開產生的，儀表板也有自己獨立的主機名稱。任何連得到那個主機名稱的人都能開啟儀表板，所以請保管好產生的密碼。想限制誰能連進來，請在服務的網路設定裡加上 IP 限制。"
+        zh-CN:
+          risk: "仪表板可以管理工具、配置文件和机密，能进去的人权力很大。"
+          mitigation: "Basic-auth 密码和会话密钥是分开生成的，仪表板也有自己独立的主机名。任何能访问那个主机名的人都能打开仪表板，所以请保管好生成的密码。想限制谁能访问，请在服务的网络设置里添加 IP 限制。"
 
 scalability:
   summary: >-

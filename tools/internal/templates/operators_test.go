@@ -10,7 +10,7 @@ import (
 
 func TestCNPGCannotBorrowUnrelatedProviderTrust(t *testing.T) {
 	r := &templates.Template{ID: "app", Requires: []string{"ingress/traefik"}}
-	r.Security.Risks = []map[string]string{{"risk": "Operator generated pods and SA", "mitigation": "Pinned catalog review"}}
+	r.Security.Risks = []templates.Risk{{Risk: "Operator generated pods and SA", Mitigation: "Pinned catalog review"}}
 	b := safeManifest + "---\napiVersion: postgresql.cnpg.io/v1\nkind: Cluster\nmetadata: {name: database}\nspec:\n  inheritedMetadata: {labels: {templates.zeabur.com/template: app}}\n  imageName: ghcr.io/example/postgres@sha256:" + strings.Repeat("a", 64) + "\n  seccompProfile: {type: RuntimeDefault}\n  resources:\n    requests: {cpu: 10m, memory: 16Mi}\n    limits: {cpu: 100m, memory: 32Mi}\n"
 	if err := templates.Safety(r, []byte(b), "test"); !errors.Is(err, templates.ErrCNPGProvider) {
 		t.Fatalf("CNPG without its exact catalog provider: got %v", err)
@@ -151,7 +151,7 @@ spec:
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			r := &templates.Template{ID: "app", Requires: []string{tc.provider}}
-			r.Security.Risks = []map[string]string{{"risk": "Operator generated pods", "mitigation": "Pinned catalog review"}}
+			r.Security.Risks = []templates.Risk{{Risk: "Operator generated pods", Mitigation: "Pinned catalog review"}}
 			if err := templates.Safety(r, []byte(tc.manifest), "test"); !matches(err, tc.rule) {
 				t.Fatalf("got %v, want %v", err, tc.rule)
 			}

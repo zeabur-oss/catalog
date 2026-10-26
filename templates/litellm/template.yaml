@@ -50,28 +50,40 @@ inputs:
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 
 security:
-  summary: >-
-    Runs as UID 65534 with a read-only root filesystem, no service-account token
-    and all capabilities dropped. Outbound traffic is not limited. Every API call
-    needs the master key or a key it issued.
+  summary: "LiteLLM runs as UID 65534 with a read-only root filesystem, no service-account token and all extra capabilities dropped. Outbound traffic is not limited. Every API call needs the master key or a key that the master key issued."
+  locales:
+    zh-TW:
+      summary: "LiteLLM 以 UID 65534 執行，根檔案系統唯讀，沒有服務帳號 token，多餘的權限都拿掉了。對外連線沒有限制。每個 API 呼叫都要帶主金鑰，或由主金鑰發出的金鑰。"
+    zh-CN:
+      summary: "LiteLLM 以 UID 65534 运行，根文件系统只读，没有服务账号 token，多余的权限都去掉了。对外连接没有限制。每个 API 调用都要带主密钥，或由主密钥发出的密钥。"
   risks:
-    - risk: >-
-        The master key has full access to the proxy, its keys and the
-        provider credentials it stores.
-      mitigation: >-
-        Keep the master key for administration. Issue virtual keys with
-        budgets and model limits for applications.
-    - risk: Enterprise features need a BerriAI license.
-      mitigation: >-
-        No LITELLM_LICENSE is set, so enterprise features stay off. The
-        installer must accept the enterprise license because the code ships in
-        the image.
-    - risk: >-
-        CloudNativePG instances call the Kubernetes API with an operator-created
-        identity.
-      mitigation: >-
-        The databases/cloudnative-pg component creates RBAC for each cluster;
-        the LiteLLM Pod has no token.
+    - risk: "The master key gives full access to the proxy, to its keys and to the provider credentials it stores."
+      mitigation: "Keep the master key for administration only. Give applications virtual keys with budgets and model limits."
+      locales:
+        zh-TW:
+          risk: "主金鑰可以完整存取代理、代理發出的金鑰，以及它保存的服務商憑證。"
+          mitigation: "主金鑰只留給管理用。給應用程式使用的，請發出有預算和模型限制的虛擬金鑰。"
+        zh-CN:
+          risk: "主密钥可以完整访问代理、代理发出的密钥，以及它保存的服务商凭证。"
+          mitigation: "主密钥只留给管理用。给应用使用的，请发出有预算和模型限制的虚拟密钥。"
+    - risk: "Enterprise features need a license from BerriAI."
+      mitigation: "No LITELLM_LICENSE is set, so enterprise features stay off. Because the enterprise code ships in the image, the person who installs the template must accept the enterprise license."
+      locales:
+        zh-TW:
+          risk: "企業版功能需要 BerriAI 的授權。"
+          mitigation: "範本沒有設定 LITELLM_LICENSE，所以企業版功能是關閉的。因為企業版程式碼包含在映像檔裡，安裝範本的人必須接受企業版授權。"
+        zh-CN:
+          risk: "企业版功能需要 BerriAI 的许可。"
+          mitigation: "模板没有设置 LITELLM_LICENSE，所以企业版功能是关闭的。因为企业版代码包含在镜像里，安装模板的人必须接受企业版许可。"
+    - risk: "The CloudNativePG database instances call the Kubernetes API with an identity that the operator creates."
+      mitigation: "The databases/cloudnative-pg component creates the RBAC permissions for each cluster. The LiteLLM Pod has no token."
+      locales:
+        zh-TW:
+          risk: "CloudNativePG 的資料庫實例會用 operator 建立的身分呼叫 Kubernetes API。"
+          mitigation: "databases/cloudnative-pg 元件會為每個叢集建立對應的 RBAC 權限。LiteLLM 的 Pod 沒有 token。"
+        zh-CN:
+          risk: "CloudNativePG 的数据库实例会用 operator 创建的身份调用 Kubernetes API。"
+          mitigation: "databases/cloudnative-pg 组件会为每个集群创建对应的 RBAC 权限。LiteLLM 的 Pod 没有 token。"
 
 scalability:
   summary: One LiteLLM instance with one PostgreSQL primary.

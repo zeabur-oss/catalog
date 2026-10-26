@@ -33,35 +33,74 @@ inputs:
 
 security:
   summary: >-
-    Runs as UID 1000 with a read-only root filesystem, no service-account token
-    and all capabilities dropped. Outbound traffic is not limited. Sign-up is
-    closed.
+    Vaultwarden runs as an unprivileged user (UID 1000) with a read-only root
+    filesystem, no service-account token and no extra Linux capabilities.
+    Outbound traffic is not limited. Sign-up is closed.
+  locales:
+    zh-TW:
+      summary: "Vaultwarden 以一般使用者（UID 1000）執行，根檔案系統唯讀，沒有 service-account token，也沒有額外的 Linux 權限。往外的網路流量沒有限制。註冊功能是關閉的。"
+    zh-CN:
+      summary: "Vaultwarden 以普通用户（UID 1000）运行，根文件系统只读，没有 service-account token，也没有额外的 Linux 权限。向外的网络流量没有限制。注册功能是关闭的。"
   risks:
-    - risk: Anyone who reaches the server could create an account.
+    - risk: Anyone who can reach the server could create an account.
       mitigation: >-
         SIGNUPS_ALLOWED is false. Sign in to /admin with the token in
-        vaultwarden-secrets and invite users by email. Without SMTP, an
+        vaultwarden-secrets, and invite users by email. Without SMTP, an
         invited address can register directly.
+      locales:
+        zh-TW:
+          risk: "任何連得到伺服器的人都可能建立帳號。"
+          mitigation: "SIGNUPS_ALLOWED 設為 false。用 vaultwarden-secrets 裡的 token 登入 /admin，再用 Email 邀請使用者。沒有設定 SMTP 的話，被邀請的 Email 可以直接註冊。"
+        zh-CN:
+          risk: "任何连得到服务器的人都可能创建账号。"
+          mitigation: "SIGNUPS_ALLOWED 设为 false。用 vaultwarden-secrets 里的 token 登录 /admin，再用邮箱邀请用户。没有配置 SMTP 的话，被邀请的邮箱可以直接注册。"
     - risk: >-
-        The admin token is a plain-text value in a Secret. Vaultwarden logs a
-        notice that recommends an Argon2 hash.
+        The admin token is stored as plain text in a Secret. Vaultwarden logs
+        a notice that recommends an Argon2 hash instead.
       mitigation: >-
-        Restrict access to the Secret. To use a hash, run vaultwarden hash
-        in a terminal and store the PHC string in the Secret.
+        Limit who can read the Secret. To use a hash, run vaultwarden hash in a
+        terminal and store the resulting PHC string in the Secret.
+      locales:
+        zh-TW:
+          risk: "管理員 token 以純文字放在機密裡。Vaultwarden 會在日誌裡提醒你改用 Argon2 雜湊值。"
+          mitigation: "限制誰能讀取這個機密。想改用雜湊值的話，在終端機執行 vaultwarden hash，再把產生的 PHC 字串存進機密。"
+        zh-CN:
+          risk: "管理员 token 以纯文本放在机密里。Vaultwarden 会在日志里提醒你改用 Argon2 哈希值。"
+          mitigation: "限制谁能读取这个机密。想改用哈希值的话，在终端执行 vaultwarden hash，再把生成的 PHC 字符串存进机密。"
     - risk: The admin page is public through the Ingress.
       mitigation: >-
-        It requires the 43-character admin token. To remove it, delete the
-        ADMIN_TOKEN variable after you invite users.
+        It needs the 43-character admin token. To remove the page, delete the
+        ADMIN_TOKEN variable after you have invited your users.
+      locales:
+        zh-TW:
+          risk: "管理頁面透過 Ingress 對外公開。"
+          mitigation: "進去需要 43 個字元的管理員 token。邀請完使用者之後，刪掉 ADMIN_TOKEN 變數，就能把這個頁面關掉。"
+        zh-CN:
+          risk: "管理页面通过 Ingress 对外公开。"
+          mitigation: "进去需要 43 个字符的管理员 token。邀请完用户之后，删掉 ADMIN_TOKEN 变量，就能把这个页面关掉。"
     - risk: >-
-        No SMTP server is configured. Invitation emails, two-factor email and
+        No SMTP server is set up, so invitation emails, two-factor emails and
         emergency access emails are not sent.
-      mitigation: >-
-        Configure the SMTP_ variables.
+      mitigation: Set the SMTP_ variables.
+      locales:
+        zh-TW:
+          risk: "沒有設定 SMTP 伺服器，所以邀請信、兩步驟驗證信和緊急存取信都寄不出去。"
+          mitigation: "設定 SMTP_ 開頭的變數。"
+        zh-CN:
+          risk: "没有配置 SMTP 服务器，所以邀请邮件、两步验证邮件和紧急访问邮件都发不出去。"
+          mitigation: "设置 SMTP_ 开头的变量。"
     - risk: >-
-        The icon service fetches favicons from websites that users store.
+        The icon service downloads favicons from the websites your users save.
       mitigation: >-
-        Vaultwarden refuses non-global addresses by default. Set
-        ICON_SERVICE=none to turn it off.
+        Vaultwarden refuses non-global (private) addresses by default. Set
+        ICON_SERVICE=none to turn the icon service off.
+      locales:
+        zh-TW:
+          risk: "圖示服務會從使用者儲存的網站下載網站圖示。"
+          mitigation: "Vaultwarden 預設會拒絕非公開網路（內網）的位址。想關掉圖示服務，就設定 ICON_SERVICE=none。"
+        zh-CN:
+          risk: "图标服务会从用户保存的网站下载网站图标。"
+          mitigation: "Vaultwarden 默认会拒绝非公网（内网）的地址。想关掉图标服务，就设置 ICON_SERVICE=none。"
 
 scalability:
   summary: One instance with SQLite on a 10Gi volume.

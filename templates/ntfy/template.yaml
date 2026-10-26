@@ -31,26 +31,52 @@ inputs:
 
 security:
   summary: >-
-    Runs as UID 1000 with a read-only root filesystem, no service-account token
-    and all capabilities dropped. Outbound traffic is not limited. Anonymous users
-    cannot read or write topics.
+    The container runs as UID 1000 with a read-only filesystem, no Kubernetes
+    token and all extra system privileges removed. Outbound traffic is not
+    limited. Anonymous users cannot read or write topics.
+  locales:
+    zh-TW:
+      summary: "以 UID 1000 執行，檔案系統唯讀，沒有 Kubernetes 權杖，也拿掉了所有額外的系統權限。對外連線沒有限制。匿名使用者不能讀寫主題。"
+    zh-CN:
+      summary: "以 UID 1000 运行，文件系统只读，没有 Kubernetes 令牌，也去掉了所有额外的系统权限。对外连接没有限制。匿名用户不能读写主题。"
   risks:
-    - risk: By default ntfy lets anyone publish to and read any topic.
+    - risk: By default, ntfy lets anyone publish to and read any topic.
       mitigation: >-
-        auth-default-access is deny-all. The admin user reads and writes all
-        topics. Create users, access rules and tokens with ntfy user, ntfy
-        access and ntfy token in the Pod.
+        This template sets auth-default-access to deny-all. The admin user can
+        read and write all topics. To create users, access rules and tokens,
+        run ntfy user, ntfy access and ntfy token in the Pod.
+      locales:
+        zh-TW:
+          risk: "ntfy 預設讓任何人都能發佈和讀取任何主題。"
+          mitigation: "這個範本把 auth-default-access 設成 deny-all。admin 使用者可以讀寫所有主題。要建立使用者、存取規則和權杖，請在 Pod 裡執行 ntfy user、ntfy access 和 ntfy token。"
+        zh-CN:
+          risk: "ntfy 默认让任何人都能发布和读取任何主题。"
+          mitigation: "这个模板把 auth-default-access 设成 deny-all。admin 用户可以读写所有主题。要创建用户、访问规则和令牌，请在 Pod 里运行 ntfy user、ntfy access 和 ntfy token。"
     - risk: >-
-        Instant delivery to the iOS app, Firebase, web push, email and calls are
-        off.
+        Instant delivery to the iOS app, Firebase, web push, email and calls
+        are off.
       mitigation: >-
         Android and web clients receive messages over their own connection. To
         use upstream-base-url or another sender, set it in the ntfy
         configuration.
+      locales:
+        zh-TW:
+          risk: "iOS app 的即時推送、Firebase、網頁推播、電子郵件和電話通知都是關閉的。"
+          mitigation: "Android 和網頁用戶端會用自己的連線收訊息。想用 upstream-base-url 或其他寄送方式，請到 ntfy 設定裡自己加。"
+        zh-CN:
+          risk: "iOS app 的即时推送、Firebase、网页推送、电子邮件和电话通知都是关闭的。"
+          mitigation: "Android 和网页客户端会用自己的连接收消息。想用 upstream-base-url 或其他发送方式，请到 ntfy 设置里自己加。"
     - risk: Attachments use disk space on the volume.
       mitigation: >-
         The attachment cache is limited to 2G in total and 15M per file. The
         message cache keeps 12 hours of messages.
+      locales:
+        zh-TW:
+          risk: "附件會佔用儲存空間的磁碟。"
+          mitigation: "附件快取總共最多 2G，單一檔案最多 15M。訊息快取只保留 12 小時的訊息。"
+        zh-CN:
+          risk: "附件会占用存储卷的磁盘空间。"
+          mitigation: "附件缓存总共最多 2G，单个文件最多 15M。消息缓存只保留 12 小时的消息。"
 
 scalability:
   summary: One instance with SQLite on a 5Gi volume.

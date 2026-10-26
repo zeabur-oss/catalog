@@ -47,6 +47,13 @@
       "required": ["summary", "risks"],
       "properties": {
         "summary": { "$ref": "#/$defs/text" },
+        "locales": {
+          "type": "object",
+          "description": "The summary in other languages.",
+          "additionalProperties": false,
+          "required": ["zh-TW", "zh-CN"],
+          "properties": { "zh-TW": { "$ref": "#/$defs/summaryLocale" }, "zh-CN": { "$ref": "#/$defs/summaryLocale" } }
+        },
         "unauthenticated": {
           "type": "array",
           "description": "Services with no sign-in or key of their own. Each needs an ingress NetworkPolicy; the risks say why.",
@@ -58,8 +65,18 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["risk", "mitigation"],
-            "properties": { "risk": { "$ref": "#/$defs/text" }, "mitigation": { "$ref": "#/$defs/text" } }
+            "required": ["risk", "mitigation", "locales"],
+            "properties": {
+              "risk": { "$ref": "#/$defs/text" },
+              "mitigation": { "$ref": "#/$defs/text" },
+              "locales": {
+                "type": "object",
+                "description": "The risk and mitigation in other languages.",
+                "additionalProperties": false,
+                "required": ["zh-TW", "zh-CN"],
+                "properties": { "zh-TW": { "$ref": "#/$defs/riskLocale" }, "zh-CN": { "$ref": "#/$defs/riskLocale" } }
+              }
+            }
           }
         }
       }
@@ -205,6 +222,18 @@
           "not": { "anyOf": [{ "required": ["generate"] }, { "required": ["secret"] }, { "required": ["generateBytes"] }, { "required": ["generateEncoding"] }] }
         }
       ]
+    },
+    "summaryLocale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary"],
+      "properties": { "summary": { "$ref": "#/$defs/text" } }
+    },
+    "riskLocale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["risk", "mitigation"],
+      "properties": { "risk": { "$ref": "#/$defs/text" }, "mitigation": { "$ref": "#/$defs/text" } }
     },
     "inputLocale": {
       "type": "object",

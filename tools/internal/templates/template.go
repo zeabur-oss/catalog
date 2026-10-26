@@ -44,10 +44,22 @@ type Metadata struct {
 
 type Security struct {
 	Summary string              `yaml:"summary" json:"summary"`
-	Risks   []map[string]string `yaml:"risks" json:"risks"`
+	Locales map[string]struct {
+		Summary string `yaml:"summary" json:"summary"`
+	} `yaml:"locales" json:"locales,omitempty"`
+	Risks []Risk `yaml:"risks" json:"risks"`
 	// Unauthenticated names the services that have no sign-in or key of their
 	// own. Each needs a NetworkPolicy that limits who can connect to it.
 	Unauthenticated []string `yaml:"unauthenticated" json:"unauthenticated,omitempty"`
+}
+
+type Risk struct {
+	Risk       string `yaml:"risk" json:"risk"`
+	Mitigation string `yaml:"mitigation" json:"mitigation"`
+	Locales    map[string]struct {
+		Risk       string `yaml:"risk" json:"risk"`
+		Mitigation string `yaml:"mitigation" json:"mitigation"`
+	} `yaml:"locales" json:"locales,omitempty"`
 }
 
 type Scalability struct {

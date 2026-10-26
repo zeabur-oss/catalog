@@ -46,13 +46,14 @@ inputs:
     generateEncoding: base64url
   - name: file-backup
     description: >
-      Installs the node agent on every node, so Velero can copy volume files
-      with Kopia. The agent runs as root and holds Velero's cluster-admin
-      token. Set false only if every Backup and Schedule sets
-      defaultVolumesToFsBackup to false. Zeabur's backup schedule sets it to
-      true, so without the agent its backups fail partly.
+      Off by default. Set true to install the node agent on every node, so
+      Velero can copy volume files with Kopia. The agent runs as root, mounts
+      host paths, holds Velero's cluster-admin token, and needs the velero
+      namespace to allow the privileged Pod Security level. Each Backup and
+      Schedule must then set defaultVolumesToFsBackup to true. Zeabur's
+      schedule does. While the input is false, such a backup fails partly.
     path: deployNodeAgent
-    default: true
+    default: false
 
 releases:
   - name: velero
@@ -91,8 +92,8 @@ releases:
               customerKeyEncryptionSecret: velero-backup-key/key
         # Kopia file-system backups work on any storage class, local-path included.
         uploaderType: kopia
-        # Back up all volumes unless they opt out. Needs the file-backup input.
-        defaultVolumesToFsBackup: true
+        # No node agent by default, so no volume copy. Backups opt in with file-backup.
+        defaultVolumesToFsBackup: false
       # CSI snapshots need per-driver setup; use file-system backups instead.
       snapshotsEnabled: false
     profiles:
@@ -116,10 +117,12 @@ detection:
 
 security:
   summary: >
-    Bound to cluster-admin; reads and restores every object. With the
-    file-backup input, a root node agent on every node holds the same token.
+    Bound to cluster-admin; reads and restores every object. By default no
+    Pod is privileged and the velero namespace needs only the baseline Pod
+    Security level. With the file-backup input, a root node agent on every
+    node holds the same token, mounts host paths and needs the privileged level.
   clusterWide: true
-  privileged: true
+  privileged: false
   credentials: required
   credentialsNote: >
     Needs static S3 credentials. All backups share one Kopia password and one
