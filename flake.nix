@@ -16,7 +16,7 @@
           src = self;
           subPackages = [ "tools/cmd/catalog" ];
           # Change it when go.sum changes: nix build prints the new value.
-          vendorHash = "sha256-lktpc0ItHMfBT3QusicuURuwAWFCIEgsN6ODQ/9M6YI=";
+          vendorHash = "sha256-uwgLBHwWDDKv7ya4nwp3VBfDdXD+++evvmqA5co0qDQ=";
           doCheck = false;
         };
         # L0 runs this API server with etcd and no nodes. Keep the version equal to the RKE2
