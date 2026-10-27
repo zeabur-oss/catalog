@@ -1,7 +1,7 @@
 ---
 title: 元件清單
 description: 檢視各元件的上游、單節點與多節點的預設狀態，以及使用限制。
-source: "e09fc4f50cf0"
+source: "7fe2f49f51b2"
 ---
 
 元件是叢集管理員在每個叢集只需安裝一次的軟體。Zeabur Catalog 會依 capability（用途類別）列出採用的上游 chart、版本、設定，以及選擇原因。下表列出各元件在單節點與多節點叢集中的預設狀態。
@@ -16,9 +16,9 @@ source: "e09fc4f50cf0"
 
 | Capability | 上游 | 單節點 | 多節點 | 備註 |
 | --- | --- | --- | --- | --- |
+| builds | Zeabur Builder 和 zot | 選用 | 選用 | 會一起安裝 zot registry |
 | certificates | cert-manager | 預設啟用 | 預設啟用 | |
 | config-reload | Stakater Reloader | 選用 | 選用 | |
-| container-registry | zot | 選用 | 選用 | |
 | databases | CloudNativePG | 選用 | 選用 | |
 | databases | Dragonfly Operator | 選用 | 選用 | 伺服器採用 `BUSL-1.1` 授權，需自行選擇啟用 |
 | databases | MariaDB Operator | 選用 | 選用 | |

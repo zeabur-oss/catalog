@@ -145,7 +145,7 @@ L2 also checks the total usage of components enabled by default in the `single-n
 
 With `-profile kubesolo`, the tests install the KubeSolo and helm-controller versions pinned in [`config/kubernetes.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/kubernetes.yaml) on a Linux host and verify their checksums.
 
-The tests then use the `single-node` settings to run L2 for the capabilities (usage categories) listed in that file: `ingress`, `certificates`, and `container-registry`.
+The tests then use the `single-node` settings to run L2 for the capabilities (usage categories) listed in that file: `ingress`, `certificates`, and `builds`.
 
 KubeSolo tests don't run templates because templates require NetworkPolicy. They also skip components whose `distributions` don't include `kubesolo`.
 

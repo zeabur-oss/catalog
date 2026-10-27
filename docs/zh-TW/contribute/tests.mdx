@@ -1,7 +1,7 @@
 ---
 title: 測試與 CI
 description: 了解各層 CI 的執行時機與檢查內容，並設定範本測試輸入。
-source: "02d9efdc51b9"
+source: "cb5e9faa5f01"
 ---
 
 L0 在每個 pull request 執行。L1 在合併佇列與合併到 `main` 後執行。L2 每晚（nightly）與發行前（release 工作流程）都會執行。各層分工檢查，後續層級會補上前一層沒涵蓋的項目。你也能用 `catalog e2e -tier l0|l1|l2` 執行與 CI 相同的測試。
@@ -146,7 +146,7 @@ L2 也會檢查 amd64 上 `single-node` profile 所有預設啟用元件的總�
 
 使用 `-profile kubesolo` 時，測試會在 Linux 主機上安裝 KubeSolo 與 helm-controller，版本固定為 [`config/kubernetes.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/kubernetes.yaml) 指定的版本，並核對校驗碼。
 
-接著，測試會使用 `single-node` 的設定值，針對該檔案列出的 capability（用途類別）執行 L2：`ingress`、`certificates` 與 `container-registry`。
+接著，測試會使用 `single-node` 的設定值，針對該檔案列出的 capability（用途類別）執行 L2：`ingress`、`certificates` 與 `builds`。
 
 KubeSolo 測試不執行範本測試，因為範本需要 NetworkPolicy。如果元件的 `distributions` 未列出 `kubesolo`，也不會測試該元件。
 

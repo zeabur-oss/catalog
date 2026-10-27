@@ -1,7 +1,7 @@
 ---
 title: 组件列表
 description: 查看各组件的上游、单节点与多节点默认状态，以及使用限制。
-source: "e09fc4f50cf0"
+source: "7fe2f49f51b2"
 ---
 
 组件是集群管理员在每个集群安装一次的软件。Zeabur Catalog 按 capability（用途类别）列出采用的上游 chart、版本、配置和选择原因。你可以通过下表查看各组件在单节点与多节点的默认状态。
@@ -16,9 +16,9 @@ source: "e09fc4f50cf0"
 
 | Capability | 上游 | 单节点 | 多节点 | 备注 |
 | --- | --- | --- | --- | --- |
+| builds | Zeabur Builder 和 zot | 可选 | 可选 | 会一起安装 zot registry |
 | certificates | cert-manager | 默认启用 | 默认启用 | |
 | config-reload | Stakater Reloader | 可选 | 可选 | |
-| container-registry | zot | 可选 | 可选 | |
 | databases | CloudNativePG | 可选 | 可选 | |
 | databases | Dragonfly Operator | 可选 | 可选 | 服务器许可证为 `BUSL-1.1`，需自行选择启用 |
 | databases | MariaDB Operator | 可选 | 可选 | |

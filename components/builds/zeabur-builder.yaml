@@ -1,19 +1,23 @@
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
-  name: zot
+  name: Zeabur Builder
   description: >
-    An OCI registry inside the cluster for the images Zeabur Builder builds, so
-    builds need no external registry account. Optional: it serves only images
-    pushed to it. Nodes pull from it at the fixed address of the cluster-ip
-    input, and must trust its CA.
+    Builds container images from Git in the cluster, with a Dockerfile or
+    Railpack, and keeps them in zot, an OCI registry installed with it, so
+    builds need no external registry account. Zeabur needs it to deploy
+    services from Git. Optional: without it, services deploy from images only.
+    Nodes pull from zot at the fixed address of the cluster-ip input, and must
+    trust its CA.
   license: Apache-2.0
-  homepage: https://zotregistry.dev
-maturity: cncf-sandbox
+  homepage: https://github.com/zeabur-oss/builder
+maturity: independent
 defaults:
   single-node: optional
   multi-node: optional
+# zot's images.
 persistsData: true
+# zot's certificates.
 requires: [certificates]
 
 inputs:
@@ -258,19 +262,78 @@ releases:
           requests: {cpu: 50m, memory: 128Mi}
           limits: {memory: 1Gi}
 
+  - name: builder
+    namespace: builder-system
+    chart: oci://ghcr.io/zeabur-oss/charts/zeabur-builder
+    version: 0.0.1
+    values: |
+      registry:
+        # zot above: images go to zot.zot.svc:5000/<namespace>/<build>.
+        host: zot.zot.svc:5000
+        # zot's token signer: each build pushes with a short-lived token for
+        # its own repositories only.
+        tokenKey:
+          namespace: zot
+          secret: zot-token-signer
+        # buildkitd trusts zot's own CA, copied from the zot-tls Secret at
+        # install time.
+        caFrom:
+          namespace: zot
+          secret: zot-tls
+        # The egress policy lets buildkitd reach zot's pods on 5000; every
+        # other private address stays blocked.
+        inCluster:
+          namespace: zot
+          podLabels: {app.kubernetes.io/name: zot}
+          port: 5000
+    profiles:
+      single-node: |
+        resources:
+          # The controller only; each namespace's buildkitd sizes itself.
+          requests: {cpu: 10m, memory: 32Mi}
+          limits: {memory: 256Mi}
+        extraArgs:
+          # Each namespace's build cache on the node's disk.
+          - --buildkitd-cache-size=10Gi
+      multi-node: |
+        resources:
+          # More namespaces and Builds to watch.
+          requests: {cpu: 20m, memory: 64Mi}
+          limits: {memory: 512Mi}
+
 detection:
-  helmCharts: [zot]
+  crds: [builds.builder.zeabur.com]
+  helmCharts: [zeabur-builder]
   workloads:
-    - kind: StatefulSet
-      labels: {app.kubernetes.io/name: zot}
     - kind: Deployment
-      labels: {app.kubernetes.io/name: zot}
+      labels: {app.kubernetes.io/name: zeabur-builder}
 
 security:
   summary: >
-    No RBAC: a ServiceAccount without roles. Serves the OCI registry API over
-    TLS on port 5000 inside the cluster.
+    Zeabur Builder: a ClusterRole that manages Builds, BuildRuns and Jobs in
+    every namespace; reads Pods and Namespaces; reads, creates, updates and
+    deletes Secrets in every namespace (the Git credentials Builds name, and
+    the copies it puts in build namespaces), and reads the zot token signer.
+    Runs one privileged buildkitd per building namespace in its own namespace,
+    with a user namespace and an egress policy. An admission policy limits the
+    Jobs and StatefulSets it can create. zot: no RBAC, a ServiceAccount without
+    roles; serves the OCI registry API over TLS on port 5000 inside the
+    cluster.
+  clusterWide: true
+  privileged: true
+  tenants: namespaced
+  tenantCRDs: [Build]
+  egress: [Git servers, docker.io, ghcr.io]
   risks:
+    - risk: buildkitd runs privileged, so a build that escapes its sandbox reaches the node.
+      mitigation: >
+        Each namespace gets its own buildkitd in a user namespace (Kubernetes
+        1.33 or later), and its egress policy blocks Pods, Services, nodes and
+        the metadata endpoint. Keep builder-system admin-only, and set
+        runtimeClassName where the cluster has a sandbox such as gVisor or
+        Kata.
+    - risk: Its token reads and writes every Secret in the cluster.
+      mitigation: Keep builder-system admin-only; the controller runs as non-root with no capabilities.
     - risk: Any pod in the cluster can pull any image anonymously.
       mitigation: >
         Keep secrets out of images; give them to the workload as Secrets.
@@ -322,6 +385,11 @@ smoke:
                 volumeMounts: [{name: tls, mountPath: /tls}]
             volumes: [{name: tls, secret: {secretName: zot-tls}}]
     wait: ["-n zot job/smoke --for=condition=Complete"]
+  - name: builder-ready
+    wait:
+      - "-n builder-system deployment/zeabur-builder --for=condition=Available"
+      - "--for=condition=Established crd/builds.builder.zeabur.com"
 
-# The volumeClaimTemplate's claims outlive the StatefulSet, with every image.
-leftovers: [persistentvolumeclaims]
+# zot's volumeClaimTemplate claims outlive the StatefulSet, with every image;
+# Builder's CRDs stay, with every Build.
+leftovers: [persistentvolumeclaims, customresourcedefinitions]
