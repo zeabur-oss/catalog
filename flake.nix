@@ -17,7 +17,8 @@
           inherit version;
           src = self;
           subPackages = [ "tools/cmd/catalog" ];
-          # Change it when go.sum changes: nix build prints the new value.
+          # Change it when go.sum changes: nix build prints the new value. On Renovate's pull
+          # requests the vendorhash workflow commits it.
           vendorHash = "sha256-uwgLBHwWDDKv7ya4nwp3VBfDdXD+++evvmqA5co0qDQ=";
           doCheck = false;
         };

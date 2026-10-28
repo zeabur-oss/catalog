@@ -1,0 +1,96 @@
+# Renovate cannot run nix, so its go.sum changes leave flake.nix's vendorHash stale. This sets it
+# to the hash nix prints and pushes the commit as zeabur-oss-bot; a push with GITHUB_TOKEN would
+# not run CI again.
+#
+# The branch's code runs only in `hash`, which has no secrets, a read-only token and no cache.
+# `push` holds the app key, through the vendorhash environment, and runs nothing from the
+# branch: it edits one line of flake.nix with a hash it checks, and pushes onto the commit `hash`
+# built, so a branch that moved since is not overwritten. No checkout keeps a credential; the
+# token goes to git push alone.
+name: vendorhash
+
+on:
+  pull_request:
+    paths: [go.sum]
+
+permissions: {}
+
+concurrency:
+  group: vendorhash-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  hash:
+    # Renovate opened the pull request; github.actor can be spoofed. The bot's own push runs
+    # this again and finds the hash current.
+    name: hash
+    if: >-
+      github.event.pull_request.user.login == 'renovate[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      startsWith(github.head_ref, 'renovate/')
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    outputs:
+      hash: ${{ steps.hash.outputs.hash }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: DeterminateSystems/determinate-nix-action@f296148a827001a9a82d3685b53210c06e5d3b67 # v3.24.0
+      - id: hash
+        run: |
+          if nix build --no-link .#catalog.goModules 2> build.log; then
+            echo "vendorHash is current"
+            exit 0
+          fi
+          cat build.log
+          got=$(sed -n 's/^ *got: *\(sha256-[A-Za-z0-9+/]\{43\}=\)$/\1/p' build.log | head -n 1)
+          if [ -z "$got" ]; then
+            echo "::error::nix build failed for a reason other than vendorHash"
+            exit 1
+          fi
+          echo "hash=$got" >> "$GITHUB_OUTPUT"
+
+  push:
+    name: push
+    needs: hash
+    if: needs.hash.outputs.hash != ''
+    runs-on: ubuntu-26.04
+    environment: vendorhash
+    permissions:
+      contents: read
+    steps:
+      - id: token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.ZEABUR_OSS_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.ZEABUR_OSS_BOT_PRIVATE_KEY }}
+          repositories: catalog
+          permission-contents: write
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - env:
+          HASH: ${{ needs.hash.outputs.hash }}
+          TOKEN: ${{ steps.token.outputs.token }}
+          BOT: zeabur-oss-bot[bot]
+          BOT_EMAIL: 349476329+zeabur-oss-bot[bot]@users.noreply.github.com
+        run: |
+          if ! printf '%s\n' "$HASH" | grep -qxE 'sha256-[A-Za-z0-9+/]{43}='; then
+            echo "::error::not a vendorHash: $HASH"
+            exit 1
+          fi
+          sed -i -E "s|^( *vendorHash = )\"sha256-[A-Za-z0-9+/]{43}=\";$|\1\"$HASH\";|" flake.nix
+          if [ "$(git diff --numstat)" != "$(printf '1\t1\tflake.nix')" ]; then
+            git diff
+            echo "::error::expected one changed line in flake.nix"
+            exit 1
+          fi
+          git -c user.name="$BOT" -c user.email="$BOT_EMAIL" commit -s -m "build: update vendorHash for go.sum" flake.nix
+          auth=$(printf 'x-access-token:%s' "$TOKEN" | base64 -w0)
+          echo "::add-mask::$auth"
+          git -c http.https://github.com/.extraheader="AUTHORIZATION: basic $auth" \
+            push origin "HEAD:refs/heads/$GITHUB_HEAD_REF"

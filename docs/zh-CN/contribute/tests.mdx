@@ -4,7 +4,7 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 source: "cb5e9faa5f01"
 ---
 
-L0 在每个 pull request 中运行；L1 在合并队列中和合并到 `main` 后运行；L2 在每晚（nightly）和发布前（release 工作流）运行。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以用 `catalog e2e -tier l0|l1|l2` 运行与 CI 相同的测试。
+L0 在每个 pull request 中运行；L1 在合并队列中和合并到 `main` 后运行；L2 在每晚（nightly）运行，打发布 tag 前要确认该 commit 已通过 L2。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以用 `catalog e2e -tier l0|l1|l2` 运行与 CI 相同的测试。
 
 ## 开始前
 
@@ -92,7 +92,7 @@ L0 在每个 pull request 中运行；L1 在合并队列中和合并到 `main` �
 
 ## L2：测试升级、资源用量和清理
 
-`nightly.yml` 和 `release.yml` 会调用 `e2e.yml`，在每晚和每次发布前运行 L2。
+`nightly.yml` 会调用 `e2e.yml`，每晚运行 L2。打发布 tag 前，如果 `nightly.yml` 最后一次运行的不是这个 commit，先在 `main` 上手动运行一次，通过后再打 tag。
 
 L2 会在 amd64 和 arm64 上，为每个组件、每种 profile 创建新的 kind 集群。`single-node` 使用单节点，`multi-node` 使用三节点。
 

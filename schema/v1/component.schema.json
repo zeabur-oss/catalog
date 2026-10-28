@@ -45,12 +45,6 @@
         "multi-node": { "$ref": "#/$defs/mode" }
       }
     },
-    "presets": {
-      "type": "array",
-      "description": "The Zeabur Installer presets that install it. minimal installs only these; standard installs these and every component recommended for the profile; secure installs standard and these.",
-      "uniqueItems": true,
-      "items": { "enum": ["minimal", "standard", "secure"] }
-    },
     "distributions": {
       "type": "array",
       "description": "Kubernetes distributions it applies to; omitted means any. Information for consumers; e2e runs on kind regardless, and on KubeSolo only when the list is empty or names kubesolo.",
@@ -89,7 +83,7 @@
               "namespace": { "type": "string" }
             }
           },
-          "generate": { "const": "random", "description": "Generate a random value instead of asking: generateBytes random bytes in generateEncoding." },
+          "generate": { "enum": ["random", "clusterIP"], "description": "Generate the value instead of asking. random: generateBytes random bytes in generateEncoding. clusterIP: a free address in the cluster's Service CIDR, for a Service's fixed ClusterIP." },
           "generateBytes": { "type": "integer", "minimum": 12, "maximum": 64, "default": 64, "description": "Random bytes to generate." },
           "generateEncoding": { "enum": ["hex", "base64url"], "default": "hex", "description": "hex, or base64url without padding." },
           "required": { "type": "boolean" },
@@ -119,24 +113,24 @@
           "required": ["host", "ca"],
           "properties": {
             "host": { "type": "string", "pattern": "^[a-z0-9.-]+:[0-9]+$", "description": "host:port that images name." },
-            "ca": { "$ref": "#/$defs/secretKey", "description": "The CA that signs its serving certificate." },
-            "clusterIPInput": { "type": "string", "pattern": "^[a-z0-9-]+$", "description": "The input that takes its Service's fixed ClusterIP. Nodes cannot resolve the host, so a registry mirror on each node sends it to this address." }
-          }
-        },
-        "storage": {
-          "type": "object",
-          "description": "A storage class for PersistentVolumeClaims.",
-          "additionalProperties": false,
-          "required": ["driver", "storageClass"],
-          "properties": {
-            "driver": { "type": "string", "description": "The CSI driver of its PersistentVolumes." },
-            "storageClass": { "type": "string" }
+            "ca": { "$ref": "#/$defs/secretKey", "description": "The CA that signs its serving certificate." }
           }
         }
       }
     },
-    "reportsOnly": { "type": "boolean", "description": "Its custom resources are only reports it writes, so removing it waits for none of them." },
-    "networkPolicies": { "type": "string", "description": "NetworkPolicies in its namespaces that an installer adds where it isolates namespaces, applied before the releases: the traffic from elsewhere that the component needs." },
+    "internalCRDs": {
+      "description": "CRDs of detection.crds whose objects the component writes itself, so they don't mean anyone uses it.",
+      "$ref": "#/$defs/strings"
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "workMemoryMiB": { "type": "integer", "minimum": 1, "description": "Memory it uses on top of its idle use while working, such as one build." }
+      }
+    },
+    "networkPolicies": { "type": "string", "description": "Standard NetworkPolicy objects in its namespaces, for installers that block incoming traffic to each namespace by default: applied before the releases, they admit the traffic the component needs from elsewhere." },
     "contributes": {
       "type": "array",
       "description": "Values this component adds to another component's release.",
@@ -161,6 +155,7 @@
         "apiServices": { "$ref": "#/$defs/strings" },
         "gatewayControllers": { "$ref": "#/$defs/strings" },
         "ingressControllers": { "$ref": "#/$defs/strings" },
+        "csiDrivers": { "$ref": "#/$defs/strings", "description": "CSI drivers of the PersistentVolumes it provides." },
         "helmCharts": { "$ref": "#/$defs/strings" },
         "k3sAddons": { "$ref": "#/$defs/strings" },
         "workloads": {

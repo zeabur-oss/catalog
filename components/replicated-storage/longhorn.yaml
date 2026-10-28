@@ -28,10 +28,6 @@ defaults:
   multi-node: recommended
 persistsData: true
 disruptsTraffic: true
-provides:
-  storage:
-    driver: driver.longhorn.io
-    storageClass: longhorn
 
 # Every node needs, before install: open-iscsi with iscsid running and the
 # iscsi_tcp module loaded (volumes attach over iSCSI on the node), an NFSv4
@@ -140,6 +136,7 @@ releases:
 
 detection:
   crds: [volumes.longhorn.io, engines.longhorn.io]
+  csiDrivers: [driver.longhorn.io]
   helmCharts: [longhorn]
   workloads:
     - kind: DaemonSet

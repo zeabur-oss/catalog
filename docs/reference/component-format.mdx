@@ -20,7 +20,7 @@ metadata:
 requires: [certificates]          # <capability> or <capability>/<upstream>
 ```
 
-A component's `metadata` also has a `summary`: what it gives the cluster, in one plain sentence for people choosing components, with its translations in `locales`. Zeabur shows the summary; the description stays for operators.
+A component's `metadata` also has a `summary`: what it gives the cluster, in one plain sentence for people choosing components, with its translations in `locales`. Installers show the summary; the description stays for operators.
 
 ```yaml
 metadata:
@@ -72,11 +72,11 @@ releases:                         # installed in order
     urlDigests: [sha256:…]                      # one per URL, in order
   # or: manifests: |  objects applied as written
 
-presets: [minimal]  # Zeabur Installer presets that install it
 inputs: []        # values to ask for or generate; Secrets are created from them
-provides: {...}   # a registry or storage class other software uses
+provides: {...}   # an in-cluster registry other software uses
+resources: {...}  # memory it needs while working, on top of idle
+internalCRDs: []  # CRDs of detection.crds whose objects it writes itself
 networkPolicies: |  # traffic it needs where an installer isolates namespaces
-reportsOnly: false  # its CRDs hold only reports it writes
 contributes: []   # values added to another component's release (CrowdSec -> Traefik)
 detection: {...}  # CRDs, API services, Helm charts, workloads
 security: {...}   # RBAC summary, cluster-wide, privileged, podSecurity, egress, credentials, tenant risks
@@ -88,30 +88,29 @@ leftovers: []     # what the upstream keeps on uninstall (e.g. CRDs)
 
 These fields tell an installer what a component offers, so the installer never needs to know a component by its ID.
 
-`presets` names the Zeabur Installer presets that install the component. `minimal` installs only the components that list it. `standard` installs every component recommended for the profile and those that list it. `secure` installs what `standard` does and those that list it. Two components of one capability cannot share a preset.
+`provides.registry` is an OCI registry in the cluster: `host` is the `host:port` images name, and `ca` is the Secret key with the CA that signs its certificate. Removing the component waits until no Pod outside its namespaces runs an image from the host.
 
-`provides.registry` is an OCI registry in the cluster: `host` is the `host:port` images name, `ca` is the Secret key with the CA that signs its certificate, and `clusterIPInput` is the input that takes its Service's fixed ClusterIP. A node's container runtime cannot resolve the host, so an installer fills the input with a free address and points a registry mirror on each node there. Removing the component waits until no Pod outside its namespaces runs an image from the host.
+An input with `generate: clusterIP` takes a fixed ClusterIP for a Service of the component. A node's container runtime cannot resolve the registry host, so an installer fills the input with a free address in the Service CIDR and points a registry mirror on each node there. Left empty, as in CI, Kubernetes assigns an address and only Pods reach the registry.
 
 ```yaml
+inputs:
+  - name: cluster-ip
+    release: zot
+    path: service.clusterIP
+    generate: clusterIP
 provides:
   registry:
     host: zot.zot.svc:5000
     ca: {name: zot-tls, key: ca.crt, namespace: zot}
-    clusterIPInput: cluster-ip
 ```
 
-`provides.storage` is a storage class and the CSI driver of its volumes. Removing the component waits until no PersistentVolume uses the driver.
+`detection.csiDrivers` lists the CSI drivers of the volumes the component provides. Removing the component waits until no PersistentVolume uses one of them. Find the StorageClass by its `provisioner`.
 
-```yaml
-provides:
-  storage:
-    driver: driver.longhorn.io
-    storageClass: longhorn
-```
+Removing a component also waits for the objects of its `detection.crds` outside its namespaces, except those in `internalCRDs`: CRDs whose objects the component writes itself, such as scan reports. Every entry of `internalCRDs` must be in `detection.crds`.
 
-Removing a component also waits for the objects of its `detection.crds` outside its namespaces. `reportsOnly: true` says its custom resources are only reports it writes, so removal waits for none of them.
+`resources.workMemoryMiB` is the memory the component uses on top of its idle use while working, such as one build. Its idle use is measured in e2e and published in `index.json`.
 
-`networkPolicies` holds NetworkPolicies in the component's own namespaces. An installer that lets each namespace admit only its own pods, the installer's namespaces and the nodes applies them before the releases, for the traffic the component needs from elsewhere. `catalog validate` checks that each object is a NetworkPolicy in one of the component's namespaces.
+`networkPolicies` is for installers that block incoming traffic to each namespace by default. It holds standard NetworkPolicy objects in the component's own namespaces, which such an installer applies before the releases, for the traffic the component needs from elsewhere. Other installers can ignore it. `catalog validate` checks that each object is a NetworkPolicy in one of the component's namespaces.
 
 ## Pin content with digests
 

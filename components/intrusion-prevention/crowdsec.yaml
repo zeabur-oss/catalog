@@ -18,7 +18,6 @@ maturity: independent
 defaults:
   single-node: optional
   multi-node: optional
-presets: [secure]
 persistsData: true
 requires: [ingress/traefik]
 

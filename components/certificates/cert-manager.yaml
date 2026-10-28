@@ -18,7 +18,6 @@ maturity: cncf-graduated
 defaults:
   single-node: recommended
   multi-node: recommended
-presets: [minimal]
 # Gateway API CRDs come with ingress; the controller exits without them.
 requires: [ingress]
 

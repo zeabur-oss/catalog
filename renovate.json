@@ -3,6 +3,9 @@
   "extends": [
     "github>zeabur-oss/.github"
   ],
+  "gitIgnoredAuthors": [
+    "349476329+zeabur-oss-bot[bot]@users.noreply.github.com"
+  ],
   "nix": {
     "enabled": true
   },
@@ -121,7 +124,7 @@
       "enabled": false
     },
     {
-      "description": "go.sum changes the vendorHash in flake.nix; CI's nix build .#release prints the new one.",
+      "description": "go.sum changes the vendorHash in flake.nix; the vendorhash workflow commits the new one as zeabur-oss-bot.",
       "matchManagers": [
         "gomod"
       ],

@@ -1,11 +1,7 @@
-# On a tag vX.Y.Z: L0 (ci.yml) and L2 (e2e.yml) on the commit, then zeabur-oss/.github's shared
-# release runs the stages of scripts/release.sh: check the version against flake.nix and
-# CHANGELOG.md, validate and `nix build .#release` (Zeabur builds the same output at its pinned
-# commit), sign index.json, bundle.tar.gz and checksums.txt with cosign keyless, attest every asset,
-# attach them to a draft release and verify the draft. A maintainer checks the draft and publishes
-# it; releases are immutable once published. Run by hand, it rehearses without publishing.
 name: release
 
+# Tag vX.Y.Z on main: the shared release validates, builds and signs the catalog, then leaves a
+# draft. Manual run: rehearse.
 on:
   push:
     tags: ["v[0-9]+.[0-9]+.[0-9]+"]
@@ -27,20 +23,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  checks:
-    if: ${{ !inputs.verify_only }}
-    uses: ./.github/workflows/ci.yml
-
-  e2e:
-    if: ${{ !inputs.verify_only }}
-    uses: ./.github/workflows/e2e.yml
-
   release:
-    needs: [checks, e2e]
-    if: >-
-      ${{ !cancelled() &&
-          ((needs.checks.result == 'success' && needs.e2e.result == 'success') || inputs.verify_only) }}
-    uses: zeabur-oss/.github/.github/workflows/release.yml@0badbf68744c7690d1b5b613071044bc12b002be # main
+    uses: zeabur-oss/.github/.github/workflows/release.yml@d372cc7913ed9692161a23a65ac5f3aa73f30eab # main
     permissions:
       contents: write
       packages: write

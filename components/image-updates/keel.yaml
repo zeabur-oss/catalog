@@ -18,7 +18,6 @@ maturity: independent
 defaults:
   single-node: optional
   multi-node: optional
-presets: [standard]
 
 releases:
   - name: keel

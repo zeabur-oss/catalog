@@ -19,7 +19,6 @@ alternatives:
 defaults:
   single-node: recommended
   multi-node: recommended
-presets: [minimal]
 disruptsTraffic: true
 
 releases:

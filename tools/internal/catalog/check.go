@@ -86,16 +86,6 @@ func Check(root string, cat *Catalog) error {
 			}
 		}
 	}
-	presets := map[string]string{}
-	for _, c := range cat.Components {
-		for _, p := range c.Presets {
-			key := c.Capability + " " + p
-			if other, ok := presets[key]; ok {
-				fail(c.Path, "preset %s: %s already installs a %s component", p, other, c.Capability)
-			}
-			presets[key] = c.ID
-		}
-	}
 	for _, p := range Profiles {
 		var ids []string
 		for _, c := range cat.Components {
@@ -110,21 +100,25 @@ func Check(root string, cat *Catalog) error {
 	return errors.Join(errs...)
 }
 
-// provisionProblems checks what provides and networkPolicies name against the
-// component's own inputs and namespaces.
+// provisionProblems checks what provides, internalCRDs, generated inputs and
+// networkPolicies name against the component's own CRDs, inputs and namespaces.
 func (c *Component) provisionProblems() []string {
 	var out []string
 	owns := func(ns string) bool {
 		return slices.ContainsFunc(c.Releases, func(r Release) bool { return r.Namespace == ns })
 	}
-	if r := c.Provides.registry(); r != nil {
-		if !owns(r.CA.Namespace) {
-			out = append(out, fmt.Sprintf("provides.registry.ca: %s is none of its namespaces", r.CA.Namespace))
+	if r := c.Provides.registry(); r != nil && !owns(r.CA.Namespace) {
+		out = append(out, fmt.Sprintf("provides.registry.ca: %s is none of its namespaces", r.CA.Namespace))
+	}
+	crds := c.detectionCRDs()
+	for _, crd := range c.InternalCRDs {
+		if !slices.Contains(crds, crd) {
+			out = append(out, fmt.Sprintf("internalCRDs: %s is not in detection.crds", crd))
 		}
-		if r.ClusterIPInput != "" && !slices.ContainsFunc(c.Inputs, func(in Input) bool {
-			return in.Name == r.ClusterIPInput && in.Path != ""
-		}) {
-			out = append(out, fmt.Sprintf("provides.registry.clusterIPInput: no input %s with a path", r.ClusterIPInput))
+	}
+	for _, in := range c.Inputs {
+		if in.Generate == "clusterIP" && in.Path == "" {
+			out = append(out, fmt.Sprintf("input %s: generate clusterIP needs a path", in.Name))
 		}
 	}
 	dec := yaml.NewDecoder(strings.NewReader(c.NetworkPolicies))
@@ -141,6 +135,17 @@ func (c *Component) provisionProblems() []string {
 		}
 		if o.Kind != "NetworkPolicy" || !owns(o.Metadata.Namespace) {
 			out = append(out, fmt.Sprintf("networkPolicies: %s %s must be a NetworkPolicy in one of its namespaces", o.Kind, o.Metadata.Name))
+		}
+	}
+	return out
+}
+
+func (c *Component) detectionCRDs() []string {
+	list, _ := c.Detection["crds"].([]any)
+	out := make([]string, 0, len(list))
+	for _, v := range list {
+		if s, ok := v.(string); ok {
+			out = append(out, s)
 		}
 	}
 	return out

@@ -19,7 +19,6 @@ maturity: cncf-graduated
 defaults:
   single-node: optional
   multi-node: optional
-presets: [secure]
 
 releases:
   - name: policy-report-crds

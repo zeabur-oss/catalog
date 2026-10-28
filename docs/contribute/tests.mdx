@@ -3,7 +3,7 @@ title: Tests and CI
 description: Learn when each CI tier runs, what it checks, and how to configure template test inputs.
 ---
 
-L0 runs on every pull request. L1 runs in the merge queue and after merges to `main`. L2 runs nightly and before releases in the release workflow. Each tier covers different checks, and later tiers run checks that earlier tiers don't cover. You can also run the same tests as CI with `catalog e2e -tier l0|l1|l2`.
+L0 runs on every pull request. L1 runs in the merge queue and after merges to `main`. L2 runs nightly; check that it passed on a commit before tagging it. Each tier covers different checks, and later tiers run checks that earlier tiers don't cover. You can also run the same tests as CI with `catalog e2e -tier l0|l1|l2`.
 
 ## Before you start
 
@@ -91,7 +91,7 @@ If a change affects `config/`, `tools/`, the flake, or workflows, L1 tests every
 
 ## L2: Test upgrades, resource usage, and cleanup
 
-`nightly.yml` and `release.yml` call `e2e.yml` to run L2 nightly and before each release.
+`nightly.yml` calls `e2e.yml` to run L2 every night. Before tagging a release, run `nightly.yml` on `main` if its last run was on another commit, and tag only once it passed.
 
 L2 creates a fresh kind cluster for each component and profile on amd64 and arm64. `single-node` uses one node, and `multi-node` uses three nodes.
 

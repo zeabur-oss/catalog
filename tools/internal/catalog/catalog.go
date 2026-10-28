@@ -30,7 +30,6 @@ type Component struct {
 	Stability       string            `yaml:"stability" json:"stability,omitempty"`
 	Alternatives    map[string]string `yaml:"alternatives" json:"alternatives,omitempty"`
 	Defaults        map[string]string `yaml:"defaults" json:"defaults"`
-	Presets         []string          `yaml:"presets" json:"presets,omitempty"`
 	Distributions   []string          `yaml:"distributions" json:"distributions,omitempty"`
 	PersistsData    bool              `yaml:"persistsData" json:"persistsData,omitempty"`
 	DisruptsTraffic bool              `yaml:"disruptsTraffic" json:"disruptsTraffic,omitempty"`
@@ -38,7 +37,8 @@ type Component struct {
 	Inputs          []Input           `yaml:"inputs" json:"inputs,omitempty"`
 	Releases        []Release         `yaml:"releases" json:"releases"`
 	Provides        *Provides         `yaml:"provides" json:"provides,omitempty"`
-	ReportsOnly     bool              `yaml:"reportsOnly" json:"reportsOnly,omitempty"`
+	InternalCRDs    []string          `yaml:"internalCRDs" json:"internalCRDs,omitempty"`
+	Resources       *Resources        `yaml:"resources" json:"resources,omitempty"`
 	NetworkPolicies string            `yaml:"networkPolicies" json:"networkPolicies,omitempty"`
 	Contributes     []Contribution    `yaml:"contributes" json:"contributes,omitempty"`
 	Detection       map[string]any    `yaml:"detection" json:"detection"`
@@ -66,20 +66,17 @@ type Metadata struct {
 // Provides is what a component offers other software in the cluster.
 type Provides struct {
 	Registry *Registry `yaml:"registry" json:"registry,omitempty"`
-	Storage  *Storage  `yaml:"storage" json:"storage,omitempty"`
 }
 
 // Registry is an OCI registry in the cluster that nodes pull from.
 type Registry struct {
-	Host           string    `yaml:"host" json:"host"`
-	CA             SecretRef `yaml:"ca" json:"ca"`
-	ClusterIPInput string    `yaml:"clusterIPInput" json:"clusterIPInput,omitempty"`
+	Host string    `yaml:"host" json:"host"`
+	CA   SecretRef `yaml:"ca" json:"ca"`
 }
 
-// Storage is a storage class and the CSI driver of its volumes.
-type Storage struct {
-	Driver       string `yaml:"driver" json:"driver"`
-	StorageClass string `yaml:"storageClass" json:"storageClass"`
+// Resources is what a component needs beyond its measured idle use.
+type Resources struct {
+	WorkMemoryMiB int `yaml:"workMemoryMiB" json:"workMemoryMiB,omitempty"`
 }
 
 type Release struct {

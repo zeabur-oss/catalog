@@ -19,7 +19,6 @@ alternatives:
 defaults:
   single-node: optional
   multi-node: optional
-presets: [standard]
 # The Barman Cloud plugin talks to the operator over mTLS from cert-manager.
 requires: [certificates]
 persistsData: true

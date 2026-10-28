@@ -7,7 +7,7 @@
 # The kubesolo profile installs KubeSolo and the standalone helm-controller on
 # the runner and tests the components of a personal install, on amd64 and
 # arm64; its measurements are keyed kubesolo-<architecture>-<version>.
-# nightly.yml and release.yml call it.
+# nightly.yml calls it.
 name: e2e
 
 on:
@@ -23,9 +23,12 @@ jobs:
       matrix: ${{ steps.list.outputs.matrix }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
+          cache: false
       - id: list
         run: echo "matrix=$(go run ./tools/cmd/catalog list -tier l2)" >> "$GITHUB_OUTPUT"
 
@@ -39,6 +42,8 @@ jobs:
     name: ${{ matrix.profile }} ${{ matrix.arch }} ${{ matrix.component || matrix.template }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup
       - name: iSCSI module for Longhorn
         if: matrix.component == 'replicated-storage/longhorn'
@@ -79,7 +84,9 @@ jobs:
           FILE: measurements/${{ matrix.component || format('templates/{0}', matrix.template) }}.json
         run: find measurements -type f ! -path "$FILE" -delete
       - id: name
-        run: echo "name=$(echo '${{ matrix.profile }}-${{ matrix.arch }}-${{ matrix.component || format('template-{0}', matrix.template) }}' | tr / -)" >> "$GITHUB_OUTPUT"
+        env:
+          NAME: ${{ matrix.profile }}-${{ matrix.arch }}-${{ matrix.component || format('template-{0}', matrix.template) }}
+        run: echo "name=${NAME//\//-}" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
@@ -92,9 +99,12 @@ jobs:
     runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
+          cache: false
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: measurements-single-node-amd64-*
