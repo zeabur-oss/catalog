@@ -4,7 +4,7 @@ description: 了解各層 CI 的執行時機與檢查內容，並設定範本測
 source: "cb5e9faa5f01"
 ---
 
-L0 在每個 pull request 執行。L1 在合併佇列與合併到 `main` 後執行。L2 每晚（nightly）與發行前（release 工作流程）都會執行。各層分工檢查，後續層級會補上前一層沒涵蓋的項目。你也能用 `catalog e2e -tier l0|l1|l2` 執行與 CI 相同的測試。
+L0 在每個 pull request 執行。L1 在合併佇列與合併到 `main` 後執行。L2 每晚（nightly）執行，發行時要求打 tag 的 commit 已經通過 L2。各層分工檢查，後續層級會補上前一層沒涵蓋的項目。你也能用 `catalog e2e -tier l0|l1|l2` 執行與 CI 相同的測試。
 
 ## 開始前
 
@@ -92,7 +92,7 @@ L0 在每個 pull request 執行。L1 在合併佇列與合併到 `main` 後執�
 
 ## L2：測試升級、資源用量與清理
 
-`nightly.yml` 與 `release.yml` 會呼叫 `e2e.yml`，每晚與每次發行前都會執行 L2。
+`nightly.yml` 會呼叫 `e2e.yml`，每晚執行 L2。打發行 tag 前，如果 `nightly.yml` 最後一次跑的不是這個 commit，先在 `main` 上手動執行一次：release 會確認它在打 tag 的 commit 上通過。
 
 L2 會在 amd64 與 arm64 上，為每個元件、每種 profile 建立新的 kind 叢集。`single-node` 使用單節點，`multi-node` 使用三節點。
 

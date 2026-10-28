@@ -1,22 +1,19 @@
 # Installs Nix and restores the Nix store, the Go caches and the chart and
-# manifest downloads from the Actions cache. Not on a tag: the release's run
-# restores nothing that a run on main saved.
+# manifest downloads from the Actions cache.
 name: setup
 description: Nix, the dev shell and the download caches
 runs:
   using: composite
   steps:
     - uses: DeterminateSystems/determinate-nix-action@f296148a827001a9a82d3685b53210c06e5d3b67 # v3.24.0
-    - if: github.ref_type != 'tag'
-      uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569 # v7.0.2
+    - uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569 # v7.0.2
       with:
         primary-key: nix-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('flake.nix', 'flake.lock') }}
         restore-prefixes-first-match: nix-${{ runner.os }}-${{ runner.arch }}-
         gc-max-store-size-linux: 3G
         # Only main saves, so pull requests do not evict each other.
         save: ${{ github.ref == 'refs/heads/main' }}
-    - if: github.ref_type != 'tag'
-      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+    - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: |
           ~/.cache/catalog

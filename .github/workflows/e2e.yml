@@ -7,7 +7,7 @@
 # The kubesolo profile installs KubeSolo and the standalone helm-controller on
 # the runner and tests the components of a personal install, on amd64 and
 # arm64; its measurements are keyed kubesolo-<architecture>-<version>.
-# nightly.yml and release.yml call it.
+# nightly.yml calls it.
 name: e2e
 
 on:
