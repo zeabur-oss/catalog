@@ -1,4 +1,4 @@
-# On a tag vX.Y.Z whose commit passed L0 and L1 (ci.yml) and L2 (nightly.yml) on main,
+# On a tag vX.Y.Z on a commit of main,
 # zeabur-oss/.github's shared release runs the stages of scripts/release.sh: check the version against flake.nix and
 # CHANGELOG.md, validate and `nix build .#release` (Zeabur builds the same output at its pinned
 # commit), sign index.json, bundle.tar.gz and checksums.txt with cosign keyless, attest every asset,
@@ -30,7 +30,6 @@ jobs:
   release:
     uses: zeabur-oss/.github/.github/workflows/release.yml@0badbf68744c7690d1b5b613071044bc12b002be # main
     permissions:
-      actions: read
       contents: write
       packages: write
       id-token: write
@@ -39,7 +38,5 @@ jobs:
       name: Zeabur Catalog
       version: ${{ inputs.version }}
       verify-only: ${{ inputs.verify_only == true }}
-      # Run nightly on main for the commit before tagging it when tonight's run is on another.
-      ci-workflows: ci.yml nightly.yml
       # The release is data, the same on every platform; it was built on arm64 before.
       platforms: '[{"os": "linux", "arch": "arm64", "runner": "ubuntu-26.04-arm"}]'
