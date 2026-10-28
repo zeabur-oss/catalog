@@ -165,7 +165,7 @@ spec:
     labels:
       templates.zeabur.com/template: halo
   instances: 1
-  imageName: ghcr.io/cloudnative-pg/postgresql:16-minimal-trixie@sha256:f76ba02680a07bdafaa00c81827351b15e671ac11e0e6a0b72f8ee5835cc82c6
+  imageName: ghcr.io/cloudnative-pg/postgresql:16-minimal-trixie@sha256:fc189febbe8c683dcf7399b93d25af3ad7a4d74c061875db300c41f0ad85f77a
   enableSuperuserAccess: false
   enablePDB: true
   postgresUID: 26
