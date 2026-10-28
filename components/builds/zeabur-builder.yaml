@@ -265,7 +265,8 @@ releases:
   - name: builder
     namespace: builder-system
     chart: oci://ghcr.io/zeabur-oss/charts/zeabur-builder
-    version: 0.0.1
+    version: 0.1.1
+    chartDigest: sha256:c3c2a8091ef6dd2572bcd2cd5d77c1cad166330dc3653bc4733ddde4a0c468c8
     values: |
       registry:
         # zot above: images go to zot.zot.svc:5000/<namespace>/<build>.

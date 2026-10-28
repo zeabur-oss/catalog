@@ -3,6 +3,18 @@
 All notable changes to this catalog are documented in this file. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- `builds/zeabur-builder` installs Zeabur Builder 0.1.1 together with the zot
+  registry it pushes to, so the two are added and removed as one component.
+
+### Removed
+
+- `container-registry/zot`. zot only serves Builder's images and now comes with
+  `builds/zeabur-builder`.
+
 ## [0.1.1] - 2026-10-28
 
 The first release. zeabur-oss repositories start at 0.1.1; there is no 0.1.0.
