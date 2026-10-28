@@ -28,7 +28,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: browserless
-          image: ghcr.io/browserless/chromium:latest@sha256:f04924f64aec5fcfc35226433d76b749068398b2abf548b2ee8c2c93c0d11e45
+          image: ghcr.io/browserless/chromium:latest@sha256:3231c6747363e1214b7d674e2945606bb68b629a10ae59a489dc44d99572a022
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
