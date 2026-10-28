@@ -1,17 +1,9 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended",
-    "helpers:pinGitHubActionDigests"
-  ],
-  "commitBody": "Signed-off-by: Renovate Bot <bot@renovateapp.com>",
-  "labels": [
-    "dependencies"
+    "github>zeabur-oss/.github"
   ],
   "nix": {
-    "enabled": true
-  },
-  "lockFileMaintenance": {
     "enabled": true
   },
   "customManagers": [
