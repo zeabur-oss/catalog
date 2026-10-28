@@ -70,9 +70,6 @@ func Check(root string, cat *Catalog) error {
 			if in.Required && in.Default == nil && in.TestValue == nil && in.Generate == "" {
 				fail(c.Path, "input %s: required, so set default, testValue or generate for CI to install it", in.Name)
 			}
-			if in.Fill != "" && in.Path == "" {
-				fail(c.Path, "input %s: fill needs a path", in.Name)
-			}
 		}
 		for _, p := range c.provisionProblems() {
 			fail(c.Path, "%s", p)

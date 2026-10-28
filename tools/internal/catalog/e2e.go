@@ -356,11 +356,7 @@ func (t *Tester) installRelease(r *run, c *Component, rel Release) error {
 	if err != nil {
 		return err
 	}
-	inputs, err := clusterInputs(c)
-	if err != nil {
-		return err
-	}
-	vals, err := c.values(rel, t.Profile, inputs)
+	vals, err := c.values(rel, t.Profile, c.testInputs())
 	if err != nil {
 		return err
 	}
@@ -407,22 +403,6 @@ func replace(manifest []byte, replacements map[string]string) ([]byte, error) {
 		out = strings.ReplaceAll(out, old, replacements[old])
 	}
 	return []byte(out), nil
-}
-
-// clusterInputs returns the test inputs, with kube-api-cidr set to the API
-// server address of the test cluster.
-func clusterInputs(c *Component) (map[string]any, error) {
-	inputs := c.testInputs()
-	if _, ok := inputs["kube-api-cidr"]; !ok {
-		return inputs, nil
-	}
-	ip, err := kubectl("get", "endpointslices", "-n", "default", "-l", "kubernetes.io/service-name=kubernetes",
-		"-o", "jsonpath={.items[0].endpoints[0].addresses[0]}")
-	if err != nil {
-		return nil, err
-	}
-	inputs["kube-api-cidr"] = strings.TrimSpace(ip) + "/32"
-	return inputs, nil
 }
 
 // createSecrets creates the Secrets that inputs live in, one per name, with

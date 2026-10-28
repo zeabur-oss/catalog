@@ -114,17 +114,6 @@ provides:
 
 `networkPolicies` 放组件自己命名空间里的 NetworkPolicy。如果安装工具让每个命名空间只接受自己的 Pod、安装工具的命名空间和节点的流量，就会在安装 releases 前应用这些 NetworkPolicy，放行组件需要从其他地方进来的流量。`catalog validate` 会检查每个对象都是组件命名空间里的 NetworkPolicy。
 
-输入加上 `fill: kube-api-cidr`，表示它接收 Kubernetes API server 地址所在的网段，由知道节点地址的安装工具填入。
-
-```yaml
-inputs:
-  - name: kube-api-cidr
-    description: IPv4 CIDR of the Kubernetes API server addresses as the CNI sees them.
-    path: kubeApiCidr
-    required: true
-    fill: kube-api-cidr
-```
-
 ## 用 digest 固定内容
 
 每个 `releases` 条目都要用 digest 固定内容。chart 或 URL 的内容与 digest 不符时，Zeabur Installer 与 `catalog render` 会停止。

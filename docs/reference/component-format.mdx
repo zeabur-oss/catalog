@@ -113,17 +113,6 @@ Removing a component also waits for the objects of its `detection.crds` outside 
 
 `networkPolicies` holds NetworkPolicies in the component's own namespaces. An installer that lets each namespace admit only its own pods, the installer's namespaces and the nodes applies them before the releases, for the traffic the component needs from elsewhere. `catalog validate` checks that each object is a NetworkPolicy in one of the component's namespaces.
 
-An input with `fill: kube-api-cidr` takes the network of the Kubernetes API server's addresses, which an installer that knows the nodes fills in.
-
-```yaml
-inputs:
-  - name: kube-api-cidr
-    description: IPv4 CIDR of the Kubernetes API server addresses as the CNI sees them.
-    path: kubeApiCidr
-    required: true
-    fill: kube-api-cidr
-```
-
 ## Pin content with digests
 
 Every `releases` entry must pin its content with a digest. Zeabur Installer and `catalog render` stop if the chart or URL content doesn't match its digest.

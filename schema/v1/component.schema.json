@@ -93,7 +93,6 @@
           "generateBytes": { "type": "integer", "minimum": 12, "maximum": 64, "default": 64, "description": "Random bytes to generate." },
           "generateEncoding": { "enum": ["hex", "base64url"], "default": "hex", "description": "hex, or base64url without padding." },
           "required": { "type": "boolean" },
-          "fill": { "enum": ["kube-api-cidr"], "description": "A value an installer that knows the cluster fills in: kube-api-cidr, the network of the Kubernetes API server's addresses." },
           "default": {},
           "testValue": { "description": "Value CI installs with." }
         },

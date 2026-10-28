@@ -110,7 +110,6 @@ type Input struct {
 	GenerateBytes    int    `yaml:"generateBytes" json:"generateBytes,omitempty"`
 	GenerateEncoding string `yaml:"generateEncoding" json:"generateEncoding,omitempty"`
 	Required         bool   `yaml:"required" json:"required,omitempty"`
-	Fill             string `yaml:"fill" json:"fill,omitempty"`
 	Default          any    `yaml:"default" json:"default,omitempty"`
 	TestValue        any    `yaml:"testValue" json:"testValue,omitempty"`
 }
