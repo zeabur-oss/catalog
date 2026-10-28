@@ -107,8 +107,9 @@ func (t *Tester) Test(id string) (res Result) {
 		start = time.Now()
 		after, err := inventory()
 		errs = append(errs, err)
-		added := addedSince(before, after)
-		if left := residue(order, added); len(left) > 0 {
+		added, claims, err := settleVolumes(addedSince(before, after))
+		errs = append(errs, err)
+		if left := residue(order, added, claims); len(left) > 0 {
 			errs = append(errs, fmt.Errorf("left behind: %s", strings.Join(left, ", ")))
 		}
 		for _, e := range added { // clean up accepted leftovers for the next test
@@ -669,9 +670,50 @@ func addedSince(before, after map[string]bool) []string {
 	return out
 }
 
+// settleVolumes waits for the provisioner to delete the PersistentVolumes in
+// added whose claim is gone and whose reclaim policy is Delete, and drops
+// them from added. It maps every other volume to the claim it was bound to,
+// as "persistentvolumeclaims namespace/name": a volume that its StorageClass
+// retains (KubeSolo's local-path does) outlives its claim by design, with
+// the claim's data.
+func settleVolumes(added []string) (kept []string, claims map[string]string, err error) {
+	claims = map[string]string{}
+	var errs []error
+	for _, e := range added {
+		name, ok := strings.CutPrefix(e, "persistentvolumes /")
+		if !ok {
+			kept = append(kept, e)
+			continue
+		}
+		out, err := kubectl("get", "persistentvolume", name, "--ignore-not-found", "-o",
+			`jsonpath={.spec.persistentVolumeReclaimPolicy} {.status.phase} {.spec.claimRef.namespace}/{.spec.claimRef.name}`)
+		if err != nil {
+			errs = append(errs, err)
+			kept = append(kept, e)
+			continue
+		}
+		f := strings.Fields(out)
+		if len(f) == 0 { // deleted since the inventory
+			continue
+		}
+		if len(f) == 3 && f[0] == "Delete" && f[1] == "Released" {
+			if _, err := kubectl("wait", "--for=delete", "persistentvolume/"+name, "--timeout=2m"); err == nil {
+				continue
+			}
+		}
+		kept = append(kept, e)
+		if len(f) == 3 && f[2] != "/" {
+			claims[e] = "persistentvolumeclaims " + f[2]
+		}
+	}
+	return kept, claims, errors.Join(errs...)
+}
+
 // residue drops declared leftovers from what an uninstall left behind. Kept
-// CRDs also keep their objects and API registrations.
-func residue(order []*Component, added []string) []string {
+// CRDs also keep their objects and API registrations. claims maps a
+// PersistentVolume to its claim: a volume is left behind with its claim's
+// data, so it is declared when its claim is.
+func residue(order []*Component, added []string, claims map[string]string) []string {
 	allowed := map[string]bool{}
 	for _, c := range order {
 		for _, l := range c.Leftovers {
@@ -690,7 +732,7 @@ func residue(order []*Component, added []string) []string {
 	}
 	var out []string
 	for _, e := range added {
-		res, name, _ := strings.Cut(e, " ")
+		res, name, _ := strings.Cut(cmp.Or(claims[e], e), " ")
 		short, _, _ := strings.Cut(res, ".")
 		_, obj, _ := strings.Cut(name, "/")
 		if allowed[short] || allowed[short+"/"+obj] || keptGroup(res) ||
