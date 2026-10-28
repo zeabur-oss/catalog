@@ -14,7 +14,9 @@ source: "94d7e744e570"
 | `bundle.tar.gz` | 软件包（bundle），包含索引、交叉检查数据、组件、模板及相关文件。 |
 | `checksums.txt` | 文件的校验和。 |
 
-每个发行文件都有一份 cosign 无密钥 Sigstore 签名包。`index.json` 对应的文件名是 `index.json.sigstore.json`。
+每个发行文件都有一份 cosign 无密钥 Sigstore 签名包。`index.json` 对应的文件名是 `index.json.sigstore.json`。版本还附有 `SHA256SUMS`，每个文件都有 GitHub 构建来源证明（build provenance attestation）。
+
+所有 zeabur-oss 版本都由 [zeabur-oss/.github](https://github.com/zeabur-oss/.github) 的共享发布工作流签名。签名会记录该工作流、仓库 `zeabur-oss/catalog` 和 tag。
 
 ## 验证并读取版本
 
@@ -27,10 +29,15 @@ source: "94d7e744e570"
 工具先固定要使用的版本，再验证文件。以下命令验证 `index.json`：
 
 ```sh
+tag=vX.Y.Z
 cosign verify-blob index.json --bundle index.json.sigstore.json \
-  --certificate-identity-regexp '^https://github.com/zeabur-oss/catalog/.github/workflows/release.yml@refs/tags/v' \
+  --certificate-identity-regexp '^https://github\.com/zeabur-oss/\.github/\.github/workflows/release\.yml@' \
+  --certificate-github-workflow-repository zeabur-oss/catalog \
+  --certificate-github-workflow-ref "refs/tags/$tag" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
+
+如果要改为检查来源证明，运行 `gh attestation verify index.json --repo zeabur-oss/catalog --signer-workflow zeabur-oss/.github/.github/workflows/release.yml`。
 
 </Step>
 

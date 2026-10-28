@@ -1,52 +1,54 @@
-# On a semver tag: run L2 (e2e.yml), validate, then build index.json, bundle.tar.gz and
-# checksums.txt with `nix build .#release` (Zeabur builds the same output at its pinned commit),
-# sign all three with cosign keyless (GitHub OIDC) and attach them to a draft release. A maintainer
-# checks the draft and publishes it; releases are immutable once published.
+# On a tag vX.Y.Z: L0 (ci.yml) and L2 (e2e.yml) on the commit, then zeabur-oss/.github's shared
+# release runs the stages of scripts/release.sh: check the version against flake.nix and
+# CHANGELOG.md, validate and `nix build .#release` (Zeabur builds the same output at its pinned
+# commit), sign index.json, bundle.tar.gz and checksums.txt with cosign keyless, attest every asset,
+# attach them to a draft release and verify the draft. A maintainer checks the draft and publishes
+# it; releases are immutable once published. Run by hand, it rehearses without publishing.
 name: release
 
 on:
   push:
     tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to rehearse or verify (v0.1.1); a rehearsal never publishes"
+        required: true
+      verify_only:
+        description: "Verify the existing draft release of this version; build and publish nothing"
+        type: boolean
+        default: false
 
 permissions:
-  contents: write
-  id-token: write # cosign keyless signing
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
+  checks:
+    if: ${{ !inputs.verify_only }}
+    uses: ./.github/workflows/ci.yml
+
   e2e:
+    if: ${{ !inputs.verify_only }}
     uses: ./.github/workflows/e2e.yml
-    permissions:
-      contents: read
 
   release:
-    needs: e2e
-    runs-on: ubuntu-26.04-arm
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: DeterminateSystems/determinate-nix-action@f296148a827001a9a82d3685b53210c06e5d3b67 # v3.24.0
-      - name: Validate and build
-        run: |
-          nix develop -c sh -c '
-            go test ./... &&
-            go run ./tools/cmd/catalog validate &&
-            go run ./tools/cmd/catalog render
-          '
-          nix build .#release
-          mkdir dist
-          cp result/* dist/
-          chmod u+w dist/*
-      - name: Sign
-        run: |
-          cd dist
-          for f in bundle.tar.gz index.json checksums.txt; do
-            nix develop .. -c cosign sign-blob --yes --bundle "$f.sigstore.json" "$f"
-          done
-      - name: Attach to a draft release
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ github.ref_name }}
-        run: |
-          awk -v v="${VERSION#v}" '$0 ~ "^## \\[" v "\\]" { on = 1; next } on && /^## / { exit } on' CHANGELOG.md > notes.md
-          test -s notes.md
-          gh release create "$VERSION" dist/* --title "Zeabur Catalog $VERSION" --notes-file notes.md \
-            --verify-tag --draft --prerelease
+    needs: [checks, e2e]
+    if: >-
+      ${{ !cancelled() &&
+          ((needs.checks.result == 'success' && needs.e2e.result == 'success') || inputs.verify_only) }}
+    uses: zeabur-oss/.github/.github/workflows/release.yml@9d500376d4e7202c9343656fb6b85dc2eba26dd3 # main
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+      attestations: write
+    with:
+      name: Zeabur Catalog
+      version: ${{ inputs.version }}
+      verify-only: ${{ inputs.verify_only == true }}
+      # The release is data, the same on every platform; it was built on arm64 before.
+      platforms: '[{"os": "linux", "arch": "arm64", "runner": "ubuntu-26.04-arm"}]'

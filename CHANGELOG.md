@@ -3,10 +3,16 @@
 All notable changes to this catalog are documented in this file. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.1.0] - 2026-10-28
+## [0.1.1] - 2026-10-28
+
+The first release. zeabur-oss repositories start at 0.1.1; there is no 0.1.0.
 
 ### Added
 
+- Releases carry `SHA256SUMS` and a GitHub build provenance attestation for
+  every file. zeabur-oss/.github's shared release workflow signs them, so the
+  signatures name that workflow and `zeabur-oss/catalog` as the repository
+  (docs/reference/releases.mdx).
 - `security.podSecurity: baseline` names a component whose namespaces cannot run
   under restricted. K8up and MOCO set it.
 - Component releases pin their content: `chartDigest` for charts, `urlDigests`

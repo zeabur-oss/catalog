@@ -13,7 +13,9 @@ Pushing a `vX.Y.Z` tag publishes `index.json`, `bundle.tar.gz`, `checksums.txt`,
 | `bundle.tar.gz` | A bundle containing the index, cross-check data, components, templates, and related files. |
 | `checksums.txt` | File checksums. |
 
-Each release file has a cosign keyless Sigstore signature bundle. The bundle for `index.json` is named `index.json.sigstore.json`.
+Each release file has a cosign keyless Sigstore signature bundle. The bundle for `index.json` is named `index.json.sigstore.json`. The release also has `SHA256SUMS` with a GitHub build provenance attestation for every file.
+
+The shared release workflow of [zeabur-oss/.github](https://github.com/zeabur-oss/.github) signs every zeabur-oss release. A signature names that workflow, the repository `zeabur-oss/catalog`, and the tag.
 
 ## Verify and read a release
 
@@ -26,10 +28,15 @@ Each release file has a cosign keyless Sigstore signature bundle. The bundle for
 The tool first pins the version to use, then verifies the file. The following command verifies `index.json`:
 
 ```sh
+tag=vX.Y.Z
 cosign verify-blob index.json --bundle index.json.sigstore.json \
-  --certificate-identity-regexp '^https://github.com/zeabur-oss/catalog/.github/workflows/release.yml@refs/tags/v' \
+  --certificate-identity-regexp '^https://github\.com/zeabur-oss/\.github/\.github/workflows/release\.yml@' \
+  --certificate-github-workflow-repository zeabur-oss/catalog \
+  --certificate-github-workflow-ref "refs/tags/$tag" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
+
+To check the attestation instead, run `gh attestation verify index.json --repo zeabur-oss/catalog --signer-workflow zeabur-oss/.github/.github/workflows/release.yml`.
 
 </Step>
 

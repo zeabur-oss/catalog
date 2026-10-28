@@ -21,16 +21,18 @@ source: "acfb4344d60b"
 
 ### 验证版本
 
-将同一个版本 tag 的 `bundle.tar.gz` 和 `bundle.tar.gz.sigstore.json` 下载到新建的私有目录，再用该 tag 的完整工作流身份验证签名：
+将同一个版本 tag 的 `bundle.tar.gz` 和 `bundle.tar.gz.sigstore.json` 下载到新建的私有目录，再按工作流、仓库和 tag 验证签名：
 
 ```sh
 tag=vX.Y.Z
 cosign verify-blob bundle.tar.gz --bundle bundle.tar.gz.sigstore.json \
-  --certificate-identity "https://github.com/zeabur-oss/catalog/.github/workflows/release.yml@refs/tags/$tag" \
+  --certificate-identity-regexp '^https://github\.com/zeabur-oss/\.github/\.github/workflows/release\.yml@' \
+  --certificate-github-workflow-repository zeabur-oss/catalog \
+  --certificate-github-workflow-ref "refs/tags/$tag" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
-只检查签发者，或使用宽松的正则表达式，都会接受其他工作流的签名。签名验证通过后才能解压包（bundle），并拒绝绝对路径、`..` 和链接。
+只检查签发者或工作流，都会接受其他工作流或其他 zeabur-oss 仓库的签名。签名验证通过后才能解压包（bundle），并拒绝绝对路径、`..` 和链接。
 
 </Step>
 

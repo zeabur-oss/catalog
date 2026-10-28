@@ -21,16 +21,18 @@ source: "acfb4344d60b"
 
 ### 驗證版本
 
-先建立私有目錄，把同一個版本 tag 的 `bundle.tar.gz` 和 `bundle.tar.gz.sigstore.json` 下載到裡面。再用該 tag 的完整工作流程身分驗證簽章：
+先建立私有目錄，把同一個版本 tag 的 `bundle.tar.gz` 和 `bundle.tar.gz.sigstore.json` 下載到裡面。再依工作流程、儲存庫和 tag 驗證簽章：
 
 ```sh
 tag=vX.Y.Z
 cosign verify-blob bundle.tar.gz --bundle bundle.tar.gz.sigstore.json \
-  --certificate-identity "https://github.com/zeabur-oss/catalog/.github/workflows/release.yml@refs/tags/$tag" \
+  --certificate-identity-regexp '^https://github\.com/zeabur-oss/\.github/\.github/workflows/release\.yml@' \
+  --certificate-github-workflow-repository zeabur-oss/catalog \
+  --certificate-github-workflow-ref "refs/tags/$tag" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
-如果只檢查簽發者，或使用寬鬆的正規表示式，驗證時也會接受其他工作流程的簽章。簽章驗證通過後，才能解開套件包（bundle）。解開時必須拒絕絕對路徑、`..` 和連結。
+如果只檢查簽發者或工作流程，驗證時也會接受其他工作流程或其他 zeabur-oss 儲存庫的簽章。簽章驗證通過後，才能解開套件包（bundle）。解開時必須拒絕絕對路徑、`..` 和連結。
 
 </Step>
 

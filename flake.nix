@@ -10,9 +10,11 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        # The release version: scripts/release.sh check compares the tag with it.
+        version = "0.1.1";
         catalog = pkgs.buildGoModule {
           pname = "catalog";
-          version = "0";
+          inherit version;
           src = self;
           subPackages = [ "tools/cmd/catalog" ];
           # Change it when go.sum changes: nix build prints the new value.
@@ -45,7 +47,7 @@
       in {
         packages = {
           inherit catalog kube-apiserver;
-          # The files that release.yml signs and publishes. Zeabur builds this output at its
+          # The files that scripts/release.sh signs and publishes. Zeabur builds this output at its
           # pinned commit, so it embeds the same bytes as the release.
           release = pkgs.runCommand "catalog-release" { nativeBuildInputs = [ catalog ]; } ''
             cp -r ${self} src
@@ -73,6 +75,7 @@
             kube-apiserver
             etcd
             cosign
+            gh
             jq
             shellcheck
             actionlint
