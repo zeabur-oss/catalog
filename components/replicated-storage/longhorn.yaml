@@ -29,7 +29,6 @@ defaults:
 persistsData: true
 disruptsTraffic: true
 provides:
-  # Removing Longhorn waits until no PersistentVolume uses its driver.
   storage:
     driver: driver.longhorn.io
     storageClass: longhorn

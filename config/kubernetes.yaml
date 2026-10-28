@@ -23,9 +23,7 @@ kubesolo:
     amd64: 081db3dec1cf6924001a33c890419647496a6581f1518594b8b439500ef79437
     arm64: 476a7523a5de4bd261f87384fb8a86c6fec2e73f501429a798a6680a78ecf323
   capabilities: [ingress, certificates, builds]
-  # The least host memory a personal install needs to offer a capability: for
-  # builds, idle plus one small build. A 1.5 GiB host built one with 221 MiB to
-  # spare, so a 2 GiB host leaves room for an app next to it.
+  # builds: idle plus one small build, with room for an app.
   minMemoryMiB:
     builds: 1800
   helmController:
