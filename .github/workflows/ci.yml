@@ -3,8 +3,7 @@
 # nix build .#release), run by zeabur-oss/.github's shared CI, and the DCO check. L1 in the merge
 # queue and on main: install and smoke test what changed and what installs it, in groups; the
 # shared CI has no dynamic matrix, so L1 stays here. CONTRIBUTING.md lists what each tier checks.
-# L2 is e2e.yml, which nightly.yml calls. A release needs this workflow and nightly.yml to have
-# passed on main for its commit.
+# L2 is e2e.yml, which nightly.yml calls.
 name: ci
 
 on:
