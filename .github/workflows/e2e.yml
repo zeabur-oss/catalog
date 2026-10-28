@@ -43,9 +43,23 @@ jobs:
       - name: iSCSI module for Longhorn
         if: matrix.component == 'replicated-storage/longhorn'
         run: sudo modprobe iscsi_tcp
-      - name: Stop Docker for KubeSolo
+      # KubeSolo requires a host without Docker. Stopping Docker leaves its
+      # netfilter rules behind, among them the FORWARD policy DROP: pod
+      # traffic to the outside is forwarded without a mark that kube-proxy
+      # accepts, so CoreDNS cannot reach its upstream and pods resolve no
+      # external name. Remove the rules as uninstalling Docker would; the
+      # security table holds the runner's own rules and stays.
+      - name: Remove Docker for KubeSolo
         if: matrix.profile == 'kubesolo'
-        run: sudo systemctl stop docker.socket docker.service
+        run: |
+          sudo systemctl stop docker.socket docker.service
+          for ipt in iptables ip6tables; do
+            for table in filter nat; do
+              sudo "$ipt" -t "$table" -F
+              sudo "$ipt" -t "$table" -X
+            done
+            sudo "$ipt" -P FORWARD ACCEPT
+          done
       - name: Previous release (upgrade test)
         if: matrix.component
         env:
