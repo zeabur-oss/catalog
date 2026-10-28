@@ -408,7 +408,7 @@ spec:
   podMetadata:
     labels:
       templates.zeabur.com/template: wordpress
-  image: docker.io/mariadb:11.4.13@sha256:250e1609e93c0e6aecf64bfbab2d84d5e89d2481540fe77447ff6c855c3b1873
+  image: docker.io/mariadb:11.4.13@sha256:d1891ede5a559f1086f55053bb8cc1569b0298338c4d72d71725a7f74f6ba620
   replicas: 1
   rootPasswordSecretKeyRef:
     name: wordpress-secrets
