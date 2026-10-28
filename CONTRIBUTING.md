@@ -22,7 +22,8 @@ existing branch: `git rebase --signoff main`, then force-push.
 - One component or template per pull request when you can; CI tests each in
   isolation.
 - Explain why a component is recommended in its `metadata.description`, and
-  why each value is set in a comment next to it.
+  why each value is set in a comment next to it. Its `metadata.summary` says
+  what it gives the cluster in one plain sentence, in English, zh-TW and zh-CN.
 - A template meets the [template standards](docs/reference/template-standards.mdx).
 - Never copy secrets, account IDs, domains, IP addresses or cloud-specific
   settings into values.

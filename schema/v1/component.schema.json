@@ -12,10 +12,18 @@
     "metadata": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "description", "license", "homepage"],
+      "required": ["name", "description", "summary", "locales", "license", "homepage"],
       "properties": {
         "name": { "type": "string", "description": "Name for people." },
         "description": { "type": "string", "description": "What it does and why the catalog recommends it, in one or two sentences." },
+        "summary": { "type": "string", "pattern": "^[^\\n]+$", "description": "What it gives the cluster, in one plain sentence for people choosing components." },
+        "locales": {
+          "type": "object",
+          "description": "The summary in other languages.",
+          "additionalProperties": false,
+          "required": ["zh-TW", "zh-CN"],
+          "properties": { "zh-TW": { "$ref": "#/$defs/summaryLocale" }, "zh-CN": { "$ref": "#/$defs/summaryLocale" } }
+        },
         "license": { "type": "string", "description": "SPDX expression; every identifier must be OSI-approved, or listed under optInOnly in config/licenses.yaml with no profile recommending the component." },
         "homepage": { "type": "string", "format": "uri" }
       }
@@ -36,6 +44,12 @@
         "single-node": { "$ref": "#/$defs/mode" },
         "multi-node": { "$ref": "#/$defs/mode" }
       }
+    },
+    "presets": {
+      "type": "array",
+      "description": "The Zeabur Installer presets that install it. minimal installs only these; standard installs these and every component recommended for the profile; secure installs standard and these.",
+      "uniqueItems": true,
+      "items": { "enum": ["minimal", "standard", "secure"] }
     },
     "distributions": {
       "type": "array",
@@ -79,6 +93,7 @@
           "generateBytes": { "type": "integer", "minimum": 12, "maximum": 64, "default": 64, "description": "Random bytes to generate." },
           "generateEncoding": { "enum": ["hex", "base64url"], "default": "hex", "description": "hex, or base64url without padding." },
           "required": { "type": "boolean" },
+          "fill": { "enum": ["kube-api-cidr"], "description": "A value an installer that knows the cluster fills in: kube-api-cidr, the network of the Kubernetes API server's addresses." },
           "default": {},
           "testValue": { "description": "Value CI installs with." }
         },
@@ -92,6 +107,37 @@
       "minItems": 1,
       "items": { "$ref": "#/$defs/release" }
     },
+    "provides": {
+      "type": "object",
+      "description": "What it offers other software in the cluster, beyond its capability.",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "registry": {
+          "type": "object",
+          "description": "An OCI registry in the cluster that nodes pull from.",
+          "additionalProperties": false,
+          "required": ["host", "ca"],
+          "properties": {
+            "host": { "type": "string", "pattern": "^[a-z0-9.-]+:[0-9]+$", "description": "host:port that images name." },
+            "ca": { "$ref": "#/$defs/secretKey", "description": "The CA that signs its serving certificate." },
+            "clusterIPInput": { "type": "string", "pattern": "^[a-z0-9-]+$", "description": "The input that takes its Service's fixed ClusterIP. Nodes cannot resolve the host, so a registry mirror on each node sends it to this address." }
+          }
+        },
+        "storage": {
+          "type": "object",
+          "description": "A storage class for PersistentVolumeClaims.",
+          "additionalProperties": false,
+          "required": ["driver", "storageClass"],
+          "properties": {
+            "driver": { "type": "string", "description": "The CSI driver of its PersistentVolumes." },
+            "storageClass": { "type": "string" }
+          }
+        }
+      }
+    },
+    "reportsOnly": { "type": "boolean", "description": "Its custom resources are only reports it writes, so removing it waits for none of them." },
+    "networkPolicies": { "type": "string", "description": "NetworkPolicies in its namespaces that an installer adds where it isolates namespaces, applied before the releases: the traffic from elsewhere that the component needs." },
     "contributes": {
       "type": "array",
       "description": "Values this component adds to another component's release.",
@@ -195,6 +241,22 @@
   },
   "$defs": {
     "mode": { "enum": ["recommended", "optional", "unsupported"] },
+    "summaryLocale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary"],
+      "properties": { "summary": { "type": "string", "pattern": "^[^\\n]+$" } }
+    },
+    "secretKey": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "key", "namespace"],
+      "properties": {
+        "name": { "type": "string" },
+        "key": { "type": "string" },
+        "namespace": { "type": "string" }
+      }
+    },
     "strings": { "type": "array", "items": { "type": "string" } },
     "values": { "type": "string", "description": "Helm values (YAML). Every value needs a comment saying why." },
     "release": {

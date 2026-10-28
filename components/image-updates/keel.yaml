@@ -6,12 +6,19 @@ metadata:
     Rolls workloads annotated keel.sh/policy to a new image tag when Zeabur
     Builder calls its webhook after a push, or when polling finds one. Optional:
     only annotated workloads change.
+  summary: Deploys each new image to the services you turn auto-deploy on for.
+  locales:
+    zh-TW:
+      summary: "新的映像檔一建好，就部署到開了自動部署的服務。"
+    zh-CN:
+      summary: "新的镜像一构建好，就部署到开了自动部署的服务。"
   license: MPL-2.0
   homepage: https://keel.sh
 maturity: independent
 defaults:
   single-node: optional
   multi-node: optional
+presets: [standard]
 
 releases:
   - name: keel

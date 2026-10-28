@@ -6,6 +6,12 @@ metadata:
     Scales workloads on events, down to zero, with scaling configured per
     namespace. Optional on a single node: there it costs more memory than
     scaling saves.
+  summary: Scales services on queues, schedules and other events, down to zero.
+  locales:
+    zh-TW:
+      summary: "依佇列、排程等事件調整服務的副本數，可降到零。"
+    zh-CN:
+      summary: "按队列、定时等事件调整服务的副本数，可缩到零。"
   license: Apache-2.0
   homepage: https://keda.sh
 maturity: cncf-graduated

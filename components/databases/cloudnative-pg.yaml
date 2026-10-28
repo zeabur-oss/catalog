@@ -5,6 +5,12 @@ metadata:
   description: >
     Runs PostgreSQL clusters from a Cluster object in the tenant's namespace:
     replicas, failover, and backups to S3 through the Barman Cloud plugin.
+  summary: Runs PostgreSQL databases with failover and backups to S3.
+  locales:
+    zh-TW:
+      summary: "執行 PostgreSQL 資料庫，支援故障切換和備份到 S3。"
+    zh-CN:
+      summary: "运行 PostgreSQL 数据库，支持故障切换和备份到 S3。"
   license: Apache-2.0
   homepage: https://cloudnative-pg.io
 maturity: cncf-sandbox
@@ -13,6 +19,7 @@ alternatives:
 defaults:
   single-node: optional
   multi-node: optional
+presets: [standard]
 # The Barman Cloud plugin talks to the operator over mTLS from cert-manager.
 requires: [certificates]
 persistsData: true

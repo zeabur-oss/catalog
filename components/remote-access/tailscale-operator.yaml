@@ -8,6 +8,12 @@ metadata:
     without a domain still serves trusted HTTPS; a Service is proxied as it is,
     without TLS. Optional: it needs a Tailscale account, and an Ingress needs
     HTTPS and MagicDNS enabled on the tailnet.
+  summary: Puts services on your tailnet with trusted HTTPS and no port open to the internet.
+  locales:
+    zh-TW:
+      summary: "把服務放上你的 tailnet，提供受信任的 HTTPS，不必對網際網路開放連接埠。"
+    zh-CN:
+      summary: "把服务放到你的 tailnet 上，提供受信任的 HTTPS，无需对互联网开放端口。"
   license: BSD-3-Clause
   homepage: https://tailscale.com/kb/1236/kubernetes-operator
 maturity: independent

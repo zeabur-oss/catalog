@@ -6,6 +6,12 @@ metadata:
     Upgrades k3s or RKE2 and node packages one node at a time from declarative Plans,
     with cordon, drain and concurrency limits. The catalog installs it from
     upstream manifests because the Rancher chart lags behind releases.
+  summary: Upgrades Kubernetes on the nodes, one node at a time.
+  locales:
+    zh-TW:
+      summary: "逐一升級各節點上的 Kubernetes。"
+    zh-CN:
+      summary: "逐个升级各节点上的 Kubernetes。"
   license: Apache-2.0
   homepage: https://github.com/rancher/system-upgrade-controller
 maturity: independent

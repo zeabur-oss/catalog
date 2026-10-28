@@ -6,6 +6,12 @@ metadata:
     Probes HTTP, TCP and DNS targets; it comes from the Prometheus project, and
     uptime alerts are plain rules. It needs VictoriaMetrics, so it follows VictoriaMetrics'
     defaults.
+  summary: Checks that your sites and ports answer, and alerts when they don't.
+  locales:
+    zh-TW:
+      summary: "檢查網站與連接埠是否回應，沒有回應時發出警示。"
+    zh-CN:
+      summary: "检查网站和端口是否响应，无响应时发出告警。"
   license: Apache-2.0
   homepage: https://github.com/prometheus/blackbox_exporter
 maturity: cncf-graduated

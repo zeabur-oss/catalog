@@ -5,6 +5,12 @@ metadata:
   description: >
     Backs up the whole cluster to S3 for disaster recovery. It can touch any
     namespace, so it is for administrators only.
+  summary: Backs up and restores the whole cluster; database backups don't need it.
+  locales:
+    zh-TW:
+      summary: "備份並還原整個叢集，資料庫備份不需要它。"
+    zh-CN:
+      summary: "备份并还原整个集群，数据库备份不需要它。"
   license: Apache-2.0
   homepage: https://velero.io
 maturity: cncf-sandbox
@@ -25,6 +31,10 @@ inputs:
     path: configuration.backupStorageLocation.0.config.s3Url
     required: true
     testValue: http://minio.invalid:9000
+  - name: region
+    description: The bucket's region; S3-compatible services that have none accept the default.
+    path: configuration.backupStorageLocation.0.config.region
+    default: us-east-1
   - name: credentials
     description: Velero reads the bucket's credentials from this AWS-style credentials file.
     secret: {name: velero-credentials, key: cloud, namespace: velero}

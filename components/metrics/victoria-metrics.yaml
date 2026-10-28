@@ -7,6 +7,12 @@ metadata:
     memory. On one node it idles at about 220Mi with node-exporter, more as
     pods add series. Its Alertmanager sends Zeabur's notifications: each
     project sets its own channels, the cluster administrator sets the cluster's.
+  summary: Keeps metrics history and sends alerts to each project's notification channels.
+  locales:
+    zh-TW:
+      summary: "保存指標歷史，並把警示送到各專案的通知管道。"
+    zh-CN:
+      summary: "保存指标历史，并把告警发到各项目的通知渠道。"
   license: Apache-2.0
   homepage: https://victoriametrics.com
 maturity: independent
@@ -688,7 +694,9 @@ security:
   summary: >
     Manages VictoriaMetrics objects, scrapes pods in all namespaces, and reads
     builds, databases, backups and certificates in all namespaces for alerts.
+    node-exporter reads the host's /proc and /sys on the host network.
   clusterWide: true
+  privileged: true
   tenants: admin-only
   tenantCRDs: [VMServiceScrape, VMPodScrape, VMRule, VMProbe]
   risks:

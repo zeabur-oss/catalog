@@ -3,6 +3,7 @@ package catalog
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"slices"
@@ -69,6 +70,12 @@ func Check(root string, cat *Catalog) error {
 			if in.Required && in.Default == nil && in.TestValue == nil && in.Generate == "" {
 				fail(c.Path, "input %s: required, so set default, testValue or generate for CI to install it", in.Name)
 			}
+			if in.Fill != "" && in.Path == "" {
+				fail(c.Path, "input %s: fill needs a path", in.Name)
+			}
+		}
+		for _, p := range c.provisionProblems() {
+			fail(c.Path, "%s", p)
 		}
 		for _, ct := range c.Contributes {
 			t, ok := cat.Get(ct.Target)
@@ -80,6 +87,16 @@ func Check(root string, cat *Catalog) error {
 			for _, p := range unexplained(ct.Values) {
 				fail(c.Path, "contributes to %s: %s has no comment saying why", ct.Target, p)
 			}
+		}
+	}
+	presets := map[string]string{}
+	for _, c := range cat.Components {
+		for _, p := range c.Presets {
+			key := c.Capability + " " + p
+			if other, ok := presets[key]; ok {
+				fail(c.Path, "preset %s: %s already installs a %s component", p, other, c.Capability)
+			}
+			presets[key] = c.ID
 		}
 	}
 	for _, p := range Profiles {
@@ -94,6 +111,49 @@ func Check(root string, cat *Catalog) error {
 		}
 	}
 	return errors.Join(errs...)
+}
+
+// provisionProblems checks what provides and networkPolicies name against the
+// component's own inputs and namespaces.
+func (c *Component) provisionProblems() []string {
+	var out []string
+	owns := func(ns string) bool {
+		return slices.ContainsFunc(c.Releases, func(r Release) bool { return r.Namespace == ns })
+	}
+	if r := c.Provides.registry(); r != nil {
+		if !owns(r.CA.Namespace) {
+			out = append(out, fmt.Sprintf("provides.registry.ca: %s is none of its namespaces", r.CA.Namespace))
+		}
+		if r.ClusterIPInput != "" && !slices.ContainsFunc(c.Inputs, func(in Input) bool {
+			return in.Name == r.ClusterIPInput && in.Path != ""
+		}) {
+			out = append(out, fmt.Sprintf("provides.registry.clusterIPInput: no input %s with a path", r.ClusterIPInput))
+		}
+	}
+	dec := yaml.NewDecoder(strings.NewReader(c.NetworkPolicies))
+	for {
+		var o struct {
+			Kind     string `yaml:"kind"`
+			Metadata struct{ Name, Namespace string }
+		}
+		if err := dec.Decode(&o); err != nil {
+			if !errors.Is(err, io.EOF) {
+				out = append(out, "networkPolicies: "+err.Error())
+			}
+			break
+		}
+		if o.Kind != "NetworkPolicy" || !owns(o.Metadata.Namespace) {
+			out = append(out, fmt.Sprintf("networkPolicies: %s %s must be a NetworkPolicy in one of its namespaces", o.Kind, o.Metadata.Name))
+		}
+	}
+	return out
+}
+
+func (p *Provides) registry() *Registry {
+	if p == nil {
+		return nil
+	}
+	return p.Registry
 }
 
 // Licenses is config/licenses.yaml.

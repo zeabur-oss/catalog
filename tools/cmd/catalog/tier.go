@@ -396,6 +396,15 @@ func dryRun(r *repo, dir string) error {
 			}
 		}
 	}
+	for _, c := range r.cat.Components {
+		for _, doc := range strings.Split(c.NetworkPolicies, "\n---") {
+			var o struct{ Metadata struct{ Namespace string } }
+			if strings.TrimSpace(doc) == "" || yaml.Unmarshal([]byte(doc), &o) != nil {
+				continue
+			}
+			files = append(files, file{c.ID + " networkPolicies", o.Metadata.Namespace, []byte(doc), false})
+		}
+	}
 	var all strings.Builder
 	for _, name := range slices.Sorted(maps.Keys(crds)) {
 		all.WriteString(crds[name] + "\n---\n")

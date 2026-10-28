@@ -5,6 +5,12 @@ metadata:
   description: >
     One operator runs both the metrics and the logs stack from CRDs, and accepts
     Prometheus operator objects so existing app manifests keep working.
+  summary: Runs the metrics and log stores.
+  locales:
+    zh-TW:
+      summary: "執行指標與日誌的儲存服務。"
+    zh-CN:
+      summary: "运行指标和日志的存储服务。"
   license: Apache-2.0
   homepage: https://docs.victoriametrics.com/operator/
 maturity: independent

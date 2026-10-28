@@ -1,7 +1,7 @@
 ---
 title: 各 Kubernetes 发行版的差异
 description: 比较各 Kubernetes 发行版的已知差异，确认组件与模板需要的配置。
-source: "cbdc88d13f47"
+source: "db5b5372fd60"
 ---
 
 组件与模板在 kind 上测试，Kubernetes 次版本与 Zeabur Installer 固定的 RKE2 版本相同。`single-node` profile 使用 1 个节点，`multi-node` profile 使用 3 个节点。profile 是这两种部署方式的配置组合。其他发行版的行为相同，但有以下已知差异。
@@ -9,5 +9,5 @@ source: "cbdc88d13f47"
 - **k3s**：启动时加上 `--disable=traefik,metrics-server`，让 Traefik 与 metrics-server 都由各自的 chart 安装。k3s 会安装自己的 Gateway API CRD。在 NAT 后运行时，不要配置 `node-external-ip`，否则 Traefik 会丢失客户端地址。
 - **KubeSolo**：默认 StorageClass 会在 PersistentVolumeClaim 删除后保留卷及其数据。在 Ubuntu 上，将 `/etc/hosts` 中的主机名映射到节点 IP。如果映射到 127.0.1.1，API server 会拒绝代理连接到 kubelet。KubeSolo 的节点没有 control-plane 标签。
 - **Longhorn**：每个节点都需要安装 open-iscsi、启动 `iscsid`，并具备 `iscsi_tcp` 模块与 NFSv4 客户端。不要让 multipathd 管理 Longhorn 使用的磁盘。详细要求见 Longhorn 组件文件中的注释。
-- **发行版限制与 KubeSolo 测试**：组件的 `distributions` 字段会限制适用的发行版，例如 system-upgrade-controller 适用于 k3s 与 RKE2。`kubesolo` e2e profile 会跳过 `distributions` 列表未包含 `kubesolo` 的组件。这个测试 profile 覆盖的 capability（用途类别）是 `ingress`、`certificates` 与 `builds`，配置见 [`config/kubernetes.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/kubernetes.yaml)。
+- **发行版限制与 KubeSolo 测试**：组件的 `distributions` 字段会限制适用的发行版，例如 system-upgrade-controller 适用于 k3s 与 RKE2。`kubesolo` e2e profile 会跳过 `distributions` 列表未包含 `kubesolo` 的组件。这个测试 profile 覆盖的 capability（用途类别）是 `ingress`、`certificates` 与 `builds`。这些也是 Zeabur 个人安装提供的 capability；`index.json` 把它们放在 `kubesolo` 下，`minMemoryMiB` 是各 capability 在这里需要的最少主机内存。配置见 [`config/kubernetes.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/kubernetes.yaml)。
 - **模板存储空间**：模板不指定 StorageClass，因此卷会使用集群的默认 StorageClass。如果集群没有默认 StorageClass，PersistentVolumeClaim 会停留在 `Pending`。

@@ -7,6 +7,12 @@ metadata:
     replicated, with users, grants and databases as objects and backups to S3.
     A MySQL-compatible database under an OSI licence.
   # The operator is MIT; the MariaDB Server images it runs are GPL-2.0.
+  summary: Runs MariaDB databases, a MySQL-compatible choice, with backups to S3.
+  locales:
+    zh-TW:
+      summary: "執行與 MySQL 相容的 MariaDB 資料庫，並備份到 S3。"
+    zh-CN:
+      summary: "运行与 MySQL 兼容的 MariaDB 数据库，并备份到 S3。"
   license: MIT AND GPL-2.0-only
   homepage: https://github.com/mariadb-operator/mariadb-operator
 maturity: independent

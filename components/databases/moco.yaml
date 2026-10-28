@@ -7,6 +7,12 @@ metadata:
     instance or a semi-synchronous primary with replicas, with backups and
     point-in-time recovery from S3. For applications that need MySQL itself.
   # The operator is Apache-2.0; the MySQL images it runs are GPL-2.0.
+  summary: Runs MySQL 8 databases with replicas and backups to S3.
+  locales:
+    zh-TW:
+      summary: "執行 MySQL 8 資料庫，支援副本，並能備份到 S3。"
+    zh-CN:
+      summary: "运行 MySQL 8 数据库，支持副本，并能备份到 S3。"
   license: Apache-2.0 AND GPL-2.0-only
   homepage: https://cybozu-go.github.io/moco/
 maturity: independent

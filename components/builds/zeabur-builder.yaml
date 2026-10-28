@@ -9,12 +9,19 @@ metadata:
     services from Git. Optional: without it, services deploy from images only.
     Nodes pull from zot at the fixed address of the cluster-ip input, and must
     trust its CA.
+  summary: Builds images from your Git repositories and keeps them in the cluster, so services can deploy from Git.
+  locales:
+    zh-TW:
+      summary: "從 Git 儲存庫建置映像檔並存放在叢集裡，讓服務可以從 Git 部署。"
+    zh-CN:
+      summary: "从 Git 仓库构建镜像并存放在集群里，让服务可以从 Git 部署。"
   license: Apache-2.0
   homepage: https://github.com/zeabur-oss/builder
 maturity: independent
 defaults:
   single-node: optional
   multi-node: optional
+presets: [standard]
 # zot's images.
 persistsData: true
 # zot's certificates.
@@ -31,6 +38,48 @@ inputs:
       to it. Left out: an address is assigned and only pods reach the registry.
     release: zot
     path: service.clusterIP
+
+provides:
+  # zot: Zeabur and nodes pull images from it, Builder pushes there.
+  registry:
+    host: zot.zot.svc:5000
+    ca: {name: zot-tls, key: ca.crt, namespace: zot}
+    clusterIPInput: cluster-ip
+
+# Where an installer isolates namespaces, zot's admits only its own pods, the
+# installer's namespaces and the nodes. buildkitd pushes, the controller
+# deletes the repositories of deleted Builds, and a build's Job in a project
+# namespace fetches its archive source. Other pods in a project namespace
+# cannot reach zot, so a compromised app cannot pull other projects' images.
+networkPolicies: |
+  apiVersion: networking.k8s.io/v1
+  kind: NetworkPolicy
+  metadata:
+    name: zot-builder
+    namespace: zot
+  spec:
+    podSelector:
+      matchLabels: {app.kubernetes.io/name: zot}
+    policyTypes: [Ingress]
+    ingress:
+      - from:
+          - namespaceSelector:
+              matchLabels: {kubernetes.io/metadata.name: builder-system}
+            podSelector:
+              matchLabels: {app.kubernetes.io/name: buildkitd}
+          - namespaceSelector:
+              matchLabels: {kubernetes.io/metadata.name: builder-system}
+            podSelector:
+              matchLabels: {app.kubernetes.io/name: zeabur-builder}
+          # Only an admin can label a Namespace as a project. Anyone who can
+          # create Pods in a project namespace can set this label on a Pod.
+          - namespaceSelector:
+              matchLabels: {zeabur.com/project: "true"}
+            podSelector:
+              matchExpressions:
+                - {key: builder.zeabur.com/buildrun, operator: Exists}
+        ports:
+          - {port: 5000, protocol: TCP}
 
 releases:
   # Before the chart: the CA that signs zot-tls, and the key that signs push

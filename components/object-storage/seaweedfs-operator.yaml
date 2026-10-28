@@ -7,6 +7,12 @@ metadata:
     its S3 API, with buckets, users, keys and policies as objects. Beta: the
     chart is pre-1.0, almost all of it comes from one maintainer, and its
     features and CRDs still change from release to release.
+  summary: Runs SeaweedFS object storage with an S3 API, in beta.
+  locales:
+    zh-TW:
+      summary: "執行提供 S3 API 的 SeaweedFS 物件儲存，目前為 Beta。"
+    zh-CN:
+      summary: "运行提供 S3 API 的 SeaweedFS 对象存储，目前为 Beta。"
   license: Apache-2.0
   homepage: https://github.com/seaweedfs/seaweedfs-operator
 maturity: independent

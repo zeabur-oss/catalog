@@ -6,12 +6,19 @@ metadata:
     Blocks brute-force attempts and scanners that show up in Traefik's access
     logs, for every app behind the ingress. It fails open, and the online API is
     off by default.
+  summary: Blocks brute-force attempts and scanners before they reach your services.
+  locales:
+    zh-TW:
+      summary: "在暴力破解和掃描碰到服務之前就擋下來。"
+    zh-CN:
+      summary: "在暴力破解和扫描碰到服务之前就拦下来。"
   license: MIT
   homepage: https://www.crowdsec.net
 maturity: independent
 defaults:
   single-node: optional
   multi-node: optional
+presets: [secure]
 persistsData: true
 requires: [ingress/traefik]
 

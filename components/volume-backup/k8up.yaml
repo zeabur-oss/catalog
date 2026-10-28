@@ -5,6 +5,12 @@ metadata:
   description: >
     Backs up each namespace with restic to any S3-compatible store, so tenants
     can safely manage their own backups.
+  summary: Backs up each project's volumes to S3-compatible storage; database backups don't need it.
+  locales:
+    zh-TW:
+      summary: "備份各專案的磁碟區，存到相容 S3 的儲存空間，資料庫備份不需要它。"
+    zh-CN:
+      summary: "把各项目的卷备份到兼容 S3 的存储，数据库备份不需要它。"
   license: Apache-2.0
   homepage: https://k8up.io
 maturity: cncf-sandbox

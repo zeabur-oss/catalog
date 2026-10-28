@@ -123,6 +123,7 @@ type kubesoloConfig struct {
 	Version        string            `yaml:"version"`
 	SHA256         map[string]string `yaml:"sha256"` // by architecture
 	Capabilities   []string          `yaml:"capabilities"`
+	MinMemoryMiB   map[string]int    `yaml:"minMemoryMiB"` // by capability
 	HelmController struct {
 		Version string `yaml:"version"`
 		SHA256  string `yaml:"sha256"`

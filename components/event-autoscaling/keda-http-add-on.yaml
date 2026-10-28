@@ -6,6 +6,12 @@ metadata:
     Scales HTTP services on request rate, including to zero; the interceptor
     holds the first request while the workload wakes. It is pre-1.0, so it is
     marked beta.
+  summary: Scales web services with their traffic, down to zero when idle.
+  locales:
+    zh-TW:
+      summary: "依流量調整網頁服務的副本數，閒置時可降到零。"
+    zh-CN:
+      summary: "按流量调整 Web 服务的副本数，空闲时可缩到零。"
   license: Apache-2.0
   homepage: https://github.com/kedacore/http-add-on
 maturity: cncf-graduated

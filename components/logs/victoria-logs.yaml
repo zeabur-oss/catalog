@@ -5,6 +5,12 @@ metadata:
   description: >
     Keeps and searches log history with low memory and disk use. It is
     Apache-2.0, unlike Loki, and runs on the VictoriaMetrics operator.
+  summary: Keeps and searches logs.
+  locales:
+    zh-TW:
+      summary: "保存並搜尋日誌。"
+    zh-CN:
+      summary: "保存并搜索日志。"
   license: Apache-2.0
   homepage: https://docs.victoriametrics.com/victorialogs/
 maturity: independent

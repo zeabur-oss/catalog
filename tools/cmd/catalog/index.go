@@ -24,7 +24,8 @@ type budgetConfig struct {
 
 // index writes index.json: every component with its install order and
 // measurements, recommended components per capability, every template with
-// its measurements, the budget and the Kubernetes versions.
+// its measurements, the budget, the Kubernetes versions and what a personal
+// install on KubeSolo offers.
 func index(fs *flag.FlagSet, r *repo) error {
 	cat := r.cat
 	out := fs.String("out", "index.json", "output file")
@@ -82,6 +83,10 @@ func index(fs *flag.FlagSet, r *repo) error {
 		"capabilities": capabilities, // capability -> profile -> recommended IDs
 		"components":   comps,
 		"templates":    indexTemplates(r.templates),
+		"kubesolo": map[string]any{
+			"capabilities": cfg.Kubesolo.Capabilities,
+			"minMemoryMiB": cfg.Kubesolo.MinMemoryMiB,
+		},
 	})
 }
 

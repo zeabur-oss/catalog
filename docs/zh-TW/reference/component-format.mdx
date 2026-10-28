@@ -1,7 +1,7 @@
 ---
 title: 元件檔案格式
 description: 按照共用外框與元件欄位撰寫 YAML，並用 digest 固定安裝內容。
-source: "59943d6797b4"
+source: "56f3e8887c4f"
 ---
 
 把元件檔案放在 `components/<capability>/<upstream>.yaml`。每個 capability（用途類別）與上游的組合各用一個檔案。檔案使用 YAML，包含共用外框、安裝內容與設定。路徑就是 ID，例如 `components/ingress/traefik.yaml` 的 ID 是 `ingress/traefik`。
@@ -19,6 +19,16 @@ metadata:
   license: MIT                    # SPDX
   homepage: https://traefik.io/traefik/
 requires: [certificates]          # <capability> or <capability>/<upstream>
+```
+
+元件的 `metadata` 還有 `summary`：用一句白話說明它為叢集提供什麼，給挑選元件的人看，翻譯放在 `locales`。Zeabur 顯示的是 summary，description 留給維運人員。
+
+```yaml
+metadata:
+  summary: Routes traffic from your domains to your services.
+  locales:
+    zh-TW: {summary: 把網域的流量導向你的服務。}
+    zh-CN: {summary: 把域名的流量转发到你的服务。}
 ```
 
 ## 元件欄位
@@ -63,12 +73,56 @@ releases:                         # installed in order
     urlDigests: [sha256:…]                      # one per URL, in order
   # or: manifests: |  objects applied as written
 
+presets: [minimal]  # Zeabur Installer presets that install it
 inputs: []        # values to ask for or generate; Secrets are created from them
+provides: {...}   # a registry or storage class other software uses
+networkPolicies: |  # traffic it needs where an installer isolates namespaces
+reportsOnly: false  # its CRDs hold only reports it writes
 contributes: []   # values added to another component's release (CrowdSec -> Traefik)
 detection: {...}  # CRDs, API services, Helm charts, workloads
 security: {...}   # RBAC summary, cluster-wide, privileged, podSecurity, egress, credentials, tenant risks
 smoke: []         # extra e2e checks
 leftovers: []     # what the upstream keeps on uninstall (e.g. CRDs)
+```
+
+## 安裝工具讀取的欄位
+
+這些欄位告訴安裝工具元件提供什麼，安裝工具不需要靠 ID 認得元件。
+
+`presets` 列出會安裝這個元件的 Zeabur Installer 預設組合。`minimal` 只安裝列出它的元件；`standard` 安裝該 profile 所有預設啟用的元件，再加上列出它的元件；`secure` 安裝 `standard` 的全部，再加上列出它的元件。同一個 capability 的兩個元件不能列出同一個預設組合。
+
+`provides.registry` 是叢集裡的 OCI registry：`host` 是映像檔名稱裡的 `host:port`，`ca` 是存放簽發它憑證的 CA 的 Secret key，`clusterIPInput` 是接收它 Service 固定 ClusterIP 的輸入。節點的容器執行環境解析不了這個 host，所以安裝工具會填一個空的位址，並在每個節點設定 registry mirror 指過去。移除元件前，會等到它的命名空間以外沒有 Pod 在跑這個 host 的映像檔。
+
+```yaml
+provides:
+  registry:
+    host: zot.zot.svc:5000
+    ca: {name: zot-tls, key: ca.crt, namespace: zot}
+    clusterIPInput: cluster-ip
+```
+
+`provides.storage` 是一個 storage class 和它磁碟區使用的 CSI driver。移除元件前，會等到沒有 PersistentVolume 使用這個 driver。
+
+```yaml
+provides:
+  storage:
+    driver: driver.longhorn.io
+    storageClass: longhorn
+```
+
+移除元件前，也會等到它命名空間以外沒有 `detection.crds` 的物件。`reportsOnly: true` 表示它的自訂資源只是它寫出的報告，移除時不用等。
+
+`networkPolicies` 放元件自己命名空間裡的 NetworkPolicy。如果安裝工具讓每個命名空間只接受自己的 Pod、安裝工具的命名空間和節點的流量，就會在安裝 releases 前套用這些 NetworkPolicy，放行元件需要從其他地方進來的流量。`catalog validate` 會檢查每個物件都是元件命名空間裡的 NetworkPolicy。
+
+輸入加上 `fill: kube-api-cidr`，表示它接收 Kubernetes API server 位址所在的網段，由知道節點位址的安裝工具填入。
+
+```yaml
+inputs:
+  - name: kube-api-cidr
+    description: IPv4 CIDR of the Kubernetes API server addresses as the CNI sees them.
+    path: kubeApiCidr
+    required: true
+    fill: kube-api-cidr
 ```
 
 ## 用 digest 固定內容

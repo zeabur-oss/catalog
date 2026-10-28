@@ -30,12 +30,16 @@ type Component struct {
 	Stability       string            `yaml:"stability" json:"stability,omitempty"`
 	Alternatives    map[string]string `yaml:"alternatives" json:"alternatives,omitempty"`
 	Defaults        map[string]string `yaml:"defaults" json:"defaults"`
+	Presets         []string          `yaml:"presets" json:"presets,omitempty"`
 	Distributions   []string          `yaml:"distributions" json:"distributions,omitempty"`
 	PersistsData    bool              `yaml:"persistsData" json:"persistsData,omitempty"`
 	DisruptsTraffic bool              `yaml:"disruptsTraffic" json:"disruptsTraffic,omitempty"`
 	Requires        []string          `yaml:"requires" json:"requires,omitempty"`
 	Inputs          []Input           `yaml:"inputs" json:"inputs,omitempty"`
 	Releases        []Release         `yaml:"releases" json:"releases"`
+	Provides        *Provides         `yaml:"provides" json:"provides,omitempty"`
+	ReportsOnly     bool              `yaml:"reportsOnly" json:"reportsOnly,omitempty"`
+	NetworkPolicies string            `yaml:"networkPolicies" json:"networkPolicies,omitempty"`
 	Contributes     []Contribution    `yaml:"contributes" json:"contributes,omitempty"`
 	Detection       map[string]any    `yaml:"detection" json:"detection"`
 	Security        map[string]any    `yaml:"security" json:"security"`
@@ -46,12 +50,36 @@ type Component struct {
 	Path string `yaml:"-" json:"-"` // relative to the repository root
 }
 
-// Metadata is the part Components and Templates share.
+// Metadata is a component's name, description and summary.
 type Metadata struct {
 	Name        string `yaml:"name" json:"name"`
 	Description string `yaml:"description" json:"description"`
-	License     string `yaml:"license" json:"license"`
-	Homepage    string `yaml:"homepage" json:"homepage"`
+	Summary     string `yaml:"summary" json:"summary"`
+	// Locales holds the summary in other languages, by language tag.
+	Locales map[string]struct {
+		Summary string `yaml:"summary" json:"summary"`
+	} `yaml:"locales" json:"locales,omitempty"`
+	License  string `yaml:"license" json:"license"`
+	Homepage string `yaml:"homepage" json:"homepage"`
+}
+
+// Provides is what a component offers other software in the cluster.
+type Provides struct {
+	Registry *Registry `yaml:"registry" json:"registry,omitempty"`
+	Storage  *Storage  `yaml:"storage" json:"storage,omitempty"`
+}
+
+// Registry is an OCI registry in the cluster that nodes pull from.
+type Registry struct {
+	Host           string    `yaml:"host" json:"host"`
+	CA             SecretRef `yaml:"ca" json:"ca"`
+	ClusterIPInput string    `yaml:"clusterIPInput" json:"clusterIPInput,omitempty"`
+}
+
+// Storage is a storage class and the CSI driver of its volumes.
+type Storage struct {
+	Driver       string `yaml:"driver" json:"driver"`
+	StorageClass string `yaml:"storageClass" json:"storageClass"`
 }
 
 type Release struct {
@@ -82,6 +110,7 @@ type Input struct {
 	GenerateBytes    int    `yaml:"generateBytes" json:"generateBytes,omitempty"`
 	GenerateEncoding string `yaml:"generateEncoding" json:"generateEncoding,omitempty"`
 	Required         bool   `yaml:"required" json:"required,omitempty"`
+	Fill             string `yaml:"fill" json:"fill,omitempty"`
 	Default          any    `yaml:"default" json:"default,omitempty"`
 	TestValue        any    `yaml:"testValue" json:"testValue,omitempty"`
 }

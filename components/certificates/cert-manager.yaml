@@ -6,12 +6,19 @@ metadata:
     cert-manager is the standard Kubernetes certificate controller (CNCF
     graduated). Its issuers live in the cluster, so it renews certificates
     itself.
+  summary: Issues TLS certificates for your domains and renews them.
+  locales:
+    zh-TW:
+      summary: "為你的網域簽發 TLS 憑證，並自動續期。"
+    zh-CN:
+      summary: "为你的域名签发 TLS 证书，并自动续期。"
   license: Apache-2.0
   homepage: https://cert-manager.io
 maturity: cncf-graduated
 defaults:
   single-node: recommended
   multi-node: recommended
+presets: [minimal]
 # Gateway API CRDs come with ingress; the controller exits without them.
 requires: [ingress]
 

@@ -5,6 +5,12 @@ metadata:
   description: >
     Serves Gateway API and Ingress, and hosts the CrowdSec bouncer. Ingress NGINX
     was retired in March 2026.
+  summary: Routes traffic from your domains to your services.
+  locales:
+    zh-TW:
+      summary: "把網域的流量導向你的服務。"
+    zh-CN:
+      summary: "把域名的流量转发到你的服务。"
   license: MIT
   homepage: https://traefik.io/traefik/
 maturity: independent
@@ -13,6 +19,7 @@ alternatives:
 defaults:
   single-node: recommended
   multi-node: recommended
+presets: [minimal]
 disruptsTraffic: true
 
 releases:

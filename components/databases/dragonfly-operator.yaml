@@ -8,6 +8,12 @@ metadata:
     to a volume or S3. Dragonfly is source-available, so it is never on by default.
   # The operator is Apache-2.0; the Dragonfly images it runs are BUSL-1.1, which
   # is not OSI-approved.
+  summary: Runs Dragonfly, a Redis-compatible store, with replicas and snapshots, under a licence that is not open source.
+  locales:
+    zh-TW:
+      summary: "執行與 Redis 相容的 Dragonfly，支援副本和快照，但不是開放原始碼授權。"
+    zh-CN:
+      summary: "运行与 Redis 兼容的 Dragonfly，支持副本和快照，但不是开源许可。"
   license: Apache-2.0 AND BUSL-1.1
   homepage: https://www.dragonflydb.io/docs/managing-dragonfly/operator/installation
 maturity: independent

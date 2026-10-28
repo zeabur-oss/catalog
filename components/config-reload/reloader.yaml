@@ -6,6 +6,12 @@ metadata:
     Rolls Deployments, StatefulSets and DaemonSets when a ConfigMap or Secret they
     use changes, whoever changed it. Optional: only workloads that opt in with an
     annotation restart.
+  summary: Restarts services when a ConfigMap or Secret they use changes.
+  locales:
+    zh-TW:
+      summary: "服務使用的 ConfigMap 或 Secret 變更時，自動重新啟動服務。"
+    zh-CN:
+      summary: "服务使用的 ConfigMap 或 Secret 变更时，自动重启服务。"
   license: Apache-2.0
   homepage: https://github.com/stakater/Reloader
 maturity: independent

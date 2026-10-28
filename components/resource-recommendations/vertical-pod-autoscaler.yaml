@@ -5,6 +5,12 @@ metadata:
   description: >
     Suggests CPU and memory requests from observed usage. Recommender only:
     nothing changes pods unless you apply a suggestion.
+  summary: Suggests CPU and memory requests from actual use.
+  locales:
+    zh-TW:
+      summary: "依實際用量建議 CPU 與記憶體的保留量。"
+    zh-CN:
+      summary: "根据实际用量建议 CPU 和内存的预留量。"
   license: Apache-2.0
   homepage: https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler
 maturity: kubernetes-sig

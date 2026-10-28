@@ -29,3 +29,32 @@ func TestLicenseProblems(t *testing.T) {
 		t.Errorf("NotOSIApproved: got %q", got)
 	}
 }
+
+func TestProvisionProblems(t *testing.T) {
+	registry := func(r Registry, policies string) *Component {
+		return &Component{
+			Releases:        []Release{{Name: "zot", Namespace: "zot"}},
+			Inputs:          []Input{{Name: "cluster-ip", Path: "service.clusterIP"}},
+			Provides:        &Provides{Registry: &r},
+			NetworkPolicies: policies,
+		}
+	}
+	ca := SecretRef{Name: "zot-tls", Key: "ca.crt", Namespace: "zot"}
+	policy := "kind: NetworkPolicy\nmetadata: {name: a, namespace: zot}\n"
+	tests := []struct {
+		name string
+		c    *Component
+		bad  bool
+	}{
+		{"its own input and namespace", registry(Registry{Host: "zot.zot.svc:5000", CA: ca, ClusterIPInput: "cluster-ip"}, policy), false},
+		{"an input it lacks", registry(Registry{Host: "zot.zot.svc:5000", CA: ca, ClusterIPInput: "address"}, ""), true},
+		{"a CA in another namespace", registry(Registry{Host: "zot.zot.svc:5000", CA: SecretRef{Name: "x", Key: "ca.crt", Namespace: "default"}}, ""), true},
+		{"a policy in another namespace", registry(Registry{Host: "zot.zot.svc:5000", CA: ca}, "kind: NetworkPolicy\nmetadata: {name: a, namespace: default}\n"), true},
+		{"another kind than NetworkPolicy", registry(Registry{Host: "zot.zot.svc:5000", CA: ca}, "kind: ConfigMap\nmetadata: {name: a, namespace: zot}\n"), true},
+	}
+	for _, tt := range tests {
+		if got := tt.c.provisionProblems(); (len(got) > 0) != tt.bad {
+			t.Errorf("%s: got %q", tt.name, got)
+		}
+	}
+}

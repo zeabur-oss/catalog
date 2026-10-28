@@ -7,12 +7,19 @@ metadata:
     from kernel events, and keeps each namespace's recent alerts in a
     PolicyReport there, readable with namespace admin rights. Optional: it needs
     a privileged eBPF probe and a BTF kernel (5.8+).
+  summary: Flags suspicious activity in containers, such as a shell or a privilege escalation.
+  locales:
+    zh-TW:
+      summary: "偵測容器內的可疑行為，例如開啟 shell 或提升權限。"
+    zh-CN:
+      summary: "检测容器内的可疑行为，例如打开 shell 或提升权限。"
   license: Apache-2.0
   homepage: https://falco.org
 maturity: cncf-graduated
 defaults:
   single-node: optional
   multi-node: optional
+presets: [secure]
 
 releases:
   - name: policy-report-crds

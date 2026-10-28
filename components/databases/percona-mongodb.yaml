@@ -8,6 +8,12 @@ metadata:
     The database server is SSPL, so it is never on by default.
   # The operator is Apache-2.0; the Percona Server for MongoDB images it runs
   # are SSPL-1.0, which is not OSI-approved.
+  summary: Runs MongoDB databases with backups to S3, under the SSPL licence.
+  locales:
+    zh-TW:
+      summary: "執行 MongoDB 資料庫並備份到 S3，採 SSPL 授權。"
+    zh-CN:
+      summary: "运行 MongoDB 数据库并备份到 S3，采用 SSPL 许可。"
   license: Apache-2.0 AND SSPL-1.0
   homepage: https://docs.percona.com/percona-operator-for-mongodb/
 maturity: independent

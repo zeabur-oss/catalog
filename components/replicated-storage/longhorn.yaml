@@ -8,6 +8,12 @@ metadata:
     on multi-node, where it becomes the default storage class. Optional on
     single-node, where a replica has nowhere else to go; it still gives
     expandable volumes and snapshots there.
+  summary: Keeps copies of each volume on other nodes, so it survives losing a node.
+  locales:
+    zh-TW:
+      summary: "把每個磁碟區另外複製一份到其他節點，節點故障時資料仍在。"
+    zh-CN:
+      summary: "把每个卷另外复制一份到其他节点，节点故障时数据仍在。"
   license: Apache-2.0
   homepage: https://longhorn.io
 maturity: cncf-incubating
@@ -22,6 +28,11 @@ defaults:
   multi-node: recommended
 persistsData: true
 disruptsTraffic: true
+provides:
+  # Removing Longhorn waits until no PersistentVolume uses its driver.
+  storage:
+    driver: driver.longhorn.io
+    storageClass: longhorn
 
 # Every node needs, before install: open-iscsi with iscsid running and the
 # iscsi_tcp module loaded (volumes attach over iSCSI on the node), an NFSv4
