@@ -1,0 +1,37 @@
+{
+  "component": "image-updates/keel",
+  "environments": {
+    "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 15,
+      "idleCPUm": 0,
+      "versions": {
+        "keel": "v1.2.3"
+      },
+      "measuredAt": "2026-10-28"
+    },
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 15,
+      "idleCPUm": 0,
+      "versions": {
+        "keel": "v1.2.3"
+      },
+      "measuredAt": "2026-10-28"
+    },
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 15,
+      "idleCPUm": 0,
+      "versions": {
+        "keel": "v1.2.3"
+      },
+      "measuredAt": "2026-10-28"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 15,
+      "idleCPUm": 0,
+      "versions": {
+        "keel": "v1.2.3"
+      },
+      "measuredAt": "2026-10-28"
+    }
+  }
+}

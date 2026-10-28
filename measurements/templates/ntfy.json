@@ -1,0 +1,13 @@
+{
+  "template": "ntfy",
+  "environments": {
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 14,
+      "idleCPUm": 1,
+      "versions": {
+        "binwiederhier/ntfy": "v2.33.1"
+      },
+      "measuredAt": "2026-10-28"
+    }
+  }
+}

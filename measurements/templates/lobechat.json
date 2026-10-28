@@ -1,0 +1,13 @@
+{
+  "template": "lobechat",
+  "environments": {
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 175,
+      "idleCPUm": 0,
+      "versions": {
+        "docker.io/lobehub/lobe-chat": "1.143.3"
+      },
+      "measuredAt": "2026-10-28"
+    }
+  }
+}

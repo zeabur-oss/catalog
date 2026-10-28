@@ -1,0 +1,37 @@
+{
+  "component": "replicated-storage/longhorn",
+  "environments": {
+    "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 352,
+      "idleCPUm": 42,
+      "versions": {
+        "longhorn": "1.13.0"
+      },
+      "measuredAt": "2026-10-28"
+    },
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 352,
+      "idleCPUm": 39,
+      "versions": {
+        "longhorn": "1.13.0"
+      },
+      "measuredAt": "2026-10-28"
+    },
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 153,
+      "idleCPUm": 26,
+      "versions": {
+        "longhorn": "1.13.0"
+      },
+      "measuredAt": "2026-10-28"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 156,
+      "idleCPUm": 22,
+      "versions": {
+        "longhorn": "1.13.0"
+      },
+      "measuredAt": "2026-10-28"
+    }
+  }
+}

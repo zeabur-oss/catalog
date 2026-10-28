@@ -1,25 +1,17 @@
 {
   "component": "volume-backup/k8up",
   "environments": {
-    "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 21,
-      "idleCPUm": 1,
-      "versions": {
-        "k8up": "4.10.0"
-      },
-      "measuredAt": "2026-10-11"
-    },
-    "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 11,
-      "idleCPUm": 1,
-      "versions": {
-        "k8up": "4.10.0"
-      },
-      "measuredAt": "2026-10-11"
-    },
     "multi-node-amd64-v1.36.4": {
       "idleMemoryMiB": 21,
       "idleCPUm": 2,
+      "versions": {
+        "k8up": "4.10.0"
+      },
+      "measuredAt": "2026-10-11"
+    },
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 21,
+      "idleCPUm": 1,
       "versions": {
         "k8up": "4.10.0"
       },
@@ -32,6 +24,14 @@
         "k8up": "4.10.0"
       },
       "measuredAt": "2026-10-11"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 10,
+      "idleCPUm": 0,
+      "versions": {
+        "k8up": "4.10.1"
+      },
+      "measuredAt": "2026-10-28"
     }
   }
 }

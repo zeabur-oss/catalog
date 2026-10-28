@@ -1,0 +1,37 @@
+{
+  "component": "databases/dragonfly-operator",
+  "environments": {
+    "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 36,
+      "idleCPUm": 2,
+      "versions": {
+        "dragonfly-operator": "v1.7.1"
+      },
+      "measuredAt": "2026-10-28"
+    },
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 36,
+      "idleCPUm": 1,
+      "versions": {
+        "dragonfly-operator": "v1.7.1"
+      },
+      "measuredAt": "2026-10-28"
+    },
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 21,
+      "idleCPUm": 1,
+      "versions": {
+        "dragonfly-operator": "v1.7.1"
+      },
+      "measuredAt": "2026-10-28"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 19,
+      "idleCPUm": 1,
+      "versions": {
+        "dragonfly-operator": "v1.7.1"
+      },
+      "measuredAt": "2026-10-28"
+    }
+  }
+}

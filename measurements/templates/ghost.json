@@ -1,0 +1,14 @@
+{
+  "template": "ghost",
+  "environments": {
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 400,
+      "idleCPUm": 6,
+      "versions": {
+        "ghost": "6-alpine",
+        "mysql": "8.4"
+      },
+      "measuredAt": "2026-10-28"
+    }
+  }
+}

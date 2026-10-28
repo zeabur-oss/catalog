@@ -1,24 +1,32 @@
 {
   "component": "certificates/cert-manager",
   "environments": {
-    "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 92,
+    "kubesolo-amd64-v1.35.7+kubesolo-v1.2.2": {
+      "idleMemoryMiB": 54,
+      "idleCPUm": 1,
+      "versions": {
+        "cert-manager": "v1.21.3"
+      },
+      "measuredAt": "2026-10-28"
+    },
+    "kubesolo-arm64-v1.35.7+kubesolo-v1.2.2": {
+      "idleMemoryMiB": 56,
+      "idleCPUm": 1,
+      "versions": {
+        "cert-manager": "v1.21.3"
+      },
+      "measuredAt": "2026-10-28"
+    },
+    "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 88,
       "idleCPUm": 2,
       "versions": {
         "cert-manager": "v1.21.2"
       },
       "measuredAt": "2026-10-11"
     },
-    "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 50,
-      "idleCPUm": 1,
-      "versions": {
-        "cert-manager": "v1.21.2"
-      },
-      "measuredAt": "2026-10-13"
-    },
-    "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 88,
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 92,
       "idleCPUm": 2,
       "versions": {
         "cert-manager": "v1.21.2"
@@ -32,6 +40,14 @@
         "cert-manager": "v1.21.2"
       },
       "measuredAt": "2026-10-11"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 53,
+      "idleCPUm": 1,
+      "versions": {
+        "cert-manager": "v1.21.3"
+      },
+      "measuredAt": "2026-10-28"
     }
   }
 }

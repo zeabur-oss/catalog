@@ -1,0 +1,13 @@
+{
+  "template": "memos",
+  "environments": {
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 17,
+      "idleCPUm": 0,
+      "versions": {
+        "neosmemo/memos": "0.31.0"
+      },
+      "measuredAt": "2026-10-28"
+    }
+  }
+}

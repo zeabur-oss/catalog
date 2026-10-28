@@ -1,0 +1,37 @@
+{
+  "component": "config-reload/reloader",
+  "environments": {
+    "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 18,
+      "idleCPUm": 1,
+      "versions": {
+        "reloader": "2.2.18"
+      },
+      "measuredAt": "2026-10-28"
+    },
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 17,
+      "idleCPUm": 1,
+      "versions": {
+        "reloader": "2.2.18"
+      },
+      "measuredAt": "2026-10-28"
+    },
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 9,
+      "idleCPUm": 0,
+      "versions": {
+        "reloader": "2.2.18"
+      },
+      "measuredAt": "2026-10-28"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 9,
+      "idleCPUm": 0,
+      "versions": {
+        "reloader": "2.2.18"
+      },
+      "measuredAt": "2026-10-28"
+    }
+  }
+}

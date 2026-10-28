@@ -1,0 +1,41 @@
+{
+  "component": "databases/cloudnative-pg",
+  "environments": {
+    "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 46,
+      "idleCPUm": 5,
+      "versions": {
+        "cloudnative-pg": "0.29.1",
+        "plugin-barman-cloud": "0.8.1"
+      },
+      "measuredAt": "2026-10-28"
+    },
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 46,
+      "idleCPUm": 4,
+      "versions": {
+        "cloudnative-pg": "0.29.1",
+        "plugin-barman-cloud": "0.8.1"
+      },
+      "measuredAt": "2026-10-28"
+    },
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 33,
+      "idleCPUm": 3,
+      "versions": {
+        "cloudnative-pg": "0.29.1",
+        "plugin-barman-cloud": "0.8.1"
+      },
+      "measuredAt": "2026-10-28"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 31,
+      "idleCPUm": 3,
+      "versions": {
+        "cloudnative-pg": "0.29.1",
+        "plugin-barman-cloud": "0.8.1"
+      },
+      "measuredAt": "2026-10-28"
+    }
+  }
+}

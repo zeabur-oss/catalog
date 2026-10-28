@@ -1,0 +1,13 @@
+{
+  "template": "meilisearch",
+  "environments": {
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 9,
+      "idleCPUm": 0,
+      "versions": {
+        "getmeili/meilisearch": "v1.55.0"
+      },
+      "measuredAt": "2026-10-28"
+    }
+  }
+}

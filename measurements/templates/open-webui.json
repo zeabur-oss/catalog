@@ -1,0 +1,14 @@
+{
+  "template": "open-webui",
+  "environments": {
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 914,
+      "idleCPUm": 4,
+      "versions": {
+        "ghcr.io/open-webui/open-webui": "main",
+        "ghcr.io/open-webui/pipelines": "main"
+      },
+      "measuredAt": "2026-10-28"
+    }
+  }
+}

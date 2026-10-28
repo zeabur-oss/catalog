@@ -1,25 +1,17 @@
 {
   "component": "metrics/victoria-metrics",
   "environments": {
-    "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 448,
-      "idleCPUm": 33,
+    "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 443,
+      "idleCPUm": 52,
       "versions": {
         "k8s-stack": "0.95.2"
       },
       "measuredAt": "2026-10-11"
     },
-    "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 206,
-      "idleCPUm": 26,
-      "versions": {
-        "k8s-stack": "0.95.2"
-      },
-      "measuredAt": "2026-10-13"
-    },
-    "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 443,
-      "idleCPUm": 52,
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 448,
+      "idleCPUm": 33,
       "versions": {
         "k8s-stack": "0.95.2"
       },
@@ -32,6 +24,14 @@
         "k8s-stack": "0.95.2"
       },
       "measuredAt": "2026-10-11"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 251,
+      "idleCPUm": 25,
+      "versions": {
+        "k8s-stack": "0.96.0"
+      },
+      "measuredAt": "2026-10-28"
     }
   }
 }

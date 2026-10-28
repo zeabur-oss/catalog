@@ -1,0 +1,13 @@
+{
+  "template": "ollama",
+  "environments": {
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 9,
+      "idleCPUm": 0,
+      "versions": {
+        "docker.io/ollama/ollama": "0.40.10"
+      },
+      "measuredAt": "2026-10-28"
+    }
+  }
+}

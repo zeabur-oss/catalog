@@ -1,0 +1,13 @@
+{
+  "template": "hermes-agent",
+  "environments": {
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 255,
+      "idleCPUm": 3,
+      "versions": {
+        "nousresearch/hermes-agent": "v2026.8.16.2"
+      },
+      "measuredAt": "2026-10-28"
+    }
+  }
+}

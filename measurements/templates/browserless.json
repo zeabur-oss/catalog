@@ -1,0 +1,13 @@
+{
+  "template": "browserless",
+  "environments": {
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 293,
+      "idleCPUm": 9,
+      "versions": {
+        "ghcr.io/browserless/chromium": "latest"
+      },
+      "measuredAt": "2026-10-28"
+    }
+  }
+}
