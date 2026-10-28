@@ -242,7 +242,7 @@ spec:
     labels:
       templates.zeabur.com/template: n8n-ai-brain
   instances: 1
-  imageName: ghcr.io/cloudnative-pg/postgresql:17-minimal-trixie@sha256:1f10c3907a0da5ea3da137a3e79315b5d5a67da64212a2ede38f824cf9014f93
+  imageName: ghcr.io/cloudnative-pg/postgresql:17-minimal-trixie@sha256:87f97b9a922e469b91faaaa36ced7c2092cf890efd3622f29095d252b70b9718
   enableSuperuserAccess: false
   enablePDB: true
   postgresUID: 26
