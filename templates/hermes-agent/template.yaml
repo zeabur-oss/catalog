@@ -2,7 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Hermes Agent
-  version: "v2026.7.7.2"
+  version: "v2026.8.16.2"
   description: >-
     Hermes gateway, authenticated API and protected dashboard with
     OpenRouter or another OpenAI-compatible provider.

@@ -33,7 +33,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: n8n
-          image: n8nio/n8n:2.44.6@sha256:d02752c6ab446ae9db8deec2f9cc887c378f77cdcad31650814df936b7386dfb
+          image: n8nio/n8n:2.45.1@sha256:d099edfa840d4b9c4a68f2ee4c0f4b6dad49d5d1237c7f1203ef48d7e6e7b4a5
           env:
             - {name: DB_TYPE, value: postgresdb}
             - {name: DB_POSTGRESDB_HOST, value: n8n-db-rw}
@@ -200,7 +200,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: runners
-          image: n8nio/runners:2.44.6@sha256:255e69ed23d8b3866e593f6e105e7e12cafc81c4d1966a8f8702115af1032461
+          image: n8nio/runners:2.45.1@sha256:b31e505e6f41ce11388ce0a7ada5eebfb973d80cd58110ba7e8c087e4c478eee
           env:
             - {name: N8N_RUNNERS_TASK_BROKER_URI, value: 'http://n8n-broker:5679'}
             - name: N8N_RUNNERS_AUTH_TOKEN
@@ -242,7 +242,7 @@ spec:
     labels:
       templates.zeabur.com/template: n8n-ai-brain
   instances: 1
-  imageName: ghcr.io/cloudnative-pg/postgresql:17-minimal-trixie@sha256:1f10c3907a0da5ea3da137a3e79315b5d5a67da64212a2ede38f824cf9014f93
+  imageName: ghcr.io/cloudnative-pg/postgresql:17-minimal-trixie@sha256:87f97b9a922e469b91faaaa36ced7c2092cf890efd3622f29095d252b70b9718
   enableSuperuserAccess: false
   enablePDB: true
   postgresUID: 26

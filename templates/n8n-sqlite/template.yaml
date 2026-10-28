@@ -2,7 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: n8n SQLite
-  version: "2.44.6"
+  version: "2.45.1"
   description: >-
     n8n 2.44.6 with external JavaScript/Python task runner and SQLite
     persistence. Licensed under the n8n Sustainable Use License

@@ -2,7 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: n8n (AI Brain)
-  version: "2.44.6"
+  version: "2.45.1"
   description: >-
     Workflow automation with PostgreSQL17 and isolated external code runners.
     Licensed under the n8n Sustainable Use License
