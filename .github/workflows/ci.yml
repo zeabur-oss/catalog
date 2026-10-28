@@ -1,7 +1,9 @@
-# L0 on every pull request: unit tests, validate, render, template lint and a
-# server-side dry run on a local API server. L1 in the merge queue and on main: install and
-# smoke test what changed and what installs it, in groups. CONTRIBUTING.md
-# lists what each tier checks. L2 is nightly.yml.
+# L0 on every pull request, in the merge queue and on main: the jobs of scripts/ci.sh (Go tests,
+# lint, validate, render, template lint, a server-side dry run on a local API server and
+# nix build .#release), run by zeabur-oss/.github's shared CI, and the DCO check. L1 in the merge
+# queue and on main: install and smoke test what changed and what installs it, in groups; the
+# shared CI has no dynamic matrix, so L1 stays here. CONTRIBUTING.md lists what each tier checks.
+# L2 is e2e.yml, which nightly.yml and release.yml call. release.yml calls this workflow too.
 name: ci
 
 on:
@@ -9,45 +11,27 @@ on:
   merge_group:
   push:
     branches: [main]
+  workflow_call:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   l0:
-    runs-on: ubuntu-26.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-      - name: DCO sign-off
-        if: github.event_name == 'pull_request'
-        run: |
-          fail=0
-          for c in $(git rev-list --no-merges '${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}'); do
-            author=$(git log -1 --format='%an <%ae>' "$c")
-            if ! git log -1 --format='%(trailers:key=Signed-off-by,valueonly)' "$c" | grep -qF "$author"; then
-              echo "::error::commit $c has no 'Signed-off-by: $author' (use git commit -s)"
-              fail=1
-            fi
-          done
-          exit $fail
-      - uses: ./.github/actions/setup
-      - run: nix develop -c go test ./...
-      - name: Validate, render, template lint, server-side dry run
-        run: nix develop -c go run ./tools/cmd/catalog e2e -tier l0
-      - run: nix build .#release
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: release
-          path: result/
+    uses: zeabur-oss/.github/.github/workflows/ci.yml@9d500376d4e7202c9343656fb6b85dc2eba26dd3 # main
+    with:
+      runner: ubuntu-26.04
 
+  dco:
+    uses: zeabur-oss/.github/.github/workflows/dco.yml@9d500376d4e7202c9343656fb6b85dc2eba26dd3 # main
+
+  # Not when release.yml calls this workflow: L2 there tests everything L1 would.
   l1-matrix:
-    if: github.event_name != 'pull_request'
+    if: github.event_name == 'merge_group' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-slim
     outputs:
       matrix: ${{ steps.list.outputs.matrix }}

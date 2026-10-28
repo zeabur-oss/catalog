@@ -16,7 +16,7 @@ L0 在每個 pull request 執行。L1 在合併佇列與合併到 `main` 後執�
 
 ## L0：檢查每個 pull request
 
-`ci.yml` 用單一 job 依序執行下列檢查。
+`ci.yml` 以 [`scripts/ci.sh`](https://github.com/zeabur-oss/catalog/blob/main/scripts/ci.sh) 的各個 job 執行下列檢查。在本機用 `scripts/ci.sh <job>` 執行其中一個，`scripts/ci.sh --list` 會列出所有 job。
 
 <Steps>
 

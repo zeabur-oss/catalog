@@ -46,6 +46,8 @@ existing branch: `git rebase --signoff main`, then force-push.
 Run the same tiers with `go run ./tools/cmd/catalog e2e -tier l0`,
 `-tier l1 <ids>` or `-tier l2 <id>`. L0 needs no Docker; L1 and L2 create kind
 clusters on a Linux machine with Docker.
+`scripts/ci.sh <job>` runs one pull request job as CI does, in the dev shell;
+`scripts/ci.sh --list` lists them.
 
 ## License
 

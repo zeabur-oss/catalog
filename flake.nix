@@ -74,6 +74,8 @@
             etcd
             cosign
             jq
+            shellcheck
+            actionlint
             yq-go
           ];
         };

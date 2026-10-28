@@ -16,7 +16,7 @@ L0 在每个 pull request 中运行；L1 在合并队列中和合并到 `main` �
 
 ## L0：检查每个 pull request
 
-`ci.yml` 用单个 job 按顺序运行以下检查。
+`ci.yml` 以 [`scripts/ci.sh`](https://github.com/zeabur-oss/catalog/blob/main/scripts/ci.sh) 的各个 job 运行以下检查。在本地用 `scripts/ci.sh <job>` 运行其中一个，`scripts/ci.sh --list` 会列出所有 job。
 
 <Steps>
 

@@ -9,6 +9,8 @@ Data format and how to add a component or template: `docs/contribute/add-compone
 `docs/reference/template-standards.mdx`. Pull request rules: `CONTRIBUTING.md`.
 
 ## Checks (what CI runs)
+Each pull request job is `scripts/ci.sh <job>` (`scripts/ci.sh --list`); it enters the dev shell itself.
+The release stages are `scripts/release.sh`. Underneath:
 ```sh
 nix develop -c go test ./...
 nix develop -c go run ./tools/cmd/catalog validate   # schema, licences, references, value comments
