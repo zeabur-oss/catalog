@@ -342,7 +342,9 @@ func (t *Tester) installRelease(r *run, c *Component, rel Release) error {
 		}); err != nil {
 			return err
 		}
-		if !r.releases[key] {
+		// The namespace is shared, so its default account goes with the
+		// namespace, not with one component.
+		if !r.releases[key] && !rel.IsDefaultAccount() {
 			r.releases[key] = true
 			r.undo = append(r.undo, func() error {
 				_, err := Run(manifest, "kubectl", "delete", "-f", "-", "--ignore-not-found", "--wait", "--timeout=5m")

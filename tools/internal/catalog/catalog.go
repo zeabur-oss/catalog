@@ -191,6 +191,12 @@ func Load(root string) (*Catalog, error) {
 	return cat, nil
 }
 
+const defaultAccountPrefix = "default-account-"
+
+// IsDefaultAccount reports whether the release is a namespace's default
+// ServiceAccount, which every component of the namespace carries.
+func (r Release) IsDefaultAccount() bool { return strings.HasPrefix(r.Name, defaultAccountPrefix) }
+
 // addDefaultAccounts puts releases first that give each of the component's
 // namespaces a default ServiceAccount mounting no token, so a Pod that names no
 // account reaches nothing in the API. kube-system belongs to the distribution.
@@ -203,7 +209,7 @@ func (c *Component) addDefaultAccounts() {
 		}
 		seen[r.Namespace] = true
 		added = append(added, Release{
-			Name:      "default-account-" + r.Namespace,
+			Name:      defaultAccountPrefix + r.Namespace,
 			Namespace: r.Namespace,
 			Manifests: fmt.Sprintf("apiVersion: v1\nkind: ServiceAccount\nmetadata:\n  name: default\n  namespace: %s\nautomountServiceAccountToken: false\n", r.Namespace),
 		})
