@@ -1,6 +1,22 @@
 {
   "component": "databases/percona-mongodb",
   "environments": {
+    "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
+      "idleMemoryMiB": 18,
+      "idleCPUm": 1,
+      "versions": {
+        "psmdb-operator": "1.23.2"
+      },
+      "measuredAt": "2026-10-29"
+    },
+    "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
+      "idleMemoryMiB": 19,
+      "idleCPUm": 1,
+      "versions": {
+        "psmdb-operator": "1.23.2"
+      },
+      "measuredAt": "2026-10-29"
+    },
     "multi-node-amd64-v1.36.4": {
       "idleMemoryMiB": 32,
       "idleCPUm": 2,

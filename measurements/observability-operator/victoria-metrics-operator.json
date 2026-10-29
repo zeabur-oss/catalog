@@ -26,8 +26,8 @@
       "measuredAt": "2026-10-11"
     },
     "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 19,
-      "idleCPUm": 1,
+      "idleMemoryMiB": 20,
+      "idleCPUm": 2,
       "versions": {
         "operator": "0.68.1"
       },

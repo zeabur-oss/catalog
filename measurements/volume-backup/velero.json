@@ -26,8 +26,8 @@
       "measuredAt": "2026-10-11"
     },
     "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 23,
-      "idleCPUm": 1,
+      "idleMemoryMiB": 22,
+      "idleCPUm": 0,
       "versions": {
         "velero": "12.2.1"
       },

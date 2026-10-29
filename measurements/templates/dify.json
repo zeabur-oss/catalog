@@ -2,8 +2,8 @@
   "template": "dify",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 1700,
-      "idleCPUm": 43,
+      "idleMemoryMiB": 1697,
+      "idleCPUm": 24,
       "versions": {
         "docker.dragonflydb.io/dragonflydb/dragonfly": "v2.0.2",
         "docker.io/langgenius/dify-api": "1.18.0",

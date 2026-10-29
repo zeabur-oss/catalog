@@ -2,8 +2,8 @@
   "template": "openclaw-browser-sandbox",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 136,
-      "idleCPUm": 2,
+      "idleMemoryMiB": 137,
+      "idleCPUm": 0,
       "versions": {
         "ghcr.io/canyugs/openclaw-sandbox-browser": "edcc8e5"
       },
