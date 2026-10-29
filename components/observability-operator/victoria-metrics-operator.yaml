@@ -34,6 +34,11 @@ releases:
       image:
         repository: victoriametrics/operator
         tag: v0.75.0@sha256:78da26b41a819093707be2ab6a65a5dc19f43d58ec52f30b49a545c2c6b7bd55
+      # The operator and the cleanup Job share this container context, which lacks a seccomp profile and runAsNonRoot; Pod Security restricted requires both.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile: {type: RuntimeDefault}
       admissionWebhooks:
         certManager:
           # cert-manager issues the webhook certificate, so every render is identical.

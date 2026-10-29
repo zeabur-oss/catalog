@@ -35,6 +35,11 @@ releases:
       - ghcr.io/kedacore/http-add-on-operator
       - ghcr.io/kedacore/http-add-on-scaler
       - ghcr.io/kedacore/http-add-on-interceptor
+    values: |
+      # The chart's pod context lacks runAsNonRoot and seccomp, which Pod Security restricted requires.
+      podSecurityContext:
+        runAsNonRoot: true
+        seccompProfile: {type: RuntimeDefault}
     profiles:
       single-node: |
         interceptor:

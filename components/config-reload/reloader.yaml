@@ -43,6 +43,11 @@ releases:
         ignoreCronJobs: true
         # Tenants opt in per workload; a namespace list would differ per cluster.
         watchGlobally: true
+        deployment:
+          # The namespace enforces Pod Security restricted.
+          containerSecurityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
     profiles:
       single-node: |
         reloader:

@@ -2,6 +2,7 @@ package templates_test
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -154,5 +155,32 @@ func TestUnauthenticatedServiceNeedsIngressPolicy(t *testing.T) {
 	other.Security.Unauthenticated = []string{"missing"}
 	if err := templates.Safety(other, []byte(safeManifest), "test"); !errors.Is(err, templates.ErrUnknownService) {
 		t.Fatalf("unknown service: got %v", err)
+	}
+}
+
+func TestCheckPodSecurity(t *testing.T) {
+	const pod = `
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: app}
+spec:
+  template:
+    spec:
+      securityContext: {runAsNonRoot: true, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: app
+          image: app
+          securityContext: {%s}
+`
+	const safe = "allowPrivilegeEscalation: false, capabilities: {drop: [ALL]}"
+	if err := templates.CheckPodSecurity([]byte(fmt.Sprintf(pod, safe)), "restricted"); err != nil {
+		t.Fatalf("restricted pod rejected: %v", err)
+	}
+	err := templates.CheckPodSecurity([]byte(fmt.Sprintf(pod, "")), "restricted")
+	if !errors.Is(err, templates.ErrPodSecurity) || !strings.Contains(err.Error(), "allowPrivilegeEscalation") {
+		t.Fatalf("restricted violation not reported: %v", err)
+	}
+	if err := templates.CheckPodSecurity([]byte(fmt.Sprintf(pod, "")), "baseline"); err != nil {
+		t.Fatalf("baseline pod rejected: %v", err)
 	}
 }

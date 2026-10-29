@@ -40,6 +40,14 @@ releases:
       watchAllNamespaces: true
       # Telemetry is on by default and reports to Percona.
       disableTelemetry: true
+      # The chart sets no security context; the namespace enforces Pod Security restricted.
+      podSecurityContext:
+        runAsNonRoot: true
+        seccompProfile: {type: RuntimeDefault}
+      # Pod Security restricted requires both settings.
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities: {drop: [ALL]}
     profiles:
       single-node: |
         resources:

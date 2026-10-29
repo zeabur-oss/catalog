@@ -27,6 +27,15 @@ releases:
     version: 0.15.0
     chartDigest: sha256:dc9682d3d41a92b535e01d0fc2726e9d595eacd22f676ccc3f5333b4c6425624
     values: |
+      # The chart sets no container context and no seccomp profile; the namespace enforces Pod Security restricted.
+      podSecurityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile: {type: RuntimeDefault}
+      # Pod Security restricted requires both settings.
+      containerSecurityContext:
+        allowPrivilegeEscalation: false
+        capabilities: {drop: [ALL]}
       recommender:
         # Produces suggestions from metrics.k8s.io.
         enabled: true

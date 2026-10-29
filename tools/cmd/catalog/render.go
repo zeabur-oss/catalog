@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
+	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
 
 // render runs helm template for every component, release, profile and
@@ -68,6 +69,17 @@ func renderComponents(cat *catalog.Catalog, comps []*catalog.Component, out stri
 						if err == nil && !bytes.Equal(again, manifest) {
 							errs = append(errs, fmt.Errorf("%s/%s %s: output differs between renders; supply generated values as inputs", c.ID, rel.Name, p))
 						}
+					}
+					level := "restricted"
+					if l, ok := c.Security["podSecurity"].(string); ok {
+						level = l
+					}
+					// A privileged component's namespaces enforce no Pod Security level.
+					if priv, _ := c.Security["privileged"].(bool); priv {
+						level = ""
+					}
+					if err := templates.CheckPodSecurity(manifest, level); err != nil {
+						errs = append(errs, fmt.Errorf("%s/%s %s %s: %w", c.ID, rel.Name, p, kv, err))
 					}
 					f := filepath.Join(out, kv, p, c.ID, rel.Name+".yaml")
 					if err := os.MkdirAll(filepath.Dir(f), 0o755); err != nil {

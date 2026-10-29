@@ -33,6 +33,9 @@ releases:
         repository: prometheus/blackbox-exporter
         registry: quay.io
         tag: v0.29.1@sha256:ea1c7aa3ef3f307cd03e85f34abb604478ccb90b567fc690da0cd9776da76b13
+      # The chart's container context is restricted already; only the seccomp profile is missing.
+      podSecurityContext:
+        seccompProfile: {type: RuntimeDefault}
       config:
         modules:
           # Uptime: a 2xx after redirects, IPv6 then IPv4.
