@@ -1,0 +1,13 @@
+{
+  "template": "openlist",
+  "environments": {
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 17,
+      "idleCPUm": 0,
+      "versions": {
+        "openlistteam/openlist": "latest-aio"
+      },
+      "measuredAt": "2026-10-29"
+    }
+  }
+}

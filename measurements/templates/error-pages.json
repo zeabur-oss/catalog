@@ -1,0 +1,13 @@
+{
+  "template": "error-pages",
+  "environments": {
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 2,
+      "idleCPUm": 0,
+      "versions": {
+        "docker.io/nginxinc/nginx-unprivileged": "1.30.5-alpine-slim"
+      },
+      "measuredAt": "2026-10-29"
+    }
+  }
+}

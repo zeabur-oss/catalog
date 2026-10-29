@@ -1,0 +1,13 @@
+{
+  "template": "nginx",
+  "environments": {
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 5,
+      "idleCPUm": 0,
+      "versions": {
+        "nginxinc/nginx-unprivileged": "1.31-alpine"
+      },
+      "measuredAt": "2026-10-29"
+    }
+  }
+}

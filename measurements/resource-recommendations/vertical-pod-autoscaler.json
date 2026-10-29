@@ -1,24 +1,16 @@
 {
   "component": "resource-recommendations/vertical-pod-autoscaler",
   "environments": {
-    "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 16,
-      "idleCPUm": 1,
-      "versions": {
-        "vpa": "0.13.0"
-      },
-      "measuredAt": "2026-10-11"
-    },
-    "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 17,
-      "idleCPUm": 1,
-      "versions": {
-        "vpa": "0.13.0"
-      },
-      "measuredAt": "2026-10-11"
-    },
     "multi-node-amd64-v1.36.4": {
       "idleMemoryMiB": 18,
+      "idleCPUm": 1,
+      "versions": {
+        "vpa": "0.13.0"
+      },
+      "measuredAt": "2026-10-11"
+    },
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 16,
       "idleCPUm": 1,
       "versions": {
         "vpa": "0.13.0"
@@ -32,6 +24,14 @@
         "vpa": "0.13.0"
       },
       "measuredAt": "2026-10-11"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 17,
+      "idleCPUm": 1,
+      "versions": {
+        "vpa": "0.15.0"
+      },
+      "measuredAt": "2026-10-29"
     }
   }
 }

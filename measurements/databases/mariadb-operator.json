@@ -1,0 +1,41 @@
+{
+  "component": "databases/mariadb-operator",
+  "environments": {
+    "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 60,
+      "idleCPUm": 3,
+      "versions": {
+        "mariadb-operator": "26.10.1",
+        "mariadb-operator-crds": "26.10.1"
+      },
+      "measuredAt": "2026-10-29"
+    },
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 60,
+      "idleCPUm": 2,
+      "versions": {
+        "mariadb-operator": "26.10.1",
+        "mariadb-operator-crds": "26.10.1"
+      },
+      "measuredAt": "2026-10-29"
+    },
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 37,
+      "idleCPUm": 1,
+      "versions": {
+        "mariadb-operator": "26.10.1",
+        "mariadb-operator-crds": "26.10.1"
+      },
+      "measuredAt": "2026-10-29"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 37,
+      "idleCPUm": 1,
+      "versions": {
+        "mariadb-operator": "26.10.1",
+        "mariadb-operator-crds": "26.10.1"
+      },
+      "measuredAt": "2026-10-29"
+    }
+  }
+}

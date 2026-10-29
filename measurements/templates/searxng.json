@@ -1,0 +1,13 @@
+{
+  "template": "searxng",
+  "environments": {
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 99,
+      "idleCPUm": 0,
+      "versions": {
+        "searxng/searxng": "2026.10.24-ef0ec03da"
+      },
+      "measuredAt": "2026-10-29"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "template": "sillytavern",
+  "environments": {
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 138,
+      "idleCPUm": 0,
+      "versions": {
+        "ghcr.io/sillytavern/sillytavern": "1.19.0"
+      },
+      "measuredAt": "2026-10-29"
+    }
+  }
+}

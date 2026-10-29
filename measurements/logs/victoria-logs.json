@@ -1,25 +1,25 @@
 {
   "component": "logs/victoria-logs",
   "environments": {
-    "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 38,
-      "idleCPUm": 3,
-      "measuredAt": "2026-10-11"
-    },
-    "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 35,
-      "idleCPUm": 2,
-      "measuredAt": "2026-10-13"
-    },
     "multi-node-amd64-v1.36.4": {
       "idleMemoryMiB": 32,
       "idleCPUm": 5,
+      "measuredAt": "2026-10-11"
+    },
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 38,
+      "idleCPUm": 3,
       "measuredAt": "2026-10-11"
     },
     "single-node-amd64-v1.36.4": {
       "idleMemoryMiB": 38,
       "idleCPUm": 3,
       "measuredAt": "2026-10-11"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 29,
+      "idleCPUm": 2,
+      "measuredAt": "2026-10-29"
     }
   }
 }

@@ -1,0 +1,10 @@
+{
+  "template": "postgresql-pgvector",
+  "environments": {
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 51,
+      "idleCPUm": 5,
+      "measuredAt": "2026-10-29"
+    }
+  }
+}

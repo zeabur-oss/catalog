@@ -1,24 +1,16 @@
 {
   "component": "volume-backup/velero",
   "environments": {
-    "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 78,
-      "idleCPUm": 1,
-      "versions": {
-        "velero": "12.2.1"
-      },
-      "measuredAt": "2026-10-11"
-    },
-    "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 38,
-      "idleCPUm": 1,
-      "versions": {
-        "velero": "12.2.1"
-      },
-      "measuredAt": "2026-10-11"
-    },
     "multi-node-amd64-v1.36.4": {
       "idleMemoryMiB": 52,
+      "idleCPUm": 1,
+      "versions": {
+        "velero": "12.2.1"
+      },
+      "measuredAt": "2026-10-11"
+    },
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 78,
       "idleCPUm": 1,
       "versions": {
         "velero": "12.2.1"
@@ -32,6 +24,14 @@
         "velero": "12.2.1"
       },
       "measuredAt": "2026-10-11"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 23,
+      "idleCPUm": 1,
+      "versions": {
+        "velero": "12.2.1"
+      },
+      "measuredAt": "2026-10-29"
     }
   }
 }

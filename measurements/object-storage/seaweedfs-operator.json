@@ -1,0 +1,37 @@
+{
+  "component": "object-storage/seaweedfs-operator",
+  "environments": {
+    "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 39,
+      "idleCPUm": 1,
+      "versions": {
+        "seaweedfs-operator": "0.1.43"
+      },
+      "measuredAt": "2026-10-29"
+    },
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 39,
+      "idleCPUm": 1,
+      "versions": {
+        "seaweedfs-operator": "0.1.43"
+      },
+      "measuredAt": "2026-10-29"
+    },
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 26,
+      "idleCPUm": 1,
+      "versions": {
+        "seaweedfs-operator": "0.1.43"
+      },
+      "measuredAt": "2026-10-29"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 27,
+      "idleCPUm": 1,
+      "versions": {
+        "seaweedfs-operator": "0.1.43"
+      },
+      "measuredAt": "2026-10-29"
+    }
+  }
+}

@@ -1,25 +1,17 @@
 {
   "component": "runtime-security/falco",
   "environments": {
-    "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 169,
-      "idleCPUm": 17,
-      "versions": {
-        "falco": "9.2.0"
-      },
-      "measuredAt": "2026-10-11"
-    },
-    "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 55,
-      "idleCPUm": 4,
-      "versions": {
-        "falco": "9.2.0"
-      },
-      "measuredAt": "2026-10-11"
-    },
     "multi-node-amd64-v1.36.4": {
       "idleMemoryMiB": 154,
       "idleCPUm": 30,
+      "versions": {
+        "falco": "9.2.0"
+      },
+      "measuredAt": "2026-10-11"
+    },
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 169,
+      "idleCPUm": 17,
       "versions": {
         "falco": "9.2.0"
       },
@@ -32,6 +24,15 @@
         "falco": "9.2.0"
       },
       "measuredAt": "2026-10-11"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 71,
+      "idleCPUm": 5,
+      "versions": {
+        "falco": "9.2.1",
+        "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+      },
+      "measuredAt": "2026-10-29"
     }
   }
 }

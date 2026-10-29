@@ -1,24 +1,16 @@
 {
   "component": "uptime-probes/blackbox-exporter",
   "environments": {
-    "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 9,
+    "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 8,
       "idleCPUm": 0,
       "versions": {
         "blackbox-exporter": "11.20.0"
       },
       "measuredAt": "2026-10-11"
     },
-    "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 4,
-      "idleCPUm": 0,
-      "versions": {
-        "blackbox-exporter": "11.20.0"
-      },
-      "measuredAt": "2026-10-13"
-    },
-    "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 8,
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 9,
       "idleCPUm": 0,
       "versions": {
         "blackbox-exporter": "11.20.0"
@@ -32,6 +24,14 @@
         "blackbox-exporter": "11.20.0"
       },
       "measuredAt": "2026-10-11"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 4,
+      "idleCPUm": 0,
+      "versions": {
+        "blackbox-exporter": "11.20.2"
+      },
+      "measuredAt": "2026-10-29"
     }
   }
 }

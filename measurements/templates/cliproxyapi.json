@@ -1,0 +1,13 @@
+{
+  "template": "cliproxyapi",
+  "environments": {
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 17,
+      "idleCPUm": 0,
+      "versions": {
+        "eceasy/cli-proxy-api": "v8.0.41"
+      },
+      "measuredAt": "2026-10-29"
+    }
+  }
+}

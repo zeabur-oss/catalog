@@ -1,0 +1,19 @@
+{
+  "template": "dify",
+  "environments": {
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 1700,
+      "idleCPUm": 43,
+      "versions": {
+        "docker.dragonflydb.io/dragonflydb/dragonfly": "v2.0.2",
+        "docker.io/langgenius/dify-api": "1.18.0",
+        "docker.io/langgenius/dify-plugin-daemon": "0.6.12-local",
+        "docker.io/langgenius/dify-sandbox": "0.2.15",
+        "docker.io/langgenius/dify-web": "1.18.0",
+        "docker.io/nginxinc/nginx-unprivileged": "1.31.7-alpine",
+        "docker.io/ubuntu/squid": "6.6-24.04_beta"
+      },
+      "measuredAt": "2026-10-29"
+    }
+  }
+}

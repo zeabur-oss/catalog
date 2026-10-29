@@ -1,0 +1,16 @@
+{
+  "template": "librechat",
+  "environments": {
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 771,
+      "idleCPUm": 44,
+      "versions": {
+        "docker.io/getmeili/meilisearch": "v1.55.0",
+        "docker.io/percona/percona-server-mongodb": "8.0.32-14",
+        "ghcr.io/danny-avila/librechat-dev": "latest",
+        "ghcr.io/danny-avila/librechat-rag-api-dev-lite": "latest"
+      },
+      "measuredAt": "2026-10-29"
+    }
+  }
+}
