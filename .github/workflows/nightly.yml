@@ -1,6 +1,7 @@
 # Every night and on demand: L2, the full e2e matrix. Opens a pull request
 # with the idle memory and CPU it measured for components and templates, so
-# measurements/ is only ever written by CI.
+# measurements/ is only ever written by CI. The pull request is zeabur-oss-bot's:
+# GitHub signs its commit, and CI runs on it, which it would not for GITHUB_TOKEN.
 name: nightly
 
 on:
@@ -19,10 +20,19 @@ jobs:
     needs: e2e
     if: ${{ !cancelled() }}
     runs-on: ubuntu-slim
+    # Holds zeabur-oss-bot's key (see vendorhash.yml).
+    environment: vendorhash
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
     steps:
+      - id: token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.ZEABUR_OSS_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.ZEABUR_OSS_BOT_PRIVATE_KEY }}
+          repositories: catalog
+          permission-contents: write
+          permission-pull-requests: write
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -40,14 +50,14 @@ jobs:
           go run ./tools/cmd/catalog merge downloaded
       - uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
+          token: ${{ steps.token.outputs.token }}
+          # Commits through the API as zeabur-oss-bot, which the sign-off must name for DCO.
+          sign-commits: true
           branch: ci/measurements
-          # The author defaults to whoever triggered the run; it must match the
-          # sign-off for the DCO check.
-          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           title: "chore: update measured resource usage"
           commit-message: |
             chore: update measured resource usage
 
-            Signed-off-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+            Signed-off-by: zeabur-oss-bot[bot] <349476329+zeabur-oss-bot[bot]@users.noreply.github.com>
           body: Idle memory and CPU of components and templates, measured by the e2e workflow on single-node and multi-node kind.
           add-paths: measurements/
