@@ -52,8 +52,11 @@ releases:
       spec:
         k8sCollector:
           enabled: true
-          # Namespace, pod and container suffice; labels add cardinality.
-          includePodLabels: false
+        # Namespace, pod and container suffice; labels add cardinality. The
+        # operator (v0.75.0) passes no flag for k8sCollector.includePodLabels:
+        # false, and vlagent's default is true.
+        extraArgs:
+          kubernetesCollector.includePodLabels: "false"
         remoteWrite:
           - url: http://vlsingle-victoria-logs.observability.svc:9428/internal/insert
         resources:
