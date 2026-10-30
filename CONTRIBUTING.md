@@ -37,9 +37,8 @@ existing branch: `git rebase --signoff main`, then force-push.
 - **Every pull request (L0, about 5 minutes):** Go tests, schema and license
   checks, rendering, template safety rules, and a dry run of every manifest
   against a real API server. Nothing is installed.
-- **In the merge queue and after a merge (L1, about 15 to 20 minutes):** what
-  you changed, and what installs it, is installed on one node and smoke
-  tested.
+- **After a merge to `main` (L1, about 15 to 20 minutes):** what you changed,
+  and what installs it, is installed on one node and smoke tested.
 - **Every night and before a release (L2):** everything on one and three
   nodes, amd64 and arm64, with upgrades from the last release, idle memory and
   CPU, uninstall and leftover checks.
