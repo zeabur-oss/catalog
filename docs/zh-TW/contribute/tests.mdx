@@ -1,10 +1,10 @@
 ---
 title: 測試與 CI
 description: 了解各層 CI 的執行時機與檢查內容，並設定範本測試輸入。
-source: "cb5e9faa5f01"
+source: "32bca73a75a7"
 ---
 
-L0 在每個 pull request 執行。L1 在合併佇列與合併到 `main` 後執行。L2 每晚（nightly）執行，打發行 tag 前要確認那個 commit 通過了 L2。各層分工檢查，後續層級會補上前一層沒涵蓋的項目。你也能用 `catalog e2e -tier l0|l1|l2` 執行與 CI 相同的測試。
+L0 在每個 pull request 執行。L1 在合併到 `main` 後執行。L2 每晚（nightly）執行，打發行 tag 前要確認那個 commit 通過了 L2。各層分工檢查，後續層級會補上前一層沒涵蓋的項目。你也能用 `catalog e2e -tier l0|l1|l2` 執行與 CI 相同的測試。
 
 ## 開始前
 
@@ -81,7 +81,7 @@ L0 在每個 pull request 執行。L1 在合併佇列與合併到 `main` 後執�
 
 ## L1：測試變更影響的元件與範本
 
-`ci.yml` 在合併佇列與合併到 `main` 後，會在單節點 amd64 kind 叢集安裝下列項目，再執行煙霧測試（smoke check）：
+`ci.yml` 在合併到 `main` 後，會在單節點 amd64 kind 叢集安裝下列項目，再執行煙霧測試（smoke check）：
 
 - 有變更的元件與範本。
 - 會安裝變更元件的元件與範本。
