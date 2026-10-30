@@ -110,9 +110,9 @@ security:
   summary: "The app pods run as non-root with read-only images and no API token. The Percona MongoDB pods use TLS and authentication and stay restricted, with one exception: a writable root filesystem for TLS files that are hardcoded to /tmp. CloudNativePG uses limited tokens that the operator manages. MongoDB requires client certificates. LibreChat presents a 90-day client certificate from the cluster CA, cert-manager renews it, and LibreChat restarts when it changes."
   locales:
     zh-TW:
-      summary: "應用程式 Pod 以非 root 身分執行，映像檔唯讀，沒有 API token。使用 TLS 和驗證的 Percona MongoDB Pod 維持受限設定，只有一個例外：根檔案系統可寫入，因為 TLS 檔案寫死放在 /tmp。CloudNativePG 使用 operator 管理、權限受限的 token。MongoDB 要求用戶端憑證。LibreChat 會出示叢集 CA 簽發、有效期 90 天的用戶端憑證，由 cert-manager 負責更新，憑證一換，LibreChat 就會重新啟動。"
+      summary: "應用程式 Pod 以非 root 身分執行，映像檔唯讀，沒有 API 權杖。使用 TLS 和驗證的 Percona MongoDB Pod 維持受限設定，只有一個例外：根檔案系統可寫入，因為 TLS 檔案寫死放在 /tmp。CloudNativePG 使用 operator 管理、權限受限的權杖。MongoDB 要求用戶端憑證。LibreChat 會出示叢集 CA 簽發、有效期 90 天的用戶端憑證，由 cert-manager 負責更新，憑證一換，LibreChat 就會重新啟動。"
     zh-CN:
-      summary: "应用 Pod 以非 root 身份运行，镜像只读，没有 API token。使用 TLS 和认证的 Percona MongoDB Pod 保持受限配置，只有一个例外：根文件系统可写入，因为 TLS 文件写死放在 /tmp。CloudNativePG 使用 operator 管理、权限受限的 token。MongoDB 要求客户端证书。LibreChat 会出示集群 CA 签发、有效期 90 天的客户端证书，由 cert-manager 负责更新，证书一换，LibreChat 就会重启。"
+      summary: "应用 Pod 以非 root 身份运行，镜像只读，没有 API 令牌。使用 TLS 和认证的 Percona MongoDB Pod 保持受限配置，只有一个例外：根文件系统可写入，因为 TLS 文件写死放在 /tmp。CloudNativePG 使用 operator 管理、权限受限的令牌。MongoDB 要求客户端证书。LibreChat 会出示集群 CA 签发、有效期 90 天的客户端证书，由 cert-manager 负责更新，证书一换，LibreChat 就会重启。"
   risks:
     - risk: "The Percona v1.23.1 entry scripts write TLS files to the hardcoded paths /tmp/tls.pem and /tmp/tls-internal.pem. The custom resource has no way to mount /tmp separately in the main container."
       mitigation: "Only the operator-managed pods get this explicit exception, readOnlyRootFilesystem=false. They still require TLS, run as UID 1001, drop all capabilities, allow no escalation and use RuntimeDefault. All ordinary application images stay read-only. Nothing is changed after reconcile, and TLS is never turned off."
@@ -136,17 +136,17 @@ security:
       mitigation: "The catalog operator creates a service account and RBAC permissions for each cluster. The ordinary app pods and the Percona pods have their tokens turned off."
       locales:
         zh-TW:
-          risk: "CloudNativePG 的 instance manager 需要 Kubernetes API 憑證。"
-          mitigation: "目錄裡的 operator 會為每個叢集建立服務帳號和 RBAC 權限。一般應用程式 Pod 和 Percona Pod 的 token 都已停用。"
+          risk: "CloudNativePG 的 instance manager 需要 Kubernetes API 認證資訊。"
+          mitigation: "目錄裡的 operator 會為每個叢集建立服務帳號和 RBAC 權限。一般應用程式 Pod 和 Percona Pod 的權杖都已停用。"
         zh-CN:
           risk: "CloudNativePG 的 instance manager 需要 Kubernetes API 凭证。"
-          mitigation: "目录里的 operator 会为每个集群创建服务账号和 RBAC 权限。普通应用 Pod 和 Percona Pod 的 token 都已停用。"
+          mitigation: "目录里的 operator 会为每个集群创建服务账号和 RBAC 权限。普通应用 Pod 和 Percona Pod 的令牌都已停用。"
     - risk: "Meilisearch has no operator in the catalog. The local files and the databases are also restored from separate points in time."
       mitigation: "Meilisearch runs as a hardened single-replica StatefulSet. Back up the files, MongoDB, pgvector, Meilisearch dumps and the generated Secrets together. Stop the writers so the file backup is consistent. Test a full restore in an isolated namespace, and check login, saved credentials, search and document retrieval."
       locales:
         zh-TW:
           risk: "Meilisearch 在目錄裡沒有 operator。本機檔案和各個資料庫的還原時間點也各不相同。"
-          mitigation: "Meilisearch 以加固過的單副本 StatefulSet 執行。檔案、MongoDB、pgvector、Meilisearch 傾印檔和產生的機密，請一起備份。為了讓檔案備份一致，備份時要先停掉寫入的程式。請在獨立的命名空間測試完整還原，並檢查登入、已儲存的憑證、搜尋和文件擷取是否正常。"
+          mitigation: "Meilisearch 以加固過的單副本 StatefulSet 執行。檔案、MongoDB、pgvector、Meilisearch 傾印檔和產生的機密，請一起備份。為了讓檔案備份一致，備份時要先停掉寫入的程式。請在獨立的命名空間測試完整還原，並檢查登入、已儲存的認證資訊、搜尋和文件擷取是否正常。"
         zh-CN:
           risk: "Meilisearch 在目录里没有 operator。本地文件和各个数据库的恢复时间点也各不相同。"
           mitigation: "Meilisearch 以加固过的单副本 StatefulSet 运行。文件、MongoDB、pgvector、Meilisearch 转储文件和生成的机密，请一起备份。为了让文件备份一致，备份时要先停掉写入的程序。请在独立的命名空间测试完整恢复，并检查登录、已保存的凭证、搜索和文档检索是否正常。"

@@ -61,9 +61,9 @@ security:
   summary: "The rootless image runs as UID 1000 with a read-only root filesystem, no service-account token and all capabilities dropped. Outbound traffic is not limited. Sign-up is closed and the install page is locked."
   locales:
     zh-TW:
-      summary: "免 root 的映像檔以 UID 1000 執行，根檔案系統唯讀，沒有服務帳號 token，所有額外權限都拿掉了。對外連線沒有限制。註冊已關閉，安裝頁面也鎖住了。"
+      summary: "免 root 的映像檔以 UID 1000 執行，根檔案系統唯讀，沒有服務帳號權杖，所有額外權限都拿掉了。對外連線沒有限制。註冊已關閉，安裝頁面也鎖住了。"
     zh-CN:
-      summary: "免 root 的镜像以 UID 1000 运行，根文件系统只读，没有服务账号 token，所有额外权限都去掉了。对外连接没有限制。注册已关闭，安装页面也锁住了。"
+      summary: "免 root 的镜像以 UID 1000 运行，根文件系统只读，没有服务账号令牌，所有额外权限都去掉了。对外连接没有限制。注册已关闭，安装页面也锁住了。"
   risks:
     - risk: "If the install page is not locked, the first visitor can configure the server."
       mitigation: "INSTALL_LOCK is true and the settings come from environment variables. Before Gitea starts, an init container creates the gitea_admin account with the generated password."
@@ -88,10 +88,10 @@ security:
       locales:
         zh-TW:
           risk: "無法使用 SSH 存取 Git。"
-          mitigation: "Ingress 只轉送 HTTP，所以 SSH 伺服器是關閉的。用 HTTPS 搭配密碼或存取 token 來 clone 和 push。"
+          mitigation: "Ingress 只轉送 HTTP，所以 SSH 伺服器是關閉的。用 HTTPS 搭配密碼或存取權杖來 clone 和 push。"
         zh-CN:
           risk: "无法使用 SSH 访问 Git。"
-          mitigation: "Ingress 只转发 HTTP，所以 SSH 服务器是关闭的。用 HTTPS 搭配密码或访问 token 来 clone 和 push。"
+          mitigation: "Ingress 只转发 HTTP，所以 SSH 服务器是关闭的。用 HTTPS 搭配密码或访问令牌来 clone 和 push。"
     - risk: "Webhooks, mirrors and repository migrations make the server send requests to addresses that users choose."
       mitigation: "Gitea blocks private webhook targets by default. The template does not limit outbound traffic. To limit it, add an egress NetworkPolicy. No SMTP server is set up, so Gitea sends no email."
       locales:
@@ -106,10 +106,10 @@ security:
       locales:
         zh-TW:
           risk: "CloudNativePG 的資料庫實例會用 operator 建立的身分呼叫 Kubernetes API。"
-          mitigation: "databases/cloudnative-pg 元件會為每個叢集建立對應的 RBAC 權限。Gitea 的 Pod 沒有 token。"
+          mitigation: "databases/cloudnative-pg 元件會為每個叢集建立對應的 RBAC 權限。Gitea 的 Pod 沒有權杖。"
         zh-CN:
           risk: "CloudNativePG 的数据库实例会用 operator 创建的身份调用 Kubernetes API。"
-          mitigation: "databases/cloudnative-pg 组件会为每个集群创建对应的 RBAC 权限。Gitea 的 Pod 没有 token。"
+          mitigation: "databases/cloudnative-pg 组件会为每个集群创建对应的 RBAC 权限。Gitea 的 Pod 没有令牌。"
     - risk: "Repositories and LFS objects live on the volume, so the database backup does not include them."
       mitigation: "Back up the gitea-data volume separately, for example with gitea dump. Try a restore before you go to production."
       locales:

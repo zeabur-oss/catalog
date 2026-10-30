@@ -106,7 +106,7 @@ security:
       locales:
         zh-TW:
           risk: "代理的工具會啟動子程序，並替高度受信任的使用者執行程式碼。"
-          mitigation: "沒有掛載主機的 socket 或路徑，不用特權模式，也沒有服務帳號憑證。對外連線沒有限制，所以代理的任務可以連到私有位址和雲端 metadata 位址，請加上 egress NetworkPolicy 擋掉它們。惡意的技能、提示詞或網頁內容，可能接管代理的狀態和憑證。每個信任範圍請各用一個命名空間，不信任的使用者請用專用節點。"
+          mitigation: "沒有掛載主機的 socket 或路徑，不用特權模式，也沒有服務帳號認證資訊。對外連線沒有限制，所以代理的任務可以連到私有位址和雲端 metadata 位址，請加上 egress NetworkPolicy 擋掉它們。惡意的技能、提示詞或網頁內容，可能接管代理的狀態和認證資訊。每個信任範圍請各用一個命名空間，不信任的使用者請用專用節點。"
         zh-CN:
           risk: "代理的工具会启动子进程，并替高度可信的用户运行代码。"
           mitigation: "没有挂载主机的 socket 或路径，不用特权模式，也没有服务账号凭证。对外连接没有限制，所以代理的任务可以访问私有地址和云端 metadata 地址，请添加 egress NetworkPolicy 拦截它们。恶意的技能、提示词或网页内容，可能接管代理的状态和凭证。每个信任范围请各用一个命名空间，不可信的用户请用专用节点。"
@@ -114,7 +114,7 @@ security:
       mitigation: "Allow only one writer, and install only skills you trust. Lazy installs are turned off. Take encrypted backups off the node while the gateway is stopped, and rehearse a restore. After a restore, check file ownership, provider access and the messaging allowlists before you send clients back to it. A node-local StorageClass has no high availability and no snapshots."
       locales:
         zh-TW:
-          risk: "保存的狀態裡有服務商憑證、對話、記憶，還有能執行程式碼的技能。"
+          risk: "保存的狀態裡有服務商認證資訊、對話、記憶，還有能執行程式碼的技能。"
           mitigation: "只允許一個寫入者，只安裝你信任的技能。延遲安裝已關閉。在閘道停止時，做加密的備份並存到節點以外的地方，也要演練還原。還原之後，先檢查檔案擁有者、服務商存取權和通訊白名單，再讓用戶端連回來。只存在節點本機的 StorageClass 沒有高可用，也沒有快照。"
         zh-CN:
           risk: "保存的状态里有服务商凭证、对话、记忆，还有能运行代码的技能。"

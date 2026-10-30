@@ -113,7 +113,7 @@ security:
         packages is disabled.
       locales:
         zh-TW:
-          risk: "工作流程的作者可以用到已連接的憑證，公開的 webhook 觸發器也可能被濫用。"
+          risk: "工作流程的作者可以用到已連接的認證資訊，公開的 webhook 觸發器也可能被濫用。"
           mitigation: "擁有者帳號在 n8n 啟動前就建好了，用的是 ownerEmail 和自動產生、放在 app-secrets/owner-password 的密碼，所以沒有訪客能搶走它。編輯器、webhook 和表單，只要連得到網域的人都能開，n8n 本身有登入。想限制誰連得進來，請在服務的網路設定裡加 IP 限制。設計工作流程時，每個 webhook 都要加上驗證。作者權限只給信任的操作人員。這個實例不能當沙箱，不要拿來執行不信任租戶的工作流程。安裝社群套件的功能已關閉。"
         zh-CN:
           risk: "工作流的作者可以用到已连接的凭据，公开的 webhook 触发器也可能被滥用。"

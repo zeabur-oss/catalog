@@ -261,7 +261,7 @@ security:
       locales:
         zh-TW:
           risk: "程式執行器需要 root，才能建立 chroot，並在每次執行時切換成獨立的身分。"
-          mitigation: "這是基準政策唯一的例外。它只拿到最少的權限，使用 RuntimeDefault 和上游內層的 seccomp 過濾。API 金鑰是自動產生的，Pod 裡沒有資料庫憑證，對外只能連到代理，資源也有上限。"
+          mitigation: "這是基準政策唯一的例外。它只拿到最少的權限，使用 RuntimeDefault 和上游內層的 seccomp 過濾。API 金鑰是自動產生的，Pod 裡沒有資料庫認證資訊，對外只能連到代理，資源也有上限。"
         zh-CN:
           risk: "代码运行器需要 root，才能创建 chroot，并在每次运行时切换成独立的身份。"
           mitigation: "这是基线策略唯一的例外。它只拿到最少的权限，使用 RuntimeDefault 和上游内层的 seccomp 过滤。API 密钥是自动生成的，Pod 里没有数据库凭证，对外只能访问代理，资源也有上限。"
