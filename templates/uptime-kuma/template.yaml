@@ -25,9 +25,9 @@ security:
     limited.
   locales:
     zh-TW:
-      summary: "所有工作負載都放在自己的命名空間，不用 root 權限執行，映像檔版本固定，根檔案系統唯讀。它們沒有 Kubernetes token，也沒有額外的 Linux 權限。往外的網路流量沒有限制。"
+      summary: "所有工作負載都放在自己的命名空間，不用 root 權限執行，映像檔版本固定，根檔案系統唯讀。它們沒有 Kubernetes 權杖，也沒有額外的 Linux 權限。往外的網路流量沒有限制。"
     zh-CN:
-      summary: "所有工作负载都放在自己的命名空间，不用 root 权限运行，镜像版本固定，根文件系统只读。它们没有 Kubernetes token，也没有额外的 Linux 权限。向外的网络流量没有限制。"
+      summary: "所有工作负载都放在自己的命名空间，不用 root 权限运行，镜像版本固定，根文件系统只读。它们没有 Kubernetes 令牌，也没有额外的 Linux 权限。向外的网络流量没有限制。"
   risks:
     - risk: The first visitor can claim an installation that is not set up yet.
       mitigation: >-

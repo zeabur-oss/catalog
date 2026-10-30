@@ -53,15 +53,15 @@ security:
   summary: "LiteLLM runs as UID 65534 with a read-only root filesystem, no service-account token and all extra capabilities dropped. Outbound traffic is not limited. Every API call needs the master key or a key that the master key issued."
   locales:
     zh-TW:
-      summary: "LiteLLM 以 UID 65534 執行，根檔案系統唯讀，沒有服務帳號 token，多餘的權限都拿掉了。對外連線沒有限制。每個 API 呼叫都要帶主金鑰，或由主金鑰發出的金鑰。"
+      summary: "LiteLLM 以 UID 65534 執行，根檔案系統唯讀，沒有服務帳號權杖，多餘的權限都拿掉了。對外連線沒有限制。每個 API 呼叫都要帶主金鑰，或由主金鑰發出的金鑰。"
     zh-CN:
-      summary: "LiteLLM 以 UID 65534 运行，根文件系统只读，没有服务账号 token，多余的权限都去掉了。对外连接没有限制。每个 API 调用都要带主密钥，或由主密钥发出的密钥。"
+      summary: "LiteLLM 以 UID 65534 运行，根文件系统只读，没有服务账号令牌，多余的权限都去掉了。对外连接没有限制。每个 API 调用都要带主密钥，或由主密钥发出的密钥。"
   risks:
     - risk: "The master key gives full access to the proxy, to its keys and to the provider credentials it stores."
       mitigation: "Keep the master key for administration only. Give applications virtual keys with budgets and model limits."
       locales:
         zh-TW:
-          risk: "主金鑰可以完整存取代理、代理發出的金鑰，以及它保存的服務商憑證。"
+          risk: "主金鑰可以完整存取代理、代理發出的金鑰，以及它保存的服務商認證資訊。"
           mitigation: "主金鑰只留給管理用。給應用程式使用的，請發出有預算和模型限制的虛擬金鑰。"
         zh-CN:
           risk: "主密钥可以完整访问代理、代理发出的密钥，以及它保存的服务商凭证。"
@@ -80,10 +80,10 @@ security:
       locales:
         zh-TW:
           risk: "CloudNativePG 的資料庫實例會用 operator 建立的身分呼叫 Kubernetes API。"
-          mitigation: "databases/cloudnative-pg 元件會為每個叢集建立對應的 RBAC 權限。LiteLLM 的 Pod 沒有 token。"
+          mitigation: "databases/cloudnative-pg 元件會為每個叢集建立對應的 RBAC 權限。LiteLLM 的 Pod 沒有權杖。"
         zh-CN:
           risk: "CloudNativePG 的数据库实例会用 operator 创建的身份调用 Kubernetes API。"
-          mitigation: "databases/cloudnative-pg 组件会为每个集群创建对应的 RBAC 权限。LiteLLM 的 Pod 没有 token。"
+          mitigation: "databases/cloudnative-pg 组件会为每个集群创建对应的 RBAC 权限。LiteLLM 的 Pod 没有令牌。"
 
 scalability:
   summary: One LiteLLM instance with one PostgreSQL primary.

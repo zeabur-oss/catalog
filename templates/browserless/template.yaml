@@ -38,18 +38,18 @@ security:
   summary: "Browserless runs as a restricted non-root container with a read-only filesystem. Its API needs a token, and the pod has no Kubernetes service-account token. Outbound traffic is not limited. Do not share one instance between tenants you do not trust."
   locales:
     zh-TW:
-      summary: "Browserless 以受限的非 root 身分執行，檔案系統唯讀。API 需要 token 才能呼叫，Pod 也沒有 Kubernetes 服務帳號 token。對外連線沒有限制。不要讓彼此不信任的租戶共用同一個實例。"
+      summary: "Browserless 以受限的非 root 身分執行，檔案系統唯讀。API 需要權杖才能呼叫，Pod 也沒有 Kubernetes 服務帳號權杖。對外連線沒有限制。不要讓彼此不信任的租戶共用同一個實例。"
     zh-CN:
-      summary: "Browserless 以受限的非 root 身份运行，文件系统只读。API 需要 token 才能调用，Pod 也没有 Kubernetes 服务账号 token。对外连接没有限制。不要让互不信任的租户共用同一个实例。"
+      summary: "Browserless 以受限的非 root 身份运行，文件系统只读。API 需要令牌才能调用，Pod 也没有 Kubernetes 服务账号令牌。对外连接没有限制。不要让互不信任的租户共用同一个实例。"
   risks:
     - risk: "The browser starts with --no-sandbox, because upstream launches Chromium that way. If a website exploits the browser, the attacker can take over the container, read its Browserless token and see what other browser sessions show."
       mitigation: "Let only trusted clients call the API. Keep the image patched. For sensitive browsing, run this service in its own tenant namespace on dedicated nodes. Keep the restricted admission policy, and do not grant SYS_ADMIN or host access. Do not share one instance between tenants you do not trust."
       locales:
         zh-TW:
-          risk: "瀏覽器啟動時帶有 --no-sandbox，因為上游就是這樣啟動 Chromium。如果有網站攻破瀏覽器，攻擊者就能控制容器，拿到 Browserless token，也能看到其他瀏覽器工作階段的內容。"
+          risk: "瀏覽器啟動時帶有 --no-sandbox，因為上游就是這樣啟動 Chromium。如果有網站攻破瀏覽器，攻擊者就能控制容器，拿到 Browserless 權杖，也能看到其他瀏覽器工作階段的內容。"
           mitigation: "只讓信任的用戶端呼叫 API。映像檔要持續更新。處理敏感內容時，請把這個服務放在自己的租戶命名空間，並使用專用節點。保留受限的准入政策，不要給 SYS_ADMIN 或主機存取權。不要讓彼此不信任的租戶共用同一個實例。"
         zh-CN:
-          risk: "浏览器启动时带有 --no-sandbox，因为上游就是这样启动 Chromium。如果有网站攻破浏览器，攻击者就能控制容器，拿到 Browserless token，也能看到其他浏览器会话的内容。"
+          risk: "浏览器启动时带有 --no-sandbox，因为上游就是这样启动 Chromium。如果有网站攻破浏览器，攻击者就能控制容器，拿到 Browserless 令牌，也能看到其他浏览器会话的内容。"
           mitigation: "只让可信的客户端调用 API。镜像要持续更新。处理敏感内容时，请把这个服务放在自己的租户命名空间，并使用专用节点。保留受限的准入策略，不要授予 SYS_ADMIN 或主机访问权限。不要让互不信任的租户共用同一个实例。"
     - risk: "Anyone who can use the browser API can make the server open internal addresses (SSRF). Browserless can block private networks by itself, but that is off by default."
       mitigation: "The file protocol, GET-style browser calls and CORS are disabled. The template does not limit outbound traffic, so the browser can still open private, cluster and cloud metadata addresses. Before untrusted clients use the API, add an egress NetworkPolicy that blocks private address ranges."
@@ -73,11 +73,11 @@ security:
       mitigation: "The token is generated at deploy time. Send it in the Authorization header where the client supports it. Limit who can read the Kubernetes Secret and the logs. Strip query strings in any external proxy logs. Rotate the token if it leaks."
       locales:
         zh-TW:
-          risk: "共用的 token 可以執行很強的自動化操作，也可能出現在用戶端網址和存取紀錄裡。"
-          mitigation: "token 在部署時自動產生。用戶端支援時，改用 Authorization 標頭傳送。限制誰能讀取 Kubernetes 機密和紀錄。外部代理伺服器的紀錄要去掉查詢字串。token 一旦外洩就要更換。"
+          risk: "共用的權杖可以執行很強的自動化操作，也可能出現在用戶端網址和存取紀錄裡。"
+          mitigation: "權杖在部署時自動產生。用戶端支援時，改用 Authorization 標頭傳送。限制誰能讀取 Kubernetes 機密和紀錄。外部代理伺服器的紀錄要去掉查詢字串。權杖一旦外洩就要更換。"
         zh-CN:
-          risk: "共用的 token 可以执行很强的自动化操作，也可能出现在客户端 URL 和访问日志里。"
-          mitigation: "token 在部署时自动生成。客户端支持时，改用 Authorization 请求头传送。限制谁能读取 Kubernetes 机密和日志。外部代理的日志要去掉查询字符串。token 一旦泄露就要更换。"
+          risk: "共用的令牌可以执行很强的自动化操作，也可能出现在客户端 URL 和访问日志里。"
+          mitigation: "令牌在部署时自动生成。客户端支持时，改用 Authorization 请求头传送。限制谁能读取 Kubernetes 机密和日志。外部代理的日志要去掉查询字符串。令牌一旦泄露就要更换。"
 
 scalability:
   summary: >-

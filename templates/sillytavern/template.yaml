@@ -36,9 +36,9 @@ security:
     reach it, over HTTPS. Outbound traffic is not limited.
   locales:
     zh-TW:
-      summary: "SillyTavern 不用 root 權限執行，根檔案系統唯讀，沒有 service-account token，也沒有額外的 Linux 權限。只有 Traefik 能透過 HTTPS 連到它。往外的網路流量沒有限制。"
+      summary: "SillyTavern 不用 root 權限執行，根檔案系統唯讀，沒有服務帳號權杖，也沒有額外的 Linux 權限。只有 Traefik 能透過 HTTPS 連到它。往外的網路流量沒有限制。"
     zh-CN:
-      summary: "SillyTavern 不用 root 权限运行，根文件系统只读，没有 service-account token，也没有额外的 Linux 权限。只有 Traefik 能通过 HTTPS 连到它。向外的网络流量没有限制。"
+      summary: "SillyTavern 不用 root 权限运行，根文件系统只读，没有服务账号令牌，也没有额外的 Linux 权限。只有 Traefik 能通过 HTTPS 连到它。向外的网络流量没有限制。"
   risks:
     - risk: >-
         A signed-in user can set up outbound model and API connections, and can

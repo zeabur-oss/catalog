@@ -49,9 +49,9 @@ security:
   summary: "LobeChat runs as non-root with a read-only root filesystem and the restricted Pod Security level. It has no Kubernetes token, and ingress uses TLS. Outbound traffic is not limited."
   locales:
     zh-TW:
-      summary: "LobeChat 以非 root 身分執行，根檔案系統唯讀，套用 restricted 等級的 Pod Security。它沒有 Kubernetes token，Ingress 使用 TLS。對外連線沒有限制。"
+      summary: "LobeChat 以非 root 身分執行，根檔案系統唯讀，套用 restricted 等級的 Pod Security。它沒有 Kubernetes 權杖，Ingress 使用 TLS。對外連線沒有限制。"
     zh-CN:
-      summary: "LobeChat 以非 root 身份运行，根文件系统只读，应用 restricted 级别的 Pod Security。它没有 Kubernetes token，Ingress 使用 TLS。对外连接没有限制。"
+      summary: "LobeChat 以非 root 身份运行，根文件系统只读，应用 restricted 级别的 Pod Security。它没有 Kubernetes 令牌，Ingress 使用 TLS。对外连接没有限制。"
   risks:
     - risk: "The LobeHub Community License limits how you may distribute derivative works."
       mitigation: "The template description names the license. The template runs the unmodified image with its notices intact. Get commercial permission before you distribute a derivative."

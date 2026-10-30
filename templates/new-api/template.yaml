@@ -66,7 +66,7 @@ security:
       locales:
         zh-TW:
           risk: "公開網站如果還沒完成初始設定，第一個來的訪客就能接管管理員帳號。"
-          mitigation: "Pod 準備好接收流量之前，PostStart hook 會先用自動產生的密碼呼叫官方支援的 /api/setup。這個設定流程不會留下任何已知的 root 憑證。"
+          mitigation: "Pod 準備好接收流量之前，PostStart hook 會先用自動產生的密碼呼叫官方支援的 /api/setup。這個設定流程不會留下任何已知的 root 認證資訊。"
         zh-CN:
           risk: "公开网站如果还没完成初始设置，第一个来的访客就能接管管理员账号。"
           mitigation: "Pod 就绪可以接收流量之前，PostStart hook 会先用自动生成的密码调用官方支持的 /api/setup。这个设置流程不会留下任何已知的 root 凭据。"

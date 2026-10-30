@@ -122,9 +122,9 @@ security:
   summary: "Ghost's workloads run in their own namespace, pinned by image digest, as non-root with a read-only root filesystem, no API token and extra capabilities dropped. Outbound traffic is not limited."
   locales:
     zh-TW:
-      summary: "Ghost 的工作負載在自己的命名空間裡執行，映像檔以 digest 固定版本，以非 root 身分執行，根檔案系統唯讀，沒有 API token，多餘的權限也都拿掉了。對外連線沒有限制。"
+      summary: "Ghost 的工作負載在自己的命名空間裡執行，映像檔以 digest 固定版本，以非 root 身分執行，根檔案系統唯讀，沒有 API 權杖，多餘的權限也都拿掉了。對外連線沒有限制。"
     zh-CN:
-      summary: "Ghost 的工作负载在自己的命名空间里运行，镜像以 digest 固定版本，以非 root 身份运行，根文件系统只读，没有 API token，多余的权限也都去掉了。对外连接没有限制。"
+      summary: "Ghost 的工作负载在自己的命名空间里运行，镜像以 digest 固定版本，以非 root 身份运行，根文件系统只读，没有 API 令牌，多余的权限也都去掉了。对外连接没有限制。"
   risks:
     - risk: "If Ghost has not been set up yet, the first visitor can create the site owner."
       mitigation: "As soon as Ghost answers, the ghost-setup Job creates the owner from ownerEmail and the generated password in ghost-secrets/admin-password. It checks every two seconds, so the window before it runs is short. /ghost and its APIs are open to anyone who can reach the domain, and Ghost has its own sign-in. To limit who can reach /ghost, add an IP limit in the service's network settings."
@@ -149,7 +149,7 @@ security:
       locales:
         zh-TW:
           risk: "Ghost 寄交易通知信和電子報，要靠外部服務。"
-          mitigation: "提供現成的 SMTP 機密。大量寄送電子報時，在 Ghost 裡設定 Mailgun。備份裡的服務商憑證要妥善保護。範本不含自架的 ActivityPub 和 Tinybird 分析。"
+          mitigation: "提供現成的 SMTP 機密。大量寄送電子報時，在 Ghost 裡設定 Mailgun。備份裡的服務商認證資訊要妥善保護。範本不含自架的 ActivityPub 和 Tinybird 分析。"
         zh-CN:
           risk: "Ghost 发送事务邮件和电子报，要依赖外部服务。"
           mitigation: "提供现成的 SMTP 机密。大量发送电子报时，在 Ghost 里设置 Mailgun。备份里的服务商凭证要妥善保护。模板不含自托管的 ActivityPub 和 Tinybird 分析。"
