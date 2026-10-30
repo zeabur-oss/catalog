@@ -38,16 +38,16 @@ security:
   summary: "CLIProxyAPI runs as a restricted non-root workload. The root filesystem is read-only, there is no service-account token, and extra capabilities are dropped. HTTPS ingress comes only from Traefik. Outbound traffic is not limited."
   locales:
     zh-TW:
-      summary: "CLIProxyAPI 以受限的非 root 身分執行。根檔案系統唯讀，沒有服務帳號 token，多餘的權限也都拿掉了。HTTPS 流量只從 Traefik 進來。對外連線沒有限制。"
+      summary: "CLIProxyAPI 以受限的非 root 身分執行。根檔案系統唯讀，沒有服務帳號權杖，多餘的權限也都拿掉了。HTTPS 流量只從 Traefik 進來。對外連線沒有限制。"
     zh-CN:
-      summary: "CLIProxyAPI 以受限的非 root 身份运行。根文件系统只读，没有服务账号 token，多余的权限也都去掉了。HTTPS 流量只从 Traefik 进来。对外连接没有限制。"
+      summary: "CLIProxyAPI 以受限的非 root 身份运行。根文件系统只读，没有服务账号令牌，多余的权限也都去掉了。HTTPS 流量只从 Traefik 进来。对外连接没有限制。"
   risks:
     - risk: "OAuth refresh tokens give access to your upstream provider accounts. The provider's subscription terms may also limit proxying."
       mitigation: "Use only accounts that you own and are allowed to proxy. The credentials sit on the private PVC, so encrypt any backup of it. Sign in with the native device login through kubectl exec. The callback ports are not exposed."
       locales:
         zh-TW:
           risk: "OAuth refresh token 可以存取你在上游服務商的帳號。服務商的訂閱條款也可能不允許轉接代理。"
-          mitigation: "只使用你自己擁有、而且允許代理的帳號。憑證放在私有的 PVC 上，備份時要加密。透過 kubectl exec 用原生的裝置登入來完成授權。回呼連接埠沒有對外開放。"
+          mitigation: "只使用你自己擁有、而且允許代理的帳號。認證資訊放在私有的 PVC 上，備份時要加密。透過 kubectl exec 用原生的裝置登入來完成授權。回呼連接埠沒有對外開放。"
         zh-CN:
           risk: "OAuth refresh token 可以访问你在上游服务商的账号。服务商的订阅条款也可能不允许转接代理。"
           mitigation: "只使用你自己拥有、并且允许代理的账号。凭证放在私有的 PVC 上，备份时要加密。通过 kubectl exec 用原生的设备登录来完成授权。回调端口没有对外开放。"

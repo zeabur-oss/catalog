@@ -49,9 +49,9 @@ security:
     Outbound traffic is not limited, but Umami makes no outbound requests.
   locales:
     zh-TW:
-      summary: "Umami 以一般使用者（UID 1001）執行，根檔案系統唯讀，沒有 service-account token，也沒有額外的 Linux 權限。往外的網路流量沒有限制，不過 Umami 本身不會對外發出請求。"
+      summary: "Umami 以一般使用者（UID 1001）執行，根檔案系統唯讀，沒有服務帳號權杖，也沒有額外的 Linux 權限。往外的網路流量沒有限制，不過 Umami 本身不會對外發出請求。"
     zh-CN:
-      summary: "Umami 以普通用户（UID 1001）运行，根文件系统只读，没有 service-account token，也没有额外的 Linux 权限。向外的网络流量没有限制，不过 Umami 本身不会对外发出请求。"
+      summary: "Umami 以普通用户（UID 1001）运行，根文件系统只读，没有服务账号令牌，也没有额外的 Linux 权限。向外的网络流量没有限制，不过 Umami 本身不会对外发出请求。"
   risks:
     - risk: Umami creates the admin account with the published password umami.
       mitigation: >-
@@ -84,10 +84,10 @@ security:
       locales:
         zh-TW:
           risk: "資料庫 Pod（CloudNativePG）會用運算子建立的身分去呼叫 Kubernetes API。"
-          mitigation: "databases/cloudnative-pg 元件會替每個叢集建立對應的權限（RBAC）。Umami 的 Pod 本身沒有 token。"
+          mitigation: "databases/cloudnative-pg 元件會替每個叢集建立對應的權限（RBAC）。Umami 的 Pod 本身沒有權杖。"
         zh-CN:
           risk: "数据库 Pod（CloudNativePG）会用运算符创建的身份去调用 Kubernetes API。"
-          mitigation: "databases/cloudnative-pg 组件会为每个集群创建对应的权限（RBAC）。Umami 的 Pod 本身没有 token。"
+          mitigation: "databases/cloudnative-pg 组件会为每个集群创建对应的权限（RBAC）。Umami 的 Pod 本身没有令牌。"
 
 scalability:
   summary: One Umami instance with one PostgreSQL primary.

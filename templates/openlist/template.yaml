@@ -42,9 +42,9 @@ security:
     limited.
   locales:
     zh-TW:
-      summary: "所有工作負載都放在自己的命名空間，不用 root 權限執行，映像檔版本固定，根檔案系統唯讀。它們沒有 Kubernetes token，也沒有額外的 Linux 權限。往外的網路流量沒有限制。"
+      summary: "所有工作負載都放在自己的命名空間，不用 root 權限執行，映像檔版本固定，根檔案系統唯讀。它們沒有 Kubernetes 權杖，也沒有額外的 Linux 權限。往外的網路流量沒有限制。"
     zh-CN:
-      summary: "所有工作负载都放在自己的命名空间，不用 root 权限运行，镜像版本固定，根文件系统只读。它们没有 Kubernetes token，也没有额外的 Linux 权限。向外的网络流量没有限制。"
+      summary: "所有工作负载都放在自己的命名空间，不用 root 权限运行，镜像版本固定，根文件系统只读。它们没有 Kubernetes 令牌，也没有额外的 Linux 权限。向外的网络流量没有限制。"
   risks:
     - risk: >-
         The upstream all-in-one Aria2 setup has no RPC password, and download
@@ -69,7 +69,7 @@ security:
         administrator credentials. Encrypt any backup you store off the node.
       locales:
         zh-TW:
-          risk: "儲存空間的憑證和管理員密碼的雜湊值都放在 SQLite 資料磁碟區裡。"
+          risk: "儲存空間的認證資訊和管理員密碼的雜湊值都放在 SQLite 資料磁碟區裡。"
           mitigation: "限制誰能讀取 PVC、機密和日誌。使用自動產生的管理員帳密。存到節點外的備份要加密。"
         zh-CN:
           risk: "存储空间的凭证和管理员密码的哈希值都放在 SQLite 数据卷里。"

@@ -40,11 +40,11 @@ security:
         operator needs it.
       locales:
         zh-TW:
-          risk: "資料庫 Pod 需要一個 Kubernetes API token，由運算子負責管理。這個範本本身不會建立任何 Role 或綁定。"
-          mitigation: "檢查目錄裡的運算子建立了哪些權限，以及它產生的 Pod。資料庫 Pod 的 token 自動掛載要保持開啟，因為運算子需要它。"
+          risk: "資料庫 Pod 需要一個 Kubernetes API 權杖，由運算子負責管理。這個範本本身不會建立任何 Role 或綁定。"
+          mitigation: "檢查目錄裡的運算子建立了哪些權限，以及它產生的 Pod。資料庫 Pod 的權杖自動掛載要保持開啟，因為運算子需要它。"
         zh-CN:
-          risk: "数据库 Pod 需要一个 Kubernetes API token，由运算符负责管理。这个模板本身不会创建任何 Role 或绑定。"
-          mitigation: "检查目录里的运算符创建了哪些权限，以及它生成的 Pod。数据库 Pod 的 token 自动挂载要保持开启，因为运算符需要它。"
+          risk: "数据库 Pod 需要一个 Kubernetes API 令牌，由运算符负责管理。这个模板本身不会创建任何 Role 或绑定。"
+          mitigation: "检查目录里的运算符创建了哪些权限，以及它生成的 Pod。数据库 Pod 的令牌自动挂载要保持开启，因为运算符需要它。"
     - risk: >-
         Local-path storage has no snapshots and no availability across nodes.
         The extension and plugin images are extra software you have to trust.

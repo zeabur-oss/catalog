@@ -34,9 +34,9 @@ security:
     Every Qdrant request needs the API key.
   locales:
     zh-TW:
-      summary: "官方映像檔以一般使用者（UID 1000）執行，根檔案系統唯讀，沒有 service-account token，也沒有額外的 Linux 權限。每個 Qdrant 請求都要帶 API 金鑰。"
+      summary: "官方映像檔以一般使用者（UID 1000）執行，根檔案系統唯讀，沒有服務帳號權杖，也沒有額外的 Linux 權限。每個 Qdrant 請求都要帶 API 金鑰。"
     zh-CN:
-      summary: "官方镜像以普通用户（UID 1000）运行，根文件系统只读，没有 service-account token，也没有额外的 Linux 权限。每个 Qdrant 请求都要带 API 密钥。"
+      summary: "官方镜像以普通用户（UID 1000）运行，根文件系统只读，没有服务账号令牌，也没有额外的 Linux 权限。每个 Qdrant 请求都要带 API 密钥。"
   risks:
     - risk: The REST API and the web dashboard are public through the Ingress.
       mitigation: >-

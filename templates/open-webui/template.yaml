@@ -96,7 +96,7 @@ security:
         install at runtime. Build them into your own pinned image.
       locales:
         zh-TW:
-          risk: "Pipeline 和管理員加的工具會執行 Python 程式碼，而且拿得到服務商的憑證。"
+          risk: "Pipeline 和管理員加的工具會執行 Python 程式碼，而且拿得到服務商的認證資訊。"
           mitigation: "每個安裝的 pipeline 和相依套件，都要當成應用程式的程式碼，完全信任了才裝。pipeline 服務要保持私有，只讓網頁介面連得到。它沒有 Kubernetes 權杖，也沒有主機 socket。對外連線沒有限制，所以請加一條 egress NetworkPolicy（限制對外連線的規則），讓 pipeline 連不到私有位址。Python 套件會裝到可寫入的 pipeline 儲存空間。需要 root 的套件（apt 或瀏覽器用的系統函式庫）無法在執行時安裝，請自己打包進固定版本的映像檔。"
         zh-CN:
           risk: "Pipeline 和管理员添加的工具会运行 Python 代码，而且拿得到服务商的凭据。"
