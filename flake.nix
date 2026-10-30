@@ -6,7 +6,7 @@
     flake-utils.url = "github:numtide/flake-utils";
     # zeabur-oss-release: checks the release tag (scripts/release.sh).
     oss-release = {
-      url = "github:zeabur-oss/.github/5a9a19ea5d8bddfc88b4185fa56291eecc5c70df";
+      url = "github:zeabur-oss/.github";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
