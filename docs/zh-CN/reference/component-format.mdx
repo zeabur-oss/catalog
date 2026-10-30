@@ -89,7 +89,7 @@ leftovers: []     # what the upstream keeps on uninstall (e.g. CRDs)
 
 这些字段告诉安装工具组件提供什么，安装工具不需要靠 ID 认出组件。
 
-`provides.registry` 是集群里的 OCI registry：`host` 是镜像名称里的 `host:port`，`ca` 是存放签发其证书的 CA 的 Secret key。移除组件前，会等到其命名空间以外没有 Pod 在运行这个 host 的镜像。
+`provides.registry` 是集群里的 OCI registry：`host` 是镜像名称里的 `host:port`，`ca` 是 Secret key，存放为 registry 签发证书的 CA。移除组件前，会等到其命名空间以外没有 Pod 在运行这个 host 的镜像。
 
 输入设成 `generate: clusterIP`，就是给组件的某个 Service 指定固定的 ClusterIP。节点的容器运行时解析不了 registry 的 host，所以安装工具会从 Service CIDR 挑一个空闲地址填进去，并在每个节点配置 registry mirror 指过去。留空时（CI 就是这样），Kubernetes 会自动分配地址，只有 Pod 能访问 registry。
 
@@ -109,7 +109,7 @@ provides:
 
 移除组件前，也会等到其命名空间以外没有 `detection.crds` 的对象，但 `internalCRDs` 列出的除外：这些 CRD 的对象是组件自己写的，例如扫描报告。`internalCRDs` 的每一项都必须在 `detection.crds` 里。
 
-`resources.workMemoryMiB` 是组件工作时（例如跑一次构建）在空闲用量之外还要多用的内存。空闲用量由 e2e 测量，放在 `index.json`。
+`resources.workMemoryMiB` 是组件工作时（例如运行一次构建）在空闲用量之外还要多用的内存。空闲用量由 e2e 测量，放在 `index.json`。
 
 `networkPolicies` 给默认拦截每个命名空间入站流量的安装工具用。内容是组件自己命名空间里的标准 NetworkPolicy 对象，这类安装工具会在安装 releases 前应用，放行组件需要从其他地方进来的流量。其他安装工具可以忽略它。`catalog validate` 会检查每个对象都是组件命名空间里的 NetworkPolicy。
 

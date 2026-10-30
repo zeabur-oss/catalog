@@ -89,7 +89,7 @@ leftovers: []     # what the upstream keeps on uninstall (e.g. CRDs)
 
 這些欄位告訴安裝工具元件提供什麼，安裝工具不需要靠 ID 認得元件。
 
-`provides.registry` 是叢集裡的 OCI registry：`host` 是映像檔名稱裡的 `host:port`，`ca` 是存放簽發它憑證的 CA 的 Secret key。移除元件前，會等到它的命名空間以外沒有 Pod 在跑這個 host 的映像檔。
+`provides.registry` 是叢集裡的 OCI registry：`host` 是映像檔名稱裡的 `host:port`，`ca` 是 Secret key，存放替 registry 簽發憑證的 CA。移除元件前，會等到元件的命名空間以外沒有 Pod 在執行這個 host 的映像檔。
 
 輸入設成 `generate: clusterIP`，就是替元件的某個 Service 指定固定的 ClusterIP。節點的容器執行環境解析不了 registry 的 host，所以安裝工具會從 Service CIDR 挑一個沒人用的位址填進去，並在每個節點設定 registry mirror 指過去。留空時（CI 就是這樣），Kubernetes 會自動分配位址，只有 Pod 連得到 registry。
 
@@ -109,7 +109,7 @@ provides:
 
 移除元件前，也會等到它命名空間以外沒有 `detection.crds` 的物件，但 `internalCRDs` 列出的除外：這些 CRD 的物件是元件自己寫的，例如掃描報告。`internalCRDs` 的每一項都必須在 `detection.crds` 裡。
 
-`resources.workMemoryMiB` 是元件工作時（例如跑一次建置）在閒置用量之外還要多用的記憶體。閒置用量由 e2e 量測，放在 `index.json`。
+`resources.workMemoryMiB` 是元件工作時（例如執行一次建置）在閒置用量之外還要多用的記憶體。閒置用量由 e2e 量測，放在 `index.json`。
 
 `networkPolicies` 給預設擋掉每個命名空間入站流量的安裝工具用。內容是元件自己命名空間裡的標準 NetworkPolicy 物件，這類安裝工具會在安裝 releases 前套用，放行元件需要從其他地方進來的流量。其他安裝工具可以忽略它。`catalog validate` 會檢查每個物件都是元件命名空間裡的 NetworkPolicy。
 
@@ -126,4 +126,4 @@ Renovate 會更新映像檔與 OCI chart 的 tag 及 digest，但無法讀取 HT
 
 每次安裝的結果必須一致。chart 不得產生密鑰或憑證。需要產生的值要放在 `inputs`，並儲存在 Secret 中。憑證由 cert-manager 提供。如果兩次渲染的結果不同，`catalog render` 會失敗。
 
-完整欄位定義請見 [元件 JSON Schema](https://github.com/zeabur-oss/catalog/blob/main/schema/v1/component.schema.json)。
+完整欄位定義請見[元件 JSON Schema](https://github.com/zeabur-oss/catalog/blob/main/schema/v1/component.schema.json)。
