@@ -88,19 +88,19 @@ security:
       locales:
         zh-TW:
           risk: "無法使用 SSH 存取 Git。"
-          mitigation: "Ingress 只轉送 HTTP，所以 SSH 伺服器是關閉的。請用 HTTPS 搭配密碼或存取 token 來 clone 和 push。"
+          mitigation: "Ingress 只轉送 HTTP，所以 SSH 伺服器是關閉的。用 HTTPS 搭配密碼或存取 token 來 clone 和 push。"
         zh-CN:
           risk: "无法使用 SSH 访问 Git。"
-          mitigation: "Ingress 只转发 HTTP，所以 SSH 服务器是关闭的。请用 HTTPS 搭配密码或访问 token 来 clone 和 push。"
+          mitigation: "Ingress 只转发 HTTP，所以 SSH 服务器是关闭的。用 HTTPS 搭配密码或访问 token 来 clone 和 push。"
     - risk: "Webhooks, mirrors and repository migrations make the server send requests to addresses that users choose."
       mitigation: "Gitea blocks private webhook targets by default. The template does not limit outbound traffic. To limit it, add an egress NetworkPolicy. No SMTP server is set up, so Gitea sends no email."
       locales:
         zh-TW:
           risk: "Webhook、鏡像和儲存庫遷移，都會讓伺服器去連使用者指定的位址。"
-          mitigation: "Gitea 預設會擋掉指向私有位址的 webhook。範本沒有限制對外連線，想限制的話，請加上 egress NetworkPolicy。範本沒有設定 SMTP 伺服器，所以 Gitea 不會寄信。"
+          mitigation: "Gitea 預設會擋掉指向私有位址的 webhook。範本沒有限制對外連線，需要限制時，請加上 egress NetworkPolicy。範本沒有設定 SMTP 伺服器，所以 Gitea 不會寄信。"
         zh-CN:
           risk: "Webhook、镜像和仓库迁移，都会让服务器去访问用户指定的地址。"
-          mitigation: "Gitea 默认会拦截指向私有地址的 webhook。模板没有限制对外连接，想限制的话，请添加 egress NetworkPolicy。模板没有配置 SMTP 服务器，所以 Gitea 不会发邮件。"
+          mitigation: "Gitea 默认会拦截指向私有地址的 webhook。模板没有限制对外连接，需要限制时，请添加 egress NetworkPolicy。模板没有配置 SMTP 服务器，所以 Gitea 不会发邮件。"
     - risk: "The CloudNativePG database instances call the Kubernetes API with an identity that the operator creates."
       mitigation: "The databases/cloudnative-pg component creates the RBAC permissions for each cluster. The Gitea Pod has no token."
       locales:
@@ -115,10 +115,10 @@ security:
       locales:
         zh-TW:
           risk: "儲存庫和 LFS 物件放在磁碟區上，資料庫備份不會包含它們。"
-          mitigation: "請另外備份 gitea-data 磁碟區，例如用 gitea dump。正式上線前，先演練一次還原。"
+          mitigation: "另外備份 gitea-data 磁碟區，例如用 gitea dump。正式上線前，先演練一次還原。"
         zh-CN:
           risk: "仓库和 LFS 对象放在卷上，数据库备份不会包含它们。"
-          mitigation: "请另外备份 gitea-data 卷，例如用 gitea dump。正式上线前，先演练一次恢复。"
+          mitigation: "另外备份 gitea-data 卷，例如用 gitea dump。正式上线前，先演练一次恢复。"
 
 scalability:
   summary: One Gitea instance on a 20Gi volume, with one PostgreSQL primary.

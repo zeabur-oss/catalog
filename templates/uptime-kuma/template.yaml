@@ -55,10 +55,10 @@ security:
       locales:
         zh-TW:
           risk: "有人可以設定監控目標，讓 Uptime Kuma 去連你的叢集或內部網路（SSRF 攻擊）。"
-          mitigation: "這個範本不限制往外的網路流量。請加上 egress NetworkPolicy，只放行你核准的目的地範圍。絕對不要掛載 Docker socket，也不要開啟特權監控。"
+          mitigation: "這個範本不限制往外的網路流量。加上 egress NetworkPolicy，只放行你核准的目的地範圍。絕對不要掛載 Docker socket，也不要開啟特權監控。"
         zh-CN:
           risk: "有人可以设置监控目标，让 Uptime Kuma 去连你的集群或内部网络（SSRF 攻击）。"
-          mitigation: "这个模板不限制向外的网络流量。请加上 egress NetworkPolicy，只放行你批准的目的地范围。绝对不要挂载 Docker socket，也不要开启特权监控。"
+          mitigation: "这个模板不限制向外的网络流量。加上 egress NetworkPolicy，只放行你批准的目的地范围。绝对不要挂载 Docker socket，也不要开启特权监控。"
     - risk: >-
         Ping monitors use unprivileged ICMP sockets, set through the
         net.ipv4.ping_group_range sysctl. The container has no NET_RAW

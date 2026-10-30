@@ -50,10 +50,10 @@ security:
       locales:
         zh-TW:
           risk: "任何連得到伺服器的人都可能建立帳號。"
-          mitigation: "SIGNUPS_ALLOWED 設為 false。用 vaultwarden-secrets 裡的 token 登入 /admin，再用 Email 邀請使用者。沒有設定 SMTP 的話，被邀請的 Email 可以直接註冊。"
+          mitigation: "SIGNUPS_ALLOWED 設為 false。用 vaultwarden-secrets 裡的 token 登入 /admin，再用 Email 邀請使用者。沒有設定 SMTP 時，受邀的 Email 可以直接註冊。"
         zh-CN:
           risk: "任何连得到服务器的人都可能创建账号。"
-          mitigation: "SIGNUPS_ALLOWED 设为 false。用 vaultwarden-secrets 里的 token 登录 /admin，再用邮箱邀请用户。没有配置 SMTP 的话，被邀请的邮箱可以直接注册。"
+          mitigation: "SIGNUPS_ALLOWED 设为 false。用 vaultwarden-secrets 里的 token 登录 /admin，再用邮箱邀请用户。没有配置 SMTP 时，受邀的邮箱可以直接注册。"
     - risk: >-
         The admin token is stored as plain text in a Secret. Vaultwarden logs
         a notice that recommends an Argon2 hash instead.
@@ -63,10 +63,10 @@ security:
       locales:
         zh-TW:
           risk: "管理員 token 以純文字放在機密裡。Vaultwarden 會在日誌裡提醒你改用 Argon2 雜湊值。"
-          mitigation: "限制誰能讀取這個機密。想改用雜湊值的話，在終端機執行 vaultwarden hash，再把產生的 PHC 字串存進機密。"
+          mitigation: "限制誰能讀取這個機密。想改用雜湊值，就在終端機執行 vaultwarden hash，再把產生的 PHC 字串存進機密。"
         zh-CN:
           risk: "管理员 token 以纯文本放在机密里。Vaultwarden 会在日志里提醒你改用 Argon2 哈希值。"
-          mitigation: "限制谁能读取这个机密。想改用哈希值的话，在终端执行 vaultwarden hash，再把生成的 PHC 字符串存进机密。"
+          mitigation: "限制谁能读取这个机密。想改用哈希值，就在终端执行 vaultwarden hash，再把生成的 PHC 字符串存进机密。"
     - risk: The admin page is public through the Ingress.
       mitigation: >-
         It needs the 43-character admin token. To remove the page, delete the

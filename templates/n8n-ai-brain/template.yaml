@@ -114,10 +114,10 @@ security:
       locales:
         zh-TW:
           risk: "工作流程的作者可以用到已連接的憑證，公開的 webhook 觸發器也可能被濫用。"
-          mitigation: "擁有者帳號在 n8n 啟動前就建好了，用的是 ownerEmail 和自動產生、放在 app-secrets/owner-password 的密碼，所以沒有訪客能搶走它。編輯器、webhook 和表單，只要連得到網域的人都能開，n8n 本身有登入。想限制誰連得進來，請在服務的網路設定裡加 IP 限制。設計工作流程時，每個 webhook 都要加上驗證。作者權限只給信任的操作人員。這個實例不能當沙箱，不要拿來跑不信任租戶的工作流程。安裝社群套件的功能已關閉。"
+          mitigation: "擁有者帳號在 n8n 啟動前就建好了，用的是 ownerEmail 和自動產生、放在 app-secrets/owner-password 的密碼，所以沒有訪客能搶走它。編輯器、webhook 和表單，只要連得到網域的人都能開，n8n 本身有登入。想限制誰連得進來，請在服務的網路設定裡加 IP 限制。設計工作流程時，每個 webhook 都要加上驗證。作者權限只給信任的操作人員。這個實例不能當沙箱，不要拿來執行不信任租戶的工作流程。安裝社群套件的功能已關閉。"
         zh-CN:
           risk: "工作流的作者可以用到已连接的凭据，公开的 webhook 触发器也可能被滥用。"
-          mitigation: "所有者账号在 n8n 启动前就建好了，用的是 ownerEmail 和自动生成、放在 app-secrets/owner-password 的密码，所以没有访客能抢走它。编辑器、webhook 和表单，只要连得到域名的人都能打开，n8n 本身有登录。想限制谁能连进来，请在服务的网络设置里加 IP 限制。设计工作流时，每个 webhook 都要加上验证。作者权限只给信任的操作人员。这个实例不能当沙箱，不要拿来跑不信任租户的工作流。安装社区包的功能已关闭。"
+          mitigation: "所有者账号在 n8n 启动前就建好了，用的是 ownerEmail 和自动生成、放在 app-secrets/owner-password 的密码，所以没有访客能抢走它。编辑器、webhook 和表单，只要连得到域名的人都能打开，n8n 本身有登录。想限制谁能连进来，请在服务的网络设置里加 IP 限制。设计工作流时，每个 webhook 都要加上验证。作者权限只给信任的操作人员。这个实例不能当沙箱，不要拿来运行不信任租户的工作流。安装社区包的功能已关闭。"
     - risk: >-
         The runners execute workflow code and have no sign-in of their own.
       mitigation: >-
@@ -126,7 +126,7 @@ security:
         template. Namespace isolation covers everything else.
       locales:
         zh-TW:
-          risk: "執行器會跑工作流程的程式碼，本身沒有登入驗證。"
+          risk: "執行器會執行工作流程的程式碼，本身沒有登入驗證。"
           mitigation: "它們有一條 NetworkPolicy，不接受任何進來的連線，只讓它們連到 n8n 和 DNS。這是範本裡唯一的 NetworkPolicy，其他部分靠命名空間隔離。"
         zh-CN:
           risk: "执行器会运行工作流的代码，本身没有登录验证。"
@@ -139,10 +139,10 @@ security:
       locales:
         zh-TW:
           risk: "資料庫 Pod（CloudNativePG）需要 Kubernetes API 的權限。"
-          mitigation: "請用目錄裡的 CloudNativePG 安裝方式，由 operator 為這些 Pod 建立範圍很小的服務帳號。"
+          mitigation: "用目錄裡的 CloudNativePG 安裝方式，由 operator 為這些 Pod 建立範圍很小的服務帳號。"
         zh-CN:
           risk: "数据库 Pod（CloudNativePG）需要 Kubernetes API 的权限。"
-          mitigation: "请用目录里的 CloudNativePG 安装方式，由 operator 为这些 Pod 创建范围很小的服务账号。"
+          mitigation: "用目录里的 CloudNativePG 安装方式，由 operator 为这些 Pod 创建范围很小的服务账号。"
     - risk: N8N_PROXY_HOPS=1 assumes Traefik is the only proxy in front of n8n.
       mitigation: >-
         If you add another proxy or load balancer that sets forwarding

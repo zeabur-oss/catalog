@@ -127,10 +127,10 @@ security:
       mitigation: "You must acknowledge the exact license when you deploy. The Mongo service is private and reachable only by the app. The Apache-2.0 license of the operator covers only the operator. Meilisearch uses the MIT community image, and the BUSL enterprise modules are not included."
       locales:
         zh-TW:
-          risk: "MongoDB 伺服器採用 SSPL-1.0 授權，把 MongoDB 當成服務提供給別人的話，要負擔額外義務。SSPL 並未通過 OSI 認可。"
+          risk: "MongoDB 伺服器採用 SSPL-1.0 授權，把 MongoDB 當成服務提供給別人時，要負擔額外義務。SSPL 並未通過 OSI 認可。"
           mitigation: "部署時必須明確確認這份授權。Mongo 服務是私有的，只有應用程式連得到。operator 的 Apache-2.0 授權只涵蓋 operator 本身。Meilisearch 使用 MIT 授權的社群版映像檔，不含 BUSL 授權的企業版模組。"
         zh-CN:
-          risk: "MongoDB 服务器采用 SSPL-1.0 许可，把 MongoDB 作为服务提供给别人的话，要承担额外义务。SSPL 并未通过 OSI 认可。"
+          risk: "MongoDB 服务器采用 SSPL-1.0 许可，把 MongoDB 作为服务提供给别人时，要承担额外义务。SSPL 并未通过 OSI 认可。"
           mitigation: "部署时必须明确确认这份许可。Mongo 服务是私有的，只有应用能访问。operator 的 Apache-2.0 许可只涵盖 operator 本身。Meilisearch 使用 MIT 许可的社区版镜像，不含 BUSL 许可的企业版模块。"
     - risk: "The CloudNativePG instance manager needs Kubernetes API credentials."
       mitigation: "The catalog operator creates a service account and RBAC permissions for each cluster. The ordinary app pods and the Percona pods have their tokens turned off."
@@ -164,10 +164,10 @@ security:
       locales:
         zh-TW:
           risk: "MongoDB 8.0.32 在 Linux 核心 6.19 以上無法啟動（SERVER-121912）。範本設定了 GLIBC_TUNABLES 來繞過，但還沒有在真實叢集上驗證過。"
-          mitigation: "新核心上 MongoDB 一啟動就當掉的話，請確認 Percona Pod 有帶 GLIBC_TUNABLES=glibc.pthread.rseq=1。"
+          mitigation: "新核心上 MongoDB 一啟動就當掉時，請確認 Percona Pod 有帶 GLIBC_TUNABLES=glibc.pthread.rseq=1。"
         zh-CN:
           risk: "MongoDB 8.0.32 在 Linux 内核 6.19 以上无法启动（SERVER-121912）。模板设置了 GLIBC_TUNABLES 来绕过，但还没有在真实集群上验证过。"
-          mitigation: "新内核上 MongoDB 一启动就崩溃的话，请确认 Percona Pod 带有 GLIBC_TUNABLES=glibc.pthread.rseq=1。"
+          mitigation: "新内核上 MongoDB 一启动就崩溃时，请确认 Percona Pod 带有 GLIBC_TUNABLES=glibc.pthread.rseq=1。"
 
 scalability:
   summary: >-

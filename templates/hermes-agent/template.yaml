@@ -59,12 +59,12 @@ inputs:
     locales:
       zh-TW:
         label: API 端點
-        description: "公開的 OpenAI 相容 HTTPS 端點（TCP 443），需要的話包含 /v1。留空就用 OpenRouter（https://openrouter.ai/api/v1）。"
+        description: "公開的 OpenAI 相容 HTTPS 端點（TCP 443），需要時包含 /v1。留空就用 OpenRouter（https://openrouter.ai/api/v1）。"
       zh-CN:
         label: API 端点
-        description: "公网的 OpenAI 兼容 HTTPS 端点（TCP 443），需要的话包含 /v1。留空就用 OpenRouter（https://openrouter.ai/api/v1）。"
+        description: "公网的 OpenAI 兼容 HTTPS 端点（TCP 443），需要时包含 /v1。留空就用 OpenRouter（https://openrouter.ai/api/v1）。"
     description: >-
-      Public OpenAI-compatible HTTPS endpoint on TCP443, including its /v1
+      Public OpenAI-compatible HTTPS endpoint on TCP 443, including its /v1
       suffix if required. If it is empty, the template uses OpenRouter
       (https://openrouter.ai/api/v1).
     required: false
@@ -132,11 +132,11 @@ security:
       mitigation: "That key overrides the one from hermes-secrets, so API calls with the Secret key may get 401. If that happens, use the API_SERVER_KEY in /opt/data/.env. The bundled skills are not set up."
       locales:
         zh-TW:
-          risk: "Pod 不執行映像檔的 s6 /init，因為 /init 需要 DAC_OVERRIDE 權限。所以映像檔第一次啟動時的技能初始化不會跑，而且新版本會把隨機的 API_SERVER_KEY 寫進 /opt/data/.env。"
-          mitigation: "這把金鑰會蓋過 hermes-secrets 裡的金鑰，用 Secret 裡的金鑰呼叫 API 可能會得到 401。遇到的話，改用 /opt/data/.env 裡的 API_SERVER_KEY。映像檔內建的技能不會自動設定。"
+          risk: "Pod 不執行映像檔的 s6 /init，因為 /init 需要 DAC_OVERRIDE 權限。所以映像檔第一次啟動時的技能初始化不會執行，而且新版本會把隨機的 API_SERVER_KEY 寫進 /opt/data/.env。"
+          mitigation: "這把金鑰會蓋過 hermes-secrets 裡的金鑰，用 Secret 裡的金鑰呼叫 API 可能會得到 401。這時改用 /opt/data/.env 裡的 API_SERVER_KEY。映像檔內建的技能不會自動設定。"
         zh-CN:
-          risk: "Pod 不运行镜像的 s6 /init，因为 /init 需要 DAC_OVERRIDE 权限。所以镜像第一次启动时的技能初始化不会跑，而且新版本会把随机的 API_SERVER_KEY 写进 /opt/data/.env。"
-          mitigation: "这个密钥会盖过 hermes-secrets 里的密钥，用 Secret 里的密钥调用 API 可能会得到 401。遇到的话，改用 /opt/data/.env 里的 API_SERVER_KEY。镜像内置的技能不会自动设置。"
+          risk: "Pod 不运行镜像的 s6 /init，因为 /init 需要 DAC_OVERRIDE 权限。所以镜像第一次启动时的技能初始化不会运行，而且新版本会把随机的 API_SERVER_KEY 写进 /opt/data/.env。"
+          mitigation: "这个密钥会盖过 hermes-secrets 里的密钥，用 Secret 里的密钥调用 API 可能会得到 401。这时改用 /opt/data/.env 里的 API_SERVER_KEY。镜像内置的技能不会自动设置。"
 
 scalability:
   summary: >-

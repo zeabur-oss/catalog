@@ -57,10 +57,10 @@ security:
       locales:
         zh-TW:
           risk: "如果 Halo 還沒完成初始化，第一個來的訪客就能建立管理員帳號。"
-          mitigation: "第一次啟動時，範本會用 halo-secrets 機密裡產生的密碼建立超級管理員 admin，所以沒有開放的設定步驟。請以 admin 登入，並在控制台改掉密碼。"
+          mitigation: "第一次啟動時，範本會用 halo-secrets 機密裡產生的密碼建立超級管理員 admin，所以沒有開放的設定步驟。以 admin 登入，並在控制台修改密碼。"
         zh-CN:
           risk: "如果 Halo 还没完成初始化，第一个来的访客就能创建管理员账号。"
-          mitigation: "第一次启动时，模板会用 halo-secrets 机密里生成的密码创建超级管理员 admin，所以没有开放的设置步骤。请以 admin 登录，并在控制台修改密码。"
+          mitigation: "第一次启动时，模板会用 halo-secrets 机密里生成的密码创建超级管理员 admin，所以没有开放的设置步骤。以 admin 登录，并在控制台修改密码。"
     - risk: "Database backups do not include Halo's local attachments, plugins or themes."
       mitigation: "Back up the Halo PVC off the node as well as the database, and test a restore of both together. The built-in Halo backup also stays on the node."
       locales:

@@ -108,7 +108,7 @@ inputs:
         label: 存储端点
         description: "现有的 S3 兼容存储 HTTPS 端点（TCP 443），用来存文档、模型加密密钥和上传的文件。"
     description: >-
-      Existing HTTPS S3-compatible object storage endpoint on TCP443 for
+      Existing HTTPS S3-compatible object storage endpoint on TCP 443 for
       documents, model encryption keys and uploaded files.
     required: true
     validation: {pattern: '^https://[A-Za-z0-9.-]+(:443)?$'}
@@ -207,10 +207,10 @@ security:
       locales:
         zh-TW:
           risk: "Dragonfly 的資料只放在記憶體裡，除非你開啟快照。重新啟動後，排隊中或還沒確認的任務、鎖和快取都會不見。"
-          mitigation: "請在 Zeabur 開啟 Dragonfly 備份。DB0（快取）和 DB1（Celery）是分開的，cache_mode=false 可以避免佇列被清掉。重新啟動前，先停掉 beat 和產生任務的程式，讓 worker 把手上的工作做完。重啟後，要檢查任務有沒有漏跑或重跑。舊的 Valkey AOF、RDB 或 PVC 資料不會被匯入。"
+          mitigation: "在 Zeabur 開啟 Dragonfly 備份。DB0（快取）和 DB1（Celery）是分開的，cache_mode=false 可以避免佇列被清掉。重新啟動前，先停掉 beat 和產生任務的程式，讓 worker 把手上的工作做完。重新啟動後，要檢查任務有沒有漏掉或重複執行。舊的 Valkey AOF、RDB 或 PVC 資料不會匯入。"
         zh-CN:
           risk: "Dragonfly 的数据只放在内存里，除非你开启快照。重启后，排队中或还没确认的任务、锁和缓存都会丢失。"
-          mitigation: "请在 Zeabur 开启 Dragonfly 备份。DB0（缓存）和 DB1（Celery）是分开的，cache_mode=false 可以避免队列被清掉。重启前，先停掉 beat 和产生任务的程序，让 worker 把手上的工作做完。重启后，要检查任务有没有漏跑或重跑。旧的 Valkey AOF、RDB 或 PVC 数据不会被导入。"
+          mitigation: "在 Zeabur 开启 Dragonfly 备份。DB0（缓存）和 DB1（Celery）是分开的，cache_mode=false 可以避免队列被清掉。重启前，先停掉 beat 和产生任务的程序，让 worker 把手上的工作做完。重启后，要检查任务有没有漏掉或重复执行。旧的 Valkey AOF、RDB 或 PVC 数据不会导入。"
     - risk: "The sandbox container has CAP_CHOWN and CAP_DAC_OVERRIDE. Dify's sandbox hands each Python script to its run user and then opens it as root. With DAC_OVERRIDE, root inside the sandbox can read and write files it does not own in the container."
       mitigation: "Only the sandbox gets these two, next to SYS_CHROOT, SETUID and SETGID. It still drops all other capabilities, allows no privilege escalation, and runs user code as a separate user under the upstream seccomp filter."
       locales:
@@ -225,19 +225,19 @@ security:
       locales:
         zh-TW:
           risk: "Dify 的觸發和除錯用 Lua 腳本，會存取沒有在 KEYS 裡宣告的 key。"
-          mitigation: "Dragonfly 以 allow-undeclared-keys 執行。這些腳本一次只跑一個，可能會讓佇列的處理速度變慢。"
+          mitigation: "Dragonfly 以 allow-undeclared-keys 執行。這些腳本一次只執行一個，可能會讓佇列的處理速度變慢。"
         zh-CN:
           risk: "Dify 的触发和调试用 Lua 脚本，会访问没有在 KEYS 里声明的 key。"
-          mitigation: "Dragonfly 以 allow-undeclared-keys 运行。这些脚本一次只跑一个，可能会让队列的处理速度变慢。"
+          mitigation: "Dragonfly 以 allow-undeclared-keys 运行。这些脚本一次只运行一个，可能会让队列的处理速度变慢。"
     - risk: "Until Dify is set up, the first visitor can create the owner account. The console is also reachable by anyone on the internet."
       mitigation: "Dify asks for INIT_PASSWORD, generated in dify-secrets/init-password, before it creates the first administrator. A visitor cannot claim the instance without it. Right after the deploy, open /install, enter that password and create the owner. The console is open to anyone who can reach the domain, and Dify has its own sign-in. To limit who can reach it, add an IP limit in the service's network settings."
       locales:
         zh-TW:
           risk: "Dify 在完成初始設定之前，第一個來的訪客就能建立擁有者帳號。任何人從網際網路也都連得到控制台。"
-          mitigation: "Dify 在建立第一個管理員之前，會要求輸入 INIT_PASSWORD，這組密碼產生在 dify-secrets/init-password。沒有它，訪客就搶不走這個實例。部署完成後，請馬上打開 /install，輸入這組密碼並建立擁有者。任何連得到網域的人都能開啟控制台，Dify 本身有登入機制。想限制誰能連進來，請在服務的網路設定裡加上 IP 限制。"
+          mitigation: "Dify 在建立第一個管理員之前，會要求輸入 INIT_PASSWORD，這組密碼產生在 dify-secrets/init-password。沒有這組密碼，訪客就搶不走這個實例。部署完成後，請馬上打開 /install，輸入這組密碼並建立擁有者。任何連得到網域的人都能開啟控制台，Dify 本身有登入機制。想限制誰能連進來，請在服務的網路設定裡加上 IP 限制。"
         zh-CN:
           risk: "Dify 在完成初始设置之前，第一个来的访客就能创建所有者账号。任何人从互联网也都能访问控制台。"
-          mitigation: "Dify 在创建第一个管理员之前，会要求输入 INIT_PASSWORD，这个密码生成在 dify-secrets/init-password。没有它，访客就抢不走这个实例。部署完成后，请马上打开 /install，输入这个密码并创建所有者。任何能访问该域名的人都能打开控制台，Dify 本身有登录机制。想限制谁能访问，请在服务的网络设置里添加 IP 限制。"
+          mitigation: "Dify 在创建第一个管理员之前，会要求输入 INIT_PASSWORD，这个密码生成在 dify-secrets/init-password。没有这个密码，访客就抢不走这个实例。部署完成后，请马上打开 /install，输入这个密码并创建所有者。任何能访问该域名的人都能打开控制台，Dify 本身有登录机制。想限制谁能访问，请在服务的网络设置里添加 IP 限制。"
     - risk: "The Dify license restricts running more than one workspace and changing the frontend branding."
       mitigation: "The template description names the license. Use one workspace unless you have written permission from upstream. The frontend images are unmodified, so they keep the branding."
       locales:
@@ -263,26 +263,26 @@ security:
           risk: "程式執行器需要 root，才能建立 chroot，並在每次執行時切換成獨立的身分。"
           mitigation: "這是基準政策唯一的例外。它只拿到最少的權限，使用 RuntimeDefault 和上游內層的 seccomp 過濾。API 金鑰是自動產生的，Pod 裡沒有資料庫憑證，對外只能連到代理，資源也有上限。"
         zh-CN:
-          risk: "代码运行器需要 root，才能建立 chroot，并在每次运行时切换成独立的身份。"
+          risk: "代码运行器需要 root，才能创建 chroot，并在每次运行时切换成独立的身份。"
           mitigation: "这是基线策略唯一的例外。它只拿到最少的权限，使用 RuntimeDefault 和上游内层的 seccomp 过滤。API 密钥是自动生成的，Pod 里没有数据库凭证，对外只能访问代理，资源也有上限。"
     - risk: "Plugins are third-party code that you trust. They can use the model integrations you have configured."
       mitigation: "Keep FORCE_VERIFYING_SIGNATURE set to true. The remote debugging and remote install listener are turned off. Let only trusted administrators install plugins. All plugins share one trust boundary, and the plugin pod has a restricted identity."
       locales:
         zh-TW:
           risk: "外掛是你要信任的第三方程式，可以使用你設定好的模型整合。"
-          mitigation: "請讓 FORCE_VERIFYING_SIGNATURE 維持 true。遠端除錯和遠端安裝的監聽都已關閉。只讓信任的管理員安裝外掛。所有外掛共用同一個信任範圍，外掛 Pod 的身分也受到限制。"
+          mitigation: "讓 FORCE_VERIFYING_SIGNATURE 維持 true。遠端除錯和遠端安裝的監聽都已關閉。只讓信任的管理員安裝外掛。所有外掛共用同一個信任範圍，外掛 Pod 的身分也受到限制。"
         zh-CN:
           risk: "插件是你要信任的第三方代码，可以使用你配置好的模型集成。"
-          mitigation: "请让 FORCE_VERIFYING_SIGNATURE 保持 true。远程调试和远程安装的监听都已关闭。只让可信的管理员安装插件。所有插件共用同一个信任范围，插件 Pod 的身份也受到限制。"
+          mitigation: "让 FORCE_VERIFYING_SIGNATURE 保持 true。远程调试和远程安装的监听都已关闭。只让可信的管理员安装插件。所有插件共用同一个信任范围，插件 Pod 的身份也受到限制。"
     - risk: "The PostgreSQL manager (CloudNativePG instance manager) needs limited permissions on the Kubernetes API."
       mitigation: "Use the catalog operator and its limited service account."
       locales:
         zh-TW:
           risk: "PostgreSQL 的管理程式（CloudNativePG instance manager）需要 Kubernetes API 的部分權限。"
-          mitigation: "請使用目錄裡的 operator 和它權限受限的服務帳號。"
+          mitigation: "使用目錄裡的 operator 和它權限受限的服務帳號。"
         zh-CN:
           risk: "PostgreSQL 的管理程序（CloudNativePG instance manager）需要 Kubernetes API 的部分权限。"
-          mitigation: "请使用目录里的 operator 和它权限受限的服务账号。"
+          mitigation: "使用目录里的 operator 和它权限受限的服务账号。"
 
 scalability:
   summary: One instance per trusted owner; do not horizontally scale this deployment.
