@@ -1,7 +1,7 @@
 ---
 title: 测试与 CI
 description: 了解各层 CI 的运行时机和检查内容，并配置模板测试输入。
-source: "5166e887c450"
+source: "8778e2c83bfb"
 ---
 
 L0 在每个 pull request 中运行；L1 在合并到 `main` 后运行；L2 在每晚（nightly）运行，打发布 tag 前要确认该 commit 已通过 L2。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以用 `catalog e2e -tier l0|l1|l2` 运行与 CI 相同的测试。
@@ -152,7 +152,7 @@ L2 也会检查 amd64 上 `single-node` profile 的默认启用组件总用量�
 
 接着，测试会使用 `single-node` 的配置值，对 `single-node` 支持的每个组件运行 L2。组件的 `distributions` 如果未列出该发行版，就跳过这个组件。这些测试不运行模板。
 
-测量结果与 kind 的结果放在一起，以 `<profile>-<architecture>-<version>` 作为标识键，例如 `k3s-amd64-v1.36.5+k3s1`。只有测试通过才会写入测量结果。组件如果有 `config/kubernetes.yaml` 固定版本的测量结果，`catalog index` 就会把该发行版列进组件的 `testedOn`。
+测量结果与 kind 的结果放在一起，以 `<profile>-<architecture>-<version>` 作为标识键，例如 `k3s-amd64-v1.36.5+k3s1`。测试失败时，该环境会标记为 `failed`。组件在 `config/kubernetes.yaml` 固定的版本上通过测试，且没有任何一次被标记为失败，`catalog index` 才会把该发行版列进组件的 `testedOn`。测试失败后，要等到再次通过，该发行版才会重新列入。
 
 ## 配置模板测试输入
 

@@ -7,6 +7,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -24,6 +25,9 @@ type measurement struct {
 }
 
 type environment struct {
+	// Failed marks an environment whose last run failed. It replaces the
+	// passing measurement before it, which catalog merge would keep.
+	Failed        bool              `json:"failed,omitempty"`
 	IdleMemoryMiB float64           `json:"idleMemoryMiB"`
 	IdleCPUm      float64           `json:"idleCPUm"`
 	Versions      map[string]string `json:"versions,omitempty"`
@@ -116,6 +120,26 @@ func writeMeasurement(c *catalog.Component, key string, res catalog.Result) erro
 		IdleCPUm:      math.Round(res.IdleCPUm),
 		Versions:      versions,
 		MeasuredAt:    time.Now().UTC().Format(time.DateOnly),
+	}
+	return writeJSON(measurementPath(c.ID), m)
+}
+
+// markFailed records that the test of c failed in environment key. On a host
+// profile it also marks every environment of profile on arch at the pinned
+// version, so a failure before the cluster answered (key empty) counts too.
+func markFailed(cfg config, profile, arch string, c *catalog.Component, key string) error {
+	m := readMeasurement(measurementPath(c.ID))
+	m.Component = c.ID
+	failed := environment{Failed: true, MeasuredAt: time.Now().UTC().Format(time.DateOnly)}
+	if key != "" {
+		m.Environments[key] = failed
+	}
+	if slices.Contains(hostProfiles, profile) {
+		for k := range m.Environments {
+			if strings.HasPrefix(k, profile+"-"+arch+"-") && strings.HasSuffix(k, "-"+cfg.pinnedVersion(profile)) {
+				m.Environments[k] = failed
+			}
+		}
 	}
 	return writeJSON(measurementPath(c.ID), m)
 }

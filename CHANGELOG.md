@@ -14,7 +14,9 @@ based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   measurements are keyed `k3s-<architecture>-<version>` and
   `rke2-<architecture>-<version>`.
 - `index.json` gives each component `testedOn`: the distributions among k3s,
-  RKE2 and KubeSolo with a passing e2e measurement at the pinned version.
+  RKE2 and KubeSolo where e2e passed at the pinned version. A failed run marks
+  its environment `failed` in `measurements/`, which leaves the distribution
+  out until it passes again, and `measured` in the index omits it.
 - `health` lists read-only checks (one `kubectl wait` each, with a timeout and
   advice) that an installer can run on a cluster; e2e runs them after install.
   Longhorn, cert-manager, Traefik and metrics-server have them.

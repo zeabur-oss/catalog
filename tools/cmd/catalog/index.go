@@ -64,8 +64,9 @@ func index(fs *flag.FlagSet, r *repo) error {
 				ic.InstallOrder[p] = append(ic.InstallOrder[p], o.ID)
 			}
 		}
-		ic.Measured = readMeasurement(measurementPath(c.ID)).Environments
-		ic.TestedOn = testedOn(cfg, ic.Measured)
+		measured := readMeasurement(measurementPath(c.ID)).Environments
+		ic.TestedOn = testedOn(cfg, measured)
+		ic.Measured = passed(measured)
 		comps = append(comps, ic)
 		if capabilities[c.Capability] == nil {
 			capabilities[c.Capability] = map[string][]string{}
@@ -88,19 +89,23 @@ func index(fs *flag.FlagSet, r *repo) error {
 }
 
 // testedOn returns the host profiles, in the order of hostProfiles, with a
-// measurement of the version that cfg pins. Only a passing e2e run writes a
-// measurement. Its key is "<profile>-<architecture>-<server version>", and
+// passing measurement of the version that cfg pins. A failed run marks its
+// environment failed, so one failed architecture leaves the distribution out
+// until it passes again. Its key is "<profile>-<architecture>-<server version>", and
 // the server version ends in the pinned release: v1.36.5+k3s1 for k3s,
 // v1.35.7+kubesolo-v1.2.3 for KubeSolo v1.2.3.
 func testedOn(cfg config, measured map[string]environment) []string {
 	out := []string{}
 	for _, p := range hostProfiles {
 		suffix := "-" + cfg.pinnedVersion(p)
-		for key := range measured {
+		pass, fail := false, false
+		for key, env := range measured {
 			if strings.HasPrefix(key, p+"-") && strings.HasSuffix(key, suffix) {
-				out = append(out, p)
-				break
+				pass, fail = pass || !env.Failed, fail || env.Failed
 			}
+		}
+		if pass && !fail {
+			out = append(out, p)
 		}
 	}
 	return out
@@ -110,6 +115,12 @@ func testedOn(cfg config, measured map[string]environment) []string {
 type indexTemplate struct {
 	*templates.Template
 	Measured map[string]environment `json:"measured,omitempty"`
+}
+
+// passed returns the environments that are not marked failed.
+func passed(envs map[string]environment) map[string]environment {
+	maps.DeleteFunc(envs, func(_ string, e environment) bool { return e.Failed })
+	return envs
 }
 
 func indexTemplates(ts []*templates.Template) []indexTemplate {
@@ -152,7 +163,7 @@ func budget(fs *flag.FlagSet, r *repo) error {
 func latest(m measurement, prefix string) (float64, bool) {
 	keys := slices.Sorted(maps.Keys(m.Environments))
 	for _, k := range slices.Backward(keys) {
-		if strings.HasPrefix(k, prefix+"-") {
+		if strings.HasPrefix(k, prefix+"-") && !m.Environments[k].Failed {
 			return m.Environments[k].IdleMemoryMiB, true
 		}
 	}

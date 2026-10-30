@@ -151,7 +151,7 @@ With `-profile k3s`, `-profile rke2` or `-profile kubesolo`, the tests install t
 
 The tests then run L2 with the `single-node` settings for every component that `single-node` supports. They skip a component whose `distributions` leaves out the distribution, and they don't run templates.
 
-Measurements are stored alongside the kind results, keyed by `<profile>-<architecture>-<version>`, for example `k3s-amd64-v1.36.5+k3s1`. Only a passing run writes one. `catalog index` lists a distribution in a component's `testedOn` when the component has a measurement for the version that `config/kubernetes.yaml` pins.
+Measurements are stored alongside the kind results, keyed by `<profile>-<architecture>-<version>`, for example `k3s-amd64-v1.36.5+k3s1`. A failed run marks its environment `failed` instead. `catalog index` lists a distribution in a component's `testedOn` when the component passed at the version that `config/kubernetes.yaml` pins and no run there is marked failed. After a failure, the distribution stays out until the run passes again.
 
 ## Configure template test inputs
 

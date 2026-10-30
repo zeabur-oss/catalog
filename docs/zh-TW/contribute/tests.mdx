@@ -1,7 +1,7 @@
 ---
 title: 測試與 CI
 description: 了解各層 CI 的執行時機與檢查內容，並設定範本測試輸入。
-source: "5166e887c450"
+source: "8778e2c83bfb"
 ---
 
 L0 在每個 pull request 執行。L1 在合併到 `main` 後執行。L2 每晚（nightly）執行，打發行 tag 前要確認那個 commit 通過了 L2。各層分工檢查，後續層級會補上前一層沒涵蓋的項目。你也能用 `catalog e2e -tier l0|l1|l2` 執行與 CI 相同的測試。
@@ -152,7 +152,7 @@ L2 也會檢查 amd64 上 `single-node` profile 所有預設啟用元件的總�
 
 接著，測試會用 `single-node` 的設定值，對 `single-node` 支援的每個元件執行 L2。如果元件的 `distributions` 沒有列出該發行版，就略過這個元件。這些測試不執行範本。
 
-量測結果與 kind 的結果放在一起，識別鍵為 `<profile>-<architecture>-<version>`，例如 `k3s-amd64-v1.36.5+k3s1`。只有測試通過才會寫入量測結果。元件若有 `config/kubernetes.yaml` 固定版本的量測結果，`catalog index` 就會把該發行版列進元件的 `testedOn`。
+量測結果與 kind 的結果放在一起，識別鍵為 `<profile>-<architecture>-<version>`，例如 `k3s-amd64-v1.36.5+k3s1`。測試失敗時，該環境會標記為 `failed`。元件在 `config/kubernetes.yaml` 固定的版本上通過測試、且沒有任何一次被標記為失敗，`catalog index` 才會把該發行版列進元件的 `testedOn`。測試失敗後，要等到再次通過，該發行版才會重新列入。
 
 ## 設定範本測試輸入
 

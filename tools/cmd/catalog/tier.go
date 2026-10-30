@@ -9,6 +9,7 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"sync"
@@ -641,13 +642,17 @@ func l2(r *repo, cfg config, o tierOptions, args []string) error {
 			}
 			t.Timings.Since("cluster", start)
 			if err != nil {
+				if o.write && strings.Contains(s.id, "/") {
+					c, _ := r.cat.Get(s.id)
+					err = errors.Join(err, markFailed(cfg, o.profile, runtime.GOARCH, c, ""))
+				}
 				rows = append(rows, row{subject: s.id, timings: t.Timings, err: err})
 				continue
 			}
 		}
 		rw := row{subject: s.id}
 		if strings.Contains(s.id, "/") {
-			rw.status, rw.err = testComponent(t, o.profile, s.id, o.write)
+			rw.status, rw.err = testComponent(t, cfg, o.profile, s.id, o.write)
 		} else {
 			rw.status, rw.err = testTemplate(r, t, s.id, o.write)
 		}
@@ -660,19 +665,26 @@ func l2(r *repo, cfg config, o tierOptions, args []string) error {
 	return report("l2 "+o.profile, rows)
 }
 
-// testComponent runs the full component test on the current cluster and
-// writes the measurement under profile if write is set.
-func testComponent(t *catalog.Tester, profile, id string, write bool) (status string, err error) {
+// testComponent runs the full component test on the current cluster. If
+// write is set, it writes the measurement under profile, or marks the
+// environment failed.
+func testComponent(t *catalog.Tester, cfg config, profile, id string, write bool) (status string, err error) {
+	c, _ := t.Catalog.Get(id)
 	key, err := currentEnvironment(profile)
 	if err != nil {
+		if write {
+			err = errors.Join(err, markFailed(cfg, profile, runtime.GOARCH, c, ""))
+		}
 		return "", err
 	}
 	slog.Info("testing", "component", id, "env", key)
 	res := t.Test(id)
 	if res.Err != nil {
+		if write {
+			return "", errors.Join(res.Err, markFailed(cfg, profile, runtime.GOARCH, c, key))
+		}
 		return "", res.Err
 	}
-	c, _ := t.Catalog.Get(id)
 	status = fmt.Sprintf("PASS %4.0f MiB %3.0fm CPU", res.IdleMemoryMiB, res.IdleCPUm)
 	if res.Unmeasured {
 		status = "PASS (installed without credentials; not measured)"

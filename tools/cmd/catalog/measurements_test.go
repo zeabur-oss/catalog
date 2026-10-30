@@ -7,6 +7,7 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
 
@@ -145,6 +146,53 @@ func TestTestedOnCountsOnlyThePinnedDistributionVersions(t *testing.T) {
 			// Consumers read testedOn as always present.
 			if data, _ := json.Marshal(got); len(c.want) == 0 && string(data) != "[]" {
 				t.Errorf("testedOn without distributions encodes as %s, want []", data)
+			}
+		})
+	}
+}
+
+func TestFailedRunTakesTheDistributionOutOfTestedOn(t *testing.T) {
+	var cfg config
+	cfg.K3s.Version = "v1.36.5+k3s1"
+	comp := &catalog.Component{ID: "ingress/traefik"}
+	pass := environment{IdleMemoryMiB: 22, MeasuredAt: "2026-10-30"}
+	main := measurement{Component: comp.ID, Environments: map[string]environment{
+		"k3s-amd64-v1.36.5+k3s1":    pass,
+		"k3s-arm64-v1.36.5+k3s1":    pass,
+		"single-node-amd64-v1.36.4": pass,
+	}}
+	for _, c := range []struct{ name, key string }{
+		{"test failed", "k3s-arm64-v1.36.5+k3s1"},
+		{"cluster never answered", ""},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			t.Chdir(t.TempDir())
+			// The nightly job checks out main, fails on k3s arm64 and uploads its file.
+			writeFile(t, "measurements/ingress/traefik.json", main)
+			if err := markFailed(cfg, "k3s", "arm64", comp, c.key); err != nil {
+				t.Fatal(err)
+			}
+			uploaded := readMeasurement("measurements/ingress/traefik.json")
+			writeFile(t, "downloaded/job/ingress/traefik.json", uploaded)
+			writeFile(t, "main/ingress/traefik.json", main)
+			if err := mergeMeasurements("downloaded", "main"); err != nil {
+				t.Fatal(err)
+			}
+			merged := readMeasurement("main/ingress/traefik.json").Environments
+			if got := testedOn(cfg, merged); slices.Contains(got, "k3s") {
+				t.Errorf("testedOn = %q after a failed k3s run", got)
+			}
+			if _, ok := passed(merged)["k3s-arm64-v1.36.5+k3s1"]; ok {
+				t.Error("the index publishes the failed environment as measured")
+			}
+			if merged["single-node-amd64-v1.36.4"].Failed || merged["k3s-amd64-v1.36.5+k3s1"].Failed {
+				t.Error("the failure changed environments of other architectures or profiles")
+			}
+
+			// The next passing run replaces the mark.
+			merged["k3s-arm64-v1.36.5+k3s1"] = pass
+			if got := testedOn(cfg, merged); !slices.Equal(got, []string{"k3s"}) {
+				t.Errorf("testedOn = %q after k3s passed again", got)
 			}
 		})
 	}
