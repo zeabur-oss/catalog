@@ -9,7 +9,7 @@ L0 runs on every pull request. L1 runs after merges to `main`. L2 runs nightly; 
 
 - L0 doesn't require Docker.
 - L1 and L2 create kind clusters and require Linux and Docker. Add `-cluster current` to use the cluster specified by `KUBECONFIG` instead.
-- Tests on k3s, RKE2 and KubeSolo install the distribution on the host itself. They require a disposable Linux host and root privileges.
+- Tests on k3s, RKE2 and KubeSolo install the distribution on the host itself. They require a disposable Linux host without Docker, and root privileges. Before and after each test, they remove the distribution and what its pods left on the host: mounts, network links, routes and firewall rules.
 
 Standard tests use the `single-node` or `multi-node` profile, each with its own set of settings.
 

@@ -35,6 +35,7 @@ based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - `container-registry/zot`. zot only serves Builder's images and now comes with
   `builds/zeabur-builder`.
+- Longhorn on KubeSolo: `distributions` leaves it out.
 - The hand-written `capabilities` list of the `kubesolo` block in
   `config/kubernetes.yaml`.
 

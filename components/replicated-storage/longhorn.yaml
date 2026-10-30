@@ -26,6 +26,9 @@ alternatives:
 defaults:
   single-node: optional
   multi-node: recommended
+# On KubeSolo v1.2.3 its driver deployer never becomes available, and a
+# KubeSolo install has one node, so there is no other node to copy to.
+distributions: [k3s, rke2, k0s, microk8s, kubeadm]
 persistsData: true
 disruptsTraffic: true
 

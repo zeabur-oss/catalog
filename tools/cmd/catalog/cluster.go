@@ -111,16 +111,66 @@ func (c *cluster) delete() {
 			"--kubeconfig", filepath.Join(c.dir, "kubeconfig")); err != nil {
 			slog.Warn("kind delete cluster", "name", c.name, "err", err)
 		}
-	// The host is a disposable runner: the uninstall scripts stop every
-	// process and remove the data.
-	case "k3s":
-		catalog.Run(nil, "sudo", "/usr/local/bin/k3s-uninstall.sh")
-	case "rke2":
-		catalog.Run(nil, "sudo", "/usr/local/bin/rke2-uninstall.sh")
-	case kubesoloProfile:
-		catalog.Run(nil, "sudo", "systemctl", "stop", "kubesolo")
-		catalog.Run(nil, "sudo", "rm", "-rf", "/var/lib/kubesolo")
+	default:
+		resetHost(c.host)
 	}
+}
+
+// hostCleanup removes what a distribution's own teardown leaves on the
+// host: mounts, network namespaces and links of pods, Calico's blackhole
+// routes and nftables tables, the iptables rules of kube-proxy and the CNI
+// plugins, and CNI state. The host is a disposable runner.
+const hostCleanup = `
+findmnt -rno TARGET | grep -E '^(/var/lib/kubesolo|/var/lib/kubelet|/run/netns|/var/run/netns)(/|$)' | sort -r |
+  while read -r m; do umount -l "$m"; done
+ip -all netns delete 2>/dev/null
+ip -o link show | awk -F': ' '{print $2}' | cut -d@ -f1 |
+  grep -E '^(cni0|flannel\.[0-9]+|flannel-v6\.[0-9]+|vxlan\.calico|vxlan-v6\.calico|cali[0-9a-f]+|veth[0-9a-f]+|kube-ipvs0)$' |
+  while read -r l; do ip link delete "$l"; done
+for family in -4 -6; do
+  ip "$family" route show type blackhole | while read -r _ dst _; do ip "$family" route del blackhole "$dst"; done
+done
+nft list tables | awk '$3 ~ /^(cali|kube-proxy)/ {print $2, $3}' |
+  while read -r family name; do nft delete table "$family" "$name"; done
+for ipt in iptables ip6tables; do
+  for table in filter nat mangle raw; do
+    rules=$("$ipt-save" -t "$table") && printf '%s\n' "$rules" | grep -vE 'kubesolo|KUBE-|CNI-|FLANNEL|flannel|cali-' | "$ipt-restore"
+  done
+done
+rm -rf /var/lib/kubesolo /var/lib/cni /etc/cni/net.d /run/flannel
+true
+`
+
+// resetHost removes the distribution of host profile p and what it left on
+// the host. It is safe on a host without p, so a run starts from it too.
+func resetHost(p string) {
+	switch p {
+	case "k3s":
+		catalog.Run(nil, "sudo", "sh", "-c", "[ ! -x /usr/local/bin/k3s-uninstall.sh ] || /usr/local/bin/k3s-uninstall.sh")
+	case "rke2":
+		catalog.Run(nil, "sudo", "sh", "-c", "[ ! -x /usr/local/bin/rke2-uninstall.sh ] || /usr/local/bin/rke2-uninstall.sh")
+	case kubesoloProfile:
+		// KillMode=process leaves the containerd shims in the unit's cgroup,
+		// which keeps the transient unit loaded: kill every process in it.
+		catalog.Run(nil, "sudo", "systemctl", "kill", "--signal=KILL", "kubesolo")
+		catalog.Run(nil, "sudo", "systemctl", "stop", "kubesolo")
+		catalog.Run(nil, "sudo", "systemctl", "reset-failed", "kubesolo")
+	}
+	if _, err := catalog.Run(nil, "sudo", "sh", "-c", hostCleanup); err != nil {
+		slog.Warn("host cleanup", "profile", p, "err", err)
+	}
+}
+
+// forwardDrops reports whether iptables -S FORWARD shows the policy DROP,
+// which Docker sets. Pods then reach nothing outside the host on CNIs that
+// add no FORWARD rules of their own, such as KubeSolo's.
+func forwardDrops(rules string) bool {
+	for _, line := range strings.Split(rules, "\n") {
+		if strings.TrimSpace(line) == "-P FORWARD DROP" {
+			return true
+		}
+	}
+	return false
 }
 
 // hostProfiles install a distribution on this host. Each tests the
@@ -183,6 +233,12 @@ func createHost(cfg config, p string, needs []*catalog.Component) (*cluster, err
 		return nil, err
 	}
 	c := &cluster{name: p, dir: dir, host: p}
+	rules, err := catalog.Run(nil, "sudo", "iptables", "-S", "FORWARD")
+	if err == nil && forwardDrops(rules) {
+		os.RemoveAll(dir)
+		return nil, fmt.Errorf("the FORWARD policy of this host is DROP, as Docker sets it, so pods cannot reach the outside; remove Docker and its rules as .github/workflows/e2e.yml does")
+	}
+	resetHost(p)
 	switch p {
 	case "k3s":
 		err = c.startK3s(cfg.K3s)
@@ -250,7 +306,7 @@ func (c *cluster) startK3s(k k3sConfig) error {
 	}
 	return c.waitHost("/etc/rancher/k3s/k3s.yaml", [][]string{
 		{"-n", "kube-system", "wait", "--for=condition=Available", "deployment/coredns", "deployment/local-path-provisioner"},
-	})
+	}, true)
 }
 
 // startRKE2 installs RKE2 from its tarball as the RKE2 install script does,
@@ -279,7 +335,7 @@ func (c *cluster) startRKE2(r rke2Config) error {
 	}
 	if err := c.waitHost("/etc/rancher/rke2/rke2.yaml", [][]string{
 		{"-n", "kube-system", "wait", "--for=condition=Available", "deployment/rke2-coredns-rke2-coredns"},
-	}); err != nil {
+	}, true); err != nil {
 		return err
 	}
 	manifest := filepath.Join(c.dir, "local-path-storage.yaml")
@@ -302,9 +358,11 @@ func (c *cluster) startRKE2(r rke2Config) error {
 
 // waitHost copies the distribution's admin kubeconfig, points KUBECONFIG at
 // the copy and waits until the node is ready and every kubectl command in
-// ready succeeds, for up to 5 minutes. The tests take their baseline of
-// objects after it.
-func (c *cluster) waitHost(adminKubeconfig string, ready [][]string) error {
+// ready succeeds, for up to 5 minutes. With charts, it also waits until the
+// distribution has installed every add-on it ships as a HelmChart (RKE2's
+// snapshot controller comes after the node is ready). The tests take their
+// baseline of objects after it.
+func (c *cluster) waitHost(adminKubeconfig string, ready [][]string, charts bool) error {
 	kubeconfig := filepath.Join(c.dir, "kubeconfig")
 	os.Setenv("KUBECONFIG", kubeconfig)
 	checks := append([][]string{{"wait", "--for=condition=Ready", "node", "--all"}}, ready...)
@@ -320,6 +378,9 @@ func (c *cluster) waitHost(adminKubeconfig string, ready [][]string) error {
 			}
 			_, err = catalog.Run(nil, "kubectl", append(args, "--timeout=10s")...)
 		}
+		if err == nil && charts {
+			err = helmChartsInstalled()
+		}
 		if err == nil {
 			return nil
 		}
@@ -328,6 +389,42 @@ func (c *cluster) waitHost(adminKubeconfig string, ready [][]string) error {
 		}
 		time.Sleep(5 * time.Second)
 	}
+}
+
+// helmChartsInstalled fails until the install Job of every HelmChart has
+// completed.
+func helmChartsInstalled() error {
+	out, err := catalog.Run(nil, "kubectl", "get", "helmcharts.helm.cattle.io", "-A", "-o",
+		`jsonpath={range .items[*]}{.metadata.namespace}{" "}{.metadata.name}{" "}{.status.jobName}{"\n"}{end}`)
+	if err != nil {
+		return err
+	}
+	jobs, err := helmChartJobs(out)
+	for _, j := range jobs {
+		if err != nil {
+			break
+		}
+		ns, name, _ := strings.Cut(j, "/")
+		_, err = catalog.Run(nil, "kubectl", "-n", ns, "wait", "--for=condition=Complete", "job/"+name, "--timeout=10s")
+	}
+	return err
+}
+
+// helmChartJobs returns <namespace>/<job> for each line "<namespace> <name>
+// <job>" of HelmCharts, or an error while a HelmChart has no Job yet.
+func helmChartJobs(out string) ([]string, error) {
+	var jobs []string
+	for _, line := range strings.Split(strings.TrimSpace(out), "\n") {
+		f := strings.Fields(line)
+		switch len(f) {
+		case 0:
+		case 3:
+			jobs = append(jobs, f[0]+"/"+f[2])
+		default:
+			return nil, fmt.Errorf("HelmChart %s has no install Job yet", strings.Join(f, "/"))
+		}
+	}
+	return jobs, nil
 }
 
 func (c *cluster) startKubesolo(k kubesoloConfig) error {
@@ -357,7 +454,7 @@ func (c *cluster) startKubesolo(k kubesoloConfig) error {
 	if err := c.waitHost("/var/lib/kubesolo/pki/admin/admin.kubeconfig", [][]string{
 		{"-n", "kube-system", "wait", "--for=condition=Available", "deployment/coredns"},
 		{"-n", "local-path-storage", "wait", "--for=condition=Available", "deployment/local-path-provisioner"},
-	}); err != nil {
+	}, false); err != nil {
 		return err
 	}
 	manifest := filepath.Join(c.dir, "helm-controller.yaml")

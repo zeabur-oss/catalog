@@ -1,7 +1,7 @@
 ---
 title: 测试与 CI
 description: 了解各层 CI 的运行时机和检查内容，并配置模板测试输入。
-source: "8778e2c83bfb"
+source: "35418c893f61"
 ---
 
 L0 在每个 pull request 中运行；L1 在合并到 `main` 后运行；L2 在每晚（nightly）运行，打发布 tag 前要确认该 commit 已通过 L2。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以用 `catalog e2e -tier l0|l1|l2` 运行与 CI 相同的测试。
@@ -10,7 +10,7 @@ L0 在每个 pull request 中运行；L1 在合并到 `main` 后运行；L2 在�
 
 - L0 不需要 Docker。
 - L1 和 L2 会创建 kind 集群，需要 Linux 和 Docker。加上 `-cluster current`，就会改用 `KUBECONFIG` 指定的集群。
-- 在 k3s、RKE2 和 KubeSolo 上测试时，会直接把发行版装在主机上，需要一台用完即弃的 Linux 主机和 root 权限。
+- 在 k3s、RKE2 和 KubeSolo 上测试时，会直接把发行版装在主机上，需要一台用完即弃、没有 Docker 的 Linux 主机和 root 权限。每项测试前后都会移除发行版，并清理 Pod 在主机上留下的挂载、网络接口、路由和防火墙规则。
 
 常规测试使用 `single-node` 或 `multi-node` profile，也就是各自的配置组合。
 

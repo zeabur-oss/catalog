@@ -3,7 +3,9 @@ package main
 import (
 	"net/http"
 	"net/http/httptest"
+	"os/exec"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
@@ -39,5 +41,37 @@ func TestDownloadChecksum(t *testing.T) {
 	}
 	if err := download(srv.URL, "0"+sum[1:], path); err == nil {
 		t.Fatal("download accepted a wrong checksum")
+	}
+}
+
+func TestHelmChartJobsWaitForEveryChartsJob(t *testing.T) {
+	jobs, err := helmChartJobs("kube-system rke2-canal helm-install-rke2-canal\nkube-system rke2-coredns helm-install-rke2-coredns\n")
+	if err != nil || !slices.Equal(jobs, []string{"kube-system/helm-install-rke2-canal", "kube-system/helm-install-rke2-coredns"}) {
+		t.Errorf("helmChartJobs = %q, %v", jobs, err)
+	}
+	if _, err := helmChartJobs("kube-system rke2-canal helm-install-rke2-canal\nkube-system rke2-snapshot-controller\n"); err == nil {
+		t.Error("a HelmChart without its install Job counted as installed")
+	}
+	if jobs, err := helmChartJobs(""); err != nil || len(jobs) != 0 {
+		t.Errorf("no HelmCharts: %q, %v", jobs, err)
+	}
+}
+
+func TestForwardDrops(t *testing.T) {
+	if !forwardDrops("-P FORWARD DROP\n-A FORWARD -j DOCKER-USER\n") {
+		t.Error("Docker's FORWARD policy not detected")
+	}
+	if forwardDrops("-P FORWARD ACCEPT\n-A FORWARD -m comment --comment \"-P FORWARD DROP\" -j ACCEPT\n") {
+		t.Error("an ACCEPT policy reported as DROP")
+	}
+}
+
+func TestHostCleanupIsValidShell(t *testing.T) {
+	sh, err := exec.LookPath("sh")
+	if err != nil {
+		t.Skip("no sh")
+	}
+	if out, err := exec.Command(sh, "-n", "-c", hostCleanup).CombinedOutput(); err != nil {
+		t.Fatalf("sh -n: %v: %s", err, out)
 	}
 }
