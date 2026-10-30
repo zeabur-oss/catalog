@@ -65,19 +65,19 @@ security:
       locales:
         zh-TW:
           risk: "Browserless 採用 SSPL 與商業雙重授權。SSPL 不是 OSI 認可的開源授權，閉源的商業用途也受到限制。"
-          mitigation: "範本說明裡有寫明授權。部署並不代表你取得了授權。請先確認自己適用哪一種授權，要用在商業產品時，先請教法律專業人士。"
+          mitigation: "範本說明裡有寫明授權。部署本身不會給你授權。請先確認自己適用哪一種授權，要用在商業產品時，先請教法律專業人士。"
         zh-CN:
           risk: "Browserless 采用 SSPL 与商业双重许可。SSPL 不是 OSI 认可的开源许可证，闭源的商业用途也受到限制。"
-          mitigation: "模板说明里有写明许可证。部署并不代表你获得了授权。请先确认自己适用哪一种许可证，要用在商业产品时，先咨询法律专业人士。"
+          mitigation: "模板说明里有写明许可证。部署本身不会给你授权。请先确认自己适用哪一种许可证，要用在商业产品时，先咨询法律专业人士。"
     - risk: "One shared token allows powerful automation. It can also show up in client URLs and access logs."
       mitigation: "The token is generated at deploy time. Send it in the Authorization header where the client supports it. Limit who can read the Kubernetes Secret and the logs. Strip query strings in any external proxy logs. Rotate the token if it leaks."
       locales:
         zh-TW:
           risk: "共用的 token 可以執行很強的自動化操作，也可能出現在用戶端網址和存取紀錄裡。"
-          mitigation: "token 在部署時自動產生。用戶端支援的話，請改用 Authorization 標頭傳送。限制誰能讀取 Kubernetes 機密和紀錄。外部代理伺服器的紀錄要去掉查詢字串。token 一旦外洩就要更換。"
+          mitigation: "token 在部署時自動產生。用戶端支援時，改用 Authorization 標頭傳送。限制誰能讀取 Kubernetes 機密和紀錄。外部代理伺服器的紀錄要去掉查詢字串。token 一旦外洩就要更換。"
         zh-CN:
           risk: "共用的 token 可以执行很强的自动化操作，也可能出现在客户端 URL 和访问日志里。"
-          mitigation: "token 在部署时自动生成。客户端支持的话，请改用 Authorization 请求头传送。限制谁能读取 Kubernetes 机密和日志。外部代理的日志要去掉查询字符串。token 一旦泄露就要更换。"
+          mitigation: "token 在部署时自动生成。客户端支持时，改用 Authorization 请求头传送。限制谁能读取 Kubernetes 机密和日志。外部代理的日志要去掉查询字符串。token 一旦泄露就要更换。"
 
 scalability:
   summary: >-

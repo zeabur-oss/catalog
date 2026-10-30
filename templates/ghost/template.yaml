@@ -149,10 +149,10 @@ security:
       locales:
         zh-TW:
           risk: "Ghost 寄交易通知信和電子報，要靠外部服務。"
-          mitigation: "請提供現成的 SMTP 機密。大量寄送電子報時，在 Ghost 裡設定 Mailgun。備份裡的服務商憑證要妥善保護。範本不含自架的 ActivityPub 和 Tinybird 分析。"
+          mitigation: "提供現成的 SMTP 機密。大量寄送電子報時，在 Ghost 裡設定 Mailgun。備份裡的服務商憑證要妥善保護。範本不含自架的 ActivityPub 和 Tinybird 分析。"
         zh-CN:
           risk: "Ghost 发送事务邮件和电子报，要依赖外部服务。"
-          mitigation: "请提供现成的 SMTP 机密。大量发送电子报时，在 Ghost 里设置 Mailgun。备份里的服务商凭证要妥善保护。模板不含自托管的 ActivityPub 和 Tinybird 分析。"
+          mitigation: "提供现成的 SMTP 机密。大量发送电子报时，在 Ghost 里设置 Mailgun。备份里的服务商凭证要妥善保护。模板不含自托管的 ActivityPub 和 Tinybird 分析。"
 
 scalability:
   summary: >-

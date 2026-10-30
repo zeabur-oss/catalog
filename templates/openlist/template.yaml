@@ -57,10 +57,10 @@ security:
       locales:
         zh-TW:
           risk: "上游的一體式 Aria2 設定沒有 RPC 密碼，下載來源可以叫它去抓任何網址。"
-          mitigation: "這個範本啟動 Aria2 時有開 RPC 密碼驗證，而且只監聽本機迴路，同時保留 FFmpeg、BitTorrent 和下載功能。往外的網路流量沒有限制，所以下載網址可以連到內網和雲端 metadata 位址。請加上 egress NetworkPolicy 把它們擋掉。"
+          mitigation: "這個範本啟動 Aria2 時有開 RPC 密碼驗證，而且只監聽本機迴路，同時保留 FFmpeg、BitTorrent 和下載功能。往外的網路流量沒有限制，所以下載網址可以連到內網和雲端 metadata 位址。加上 egress NetworkPolicy 把這些位址擋掉。"
         zh-CN:
           risk: "上游的一体式 Aria2 设置没有 RPC 密码，下载来源可以让它去抓任何网址。"
-          mitigation: "这个模板启动 Aria2 时开启了 RPC 密码验证，而且只监听本机回环，同时保留 FFmpeg、BitTorrent 和下载功能。向外的网络流量没有限制，所以下载网址可以连到内网和云端 metadata 地址。请加上 egress NetworkPolicy 把它们挡掉。"
+          mitigation: "这个模板启动 Aria2 时开启了 RPC 密码验证，而且只监听本机回环，同时保留 FFmpeg、BitTorrent 和下载功能。向外的网络流量没有限制，所以下载网址可以连到内网和云端 metadata 地址。加上 egress NetworkPolicy 把这些地址挡掉。"
     - risk: >-
         Storage credentials and administrator password hashes are kept in the
         SQLite data volume.

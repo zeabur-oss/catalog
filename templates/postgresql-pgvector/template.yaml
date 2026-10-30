@@ -65,10 +65,10 @@ security:
       mitigation: Run a restore drill with representative vectors before production.
       locales:
         zh-TW:
-          risk: "備份順利跑完，不代表向量和索引一定能正確還原。"
+          risk: "備份順利完成，向量和索引也不一定能正確還原。"
           mitigation: "正式上線前，用有代表性的向量資料實際演練一次還原。"
         zh-CN:
-          risk: "备份顺利跑完，不代表向量和索引一定能正确恢复。"
+          risk: "备份顺利完成，向量和索引也不一定能正确恢复。"
           mitigation: "正式上线前，用有代表性的向量数据实际演练一次恢复。"
 
 scalability:

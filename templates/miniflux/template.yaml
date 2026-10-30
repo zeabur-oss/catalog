@@ -56,10 +56,10 @@ security:
       locales:
         zh-TW:
           risk: "伺服器會去抓使用者指定位址的訂閱源。"
-          mitigation: "Miniflux 預設會拒絕私有網路位址。範本沒有限制對外連線，想限制的話，請加一條 egress NetworkPolicy（限制對外連線的規則）。"
+          mitigation: "Miniflux 預設會拒絕私有網路位址。範本沒有限制對外連線，需要限制時，請加一條 egress NetworkPolicy（限制對外連線的規則）。"
         zh-CN:
           risk: "服务器会去抓取用户指定地址的订阅源。"
-          mitigation: "Miniflux 默认会拒绝私有网络地址。模板没有限制对外连接，想限制的话，请加一条 egress NetworkPolicy（限制对外连接的规则）。"
+          mitigation: "Miniflux 默认会拒绝私有网络地址。模板没有限制对外连接，需要限制时，请加一条 egress NetworkPolicy（限制对外连接的规则）。"
     - risk: >-
         The database pods (CloudNativePG) call the Kubernetes API with an
         identity that the database operator creates.

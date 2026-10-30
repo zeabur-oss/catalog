@@ -47,10 +47,10 @@ security:
       locales:
         zh-TW:
           risk: "OAuth refresh token 可以存取你在上游服務商的帳號。服務商的訂閱條款也可能不允許轉接代理。"
-          mitigation: "只使用你自己擁有、而且允許代理的帳號。憑證放在私有的 PVC 上，備份時要加密。請透過 kubectl exec 用原生的裝置登入來完成授權。回呼連接埠沒有對外開放。"
+          mitigation: "只使用你自己擁有、而且允許代理的帳號。憑證放在私有的 PVC 上，備份時要加密。透過 kubectl exec 用原生的裝置登入來完成授權。回呼連接埠沒有對外開放。"
         zh-CN:
           risk: "OAuth refresh token 可以访问你在上游服务商的账号。服务商的订阅条款也可能不允许转接代理。"
-          mitigation: "只使用你自己拥有、并且允许代理的账号。凭证放在私有的 PVC 上，备份时要加密。请通过 kubectl exec 用原生的设备登录来完成授权。回调端口没有对外开放。"
+          mitigation: "只使用你自己拥有、并且允许代理的账号。凭证放在私有的 PVC 上，备份时要加密。通过 kubectl exec 用原生的设备登录来完成授权。回调端口没有对外开放。"
     - risk: "API keys can use up your account quotas. The management interface can read and change sensitive proxy settings."
       mitigation: "Client keys and management keys are generated separately. The ingress exposes only /v1 and /v1beta. Remote management and the downloadable control panel are turned off. To manage the proxy, run kubectl -n NAMESPACE port-forward deployment/cliproxyapi 8317:8317 --address 127.0.0.1 and do not publish the tunnel."
       locales:
