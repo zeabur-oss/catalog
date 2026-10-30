@@ -34,10 +34,32 @@
         "type": "github"
       }
     },
+    "oss-release": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1793358655,
+        "narHash": "sha256-rgUU5XLTQ7jiEAXVt1rGjnosfELxEO5nMnkz1B+szxE=",
+        "owner": "zeabur-oss",
+        "repo": ".github",
+        "rev": "5a9a19ea5d8bddfc88b4185fa56291eecc5c70df",
+        "type": "github"
+      },
+      "original": {
+        "owner": "zeabur-oss",
+        "repo": ".github",
+        "rev": "5a9a19ea5d8bddfc88b4185fa56291eecc5c70df",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "oss-release": "oss-release"
       }
     },
     "systems": {

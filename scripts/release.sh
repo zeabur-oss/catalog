@@ -4,6 +4,8 @@
 #
 #   scripts/release.sh check   <version>                                the version is flake.nix's and
 #                                                                       has a CHANGELOG.md section
+#                                                                       (a pre-release reads its
+#                                                                       normal version's)
 #   scripts/release.sh build   <version> <os> <arch> <dist>             validate, nix build .#release
 #   scripts/release.sh publish <version> <artifacts> <published>        nothing to push: []
 #   scripts/release.sh assets  <version> <artifacts> <release>          sign, SHA256SUMS, notes
@@ -23,22 +25,25 @@ if [[ -z "${CATALOG_RELEASE_SHELL:-}" ]]; then
 fi
 
 version="${2:?version}"
-[[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "error: $version is not vX.Y.Z" >&2; exit 1; }
+# plain: manifests and flake.nix carry it; normal: the CHANGELOG.md section it reads.
+parsed=$(zeabur-oss-release version "$version")
+plain=$(sed -n 's/^plain=//p' <<<"$parsed")
+normal=$(sed -n 's/^normal=//p' <<<"$parsed")
 
 # The files nix build .#release makes; each gets a Sigstore bundle <file>.sigstore.json.
 files=(bundle.tar.gz index.json checksums.txt)
 
 notes() {
-  awk -v v="${version#v}" '$0 ~ "^## \\[" v "\\]" { on = 1; next } on && /^## / { exit } on' CHANGELOG.md
+  awk -v v="$normal" '$0 ~ "^## \\[" v "\\]" { on = 1; next } on && /^## / { exit } on' CHANGELOG.md
 }
 
 case "$stage" in
   check)
     flake_version=$(nix eval --raw .#catalog.version)
-    [[ "$flake_version" == "${version#v}" ]] ||
-      { echo "error: flake.nix has version $flake_version, not ${version#v}" >&2; exit 1; }
+    [[ "$flake_version" == "$plain" ]] ||
+      { echo "error: flake.nix has version $flake_version, not $plain" >&2; exit 1; }
     [[ -n "$(notes | tr -d '[:space:]')" ]] ||
-      { echo "error: CHANGELOG.md has no section ## [${version#v}]" >&2; exit 1; }
+      { echo "error: CHANGELOG.md has no section ## [$normal]" >&2; exit 1; }
     ;;
 
   build)

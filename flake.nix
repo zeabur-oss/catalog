@@ -4,9 +4,14 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    # zeabur-oss-release: checks the release tag (scripts/release.sh).
+    oss-release = {
+      url = "github:zeabur-oss/.github/5a9a19ea5d8bddfc88b4185fa56291eecc5c70df";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs = { self, nixpkgs, flake-utils, oss-release }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
@@ -81,6 +86,7 @@
             shellcheck
             actionlint
             yq-go
+            oss-release.packages.${system}.zeabur-oss-release
           ];
         };
       });

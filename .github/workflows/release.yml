@@ -1,14 +1,14 @@
 name: release
 
-# Tag vX.Y.Z on main: the shared release validates, builds and signs the catalog, then leaves a
+# Tag vX.Y.Z or vX.Y.Z-<pre-release> on main: the shared release validates, builds and signs the catalog, then leaves a
 # draft. Manual run: rehearse.
 on:
   push:
-    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+    tags: ["v[0-9]*"]
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to rehearse or verify (v0.1.1); a rehearsal never publishes"
+        description: "Version to rehearse or verify (v0.1.1, v0.1.2-beta.1); a rehearsal never publishes"
         required: true
       verify_only:
         description: "Verify the existing draft release of this version; build and publish nothing"
@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   release:
-    uses: zeabur-oss/.github/.github/workflows/release.yml@d372cc7913ed9692161a23a65ac5f3aa73f30eab # main
+    uses: zeabur-oss/.github/.github/workflows/release.yml@5a9a19ea5d8bddfc88b4185fa56291eecc5c70df # .github#14
     permissions:
       contents: write
       packages: write
