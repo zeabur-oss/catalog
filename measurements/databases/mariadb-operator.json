@@ -1,6 +1,15 @@
 {
   "component": "databases/mariadb-operator",
   "environments": {
+    "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
+      "idleMemoryMiB": 23,
+      "idleCPUm": 2,
+      "versions": {
+        "mariadb-operator": "26.10.1",
+        "mariadb-operator-crds": "26.10.1"
+      },
+      "measuredAt": "2026-10-29"
+    },
     "multi-node-amd64-v1.36.4": {
       "idleMemoryMiB": 60,
       "idleCPUm": 3,

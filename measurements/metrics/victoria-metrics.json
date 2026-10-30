@@ -26,8 +26,8 @@
       "measuredAt": "2026-10-11"
     },
     "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 243,
-      "idleCPUm": 27,
+      "idleMemoryMiB": 260,
+      "idleCPUm": 26,
       "versions": {
         "k8s-stack": "0.96.0"
       },

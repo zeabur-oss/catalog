@@ -2,8 +2,8 @@
   "template": "uptime-kuma",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 118,
-      "idleCPUm": 3,
+      "idleMemoryMiB": 119,
+      "idleCPUm": 2,
       "versions": {
         "louislam/uptime-kuma": "2.5.7-rootless"
       },

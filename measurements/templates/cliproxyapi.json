@@ -2,7 +2,7 @@
   "template": "cliproxyapi",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 17,
+      "idleMemoryMiB": 18,
       "idleCPUm": 0,
       "versions": {
         "eceasy/cli-proxy-api": "v8.0.41"

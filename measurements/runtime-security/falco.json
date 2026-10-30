@@ -26,7 +26,7 @@
       "measuredAt": "2026-10-11"
     },
     "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 71,
+      "idleMemoryMiB": 69,
       "idleCPUm": 5,
       "versions": {
         "falco": "9.2.1",

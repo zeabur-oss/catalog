@@ -2,8 +2,8 @@
   "template": "halo",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 420,
-      "idleCPUm": 10,
+      "idleMemoryMiB": 421,
+      "idleCPUm": 13,
       "versions": {
         "halohub/halo": "2.27.1"
       },

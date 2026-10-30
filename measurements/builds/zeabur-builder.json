@@ -10,7 +10,25 @@
       },
       "measuredAt": "2026-10-29"
     },
+    "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
+      "idleMemoryMiB": 49,
+      "idleCPUm": 2,
+      "versions": {
+        "builder": "0.1.1",
+        "zot": "0.1.128"
+      },
+      "measuredAt": "2026-10-29"
+    },
     "kubesolo-arm64-v1.35.7+kubesolo-v1.2.2": {
+      "idleMemoryMiB": 49,
+      "idleCPUm": 2,
+      "versions": {
+        "builder": "0.1.1",
+        "zot": "0.1.128"
+      },
+      "measuredAt": "2026-10-29"
+    },
+    "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
       "idleMemoryMiB": 49,
       "idleCPUm": 2,
       "versions": {
@@ -47,8 +65,8 @@
       "measuredAt": "2026-10-29"
     },
     "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 49,
-      "idleCPUm": 3,
+      "idleMemoryMiB": 48,
+      "idleCPUm": 2,
       "versions": {
         "builder": "0.1.1",
         "zot": "0.1.128"

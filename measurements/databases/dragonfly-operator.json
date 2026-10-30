@@ -1,6 +1,22 @@
 {
   "component": "databases/dragonfly-operator",
   "environments": {
+    "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
+      "idleMemoryMiB": 20,
+      "idleCPUm": 1,
+      "versions": {
+        "dragonfly-operator": "v1.7.1"
+      },
+      "measuredAt": "2026-10-29"
+    },
+    "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
+      "idleMemoryMiB": 20,
+      "idleCPUm": 1,
+      "versions": {
+        "dragonfly-operator": "v1.7.1"
+      },
+      "measuredAt": "2026-10-29"
+    },
     "multi-node-amd64-v1.36.4": {
       "idleMemoryMiB": 37,
       "idleCPUm": 1,
@@ -26,7 +42,7 @@
       "measuredAt": "2026-10-29"
     },
     "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 19,
+      "idleMemoryMiB": 20,
       "idleCPUm": 1,
       "versions": {
         "dragonfly-operator": "v1.7.1"

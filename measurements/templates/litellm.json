@@ -2,7 +2,7 @@
   "template": "litellm",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 639,
+      "idleMemoryMiB": 638,
       "idleCPUm": 10,
       "versions": {
         "ghcr.io/berriai/litellm-non_root": "v1.106.3"

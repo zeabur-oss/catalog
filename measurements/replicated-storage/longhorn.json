@@ -26,8 +26,8 @@
       "measuredAt": "2026-10-29"
     },
     "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 158,
-      "idleCPUm": 20,
+      "idleMemoryMiB": 155,
+      "idleCPUm": 18,
       "versions": {
         "longhorn": "1.13.0"
       },

@@ -26,7 +26,7 @@
       "measuredAt": "2026-10-29"
     },
     "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 27,
+      "idleMemoryMiB": 26,
       "idleCPUm": 1,
       "versions": {
         "seaweedfs-operator": "0.1.43"

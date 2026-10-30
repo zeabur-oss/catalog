@@ -2,7 +2,7 @@
   "template": "lobechat",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 175,
+      "idleMemoryMiB": 176,
       "idleCPUm": 0,
       "versions": {
         "docker.io/lobehub/lobe-chat": "1.143.3"
