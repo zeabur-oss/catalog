@@ -21,8 +21,8 @@ import (
 
 // Tiers. L0 runs on every pull request: static checks, then a server-side dry
 // run on a local API server with only the CRDs and no nodes. L1 runs on main
-// and in the merge queue: it installs and smoke tests what changed,
-// single-node amd64, in groups that share their dependencies. L2 runs nightly
+// only: it installs and smoke tests what changed, single-node amd64, in
+// groups that share their dependencies. L2 runs nightly
 // and before a release: every profile and architecture in a fresh cluster
 // each, with idle usage, uninstall, residue and upgrade checks. With -cluster
 // current, L1 and L2 use the current cluster instead of kind.

@@ -88,5 +88,5 @@ Every template in Zeabur Catalog must follow these rules. When you add or update
 
 ## Tests
 
-- Smoke tests run on kind clusters in CI with the components the template requires. In the merge queue, tests that need the same components share a cluster; nightly runs use fresh clusters. Tests must prove that core functionality works, such as by sending an authenticated request or running a database query. Checking only whether Pods are Ready isn't enough.
+- Smoke tests run on kind clusters in CI with the components the template requires. In L1, which runs after merges to `main`, tests that need the same components share a cluster; nightly runs use fresh clusters. Tests must prove that core functionality works, such as by sending an authenticated request or running a database query. Checking only whether Pods are Ready isn't enough.
 - Tests must use only disposable credentials and storage. Put test input values in [`config/e2e.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/e2e.yaml). Object storage must use SeaweedFS in the test cluster.

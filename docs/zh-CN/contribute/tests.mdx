@@ -1,10 +1,10 @@
 ---
 title: 测试与 CI
 description: 了解各层 CI 的运行时机和检查内容，并配置模板测试输入。
-source: "cb5e9faa5f01"
+source: "32bca73a75a7"
 ---
 
-L0 在每个 pull request 中运行；L1 在合并队列中和合并到 `main` 后运行；L2 在每晚（nightly）运行，打发布 tag 前要确认该 commit 已通过 L2。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以用 `catalog e2e -tier l0|l1|l2` 运行与 CI 相同的测试。
+L0 在每个 pull request 中运行；L1 在合并到 `main` 后运行；L2 在每晚（nightly）运行，打发布 tag 前要确认该 commit 已通过 L2。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以用 `catalog e2e -tier l0|l1|l2` 运行与 CI 相同的测试。
 
 ## 开始前
 
@@ -81,7 +81,7 @@ L0 在每个 pull request 中运行；L1 在合并队列中和合并到 `main` �
 
 ## L1：测试变更影响的组件和模板
 
-`ci.yml` 在合并队列中和合并到 `main` 后，会在单节点 amd64 kind 集群中安装以下项目，再运行冒烟测试（smoke check）：
+`ci.yml` 在合并到 `main` 后，会在单节点 amd64 kind 集群中安装以下项目，再运行冒烟测试（smoke check）：
 
 - 有变更的组件和模板。
 - 会安装变更组件的组件和模板。

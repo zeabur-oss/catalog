@@ -3,7 +3,7 @@ title: Tests and CI
 description: Learn when each CI tier runs, what it checks, and how to configure template test inputs.
 ---
 
-L0 runs on every pull request. L1 runs in the merge queue and after merges to `main`. L2 runs nightly; check that it passed on a commit before tagging it. Each tier covers different checks, and later tiers run checks that earlier tiers don't cover. You can also run the same tests as CI with `catalog e2e -tier l0|l1|l2`.
+L0 runs on every pull request. L1 runs after merges to `main`. L2 runs nightly; check that it passed on a commit before tagging it. Each tier covers different checks, and later tiers run checks that earlier tiers don't cover. You can also run the same tests as CI with `catalog e2e -tier l0|l1|l2`.
 
 ## Before you start
 
@@ -80,7 +80,7 @@ Each template's Namespace generates warnings at its own enforce level. Any warni
 
 ## L1: Test components and templates affected by changes
 
-In the merge queue and after merges to `main`, `ci.yml` installs the following items in a single-node amd64 kind cluster, then runs smoke checks:
+After merges to `main`, `ci.yml` installs the following items in a single-node amd64 kind cluster, then runs smoke checks:
 
 - Changed components and templates.
 - Components and templates that install a changed component.

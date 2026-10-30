@@ -15,8 +15,10 @@ sections.
 
 ```yaml
 # Before: bumping this since it was OOMing under load
-# After:  The controller used 400 MiB with 2,000 Certificates. This limit keeps a margin of 50%.
+# After:  The chart default is too low for the controller's cache of every Certificate.
 ```
+
+A value comment states the constraint or the difference from the upstream default, not the history or the measurements behind it.
 
 ```text
 Before: Updated the cronjob stuff so old jobs dont pile up

@@ -1,7 +1,7 @@
 ---
 title: 模板标准
 description: 按照模板标准新增或修改 Zeabur Catalog 模板，检查安全、网络、数据、升级与测试配置。
-source: "115a9381d675"
+source: "10570e1f48c3"
 ---
 
 Zeabur Catalog 的每个模板都必须符合以下规则。新增或修改模板时，使用 `catalog validate`、`catalog template lint` 和安装测试检查其中多项规则，其余规则由你逐项确认。查阅上游文档时，请对照模板固定使用的确切版本。
@@ -89,5 +89,5 @@ Zeabur Catalog 的每个模板都必须符合以下规则。新增或修改模�
 
 ## 测试
 
-- 冒烟测试会在 CI 的 kind 集群上运行，并搭配模板需要的组件。在合并队列中，需要相同组件的测试会共用集群；每晚则使用全新的集群运行。测试必须证明主要功能正常，例如发送经过身份验证的请求或执行数据库查询，不能只检查 Pod 是否为 Ready。
+- 冒烟测试会在 CI 的 kind 集群上运行，并搭配模板需要的组件。在合并到 `main` 后运行的 L1 中，需要相同组件的测试会共用集群；每晚则使用全新的集群运行。测试必须证明主要功能正常，例如发送经过身份验证的请求或执行数据库查询，不能只检查 Pod 是否为 Ready。
 - 测试只能使用一次性的凭据与存储空间。测试输入值必须放在 [`config/e2e.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/e2e.yaml)。对象存储必须使用测试集群内的 SeaweedFS。

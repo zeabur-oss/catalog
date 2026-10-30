@@ -1,14 +1,13 @@
-# L0 on every pull request, in the merge queue and on main: the jobs of scripts/ci.sh (Go tests,
+# L0 on every pull request and on main: the jobs of scripts/ci.sh (Go tests,
 # lint, validate, render, template lint, a server-side dry run on a local API server and
-# nix build .#release), run by zeabur-oss/.github's shared CI, and the DCO check. L1 in the merge
-# queue and on main: install and smoke test what changed and what installs it, in groups; the
-# shared CI has no dynamic matrix, so L1 stays here. CONTRIBUTING.md lists what each tier checks.
+# nix build .#release), run by zeabur-oss/.github's shared CI, and the DCO check. L1 on main only:
+# install and smoke test what changed and what installs it, in groups; the shared CI has no
+# dynamic matrix, so L1 stays here. CONTRIBUTING.md lists what each tier checks.
 # L2 is e2e.yml, which nightly.yml calls.
 name: ci
 
 on:
   pull_request:
-  merge_group:
   push:
     branches: [main]
 
@@ -29,7 +28,7 @@ jobs:
     uses: zeabur-oss/.github/.github/workflows/dco.yml@d372cc7913ed9692161a23a65ac5f3aa73f30eab # main
 
   l1-matrix:
-    if: github.event_name == 'merge_group' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-slim
     outputs:
       matrix: ${{ steps.list.outputs.matrix }}
@@ -43,7 +42,7 @@ jobs:
           go-version-file: go.mod
       - id: list
         env:
-          SINCE: ${{ github.event.merge_group.base_sha || github.event.before }}
+          SINCE: ${{ github.event.before }}
         run: echo "matrix=$(go run ./tools/cmd/catalog list -tier l1 -since "$SINCE")" >> "$GITHUB_OUTPUT"
 
   l1:
