@@ -1,7 +1,7 @@
 ---
 title: 测试与 CI
 description: 了解各层 CI 的运行时机和检查内容，并配置模板测试输入。
-source: "32bca73a75a7"
+source: "5166e887c450"
 ---
 
 L0 在每个 pull request 中运行；L1 在合并到 `main` 后运行；L2 在每晚（nightly）运行，打发布 tag 前要确认该 commit 已通过 L2。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以用 `catalog e2e -tier l0|l1|l2` 运行与 CI 相同的测试。
@@ -10,7 +10,7 @@ L0 在每个 pull request 中运行；L1 在合并到 `main` 后运行；L2 在�
 
 - L0 不需要 Docker。
 - L1 和 L2 会创建 kind 集群，需要 Linux 和 Docker。加上 `-cluster current`，就会改用 `KUBECONFIG` 指定的集群。
-- 运行 KubeSolo 测试需要 Linux 主机和 root 权限。
+- 在 k3s、RKE2 和 KubeSolo 上测试时，会直接把发行版装在主机上，需要一台用完即弃的 Linux 主机和 root 权限。
 
 常规测试使用 `single-node` 或 `multi-node` profile，也就是各自的配置组合。
 
@@ -118,9 +118,9 @@ L2 会在 amd64 和 arm64 上，为每个组件、每种 profile 创建新的 ki
 
 <Step>
 
-### 运行冒烟测试并卸载
+### 运行健康检查和冒烟测试，再卸载
 
-运行冒烟测试，再卸载组件。只要有任何残留项，测试就会失败。
+运行组件的健康检查和冒烟测试，再卸载组件。只要有任何残留项，测试就会失败。
 
 </Step>
 
@@ -142,15 +142,17 @@ L2 也会检查 amd64 上 `single-node` profile 的默认启用组件总用量�
 
 `nightly.yml` 会创建 pull request，更新 `measurements/`。你也可以手动运行这个工作流，立即获取测量结果。Renovate 则会针对每个新的上游版本和镜像 digest 创建 pull request。
 
-### KubeSolo 测试
+### 在 k3s、RKE2 和 KubeSolo 上测试
 
-使用 `-profile kubesolo` 时，测试会在 Linux 主机上安装 [`config/kubernetes.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/kubernetes.yaml) 固定的 KubeSolo 和 helm-controller 版本，并核对校验和。
+使用 `-profile k3s`、`-profile rke2` 或 `-profile kubesolo` 时，测试会在 Linux 主机上安装 [`config/kubernetes.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/kubernetes.yaml) 固定版本的发行版，并核对每个下载文件的校验和：
 
-接着，测试会使用 `single-node` 的配置值，针对该文件列出的 capability（用途类别）运行 L2：`ingress`、`certificates`、`builds` 和 `databases`。
+- k3s 不启用自带的 Traefik 和 metrics-server。
+- RKE2 不启用自带的 ingress controller 和 metrics-server，并加装 local-path-provisioner 作为默认 StorageClass。
+- KubeSolo 会另外安装独立的 helm-controller。
 
-KubeSolo 测试不运行模板，因为模板需要 NetworkPolicy。组件的 `distributions` 如果未列出 `kubesolo`，也不会运行。
+接着，测试会使用 `single-node` 的配置值，对 `single-node` 支持的每个组件运行 L2。组件的 `distributions` 如果未列出该发行版，就跳过这个组件。这些测试不运行模板。
 
-测量结果与 kind 的结果放在一起，以 `kubesolo-<architecture>-<version>` 作为标识键。
+测量结果与 kind 的结果放在一起，以 `<profile>-<architecture>-<version>` 作为标识键，例如 `k3s-amd64-v1.36.5+k3s1`。只有测试通过才会写入测量结果。组件如果有 `config/kubernetes.yaml` 固定版本的测量结果，`catalog index` 就会把该发行版列进组件的 `testedOn`。
 
 ## 配置模板测试输入
 
@@ -199,5 +201,5 @@ L0 会启动自己的 API server；L1 和 L2 会创建自己的 kind 集群，�
 | --- | --- |
 | L0 因模板 Namespace 的 Pod Security 警告而失败 | 按照警告修正模板。警告会让模板测试失败。 |
 | 组件列在 `unready`，没有资源测量结果 | 检查 `config/e2e.yaml`。这些组件需要 CI 未持有的凭据，测试不测量资源用量。 |
-| KubeSolo 没有运行某个组件 | 检查组件的 `distributions` 是否包含 `kubesolo`。 |
+| k3s、RKE2 或 KubeSolo 没有测试某个组件 | 检查组件的 `distributions` 是否包含该发行版。 |
 | 需要让节点从镜像站拉取镜像 | 配置 `ZEABUR_REGISTRY_MIRRORS`，值的格式为 `docker.io=http://mirror:5001,ghcr.io=...`。 |

@@ -167,6 +167,13 @@ security:
 # owner, and Longhorn's uninstall deletes only the class longhorn.
 leftovers: [storageclasses/longhorn-static]
 
+health:
+  # Longhorn's own checks of each node: packages, modules, disk space.
+  - name: nodes-ready
+    wait: ["--for=condition=Ready", "nodes.longhorn.io", "--all", "-n", "longhorn-system"]
+    timeout: 60s
+    advice: "On a node that joined without it, add longhorn: true under join in its configuration and run zeabur-installer apply there."
+
 smoke:
   - name: driver
     wait: ["-n longhorn-system deployment/longhorn-driver-deployer --for=condition=Available"]

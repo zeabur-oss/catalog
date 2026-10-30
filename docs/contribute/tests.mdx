@@ -9,7 +9,7 @@ L0 runs on every pull request. L1 runs after merges to `main`. L2 runs nightly; 
 
 - L0 doesn't require Docker.
 - L1 and L2 create kind clusters and require Linux and Docker. Add `-cluster current` to use the cluster specified by `KUBECONFIG` instead.
-- KubeSolo tests require a Linux host and root privileges.
+- Tests on k3s, RKE2 and KubeSolo install the distribution on the host itself. They require a disposable Linux host and root privileges.
 
 Standard tests use the `single-node` or `multi-node` profile, each with its own set of settings.
 
@@ -117,9 +117,9 @@ Sample idle memory and CPU usage every 10 seconds until five consecutive samples
 
 <Step>
 
-### Run smoke checks and uninstall
+### Run health and smoke checks, then uninstall
 
-Run smoke checks, then uninstall the component. Any leftover resources fail the test.
+Run the component's health checks and smoke checks, then uninstall the component. Any leftover resources fail the test.
 
 </Step>
 
@@ -141,15 +141,17 @@ L2 also checks the total usage of components enabled by default in the `single-n
 
 `nightly.yml` opens a pull request to update `measurements/`. You can also run this workflow manually to get measurements immediately. Renovate opens a pull request for each new upstream version and image digest.
 
-### KubeSolo tests
+### Tests on k3s, RKE2 and KubeSolo
 
-With `-profile kubesolo`, the tests install the KubeSolo and helm-controller versions pinned in [`config/kubernetes.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/kubernetes.yaml) on a Linux host and verify their checksums.
+With `-profile k3s`, `-profile rke2` or `-profile kubesolo`, the tests install that distribution on the Linux host, at the version pinned in [`config/kubernetes.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/kubernetes.yaml), and verify the checksum of every download:
 
-The tests then use the `single-node` settings to run L2 for the capabilities (usage categories) listed in that file: `ingress`, `certificates`, `builds`, and `databases`.
+- k3s runs without its own Traefik and metrics-server.
+- RKE2 runs without its ingress controller and metrics-server, and gets local-path-provisioner as its default StorageClass.
+- KubeSolo gets the standalone helm-controller.
 
-KubeSolo tests don't run templates because templates require NetworkPolicy. They also skip components whose `distributions` don't include `kubesolo`.
+The tests then run L2 with the `single-node` settings for every component that `single-node` supports. They skip a component whose `distributions` leaves out the distribution, and they don't run templates.
 
-Measurements are stored alongside the kind results, keyed by `kubesolo-<architecture>-<version>`.
+Measurements are stored alongside the kind results, keyed by `<profile>-<architecture>-<version>`, for example `k3s-amd64-v1.36.5+k3s1`. Only a passing run writes one. `catalog index` lists a distribution in a component's `testedOn` when the component has a measurement for the version that `config/kubernetes.yaml` pins.
 
 ## Configure template test inputs
 
@@ -198,5 +200,5 @@ After testing, each tier deletes the test environment it created. Add `-keep` to
 | --- | --- |
 | L0 fails because of Pod Security warnings for a template's Namespace | Fix the template according to the warnings. Warnings fail the template test. |
 | A component appears in `unready` and has no resource measurements | Check `config/e2e.yaml`. These components require credentials CI doesn't have, so the tests don't measure their resource usage. |
-| KubeSolo doesn't test a component | Check whether the component's `distributions` includes `kubesolo`. |
+| k3s, RKE2 or KubeSolo doesn't test a component | Check whether the component's `distributions` includes that distribution. |
 | Nodes need to pull images from registry mirrors | Set `ZEABUR_REGISTRY_MIRRORS` with a value in the format `docker.io=http://mirror:5001,ghcr.io=...`. |

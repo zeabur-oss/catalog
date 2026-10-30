@@ -172,6 +172,18 @@ leftovers:
   - secrets/letsencrypt-staging-account-key
   - secrets/letsencrypt-account-key
 
+health:
+  - name: controllers
+    wait: ["--for=condition=Available", "deployment/cert-manager", "deployment/cert-manager-webhook",
+      "deployment/cert-manager-cainjector", "-n", "cert-manager"]
+    timeout: 60s
+    advice: Check the pods in the cert-manager namespace with kubectl -n cert-manager get pods; until they run, no certificate is issued or renewed.
+  # Ready means the ACME account is registered with Let's Encrypt.
+  - name: acme-issuer
+    wait: ["--for=condition=Ready", "clusterissuer/letsencrypt"]
+    timeout: 60s
+    advice: Check that the cluster can reach acme-v02.api.letsencrypt.org, then read the reason with kubectl describe clusterissuer letsencrypt.
+
 smoke:
   - name: self-signed-certificate
     manifest: |
@@ -190,8 +202,7 @@ smoke:
     wait: ["-n catalog-smoke certificate/smoke --for=condition=Ready"]
   # Ready means the ACME account is registered; it needs egress to Let's
   # Encrypt, not a reachable ingress. CI points both issuers at staging
-  # (config/e2e.yaml), so it registers no production accounts.
-  - name: acme-issuers
-    wait:
-      - "clusterissuer/letsencrypt-staging --for=condition=Ready"
-      - "clusterissuer/letsencrypt --for=condition=Ready"
+  # (config/e2e.yaml), so it registers no production accounts. The health
+  # check acme-issuer covers letsencrypt.
+  - name: acme-staging-issuer
+    wait: ["clusterissuer/letsencrypt-staging --for=condition=Ready"]

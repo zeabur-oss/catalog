@@ -113,15 +113,25 @@
   ],
   "packageRules": [
     {
-      "description": "The kind node follows the Kubernetes minor that the Zeabur installer pins; a minor bump changes both together",
+      "description": "The kind node, k3s and RKE2 follow the Kubernetes minor that the Zeabur installer pins; a minor bump changes them together",
       "matchPackageNames": [
-        "kindest/node"
+        "kindest/node",
+        "k3s-io/k3s",
+        "rancher/rke2"
       ],
       "matchUpdateTypes": [
         "major",
         "minor"
       ],
       "enabled": false
+    },
+    {
+      "description": "k3s and RKE2 tags are <Kubernetes version>+k3s<n> and +rke2r<n>",
+      "matchPackageNames": [
+        "k3s-io/k3s",
+        "rancher/rke2"
+      ],
+      "versioning": "regex:^v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\+(k3s|rke2r)(?<build>\\d+)$"
     },
     {
       "description": "go.sum changes the vendorHash in flake.nix; the vendorhash workflow commits the new one as zeabur-oss-bot.",

@@ -89,11 +89,21 @@ func validate(fs *flag.FlagSet, r *repo) error {
 // list prints the e2e CI matrix of a tier. For l1: one job per group, with
 // the IDs it tests. For l2: every profile × architecture × component it
 // supports, and every template on single-node amd64. Both carry the kind node
-// version. The kubesolo profile lists the components of a personal install.
+// version.
 func list(fs *flag.FlagSet, r *repo) error {
 	since := fs.String("since", "", "only what changed since this git commit")
 	tier := fs.String("tier", "l2", "l1 or l2")
+	only := fs.String("profiles", "", "l2: only these profiles, separated by commas")
 	fs.Parse(os.Args[2:])
+	profiles := l2Profiles()
+	if *only != "" {
+		profiles = strings.Split(*only, ",")
+		for _, p := range profiles {
+			if !slices.Contains(l2Profiles(), p) {
+				return fmt.Errorf("unknown profile %q; use %s", p, strings.Join(l2Profiles(), ", "))
+			}
+		}
+	}
 	cfg, err := loadConfig()
 	if err != nil {
 		return err
@@ -120,8 +130,8 @@ func list(fs *flag.FlagSet, r *repo) error {
 			jobs = append(jobs, job{IDs: strings.Join(g.IDs, " ")})
 		}
 	case "l2":
-		for _, p := range append(slices.Clone(catalog.Profiles), kubesoloProfile) {
-			subs, err := profileSubjects(r, cfg, p, selected)
+		for _, p := range profiles {
+			subs, err := profileSubjects(r, p, selected)
 			if err != nil {
 				return err
 			}
@@ -185,6 +195,8 @@ type config struct {
 	E2E      struct {
 		Version string `yaml:"version"` // kindest/node
 	} `yaml:"e2e"`
+	K3s      k3sConfig      `yaml:"k3s"`
+	RKE2     rke2Config     `yaml:"rke2"`
 	Kubesolo kubesoloConfig `yaml:"kubesolo"`
 }
 

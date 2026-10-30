@@ -66,3 +66,45 @@ func TestProvisionProblems(t *testing.T) {
 		}
 	}
 }
+
+func TestHealthChecksStayReadOnlyKubectlWaits(t *testing.T) {
+	const root = "../../.."
+	const path = "components/ingress/traefik.yaml"
+	cat, err := Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := Check(root, cat); err != nil {
+		t.Fatalf("the catalog does not validate: %v", err)
+	}
+	valid := func() map[string]any {
+		return map[string]any{"name": "controller", "wait": []any{"--for=condition=Available", "deployment/traefik", "-n", "traefik"},
+			"timeout": "60s", "advice": "Check the pods."}
+	}
+	for _, c := range []struct {
+		name string
+		edit func(map[string]any)
+	}{
+		{"valid", func(map[string]any) {}},
+		{"manifest", func(h map[string]any) { h["manifest"] = "kind: ConfigMap" }},
+		{"own timeout", func(h map[string]any) { h["wait"] = append(h["wait"].([]any), "--timeout=10m") }},
+		{"no condition", func(h map[string]any) { h["wait"] = []any{"deployment/traefik", "-n", "traefik"} }},
+		{"no advice", func(h map[string]any) { delete(h, "advice") }},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			h := valid()
+			c.edit(h)
+			raw := cat.Raw[path].(map[string]any)
+			old := raw["health"]
+			raw["health"] = []any{h}
+			defer func() { raw["health"] = old }()
+			err := Check(root, cat)
+			if c.name == "valid" && err != nil {
+				t.Errorf("Check rejected a valid health check: %v", err)
+			}
+			if c.name != "valid" && err == nil {
+				t.Error("Check accepted the health check")
+			}
+		})
+	}
+}

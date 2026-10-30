@@ -13,11 +13,18 @@ permissions:
   contents: read
 
 jobs:
-  e2e:
+  e2e-kind:
     uses: ./.github/workflows/e2e.yml
+    with:
+      profiles: single-node,multi-node
+
+  e2e-hosts:
+    uses: ./.github/workflows/e2e.yml
+    with:
+      profiles: k3s,rke2,kubesolo
 
   pull-request:
-    needs: e2e
+    needs: [e2e-kind, e2e-hosts]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-slim
     # Holds zeabur-oss-bot's key (see vendorhash.yml).
@@ -59,5 +66,5 @@ jobs:
             chore: update measured resource usage
 
             Signed-off-by: zeabur-oss-bot[bot] <349476329+zeabur-oss-bot[bot]@users.noreply.github.com>
-          body: Idle memory and CPU of components and templates, measured by the e2e workflow on single-node and multi-node kind.
+          body: Idle memory and CPU of components and templates, measured by the e2e workflow on kind, k3s, RKE2 and KubeSolo.
           add-paths: measurements/

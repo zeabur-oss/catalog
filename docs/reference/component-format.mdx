@@ -80,6 +80,7 @@ networkPolicies: |  # traffic it needs where an installer isolates namespaces
 contributes: []   # values added to another component's release (CrowdSec -> Traefik)
 detection: {...}  # CRDs, API services, Helm charts, workloads
 security: {...}   # RBAC summary, cluster-wide, privileged, podSecurity, egress, credentials, tenant risks
+health: []        # read-only checks an installer runs on a cluster
 smoke: []         # extra e2e checks
 leftovers: []     # what the upstream keeps on uninstall (e.g. CRDs)
 ```
@@ -109,6 +110,18 @@ provides:
 Removing a component also waits for the objects of its `detection.crds` outside its namespaces, except those in `internalCRDs`: CRDs whose objects the component writes itself, such as scan reports. Every entry of `internalCRDs` must be in `detection.crds`.
 
 `resources.workMemoryMiB` is the memory the component uses on top of its idle use while working, such as one build. Its idle use is measured in e2e and published in `index.json`.
+
+`health` lists read-only checks that an installer, such as `zeabur-installer doctor`, runs on an installed cluster. Each check is one `kubectl wait` with the arguments in `wait` and the `timeout`. `wait` has a `--for` condition and no `--timeout`. `advice` is the English sentence to show when the check fails. A check applies nothing, so it has no manifest. Checks that create objects go in `smoke`, which only e2e runs. e2e runs `health` after install, before `smoke`.
+
+```yaml
+health:
+  - name: nodes-ready
+    wait: ["--for=condition=Ready", "nodes.longhorn.io", "--all", "-n", "longhorn-system"]
+    timeout: 60s
+    advice: "On a node that joined without it, add longhorn: true under join in its configuration and run zeabur-installer apply there."
+```
+
+`index.json` adds `testedOn` to each component: the distributions among `k3s`, `rke2` and `kubesolo` on which its e2e run passed, at the versions that `config/kubernetes.yaml` pins. It is always present and can be empty. `catalog index` derives it from `measurements/`; nobody writes it by hand. `distributions` remains the hard limit.
 
 `networkPolicies` is for installers that block incoming traffic to each namespace by default. It holds standard NetworkPolicy objects in the component's own namespaces, which such an installer applies before the releases, for the traffic the component needs from elsewhere. Other installers can ignore it. `catalog validate` checks that each object is a NetworkPolicy in one of the component's namespaces.
 

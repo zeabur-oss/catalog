@@ -66,3 +66,9 @@ detection:
 security:
   summary: Reads kubelet metrics; registers an aggregated API.
   clusterWide: true
+
+health:
+  - name: metrics-api
+    wait: ["--for=condition=Available", "apiservice/v1beta1.metrics.k8s.io"]
+    timeout: 60s
+    advice: The metrics API does not answer, so kubectl top and autoscaling have no data; check the metrics-server pod in kube-system with kubectl -n kube-system get pods.

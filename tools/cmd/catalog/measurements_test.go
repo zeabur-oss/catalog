@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/zeabur-oss/catalog/tools/internal/templates"
@@ -111,6 +112,39 @@ func TestImageVersions(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			if got := imageVersions([]string{c.ref})[c.image]; got != c.version {
 				t.Errorf("imageVersions(%q)[%q] = %q, want %q", c.ref, c.image, got, c.version)
+			}
+		})
+	}
+}
+
+func TestTestedOnCountsOnlyThePinnedDistributionVersions(t *testing.T) {
+	var cfg config
+	cfg.K3s.Version = "v1.36.5+k3s1"
+	cfg.RKE2.Version = "v1.36.5+rke2r1"
+	cfg.Kubesolo.Version = "v1.2.3"
+	for _, c := range []struct {
+		name string
+		keys []string
+		want []string
+	}{
+		{"kind only", []string{"single-node-amd64-v1.36.4", "multi-node-arm64-v1.36.4"}, []string{}},
+		{"pinned versions", []string{"kubesolo-arm64-v1.35.7+kubesolo-v1.2.3", "k3s-amd64-v1.36.5+k3s1", "rke2-arm64-v1.36.5+rke2r1"},
+			[]string{"k3s", "rke2", "kubesolo"}},
+		{"older releases", []string{"kubesolo-amd64-v1.35.7+kubesolo-v1.2.2", "k3s-amd64-v1.36.4+k3s1"}, []string{}},
+		{"one architecture is enough", []string{"kubesolo-amd64-v1.35.7+kubesolo-v1.2.3", "single-node-amd64-v1.36.4"}, []string{"kubesolo"}},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			measured := map[string]environment{}
+			for _, k := range c.keys {
+				measured[k] = environment{}
+			}
+			got := testedOn(cfg, measured)
+			if !slices.Equal(got, c.want) {
+				t.Errorf("testedOn = %q, want %q", got, c.want)
+			}
+			// Consumers read testedOn as always present.
+			if data, _ := json.Marshal(got); len(c.want) == 0 && string(data) != "[]" {
+				t.Errorf("testedOn without distributions encodes as %s, want []", data)
 			}
 		})
 	}

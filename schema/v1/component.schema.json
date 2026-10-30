@@ -47,7 +47,7 @@
     },
     "distributions": {
       "type": "array",
-      "description": "Kubernetes distributions it applies to; omitted means any. Information for consumers; e2e runs on kind regardless, and on KubeSolo only when the list is empty or names kubesolo.",
+      "description": "Hard limits: the only Kubernetes distributions it can run on, for example because it needs what other distributions lack; omitted means any. e2e on k3s, RKE2 and KubeSolo skips a distribution the list leaves out; kind runs it regardless. Which distributions it was tested on is the index's testedOn, derived from passing e2e runs.",
       "minItems": 1,
       "uniqueItems": true,
       "items": { "enum": ["k3s", "rke2", "k0s", "kubesolo", "microk8s", "kubeadm"] }
@@ -200,9 +200,31 @@
         }
       }
     },
+    "health": {
+      "type": "array",
+      "description": "Read-only checks that a tool such as zeabur-installer doctor runs on an installed cluster. Each is one `kubectl wait` and applies nothing. e2e runs them after install, before smoke.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "wait", "timeout", "advice"],
+        "properties": {
+          "name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "wait": {
+            "type": "array",
+            "description": "`kubectl wait` arguments, one per item, with a --for condition and without --timeout.",
+            "minItems": 2,
+            "items": { "type": "string", "minLength": 1 },
+            "contains": { "pattern": "^--for=" },
+            "not": { "contains": { "pattern": "^--timeout" } }
+          },
+          "timeout": { "type": "string", "pattern": "^[0-9]+(s|m)$" },
+          "advice": { "type": "string", "minLength": 1, "description": "An English sentence shown when the check fails: what to do about it." }
+        }
+      }
+    },
     "smoke": {
       "type": "array",
-      "description": "Extra e2e checks after install.",
+      "description": "Extra e2e checks after install. They may apply objects in catalog-smoke, so only e2e runs them; read-only checks go in health.",
       "items": {
         "type": "object",
         "additionalProperties": false,

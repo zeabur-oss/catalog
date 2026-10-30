@@ -187,13 +187,16 @@ func subjects(r *repo, profile string, sel func(string, []*catalog.Component) bo
 	return out, nil
 }
 
-// kubesoloProfile is the profile that tests a personal install on KubeSolo. It
-// installs with the single-node values.
+// kubesoloProfile is the host profile that installs KubeSolo.
 const kubesoloProfile = "kubesolo"
 
-// profileSubjects is subjects for a catalog profile or kubesoloProfile.
-func profileSubjects(r *repo, cfg config, profile string, sel func(string, []*catalog.Component) bool) ([]subject, error) {
-	if profile != kubesoloProfile {
+// l2Profiles returns the catalog profiles, then the host profiles.
+func l2Profiles() []string { return append(slices.Clone(catalog.Profiles), hostProfiles...) }
+
+// profileSubjects is subjects for a catalog profile or a host profile. A host
+// profile tests components only.
+func profileSubjects(r *repo, profile string, sel func(string, []*catalog.Component) bool) ([]subject, error) {
+	if !slices.Contains(hostProfiles, profile) {
 		return subjects(r, profile, sel)
 	}
 	subs, err := subjects(r, templateProfile, sel)
@@ -202,7 +205,7 @@ func profileSubjects(r *repo, cfg config, profile string, sel func(string, []*ca
 	}
 	return slices.DeleteFunc(subs, func(s subject) bool {
 		c, ok := r.cat.Get(s.id)
-		return !ok || !cfg.Kubesolo.runs(c)
+		return !ok || !hostRuns(profile, c)
 	}), nil
 }
 
@@ -596,15 +599,14 @@ func testTemplate(r *repo, t *catalog.Tester, id string, write bool) (status str
 // l2 tests each component and template in a fresh cluster with the full
 // checks.
 func l2(r *repo, cfg config, o tierOptions, args []string) error {
-	profiles := append(slices.Clone(catalog.Profiles), kubesoloProfile)
-	if !slices.Contains(profiles, o.profile) {
-		return fmt.Errorf("unknown -profile %q; use %s", o.profile, strings.Join(profiles, " or "))
+	if !slices.Contains(l2Profiles(), o.profile) {
+		return fmt.Errorf("unknown -profile %q; use %s", o.profile, strings.Join(l2Profiles(), ", "))
 	}
 	sel, err := selection(r, o.since, args)
 	if err != nil {
 		return err
 	}
-	subs, err := profileSubjects(r, cfg, o.profile, sel)
+	subs, err := profileSubjects(r, o.profile, sel)
 	if err != nil {
 		return err
 	}
@@ -614,7 +616,7 @@ func l2(r *repo, cfg config, o tierOptions, args []string) error {
 		}
 	}
 	values := o.profile
-	if values == kubesoloProfile {
+	if slices.Contains(hostProfiles, values) {
 		values = templateProfile
 	}
 	t, err := newTester(r.cat, values)
@@ -632,8 +634,8 @@ func l2(r *repo, cfg config, o tierOptions, args []string) error {
 		var c *cluster
 		if !o.current {
 			start := time.Now()
-			if o.profile == kubesoloProfile {
-				c, err = createKubesolo(cfg.Kubesolo)
+			if slices.Contains(hostProfiles, o.profile) {
+				c, err = createHost(cfg, o.profile, s.order)
 			} else {
 				c, err = createCluster(o.profile, cfg.E2E.Version, s.order)
 			}

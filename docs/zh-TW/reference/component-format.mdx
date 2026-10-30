@@ -1,7 +1,7 @@
 ---
 title: 元件檔案格式
 description: 按照共用外框與元件欄位撰寫 YAML，並用 digest 固定安裝內容。
-source: "2c8866bb04c0"
+source: "ec9feff4a12e"
 ---
 
 把元件檔案放在 `components/<capability>/<upstream>.yaml`。每個 capability（用途類別）與上游的組合各用一個檔案。檔案使用 YAML，包含共用外框、安裝內容與設定。路徑就是 ID，例如 `components/ingress/traefik.yaml` 的 ID 是 `ingress/traefik`。
@@ -81,6 +81,7 @@ networkPolicies: |  # traffic it needs where an installer isolates namespaces
 contributes: []   # values added to another component's release (CrowdSec -> Traefik)
 detection: {...}  # CRDs, API services, Helm charts, workloads
 security: {...}   # RBAC summary, cluster-wide, privileged, podSecurity, egress, credentials, tenant risks
+health: []        # read-only checks an installer runs on a cluster
 smoke: []         # extra e2e checks
 leftovers: []     # what the upstream keeps on uninstall (e.g. CRDs)
 ```
@@ -110,6 +111,18 @@ provides:
 移除元件前，也會等到它命名空間以外沒有 `detection.crds` 的物件，但 `internalCRDs` 列出的除外：這些 CRD 的物件是元件自己寫的，例如掃描報告。`internalCRDs` 的每一項都必須在 `detection.crds` 裡。
 
 `resources.workMemoryMiB` 是元件工作時（例如執行一次建置）在閒置用量之外還要多用的記憶體。閒置用量由 e2e 量測，放在 `index.json`。
+
+`health` 列出唯讀檢查，讓安裝工具（例如 `zeabur-installer doctor`）在已安裝的叢集上執行。每項檢查是一次 `kubectl wait`，參數取自 `wait` 與 `timeout`。`wait` 要有 `--for` 條件，不能有 `--timeout`。`advice` 是檢查失敗時顯示的英文句子。檢查不會套用任何物件，所以沒有 manifest。要建立物件的檢查請放在 `smoke`，只有 e2e 會執行。e2e 會在安裝後、`smoke` 之前執行 `health`。
+
+```yaml
+health:
+  - name: nodes-ready
+    wait: ["--for=condition=Ready", "nodes.longhorn.io", "--all", "-n", "longhorn-system"]
+    timeout: 60s
+    advice: "On a node that joined without it, add longhorn: true under join in its configuration and run zeabur-installer apply there."
+```
+
+`index.json` 會替每個元件加上 `testedOn`，列出元件在哪些發行版（`k3s`、`rke2`、`kubesolo`）上通過 e2e，版本以 `config/kubernetes.yaml` 固定的為準。這個欄位一定存在，可能是空清單。它由 `catalog index` 從 `measurements/` 推導，不用手寫。硬性限制仍由 `distributions` 表示。
 
 `networkPolicies` 給預設擋掉每個命名空間入站流量的安裝工具用。內容是元件自己命名空間裡的標準 NetworkPolicy 物件，這類安裝工具會在安裝 releases 前套用，放行元件需要從其他地方進來的流量。其他安裝工具可以忽略它。`catalog validate` 會檢查每個物件都是元件命名空間裡的 NetworkPolicy。
 

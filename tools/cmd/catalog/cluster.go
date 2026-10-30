@@ -20,11 +20,11 @@ import (
 	"go.yaml.in/yaml/v3"
 )
 
-// cluster is a kind cluster, or KubeSolo on this host, with its own
+// cluster is a kind cluster, or a distribution on this host, with its own
 // kubeconfig. The tool never uses the contexts in the default kubeconfig.
 type cluster struct {
 	name, dir string
-	kubesolo  bool
+	host      string // the host profile (k3s, rke2, kubesolo); empty for kind
 }
 
 // nodeSetup holds commands that run in every node before the components that
@@ -104,51 +104,230 @@ func (c *cluster) setup(needs []*catalog.Component) error {
 }
 
 func (c *cluster) delete() {
-	if c.kubesolo {
-		// The host is a disposable runner: stop the service and drop its data.
+	defer os.RemoveAll(c.dir)
+	switch c.host {
+	case "":
+		if _, err := catalog.Run(nil, "kind", "delete", "cluster", "--name", c.name,
+			"--kubeconfig", filepath.Join(c.dir, "kubeconfig")); err != nil {
+			slog.Warn("kind delete cluster", "name", c.name, "err", err)
+		}
+	// The host is a disposable runner: the uninstall scripts stop every
+	// process and remove the data.
+	case "k3s":
+		catalog.Run(nil, "sudo", "/usr/local/bin/k3s-uninstall.sh")
+	case "rke2":
+		catalog.Run(nil, "sudo", "/usr/local/bin/rke2-uninstall.sh")
+	case kubesoloProfile:
 		catalog.Run(nil, "sudo", "systemctl", "stop", "kubesolo")
 		catalog.Run(nil, "sudo", "rm", "-rf", "/var/lib/kubesolo")
-		os.RemoveAll(c.dir)
-		return
 	}
-	if _, err := catalog.Run(nil, "kind", "delete", "cluster", "--name", c.name,
-		"--kubeconfig", filepath.Join(c.dir, "kubeconfig")); err != nil {
-		slog.Warn("kind delete cluster", "name", c.name, "err", err)
+}
+
+// hostProfiles install a distribution on this host. Each tests the
+// components of single-node, with its values, whose distributions allow it.
+var hostProfiles = []string{"k3s", "rke2", kubesoloProfile}
+
+// hostRuns reports whether host profile p tests c.
+func hostRuns(p string, c *catalog.Component) bool {
+	return c.Defaults[templateProfile] != "unsupported" &&
+		(len(c.Distributions) == 0 || slices.Contains(c.Distributions, p))
+}
+
+// pinnedVersion returns the release of the distribution that cfg pins for
+// host profile p.
+func (cfg config) pinnedVersion(p string) string {
+	switch p {
+	case "k3s":
+		return cfg.K3s.Version
+	case "rke2":
+		return cfg.RKE2.Version
+	case kubesoloProfile:
+		return cfg.Kubesolo.Version
 	}
-	os.RemoveAll(c.dir)
+	return ""
+}
+
+// k3sConfig is the k3s block of config/kubernetes.yaml.
+type k3sConfig struct {
+	Version       string            `yaml:"version"`
+	SHA256        map[string]string `yaml:"sha256"` // the binary, by architecture
+	InstallScript string            `yaml:"installScript"`
+}
+
+// rke2Config is the rke2 block of config/kubernetes.yaml.
+type rke2Config struct {
+	Version   string            `yaml:"version"`
+	SHA256    map[string]string `yaml:"sha256"` // the tarball, by architecture
+	LocalPath struct {
+		Version string `yaml:"version"`
+		SHA256  string `yaml:"sha256"`
+	} `yaml:"localPath"`
 }
 
 // kubesoloConfig is the kubesolo block of config/kubernetes.yaml.
 type kubesoloConfig struct {
 	Version        string            `yaml:"version"`
 	SHA256         map[string]string `yaml:"sha256"` // by architecture
-	Capabilities   []string          `yaml:"capabilities"`
 	HelmController struct {
 		Version string `yaml:"version"`
 		SHA256  string `yaml:"sha256"`
 	} `yaml:"helmController"`
 }
 
-// runs reports whether the personal install runs c on KubeSolo.
-func (k kubesoloConfig) runs(c *catalog.Component) bool {
-	return slices.Contains(k.Capabilities, c.Capability) &&
-		(len(c.Distributions) == 0 || slices.Contains(c.Distributions, "kubesolo"))
-}
-
-// createKubesolo installs KubeSolo and the standalone helm-controller on this
-// host and points KUBECONFIG at them. Both downloads must match their pinned
-// checksums.
-func createKubesolo(k kubesoloConfig) (*cluster, error) {
-	dir, err := os.MkdirTemp("", "catalog-kubesolo-")
+// createHost installs the distribution of host profile p on this host and
+// points KUBECONFIG at it. Every download must match its pinned checksum.
+// needs is the install order of what the cluster tests.
+func createHost(cfg config, p string, needs []*catalog.Component) (*cluster, error) {
+	dir, err := os.MkdirTemp("", "catalog-"+p+"-")
 	if err != nil {
 		return nil, err
 	}
-	c := &cluster{name: "kubesolo", dir: dir, kubesolo: true}
-	if err := c.startKubesolo(k); err != nil {
+	c := &cluster{name: p, dir: dir, host: p}
+	switch p {
+	case "k3s":
+		err = c.startK3s(cfg.K3s)
+	case "rke2":
+		err = c.startRKE2(cfg.RKE2)
+	case kubesoloProfile:
+		err = c.startKubesolo(cfg.Kubesolo)
+	default:
+		err = fmt.Errorf("unknown host profile %q", p)
+	}
+	if err == nil {
+		err = hostSetup(needs)
+	}
+	if err != nil {
 		c.delete()
 		return nil, err
 	}
 	return c, nil
+}
+
+// hostSetup runs the node setup of needs on this host, the only node.
+func hostSetup(needs []*catalog.Component) error {
+	for _, comp := range needs {
+		if script, ok := nodeSetup[comp.ID]; ok {
+			if _, err := catalog.Run(nil, "sudo", "sh", "-c", script); err != nil {
+				return fmt.Errorf("%s node setup: %w", comp.ID, err)
+			}
+		}
+	}
+	return nil
+}
+
+// releaseURL returns the URL of file in a GitHub release. k3s and RKE2 tags
+// contain a plus sign.
+func releaseURL(repo, tag, file string) string {
+	return "https://github.com/" + repo + "/releases/download/" + strings.ReplaceAll(tag, "+", "%2B") + "/" + file
+}
+
+// startK3s installs k3s with its install script, as the Zeabur installer
+// does: the script writes the systemd unit and the uninstall script, and
+// gets the checked binary. k3s's Traefik and metrics-server are off, since
+// the catalog's components replace them.
+func (c *cluster) startK3s(k k3sConfig) error {
+	arch := runtime.GOARCH
+	file := "k3s"
+	if arch != "amd64" {
+		file += "-" + arch
+	}
+	bin := filepath.Join(c.dir, "k3s")
+	if err := download(releaseURL("k3s-io/k3s", k.Version, file), k.SHA256[arch], bin); err != nil {
+		return err
+	}
+	script := filepath.Join(c.dir, "install.sh")
+	if err := download("https://raw.githubusercontent.com/k3s-io/k3s/"+strings.ReplaceAll(k.Version, "+", "%2B")+"/install.sh",
+		k.InstallScript, script); err != nil {
+		return err
+	}
+	slog.Info("starting k3s", "version", k.Version)
+	if _, err := catalog.Run(nil, "sudo", "install", "-m", "0755", bin, "/usr/local/bin/k3s"); err != nil {
+		return err
+	}
+	if _, err := catalog.Run(nil, "sudo", "env", "INSTALL_K3S_SKIP_DOWNLOAD=true",
+		"INSTALL_K3S_EXEC=server --disable=traefik,metrics-server", "sh", script); err != nil {
+		return err
+	}
+	return c.waitHost("/etc/rancher/k3s/k3s.yaml", [][]string{
+		{"-n", "kube-system", "wait", "--for=condition=Available", "deployment/coredns", "deployment/local-path-provisioner"},
+	})
+}
+
+// startRKE2 installs RKE2 from its tarball as the RKE2 install script does,
+// without its ingress controller and metrics-server, and adds
+// local-path-provisioner as the default storage class.
+func (c *cluster) startRKE2(r rke2Config) error {
+	arch := runtime.GOARCH
+	tarball := filepath.Join(c.dir, "rke2.tar.gz")
+	if err := download(releaseURL("rancher/rke2", r.Version, "rke2.linux-"+arch+".tar.gz"), r.SHA256[arch], tarball); err != nil {
+		return err
+	}
+	config := filepath.Join(c.dir, "config.yaml")
+	if err := os.WriteFile(config, []byte("ingress-controller: none\ndisable: [rke2-metrics-server]\n"), 0o644); err != nil {
+		return err
+	}
+	slog.Info("starting RKE2", "version", r.Version)
+	for _, args := range [][]string{
+		{"tar", "-xzf", tarball, "-C", "/usr/local"},
+		{"install", "-D", "-m", "0600", config, "/etc/rancher/rke2/config.yaml"},
+		{"systemctl", "daemon-reload"},
+		{"systemctl", "start", "rke2-server"},
+	} {
+		if _, err := catalog.Run(nil, "sudo", args...); err != nil {
+			return err
+		}
+	}
+	if err := c.waitHost("/etc/rancher/rke2/rke2.yaml", [][]string{
+		{"-n", "kube-system", "wait", "--for=condition=Available", "deployment/rke2-coredns-rke2-coredns"},
+	}); err != nil {
+		return err
+	}
+	manifest := filepath.Join(c.dir, "local-path-storage.yaml")
+	if err := download("https://raw.githubusercontent.com/rancher/local-path-provisioner/"+r.LocalPath.Version+"/deploy/local-path-storage.yaml",
+		r.LocalPath.SHA256, manifest); err != nil {
+		return err
+	}
+	slog.Info("installing local-path-provisioner", "version", r.LocalPath.Version)
+	for _, args := range [][]string{
+		{"apply", "--server-side", "-f", manifest},
+		{"annotate", "storageclass", "local-path", "storageclass.kubernetes.io/is-default-class=true"},
+		{"-n", "local-path-storage", "rollout", "status", "deployment/local-path-provisioner", "--timeout=5m"},
+	} {
+		if _, err := catalog.Run(nil, "kubectl", args...); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// waitHost copies the distribution's admin kubeconfig, points KUBECONFIG at
+// the copy and waits until the node is ready and every kubectl command in
+// ready succeeds, for up to 5 minutes. The tests take their baseline of
+// objects after it.
+func (c *cluster) waitHost(adminKubeconfig string, ready [][]string) error {
+	kubeconfig := filepath.Join(c.dir, "kubeconfig")
+	os.Setenv("KUBECONFIG", kubeconfig)
+	checks := append([][]string{{"wait", "--for=condition=Ready", "node", "--all"}}, ready...)
+	deadline := time.Now().Add(5 * time.Minute)
+	for {
+		out, err := catalog.Run(nil, "sudo", "cat", adminKubeconfig)
+		if err == nil {
+			err = os.WriteFile(kubeconfig, []byte(out), 0o600)
+		}
+		for _, args := range checks {
+			if err != nil {
+				break
+			}
+			_, err = catalog.Run(nil, "kubectl", append(args, "--timeout=10s")...)
+		}
+		if err == nil {
+			return nil
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("%s is not ready: %w", c.host, err)
+		}
+		time.Sleep(5 * time.Second)
+	}
 }
 
 func (c *cluster) startKubesolo(k kubesoloConfig) error {
@@ -174,22 +353,12 @@ func (c *cluster) startKubesolo(k kubesoloConfig) error {
 			return err
 		}
 	}
-	kubeconfig := filepath.Join(c.dir, "kubeconfig")
-	os.Setenv("KUBECONFIG", kubeconfig)
-	deadline := time.Now().Add(5 * time.Minute)
-	for {
-		out, err := catalog.Run(nil, "sudo", "cat", "/var/lib/kubesolo/pki/admin/admin.kubeconfig")
-		if err == nil && os.WriteFile(kubeconfig, []byte(out), 0o600) == nil {
-			// KubeSolo adds CoreDNS and its storage provisioner after the node is ready.
-			// They must exist before the tests take their baseline of objects.
-			if err = kubesoloReady(); err == nil {
-				break
-			}
-		}
-		if time.Now().After(deadline) {
-			return fmt.Errorf("KubeSolo is not ready: %w", err)
-		}
-		time.Sleep(5 * time.Second)
+	// KubeSolo adds CoreDNS and its storage provisioner after the node is ready.
+	if err := c.waitHost("/var/lib/kubesolo/pki/admin/admin.kubeconfig", [][]string{
+		{"-n", "kube-system", "wait", "--for=condition=Available", "deployment/coredns"},
+		{"-n", "local-path-storage", "wait", "--for=condition=Available", "deployment/local-path-provisioner"},
+	}); err != nil {
+		return err
 	}
 	manifest := filepath.Join(c.dir, "helm-controller.yaml")
 	if err := download("https://github.com/k3s-io/helm-controller/releases/download/"+k.HelmController.Version+"/deploy-cluster-scoped.yaml",
@@ -202,19 +371,6 @@ func (c *cluster) startKubesolo(k kubesoloConfig) error {
 	}
 	_, err := catalog.Run(nil, "kubectl", "-n", "helm-controller", "rollout", "status", "deployment/helm-controller", "--timeout=5m")
 	return err
-}
-
-func kubesoloReady() error {
-	for _, args := range [][]string{
-		{"wait", "--for=condition=Ready", "node", "--all"},
-		{"-n", "kube-system", "wait", "--for=condition=Available", "deployment/coredns"},
-		{"-n", "local-path-storage", "wait", "--for=condition=Available", "deployment/local-path-provisioner"},
-	} {
-		if _, err := catalog.Run(nil, "kubectl", append(args, "--timeout=10s")...); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // download saves url to path and fails unless its SHA-256 is sum.

@@ -9,21 +9,21 @@ import (
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 )
 
-func TestKubesoloRuns(t *testing.T) {
-	k := kubesoloConfig{Capabilities: []string{"ingress", "databases"}}
+func TestHostRuns(t *testing.T) {
 	for _, c := range []struct {
-		name string
-		comp catalog.Component
-		want bool
+		name    string
+		profile string
+		comp    catalog.Component
+		want    bool
 	}{
-		{"listed capability", catalog.Component{Capability: "ingress"}, true},
-		{"other capability", catalog.Component{Capability: "logs"}, false},
-		{"distribution without kubesolo", catalog.Component{Capability: "databases", Distributions: []string{"k3s", "rke2"}}, false},
-		{"distribution with kubesolo", catalog.Component{Capability: "databases", Distributions: []string{"kubesolo"}}, true},
+		{"any distribution", "rke2", catalog.Component{}, true},
+		{"listed distribution", "k3s", catalog.Component{Distributions: []string{"k3s", "rke2"}}, true},
+		{"distribution left out", "kubesolo", catalog.Component{Distributions: []string{"k3s", "rke2"}}, false},
+		{"single-node unsupported", "k3s", catalog.Component{Defaults: map[string]string{"single-node": "unsupported"}}, false},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			if got := k.runs(&c.comp); got != c.want {
-				t.Errorf("runs = %v, want %v", got, c.want)
+			if got := hostRuns(c.profile, &c.comp); got != c.want {
+				t.Errorf("hostRuns(%s) = %v, want %v", c.profile, got, c.want)
 			}
 		})
 	}

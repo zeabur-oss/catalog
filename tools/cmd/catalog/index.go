@@ -22,8 +22,8 @@ type budgetConfig struct {
 	} `yaml:"singleNode" json:"singleNode"`
 }
 
-// index writes index.json: every component with its install order and
-// measurements, recommended components per capability, every template with
+// index writes index.json: every component with its install order,
+// measurements and the distributions it was tested on, recommended components per capability, every template with
 // its measurements, the budget and the Kubernetes versions.
 func index(fs *flag.FlagSet, r *repo) error {
 	cat := r.cat
@@ -44,6 +44,7 @@ func index(fs *flag.FlagSet, r *repo) error {
 	type component struct {
 		*catalog.Component
 		InstallOrder   map[string][]string    `json:"installOrder"`
+		TestedOn       []string               `json:"testedOn"`
 		Measured       map[string]environment `json:"measured,omitempty"`
 		NonOSILicenses []string               `json:"nonOSILicenses,omitempty"`
 	}
@@ -64,6 +65,7 @@ func index(fs *flag.FlagSet, r *repo) error {
 			}
 		}
 		ic.Measured = readMeasurement(measurementPath(c.ID)).Environments
+		ic.TestedOn = testedOn(cfg, ic.Measured)
 		comps = append(comps, ic)
 		if capabilities[c.Capability] == nil {
 			capabilities[c.Capability] = map[string][]string{}
@@ -83,6 +85,25 @@ func index(fs *flag.FlagSet, r *repo) error {
 		"components":   comps,
 		"templates":    indexTemplates(r.templates),
 	})
+}
+
+// testedOn returns the host profiles, in the order of hostProfiles, with a
+// measurement of the version that cfg pins. Only a passing e2e run writes a
+// measurement. Its key is "<profile>-<architecture>-<server version>", and
+// the server version ends in the pinned release: v1.36.5+k3s1 for k3s,
+// v1.35.7+kubesolo-v1.2.3 for KubeSolo v1.2.3.
+func testedOn(cfg config, measured map[string]environment) []string {
+	out := []string{}
+	for _, p := range hostProfiles {
+		suffix := "-" + cfg.pinnedVersion(p)
+		for key := range measured {
+			if strings.HasPrefix(key, p+"-") && strings.HasSuffix(key, suffix) {
+				out = append(out, p)
+				break
+			}
+		}
+	}
+	return out
 }
 
 // indexTemplate is a template in index.json, with its measurements.
