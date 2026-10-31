@@ -95,6 +95,7 @@ jobs:
           FILE: measurements/${{ matrix.component || format('templates/{0}', matrix.template) }}.json
         run: find measurements -type f ! -path "$FILE" -delete
       - id: name
+        if: always()
         env:
           NAME: ${{ matrix.profile }}-${{ matrix.arch }}-${{ matrix.component || format('template-{0}', matrix.template) }}
         run: echo "name=${NAME//\//-}" >> "$GITHUB_OUTPUT"
