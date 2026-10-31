@@ -20,15 +20,16 @@ After you verify the release signature, use the `catalog` command to render and 
 
 ### Verify the release
 
-Download `bundle.tar.gz` and `bundle.tar.gz.sigstore.json` from the same release tag into a new private directory. Then verify the signature against the workflow, the repository and the tag:
+Download `bundle.tar.gz`, `SHA256SUMS` and `SHA256SUMS.sigstore.json` from the same release tag into a new private directory. Then verify the signature of `SHA256SUMS` against the workflow, the repository and the tag, and check the bundle against it:
 
 ```sh
 tag=vX.Y.Z
-cosign verify-blob bundle.tar.gz --bundle bundle.tar.gz.sigstore.json \
+cosign verify-blob SHA256SUMS --bundle SHA256SUMS.sigstore.json \
   --certificate-identity-regexp '^https://github\.com/zeabur-oss/\.github/\.github/workflows/release\.yml@' \
   --certificate-github-workflow-repository zeabur-oss/catalog \
   --certificate-github-workflow-ref "refs/tags/$tag" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
+sha256sum --check --ignore-missing SHA256SUMS
 ```
 
 Checking only the issuer or the workflow accepts signatures from other workflows or other zeabur-oss repositories. Extract the bundle only after signature verification succeeds, and reject absolute paths, `..`, and links.

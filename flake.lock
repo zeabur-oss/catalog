@@ -18,6 +18,27 @@
         "type": "github"
       }
     },
+    "nix-bun": {
+      "inputs": {
+        "nixpkgs": [
+          "oss",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1793455789,
+        "narHash": "sha256-E9NBwcMeAn8r1QFGzsY6hmMpR/Jmjg17cgLys9H0/8U=",
+        "owner": "zeabur-oss",
+        "repo": "nix-bun",
+        "rev": "8cc67ab1d93ab5c5ccd8a04c1dcaad205e93e180",
+        "type": "github"
+      },
+      "original": {
+        "owner": "zeabur-oss",
+        "repo": "nix-bun",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1793136825,
@@ -34,18 +55,19 @@
         "type": "github"
       }
     },
-    "oss-release": {
+    "oss": {
       "inputs": {
+        "nix-bun": "nix-bun",
         "nixpkgs": [
           "nixpkgs"
         ]
       },
       "locked": {
-        "lastModified": 1793364549,
-        "narHash": "sha256-arw52clDXZ+Ej5jJhzSEW8FIkebszz/fKGE00ORIC0k=",
+        "lastModified": 1793473979,
+        "narHash": "sha256-VDgEferySOE2eYq0bo3bbAKZGJu6lo+vB08fk9g0c2M=",
         "owner": "zeabur-oss",
         "repo": ".github",
-        "rev": "9a1863f91c2f8253ec3c970b6c91b3fd01a9a69f",
+        "rev": "bc2fba94d807c947f554f3b75be5623d86473067",
         "type": "github"
       },
       "original": {
@@ -58,7 +80,7 @@
       "inputs": {
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
-        "oss-release": "oss-release"
+        "oss": "oss"
       }
     },
     "systems": {

@@ -3,7 +3,7 @@ title: Releases and bundles
 description: Pin a Zeabur Catalog version, verify Sigstore signatures, and read index.json, or build release artifacts from a specific commit.
 ---
 
-Pushing a `vX.Y.Z` tag publishes `index.json`, `bundle.tar.gz`, `checksums.txt`, and a Sigstore signature bundle for each file. Tools that use Zeabur Catalog should pin a version and verify it before reading `index.json`.
+Pushing a `vX.Y.Z` tag publishes `index.json`, `bundle.tar.gz`, `checksums.txt`, and `SHA256SUMS` with its Sigstore signature bundle. Tools that use Zeabur Catalog should pin a version and verify it before reading `index.json`.
 
 ## Release artifacts
 
@@ -13,7 +13,7 @@ Pushing a `vX.Y.Z` tag publishes `index.json`, `bundle.tar.gz`, `checksums.txt`,
 | `bundle.tar.gz` | A bundle containing the index, cross-check data, components, templates, and related files. |
 | `checksums.txt` | File checksums. |
 
-Each release file has a cosign keyless Sigstore signature bundle. The bundle for `index.json` is named `index.json.sigstore.json`. The release also has `SHA256SUMS` with a GitHub build provenance attestation for every file.
+`SHA256SUMS` lists the checksum of every other file and has a cosign keyless Sigstore signature bundle, `SHA256SUMS.sigstore.json`. Every file also has a GitHub build provenance attestation.
 
 The shared release workflow of [zeabur-oss/.github](https://github.com/zeabur-oss/.github) signs every zeabur-oss release. A signature names that workflow, the repository `zeabur-oss/catalog`, and the tag.
 
@@ -25,15 +25,16 @@ The shared release workflow of [zeabur-oss/.github](https://github.com/zeabur-os
 
 ### Pin a version and verify the signature
 
-The tool first pins the version to use, then verifies the file. The following command verifies `index.json`:
+The tool first pins the version to use, then verifies the file. The following commands verify the signature of `SHA256SUMS`, then the files it lists. Download the files into a new private directory first:
 
 ```sh
 tag=vX.Y.Z
-cosign verify-blob index.json --bundle index.json.sigstore.json \
+cosign verify-blob SHA256SUMS --bundle SHA256SUMS.sigstore.json \
   --certificate-identity-regexp '^https://github\.com/zeabur-oss/\.github/\.github/workflows/release\.yml@' \
   --certificate-github-workflow-repository zeabur-oss/catalog \
   --certificate-github-workflow-ref "refs/tags/$tag" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
+sha256sum --check --ignore-missing SHA256SUMS
 ```
 
 To check the attestation instead, run `gh attestation verify index.json --repo zeabur-oss/catalog --signer-workflow zeabur-oss/.github/.github/workflows/release.yml`.
