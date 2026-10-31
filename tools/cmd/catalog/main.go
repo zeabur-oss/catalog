@@ -94,7 +94,12 @@ func list(fs *flag.FlagSet, r *repo) error {
 	since := fs.String("since", "", "only what changed since this git commit")
 	tier := fs.String("tier", "l2", "l1 or l2")
 	only := fs.String("profiles", "", "l2: only these profiles, separated by commas")
+	idList := fs.String("ids", "", "l2: only these component or template IDs, separated by commas")
 	fs.Parse(os.Args[2:])
+	ids, err := onlyIDs(r, *idList)
+	if err != nil {
+		return err
+	}
 	profiles := l2Profiles()
 	if *only != "" {
 		profiles = strings.Split(*only, ",")
@@ -136,6 +141,9 @@ func list(fs *flag.FlagSet, r *repo) error {
 				return err
 			}
 			for _, s := range subs {
+				if ids != nil && !ids[s.id] {
+					continue
+				}
 				if !strings.Contains(s.id, "/") {
 					jobs = append(jobs, job{Profile: p, Arch: "amd64", Template: s.id})
 					continue
@@ -151,6 +159,33 @@ func list(fs *flag.FlagSet, r *repo) error {
 	return json.NewEncoder(os.Stdout).Encode(map[string]any{
 		"include": jobs, "version": cfg.E2E.Version,
 	})
+}
+
+// onlyIDs returns the set of IDs in list, separated by commas, or nil when
+// list is empty. An ID that is no component or template is an error.
+func onlyIDs(r *repo, list string) (map[string]bool, error) {
+	if list == "" {
+		return nil, nil
+	}
+	known := map[string]bool{}
+	for _, c := range r.cat.Components {
+		known[c.ID] = true
+	}
+	for _, t := range r.templates {
+		known[t.ID] = true
+	}
+	ids := map[string]bool{}
+	for _, id := range strings.Split(list, ",") {
+		id = strings.TrimSpace(id)
+		if id == "" {
+			continue
+		}
+		if !known[id] {
+			return nil, fmt.Errorf("unknown component or template %q", id)
+		}
+		ids[id] = true
+	}
+	return ids, nil
 }
 
 // shared lists the files every e2e run depends on.

@@ -20,6 +20,18 @@ on:
         description: L2 profiles, separated by commas
         type: string
         required: true
+  # A manual run, such as one distribution and a few components. Only
+  # nightly.yml opens the measurements pull request.
+  workflow_dispatch:
+    inputs:
+      profiles:
+        description: L2 profiles, separated by commas
+        type: string
+        required: true
+      components:
+        description: Component or template IDs, separated by commas; empty runs all
+        type: string
+        required: false
 
 permissions:
   contents: read
@@ -40,7 +52,8 @@ jobs:
       - id: list
         env:
           PROFILES: ${{ inputs.profiles }}
-        run: echo "matrix=$(go run ./tools/cmd/catalog list -tier l2 -profiles "$PROFILES")" >> "$GITHUB_OUTPUT"
+          IDS: ${{ inputs.components }}
+        run: echo "matrix=$(go run ./tools/cmd/catalog list -tier l2 -profiles "$PROFILES" -ids "$IDS")" >> "$GITHUB_OUTPUT"
 
   e2e:
     needs: matrix
