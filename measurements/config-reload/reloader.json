@@ -1,37 +1,85 @@
 {
   "component": "config-reload/reloader",
   "environments": {
+    "k3s-amd64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 9,
+      "idleCPUm": 0,
+      "versions": {
+        "reloader": "2.2.18"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "k3s-arm64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 10,
+      "idleCPUm": 0,
+      "versions": {
+        "reloader": "2.2.18"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
+      "idleMemoryMiB": 9,
+      "idleCPUm": 0,
+      "versions": {
+        "reloader": "2.2.18"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
+      "idleMemoryMiB": 9,
+      "idleCPUm": 0,
+      "versions": {
+        "reloader": "2.2.18"
+      },
+      "measuredAt": "2026-10-31"
+    },
     "multi-node-amd64-v1.36.4": {
       "idleMemoryMiB": 17,
       "idleCPUm": 1,
       "versions": {
         "reloader": "2.2.18"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     },
     "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 18,
+      "idleMemoryMiB": 17,
       "idleCPUm": 1,
       "versions": {
         "reloader": "2.2.18"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
+    },
+    "rke2-amd64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 11,
+      "idleCPUm": 0,
+      "versions": {
+        "reloader": "2.2.18"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "rke2-arm64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 11,
+      "idleCPUm": 0,
+      "versions": {
+        "reloader": "2.2.18"
+      },
+      "measuredAt": "2026-10-31"
     },
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 9,
+      "idleMemoryMiB": 8,
       "idleCPUm": 0,
       "versions": {
         "reloader": "2.2.18"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     },
     "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 9,
+      "idleMemoryMiB": 8,
       "idleCPUm": 0,
       "versions": {
         "reloader": "2.2.18"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     }
   }
 }

@@ -1,37 +1,83 @@
 {
   "component": "resource-recommendations/vertical-pod-autoscaler",
   "environments": {
-    "multi-node-amd64-v1.36.4": {
+    "k3s-amd64-v1.36.5+k3s1": {
       "idleMemoryMiB": 18,
       "idleCPUm": 1,
       "versions": {
-        "vpa": "0.13.0"
+        "vpa": "0.15.0"
       },
-      "measuredAt": "2026-10-11"
+      "measuredAt": "2026-10-31"
     },
-    "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 16,
-      "idleCPUm": 1,
-      "versions": {
-        "vpa": "0.13.0"
-      },
-      "measuredAt": "2026-10-11"
+    "k3s-arm64-v1.36.5+k3s1": {
+      "failed": true,
+      "idleMemoryMiB": 0,
+      "idleCPUm": 0,
+      "measuredAt": "2026-10-31"
     },
-    "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 17,
-      "idleCPUm": 1,
-      "versions": {
-        "vpa": "0.13.0"
-      },
-      "measuredAt": "2026-10-11"
-    },
-    "single-node-arm64-v1.36.4": {
+    "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
       "idleMemoryMiB": 17,
       "idleCPUm": 1,
       "versions": {
         "vpa": "0.15.0"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
+    },
+    "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
+      "idleMemoryMiB": 17,
+      "idleCPUm": 1,
+      "versions": {
+        "vpa": "0.15.0"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 16,
+      "idleCPUm": 1,
+      "versions": {
+        "vpa": "0.15.0"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 17,
+      "idleCPUm": 1,
+      "versions": {
+        "vpa": "0.15.0"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "rke2-amd64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 18,
+      "idleCPUm": 1,
+      "versions": {
+        "vpa": "0.15.0"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "rke2-arm64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 17,
+      "idleCPUm": 1,
+      "versions": {
+        "vpa": "0.15.0"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 17,
+      "idleCPUm": 1,
+      "versions": {
+        "vpa": "0.15.0"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 18,
+      "idleCPUm": 1,
+      "versions": {
+        "vpa": "0.15.0"
+      },
+      "measuredAt": "2026-10-31"
     }
   }
 }

@@ -3,13 +3,13 @@
   "environments": {
     "single-node-amd64-v1.36.4": {
       "idleMemoryMiB": 149,
-      "idleCPUm": 15,
+      "idleCPUm": 12,
       "versions": {
         "docker.io/mariadb": "11.4.13",
         "docker.io/nginxinc/nginx-unprivileged": "stable-alpine",
         "docker.io/wordpress": "php8.3-fpm-alpine"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     }
   }
 }

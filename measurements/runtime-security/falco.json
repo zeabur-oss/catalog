@@ -1,38 +1,95 @@
 {
   "component": "runtime-security/falco",
   "environments": {
-    "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 154,
-      "idleCPUm": 30,
-      "versions": {
-        "falco": "9.2.0"
-      },
-      "measuredAt": "2026-10-11"
-    },
-    "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 169,
-      "idleCPUm": 17,
-      "versions": {
-        "falco": "9.2.0"
-      },
-      "measuredAt": "2026-10-11"
-    },
-    "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 53,
-      "idleCPUm": 4,
-      "versions": {
-        "falco": "9.2.0"
-      },
-      "measuredAt": "2026-10-11"
-    },
-    "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 69,
+    "k3s-amd64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 68,
       "idleCPUm": 5,
       "versions": {
         "falco": "9.2.1",
         "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
+    },
+    "k3s-arm64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 68,
+      "idleCPUm": 3,
+      "versions": {
+        "falco": "9.2.1",
+        "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
+      "idleMemoryMiB": 63,
+      "idleCPUm": 4,
+      "versions": {
+        "falco": "9.2.1",
+        "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
+      "idleMemoryMiB": 65,
+      "idleCPUm": 3,
+      "versions": {
+        "falco": "9.2.1",
+        "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 167,
+      "idleCPUm": 21,
+      "versions": {
+        "falco": "9.2.1",
+        "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 172,
+      "idleCPUm": 27,
+      "versions": {
+        "falco": "9.2.1",
+        "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "rke2-amd64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 69,
+      "idleCPUm": 7,
+      "versions": {
+        "falco": "9.2.1",
+        "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "rke2-arm64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 75,
+      "idleCPUm": 7,
+      "versions": {
+        "falco": "9.2.1",
+        "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 67,
+      "idleCPUm": 4,
+      "versions": {
+        "falco": "9.2.1",
+        "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 68,
+      "idleCPUm": 5,
+      "versions": {
+        "falco": "9.2.1",
+        "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+      },
+      "measuredAt": "2026-10-31"
     }
   }
 }

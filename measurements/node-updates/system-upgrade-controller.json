@@ -1,6 +1,24 @@
 {
   "component": "node-updates/system-upgrade-controller",
   "environments": {
+    "k3s-amd64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 12,
+      "idleCPUm": 1,
+      "versions": {
+        "controller": "v0.20.2",
+        "crds": "v0.20.2"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "k3s-arm64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 13,
+      "idleCPUm": 0,
+      "versions": {
+        "controller": "v0.20.2",
+        "crds": "v0.20.2"
+      },
+      "measuredAt": "2026-10-31"
+    },
     "multi-node-amd64-v1.36.4": {
       "idleMemoryMiB": 11,
       "idleCPUm": 0,
@@ -8,25 +26,43 @@
         "controller": "v0.20.2",
         "crds": "v0.20.2"
       },
-      "measuredAt": "2026-10-11"
+      "measuredAt": "2026-10-31"
     },
     "multi-node-arm64-v1.36.4": {
       "idleMemoryMiB": 11,
+      "idleCPUm": 1,
+      "versions": {
+        "controller": "v0.20.2",
+        "crds": "v0.20.2"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "rke2-amd64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 13,
       "idleCPUm": 0,
       "versions": {
         "controller": "v0.20.2",
         "crds": "v0.20.2"
       },
-      "measuredAt": "2026-10-11"
+      "measuredAt": "2026-10-31"
     },
-    "single-node-amd64-v1.36.4": {
+    "rke2-arm64-v1.36.5+rke2r1": {
       "idleMemoryMiB": 12,
       "idleCPUm": 0,
       "versions": {
         "controller": "v0.20.2",
         "crds": "v0.20.2"
       },
-      "measuredAt": "2026-10-11"
+      "measuredAt": "2026-10-31"
+    },
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 11,
+      "idleCPUm": 0,
+      "versions": {
+        "controller": "v0.20.2",
+        "crds": "v0.20.2"
+      },
+      "measuredAt": "2026-10-31"
     },
     "single-node-arm64-v1.36.4": {
       "idleMemoryMiB": 11,
@@ -35,7 +71,7 @@
         "controller": "v0.20.2",
         "crds": "v0.20.2"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     }
   }
 }

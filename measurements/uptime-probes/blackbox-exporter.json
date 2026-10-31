@@ -1,29 +1,77 @@
 {
   "component": "uptime-probes/blackbox-exporter",
   "environments": {
+    "k3s-amd64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 4,
+      "idleCPUm": 0,
+      "versions": {
+        "blackbox-exporter": "11.20.2"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "k3s-arm64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 4,
+      "idleCPUm": 0,
+      "versions": {
+        "blackbox-exporter": "11.20.2"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
+      "idleMemoryMiB": 4,
+      "idleCPUm": 0,
+      "versions": {
+        "blackbox-exporter": "11.20.2"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
+      "idleMemoryMiB": 4,
+      "idleCPUm": 0,
+      "versions": {
+        "blackbox-exporter": "11.20.2"
+      },
+      "measuredAt": "2026-10-31"
+    },
     "multi-node-amd64-v1.36.4": {
       "idleMemoryMiB": 8,
       "idleCPUm": 0,
       "versions": {
-        "blackbox-exporter": "11.20.0"
+        "blackbox-exporter": "11.20.2"
       },
-      "measuredAt": "2026-10-11"
+      "measuredAt": "2026-10-31"
     },
     "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 9,
+      "idleMemoryMiB": 8,
       "idleCPUm": 0,
       "versions": {
-        "blackbox-exporter": "11.20.0"
+        "blackbox-exporter": "11.20.2"
       },
-      "measuredAt": "2026-10-11"
+      "measuredAt": "2026-10-31"
+    },
+    "rke2-amd64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 4,
+      "idleCPUm": 0,
+      "versions": {
+        "blackbox-exporter": "11.20.2"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "rke2-arm64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 4,
+      "idleCPUm": 0,
+      "versions": {
+        "blackbox-exporter": "11.20.2"
+      },
+      "measuredAt": "2026-10-31"
     },
     "single-node-amd64-v1.36.4": {
       "idleMemoryMiB": 4,
       "idleCPUm": 0,
       "versions": {
-        "blackbox-exporter": "11.20.0"
+        "blackbox-exporter": "11.20.2"
       },
-      "measuredAt": "2026-10-11"
+      "measuredAt": "2026-10-31"
     },
     "single-node-arm64-v1.36.4": {
       "idleMemoryMiB": 4,
@@ -31,7 +79,7 @@
       "versions": {
         "blackbox-exporter": "11.20.2"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     }
   }
 }

@@ -1,6 +1,24 @@
 {
   "component": "ingress/traefik",
   "environments": {
+    "k3s-amd64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 24,
+      "idleCPUm": 0,
+      "versions": {
+        "gateway-api-crds": "v1.6.3",
+        "traefik": "42.1.3"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "k3s-arm64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 24,
+      "idleCPUm": 0,
+      "versions": {
+        "gateway-api-crds": "v1.6.3",
+        "traefik": "42.1.3"
+      },
+      "measuredAt": "2026-10-31"
+    },
     "kubesolo-amd64-v1.35.7+kubesolo-v1.2.2": {
       "idleMemoryMiB": 22,
       "idleCPUm": 0,
@@ -11,13 +29,13 @@
       "measuredAt": "2026-10-29"
     },
     "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
-      "idleMemoryMiB": 22,
+      "idleMemoryMiB": 23,
       "idleCPUm": 0,
       "versions": {
         "gateway-api-crds": "v1.6.3",
         "traefik": "42.1.3"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     },
     "kubesolo-arm64-v1.35.7+kubesolo-v1.2.2": {
       "idleMemoryMiB": 23,
@@ -35,43 +53,55 @@
         "gateway-api-crds": "v1.6.3",
         "traefik": "42.1.3"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     },
     "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 45,
+      "failed": true,
+      "idleMemoryMiB": 0,
       "idleCPUm": 0,
-      "versions": {
-        "gateway-api-crds": "v1.6.2",
-        "traefik": "41.7.1"
-      },
-      "measuredAt": "2026-10-11"
+      "measuredAt": "2026-10-31"
     },
     "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 56,
+      "failed": true,
+      "idleMemoryMiB": 0,
+      "idleCPUm": 0,
+      "measuredAt": "2026-10-31"
+    },
+    "rke2-amd64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 22,
       "idleCPUm": 0,
       "versions": {
-        "gateway-api-crds": "v1.6.2",
-        "traefik": "41.7.1"
+        "gateway-api-crds": "v1.6.3",
+        "traefik": "42.1.3"
       },
-      "measuredAt": "2026-10-11"
+      "measuredAt": "2026-10-31"
     },
-    "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 23,
-      "idleCPUm": 0,
-      "versions": {
-        "gateway-api-crds": "v1.6.2",
-        "traefik": "41.7.1"
-      },
-      "measuredAt": "2026-10-11"
-    },
-    "single-node-arm64-v1.36.4": {
+    "rke2-arm64-v1.36.5+rke2r1": {
       "idleMemoryMiB": 23,
       "idleCPUm": 0,
       "versions": {
         "gateway-api-crds": "v1.6.3",
         "traefik": "42.1.3"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
+    },
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 22,
+      "idleCPUm": 0,
+      "versions": {
+        "gateway-api-crds": "v1.6.3",
+        "traefik": "42.1.3"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 24,
+      "idleCPUm": 0,
+      "versions": {
+        "gateway-api-crds": "v1.6.3",
+        "traefik": "42.1.3"
+      },
+      "measuredAt": "2026-10-31"
     }
   }
 }

@@ -2,13 +2,13 @@
   "template": "n8n-sqlite",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 309,
-      "idleCPUm": 3,
+      "idleMemoryMiB": 311,
+      "idleCPUm": 2,
       "versions": {
         "docker.io/n8nio/n8n": "2.45.1",
         "docker.io/n8nio/runners": "2.45.1"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     }
   }
 }

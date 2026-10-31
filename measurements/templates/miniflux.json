@@ -2,12 +2,12 @@
   "template": "miniflux",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 73,
-      "idleCPUm": 7,
+      "idleMemoryMiB": 72,
+      "idleCPUm": 8,
       "versions": {
         "miniflux/miniflux": "2.3.4"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     }
   }
 }

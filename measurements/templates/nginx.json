@@ -7,7 +7,7 @@
       "versions": {
         "nginxinc/nginx-unprivileged": "1.31-alpine"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     }
   }
 }
