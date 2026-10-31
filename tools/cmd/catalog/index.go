@@ -22,8 +22,8 @@ type budgetConfig struct {
 	} `yaml:"singleNode" json:"singleNode"`
 }
 
-// index writes index.json: every component with its install order and
-// measurements, recommended components per capability, every template with
+// index writes index.json: every component with its install order,
+// measurements and the distributions it was tested on, recommended components per capability, every template with
 // its measurements, the budget and the Kubernetes versions.
 func index(fs *flag.FlagSet, r *repo) error {
 	cat := r.cat
@@ -44,6 +44,7 @@ func index(fs *flag.FlagSet, r *repo) error {
 	type component struct {
 		*catalog.Component
 		InstallOrder   map[string][]string    `json:"installOrder"`
+		TestedOn       []string               `json:"testedOn"`
 		Measured       map[string]environment `json:"measured,omitempty"`
 		NonOSILicenses []string               `json:"nonOSILicenses,omitempty"`
 	}
@@ -63,7 +64,9 @@ func index(fs *flag.FlagSet, r *repo) error {
 				ic.InstallOrder[p] = append(ic.InstallOrder[p], o.ID)
 			}
 		}
-		ic.Measured = readMeasurement(measurementPath(c.ID)).Environments
+		measured := readMeasurement(measurementPath(c.ID)).Environments
+		ic.TestedOn = testedOn(cfg, measured)
+		ic.Measured = passed(measured)
 		comps = append(comps, ic)
 		if capabilities[c.Capability] == nil {
 			capabilities[c.Capability] = map[string][]string{}
@@ -85,10 +88,55 @@ func index(fs *flag.FlagSet, r *repo) error {
 	})
 }
 
+// testedOn returns the host profiles, in the order of hostProfiles, with a
+// passing measurement of the version that cfg pins. A failed run marks its
+// environment failed, so one failed architecture leaves the distribution out
+// until it passes again. Its key is "<profile>-<architecture>-<server version>", and
+// the server version ends in the pinned release: v1.36.5+k3s1 for k3s,
+// v1.35.7+kubesolo-v1.2.3 for KubeSolo v1.2.3.
+func testedOn(cfg config, measured map[string]environment) []string {
+	out := []string{}
+	for _, p := range hostProfiles {
+		suffix := "-" + cfg.pinnedVersion(p)
+		// A failure marker stands until a later run passes on the same
+		// architecture, whatever key that run measured under.
+		passAt, failAt := map[string]string{}, map[string]string{}
+		for key, env := range measured {
+			if !strings.HasPrefix(key, p+"-") || !strings.HasSuffix(key, suffix) {
+				continue
+			}
+			arch, _, _ := strings.Cut(strings.TrimPrefix(key, p+"-"), "-")
+			at := passAt
+			if env.Failed {
+				at = failAt
+			}
+			if old, ok := at[arch]; !ok || env.MeasuredAt > old {
+				at[arch] = env.MeasuredAt
+			}
+		}
+		ok := len(passAt) > 0
+		for arch, f := range failAt {
+			if pass, has := passAt[arch]; !has || f > pass {
+				ok = false
+			}
+		}
+		if ok {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
 // indexTemplate is a template in index.json, with its measurements.
 type indexTemplate struct {
 	*templates.Template
 	Measured map[string]environment `json:"measured,omitempty"`
+}
+
+// passed returns the environments that are not marked failed.
+func passed(envs map[string]environment) map[string]environment {
+	maps.DeleteFunc(envs, func(_ string, e environment) bool { return e.Failed })
+	return envs
 }
 
 func indexTemplates(ts []*templates.Template) []indexTemplate {
@@ -131,7 +179,7 @@ func budget(fs *flag.FlagSet, r *repo) error {
 func latest(m measurement, prefix string) (float64, bool) {
 	keys := slices.Sorted(maps.Keys(m.Environments))
 	for _, k := range slices.Backward(keys) {
-		if strings.HasPrefix(k, prefix+"-") {
+		if strings.HasPrefix(k, prefix+"-") && !m.Environments[k].Failed {
 			return m.Environments[k].IdleMemoryMiB, true
 		}
 	}

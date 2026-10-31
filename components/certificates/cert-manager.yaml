@@ -172,6 +172,13 @@ leftovers:
   - secrets/letsencrypt-staging-account-key
   - secrets/letsencrypt-account-key
 
+health:
+  - name: controllers
+    wait: ["--for=condition=Available", "deployment/cert-manager", "deployment/cert-manager-webhook",
+      "deployment/cert-manager-cainjector", "-n", "cert-manager"]
+    timeout: 60s
+    advice: No certificate is issued or renewed until cert-manager runs. Check its pods with kubectl -n cert-manager get pods.
+
 smoke:
   - name: self-signed-certificate
     manifest: |
@@ -190,7 +197,8 @@ smoke:
     wait: ["-n catalog-smoke certificate/smoke --for=condition=Ready"]
   # Ready means the ACME account is registered; it needs egress to Let's
   # Encrypt, not a reachable ingress. CI points both issuers at staging
-  # (config/e2e.yaml), so it registers no production accounts.
+  # (config/e2e.yaml), so it registers no production accounts. They stay out
+  # of health, so cert-manager installs on a cluster without outbound access.
   - name: acme-issuers
     wait:
       - "clusterissuer/letsencrypt-staging --for=condition=Ready"

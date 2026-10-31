@@ -9,6 +9,7 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"sync"
@@ -187,13 +188,16 @@ func subjects(r *repo, profile string, sel func(string, []*catalog.Component) bo
 	return out, nil
 }
 
-// kubesoloProfile is the profile that tests a personal install on KubeSolo. It
-// installs with the single-node values.
+// kubesoloProfile is the host profile that installs KubeSolo.
 const kubesoloProfile = "kubesolo"
 
-// profileSubjects is subjects for a catalog profile or kubesoloProfile.
-func profileSubjects(r *repo, cfg config, profile string, sel func(string, []*catalog.Component) bool) ([]subject, error) {
-	if profile != kubesoloProfile {
+// l2Profiles returns the catalog profiles, then the host profiles.
+func l2Profiles() []string { return append(slices.Clone(catalog.Profiles), hostProfiles...) }
+
+// profileSubjects is subjects for a catalog profile or a host profile. A host
+// profile tests components only.
+func profileSubjects(r *repo, profile string, sel func(string, []*catalog.Component) bool) ([]subject, error) {
+	if !slices.Contains(hostProfiles, profile) {
 		return subjects(r, profile, sel)
 	}
 	subs, err := subjects(r, templateProfile, sel)
@@ -202,7 +206,7 @@ func profileSubjects(r *repo, cfg config, profile string, sel func(string, []*ca
 	}
 	return slices.DeleteFunc(subs, func(s subject) bool {
 		c, ok := r.cat.Get(s.id)
-		return !ok || !cfg.Kubesolo.runs(c)
+		return !ok || !hostRuns(profile, c)
 	}), nil
 }
 
@@ -596,15 +600,14 @@ func testTemplate(r *repo, t *catalog.Tester, id string, write bool) (status str
 // l2 tests each component and template in a fresh cluster with the full
 // checks.
 func l2(r *repo, cfg config, o tierOptions, args []string) error {
-	profiles := append(slices.Clone(catalog.Profiles), kubesoloProfile)
-	if !slices.Contains(profiles, o.profile) {
-		return fmt.Errorf("unknown -profile %q; use %s", o.profile, strings.Join(profiles, " or "))
+	if !slices.Contains(l2Profiles(), o.profile) {
+		return fmt.Errorf("unknown -profile %q; use %s", o.profile, strings.Join(l2Profiles(), ", "))
 	}
 	sel, err := selection(r, o.since, args)
 	if err != nil {
 		return err
 	}
-	subs, err := profileSubjects(r, cfg, o.profile, sel)
+	subs, err := profileSubjects(r, o.profile, sel)
 	if err != nil {
 		return err
 	}
@@ -614,7 +617,7 @@ func l2(r *repo, cfg config, o tierOptions, args []string) error {
 		}
 	}
 	values := o.profile
-	if values == kubesoloProfile {
+	if slices.Contains(hostProfiles, values) {
 		values = templateProfile
 	}
 	t, err := newTester(r.cat, values)
@@ -632,20 +635,24 @@ func l2(r *repo, cfg config, o tierOptions, args []string) error {
 		var c *cluster
 		if !o.current {
 			start := time.Now()
-			if o.profile == kubesoloProfile {
-				c, err = createKubesolo(cfg.Kubesolo)
+			if slices.Contains(hostProfiles, o.profile) {
+				c, err = createHost(cfg, o.profile, s.order)
 			} else {
 				c, err = createCluster(o.profile, cfg.E2E.Version, s.order)
 			}
 			t.Timings.Since("cluster", start)
 			if err != nil {
+				if o.write && strings.Contains(s.id, "/") {
+					c, _ := r.cat.Get(s.id)
+					err = errors.Join(err, markFailed(cfg, o.profile, runtime.GOARCH, c, ""))
+				}
 				rows = append(rows, row{subject: s.id, timings: t.Timings, err: err})
 				continue
 			}
 		}
 		rw := row{subject: s.id}
 		if strings.Contains(s.id, "/") {
-			rw.status, rw.err = testComponent(t, o.profile, s.id, o.write)
+			rw.status, rw.err = testComponent(t, cfg, o.profile, s.id, o.write)
 		} else {
 			rw.status, rw.err = testTemplate(r, t, s.id, o.write)
 		}
@@ -658,19 +665,26 @@ func l2(r *repo, cfg config, o tierOptions, args []string) error {
 	return report("l2 "+o.profile, rows)
 }
 
-// testComponent runs the full component test on the current cluster and
-// writes the measurement under profile if write is set.
-func testComponent(t *catalog.Tester, profile, id string, write bool) (status string, err error) {
+// testComponent runs the full component test on the current cluster. If
+// write is set, it writes the measurement under profile, or marks the
+// environment failed.
+func testComponent(t *catalog.Tester, cfg config, profile, id string, write bool) (status string, err error) {
+	c, _ := t.Catalog.Get(id)
 	key, err := currentEnvironment(profile)
 	if err != nil {
+		if write {
+			err = errors.Join(err, markFailed(cfg, profile, runtime.GOARCH, c, ""))
+		}
 		return "", err
 	}
 	slog.Info("testing", "component", id, "env", key)
 	res := t.Test(id)
 	if res.Err != nil {
+		if write {
+			return "", errors.Join(res.Err, markFailed(cfg, profile, runtime.GOARCH, c, key))
+		}
 		return "", res.Err
 	}
-	c, _ := t.Catalog.Get(id)
 	status = fmt.Sprintf("PASS %4.0f MiB %3.0fm CPU", res.IdleMemoryMiB, res.IdleCPUm)
 	if res.Unmeasured {
 		status = "PASS (installed without credentials; not measured)"

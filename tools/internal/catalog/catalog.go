@@ -43,6 +43,7 @@ type Component struct {
 	Contributes     []Contribution    `yaml:"contributes" json:"contributes,omitempty"`
 	Detection       map[string]any    `yaml:"detection" json:"detection"`
 	Security        map[string]any    `yaml:"security" json:"security"`
+	Health          []Health          `yaml:"health" json:"health,omitempty"`
 	Smoke           []Smoke           `yaml:"smoke" json:"smoke,omitempty"`
 	Leftovers       []string          `yaml:"leftovers" json:"leftovers,omitempty"`
 	UpgradeNotes    []map[string]any  `yaml:"upgradeNotes" json:"upgradeNotes,omitempty"`
@@ -121,6 +122,15 @@ type Contribution struct {
 	Target  string `yaml:"target" json:"target"`
 	Release string `yaml:"release" json:"release"`
 	Values  string `yaml:"values" json:"values"`
+}
+
+// Health is a read-only check of an installed component: one kubectl wait
+// that applies nothing, so it can run on a production cluster.
+type Health struct {
+	Name    string   `yaml:"name" json:"name"`
+	Wait    []string `yaml:"wait" json:"wait"` // kubectl wait arguments, without --timeout
+	Timeout string   `yaml:"timeout" json:"timeout"`
+	Advice  string   `yaml:"advice" json:"advice"` // shown when the check fails
 }
 
 type Smoke struct {

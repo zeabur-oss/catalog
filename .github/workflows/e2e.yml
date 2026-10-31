@@ -1,17 +1,37 @@
-# L2: installs every component on kind, one node for single-node and three
-# for multi-node, on amd64 and arm64, each in a fresh cluster: dependencies
-# first, the previous release when its version differs (upgrade test), idle
-# memory and CPU once they are stable, smoke test, uninstall and residue
-# check. Installs every template on single-node amd64 with the components it
-# requires, runs its smoke checks, then measures its idle memory and CPU.
-# The kubesolo profile installs KubeSolo and the standalone helm-controller on
-# the runner and tests the components of a personal install, on amd64 and
-# arm64; its measurements are keyed kubesolo-<architecture>-<version>.
-# nightly.yml calls it.
+# L2: installs every component in a fresh cluster each, on amd64 and arm64:
+# dependencies first, the previous release when its version differs (upgrade
+# test), idle memory and CPU once they are stable, health and smoke checks,
+# uninstall and residue check. profiles picks the profiles of one call; a
+# matrix holds at most 256 jobs, so nightly.yml calls it once for kind and once
+# for the host distributions.
+# - single-node and multi-node run on kind, one node and three. single-node
+#   amd64 also installs every template with the components it requires, runs
+#   its smoke checks, then measures its idle memory and CPU.
+# - k3s, rke2 and kubesolo install that distribution on the runner and test
+#   the components of single-node that their distributions allow. Their
+#   measurements are keyed <profile>-<architecture>-<version>, and the index's
+#   testedOn is derived from them.
 name: e2e
 
 on:
   workflow_call:
+    inputs:
+      profiles:
+        description: L2 profiles, separated by commas
+        type: string
+        required: true
+  # A manual run, such as one distribution and a few components. Only
+  # nightly.yml opens the measurements pull request.
+  workflow_dispatch:
+    inputs:
+      profiles:
+        description: L2 profiles, separated by commas
+        type: string
+        required: true
+      components:
+        description: Component or template IDs, separated by commas; empty runs all
+        type: string
+        required: false
 
 permissions:
   contents: read
@@ -30,7 +50,10 @@ jobs:
           go-version-file: go.mod
           cache: false
       - id: list
-        run: echo "matrix=$(go run ./tools/cmd/catalog list -tier l2)" >> "$GITHUB_OUTPUT"
+        env:
+          PROFILES: ${{ inputs.profiles }}
+          IDS: ${{ inputs.components }}
+        run: echo "matrix=$(go run ./tools/cmd/catalog list -tier l2 -profiles "$PROFILES" -ids "$IDS")" >> "$GITHUB_OUTPUT"
 
   e2e:
     needs: matrix
@@ -48,14 +71,15 @@ jobs:
       - name: iSCSI module for Longhorn
         if: matrix.component == 'replicated-storage/longhorn'
         run: sudo modprobe iscsi_tcp
-      # KubeSolo requires a host without Docker. Stopping Docker leaves its
-      # netfilter rules behind, among them the FORWARD policy DROP: pod
+      # A distribution on the host runs without Docker, as on a server the
+      # Zeabur installer sets up; KubeSolo requires it. Stopping Docker leaves
+      # its netfilter rules behind, among them the FORWARD policy DROP: pod
       # traffic to the outside is forwarded without a mark that kube-proxy
       # accepts, so CoreDNS cannot reach its upstream and pods resolve no
       # external name. Remove the rules as uninstalling Docker would; the
       # security table holds the runner's own rules and stays.
-      - name: Remove Docker for KubeSolo
-        if: matrix.profile == 'kubesolo'
+      - name: Remove Docker for a host distribution
+        if: contains(fromJSON('["k3s", "rke2", "kubesolo"]'), matrix.profile)
         run: |
           sudo systemctl stop docker.socket docker.service
           for ipt in iptables ip6tables; do
@@ -84,6 +108,7 @@ jobs:
           FILE: measurements/${{ matrix.component || format('templates/{0}', matrix.template) }}.json
         run: find measurements -type f ! -path "$FILE" -delete
       - id: name
+        if: always()
         env:
           NAME: ${{ matrix.profile }}-${{ matrix.arch }}-${{ matrix.component || format('template-{0}', matrix.template) }}
         run: echo "name=${NAME//\//-}" >> "$GITHUB_OUTPUT"
@@ -96,6 +121,7 @@ jobs:
 
   budget:
     needs: e2e
+    if: contains(inputs.profiles, 'single-node')
     runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

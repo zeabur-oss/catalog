@@ -6,9 +6,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"maps"
 	"os"
 	"path/filepath"
+	"reflect"
 )
 
 // merge merges the measurements that CI jobs uploaded into measurements/.
@@ -20,14 +20,30 @@ func merge(fs *flag.FlagSet, _ *repo) error {
 	return mergeMeasurements(fs.Arg(0), "measurements")
 }
 
+// supersedes reports whether old, an environment already merged, wins over
+// env. Every job uploads the whole file it checked out, so an artifact can
+// carry stale copies of environments that another job measured; those must
+// not undo a newer result or a failure of the same day.
+func supersedes(env, old environment) bool {
+	if old.MeasuredAt != env.MeasuredAt {
+		return old.MeasuredAt > env.MeasuredAt
+	}
+	return old.Failed && !env.Failed
+}
+
 // mergeMeasurements merges each subdirectory of src into dst. A subdirectory
 // holds the files of one job, in the layout of measurements/. An environment
-// in src replaces the same environment in dst, and dst keeps the others.
+// in src replaces the same environment in dst unless dst's is newer, and dst
+// keeps the others. An environment equal to dst's before the merge is the
+// job's checked-out copy, not a result, and is skipped. A result always
+// replaces dst's environment from before the merge, because a rerun on the
+// same day dates both the same. Results of two jobs compare by supersedes.
 func mergeMeasurements(src, dst string) error {
 	jobs, err := os.ReadDir(src)
 	if err != nil {
 		return err
 	}
+	base := map[string]measurement{}
 	for _, job := range jobs {
 		if !job.IsDir() {
 			continue
@@ -51,9 +67,23 @@ func mergeMeasurements(src, dst string) error {
 			}
 			target := filepath.Join(dst, rel)
 			out := readMeasurement(target)
+			before, seen := base[target]
+			if !seen {
+				before = readMeasurement(target)
+				base[target] = before
+			}
 			out.Component = cmp.Or(in.Component, out.Component)
 			out.Template = cmp.Or(in.Template, out.Template)
-			maps.Copy(out.Environments, in.Environments)
+			for k, env := range in.Environments {
+				if was, ok := before.Environments[k]; ok && reflect.DeepEqual(env, was) {
+					continue
+				}
+				old, ok := out.Environments[k]
+				fromBefore := ok && reflect.DeepEqual(old, before.Environments[k])
+				if !ok || fromBefore || !supersedes(env, old) {
+					out.Environments[k] = env
+				}
+			}
 			return writeJSON(target, out)
 		})
 		if err != nil {

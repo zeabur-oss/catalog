@@ -45,7 +45,7 @@ metadata:
 maturity: independent             # cncf-graduated | cncf-incubating | cncf-sandbox | kubernetes-sig | independent
 defaults: {single-node: recommended, multi-node: recommended}
 requires: [certificates]          # installed first
-distributions: [k3s]              # optional; omitted means any cluster
+distributions: [k3s]              # optional; distributions to test it on, omitted means all
 
 releases:                         # installed in order
   - name: traefik
@@ -80,6 +80,7 @@ networkPolicies: |  # traffic it needs where an installer isolates namespaces
 contributes: []   # values added to another component's release (CrowdSec -> Traefik)
 detection: {...}  # CRDs, API services, Helm charts, workloads
 security: {...}   # RBAC summary, cluster-wide, privileged, podSecurity, egress, credentials, tenant risks
+health: []        # read-only checks an installer runs on a cluster
 smoke: []         # extra e2e checks
 leftovers: []     # what the upstream keeps on uninstall (e.g. CRDs)
 ```
@@ -109,6 +110,18 @@ provides:
 Removing a component also waits for the objects of its `detection.crds` outside its namespaces, except those in `internalCRDs`: CRDs whose objects the component writes itself, such as scan reports. Every entry of `internalCRDs` must be in `detection.crds`.
 
 `resources.workMemoryMiB` is the memory the component uses on top of its idle use while working, such as one build. Its idle use is measured in e2e and published in `index.json`.
+
+`health` lists read-only checks that an installer such as `zeabur-installer doctor` runs on an installed cluster. Each check runs `kubectl wait` once, with the arguments in `wait` and the time limit in `timeout`. Put a `--for` condition in `wait`, and leave out `--timeout`. When a check fails, the installer shows its `advice`, which tells the reader in English what to do. A health check has no manifest and applies nothing. Put checks that create objects in `smoke`, which only e2e runs. e2e runs `health` after install and before `smoke`.
+
+```yaml
+health:
+  - name: nodes-ready
+    wait: ["--for=condition=Ready", "nodes.longhorn.io", "--all", "-n", "longhorn-system"]
+    timeout: 60s
+    advice: "A node that joined without Longhorn needs longhorn: true under join in its configuration. Add it, then run zeabur-installer apply on that node."
+```
+
+`distributions` and `testedOn` are two different lists. `distributions` in the component file names the distributions to test the component on. `testedOn` in `index.json` names the distributions where that test passed, at the versions that `config/kubernetes.yaml` pins. An installer reads `testedOn` to offer the component only where it passed. `catalog index` derives `testedOn` from `measurements/`, so don't write it by hand. It's present on every component and can be empty.
 
 `networkPolicies` is for installers that block incoming traffic to each namespace by default. It holds standard NetworkPolicy objects in the component's own namespaces, which such an installer applies before the releases, for the traffic the component needs from elsewhere. Other installers can ignore it. `catalog validate` checks that each object is a NetworkPolicy in one of the component's namespaces.
 

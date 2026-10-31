@@ -10,19 +10,37 @@ versions: ["1.34.0", "1.35.0", "1.36.0", "1.37.0"]
 e2e:
   version: v1.36.4 # renovate: docker kindest/node
 
-# The kubesolo profile installs KubeSolo on the runner and tests the components
-# of a personal Zeabur install: the capabilities below, minus components whose
-# distributions leave out kubesolo. KubeSolo enforces no NetworkPolicy and has
-# one node, so templates and multi-node checks do not run on it. The helm
-# controller is the standalone k3s-io one that the Zeabur installer deploys.
-# sha256 is the checksum of the release asset for each architecture; change it
-# with the version.
+# The k3s, rke2 and kubesolo profiles install that distribution on the runner
+# and test every component that single-node supports and whose distributions
+# allow it, with the single-node values. Templates run on kind only. The
+# index's testedOn lists the distributions whose pinned version below has a
+# passing measurement. sha256 is the checksum of each release asset; change it
+# with the version. k3s and RKE2 keep the release that the Zeabur installer
+# pins (crates/zeabur-installer-plan/src/pins.rs).
+k3s:
+  version: v1.36.5+k3s1 # renovate: github-releases k3s-io/k3s
+  sha256:
+    amd64: d73847bcd3c5fccef0115b372e2f9a91f3032dc84bbf71518a4617565294d313 # k3s
+    arm64: 135e34cb9e8a1cfae3cb55577789e93501efe7edc080a8b2630458a85b07721e # k3s-arm64
+  installScript: 46177d4c99440b4c0311b67233823a8e8a2fc09693f6c89af1a7161e152fbfad # install.sh at the tag
+
+rke2:
+  version: v1.36.5+rke2r1 # renovate: github-releases rancher/rke2
+  sha256:
+    amd64: 4fdbe8a8a32517fbcb6e80c71ca393b96828fbb87685102d9058b51527f9278d # rke2.linux-amd64.tar.gz
+    arm64: 244454bed11d9525452e10a2e5055da5d5fc6b61928ca3fae778bc4254ce467f # rke2.linux-arm64.tar.gz
+  # RKE2 ships no storage class. The Zeabur installer adds this one.
+  localPath:
+    version: v0.0.37 # renovate: github-releases rancher/local-path-provisioner
+    sha256: 9781b39c24f3f651bd6d6e41b561e04e4904bbdb6d4f8c7a6009df3a702dcd65 # deploy/local-path-storage.yaml
+
+# KubeSolo enforces no NetworkPolicy and has one node. The helm controller is
+# the standalone k3s-io one that the Zeabur installer deploys.
 kubesolo:
   version: v1.2.3 # renovate: github-releases portainer/kubesolo
   sha256:
     amd64: 177e1832bac16b92968c2a8ff6a40448d98d1a195bc71f04870c8e7fa7905331
     arm64: fa63b4c7cc3ffe620564272dd26f235244008c6c8eaf876d6538ee4802e7cb2a
-  capabilities: [ingress, certificates, builds, databases]
   helmController:
     version: v0.17.9 # renovate: github-releases k3s-io/helm-controller
     sha256: 53da110ca271b6d6415e84bfc5ffe47d726fa35d1fb3acda47e6649ee05d4791 # deploy-cluster-scoped.yaml

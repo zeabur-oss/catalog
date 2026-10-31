@@ -155,6 +155,12 @@ security:
 # The chart's crds/ directory: Helm never deletes it.
 leftovers: [customresourcedefinitions]
 
-smoke:
+health:
+  - name: controller
+    wait: ["--for=condition=Available", "deployment/traefik", "-n", "traefik"]
+    timeout: 60s
+    advice: No route is served until Traefik runs. Check its pods with kubectl -n traefik get pods.
   - name: gateway-class-accepted
-    wait: ["gatewayclass/traefik --for=condition=Accepted"]
+    wait: ["--for=condition=Accepted", "gatewayclass/traefik"]
+    timeout: 60s
+    advice: Traefik hasn't accepted its GatewayClass. Read the reason with kubectl describe gatewayclass traefik.

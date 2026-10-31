@@ -1,7 +1,7 @@
 ---
 title: 组件文件格式
 description: 按照通用结构和组件字段编写 YAML，并用 digest 固定安装内容。
-source: "2c8866bb04c0"
+source: "a583f36828d6"
 ---
 
 把组件文件放在 `components/<capability>/<upstream>.yaml`，每个 capability（用途类别）与上游的组合各用一个文件。文件使用 YAML，包含通用结构、安装内容和配置。路径就是 ID，例如 `components/ingress/traefik.yaml` 的 ID 是 `ingress/traefik`。
@@ -46,7 +46,7 @@ metadata:
 maturity: independent             # cncf-graduated | cncf-incubating | cncf-sandbox | kubernetes-sig | independent
 defaults: {single-node: recommended, multi-node: recommended}
 requires: [certificates]          # installed first
-distributions: [k3s]              # optional; omitted means any cluster
+distributions: [k3s]              # optional; distributions to test it on, omitted means all
 
 releases:                         # installed in order
   - name: traefik
@@ -81,6 +81,7 @@ networkPolicies: |  # traffic it needs where an installer isolates namespaces
 contributes: []   # values added to another component's release (CrowdSec -> Traefik)
 detection: {...}  # CRDs, API services, Helm charts, workloads
 security: {...}   # RBAC summary, cluster-wide, privileged, podSecurity, egress, credentials, tenant risks
+health: []        # read-only checks an installer runs on a cluster
 smoke: []         # extra e2e checks
 leftovers: []     # what the upstream keeps on uninstall (e.g. CRDs)
 ```
@@ -110,6 +111,18 @@ provides:
 移除组件前，也会等到其命名空间以外没有 `detection.crds` 的对象，但 `internalCRDs` 列出的除外：这些 CRD 的对象是组件自己写的，例如扫描报告。`internalCRDs` 的每一项都必须在 `detection.crds` 里。
 
 `resources.workMemoryMiB` 是组件工作时（例如运行一次构建）在空闲用量之外还要多用的内存。空闲用量由 e2e 测量，放在 `index.json`。
+
+`health` 列出只读检查，供安装工具（例如 `zeabur-installer doctor`）检查已安装的集群。每项检查运行一次 `kubectl wait`，参数写在 `wait`，等待时间写在 `timeout`。`wait` 里要有 `--for` 条件，不要放 `--timeout`。检查失败时，安装工具会显示 `advice`，用英文告诉用户该怎么处理。健康检查没有 manifest，也不会应用任何对象。需要创建对象的检查放在 `smoke`，只有 e2e 会运行。e2e 在安装完成后、运行 `smoke` 之前，先运行 `health`。
+
+```yaml
+health:
+  - name: nodes-ready
+    wait: ["--for=condition=Ready", "nodes.longhorn.io", "--all", "-n", "longhorn-system"]
+    timeout: 60s
+    advice: "A node that joined without Longhorn needs longhorn: true under join in its configuration. Add it, then run zeabur-installer apply on that node."
+```
+
+`distributions` 和 `testedOn` 是两份不同的列表。组件文件里的 `distributions` 列出要在哪些发行版上测试这个组件；`index.json` 里的 `testedOn` 列出测试通过的发行版，版本以 `config/kubernetes.yaml` 固定的为准。安装工具会读取 `testedOn`，只在测试通过的发行版上提供这个组件。`testedOn` 由 `catalog index` 从 `measurements/` 生成，无需手写。每个组件都有这个字段，可以是空列表。
 
 `networkPolicies` 给默认拦截每个命名空间入站流量的安装工具用。内容是组件自己命名空间里的标准 NetworkPolicy 对象，这类安装工具会在安装 releases 前应用，放行组件需要从其他地方进来的流量。其他安装工具可以忽略它。`catalog validate` 会检查每个对象都是组件命名空间里的 NetworkPolicy。
 

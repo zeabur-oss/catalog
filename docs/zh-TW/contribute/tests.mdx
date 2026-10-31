@@ -1,7 +1,7 @@
 ---
 title: 測試與 CI
 description: 了解各層 CI 的執行時機與檢查內容，並設定範本測試輸入。
-source: "32bca73a75a7"
+source: "5a3b297a90db"
 ---
 
 L0 在每個 pull request 執行。L1 在合併到 `main` 後執行。L2 每晚（nightly）執行，打發行 tag 前要確認那個 commit 通過了 L2。各層分工檢查，後續層級會補上前一層沒涵蓋的項目。你也能用 `catalog e2e -tier l0|l1|l2` 執行與 CI 相同的測試。
@@ -10,7 +10,7 @@ L0 在每個 pull request 執行。L1 在合併到 `main` 後執行。L2 每晚�
 
 - L0 不需要 Docker。
 - L1 與 L2 會建立 kind 叢集，需要 Linux 與 Docker。加上 `-cluster current`，就會改用 `KUBECONFIG` 指定的叢集。
-- 執行 KubeSolo 測試需要 Linux 主機與 root 權限。
+- 在 k3s、RKE2 與 KubeSolo 上測試時，發行版會直接安裝在主機上，所以要用一台沒有 Docker、用完就能丟的 Linux 主機，並有 root 權限。每項測試前後都會移除發行版，並清掉 Pod 在主機上留下的掛載、網路介面、路由與防火牆規則。
 
 一般測試使用 `single-node` 或 `multi-node` profile，兩者各有一組設定。
 
@@ -118,9 +118,9 @@ L2 會在 amd64 與 arm64 上，為每個元件、每種 profile 建立新的 ki
 
 <Step>
 
-### 執行煙霧測試並解除安裝
+### 執行健康檢查與煙霧測試，再解除安裝
 
-執行煙霧測試，再解除安裝元件。只要有任何殘留項目，測試就會失敗。
+執行元件的健康檢查與煙霧測試，再解除安裝元件。只要有任何殘留項目，測試就會失敗。
 
 </Step>
 
@@ -142,15 +142,19 @@ L2 也會檢查 amd64 上 `single-node` profile 所有預設啟用元件的總�
 
 `nightly.yml` 會建立 pull request，更新 `measurements/`。你也能手動執行這個工作流程，立即取得量測結果。Renovate 則會針對每個新的上游版本與映像檔 digest 建立 pull request。
 
-### KubeSolo 測試
+### 在 k3s、RKE2 與 KubeSolo 上測試
 
-使用 `-profile kubesolo` 時，測試會在 Linux 主機上安裝 KubeSolo 與 helm-controller，版本固定為 [`config/kubernetes.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/kubernetes.yaml) 指定的版本，並核對校驗碼。
+使用 `-profile k3s`、`-profile rke2` 或 `-profile kubesolo` 時，測試會在 Linux 主機上安裝該發行版，版本固定為 [`config/kubernetes.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/kubernetes.yaml) 指定的版本，並核對每個下載檔的校驗碼。各發行版和預設安裝有這些不同：
 
-接著，測試會使用 `single-node` 的設定值，針對該檔案列出的 capability（用途類別）執行 L2：`ingress`、`certificates`、`builds` 與 `databases`。
+- k3s 不啟用內建的 Traefik 與 metrics-server。
+- RKE2 不啟用內建的 ingress controller 與 metrics-server，並加裝 local-path-provisioner 當作預設 StorageClass。
+- KubeSolo 會另外安裝獨立的 helm-controller。
 
-KubeSolo 測試不執行範本測試，因為範本需要 NetworkPolicy。如果元件的 `distributions` 未列出 `kubesolo`，也不會測試該元件。
+接著，測試會用 `single-node` 的設定值，對 `single-node` 支援的每個元件執行 L2。元件的 `distributions` 沒有列出這個發行版時，就不會在上面測試。範本不在這些發行版上測試。
 
-量測結果與 kind 的結果放在一起，識別鍵為 `kubesolo-<architecture>-<version>`。
+量測結果與 kind 的結果放在一起，識別鍵為 `<profile>-<architecture>-<version>`，例如 `k3s-amd64-v1.36.5+k3s1`。測試失敗時，該環境會改標記為 `failed`。
+
+元件在 `config/kubernetes.yaml` 固定的版本上通過測試後，`catalog index` 會把這個發行版列進元件的 `testedOn`。之後只要測試失敗，這個發行版就會移出清單，等下一次通過再列回來。
 
 ## 設定範本測試輸入
 
@@ -199,5 +203,5 @@ L0 會啟動自己的 API server。L1 與 L2 會建立自己的 kind 叢集，�
 | --- | --- |
 | L0 因範本 Namespace 的 Pod Security 警告而失敗 | 依照警告修正範本。警告會讓範本測試失敗。 |
 | 元件列在 `unready`，沒有資源量測結果 | 檢查 `config/e2e.yaml`。這些元件需要額外的認證資訊，但 CI 沒有這些資訊，因此測試不量測資源用量。 |
-| KubeSolo 沒有執行某個元件 | 檢查元件的 `distributions` 是否包含 `kubesolo`。 |
+| k3s、RKE2 或 KubeSolo 沒有測試某個元件 | 檢查元件的 `distributions` 是否包含該發行版。 |
 | 需要讓節點從映像檔鏡像站拉取映像檔 | 設定 `ZEABUR_REGISTRY_MIRRORS`，值的格式為 `docker.io=http://mirror:5001,ghcr.io=...`。 |

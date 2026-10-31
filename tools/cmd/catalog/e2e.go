@@ -7,6 +7,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -24,6 +25,9 @@ type measurement struct {
 }
 
 type environment struct {
+	// Failed marks an environment whose last run failed. It replaces the
+	// passing measurement before it, which catalog merge would keep.
+	Failed        bool              `json:"failed,omitempty"`
 	IdleMemoryMiB float64           `json:"idleMemoryMiB"`
 	IdleCPUm      float64           `json:"idleCPUm"`
 	Versions      map[string]string `json:"versions,omitempty"`
@@ -33,7 +37,7 @@ type environment struct {
 func e2e(fs *flag.FlagSet, r *repo) error {
 	tier := fs.String("tier", "l2", strings.Join(tiers, ", ")+" (see tier.go)")
 	cluster := fs.String("cluster", "kind", "l1, l2: kind creates a cluster for each group or test; current uses the cluster that KUBECONFIG names")
-	profile := fs.String("profile", templateProfile, "l2: single-node, multi-node or kubesolo (KubeSolo on this host)")
+	profile := fs.String("profile", templateProfile, "l2: single-node, multi-node (kind), or k3s, rke2 or kubesolo (installed on this host)")
 	write := fs.Bool("write", false, "l2: update measurements/ for passing tests")
 	previous := fs.String("previous", "", "l2: previous release's index.json, for upgrade tests")
 	since := fs.String("since", "", "l1, l2: without ids, only what changed since this git commit")
@@ -116,6 +120,30 @@ func writeMeasurement(c *catalog.Component, key string, res catalog.Result) erro
 		IdleCPUm:      math.Round(res.IdleCPUm),
 		Versions:      versions,
 		MeasuredAt:    time.Now().UTC().Format(time.DateOnly),
+	}
+	return writeJSON(measurementPath(c.ID), m)
+}
+
+// markFailed records that the test of c failed in environment key. On a host
+// profile it also marks every environment of profile on arch at the pinned
+// version, and records one when there is none, so a failure before the
+// cluster answered (key empty) counts too.
+func markFailed(cfg config, profile, arch string, c *catalog.Component, key string) error {
+	m := readMeasurement(measurementPath(c.ID))
+	m.Component = c.ID
+	failed := environment{Failed: true, MeasuredAt: time.Now().UTC().Format(time.DateOnly)}
+	if key != "" {
+		m.Environments[key] = failed
+	}
+	if slices.Contains(hostProfiles, profile) {
+		// With no measurement yet, a placeholder key carries the failure;
+		// testedOn lets a later passing run on the architecture replace it.
+		m.Environments[profile+"-"+arch+"-"+cfg.pinnedVersion(profile)] = failed
+		for k := range m.Environments {
+			if strings.HasPrefix(k, profile+"-"+arch+"-") && strings.HasSuffix(k, "-"+cfg.pinnedVersion(profile)) {
+				m.Environments[k] = failed
+			}
+		}
 	}
 	return writeJSON(measurementPath(c.ID), m)
 }

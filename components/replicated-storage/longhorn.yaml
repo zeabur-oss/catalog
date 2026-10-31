@@ -26,6 +26,9 @@ alternatives:
 defaults:
   single-node: optional
   multi-node: recommended
+# On KubeSolo v1.2.3 its driver deployer never becomes available, and a
+# KubeSolo install has one node, so there is no other node to copy to.
+distributions: [k3s, rke2, k0s, microk8s, kubeadm]
 persistsData: true
 disruptsTraffic: true
 
@@ -166,6 +169,13 @@ security:
 # The manager creates the storage class longhorn-static itself, without an
 # owner, and Longhorn's uninstall deletes only the class longhorn.
 leftovers: [storageclasses/longhorn-static]
+
+health:
+  # Longhorn's own checks of each node: packages, modules, disk space.
+  - name: nodes-ready
+    wait: ["--for=condition=Ready", "nodes.longhorn.io", "--all", "-n", "longhorn-system"]
+    timeout: 60s
+    advice: "A node that joined without Longhorn needs longhorn: true under join in its configuration. Add it, then run zeabur-installer apply on that node."
 
 smoke:
   - name: driver
