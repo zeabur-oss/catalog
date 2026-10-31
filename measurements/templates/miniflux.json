@@ -3,7 +3,7 @@
   "environments": {
     "single-node-amd64-v1.36.4": {
       "idleMemoryMiB": 72,
-      "idleCPUm": 8,
+      "idleCPUm": 6,
       "versions": {
         "miniflux/miniflux": "2.3.4"
       },

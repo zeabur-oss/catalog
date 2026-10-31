@@ -58,7 +58,7 @@
       "measuredAt": "2026-10-31"
     },
     "rke2-arm64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 15,
+      "idleMemoryMiB": 16,
       "idleCPUm": 0,
       "versions": {
         "keel": "v1.2.3"

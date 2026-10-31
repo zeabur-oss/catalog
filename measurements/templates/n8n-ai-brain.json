@@ -2,7 +2,7 @@
   "template": "n8n-ai-brain",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 388,
+      "idleMemoryMiB": 370,
       "idleCPUm": 12,
       "versions": {
         "n8nio/n8n": "2.45.1",
