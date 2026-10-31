@@ -4,9 +4,9 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    # Bun's own release binaries; Nixpkgs is behind, and bun fmt and bun check are newer.
-    nix-bun = {
-      url = "github:zeabur-oss/nix-bun";
+    # The base shell of every zeabur-oss repository: Bun, the release tools and the shared linters.
+    oss = {
+      url = "github:zeabur-oss/.github";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -16,15 +16,12 @@
       self,
       nixpkgs,
       flake-utils,
-      nix-bun,
+      oss,
     }:
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = [ nix-bun.overlays.default ];
-        };
+        pkgs = nixpkgs.legacyPackages.${system};
         # The release version: scripts/release.ts check compares the tag with it.
         version = "0.1.1";
         catalog = pkgs.buildGoModule {
@@ -82,25 +79,16 @@
         };
 
         devShells.default = pkgs.mkShell {
+          inputsFrom = [ oss.devShells.${system}.base ];
           packages = with pkgs; [
             go
             gopls
-            kubernetes-helm
             kubectl
             kubeconform
             kind
             kube-apiserver
             etcd
-            jq
-            shellcheck
-            actionlint
             yq-go
-
-            # Releases: scripts/release.ts and @zeabur-oss/release (package.json) call these
-            bun
-            crane
-            cosign
-            gh
           ];
         };
       }
