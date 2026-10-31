@@ -4,7 +4,7 @@ description: 固定 Zeabur Catalog 版本、驗證 Sigstore 簽章，再讀取 i
 source: "94d7e744e570"
 ---
 
-打上 `vX.Y.Z` tag 後，就會發布 `index.json`、`bundle.tar.gz`、`checksums.txt`，以及各自的 Sigstore 簽章套件。使用 Zeabur Catalog 的工具應固定使用一個版本，驗證後再讀取 `index.json`。
+打上 `vX.Y.Z` tag 後，就會發布 `index.json`、`bundle.tar.gz`、`checksums.txt`，以及 `SHA256SUMS` 和它的 Sigstore 簽章套件。使用 Zeabur Catalog 的工具應固定使用一個版本，驗證後再讀取 `index.json`。
 
 ## 版本產物
 
@@ -14,7 +14,7 @@ source: "94d7e744e570"
 | `bundle.tar.gz` | 套件包（bundle），包含索引、交叉檢查資料、元件、範本及相關檔案。 |
 | `checksums.txt` | 檔案的檢查碼。 |
 
-每個發布檔案都有一份 cosign 無金鑰 Sigstore 簽章套件。`index.json` 對應的檔名是 `index.json.sigstore.json`。版本也附有 `SHA256SUMS`，每個檔案都有 GitHub 建置來源證明（build provenance attestation）。
+`SHA256SUMS` 列出其他每個檔案的雜湊值，並附有 cosign 無金鑰 Sigstore 簽章套件 `SHA256SUMS.sigstore.json`。每個檔案也都有 GitHub 建置來源證明（build provenance attestation）。
 
 所有 zeabur-oss 版本都由 [zeabur-oss/.github](https://github.com/zeabur-oss/.github) 的共用發布工作流程簽署。簽章會記錄該工作流程、儲存庫 `zeabur-oss/catalog` 與 tag。
 
@@ -26,15 +26,16 @@ source: "94d7e744e570"
 
 ### 固定版本並驗證簽章
 
-工具先固定要使用的版本，再驗證檔案。以下指令驗證 `index.json`：
+工具先固定要使用的版本，再驗證檔案。先把檔案下載到新建的私有目錄，以下指令驗證 `SHA256SUMS` 的簽章，再核對它列出的檔案：
 
 ```sh
 tag=vX.Y.Z
-cosign verify-blob index.json --bundle index.json.sigstore.json \
+cosign verify-blob SHA256SUMS --bundle SHA256SUMS.sigstore.json \
   --certificate-identity-regexp '^https://github\.com/zeabur-oss/\.github/\.github/workflows/release\.yml@' \
   --certificate-github-workflow-repository zeabur-oss/catalog \
   --certificate-github-workflow-ref "refs/tags/$tag" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
+sha256sum --check --ignore-missing SHA256SUMS
 ```
 
 若要改為檢查來源證明，請執行 `gh attestation verify index.json --repo zeabur-oss/catalog --signer-workflow zeabur-oss/.github/.github/workflows/release.yml`。

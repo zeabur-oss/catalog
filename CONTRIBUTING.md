@@ -49,6 +49,20 @@ clusters on a Linux machine with Docker.
 `scripts/ci.sh <job>` runs one pull request job as CI does, in the dev shell;
 `scripts/ci.sh --list` lists them.
 
+## Releases
+
+The release workflow is the shared one of [zeabur-oss/.github](https://github.com/zeabur-oss/.github);
+its stages are `bun scripts/release.ts check|build|publish|assets|verify`. To release `vX.Y.Z`:
+
+1. Set `version` in `flake.nix`, add the `## X.Y.Z (YYYY-MM-DD)` section to `CHANGELOG.md`, and merge
+   to `main`. The section becomes the release body as it is, so keep each paragraph and list item
+   on one line. A pre-release such as `vX.Y.Z-rc.1` needs its own `## X.Y.Z-rc.1 (YYYY-MM-DD)` section.
+2. Optionally rehearse: run the Release workflow by hand with the version. It builds the release
+   and publishes nothing.
+3. Once CI has passed on `main` for that commit, push the tag `vX.Y.Z` on it. The workflow leaves a
+   draft release; check it and publish it. If its verify job fails because of the check itself, fix
+   the check and run `verify` again from a checkout, as zeabur-oss/.github's README shows.
+
 ## License
 
 By contributing you agree that your contributions are licensed under the

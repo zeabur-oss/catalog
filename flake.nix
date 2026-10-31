@@ -4,18 +4,28 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    # zeabur-oss-release: checks the release tag (scripts/release.sh).
-    oss-release = {
-      url = "github:zeabur-oss/.github";
+    # Bun's own release binaries; Nixpkgs is behind, and bun fmt and bun check are newer.
+    nix-bun = {
+      url = "github:zeabur-oss/nix-bun";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { self, nixpkgs, flake-utils, oss-release }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+      nix-bun,
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
-        pkgs = nixpkgs.legacyPackages.${system};
-        # The release version: scripts/release.sh check compares the tag with it.
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ nix-bun.overlays.default ];
+        };
+        # The release version: scripts/release.ts check compares the tag with it.
         version = "0.1.1";
         catalog = pkgs.buildGoModule {
           pname = "catalog";
@@ -50,10 +60,11 @@
           ];
           doCheck = false;
         };
-      in {
+      in
+      {
         packages = {
           inherit catalog kube-apiserver;
-          # The files that scripts/release.sh signs and publishes. Zeabur builds this output at its
+          # The files that scripts/release.ts publishes. Zeabur builds this output at its
           # pinned commit, so it embeds the same bytes as the release.
           release = pkgs.runCommand "catalog-release" { nativeBuildInputs = [ catalog ]; } ''
             cp -r ${self} src
@@ -80,14 +91,18 @@
             kind
             kube-apiserver
             etcd
-            cosign
-            gh
             jq
             shellcheck
             actionlint
             yq-go
-            oss-release.packages.${system}.zeabur-oss-release
+
+            # Releases: scripts/release.ts and @zeabur-oss/release (package.json) call these
+            bun
+            crane
+            cosign
+            gh
           ];
         };
-      });
+      }
+    );
 }
