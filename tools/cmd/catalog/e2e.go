@@ -126,7 +126,8 @@ func writeMeasurement(c *catalog.Component, key string, res catalog.Result) erro
 
 // markFailed records that the test of c failed in environment key. On a host
 // profile it also marks every environment of profile on arch at the pinned
-// version, so a failure before the cluster answered (key empty) counts too.
+// version, and records one when there is none, so a failure before the
+// cluster answered (key empty) counts too.
 func markFailed(cfg config, profile, arch string, c *catalog.Component, key string) error {
 	m := readMeasurement(measurementPath(c.ID))
 	m.Component = c.ID
@@ -135,6 +136,9 @@ func markFailed(cfg config, profile, arch string, c *catalog.Component, key stri
 		m.Environments[key] = failed
 	}
 	if slices.Contains(hostProfiles, profile) {
+		// With no measurement yet, a placeholder key carries the failure;
+		// testedOn lets a later passing run on the architecture replace it.
+		m.Environments[profile+"-"+arch+"-"+cfg.pinnedVersion(profile)] = failed
 		for k := range m.Environments {
 			if strings.HasPrefix(k, profile+"-"+arch+"-") && strings.HasSuffix(k, "-"+cfg.pinnedVersion(profile)) {
 				m.Environments[k] = failed

@@ -98,13 +98,29 @@ func testedOn(cfg config, measured map[string]environment) []string {
 	out := []string{}
 	for _, p := range hostProfiles {
 		suffix := "-" + cfg.pinnedVersion(p)
-		pass, fail := false, false
+		// A failure marker stands until a later run passes on the same
+		// architecture, whatever key that run measured under.
+		passAt, failAt := map[string]string{}, map[string]string{}
 		for key, env := range measured {
-			if strings.HasPrefix(key, p+"-") && strings.HasSuffix(key, suffix) {
-				pass, fail = pass || !env.Failed, fail || env.Failed
+			if !strings.HasPrefix(key, p+"-") || !strings.HasSuffix(key, suffix) {
+				continue
+			}
+			arch, _, _ := strings.Cut(strings.TrimPrefix(key, p+"-"), "-")
+			at := passAt
+			if env.Failed {
+				at = failAt
+			}
+			if old, ok := at[arch]; !ok || env.MeasuredAt > old {
+				at[arch] = env.MeasuredAt
 			}
 		}
-		if pass && !fail {
+		ok := len(passAt) > 0
+		for arch, f := range failAt {
+			if pass, has := passAt[arch]; !has || f > pass {
+				ok = false
+			}
+		}
+		if ok {
 			out = append(out, p)
 		}
 	}

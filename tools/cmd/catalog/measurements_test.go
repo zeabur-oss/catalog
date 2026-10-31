@@ -197,3 +197,69 @@ func TestFailedRunTakesTheDistributionOutOfTestedOn(t *testing.T) {
 		})
 	}
 }
+
+func TestFailureSurvivesAnotherJobsStaleCopy(t *testing.T) {
+	t.Chdir(t.TempDir())
+	var cfg config
+	cfg.K3s.Version = "v1.36.5+k3s1"
+	comp := &catalog.Component{ID: "ingress/traefik"}
+	pass := environment{IdleMemoryMiB: 22, MeasuredAt: "2026-10-30"}
+	main := measurement{Component: comp.ID, Environments: map[string]environment{
+		"k3s-amd64-v1.36.5+k3s1":    pass,
+		"k3s-arm64-v1.36.5+k3s1":    pass,
+		"single-node-amd64-v1.36.4": pass,
+	}}
+	// The k3s arm64 job fails; the single-node job, merged after it, uploads
+	// its checkout of main with the old passing k3s measurements.
+	writeFile(t, "measurements/ingress/traefik.json", main)
+	if err := markFailed(cfg, "k3s", "arm64", comp, "k3s-arm64-v1.36.5+k3s1"); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, "downloaded/measurements-k3s-arm64-ingress-traefik/ingress/traefik.json", readMeasurement("measurements/ingress/traefik.json"))
+	fresh := main
+	fresh.Environments = map[string]environment{}
+	for k, e := range main.Environments {
+		fresh.Environments[k] = e
+	}
+	fresh.Environments["single-node-amd64-v1.36.4"] = environment{IdleMemoryMiB: 25, MeasuredAt: "2026-10-31"}
+	writeFile(t, "downloaded/measurements-single-node-amd64-ingress-traefik/ingress/traefik.json", fresh)
+	writeFile(t, "main/ingress/traefik.json", main)
+
+	if err := mergeMeasurements("downloaded", "main"); err != nil {
+		t.Fatal(err)
+	}
+	merged := readMeasurement("main/ingress/traefik.json").Environments
+	if !merged["k3s-arm64-v1.36.5+k3s1"].Failed {
+		t.Error("a stale passing copy undid the failure marker")
+	}
+	if merged["single-node-amd64-v1.36.4"].IdleMemoryMiB != 25 {
+		t.Error("the new measurement was not merged")
+	}
+	if slices.Contains(testedOn(cfg, merged), "k3s") {
+		t.Error("k3s stays in testedOn after its arm64 run failed")
+	}
+}
+
+func TestStartupFailureWithoutMeasurementIsRecorded(t *testing.T) {
+	t.Chdir(t.TempDir())
+	var cfg config
+	cfg.Kubesolo.Version = "v1.2.3"
+	comp := &catalog.Component{ID: "ingress/traefik"}
+	// amd64 passed; arm64 has never been measured and its cluster never answered.
+	writeFile(t, "measurements/ingress/traefik.json", measurement{Component: comp.ID, Environments: map[string]environment{
+		"kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {IdleMemoryMiB: 20, MeasuredAt: "2026-10-30"},
+	}})
+	if err := markFailed(cfg, kubesoloProfile, "arm64", comp, ""); err != nil {
+		t.Fatal(err)
+	}
+	envs := readMeasurement("measurements/ingress/traefik.json").Environments
+	if got := testedOn(cfg, envs); slices.Contains(got, kubesoloProfile) {
+		t.Errorf("testedOn = %q after arm64 failed to start", got)
+	}
+
+	// A later arm64 run passes under its real key and replaces the mark.
+	envs["kubesolo-arm64-v1.35.7+kubesolo-v1.2.3"] = environment{IdleMemoryMiB: 21, MeasuredAt: "2999-01-01"}
+	if got := testedOn(cfg, envs); !slices.Equal(got, []string{kubesoloProfile}) {
+		t.Errorf("testedOn = %q after arm64 passed", got)
+	}
+}
