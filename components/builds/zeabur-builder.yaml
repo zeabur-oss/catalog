@@ -246,7 +246,9 @@ releases:
           gcInterval: 1h
           # Every untagged manifest goes after the delay; per repository, the
           # 20 most recently pushed tags stay. Builder pushes one tag per
-          # commit, so 20 commits remain to roll back to.
+          # commit, so 20 commits remain to roll back to. zeabur-builder is
+          # Builder's owner marker: without it Builder never deletes the
+          # repository.
           retention:
             delay: 2h
             policies:
@@ -255,6 +257,7 @@ releases:
                 deleteUntagged: true
                 keepTags:
                   - mostRecentlyPushedCount: 20
+                  - patterns: ["^zeabur-builder$"]
         http:
           # All interfaces, so the Service reaches the pod.
           address: 0.0.0.0

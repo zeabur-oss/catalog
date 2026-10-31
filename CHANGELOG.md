@@ -9,6 +9,8 @@ based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - `builds/zeabur-builder` installs Zeabur Builder 0.1.1 together with the zot
   registry it pushes to, so the two are added and removed as one component.
+  Its zot keeps the `zeabur-builder` tag in every repository, Builder's owner
+  marker, besides the 20 most recently pushed tags.
 - The `k3s` and `rke2` e2e profiles install k3s v1.36.5+k3s1 and RKE2
   v1.36.5+rke2r1 on the runner, the releases Zeabur Installer pins. Their
   measurements are keyed `k3s-<architecture>-<version>` and
