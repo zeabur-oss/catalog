@@ -1,7 +1,7 @@
 ---
 title: 测试与 CI
 description: 了解各层 CI 的运行时机和检查内容，并配置模板测试输入。
-source: "35418c893f61"
+source: "5a3b297a90db"
 ---
 
 L0 在每个 pull request 中运行；L1 在合并到 `main` 后运行；L2 在每晚（nightly）运行，打发布 tag 前要确认该 commit 已通过 L2。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以用 `catalog e2e -tier l0|l1|l2` 运行与 CI 相同的测试。
@@ -10,7 +10,7 @@ L0 在每个 pull request 中运行；L1 在合并到 `main` 后运行；L2 在�
 
 - L0 不需要 Docker。
 - L1 和 L2 会创建 kind 集群，需要 Linux 和 Docker。加上 `-cluster current`，就会改用 `KUBECONFIG` 指定的集群。
-- 在 k3s、RKE2 和 KubeSolo 上测试时，会直接把发行版装在主机上，需要一台用完即弃、没有 Docker 的 Linux 主机和 root 权限。每项测试前后都会移除发行版，并清理 Pod 在主机上留下的挂载、网络接口、路由和防火墙规则。
+- 在 k3s、RKE2 和 KubeSolo 上测试时，发行版会直接装在主机上，所以要用一台没有 Docker、用完即弃的 Linux 主机，并有 root 权限。每项测试前后都会移除发行版，并清理 Pod 在主机上留下的挂载、网络接口、路由和防火墙规则。
 
 常规测试使用 `single-node` 或 `multi-node` profile，也就是各自的配置组合。
 
@@ -144,15 +144,17 @@ L2 也会检查 amd64 上 `single-node` profile 的默认启用组件总用量�
 
 ### 在 k3s、RKE2 和 KubeSolo 上测试
 
-使用 `-profile k3s`、`-profile rke2` 或 `-profile kubesolo` 时，测试会在 Linux 主机上安装 [`config/kubernetes.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/kubernetes.yaml) 固定版本的发行版，并核对每个下载文件的校验和：
+使用 `-profile k3s`、`-profile rke2` 或 `-profile kubesolo` 时，测试会在 Linux 主机上安装 [`config/kubernetes.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/kubernetes.yaml) 固定版本的发行版，并核对每个下载文件的校验和。各发行版和默认安装有这些不同：
 
 - k3s 不启用自带的 Traefik 和 metrics-server。
 - RKE2 不启用自带的 ingress controller 和 metrics-server，并加装 local-path-provisioner 作为默认 StorageClass。
 - KubeSolo 会另外安装独立的 helm-controller。
 
-接着，测试会使用 `single-node` 的配置值，对 `single-node` 支持的每个组件运行 L2。组件的 `distributions` 如果未列出该发行版，就跳过这个组件。这些测试不运行模板。
+接着，测试会使用 `single-node` 的配置值，对 `single-node` 支持的每个组件运行 L2。组件的 `distributions` 没有列出这个发行版时，就不会在上面测试。模板不在这些发行版上测试。
 
-测量结果与 kind 的结果放在一起，以 `<profile>-<architecture>-<version>` 作为标识键，例如 `k3s-amd64-v1.36.5+k3s1`。测试失败时，该环境会标记为 `failed`。组件在 `config/kubernetes.yaml` 固定的版本上通过测试，且没有任何一次被标记为失败，`catalog index` 才会把该发行版列进组件的 `testedOn`。测试失败后，要等到再次通过，该发行版才会重新列入。
+测量结果与 kind 的结果放在一起，以 `<profile>-<architecture>-<version>` 作为标识键，例如 `k3s-amd64-v1.36.5+k3s1`。测试失败时，该环境会改为标记 `failed`。
+
+组件在 `config/kubernetes.yaml` 固定的版本上通过测试后，`catalog index` 会把这个发行版列进组件的 `testedOn`。之后只要测试失败，这个发行版就会移出列表，等下一次通过再列回来。
 
 ## 配置模板测试输入
 

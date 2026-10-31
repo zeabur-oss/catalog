@@ -177,12 +177,12 @@ health:
     wait: ["--for=condition=Available", "deployment/cert-manager", "deployment/cert-manager-webhook",
       "deployment/cert-manager-cainjector", "-n", "cert-manager"]
     timeout: 60s
-    advice: Check the pods in the cert-manager namespace with kubectl -n cert-manager get pods; until they run, no certificate is issued or renewed.
+    advice: No certificate is issued or renewed until cert-manager runs. Check its pods with kubectl -n cert-manager get pods.
   # Ready means the ACME account is registered with Let's Encrypt.
   - name: acme-issuer
     wait: ["--for=condition=Ready", "clusterissuer/letsencrypt"]
     timeout: 60s
-    advice: Check that the cluster can reach acme-v02.api.letsencrypt.org, then read the reason with kubectl describe clusterissuer letsencrypt.
+    advice: The letsencrypt issuer has no Let's Encrypt account yet. Check that the cluster can reach acme-v02.api.letsencrypt.org, then read the reason with kubectl describe clusterissuer letsencrypt.
 
 smoke:
   - name: self-signed-certificate

@@ -9,7 +9,7 @@ L0 runs on every pull request. L1 runs after merges to `main`. L2 runs nightly; 
 
 - L0 doesn't require Docker.
 - L1 and L2 create kind clusters and require Linux and Docker. Add `-cluster current` to use the cluster specified by `KUBECONFIG` instead.
-- Tests on k3s, RKE2 and KubeSolo install the distribution on the host itself. They require a disposable Linux host without Docker, and root privileges. Before and after each test, they remove the distribution and what its pods left on the host: mounts, network links, routes and firewall rules.
+- Tests on k3s, RKE2 and KubeSolo install the distribution on the host itself. They need root on a disposable Linux host without Docker. Before and after each test, they remove the distribution and clean up the mounts, network links, routes and firewall rules that its pods left on the host.
 
 Standard tests use the `single-node` or `multi-node` profile, each with its own set of settings.
 
@@ -143,15 +143,17 @@ L2 also checks the total usage of components enabled by default in the `single-n
 
 ### Tests on k3s, RKE2 and KubeSolo
 
-With `-profile k3s`, `-profile rke2` or `-profile kubesolo`, the tests install that distribution on the Linux host, at the version pinned in [`config/kubernetes.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/kubernetes.yaml), and verify the checksum of every download:
+With `-profile k3s`, `-profile rke2` or `-profile kubesolo`, the tests install that distribution on the Linux host, at the version pinned in [`config/kubernetes.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/kubernetes.yaml), and verify the checksum of every download. They change these defaults:
 
 - k3s runs without its own Traefik and metrics-server.
 - RKE2 runs without its ingress controller and metrics-server, and gets local-path-provisioner as its default StorageClass.
 - KubeSolo gets the standalone helm-controller.
 
-The tests then run L2 with the `single-node` settings for every component that `single-node` supports. They skip a component whose `distributions` leaves out the distribution, and they don't run templates.
+The tests then run L2 with the `single-node` settings for every component that `single-node` supports. A component whose `distributions` leaves out the distribution isn't tested on it. Templates aren't tested on these distributions.
 
-Measurements are stored alongside the kind results, keyed by `<profile>-<architecture>-<version>`, for example `k3s-amd64-v1.36.5+k3s1`. A failed run marks its environment `failed` instead. `catalog index` lists a distribution in a component's `testedOn` when the component passed at the version that `config/kubernetes.yaml` pins and no run there is marked failed. After a failure, the distribution stays out until the run passes again.
+Measurements are stored alongside the kind results, keyed by `<profile>-<architecture>-<version>`, for example `k3s-amd64-v1.36.5+k3s1`. A failed run marks its environment `failed` instead.
+
+Once a component passes at the version that `config/kubernetes.yaml` pins, `catalog index` adds the distribution to the component's `testedOn`. A failed run takes it out again, and the next passing run puts it back.
 
 ## Configure template test inputs
 

@@ -175,7 +175,7 @@ health:
   - name: nodes-ready
     wait: ["--for=condition=Ready", "nodes.longhorn.io", "--all", "-n", "longhorn-system"]
     timeout: 60s
-    advice: "On a node that joined without it, add longhorn: true under join in its configuration and run zeabur-installer apply there."
+    advice: "A node that joined without Longhorn needs longhorn: true under join in its configuration. Add it, then run zeabur-installer apply on that node."
 
 smoke:
   - name: driver

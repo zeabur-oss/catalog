@@ -10,24 +10,27 @@ based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `builds/zeabur-builder` installs Zeabur Builder 0.1.1 together with the zot
   registry it pushes to, so the two are added and removed as one component.
 - The `k3s` and `rke2` e2e profiles install k3s v1.36.5+k3s1 and RKE2
-  v1.36.5+rke2r1, the releases the Zeabur installer pins, on the runner. Their
+  v1.36.5+rke2r1 on the runner, the releases Zeabur Installer pins. Their
   measurements are keyed `k3s-<architecture>-<version>` and
   `rke2-<architecture>-<version>`.
-- `index.json` gives each component `testedOn`: the distributions among k3s,
-  RKE2 and KubeSolo where e2e passed at the pinned version. A failed run marks
-  its environment `failed` in `measurements/`, which leaves the distribution
-  out until it passes again, and `measured` in the index omits it.
-- `health` lists read-only checks (one `kubectl wait` each, with a timeout and
-  advice) that an installer can run on a cluster; e2e runs them after install.
-  Longhorn, cert-manager, Traefik and metrics-server have them.
+- `index.json` gives each component `testedOn`, the distributions among k3s,
+  RKE2 and KubeSolo where its e2e test passed at the pinned version. A failed
+  run marks its environment `failed` in `measurements/`. The distribution then
+  stays out of `testedOn` until a run passes again, and `measured` in the index
+  leaves the environment out.
+- A component's `health` lists read-only checks that an installer can run on a
+  cluster. Each is one `kubectl wait`, with a timeout and advice for when it
+  fails. e2e runs them after install. Longhorn, cert-manager, Traefik and
+  metrics-server have them.
 
 ### Changed
 
 - The `kubesolo` profile pins KubeSolo v1.2.3, which keeps a Job's `nodeSelector`,
   and tests the `databases` capability.
 - The `kubesolo` profile, like `k3s` and `rke2`, tests every component that
-  single-node supports and whose `distributions` allow it. `distributions` now
-  states hard limits only.
+  single-node supports and whose `distributions` include it. `distributions`
+  now lists the distributions to test a component on, and `testedOn` the ones
+  where that test passed.
 - Traefik's smoke check of its GatewayClass and cert-manager's of the
   production issuer are now health checks.
 
@@ -35,7 +38,7 @@ based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - `container-registry/zot`. zot only serves Builder's images and now comes with
   `builds/zeabur-builder`.
-- Longhorn on KubeSolo: `distributions` leaves it out.
+- KubeSolo from Longhorn's `distributions`.
 - The hand-written `capabilities` list of the `kubesolo` block in
   `config/kubernetes.yaml`.
 

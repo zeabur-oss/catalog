@@ -159,8 +159,8 @@ health:
   - name: controller
     wait: ["--for=condition=Available", "deployment/traefik", "-n", "traefik"]
     timeout: 60s
-    advice: Check the pods in the traefik namespace with kubectl -n traefik get pods; until Traefik runs, no route is served.
+    advice: No route is served until Traefik runs. Check its pods with kubectl -n traefik get pods.
   - name: gateway-class-accepted
     wait: ["--for=condition=Accepted", "gatewayclass/traefik"]
     timeout: 60s
-    advice: Traefik has not accepted its GatewayClass; read the reason with kubectl describe gatewayclass traefik.
+    advice: Traefik hasn't accepted its GatewayClass. Read the reason with kubectl describe gatewayclass traefik.

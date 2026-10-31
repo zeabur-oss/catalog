@@ -47,7 +47,7 @@
     },
     "distributions": {
       "type": "array",
-      "description": "Hard limits: the only Kubernetes distributions it can run on, for example because it needs what other distributions lack; omitted means any. e2e on k3s, RKE2 and KubeSolo skips a distribution the list leaves out; kind runs it regardless. Which distributions it was tested on is the index's testedOn, derived from passing e2e runs.",
+      "description": "Distributions to test it on. Omitted means every distribution that e2e covers: k3s, RKE2 and KubeSolo. kind tests it regardless. The distributions where its test passed are a separate list, testedOn in index.json.",
       "minItems": 1,
       "uniqueItems": true,
       "items": { "enum": ["k3s", "rke2", "k0s", "kubesolo", "microk8s", "kubeadm"] }
@@ -218,13 +218,13 @@
             "not": { "contains": { "pattern": "^--timeout" } }
           },
           "timeout": { "type": "string", "pattern": "^[0-9]+(s|m)$" },
-          "advice": { "type": "string", "minLength": 1, "description": "An English sentence shown when the check fails: what to do about it." }
+          "advice": { "type": "string", "minLength": 1, "description": "What to do when the check fails, in English. An installer shows it to the reader." }
         }
       }
     },
     "smoke": {
       "type": "array",
-      "description": "Extra e2e checks after install. They may apply objects in catalog-smoke, so only e2e runs them; read-only checks go in health.",
+      "description": "Extra e2e checks after install. They may apply objects in catalog-smoke, so only e2e runs them. Read-only checks go in health.",
       "items": {
         "type": "object",
         "additionalProperties": false,
