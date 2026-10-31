@@ -33,6 +33,12 @@ based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   where that test passed.
 - Traefik's smoke check of its GatewayClass is now a health check.
 
+### Fixed
+
+- `databases/mariadb-operator` turns off client-go's streaming list. On a new
+  KubeSolo cluster its controllers started too late to sync their caches, so a
+  MariaDB object was never reconciled.
+
 ### Removed
 
 - `container-registry/zot`. zot only serves Builder's images and now comes with

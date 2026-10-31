@@ -49,6 +49,11 @@ releases:
       crds:
         # From the mariadb-operator-crds release.
         enabled: false
+      extraEnv:
+        # With client-go's streaming list, the controllers start 90 s or more late
+        # on a new KubeSolo cluster, often past their cache-sync limit, and the
+        # manager exits.
+        - {name: KUBE_FEATURE_WatchListClient, value: "false"}
       webhook:
         # The operator image, pinned by digest.
         image:
