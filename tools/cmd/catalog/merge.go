@@ -35,8 +35,9 @@ func supersedes(env, old environment) bool {
 // holds the files of one job, in the layout of measurements/. An environment
 // in src replaces the same environment in dst unless dst's is newer, and dst
 // keeps the others. An environment equal to dst's before the merge is the
-// job's checked-out copy, not a result, so it never replaces another job's:
-// a rerun on the same day dates both the same.
+// job's checked-out copy, not a result, and is skipped. A result always
+// replaces dst's environment from before the merge, because a rerun on the
+// same day dates both the same. Results of two jobs compare by supersedes.
 func mergeMeasurements(src, dst string) error {
 	jobs, err := os.ReadDir(src)
 	if err != nil {
@@ -77,7 +78,9 @@ func mergeMeasurements(src, dst string) error {
 				if was, ok := before.Environments[k]; ok && reflect.DeepEqual(env, was) {
 					continue
 				}
-				if old, ok := out.Environments[k]; !ok || !supersedes(env, old) {
+				old, ok := out.Environments[k]
+				fromBefore := ok && reflect.DeepEqual(old, before.Environments[k])
+				if !ok || fromBefore || !supersedes(env, old) {
 					out.Environments[k] = env
 				}
 			}

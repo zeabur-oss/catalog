@@ -264,34 +264,36 @@ func TestStartupFailureWithoutMeasurementIsRecorded(t *testing.T) {
 	}
 }
 
-func TestSameDayStaleCopyKeepsTheFreshMeasurement(t *testing.T) {
+func TestSameDayRerunReplacesWhatMainHeld(t *testing.T) {
 	t.Chdir(t.TempDir())
-	// A rerun on the day whose measurements already reached main: both jobs
-	// date their work the same as main's.
+	// A rerun on the day whose measurements already reached main: every job
+	// dates its work the same as main's, and uploads main's copy of the
+	// environments it didn't measure.
+	day := "2026-10-31"
 	main := measurement{Component: "ingress/traefik", Environments: map[string]environment{
-		"k3s-amd64-v1.36.5+k3s1":    {IdleMemoryMiB: 22, MeasuredAt: "2026-10-31"},
-		"single-node-amd64-v1.36.4": {IdleMemoryMiB: 23, MeasuredAt: "2026-10-31"},
+		"k3s-amd64-v1.36.5+k3s1":    {IdleMemoryMiB: 22, MeasuredAt: day},
+		"rke2-amd64-v1.36.5+rke2r1": {Failed: true, MeasuredAt: day},
 	}}
 	writeFile(t, "main/ingress/traefik.json", main)
 	k3s := measurement{Component: main.Component, Environments: map[string]environment{
-		"k3s-amd64-v1.36.5+k3s1":    {IdleMemoryMiB: 30, MeasuredAt: "2026-10-31"},
-		"single-node-amd64-v1.36.4": main.Environments["single-node-amd64-v1.36.4"],
+		"k3s-amd64-v1.36.5+k3s1":    {IdleMemoryMiB: 30, MeasuredAt: day},
+		"rke2-amd64-v1.36.5+rke2r1": main.Environments["rke2-amd64-v1.36.5+rke2r1"],
 	}}
-	single := measurement{Component: main.Component, Environments: map[string]environment{
+	rke2 := measurement{Component: main.Component, Environments: map[string]environment{
 		"k3s-amd64-v1.36.5+k3s1":    main.Environments["k3s-amd64-v1.36.5+k3s1"],
-		"single-node-amd64-v1.36.4": {IdleMemoryMiB: 26, MeasuredAt: "2026-10-31"},
+		"rke2-amd64-v1.36.5+rke2r1": {IdleMemoryMiB: 40, MeasuredAt: day},
 	}}
 	writeFile(t, "downloaded/measurements-k3s-amd64-ingress-traefik/ingress/traefik.json", k3s)
-	writeFile(t, "downloaded/measurements-single-node-amd64-ingress-traefik/ingress/traefik.json", single)
+	writeFile(t, "downloaded/measurements-rke2-amd64-ingress-traefik/ingress/traefik.json", rke2)
 
 	if err := mergeMeasurements("downloaded", "main"); err != nil {
 		t.Fatal(err)
 	}
 	merged := readMeasurement("main/ingress/traefik.json").Environments
-	if got := merged["k3s-amd64-v1.36.5+k3s1"].IdleMemoryMiB; got != 30 {
-		t.Errorf("k3s-amd64 idle memory = %v, want the rerun's 30, not main's copy", got)
+	if got := merged["k3s-amd64-v1.36.5+k3s1"]; got.IdleMemoryMiB != 30 {
+		t.Errorf("k3s-amd64 = %+v, want the rerun's pass, not main's copy from the rke2 job", got)
 	}
-	if got := merged["single-node-amd64-v1.36.4"].IdleMemoryMiB; got != 26 {
-		t.Errorf("single-node-amd64 idle memory = %v, want the rerun's 26", got)
+	if got := merged["rke2-amd64-v1.36.5+rke2r1"]; got.Failed || got.IdleMemoryMiB != 40 {
+		t.Errorf("rke2-amd64 = %+v, want the rerun's pass over main's failure", got)
 	}
 }
