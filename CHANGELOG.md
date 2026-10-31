@@ -17,8 +17,8 @@ based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- `databases/mariadb-operator` turns off client-go's streaming list. On KubeSolo
-  the list never finished, the controllers timed out waiting for caches and a
+- `databases/mariadb-operator` turns off client-go's streaming list. On a new
+  KubeSolo cluster its controllers started too late to sync their caches, so a
   MariaDB object was never reconciled.
 
 ### Removed
