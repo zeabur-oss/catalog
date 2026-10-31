@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 )
 
 // merge merges the measurements that CI jobs uploaded into measurements/.
@@ -33,12 +34,15 @@ func supersedes(env, old environment) bool {
 // mergeMeasurements merges each subdirectory of src into dst. A subdirectory
 // holds the files of one job, in the layout of measurements/. An environment
 // in src replaces the same environment in dst unless dst's is newer, and dst
-// keeps the others.
+// keeps the others. An environment equal to dst's before the merge is the
+// job's checked-out copy, not a result, so it never replaces another job's:
+// a rerun on the same day dates both the same.
 func mergeMeasurements(src, dst string) error {
 	jobs, err := os.ReadDir(src)
 	if err != nil {
 		return err
 	}
+	base := map[string]measurement{}
 	for _, job := range jobs {
 		if !job.IsDir() {
 			continue
@@ -62,9 +66,17 @@ func mergeMeasurements(src, dst string) error {
 			}
 			target := filepath.Join(dst, rel)
 			out := readMeasurement(target)
+			before, seen := base[target]
+			if !seen {
+				before = readMeasurement(target)
+				base[target] = before
+			}
 			out.Component = cmp.Or(in.Component, out.Component)
 			out.Template = cmp.Or(in.Template, out.Template)
 			for k, env := range in.Environments {
+				if was, ok := before.Environments[k]; ok && reflect.DeepEqual(env, was) {
+					continue
+				}
 				if old, ok := out.Environments[k]; !ok || !supersedes(env, old) {
 					out.Environments[k] = env
 				}
