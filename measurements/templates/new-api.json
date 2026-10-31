@@ -2,12 +2,12 @@
   "template": "new-api",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 96,
-      "idleCPUm": 12,
+      "idleMemoryMiB": 108,
+      "idleCPUm": 14,
       "versions": {
         "docker.io/calciumion/new-api": "v1.0.0-rc.46"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     }
   }
 }

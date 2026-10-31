@@ -1,37 +1,85 @@
 {
   "component": "intrusion-prevention/crowdsec",
   "environments": {
-    "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 117,
-      "idleCPUm": 2,
-      "versions": {
-        "crowdsec": "0.24.2"
-      },
-      "measuredAt": "2026-10-11"
-    },
-    "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 119,
+    "k3s-amd64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 81,
       "idleCPUm": 1,
       "versions": {
         "crowdsec": "0.24.2"
       },
-      "measuredAt": "2026-10-11"
+      "measuredAt": "2026-10-31"
     },
-    "single-node-amd64-v1.36.4": {
+    "k3s-arm64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 74,
+      "idleCPUm": 1,
+      "versions": {
+        "crowdsec": "0.24.2"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
+      "idleMemoryMiB": 72,
+      "idleCPUm": 1,
+      "versions": {
+        "crowdsec": "0.24.2"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
+      "idleMemoryMiB": 72,
+      "idleCPUm": 1,
+      "versions": {
+        "crowdsec": "0.24.2"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 110,
+      "idleCPUm": 2,
+      "versions": {
+        "crowdsec": "0.24.2"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 114,
+      "idleCPUm": 2,
+      "versions": {
+        "crowdsec": "0.24.2"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "rke2-amd64-v1.36.5+rke2r1": {
       "idleMemoryMiB": 76,
       "idleCPUm": 1,
       "versions": {
         "crowdsec": "0.24.2"
       },
-      "measuredAt": "2026-10-11"
+      "measuredAt": "2026-10-31"
     },
-    "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 73,
+    "rke2-arm64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 72,
       "idleCPUm": 1,
       "versions": {
         "crowdsec": "0.24.2"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
+    },
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 72,
+      "idleCPUm": 1,
+      "versions": {
+        "crowdsec": "0.24.2"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 72,
+      "idleCPUm": 1,
+      "versions": {
+        "crowdsec": "0.24.2"
+      },
+      "measuredAt": "2026-10-31"
     }
   }
 }

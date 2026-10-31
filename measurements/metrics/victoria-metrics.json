@@ -1,37 +1,85 @@
 {
   "component": "metrics/victoria-metrics",
   "environments": {
-    "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 443,
-      "idleCPUm": 52,
+    "k3s-amd64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 247,
+      "idleCPUm": 43,
       "versions": {
-        "k8s-stack": "0.95.2"
+        "k8s-stack": "0.96.0"
       },
-      "measuredAt": "2026-10-11"
+      "measuredAt": "2026-10-31"
     },
-    "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 448,
-      "idleCPUm": 33,
-      "versions": {
-        "k8s-stack": "0.95.2"
-      },
-      "measuredAt": "2026-10-11"
-    },
-    "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 207,
+    "k3s-arm64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 264,
       "idleCPUm": 28,
       "versions": {
-        "k8s-stack": "0.95.2"
+        "k8s-stack": "0.96.0"
       },
-      "measuredAt": "2026-10-11"
+      "measuredAt": "2026-10-31"
+    },
+    "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
+      "idleMemoryMiB": 262,
+      "idleCPUm": 36,
+      "versions": {
+        "k8s-stack": "0.96.0"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
+      "idleMemoryMiB": 255,
+      "idleCPUm": 25,
+      "versions": {
+        "k8s-stack": "0.96.0"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 426,
+      "idleCPUm": 67,
+      "versions": {
+        "k8s-stack": "0.96.0"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 425,
+      "idleCPUm": 49,
+      "versions": {
+        "k8s-stack": "0.96.0"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "rke2-amd64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 274,
+      "idleCPUm": 21,
+      "versions": {
+        "k8s-stack": "0.96.0"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "rke2-arm64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 266,
+      "idleCPUm": 28,
+      "versions": {
+        "k8s-stack": "0.96.0"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 247,
+      "idleCPUm": 32,
+      "versions": {
+        "k8s-stack": "0.96.0"
+      },
+      "measuredAt": "2026-10-31"
     },
     "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 260,
+      "idleMemoryMiB": 238,
       "idleCPUm": 26,
       "versions": {
         "k8s-stack": "0.96.0"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     }
   }
 }

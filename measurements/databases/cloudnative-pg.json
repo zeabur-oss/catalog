@@ -1,41 +1,77 @@
 {
   "component": "databases/cloudnative-pg",
   "environments": {
-    "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
+    "k3s-amd64-v1.36.5+k3s1": {
       "idleMemoryMiB": 31,
       "idleCPUm": 3,
       "versions": {
         "cloudnative-pg": "0.29.1",
         "plugin-barman-cloud": "0.8.1"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     },
-    "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
+    "k3s-arm64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 31,
+      "idleCPUm": 2,
+      "versions": {
+        "cloudnative-pg": "0.29.1",
+        "plugin-barman-cloud": "0.8.1"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
       "idleMemoryMiB": 32,
       "idleCPUm": 3,
       "versions": {
         "cloudnative-pg": "0.29.1",
         "plugin-barman-cloud": "0.8.1"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     },
-    "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 47,
-      "idleCPUm": 5,
+    "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
+      "idleMemoryMiB": 32,
+      "idleCPUm": 2,
       "versions": {
         "cloudnative-pg": "0.29.1",
         "plugin-barman-cloud": "0.8.1"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
+    },
+    "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 48,
+      "idleCPUm": 4,
+      "versions": {
+        "cloudnative-pg": "0.29.1",
+        "plugin-barman-cloud": "0.8.1"
+      },
+      "measuredAt": "2026-10-31"
     },
     "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 48,
+      "idleMemoryMiB": 46,
       "idleCPUm": 3,
       "versions": {
         "cloudnative-pg": "0.29.1",
         "plugin-barman-cloud": "0.8.1"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
+    },
+    "rke2-amd64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 32,
+      "idleCPUm": 4,
+      "versions": {
+        "cloudnative-pg": "0.29.1",
+        "plugin-barman-cloud": "0.8.1"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "rke2-arm64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 33,
+      "idleCPUm": 3,
+      "versions": {
+        "cloudnative-pg": "0.29.1",
+        "plugin-barman-cloud": "0.8.1"
+      },
+      "measuredAt": "2026-10-31"
     },
     "single-node-amd64-v1.36.4": {
       "idleMemoryMiB": 31,
@@ -44,16 +80,16 @@
         "cloudnative-pg": "0.29.1",
         "plugin-barman-cloud": "0.8.1"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     },
     "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 32,
+      "idleMemoryMiB": 31,
       "idleCPUm": 3,
       "versions": {
         "cloudnative-pg": "0.29.1",
         "plugin-barman-cloud": "0.8.1"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     }
   }
 }

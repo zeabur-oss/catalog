@@ -1,37 +1,85 @@
 {
   "component": "volume-backup/velero",
   "environments": {
-    "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 52,
+    "k3s-amd64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 23,
       "idleCPUm": 1,
       "versions": {
         "velero": "12.2.1"
       },
-      "measuredAt": "2026-10-11"
+      "measuredAt": "2026-10-31"
     },
-    "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 78,
+    "k3s-arm64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 23,
       "idleCPUm": 1,
       "versions": {
         "velero": "12.2.1"
       },
-      "measuredAt": "2026-10-11"
+      "measuredAt": "2026-10-31"
     },
-    "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 38,
-      "idleCPUm": 1,
-      "versions": {
-        "velero": "12.2.1"
-      },
-      "measuredAt": "2026-10-11"
-    },
-    "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 22,
+    "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
+      "idleMemoryMiB": 23,
       "idleCPUm": 0,
       "versions": {
         "velero": "12.2.1"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
+    },
+    "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
+      "idleMemoryMiB": 23,
+      "idleCPUm": 1,
+      "versions": {
+        "velero": "12.2.1"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 22,
+      "idleCPUm": 1,
+      "versions": {
+        "velero": "12.2.1"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 22,
+      "idleCPUm": 1,
+      "versions": {
+        "velero": "12.2.1"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "rke2-amd64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 23,
+      "idleCPUm": 1,
+      "versions": {
+        "velero": "12.2.1"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "rke2-arm64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 23,
+      "idleCPUm": 1,
+      "versions": {
+        "velero": "12.2.1"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 23,
+      "idleCPUm": 1,
+      "versions": {
+        "velero": "12.2.1"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 22,
+      "idleCPUm": 1,
+      "versions": {
+        "velero": "12.2.1"
+      },
+      "measuredAt": "2026-10-31"
     }
   }
 }

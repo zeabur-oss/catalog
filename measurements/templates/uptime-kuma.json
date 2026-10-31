@@ -3,11 +3,11 @@
   "environments": {
     "single-node-amd64-v1.36.4": {
       "idleMemoryMiB": 119,
-      "idleCPUm": 2,
+      "idleCPUm": 4,
       "versions": {
         "louislam/uptime-kuma": "2.5.7-rootless"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     }
   }
 }

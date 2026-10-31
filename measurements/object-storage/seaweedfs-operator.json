@@ -1,29 +1,85 @@
 {
   "component": "object-storage/seaweedfs-operator",
   "environments": {
-    "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 39,
+    "k3s-amd64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 25,
       "idleCPUm": 1,
       "versions": {
         "seaweedfs-operator": "0.1.43"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
+    },
+    "k3s-arm64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 27,
+      "idleCPUm": 1,
+      "versions": {
+        "seaweedfs-operator": "0.1.43"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "kubesolo-amd64-v1.2.3": {
+      "failed": true,
+      "idleMemoryMiB": 0,
+      "idleCPUm": 0,
+      "measuredAt": "2026-10-31"
+    },
+    "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
+      "failed": true,
+      "idleMemoryMiB": 0,
+      "idleCPUm": 0,
+      "measuredAt": "2026-10-31"
+    },
+    "kubesolo-arm64-v1.2.3": {
+      "failed": true,
+      "idleMemoryMiB": 0,
+      "idleCPUm": 0,
+      "measuredAt": "2026-10-31"
+    },
+    "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
+      "failed": true,
+      "idleMemoryMiB": 0,
+      "idleCPUm": 0,
+      "measuredAt": "2026-10-31"
+    },
+    "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 40,
+      "idleCPUm": 1,
+      "versions": {
+        "seaweedfs-operator": "0.1.43"
+      },
+      "measuredAt": "2026-10-31"
     },
     "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 39,
+      "idleMemoryMiB": 40,
       "idleCPUm": 1,
       "versions": {
         "seaweedfs-operator": "0.1.43"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
+    },
+    "rke2-amd64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 27,
+      "idleCPUm": 1,
+      "versions": {
+        "seaweedfs-operator": "0.1.43"
+      },
+      "measuredAt": "2026-10-31"
+    },
+    "rke2-arm64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 28,
+      "idleCPUm": 1,
+      "versions": {
+        "seaweedfs-operator": "0.1.43"
+      },
+      "measuredAt": "2026-10-31"
     },
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 26,
+      "idleMemoryMiB": 25,
       "idleCPUm": 1,
       "versions": {
         "seaweedfs-operator": "0.1.43"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     },
     "single-node-arm64-v1.36.4": {
       "idleMemoryMiB": 26,
@@ -31,7 +87,7 @@
       "versions": {
         "seaweedfs-operator": "0.1.43"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     }
   }
 }

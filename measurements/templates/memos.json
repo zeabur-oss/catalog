@@ -2,12 +2,12 @@
   "template": "memos",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 15,
+      "idleMemoryMiB": 16,
       "idleCPUm": 0,
       "versions": {
         "neosmemo/memos": "0.31.0"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     }
   }
 }

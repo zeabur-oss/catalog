@@ -2,12 +2,12 @@
   "template": "gitea",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 156,
+      "idleMemoryMiB": 160,
       "idleCPUm": 5,
       "versions": {
         "docker.gitea.com/gitea": "28.2.0-rootless"
       },
-      "measuredAt": "2026-10-29"
+      "measuredAt": "2026-10-31"
     }
   }
 }
