@@ -31,8 +31,7 @@ based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   single-node supports and whose `distributions` include it. `distributions`
   now lists the distributions to test a component on, and `testedOn` the ones
   where that test passed.
-- Traefik's smoke check of its GatewayClass and cert-manager's of the
-  production issuer are now health checks.
+- Traefik's smoke check of its GatewayClass is now a health check.
 
 ### Removed
 
