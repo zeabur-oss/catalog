@@ -15,6 +15,12 @@ based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The `kubesolo` profile pins KubeSolo v1.2.3, which keeps a Job's `nodeSelector`,
   and tests the `databases` capability.
 
+### Fixed
+
+- `databases/mariadb-operator` turns off client-go's streaming list. On KubeSolo
+  the list never finished, the controllers timed out waiting for caches and a
+  MariaDB object was never reconciled.
+
 ### Removed
 
 - `container-registry/zot`. zot only serves Builder's images and now comes with

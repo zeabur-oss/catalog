@@ -49,6 +49,10 @@ releases:
       crds:
         # From the mariadb-operator-crds release.
         enabled: false
+      extraEnv:
+        # The streaming list client-go uses by default never completes against
+        # KubeSolo's API server, so the controllers wait for caches until they exit.
+        - {name: KUBE_FEATURE_WatchListClient, value: "false"}
       webhook:
         # The operator image, pinned by digest.
         image:
