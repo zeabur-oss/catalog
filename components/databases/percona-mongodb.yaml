@@ -98,7 +98,7 @@ smoke:
       spec:
         crVersion: 1.23.1
         # MongoDB 8 does not start on Linux 6.19 and newer (SERVER-121912); 7.0 runs everywhere.
-        image: percona/percona-server-mongodb:7.0.43-23
+        image: percona/percona-server-mongodb:8.3.11-3
         unsafeFlags: {replsetSize: true}
         replsets:
           - name: rs0
