@@ -158,7 +158,8 @@ func E2E(t *catalog.Tester, r *Template, values E2EValues, measure bool) (usage 
 		}
 		slog.Info("smoke", "template", r.ID, "check", s.Name)
 		if _, err := kubectl(nil, "wait", "-n", ns, s.Resource, "--for="+s.Condition, "--timeout="+s.Timeout); err != nil {
-			return nil, fmt.Errorf("smoke %s: %w", s.Name, err)
+			diag := catalog.Diagnose(func(a ...string) (string, error) { return kubectl(nil, a...) }, ns, "-n", ns, s.Resource)
+			return nil, fmt.Errorf("smoke %s: %w%s", s.Name, err, diag)
 		}
 		if s.HTTP != nil {
 			err = httpSmoke(ns, s)

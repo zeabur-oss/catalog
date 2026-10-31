@@ -477,8 +477,10 @@ func waitReady(manifest []byte, defaultNS string) error {
 		case "CustomResourceDefinition":
 			_, err = kubectl("wait", "--for=condition=Established", "crd/"+o.Metadata.Name, "--timeout=2m")
 		case "Deployment", "StatefulSet", "DaemonSet":
-			_, err = kubectl("-n", cmp.Or(o.Metadata.Namespace, defaultNS), "rollout", "status",
-				strings.ToLower(o.Kind)+"/"+o.Metadata.Name, "--timeout=10m")
+			ns, obj := cmp.Or(o.Metadata.Namespace, defaultNS), strings.ToLower(o.Kind)+"/"+o.Metadata.Name
+			if _, err = kubectl("-n", ns, "rollout", "status", obj, "--timeout=10m"); err != nil {
+				err = fmt.Errorf("%w%s", err, Diagnose(kubectl, ns, "-n", ns, obj))
+			}
 		}
 		if err != nil {
 			return err
@@ -509,7 +511,8 @@ func (t *Tester) smoke(c *Component) error {
 		for _, w := range s.Wait {
 			args := append(append([]string{"wait"}, strings.Fields(w)...), "--timeout="+cmp.Or(s.Timeout, "180s"))
 			if _, err := kubectl(args...); err != nil {
-				return fmt.Errorf("%s: %w", s.Name, err)
+				object, ns := waitTarget(strings.Fields(w))
+				return fmt.Errorf("%s: %w%s", s.Name, err, Diagnose(kubectl, ns, object...))
 			}
 		}
 	}
