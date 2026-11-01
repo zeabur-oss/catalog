@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: ntfy
   # renovate: depName=binwiederhier/ntfy
-  version: "v2.33.1"
+  version: "v2.34.0"
   description: >-
     ntfy push notification server over HTTP. Topics need an account, and the
     message cache, users and attachments are on a persistent volume.
