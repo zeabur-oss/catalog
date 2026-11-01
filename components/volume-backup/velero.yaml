@@ -1,10 +1,9 @@
+# Backs up the whole cluster to S3 for disaster recovery. It can touch any
+# namespace, so it is for administrators only.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: Velero
-  description: >
-    Backs up the whole cluster to S3 for disaster recovery. It can touch any
-    namespace, so it is for administrators only.
   summary: Backs up and restores the whole cluster; database backups don't need it.
   locales:
     zh-TW:

@@ -1,13 +1,12 @@
+# Block storage replicated across nodes: a volume survives losing its node,
+# follows its pod to another node, and can be expanded in place. Recommended on
+# multi-node, where it becomes the default storage class. Optional on
+# single-node, where a replica has nowhere else to go; it still gives expandable
+# volumes and snapshots there.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: Longhorn
-  description: >
-    Block storage replicated across nodes: a volume survives losing its node,
-    follows its pod to another node, and can be expanded in place. Recommended
-    on multi-node, where it becomes the default storage class. Optional on
-    single-node, where a replica has nowhere else to go; it still gives
-    expandable volumes and snapshots there.
   summary: Keeps copies of each volume on other nodes, so it survives losing a node.
   locales:
     zh-TW:

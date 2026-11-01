@@ -1,11 +1,10 @@
+# Blocks brute-force attempts and scanners that show up in Traefik's access
+# logs, for every app behind the ingress. It fails open, and the online API is
+# off by default.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: CrowdSec
-  description: >
-    Blocks brute-force attempts and scanners that show up in Traefik's access
-    logs, for every app behind the ingress. It fails open, and the online API is
-    off by default.
   summary: Blocks brute-force attempts and scanners before they reach your services.
   locales:
     zh-TW:

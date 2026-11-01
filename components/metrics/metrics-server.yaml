@@ -1,10 +1,9 @@
+# Serves metrics.k8s.io for HPA and `kubectl top`. It keeps no history, so it is
+# the cheapest source of live CPU and memory.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: Kubernetes Metrics Server
-  description: >
-    Serves metrics.k8s.io for HPA and `kubectl top`. It keeps no history, so it
-    is the cheapest source of live CPU and memory.
   summary: Shows the CPU and memory each pod uses right now.
   locales:
     zh-TW:

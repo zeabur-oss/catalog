@@ -1,11 +1,10 @@
+# Connects to MariaDB over TLS.
 apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: WordPress
   # renovate: depName=docker.io/wordpress
   version: "php8.3-fpm-alpine"
-  description: >-
-    WordPress PHP 8.3 with TLS MariaDB Operator 11.4 LTS and preinstalled owner.
   summary: WordPress, with MariaDB and an owner account ready.
   locales:
     zh-TW:

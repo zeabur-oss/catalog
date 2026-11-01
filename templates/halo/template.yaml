@@ -4,8 +4,6 @@ metadata:
   name: Halo
   # renovate: depName=halohub/halo
   version: "2.27.1"
-  description: >-
-    Halo publishing with persistent site assets and CloudNativePG PostgreSQL 16.
   summary: Halo for websites and blogs, with PostgreSQL.
   locales:
     zh-TW:

@@ -1,11 +1,10 @@
+# Runs MongoDB replica sets from a PerconaServerMongoDB object in the tenant's
+# namespace, with scheduled backups to S3 through Percona Backup for MongoDB.
+# The database server is SSPL, so it is never on by default.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: Percona Operator for MongoDB
-  description: >
-    Runs MongoDB replica sets from a PerconaServerMongoDB object in the tenant's
-    namespace, with scheduled backups to S3 through Percona Backup for MongoDB.
-    The database server is SSPL, so it is never on by default.
   # The operator is Apache-2.0; the Percona Server for MongoDB images it runs
   # are SSPL-1.0, which is not OSI-approved.
   summary: Runs MongoDB databases with backups to S3, under the SSPL licence.

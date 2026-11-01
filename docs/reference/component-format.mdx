@@ -14,13 +14,12 @@ apiVersion: catalog.zeabur.com/v1
 kind: Component                   # or Template
 metadata:
   name: Traefik Proxy
-  description: Why it is recommended, or what the template runs, in one or two sentences.
   license: MIT                    # SPDX
   homepage: https://traefik.io/traefik/
 requires: [certificates]          # <capability> or <capability>/<upstream>
 ```
 
-A component's `metadata` also has a `summary`: what it gives the cluster, in one plain sentence for people choosing components, with its translations in `locales`. Installers show the summary; the description stays for operators.
+A component's `metadata` also has a `summary`: what it gives the cluster, in one plain sentence for people choosing components, with its translations in `locales`. A comment at the top of the file says why the catalog recommends the component.
 
 ```yaml
 metadata:
@@ -39,7 +38,6 @@ apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: Traefik Proxy
-  description: Why it is recommended, in one or two sentences.
   license: MIT                    # SPDX; OSI-approved, or opt-in only (see below)
   homepage: https://traefik.io/traefik/
 defaults: {single-node: recommended, multi-node: recommended}

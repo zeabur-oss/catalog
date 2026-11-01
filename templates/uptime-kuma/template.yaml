@@ -4,7 +4,6 @@ metadata:
   name: Uptime Kuma
   # renovate: depName=louislam/uptime-kuma
   version: "2.5.7-rootless"
-  description: Self-hosted uptime monitoring with persistent SQLite data.
   summary: Uptime monitoring, with its data on a volume.
   locales:
     zh-TW:

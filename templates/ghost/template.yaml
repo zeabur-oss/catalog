@@ -4,9 +4,6 @@ metadata:
   name: Ghost
   # renovate: depName=ghost
   version: "6-alpine"
-  description: >-
-    Ghost 6 publishing with a real MySQL dependency, persistent content and
-    external SMTP.
   summary: Ghost 6 for blogs and newsletters, with MySQL and your own SMTP server.
   locales:
     zh-TW:

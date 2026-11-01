@@ -4,9 +4,6 @@ metadata:
   name: Umami
   # renovate: depName=ghcr.io/umami-software/umami
   version: "3.4.1"
-  description: >-
-    Umami web analytics over HTTPS, with PostgreSQL 18 managed by
-    CloudNativePG.
   summary: Website analytics, with PostgreSQL.
   locales:
     zh-TW:

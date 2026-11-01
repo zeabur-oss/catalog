@@ -4,7 +4,6 @@ metadata:
   name: Qdrant
   # renovate: depName=qdrant/qdrant
   version: "v1.20.0-unprivileged"
-  description: Qdrant vector database with API key authentication and data on a persistent volume.
   summary: A vector database with an API key and data on a volume.
   locales:
     zh-TW:

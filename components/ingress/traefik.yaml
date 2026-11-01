@@ -1,10 +1,9 @@
+# Serves Gateway API and Ingress, and hosts the CrowdSec bouncer. Ingress NGINX
+# was retired in March 2026.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: Traefik Proxy
-  description: >
-    Serves Gateway API and Ingress, and hosts the CrowdSec bouncer. Ingress NGINX
-    was retired in March 2026.
   summary: Routes traffic from your domains to your services.
   locales:
     zh-TW:

@@ -1,11 +1,10 @@
+# Runs MySQL from a MySQLCluster object in the tenant's namespace, one instance
+# or a semi-synchronous primary with replicas, with backups and point-in-time
+# recovery from S3. For applications that need MySQL itself.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: MOCO
-  description: >
-    Runs MySQL 8 from a MySQLCluster object in the tenant's namespace, one
-    instance or a semi-synchronous primary with replicas, with backups and
-    point-in-time recovery from S3. For applications that need MySQL itself.
   # The operator is Apache-2.0; the MySQL images it runs are GPL-2.0.
   summary: Runs MySQL 8 databases with replicas and backups to S3.
   locales:

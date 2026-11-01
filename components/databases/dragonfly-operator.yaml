@@ -1,11 +1,10 @@
+# Runs Dragonfly, a Redis-compatible in-memory store, from a Dragonfly object in
+# the tenant's namespace: a primary with replicas, failover, and snapshots to a
+# volume or S3. Dragonfly is source-available, so it is never on by default.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: Dragonfly Operator
-  description: >
-    Runs Dragonfly, a Redis-compatible in-memory store, from a Dragonfly object
-    in the tenant's namespace: a primary with replicas, failover, and snapshots
-    to a volume or S3. Dragonfly is source-available, so it is never on by default.
   # The operator is Apache-2.0; the Dragonfly images it runs are BUSL-1.1, which
   # is not OSI-approved.
   summary: Runs Dragonfly, a Redis-compatible store, with replicas and snapshots, under a licence that is not open source.

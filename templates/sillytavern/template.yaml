@@ -4,9 +4,6 @@ metadata:
   name: SillyTavern
   # renovate: depName=ghcr.io/sillytavern/sillytavern
   version: "1.19.0"
-  description: >-
-    Private LLM frontend with generated Basic authentication and persistent
-    conversations.
   summary: An LLM chat frontend behind a password, with conversations kept on a volume.
   locales:
     zh-TW:

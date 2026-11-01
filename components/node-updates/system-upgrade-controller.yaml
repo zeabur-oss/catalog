@@ -1,11 +1,10 @@
+# Upgrades k3s or RKE2 and node packages one node at a time from declarative
+# Plans, with cordon, drain and concurrency limits. The catalog installs it from
+# upstream manifests because the Rancher chart lags behind releases.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: System Upgrade Controller
-  description: >
-    Upgrades k3s or RKE2 and node packages one node at a time from declarative Plans,
-    with cordon, drain and concurrency limits. The catalog installs it from
-    upstream manifests because the Rancher chart lags behind releases.
   summary: Upgrades Kubernetes on the nodes, one node at a time.
   locales:
     zh-TW:

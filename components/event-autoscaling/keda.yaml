@@ -1,11 +1,10 @@
+# Scales workloads on events, down to zero, with scaling configured per
+# namespace. Optional on a single node: there it costs more memory than scaling
+# saves.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: KEDA
-  description: >
-    Scales workloads on events, down to zero, with scaling configured per
-    namespace. Optional on a single node: there it costs more memory than
-    scaling saves.
   summary: Scales services on queues, schedules and other events, down to zero.
   locales:
     zh-TW:

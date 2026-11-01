@@ -12,10 +12,9 @@
     "metadata": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "description", "summary", "locales", "license", "homepage"],
+      "required": ["name", "summary", "locales", "license", "homepage"],
       "properties": {
         "name": { "type": "string", "description": "Name for people." },
-        "description": { "type": "string", "description": "What it does and why the catalog recommends it, in one or two sentences." },
         "summary": { "type": "string", "pattern": "^[^\\n]+$", "description": "What it gives the cluster, in one plain sentence for people choosing components." },
         "locales": {
           "type": "object",

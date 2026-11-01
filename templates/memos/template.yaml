@@ -4,7 +4,6 @@ metadata:
   name: Memos
   # renovate: depName=neosmemo/memos
   version: "0.31.0"
-  description: Memos note-taking service with SQLite on a persistent volume and a provisioned administrator.
   summary: A note-taking app with SQLite on a volume and an admin account ready.
   locales:
     zh-TW:

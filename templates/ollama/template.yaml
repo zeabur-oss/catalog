@@ -4,7 +4,6 @@ metadata:
   name: Ollama
   # renovate: depName=docker.io/ollama/ollama
   version: "0.40.11"
-  description: Private CPU-only local model runtime. The API has no public ingress.
   summary: Runs local models on the CPU; its API is reachable only inside the cluster.
   locales:
     zh-TW:

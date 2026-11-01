@@ -4,8 +4,6 @@ metadata:
   name: PostgreSQL with pgvector
   # renovate: depName=ghcr.io/cloudnative-pg/postgresql
   version: "18-standard-trixie"
-  description: >-
-    CloudNativePG PostgreSQL 18 standard image with pgvector enabled.
   summary: A PostgreSQL 18 database with pgvector.
   locales:
     zh-TW:

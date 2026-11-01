@@ -1,13 +1,12 @@
+# Puts a Service or Ingress on the tailnet with no port open to the internet. An
+# Ingress gets a MagicDNS name with a Let's Encrypt certificate, so a host
+# without a domain still serves trusted HTTPS; a Service is proxied as it is,
+# without TLS. Optional: it needs a Tailscale account, and an Ingress needs
+# HTTPS and MagicDNS enabled on the tailnet.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: Tailscale Kubernetes operator
-  description: >
-    Puts a Service or Ingress on the tailnet with no port open to the internet.
-    An Ingress gets a MagicDNS name with a Let's Encrypt certificate, so a host
-    without a domain still serves trusted HTTPS; a Service is proxied as it is,
-    without TLS. Optional: it needs a Tailscale account, and an Ingress needs
-    HTTPS and MagicDNS enabled on the tailnet.
   summary: Puts services on your tailnet with trusted HTTPS and no port open to the internet.
   locales:
     zh-TW:

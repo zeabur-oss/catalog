@@ -1,11 +1,10 @@
+# Rolls workloads annotated keel.sh/policy to a new image tag when Zeabur
+# Builder calls its webhook after a push, or when polling finds one. Optional:
+# only annotated workloads change.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: Keel
-  description: >
-    Rolls workloads annotated keel.sh/policy to a new image tag when Zeabur
-    Builder calls its webhook after a push, or when polling finds one. Optional:
-    only annotated workloads change.
   summary: Deploys each new image to the services you turn auto-deploy on for.
   locales:
     zh-TW:

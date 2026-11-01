@@ -1,15 +1,13 @@
+# Authenticated headless Chromium for trusted automation clients. Browserless is
+# SSPL-1.0 (https://github.com/browserless/browserless/blob/main/LICENSE), which
+# is not OSI-approved; closed-source commercial sites, apps or CI may need a
+# commercial license.
 apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Browserless
   # renovate: depName=ghcr.io/browserless/chromium
   version: "latest"
-  description: >-
-    Authenticated headless Chromium service for trusted automation clients, with
-    restricted container isolation. Browserless is SSPL-1.0
-    (https://github.com/browserless/browserless/blob/main/LICENSE), which is
-    not OSI-approved; closed-source commercial sites, apps or CI may need a
-    commercial license.
   summary: A headless Chrome that your automation tools drive with a token.
   locales:
     zh-TW:

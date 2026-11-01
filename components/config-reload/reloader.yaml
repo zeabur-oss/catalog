@@ -1,11 +1,10 @@
+# Rolls Deployments, StatefulSets and DaemonSets when a ConfigMap or Secret they
+# use changes, whoever changed it. Optional: only workloads that opt in with an
+# annotation restart.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: Stakater Reloader
-  description: >
-    Rolls Deployments, StatefulSets and DaemonSets when a ConfigMap or Secret they
-    use changes, whoever changed it. Optional: only workloads that opt in with an
-    annotation restart.
   summary: Restarts services when a ConfigMap or Secret they use changes.
   locales:
     zh-TW:

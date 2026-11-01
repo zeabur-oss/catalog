@@ -47,11 +47,10 @@ type Component struct {
 	Path string `yaml:"-" json:"-"` // relative to the repository root
 }
 
-// Metadata is a component's name, description and summary.
+// Metadata is a component's name and summary.
 type Metadata struct {
-	Name        string `yaml:"name" json:"name"`
-	Description string `yaml:"description" json:"description"`
-	Summary     string `yaml:"summary" json:"summary"`
+	Name    string `yaml:"name" json:"name"`
+	Summary string `yaml:"summary" json:"summary"`
 	// Locales holds the summary in other languages, by language tag.
 	Locales map[string]struct {
 		Summary string `yaml:"summary" json:"summary"`

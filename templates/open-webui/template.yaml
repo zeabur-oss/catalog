@@ -1,13 +1,12 @@
+# Open WebUI's license
+# (https://github.com/open-webui/open-webui/blob/main/LICENSE) requires you to
+# keep its branding.
 apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Open WebUI
   # renovate: depName=ghcr.io/open-webui/open-webui
   version: "main"
-  description: >-
-    Authenticated LLM interface with private pipelines. Open WebUI's license
-    (https://github.com/open-webui/open-webui/blob/main/LICENSE) requires you
-    to keep its branding.
   summary: A chat interface for LLMs with sign-in; its licence asks you to keep its branding.
   locales:
     zh-TW:

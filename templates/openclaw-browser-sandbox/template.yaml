@@ -1,15 +1,12 @@
+# For one trusted owner and caller only: Chromium runs with --no-sandbox and CDP
+# has no application authentication, so it gives no isolation from hostile pages
+# or other users.
 apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: OpenClaw Browser Sandbox
   # renovate: depName=ghcr.io/canyugs/openclaw-sandbox-browser
   version: "edcc8e5"
-  description: >-
-    Headless Chromium browser sandbox that can be controlled via Chrome DevTools
-    Protocol (CDP). Use this with OpenClaw or other services that need browser
-    automation capabilities. For one trusted owner and caller only: Chromium
-    runs with --no-sandbox and CDP has no application authentication, so it
-    gives no isolation from hostile pages or other users.
   summary: A headless Chrome that OpenClaw or other services drive through the DevTools protocol.
   locales:
     zh-TW:

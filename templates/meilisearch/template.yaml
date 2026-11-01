@@ -4,7 +4,6 @@ metadata:
   name: Meilisearch
   # renovate: depName=getmeili/meilisearch
   version: "v1.55.0"
-  description: Meilisearch Community Edition search engine with a master key and indexes on a persistent volume.
   summary: A fast search engine with a master key and indexes on a volume.
   locales:
     zh-TW:

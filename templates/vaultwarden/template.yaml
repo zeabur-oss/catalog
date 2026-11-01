@@ -1,12 +1,10 @@
+# Keeps its data in SQLite on a volume.
 apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Vaultwarden
   # renovate: depName=vaultwarden/server
   version: "1.37.4"
-  description: >-
-    Vaultwarden, a Bitwarden-compatible password manager server, with SQLite
-    on a persistent volume. Sign-up is closed; the administrator invites users.
   summary: A Bitwarden-compatible password manager; sign-up is closed and the admin invites people.
   locales:
     zh-TW:

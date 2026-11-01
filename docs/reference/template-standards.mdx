@@ -16,7 +16,7 @@ Every template in Zeabur Catalog must follow these rules. When you add or update
 
 ## Licenses and images
 
-- You must list the licenses for the application and its images. For source-available software, use the exact license name, such as `BUSL-1.1` or `SSPL`, and include a license link in the template description. Don't add an input that asks users to enter a license acceptance string.
+- You must list the licenses for the application and its images. For source-available software, use the exact license name, such as `BUSL-1.1` or `SSPL`, and include a license link in a comment at the top of `template.yaml`. Don't add an input that asks users to enter a license acceptance string.
 - You must pin every image to a digest and keep a readable tag alongside it. This rule also applies to initialization, migration, and backup images.
 - Don't install anything at runtime. This includes using package managers, downloading code whose contents can change, or running cluster-level installers from an application template.
 

@@ -1,14 +1,12 @@
+# Builds container images from Git in the cluster, with a Dockerfile or
+# Railpack, and keeps them in zot, an OCI registry installed with it, so builds
+# need no external registry account. Zeabur needs it to deploy services from
+# Git. Optional: without it, services deploy from images only. Nodes pull from
+# zot at the fixed address of the cluster-ip input, and must trust its CA.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: Zeabur Builder
-  description: >
-    Builds container images from Git in the cluster, with a Dockerfile or
-    Railpack, and keeps them in zot, an OCI registry installed with it, so
-    builds need no external registry account. Zeabur needs it to deploy
-    services from Git. Optional: without it, services deploy from images only.
-    Nodes pull from zot at the fixed address of the cluster-ip input, and must
-    trust its CA.
   summary: Builds images from your Git repositories and keeps them in the cluster, so services can deploy from Git.
   locales:
     zh-TW:

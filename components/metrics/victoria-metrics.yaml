@@ -1,12 +1,10 @@
+# Keeps metrics history and evaluates alerts with a fraction of Prometheus'
+# memory. Its Alertmanager sends Zeabur's notifications: each project sets its
+# own channels, the cluster administrator sets the cluster's.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: VictoriaMetrics (k8s stack)
-  description: >
-    Keeps metrics history and evaluates alerts with a fraction of Prometheus'
-    memory. On one node it idles at about 220Mi with node-exporter, more as
-    pods add series. Its Alertmanager sends Zeabur's notifications: each
-    project sets its own channels, the cluster administrator sets the cluster's.
   summary: Keeps metrics history and sends alerts to each project's notification channels.
   locales:
     zh-TW:

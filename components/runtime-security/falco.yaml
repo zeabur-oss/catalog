@@ -1,12 +1,11 @@
+# Flags suspicious runtime behavior (container shells, privilege escalation)
+# from kernel events, and keeps each namespace's recent alerts in a PolicyReport
+# there, readable with namespace admin rights. Optional: it needs a privileged
+# eBPF probe and a kernel with BTF (5.8 or later).
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: Falco
-  description: >
-    Flags suspicious runtime behavior (container shells, privilege escalation)
-    from kernel events, and keeps each namespace's recent alerts in a
-    PolicyReport there, readable with namespace admin rights. Optional: it needs
-    a privileged eBPF probe and a BTF kernel (5.8+).
   summary: Flags suspicious activity in containers, such as a shell or a privilege escalation.
   locales:
     zh-TW:

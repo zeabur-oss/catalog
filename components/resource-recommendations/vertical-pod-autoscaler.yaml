@@ -1,10 +1,8 @@
+# Recommender only: nothing changes pods unless you apply a suggestion.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: Vertical Pod Autoscaler (recommender only)
-  description: >
-    Suggests CPU and memory requests from observed usage. Recommender only:
-    nothing changes pods unless you apply a suggestion.
   summary: Suggests CPU and memory requests from actual use.
   locales:
     zh-TW:

@@ -4,7 +4,6 @@ metadata:
   name: OpenList
   # renovate: depName=openlistteam/openlist
   version: "latest-aio"
-  description: File listing and WebDAV with FFmpeg and authenticated local Aria2 downloads.
   summary: File listing and WebDAV, with FFmpeg and Aria2 downloads.
   locales:
     zh-TW:

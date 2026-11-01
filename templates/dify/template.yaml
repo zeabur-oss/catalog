@@ -1,18 +1,16 @@
+# Dify uses a modified Apache license
+# (https://github.com/langgenius/dify/blob/main/LICENSE): one workspace only
+# without written permission, and keep the frontend logo and copyright. The
+# Dragonfly engine is BUSL-1.1
+# (https://github.com/dragonflydb/dragonfly/blob/main/LICENSE.md): offering it
+# to third parties as a hosted service or in-memory data store product needs a
+# separate license.
 apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Dify
   # renovate: depName=docker.io/langgenius/dify-api
   version: "1.18.0"
-  description: >-
-    Dify LLM app development platform with PostgreSQL/pgvector, a Dragonfly
-    queue, a code sandbox and S3 object storage. Dify uses a modified Apache
-    license (https://github.com/langgenius/dify/blob/main/LICENSE): one
-    workspace only without written permission, and keep the frontend logo and
-    copyright. The Dragonfly engine is BUSL-1.1
-    (https://github.com/dragonflydb/dragonfly/blob/main/LICENSE.md): offering
-    it to third parties as a hosted service or in-memory data store product
-    needs a separate license.
   summary: A platform for building LLM apps, with PostgreSQL, a queue, a code sandbox and S3 storage.
   locales:
     zh-TW:

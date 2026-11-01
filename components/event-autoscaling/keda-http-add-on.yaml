@@ -1,11 +1,9 @@
+# Scales HTTP services on request rate, including to zero; the interceptor holds
+# the first request while the workload wakes.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: KEDA HTTP Add-on
-  description: >
-    Scales HTTP services on request rate, including to zero; the interceptor
-    holds the first request while the workload wakes. It is pre-1.0, so it is
-    marked beta.
   summary: Scales web services with their traffic, down to zero when idle.
   locales:
     zh-TW:

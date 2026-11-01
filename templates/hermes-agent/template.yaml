@@ -4,9 +4,6 @@ metadata:
   name: Hermes Agent
   # renovate: depName=nousresearch/hermes-agent
   version: "v2026.8.16.2"
-  description: >-
-    Hermes gateway, authenticated API and protected dashboard with
-    OpenRouter or another OpenAI-compatible provider.
   summary: The Hermes AI agent with an API and a dashboard, using OpenRouter or another OpenAI-compatible provider.
   locales:
     zh-TW:

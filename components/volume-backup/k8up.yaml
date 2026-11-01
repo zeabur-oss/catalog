@@ -1,10 +1,9 @@
+# Backs up each namespace with restic to any S3-compatible store, so tenants can
+# safely manage their own backups.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: K8up
-  description: >
-    Backs up each namespace with restic to any S3-compatible store, so tenants
-    can safely manage their own backups.
   summary: Backs up each project's volumes to S3-compatible storage; database backups don't need it.
   locales:
     zh-TW:

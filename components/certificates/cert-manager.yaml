@@ -1,11 +1,9 @@
+# cert-manager is the standard Kubernetes certificate controller (CNCF
+# graduated). Its issuers live in the cluster, so it renews certificates itself.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: cert-manager
-  description: >
-    cert-manager is the standard Kubernetes certificate controller (CNCF
-    graduated). Its issuers live in the cluster, so it renews certificates
-    itself.
   summary: Issues TLS certificates for your domains and renews them.
   locales:
     zh-TW:

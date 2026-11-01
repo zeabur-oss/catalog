@@ -47,7 +47,6 @@ apiVersion: catalog.zeabur.com/v1
 kind: Component                   # or Template
 metadata:
   name: Traefik Proxy
-  description: Why it is recommended, or what the template runs, in one or two sentences.
   license: MIT                    # SPDX
   homepage: https://traefik.io/traefik/
 requires: [certificates]          # <capability> or <capability>/<upstream>
@@ -71,6 +70,6 @@ The tools and original files are licensed under Apache-2.0. Each upstream,
 application, image and chart keeps its own license, named in
 `metadata.license`. Some use source-available licenses such as BUSL-1.1 or
 SSPL; those components are opt-in only, and those templates name and link the
-license in their description. Contributions use the
+license in a comment at the top of `template.yaml`. Contributions use the
 [Developer Certificate of Origin](https://developercertificate.org/); see
 [CONTRIBUTING.md](CONTRIBUTING.md).

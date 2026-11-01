@@ -1,11 +1,10 @@
+# Runs MariaDB from a MariaDB object in the tenant's namespace, standalone or
+# replicated, with users, grants and databases as objects and backups to S3. A
+# MySQL-compatible database under an OSI licence.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: MariaDB Operator
-  description: >
-    Runs MariaDB from a MariaDB object in the tenant's namespace, standalone or
-    replicated, with users, grants and databases as objects and backups to S3.
-    A MySQL-compatible database under an OSI licence.
   # The operator is MIT; the MariaDB Server images it runs are GPL-2.0.
   summary: Runs MariaDB databases, a MySQL-compatible choice, with backups to S3.
   locales:

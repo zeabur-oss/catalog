@@ -1,10 +1,9 @@
+# One operator runs both the metrics and the logs stack from CRDs, and accepts
+# Prometheus operator objects so existing app manifests keep working.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: VictoriaMetrics operator
-  description: >
-    One operator runs both the metrics and the logs stack from CRDs, and accepts
-    Prometheus operator objects so existing app manifests keep working.
   summary: Runs the metrics and log stores.
   locales:
     zh-TW:

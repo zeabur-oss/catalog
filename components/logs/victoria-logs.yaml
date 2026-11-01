@@ -1,10 +1,9 @@
+# Keeps and searches log history with low memory and disk use. It is Apache-2.0,
+# unlike Loki, and runs on the VictoriaMetrics operator.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: VictoriaLogs
-  description: >
-    Keeps and searches log history with low memory and disk use. It is
-    Apache-2.0, unlike Loki, and runs on the VictoriaMetrics operator.
   summary: Keeps and searches logs.
   locales:
     zh-TW:

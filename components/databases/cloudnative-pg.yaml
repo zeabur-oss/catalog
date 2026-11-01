@@ -1,10 +1,9 @@
+# Runs PostgreSQL clusters from a Cluster object in the tenant's namespace:
+# replicas, failover, and backups to S3 through the Barman Cloud plugin.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: CloudNativePG
-  description: >
-    Runs PostgreSQL clusters from a Cluster object in the tenant's namespace:
-    replicas, failover, and backups to S3 through the Barman Cloud plugin.
   summary: Runs PostgreSQL databases with failover and backups to S3.
   locales:
     zh-TW:

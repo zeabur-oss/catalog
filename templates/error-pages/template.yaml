@@ -1,13 +1,11 @@
+# Serves the pages (404, 502, 503, 504) from HTML in a ConfigMap, for Traefik
+# errors middlewares and Ingress or HTTPRoute backends in the same namespace.
 apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Error pages
   # renovate: depName=docker.io/nginxinc/nginx-unprivileged
   version: "1.31.7-alpine-slim"
-  description: >-
-    Serves a maintenance page and error pages (404, 502, 503, 504) from HTML in a
-    ConfigMap, for Traefik errors middlewares and Ingress or HTTPRoute backends
-    in the same namespace.
   summary: Shows a maintenance page and error pages for the project's domains.
   locales:
     zh-TW:

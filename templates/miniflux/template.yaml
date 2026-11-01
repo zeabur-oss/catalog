@@ -4,9 +4,6 @@ metadata:
   name: Miniflux
   # renovate: depName=miniflux/miniflux
   version: "2.3.4"
-  description: >-
-    Miniflux feed reader over HTTPS, with PostgreSQL 18 managed by
-    CloudNativePG.
   summary: A feed reader, with PostgreSQL.
   locales:
     zh-TW:

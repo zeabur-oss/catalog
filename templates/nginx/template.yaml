@@ -4,9 +4,6 @@ metadata:
   name: nginx
   # renovate: depName=nginxinc/nginx-unprivileged
   version: "1.31-alpine"
-  description: >-
-    An unprivileged stateless NGINX web server with private service and Traefik
-    HTTPS ingress.
   summary: An NGINX web server over HTTPS.
   locales:
     zh-TW:

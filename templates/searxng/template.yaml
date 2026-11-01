@@ -1,12 +1,10 @@
+# Generates its signing secret and answers both HTML and JSON searches.
 apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: SearXNG
   # renovate: depName=searxng/searxng
   version: "2026.10.24-ef0ec03da"
-  description: >-
-    Privacy-respecting metasearch with generated signing secret and HTML/JSON
-    search.
   summary: A private metasearch engine.
   locales:
     zh-TW:

@@ -15,13 +15,12 @@ apiVersion: catalog.zeabur.com/v1
 kind: Component                   # or Template
 metadata:
   name: Traefik Proxy
-  description: Why it is recommended, or what the template runs, in one or two sentences.
   license: MIT                    # SPDX
   homepage: https://traefik.io/traefik/
 requires: [certificates]          # <capability> or <capability>/<upstream>
 ```
 
-组件的 `metadata` 还有 `summary`：用一句平实的话说明它为集群提供什么，给挑选组件的人看，翻译放在 `locales`。安装工具显示的是 summary，description 留给运维人员。
+组件的 `metadata` 还有 `summary`：用一句平实的话说明它为集群提供什么，给挑选组件的人看，翻译放在 `locales`。文件开头的注释说明选用这个组件的原因。
 
 ```yaml
 metadata:
@@ -40,7 +39,6 @@ apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: Traefik Proxy
-  description: Why it is recommended, in one or two sentences.
   license: MIT                    # SPDX; OSI-approved, or opt-in only (see below)
   homepage: https://traefik.io/traefik/
 defaults: {single-node: recommended, multi-node: recommended}

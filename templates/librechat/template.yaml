@@ -1,14 +1,13 @@
+# Document search uses PostgreSQL with pgvector, through CloudNativePG. The
+# Percona MongoDB server is SSPL-1.0
+# (https://www.mongodb.com/legal/licensing/server-side-public-license); read
+# section 13 on service-offering obligations before you offer this to others.
 apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: LibreChat
   # renovate: depName=ghcr.io/danny-avila/librechat-dev
   version: "latest"
-  description: >-
-    Authenticated AI chat with Percona-managed MongoDB, CNPG pgvector RAG and
-    private community Meilisearch. The Percona MongoDB server is SSPL-1.0
-    (https://www.mongodb.com/legal/licensing/server-side-public-license); read
-    section 13 on service-offering obligations before you offer this to others.
   summary: An AI chat app with sign-in, MongoDB, PostgreSQL for document search and Meilisearch.
   locales:
     zh-TW:
