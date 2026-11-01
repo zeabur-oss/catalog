@@ -206,8 +206,10 @@ func Check(root string, cat *catalog.Catalog, all []*Template) error {
 			fail("%v", err)
 		} else if err := checkActions(data, t.Inputs); err != nil {
 			fail("manifests.yaml: %v", err)
-		} else if !labelValue.MatchString(t.Metadata.Version) || !strings.Contains(string(data), ":"+t.Metadata.Version+"@") {
-			fail("metadata.version must be the tag of an image in manifests.yaml, pinned with a digest")
+		} else if src, err := os.ReadFile(filepath.Join(t.Dir, "template.yaml")); err != nil {
+			fail("%v", err)
+		} else if err := CheckVersion(src, data, t.Metadata.Version); err != nil {
+			fail("%v", err)
 		}
 		for _, p := range catalog.Profiles {
 			if _, err := cat.InstallOrder(t.Requires, p); err != nil {
@@ -216,6 +218,24 @@ func Check(root string, cat *catalog.Catalog, all []*Template) error {
 		}
 	}
 	return errors.Join(errs...)
+}
+
+// versionImage is the line above metadata.version that names the image whose tag it is, so that
+// Renovate moves the version with that image.
+var versionImage = regexp.MustCompile(`(?m)^  # renovate: depName=(\S+)\n  version: "?([^"\s]+)"?$`)
+
+// CheckVersion reports whether metadata.version names, on the line above it, an image of the
+// manifests that is pinned at that tag with a digest.
+func CheckVersion(templateYAML, manifests []byte, version string) error {
+	m := versionImage.FindSubmatch(templateYAML)
+	if m == nil || string(m[2]) != version {
+		return errors.New(`metadata.version needs "# renovate: depName=<image>" on the line above it`)
+	}
+	image := regexp.MustCompile(`(^|[\s"'])` + regexp.QuoteMeta(string(m[1])+":"+version+"@sha256:"))
+	if !labelValue.MatchString(version) || !image.Match(manifests) {
+		return fmt.Errorf("metadata.version must be the tag of %s in manifests.yaml, pinned with a digest", m[1])
+	}
+	return nil
 }
 
 // RequiresCertificates reports whether the template installs certificates.

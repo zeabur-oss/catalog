@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Open WebUI
+  # renovate: depName=ghcr.io/open-webui/open-webui
   version: "main"
   description: >-
     Authenticated LLM interface with private pipelines. Open WebUI's license

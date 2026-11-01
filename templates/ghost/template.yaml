@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Ghost
+  # renovate: depName=ghost
   version: "6-alpine"
   description: >-
     Ghost 6 publishing with a real MySQL dependency, persistent content and

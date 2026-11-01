@@ -101,6 +101,18 @@
       "versioningTemplate": "docker"
     },
     {
+      "description": "A template's metadata.version, the tag of the image named on the line above it; it moves in the same pull request as that image",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^templates/[^/]+/template\\.yaml$/"
+      ],
+      "matchStrings": [
+        "# renovate: depName=(?<depName>\\S+)\\n\\s+version: \"?(?<currentValue>[^\"\\s]+)\"?"
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    },
+    {
       "description": "Cluster versions e2e runs on",
       "customType": "regex",
       "managerFilePatterns": [
@@ -159,13 +171,20 @@
       "automerge": false
     },
     {
-      "description": "Each template gets its own pull request, and a person reviews every image change",
+      "description": "Each template gets its own pull request, with its images and metadata.version together, and a person reviews every image change",
       "matchFileNames": [
         "templates/**"
       ],
-      "groupName": null,
+      "groupName": "{{{packageFileDir}}}",
       "pinDigests": true,
       "automerge": false
+    },
+    {
+      "description": "metadata.version is a tag alone; its digest is on the image in manifests.yaml",
+      "matchFileNames": [
+        "templates/*/template.yaml"
+      ],
+      "pinDigests": false
     },
     {
       "description": "Keel's smoke test starts on pause 3.9 so that Keel can update it to 3.10",

@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: LobeChat
+  # renovate: depName=docker.io/lobehub/lobe-chat
   version: "1.143.3"
   description: >-
     LobeChat chatbot UI in client-storage mode. Chats stay in each browser; a

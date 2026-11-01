@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Qdrant
+  # renovate: depName=qdrant/qdrant
   version: "v1.20.0-unprivileged"
   description: Qdrant vector database with API key authentication and data on a persistent volume.
   license: Apache-2.0
