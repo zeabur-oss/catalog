@@ -1,0 +1,14 @@
+description: <capability> is installed when discovery serves a CRD of any component of the capability.
+components:
+  - id: databases/cloudnative-pg
+    detection: {crds: [clusters.postgresql.cnpg.io]}
+  - id: databases/percona-mongodb
+    detection: {crds: [perconaservermongodbs.psmdb.percona.com]}
+  - id: certificates/cert-manager
+    detection: {crds: [certificates.cert-manager.io]}
+served:
+  - {group: psmdb.percona.com, resource: perconaservermongodbs}
+requires: [databases, certificates]
+want:
+  databases: installed
+  certificates: missing

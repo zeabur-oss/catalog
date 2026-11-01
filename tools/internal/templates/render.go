@@ -26,31 +26,62 @@ type RenderOptions struct {
 
 // Errors from Render and GenerateInputs.
 var (
-	ErrNamespace     = errors.New("namespace must be a DNS label")
-	ErrDomain        = errors.New("domain must be a lowercase DNS hostname, not an IP address")
-	ErrClusterIssuer = errors.New("cluster issuer must be a DNS subdomain name")
-	ErrNoDomain      = errors.New("services with domains need -domain and -cluster-issuer")
-	ErrGenerated     = errors.New("is generated into a Secret; render does not take it")
-	ErrMissingInput  = errors.New("is required")
-	ErrInputPattern  = errors.New("does not match its validation pattern")
+	ErrNamespace       = errors.New("namespace must be a DNS label")
+	ErrDomain          = errors.New("domain must be a lowercase DNS hostname, not an IP address")
+	ErrClusterIssuer   = errors.New("cluster issuer must be a DNS subdomain name")
+	ErrNoDomain        = errors.New("services with domains need -domain")
+	ErrNoClusterIssuer = errors.New("services with domains need -cluster-issuer")
+	ErrGenerated       = errors.New("is generated into a Secret; render does not take it")
+	ErrMissingInput    = errors.New("is required")
+	ErrInputPattern    = errors.New("does not match its validation pattern")
+	ErrUnknownInput    = errors.New("is not an input of this template")
 )
+
+// CheckError is a render that the options fail. Code names the rule as the
+// cases in conformance/template/ do, and Input names the input of an input rule.
+type CheckError struct {
+	Code  string
+	Input string
+	Err   error
+}
+
+func (e *CheckError) Error() string {
+	if e.Input == "" {
+		return e.Err.Error()
+	}
+	return "input " + e.Input + " " + e.Err.Error()
+}
+
+func (e *CheckError) Unwrap() error { return e.Err }
+
+func refuse(code string, err error) error { return &CheckError{Code: code, Err: err} }
+
+func refuseInput(code, input string, err error) error {
+	return &CheckError{Code: code, Input: input, Err: err}
+}
 
 var namespaceLabel = regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`)
 var dnsSubdomain = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$`)
 
 func (o RenderOptions) validate(r *Template) error {
 	if !namespaceLabel.MatchString(o.Namespace) || len(o.Namespace) > 63 {
-		return ErrNamespace
+		return refuse("invalid-namespace", ErrNamespace)
 	}
 	if o.Domain != "" && (!dnsSubdomain.MatchString(o.Domain) || len(o.Domain) > 253 || net.ParseIP(o.Domain) != nil) {
-		return ErrDomain
+		return refuse("invalid-domain", ErrDomain)
 	}
 	if o.ClusterIssuer != "" && (!dnsSubdomain.MatchString(o.ClusterIssuer) || len(o.ClusterIssuer) > 253) {
-		return ErrClusterIssuer
+		return refuse("invalid-cluster-issuer", ErrClusterIssuer)
 	}
 	for _, s := range r.Services {
-		if len(s.Domains) > 0 && (o.Domain == "" || o.ClusterIssuer == "") {
-			return ErrNoDomain
+		if len(s.Domains) == 0 {
+			continue
+		}
+		if o.Domain == "" {
+			return refuse("needs-domain", ErrNoDomain)
+		}
+		if o.ClusterIssuer == "" {
+			return refuse("needs-cluster-issuer", ErrNoClusterIssuer)
 		}
 	}
 	patterns, err := validateInputs(r.Inputs)
@@ -63,20 +94,20 @@ func (o RenderOptions) validate(r *Template) error {
 		v, ok := o.Inputs[in.Name]
 		if in.Generate != "" {
 			if ok {
-				return fmt.Errorf("input %s %w", in.Name, ErrGenerated)
+				return refuseInput("generated-input", in.Name, ErrGenerated)
 			}
 			continue
 		}
 		if in.Required && !ok {
-			return fmt.Errorf("input %s %w", in.Name, ErrMissingInput)
+			return refuseInput("missing-input", in.Name, ErrMissingInput)
 		}
 		if ok && !patterns[i].MatchString(v) {
-			return fmt.Errorf("input %s %w", in.Name, ErrInputPattern)
+			return refuseInput("pattern", in.Name, ErrInputPattern)
 		}
 	}
-	for k := range o.Inputs {
+	for _, k := range slices.Sorted(maps.Keys(o.Inputs)) {
 		if !known[k] {
-			return fmt.Errorf("unknown input %s", k)
+			return refuseInput("unknown-input", k, ErrUnknownInput)
 		}
 	}
 	return nil

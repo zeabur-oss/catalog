@@ -1,0 +1,21 @@
+description: A required input is given.
+id: app
+template:
+  metadata: {version: "1.0.0"}
+  services: [{name: app, domains: ["{{ .Domain }}"]}]
+  inputs:
+    - {name: adminEmail, required: true, validation: {pattern: '[^@\s]+@[^@\s]+'}}
+    - {name: password, generate: random, secret: {name: app-secrets, key: password}, validation: {pattern: '[A-Za-z0-9_-]{43}'}}
+manifests: |
+  apiVersion: v1
+  kind: ConfigMap
+  metadata: {name: app, namespace: {{ .Namespace }}}
+  data:
+    host: {{ .Domain }}
+    admin: {{ .Inputs.adminEmail }}
+options:
+  namespace: shop
+  domain: app.example.com
+  clusterIssuer: letsencrypt
+want:
+  error: {code: missing-input, input: adminEmail}

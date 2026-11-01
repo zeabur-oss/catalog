@@ -1,0 +1,38 @@
+description: Each field takes its value, and every object gets the labels of the template.
+id: app
+template:            # template.yaml, with only the fields rendering reads
+  metadata: {version: "1.2.0"}
+  services: [{name: app, domains: ["{{ .Domain }}"]}]
+  inputs:
+    - {name: adminEmail, required: true, validation: {pattern: '[^@\s]+@[^@\s]+'}}
+manifests: |
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: app
+    namespace: {{ .Namespace }}
+  data:
+    host: {{ .Domain }}
+    issuer: {{ .ClusterIssuer }}
+    admin: {{ .Inputs.adminEmail }}
+options:
+  namespace: shop
+  domain: app.example.com
+  clusterIssuer: letsencrypt
+  inputs: {adminEmail: me@example.com}
+want:
+  objects:           # in the order of manifests.yaml
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: app
+        namespace: shop
+        labels:
+          app.kubernetes.io/instance: app
+          app.kubernetes.io/version: "1.2.0"
+          templates.zeabur.com/template: app
+      data:
+        host: app.example.com
+        issuer: letsencrypt
+        admin: me@example.com
+  # error: {code: missing-input, input: adminEmail}, in place of objects

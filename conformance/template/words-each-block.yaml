@@ -1,0 +1,15 @@
+description: Each block falls back on its own. A summary without locales shows in English next to risks in the reader's language.
+language: zh-CN
+template:
+  security:
+    summary: Runs with the restricted profile.
+    risks:
+      - risk: The first visitor becomes the owner.
+        mitigation: Sign in right after the deploy.
+        locales:
+          zh-TW: {risk: 第一個造訪的人會成為擁有者。, mitigation: 部署完馬上登入。}
+          zh-CN: {risk: 第一个访问的人会成为所有者。, mitigation: 部署完马上登录。}
+want:
+  summary: Runs with the restricted profile.
+  risks:
+    - {risk: 第一个访问的人会成为所有者。, mitigation: 部署完马上登录。}

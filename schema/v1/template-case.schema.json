@@ -1,0 +1,260 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zeabur-oss/catalog/schema/v1/template-case.schema.json",
+  "title": "Template case",
+  "description": "One case of conformance/template/: a render, the state of what a template requires, or the words a reader sees. docs/reference/template-clients.mdx gives the rules.",
+  "oneOf": [
+    { "$ref": "#/$defs/renderCase" },
+    { "$ref": "#/$defs/requiresCase" },
+    { "$ref": "#/$defs/wordsCase" }
+  ],
+  "$defs": {
+    "renderCase": {
+      "type": "object",
+      "description": "A small template, the options of one render and its objects or the check it fails.",
+      "additionalProperties": false,
+      "required": ["description", "id", "template", "manifests", "options", "want"],
+      "properties": {
+        "description": { "$ref": "#/$defs/description" },
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "description": "The template's id, its directory name." },
+        "template": {
+          "type": "object",
+          "description": "template.yaml, with only the fields rendering reads.",
+          "additionalProperties": false,
+          "required": ["metadata", "services"],
+          "properties": {
+            "metadata": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["version"],
+              "properties": { "version": { "type": "string" } }
+            },
+            "services": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "domains": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            },
+            "inputs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["name", "validation"],
+                "properties": {
+                  "name": { "$ref": "#/$defs/inputName" },
+                  "required": { "type": "boolean" },
+                  "default": { "type": "string" },
+                  "generate": { "const": "random" },
+                  "secret": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["name", "key"],
+                    "properties": { "name": { "type": "string" }, "key": { "type": "string" } }
+                  },
+                  "validation": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["pattern"],
+                    "properties": { "pattern": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "manifests": { "type": "string", "description": "manifests.yaml." },
+        "options": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["namespace"],
+          "properties": {
+            "namespace": { "type": "string" },
+            "domain": { "type": "string", "description": "Left out means none." },
+            "clusterIssuer": { "type": "string", "description": "Left out means none." },
+            "inputs": {
+              "type": "object",
+              "description": "The values given, by input name. Left out means none.",
+              "additionalProperties": { "type": "string" }
+            }
+          }
+        },
+        "want": {
+          "type": "object",
+          "description": "The objects, or the check the options fail.",
+          "additionalProperties": false,
+          "oneOf": [{ "required": ["objects"] }, { "required": ["error"] }],
+          "properties": {
+            "objects": {
+              "type": "array",
+              "description": "In the order of manifests.yaml.",
+              "items": { "type": "object" }
+            },
+            "error": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["code"],
+                  "properties": {
+                    "code": { "enum": ["invalid-namespace", "invalid-domain", "invalid-cluster-issuer", "needs-domain", "needs-cluster-issuer"] }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["code", "input"],
+                  "properties": {
+                    "code": { "enum": ["generated-input", "missing-input", "pattern", "unknown-input"] },
+                    "input": { "type": "string" }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "requiresCase": {
+      "type": "object",
+      "description": "Components of a catalog release, what kube-apiserver serves, and the state of each name in requires.",
+      "additionalProperties": false,
+      "required": ["description", "components", "requires", "want"],
+      "properties": {
+        "description": { "$ref": "#/$defs/description" },
+        "components": {
+          "type": "array",
+          "description": "index.json components, with only the fields matching reads. The capability is the part of the id before the slash.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+$" },
+              "detection": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "crds": { "type": "array", "items": { "type": "string", "pattern": "^[a-z0-9-]+\\.[a-z0-9.-]+$" } }
+                }
+              }
+            }
+          }
+        },
+        "served": {
+          "type": "array",
+          "description": "The resources that discovery lists. Left out means discovery failed.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["group", "resource"],
+            "properties": { "group": { "type": "string" }, "resource": { "type": "string" } }
+          }
+        },
+        "requires": { "$ref": "#/$defs/names" },
+        "want": {
+          "type": "object",
+          "description": "Each name of requires, with its state.",
+          "propertyNames": { "$ref": "#/$defs/name" },
+          "additionalProperties": { "enum": ["installed", "missing", "unknown"] }
+        }
+      }
+    },
+    "wordsCase": {
+      "type": "object",
+      "description": "The text of a template, a reader's language and the text the reader sees.",
+      "additionalProperties": false,
+      "required": ["description", "language", "template", "want"],
+      "properties": {
+        "description": { "$ref": "#/$defs/description" },
+        "language": { "type": "string", "description": "The reader's language, as a BCP 47 tag." },
+        "template": {
+          "type": "object",
+          "description": "template.yaml, with only the text fields.",
+          "additionalProperties": false,
+          "properties": {
+            "security": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["summary"],
+              "properties": {
+                "summary": { "type": "string" },
+                "locales": { "$ref": "#/$defs/locales", "additionalProperties": { "type": "object", "additionalProperties": false, "required": ["summary"], "properties": { "summary": { "type": "string" } } } },
+                "risks": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["risk", "mitigation", "locales"],
+                    "properties": {
+                      "risk": { "type": "string" },
+                      "mitigation": { "type": "string" },
+                      "locales": { "$ref": "#/$defs/locales", "additionalProperties": { "$ref": "#/$defs/riskWords" } }
+                    }
+                  }
+                }
+              }
+            },
+            "inputs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["name", "label", "description", "locales"],
+                "properties": {
+                  "name": { "$ref": "#/$defs/inputName" },
+                  "label": { "type": "string" },
+                  "description": { "type": "string" },
+                  "locales": { "$ref": "#/$defs/locales", "additionalProperties": { "$ref": "#/$defs/inputWords" } }
+                }
+              }
+            }
+          }
+        },
+        "want": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "summary": { "type": "string" },
+            "risks": { "type": "array", "description": "In the template's order.", "items": { "$ref": "#/$defs/riskWords" } },
+            "inputs": {
+              "type": "object",
+              "description": "By input name.",
+              "propertyNames": { "$ref": "#/$defs/inputName" },
+              "additionalProperties": { "$ref": "#/$defs/inputWords" }
+            }
+          }
+        }
+      }
+    },
+    "description": { "type": "string", "description": "The rule the case checks, in one or two sentences." },
+    "inputName": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
+    "name": { "type": "string", "pattern": "^[a-z0-9-]+(/[a-z0-9-]+)?$" },
+    "names": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/name" } },
+    "locales": {
+      "type": "object",
+      "description": "The same text in zh-TW and zh-CN.",
+      "required": ["zh-TW", "zh-CN"],
+      "propertyNames": { "enum": ["zh-TW", "zh-CN"] }
+    },
+    "riskWords": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["risk", "mitigation"],
+      "properties": { "risk": { "type": "string" }, "mitigation": { "type": "string" } }
+    },
+    "inputWords": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "description"],
+      "properties": { "label": { "type": "string" }, "description": { "type": "string" } }
+    }
+  }
+}
