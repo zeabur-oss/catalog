@@ -38,7 +38,14 @@ The installer takes these steps in order.
    | `testedOn` doesn't list the distribution | `untested` | Defaults only. An enabled component is installed with an `untested` warning |
 5. **Order.** Go through the chosen components in id order. For each one, take its `installOrder` for the profile, which lists its dependencies and then the component. Add each id that isn't in the result yet. A component in the result that wasn't chosen is there as a dependency.
 
-   Before adding a component's list, check each id in it that isn't disabled. When the catalog has that component and its `testedOn` doesn't list the distribution, a default is left out with the code `needs-untested`, which names the dependency. An enabled component still adds its list, with an `untested` warning for that dependency. When an id in the list is disabled or left out, the choice is an error.
+   A component in `installOrder` may be disabled, left out or untested. What happens depends on what needs it:
+
+   | The needed component | A default needs it | An enabled component needs it |
+   | --- | --- | --- |
+   | Is disabled, or left out for `distributions` or `unsupported` | Error `needs-disabled` | Error `needs-disabled` |
+   | Has a `testedOn` without the distribution | The default is left out too, with the code `needs-untested` and the needed component's id | The needed component is installed, with an `untested` warning |
+
+   For example, say VictoriaLogs needs the VictoriaMetrics operator, which is tested only on k3s. When VictoriaLogs is enabled on rke2, the installer installs the operator too and warns that the operator is untested there. When VictoriaLogs is only a default, neither is installed.
 
 The result has the components in install order, each with why it's installed (`default`, `enabled` or `dependency`), the components left out with their reasons and the warnings. Because each `installOrder` already places a component after its dependencies, the result does too. It doesn't depend on the order of `enable` or `disable`.
 
@@ -50,7 +57,7 @@ The installer stops and installs nothing on these errors. The `kind` names the e
 | --- | --- | --- |
 | `unknown` | A name matches no capability or component id | The name |
 | `replaced` | `enable` or `disable` names an id that a component [replaces](#replaced-components) | The new id to write instead |
-| `needs-disabled` | A chosen component needs one that is disabled or left out | Both components |
+| `needs-disabled` | A chosen component needs one that is disabled, or left out for `distributions` or `unsupported` | Both components |
 
 ## Replaced components
 

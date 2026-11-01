@@ -39,7 +39,14 @@ source: "070a2deaa0c8"
    | `testedOn` 沒有列這個發行版 | `untested` | 只排除預設元件。啟用的元件照樣安裝，並顯示 `untested` 警告 |
 5. 依 ID 順序走過已選的元件，取每個元件在這個 profile 的 `installOrder`，排出**安裝順序**。`installOrder` 先列它需要的元件，最後是它自己。結果裡還沒有的 ID 就依序加進去。結果裡沒被選到的元件，是因為其他元件需要才安裝的。
 
-   加入一個元件的清單之前，先檢查清單裡每個沒停用的 ID。catalog 有這個元件，但它的 `testedOn` 沒有列這個發行版時，預設元件會被排除，代碼是 `needs-untested`，並指出是哪個依賴元件。啟用的元件照樣加入清單，並對這個依賴元件顯示 `untested` 警告。清單裡有停用或排除的 ID 時，也會出錯。
+   `installOrder` 裡需要的元件，可能已停用、被排除或沒測過。結果要看是誰需要它：
+
+   | 需要的元件 | 預設元件需要它 | 啟用的元件需要它 |
+   | --- | --- | --- |
+   | 已停用，或因為 `distributions`、`unsupported` 排除 | 出錯，代碼是 `needs-disabled` | 出錯，代碼是 `needs-disabled` |
+   | `testedOn` 沒有列這個發行版 | 這個預設元件也不裝，代碼是 `needs-untested`，並指出它需要哪個元件 | 照樣安裝需要的元件，並顯示 `untested` 警告 |
+
+   例如 VictoriaLogs 需要 VictoriaMetrics operator，而 operator 只在 k3s 測過。在 rke2 上啟用 VictoriaLogs，會連 operator 一起裝，並提醒 operator 在 rke2 沒測過。VictoriaLogs 只是預設元件時，兩個都不裝。
 
 挑選的結果有三部分：
 
@@ -57,7 +64,7 @@ source: "070a2deaa0c8"
 | --- | --- | --- |
 | `unknown` | 名稱對不到任何 capability 或元件 ID | 這個名稱 |
 | `replaced` | `enable` 或 `disable` 寫的 ID 已由其他元件接手，見下一節 | 要改寫的新 ID |
-| `needs-disabled` | 已選的元件需要的元件已停用或排除 | 兩個元件的名稱 |
+| `needs-disabled` | 已選的元件需要的元件已停用，或因為 `distributions`、`unsupported` 排除 | 兩個元件的名稱 |
 
 ## 接手舊元件
 
