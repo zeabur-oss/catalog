@@ -29,15 +29,15 @@ releases:
     namespace: seaweedfs-operator
     repo: https://seaweedfs.github.io/seaweedfs-operator/
     chart: seaweedfs-operator
-    version: 0.1.43
-    chartDigest: sha256:b8530dcbd1dac63c0321d5c25a34951ae6a8c0c9dec93aee8ecb4f0d12897bfc
+    version: 0.1.44
+    chartDigest: sha256:46a27f3915386c4350e74e7c40e6e4032f20ca6cd21f51fa4913e871f9fcea27
     values: |
       # Pinned by digest; a tag alone can move. An empty registry lets
       # repository hold the full name, which Renovate looks up.
       image:
         registry: ""
         repository: chrislusf/seaweedfs-operator
-        tag: 1.0.40@sha256:41c72bcfa39f4f8f7ae0d384d70c87ad81118834a189876ca0f22824eddee752
+        tag: 1.0.41@sha256:a3f201010df9f25a3ce82dca57dbf0113d12af4e13fd70c1b4146333759e308f
       webhook:
         certManager:
           # cert-manager issues the webhook certificate instead of the chart's
@@ -125,7 +125,7 @@ smoke:
       kind: Seaweed
       metadata: {name: smoke, namespace: catalog-smoke}
       spec:
-        image: chrislusf/seaweedfs:4.48
+        image: chrislusf/seaweedfs:4.50
         volumeServerDiskCount: 1
         master:
           replicas: 1
