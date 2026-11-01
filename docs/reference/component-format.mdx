@@ -134,7 +134,7 @@ Every `releases` entry must pin its content with a digest. Zeabur Installer and 
 - `urlDigests` uses the sha256 of each downloaded file, in the same order as the URLs.
 - Images in `values` use `<tag>@sha256:<digest>`, including images that the chart passes to an operator as arguments. If a chart doesn't accept a digest, list the image in `unpinnedImages` and explain why in a comment. URL installation entries are exempt from this requirement.
 
-Renovate updates image and OCI chart tags and digests. It can't read digests for HTTP charts or URLs. After Renovate updates `version`, `catalog render` fails and outputs the new digest for you to copy into the file.
+Renovate updates image and chart versions together with their digests. It can't read digests for URLs: after Renovate updates their `version`, `catalog render` fails and outputs the new digest for you to copy into the file.
 
 Installation results must be consistent: charts must not generate keys or certificates. Put values that need generation in `inputs` and store them in Secrets; cert-manager supplies certificates. If two renders produce different results, `catalog render` fails.
 

@@ -11,26 +11,16 @@
   },
   "customManagers": [
     {
-      "description": "Helm charts from HTTP repositories. Renovate cannot read their chartDigest: catalog render prints the new one",
-      "customType": "regex",
+      "description": "Helm charts, with their chartDigest: an HTTP chart's is the digest in its repository's index.yaml, an OCI chart's the manifest digest",
+      "customType": "jsonata",
+      "fileFormat": "yaml",
       "managerFilePatterns": [
         "/^components/.+\\.yaml$/"
       ],
       "matchStrings": [
-        "repo: (?<registryUrl>https://\\S+)\\n\\s+chart: (?<depName>\\S+)\\n\\s+version: (?<currentValue>\\S+)"
-      ],
-      "datasourceTemplate": "helm"
-    },
-    {
-      "description": "Helm charts from OCI registries, with chartDigest as their manifest digest",
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/^components/.+\\.yaml$/"
-      ],
-      "matchStrings": [
-        "chart: oci://(?<depName>\\S+)\\n\\s+version: (?<currentValue>\\S+)\\n\\s+chartDigest: (?<currentDigest>sha256:[a-f0-9]{64})"
-      ],
-      "datasourceTemplate": "docker"
+        "releases[$contains(repo, 'https://')].{ 'depName': chart, 'registryUrl': repo, 'currentValue': version, 'currentDigest': $substringAfter(chartDigest, 'sha256:'), 'datasource': 'helm' }",
+        "releases[$contains(chart, 'oci://')].{ 'depName': $substringAfter(chart, 'oci://'), 'currentValue': version, 'currentDigest': chartDigest, 'datasource': 'docker' }"
+      ]
     },
     {
       "description": "Manifests from GitHub releases. Renovate cannot read their urlDigests: catalog render prints the new ones",
