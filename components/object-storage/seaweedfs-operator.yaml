@@ -109,7 +109,7 @@ security:
 
 # The CRDs carry helm.sh/resource-policy: keep.
 # The chart annotates its CRDs helm.sh/resource-policy: keep.
-leftovers: [customresourcedefinitions]
+leftovers: [customresourcedefinitions, persistentvolumeclaims]
 
 smoke:
   - name: one-node-s3
