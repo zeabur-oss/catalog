@@ -1,0 +1,36 @@
+description: >
+  On a server with an install record, a default the record lacks is offered,
+  not installed. It is installed when enable names it, a chosen component needs
+  it, or the client lists it as required.
+components:
+  - id: certificates/cert-manager
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, rke2, kubesolo]
+  - id: logs/victoria-logs
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, rke2, kubesolo]
+    installOrder:
+      single-node: [observability-operator/victoria-metrics-operator, logs/victoria-logs]
+      multi-node: [observability-operator/victoria-metrics-operator, logs/victoria-logs]
+  - id: metrics/metrics-server
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, rke2, kubesolo]
+  - id: observability-operator/victoria-metrics-operator
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, rke2, kubesolo]
+  - id: uptime-probes/gatus
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, rke2, kubesolo]
+config:
+  profile: multi-node
+  distribution: k3s
+  required: [metrics]
+  enable: [logs/victoria-logs]
+  installed: [certificates/cert-manager]
+want:
+  components:
+    - {id: certificates/cert-manager, why: default}
+    - {id: observability-operator/victoria-metrics-operator, why: dependency}
+    - {id: logs/victoria-logs, why: enabled}
+    - {id: metrics/metrics-server, why: default}
+  offered: [uptime-probes/gatus]

@@ -1,0 +1,111 @@
+---
+title: How installers choose and install components
+description: The rules an installer follows to choose components from index.json, order them and check them once installed, with cases to test an installer against.
+---
+
+An installer reads `index.json` from a [release](releases.mdx) and decides which components to install. This page gives the rules. Zeabur Installer follows them, and another installer that follows them chooses the same components for the same configuration. Each rule has a case in [`conformance/select/`](#test-cases) to test against.
+
+## What an installer starts from
+
+- `index.json` of one catalog release.
+- The profile, `single-node` or `multi-node`, and the distribution: `k3s`, `rke2` or `kubesolo`.
+- The `enable` and `disable` lists that the person writes. Each item is a component id, such as `logs/victoria-logs`, or a capability, such as `logs`.
+- The install record, when the server already has one: the ids of the components installed on it.
+
+## Names
+
+A component id names that component. A capability names one of its components that isn't `unsupported` on the profile. The installer sorts those components and takes the first:
+
+1. Components whose `testedOn` lists the distribution come first.
+2. Then components `recommended` on the profile.
+3. Then id order.
+
+A name that matches no capability or component id is an error, in `enable` and in `disable`.
+
+## Choose the components
+
+The installer takes these steps in order.
+
+1. **Defaults.** Start from every component `recommended` on the profile. An installer may add components it needs on top of the defaults, by id or capability. They count as defaults.
+2. **Enable.** Add each component that `enable` names. It counts as enabled.
+3. **Disable.** Take out each chosen component that a `disable` item names: by its id, or by its capability, which takes out every chosen component of that capability. A known name that matches nothing chosen does nothing.
+4. **Leave out what can't be installed here.** Take out the components below and list each with its reason, word for word:
+
+   | When | Reason |
+   | --- | --- |
+   | `distributions` is present and doesn't list the distribution | `runs on k3s, rke2 only` (the list, joined with `, `) |
+   | `defaults` is `unsupported` on the profile | `unsupported on single-node` |
+   | `testedOn` doesn't list the distribution | `not tested on rke2` |
+
+   The first two apply to enabled components too. An enabled component that `testedOn` doesn't list is an error instead: the person asked for something the catalog didn't test there.
+5. **Install record.** On a server with an install record, a default that the record lacks is offered, not installed. It's still installed when `enable` names it or a chosen component needs it. An installer may also keep a list of defaults it always installs, such as the ones it can't work without.
+6. **Order.** Go through the chosen components in id order. For each one, take its `installOrder` for the profile, which lists its dependencies and then the component. Add each id that isn't in the result yet. A component in the result that wasn't chosen is there as a dependency.
+
+   Before adding a component's list, check each id in it that isn't disabled. When the catalog has that component and its `testedOn` doesn't list the distribution, a default is left out with `needs observability-operator/victoria-metrics-operator, not tested on rke2`, and an enabled component is an error naming the dependency. When an id in the list is disabled or left out, the choice is an error.
+
+The result has the components in install order, each with why it's installed (`default`, `enabled` or `dependency`), the components left out with their reasons, and the defaults offered on a server with an install record. Because each `installOrder` already places a component after its dependencies, the result does too. It doesn't depend on the order of `enable` or `disable`.
+
+## Errors
+
+The installer stops and installs nothing on these errors. The `kind` names the error in the test cases.
+
+| `kind` | When | Tell the person |
+| --- | --- | --- |
+| `unknown` | A name matches no capability or component id. | The name. |
+| `replaced` | `enable` names an id that a component [replaces](#replaced-components). | Write the new id instead. |
+| `untested` | An enabled component, or a component it needs, isn't tested on the distribution. | The component and the distributions its `testedOn` lists. |
+| `needs-disabled` | A chosen component needs one that is disabled or left out. | Both components. |
+
+## Replaced components
+
+When a component takes over from one the catalog removed, its `replaces` lists the old id. For example, `builds/zeabur-builder` has `replaces: [container-registry/zot]`, because zot now comes with Zeabur Builder. No component has an id that another one replaces.
+
+- `enable` with the old id is an error naming the new id.
+- `disable` with the old id takes out the new one, with a warning that names the new id.
+- An install record with the old id counts as having the new component.
+
+`replaces` is optional. An installer that doesn't read it still installs the same components. It only reports an old id as unknown.
+
+## Install and check
+
+Install the components in the order of the result. [Component file format](component-format.mdx) describes the releases of each one, the digests that pin them and the other fields an installer reads.
+
+Once a component is installed, run each of its `health` checks as one `kubectl wait`: the items of `wait`, one argument each, then `--timeout=<timeout>`.
+
+```sh
+kubectl wait --for=condition=Ready nodes.longhorn.io --all -n longhorn-system --timeout=60s
+```
+
+An installer may use its own time limit in place of `timeout`. For example, `zeabur-installer apply` waits up to `--timeout=5m` right after installing, and `zeabur-installer doctor` uses each check's `timeout`. When a check fails, show its `advice`.
+
+## Test cases
+
+`conformance/select/` has one case for each rule above. The directory is in the repository and in `bundle.tar.gz`, so an installer that pins a catalog commit or release reads the cases of that version. [`schema/v1/select-case.schema.json`](https://github.com/zeabur-oss/catalog/blob/main/schema/v1/select-case.schema.json) defines the format.
+
+```yaml
+description: A default not tested on the distribution is left out with a reason.
+components:            # index.json components, with only the fields selection reads
+  - id: ingress/traefik
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, rke2, kubesolo]
+  - id: logs/victoria-logs
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, kubesolo]
+config:
+  profile: multi-node
+  distribution: rke2
+  # add: what the installer adds to the defaults
+  # required: defaults it always installs, even when the install record lacks them
+  # enable, disable: the person's lists
+  # installed: the install record's ids; left out, the server has no install record
+want:
+  components:          # in install order
+    - {id: ingress/traefik, why: default}
+  leftOut:
+    logs/victoria-logs: not tested on rke2
+  # offered: defaults not installed because the install record lacks them
+  # warnings: [{kind: replaced, old: …, new: …}]
+  # error: {kind: untested, component: …, distribution: …}, in place of the rest
+```
+
+To run a case, build an index from `components`. The capability of each component is the part of its id before the slash, `installOrder` left out for a profile means the component alone, and `distributions` left out means any distribution. Choose with `config`, then compare the result with `want`. A list or map that `want` leaves out is empty. Compare the reasons word for word, and for an error compare only `kind` and its fields.

@@ -12,6 +12,7 @@
     template-format: 模板文件格式
     template-standards: 模板标准
     releases: 版本与软件包
+    installers: 安装工具如何选择和安装组件
     licenses: 许可证
 - group: contribute
   label: 贡献

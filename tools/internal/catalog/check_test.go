@@ -30,6 +30,30 @@ func TestLicenseProblems(t *testing.T) {
 	}
 }
 
+func TestReplaceProblems(t *testing.T) {
+	tests := []struct {
+		name       string
+		components []*Component
+		bad        bool
+	}{
+		{"an id no component has", []*Component{{ID: "builds/zeabur-builder", Replaces: []string{"container-registry/zot"}}}, false},
+		{"an id a component still has", []*Component{
+			{ID: "builds/zeabur-builder", Replaces: []string{"container-registry/zot"}},
+			{ID: "container-registry/zot"},
+		}, true},
+		{"an id two components replace", []*Component{
+			{ID: "builds/a", Replaces: []string{"container-registry/zot"}},
+			{ID: "builds/b", Replaces: []string{"container-registry/zot"}},
+		}, true},
+	}
+	for _, tt := range tests {
+		cat := &Catalog{Components: tt.components}
+		if got := cat.replaceProblems(); (len(got) > 0) != tt.bad {
+			t.Errorf("%s: got %q", tt.name, got)
+		}
+	}
+}
+
 func TestProvisionProblems(t *testing.T) {
 	component := func(edit func(*Component)) *Component {
 		c := &Component{

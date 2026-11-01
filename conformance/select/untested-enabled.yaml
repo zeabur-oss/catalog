@@ -1,0 +1,11 @@
+description: A component that enable names and that was not tested on the distribution is an error.
+components:
+  - id: logs/victoria-logs
+    defaults: {single-node: optional, multi-node: optional}
+    testedOn: [k3s, rke2]
+config:
+  profile: single-node
+  distribution: kubesolo
+  enable: [logs/victoria-logs]
+want:
+  error: {kind: untested, component: logs/victoria-logs, distribution: kubesolo}

@@ -1,0 +1,19 @@
+description: >
+  A capability name resolves to a component tested on the distribution before
+  one that is recommended.
+components:
+  - id: logs/loki
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s]
+  - id: logs/victoria-logs
+    defaults: {single-node: optional, multi-node: optional}
+    testedOn: [k3s, rke2]
+config:
+  profile: multi-node
+  distribution: rke2
+  enable: [logs]
+want:
+  components:
+    - {id: logs/victoria-logs, why: enabled}
+  leftOut:
+    logs/loki: not tested on rke2

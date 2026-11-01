@@ -46,6 +46,7 @@ maturity: independent             # cncf-graduated | cncf-incubating | cncf-sand
 defaults: {single-node: recommended, multi-node: recommended}
 requires: [certificates]          # installed first
 distributions: [k3s]              # optional; distributions to test it on, omitted means all
+replaces: [container-registry/zot] # optional; ids of removed components it took over
 
 releases:                         # installed in order
   - name: traefik
@@ -122,6 +123,8 @@ health:
 ```
 
 `distributions` and `testedOn` are two different lists. `distributions` in the component file names the distributions to test the component on. `testedOn` in `index.json` names the distributions where that test passed, at the versions that `config/kubernetes.yaml` pins. An installer reads `testedOn` to offer the component only where it passed. `catalog index` derives `testedOn` from `measurements/`, so don't write it by hand. It's present on every component and can be empty.
+
+`replaces` lists the ids of removed components that this one took over, such as `container-registry/zot` on `builds/zeabur-builder`. An installer treats an install record with an old id as having this component, and tells a person who writes an old id in the configuration to write the new one. No current component may have an id that another one replaces; `catalog validate` checks it. [How installers choose and install components](installers.mdx#replaced-components) gives the rules.
 
 `networkPolicies` is for installers that block incoming traffic to each namespace by default. It holds standard NetworkPolicy objects in the component's own namespaces, which such an installer applies before the releases, for the traffic the component needs from elsewhere. Other installers can ignore it. `catalog validate` checks that each object is a NetworkPolicy in one of the component's namespaces.
 

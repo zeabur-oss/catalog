@@ -1,0 +1,18 @@
+description: An install record that has an id a component replaces counts as having that component.
+components:
+  - id: builds/zeabur-builder
+    defaults: {single-node: optional, multi-node: optional}
+    testedOn: [k3s, rke2, kubesolo]
+    replaces: [container-registry/zot]
+  - id: ingress/traefik
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, rke2, kubesolo]
+config:
+  profile: multi-node
+  distribution: k3s
+  add: [builds]
+  installed: [container-registry/zot, ingress/traefik]
+want:
+  components:
+    - {id: builds/zeabur-builder, why: default}
+    - {id: ingress/traefik, why: default}

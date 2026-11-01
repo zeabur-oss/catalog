@@ -1,0 +1,19 @@
+description: A disable name that a component replaces takes out the new id, with a warning.
+components:
+  - id: builds/zeabur-builder
+    defaults: {single-node: optional, multi-node: optional}
+    testedOn: [k3s, rke2, kubesolo]
+    replaces: [container-registry/zot]
+  - id: ingress/traefik
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, rke2, kubesolo]
+config:
+  profile: multi-node
+  distribution: k3s
+  add: [builds]
+  disable: [container-registry/zot]
+want:
+  components:
+    - {id: ingress/traefik, why: default}
+  warnings:
+    - {kind: replaced, old: container-registry/zot, new: builds/zeabur-builder}

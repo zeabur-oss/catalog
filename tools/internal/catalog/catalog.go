@@ -34,6 +34,7 @@ type Component struct {
 	PersistsData    bool              `yaml:"persistsData" json:"persistsData,omitempty"`
 	DisruptsTraffic bool              `yaml:"disruptsTraffic" json:"disruptsTraffic,omitempty"`
 	Requires        []string          `yaml:"requires" json:"requires,omitempty"`
+	Replaces        []string          `yaml:"replaces" json:"replaces,omitempty"`
 	Inputs          []Input           `yaml:"inputs" json:"inputs,omitempty"`
 	Releases        []Release         `yaml:"releases" json:"releases"`
 	Provides        *Provides         `yaml:"provides" json:"provides,omitempty"`
