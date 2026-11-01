@@ -135,7 +135,7 @@ want:
 
 {/* vale ZeaburZhTW.Terms = NO */}
 
-1. 渲染案例：用 `options` 渲染 `template` 和 `manifests`，再把物件，或沒過的檢查的代碼和 `input`，拿來和 `want` 比對。比對代碼和欄位，不比對用戶端顯示的文字。
+1. 渲染案例：用 `options` 渲染 `template` 和 `manifests`，再把渲染出的物件和 `want` 比對。檢查沒過時，改比對那項檢查的代碼和 `input`。比對代碼和欄位，不比對用戶端顯示的文字。
 2. 元件案例：每個元件的 capability 是 ID 斜線前的部分。找出 `requires` 裡每個名稱的狀態，再和 `want` 比對。
 3. 文字案例：依 `language` 挑出要顯示的文字，再和 `want` 比對。`want` 沒寫的清單或對照表就是空的。
 

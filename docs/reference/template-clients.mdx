@@ -127,6 +127,6 @@ A words case has `language`, the text fields of a template and the text the read
 
 To run a case:
 
-1. Render case: render `template` and `manifests` with `options`, and compare the objects, or the code and `input` of the failed check, with `want`. Compare codes and fields, not the words a client shows.
+1. Render case: render `template` and `manifests` with `options`, and compare the objects with `want`. When a check fails, compare its code and `input` instead. Compare codes and fields, not the words a client shows.
 2. Requires case: the capability of each component is the part of its id before the slash. Find the state of each name in `requires`, and compare with `want`.
 3. Words case: pick the text for `language`, and compare with `want`. A list or map that `want` leaves out is empty.

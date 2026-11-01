@@ -128,6 +128,6 @@ want:
 
 运行用例的步骤如下。
 
-1. 渲染用例：用 `options` 渲染 `template` 和 `manifests`，再把对象，或没通过的检查的代码和 `input`，与 `want` 比较。比较代码和字段，不比较客户端显示的文字。
+1. 渲染用例：用 `options` 渲染 `template` 和 `manifests`，再把渲染出的对象与 `want` 比较。检查没通过时，改为比较那项检查的代码和 `input`。比较代码和字段，不比较客户端显示的文字。
 2. 组件用例：每个组件的 capability 是 ID 斜杠前的部分。找出 `requires` 里每个名称的状态，再与 `want` 比较。
 3. 文字用例：按 `language` 选出要显示的文字，再与 `want` 比较。`want` 没写的列表或映射就是空的。
