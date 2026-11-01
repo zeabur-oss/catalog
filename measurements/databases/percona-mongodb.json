@@ -7,7 +7,7 @@
       "versions": {
         "psmdb-operator": "1.23.2"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "k3s-arm64-v1.36.5+k3s1": {
       "idleMemoryMiB": 18,
@@ -15,23 +15,23 @@
       "versions": {
         "psmdb-operator": "1.23.2"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
-      "idleMemoryMiB": 18,
+      "idleMemoryMiB": 19,
       "idleCPUm": 1,
       "versions": {
         "psmdb-operator": "1.23.2"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
-      "idleMemoryMiB": 18,
+      "idleMemoryMiB": 19,
       "idleCPUm": 1,
       "versions": {
         "psmdb-operator": "1.23.2"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "multi-node-amd64-v1.36.4": {
       "idleMemoryMiB": 32,
@@ -39,7 +39,7 @@
       "versions": {
         "psmdb-operator": "1.23.2"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "multi-node-arm64-v1.36.4": {
       "idleMemoryMiB": 32,
@@ -47,23 +47,23 @@
       "versions": {
         "psmdb-operator": "1.23.2"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "rke2-amd64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 19,
-      "idleCPUm": 1,
-      "versions": {
-        "psmdb-operator": "1.23.2"
-      },
-      "measuredAt": "2026-10-31"
-    },
-    "rke2-arm64-v1.36.5+rke2r1": {
       "idleMemoryMiB": 20,
       "idleCPUm": 1,
       "versions": {
         "psmdb-operator": "1.23.2"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
+    },
+    "rke2-arm64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 19,
+      "idleCPUm": 1,
+      "versions": {
+        "psmdb-operator": "1.23.2"
+      },
+      "measuredAt": "2026-11-01"
     },
     "single-node-amd64-v1.36.4": {
       "idleMemoryMiB": 18,
@@ -71,7 +71,7 @@
       "versions": {
         "psmdb-operator": "1.23.2"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "single-node-arm64-v1.36.4": {
       "idleMemoryMiB": 18,
@@ -79,7 +79,7 @@
       "versions": {
         "psmdb-operator": "1.23.2"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     }
   }
 }

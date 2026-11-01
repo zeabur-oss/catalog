@@ -2,13 +2,13 @@
   "template": "ghost",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 396,
-      "idleCPUm": 6,
+      "idleMemoryMiB": 400,
+      "idleCPUm": 11,
       "versions": {
         "ghost": "6-alpine",
         "mysql": "8.4"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     }
   }
 }

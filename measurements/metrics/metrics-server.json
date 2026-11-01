@@ -7,7 +7,7 @@
       "versions": {
         "metrics-server": "3.14.0"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "k3s-arm64-v1.36.5+k3s1": {
       "idleMemoryMiB": 17,
@@ -15,39 +15,39 @@
       "versions": {
         "metrics-server": "3.14.0"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
       "idleMemoryMiB": 17,
-      "idleCPUm": 3,
-      "versions": {
-        "metrics-server": "3.14.0"
-      },
-      "measuredAt": "2026-10-31"
-    },
-    "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
-      "idleMemoryMiB": 18,
       "idleCPUm": 2,
       "versions": {
         "metrics-server": "3.14.0"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
+    },
+    "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
+      "idleMemoryMiB": 17,
+      "idleCPUm": 2,
+      "versions": {
+        "metrics-server": "3.14.0"
+      },
+      "measuredAt": "2026-11-01"
     },
     "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 33,
+      "idleMemoryMiB": 32,
+      "idleCPUm": 2,
+      "versions": {
+        "metrics-server": "3.14.0"
+      },
+      "measuredAt": "2026-11-01"
+    },
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 32,
       "idleCPUm": 4,
       "versions": {
         "metrics-server": "3.14.0"
       },
-      "measuredAt": "2026-10-31"
-    },
-    "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 31,
-      "idleCPUm": 3,
-      "versions": {
-        "metrics-server": "3.14.0"
-      },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "rke2-amd64-v1.36.5+rke2r1": {
       "idleMemoryMiB": 16,
@@ -55,15 +55,15 @@
       "versions": {
         "metrics-server": "3.14.0"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "rke2-arm64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 16,
+      "idleMemoryMiB": 17,
       "idleCPUm": 2,
       "versions": {
         "metrics-server": "3.14.0"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "single-node-amd64-v1.36.4": {
       "idleMemoryMiB": 17,
@@ -71,7 +71,7 @@
       "versions": {
         "metrics-server": "3.14.0"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "single-node-arm64-v1.36.4": {
       "idleMemoryMiB": 17,
@@ -79,7 +79,7 @@
       "versions": {
         "metrics-server": "3.14.0"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     }
   }
 }
