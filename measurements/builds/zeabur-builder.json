@@ -2,8 +2,8 @@
   "component": "builds/zeabur-builder",
   "environments": {
     "k3s-amd64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 49,
-      "idleCPUm": 3,
+      "idleMemoryMiB": 50,
+      "idleCPUm": 2,
       "versions": {
         "builder": "0.1.1",
         "zot": "0.1.128"
@@ -11,8 +11,8 @@
       "measuredAt": "2026-11-01"
     },
     "k3s-arm64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 49,
-      "idleCPUm": 2,
+      "idleMemoryMiB": 50,
+      "idleCPUm": 3,
       "versions": {
         "builder": "0.1.1",
         "zot": "0.1.128"
@@ -56,8 +56,8 @@
       "measuredAt": "2026-11-01"
     },
     "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 49,
-      "idleCPUm": 3,
+      "idleMemoryMiB": 48,
+      "idleCPUm": 4,
       "versions": {
         "builder": "0.1.1",
         "zot": "0.1.128"
@@ -65,8 +65,8 @@
       "measuredAt": "2026-11-01"
     },
     "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 48,
-      "idleCPUm": 5,
+      "idleMemoryMiB": 49,
+      "idleCPUm": 3,
       "versions": {
         "builder": "0.1.1",
         "zot": "0.1.128"
@@ -83,16 +83,7 @@
       "measuredAt": "2026-11-01"
     },
     "rke2-arm64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 49,
-      "idleCPUm": 3,
-      "versions": {
-        "builder": "0.1.1",
-        "zot": "0.1.128"
-      },
-      "measuredAt": "2026-11-01"
-    },
-    "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 49,
+      "idleMemoryMiB": 48,
       "idleCPUm": 2,
       "versions": {
         "builder": "0.1.1",
@@ -100,8 +91,17 @@
       },
       "measuredAt": "2026-11-01"
     },
-    "single-node-arm64-v1.36.4": {
+    "single-node-amd64-v1.36.4": {
       "idleMemoryMiB": 50,
+      "idleCPUm": 3,
+      "versions": {
+        "builder": "0.1.1",
+        "zot": "0.1.128"
+      },
+      "measuredAt": "2026-11-01"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 49,
       "idleCPUm": 2,
       "versions": {
         "builder": "0.1.1",

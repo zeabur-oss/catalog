@@ -2,7 +2,7 @@
   "component": "certificates/cert-manager",
   "environments": {
     "k3s-amd64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 57,
+      "idleMemoryMiB": 56,
       "idleCPUm": 1,
       "versions": {
         "cert-manager": "v1.21.3"
@@ -10,7 +10,7 @@
       "measuredAt": "2026-11-01"
     },
     "k3s-arm64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 54,
+      "idleMemoryMiB": 56,
       "idleCPUm": 1,
       "versions": {
         "cert-manager": "v1.21.3"
@@ -50,7 +50,7 @@
       "measuredAt": "2026-11-01"
     },
     "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 92,
+      "idleMemoryMiB": 91,
       "idleCPUm": 2,
       "versions": {
         "cert-manager": "v1.21.3"
@@ -58,15 +58,15 @@
       "measuredAt": "2026-11-01"
     },
     "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 92,
-      "idleCPUm": 1,
+      "idleMemoryMiB": 93,
+      "idleCPUm": 2,
       "versions": {
         "cert-manager": "v1.21.3"
       },
       "measuredAt": "2026-11-01"
     },
     "rke2-amd64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 56,
+      "idleMemoryMiB": 57,
       "idleCPUm": 1,
       "versions": {
         "cert-manager": "v1.21.3"
@@ -74,7 +74,7 @@
       "measuredAt": "2026-11-01"
     },
     "rke2-arm64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 59,
+      "idleMemoryMiB": 58,
       "idleCPUm": 1,
       "versions": {
         "cert-manager": "v1.21.3"
@@ -90,7 +90,7 @@
       "measuredAt": "2026-11-01"
     },
     "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 55,
+      "idleMemoryMiB": 53,
       "idleCPUm": 1,
       "versions": {
         "cert-manager": "v1.21.3"

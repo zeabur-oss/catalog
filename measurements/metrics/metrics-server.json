@@ -18,7 +18,7 @@
       "measuredAt": "2026-11-01"
     },
     "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
-      "idleMemoryMiB": 17,
+      "idleMemoryMiB": 18,
       "idleCPUm": 2,
       "versions": {
         "metrics-server": "3.14.0"
@@ -35,22 +35,22 @@
     },
     "multi-node-amd64-v1.36.4": {
       "idleMemoryMiB": 32,
-      "idleCPUm": 2,
+      "idleCPUm": 3,
       "versions": {
         "metrics-server": "3.14.0"
       },
       "measuredAt": "2026-11-01"
     },
     "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 32,
-      "idleCPUm": 4,
+      "idleMemoryMiB": 33,
+      "idleCPUm": 3,
       "versions": {
         "metrics-server": "3.14.0"
       },
       "measuredAt": "2026-11-01"
     },
     "rke2-amd64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 16,
+      "idleMemoryMiB": 17,
       "idleCPUm": 2,
       "versions": {
         "metrics-server": "3.14.0"
@@ -67,7 +67,7 @@
     },
     "single-node-amd64-v1.36.4": {
       "idleMemoryMiB": 17,
-      "idleCPUm": 1,
+      "idleCPUm": 2,
       "versions": {
         "metrics-server": "3.14.0"
       },

@@ -2,8 +2,8 @@
   "component": "runtime-security/falco",
   "environments": {
     "k3s-amd64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 68,
-      "idleCPUm": 3,
+      "idleMemoryMiB": 67,
+      "idleCPUm": 2,
       "versions": {
         "falco": "9.2.1",
         "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
@@ -11,7 +11,7 @@
       "measuredAt": "2026-11-01"
     },
     "k3s-arm64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 70,
+      "idleMemoryMiB": 71,
       "idleCPUm": 3,
       "versions": {
         "falco": "9.2.1",
@@ -20,8 +20,8 @@
       "measuredAt": "2026-11-01"
     },
     "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
-      "idleMemoryMiB": 62,
-      "idleCPUm": 5,
+      "idleMemoryMiB": 63,
+      "idleCPUm": 3,
       "versions": {
         "falco": "9.2.1",
         "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
@@ -29,7 +29,7 @@
       "measuredAt": "2026-11-01"
     },
     "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
-      "idleMemoryMiB": 65,
+      "idleMemoryMiB": 66,
       "idleCPUm": 2,
       "versions": {
         "falco": "9.2.1",
@@ -38,8 +38,8 @@
       "measuredAt": "2026-11-01"
     },
     "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 168,
-      "idleCPUm": 44,
+      "idleMemoryMiB": 169,
+      "idleCPUm": 33,
       "versions": {
         "falco": "9.2.1",
         "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
@@ -47,7 +47,7 @@
       "measuredAt": "2026-11-01"
     },
     "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 175,
+      "idleMemoryMiB": 174,
       "idleCPUm": 23,
       "versions": {
         "falco": "9.2.1",
@@ -56,8 +56,8 @@
       "measuredAt": "2026-11-01"
     },
     "rke2-amd64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 70,
-      "idleCPUm": 9,
+      "idleMemoryMiB": 73,
+      "idleCPUm": 6,
       "versions": {
         "falco": "9.2.1",
         "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
@@ -65,7 +65,7 @@
       "measuredAt": "2026-11-01"
     },
     "rke2-arm64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 74,
+      "idleMemoryMiB": 75,
       "idleCPUm": 7,
       "versions": {
         "falco": "9.2.1",
@@ -75,7 +75,7 @@
     },
     "single-node-amd64-v1.36.4": {
       "idleMemoryMiB": 67,
-      "idleCPUm": 7,
+      "idleCPUm": 5,
       "versions": {
         "falco": "9.2.1",
         "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
@@ -84,7 +84,7 @@
     },
     "single-node-arm64-v1.36.4": {
       "idleMemoryMiB": 70,
-      "idleCPUm": 5,
+      "idleCPUm": 4,
       "versions": {
         "falco": "9.2.1",
         "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"

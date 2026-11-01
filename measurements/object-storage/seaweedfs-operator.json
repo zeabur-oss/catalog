@@ -2,7 +2,7 @@
   "component": "object-storage/seaweedfs-operator",
   "environments": {
     "k3s-amd64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 27,
+      "idleMemoryMiB": 26,
       "idleCPUm": 1,
       "versions": {
         "seaweedfs-operator": "0.1.44"
@@ -10,7 +10,7 @@
       "measuredAt": "2026-11-01"
     },
     "k3s-arm64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 26,
+      "idleMemoryMiB": 27,
       "idleCPUm": 1,
       "versions": {
         "seaweedfs-operator": "0.1.44"
@@ -54,7 +54,7 @@
       "measuredAt": "2026-11-01"
     },
     "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 42,
+      "idleMemoryMiB": 40,
       "idleCPUm": 1,
       "versions": {
         "seaweedfs-operator": "0.1.44"
