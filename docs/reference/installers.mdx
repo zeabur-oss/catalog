@@ -38,7 +38,7 @@ The installer takes these steps in order.
    | `testedOn` doesn't list the distribution | `untested` | Defaults only. An enabled component is installed with an `untested` warning |
 5. **Order.** Go through the chosen components in id order. For each one, take its `installOrder` for the profile, which lists its dependencies and then the component. Add each id that isn't in the result yet. A component in the result that wasn't chosen is there as a dependency.
 
-   Before adding a component's list, check each id in it that isn't disabled. When the catalog has that component and its `testedOn` doesn't list the distribution, a default is left out with the code `needs-untested`, which names the dependency. An enabled component still adds its list, with an `untested` warning for that dependency. When an id in the list is disabled or left out, the choice is an error.
+   Before adding a component's list, check each id in it that isn't disabled. When the catalog has that component and its `testedOn` doesn't list the distribution, a default is left out with the code `needs-untested`, which names the dependency. An enabled component still adds its list, with an `untested` warning for that dependency, even when step 4 left the dependency out as an untested default. When an id in the list is disabled, or left out for `distributions` or `unsupported`, the choice is an error.
 
 The result has the components in install order, each with why it's installed (`default`, `enabled` or `dependency`), the components left out with their reasons and the warnings. Because each `installOrder` already places a component after its dependencies, the result does too. It doesn't depend on the order of `enable` or `disable`.
 

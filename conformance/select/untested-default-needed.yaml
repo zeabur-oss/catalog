@@ -1,0 +1,23 @@
+description: >
+  A default left out as untested is still installed, with a warning, when a
+  component that enable names needs it.
+components:
+  - id: logs/victoria-logs
+    defaults: {single-node: optional, multi-node: optional}
+    testedOn: [k3s, rke2]
+    installOrder:
+      single-node: [observability-operator/victoria-metrics-operator, logs/victoria-logs]
+      multi-node: [observability-operator/victoria-metrics-operator, logs/victoria-logs]
+  - id: observability-operator/victoria-metrics-operator
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s]
+config:
+  profile: multi-node
+  distribution: rke2
+  enable: [logs/victoria-logs]
+want:
+  components:
+    - {id: observability-operator/victoria-metrics-operator, why: dependency}
+    - {id: logs/victoria-logs, why: enabled}
+  warnings:
+    - {kind: untested, component: observability-operator/victoria-metrics-operator, distribution: rke2}
