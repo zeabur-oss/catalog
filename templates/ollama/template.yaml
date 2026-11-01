@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: Ollama
   # renovate: depName=docker.io/ollama/ollama
-  version: "0.40.10"
+  version: "0.40.11"
   description: Private CPU-only local model runtime. The API has no public ingress.
   license: MIT
   homepage: https://github.com/ollama/ollama
