@@ -1,0 +1,113 @@
+---
+title: 安装工具如何选择和安装组件
+description: 安装工具从 index.json 选择组件、排定顺序、装好后检查时要遵守的规则，以及用来测试安装工具的用例。
+source: "070a2deaa0c8"
+---
+
+安装工具从某个[版本](releases.mdx)读取 `index.json`，再决定安装哪些组件。本页列出选择的规则。Zeabur Installer 按这些规则选择。其他安装工具只要遵守同样的规则，同一份配置就会选出同样的组件。每条规则在 `conformance/select/` 都有一个测试用例，用法见本页最后一节。
+
+## 安装工具需要的数据
+
+- 一个 catalog 版本的 `index.json`。
+- profile，即 `single-node` 或 `multi-node`。
+- 发行版，即 `k3s`、`rke2` 或 `kubesolo`。
+- 用户写的 `enable` 和 `disable` 列表。每一项可以是组件 ID（例如 `logs/victoria-logs`），也可以是 capability（例如 `logs`）。
+
+## 名称
+
+组件 ID 指的就是那个组件。写 capability 时，安装工具从这个 capability 下、在当前 profile 不是 `unsupported` 的组件里选一个。选法是按下列顺序排好，取第一个。
+
+1. `testedOn` 列有当前发行版的组件排前面。
+2. 然后是当前 profile `recommended` 的组件。
+3. 最后按 ID 排序。
+
+名称对不上任何 capability 或组件 ID 时，不管写在 `enable` 还是 `disable`，都会报错。
+
+## 选择组件
+
+安装工具按顺序执行下面几步。
+
+1. 先取当前 profile 所有 `recommended` 的组件，这些是**默认组件**。安装工具可以用 ID 或 capability 再加上自己需要的组件，这些组件也算默认组件。
+2. 加入 `enable` 列出的组件，这些是**启用的组件**。
+3. 去掉 `disable` 列出的组件，这些是**停用的组件**。写组件 ID 就去掉那个组件，写 capability 就去掉这个 capability 下所有已选的组件。名称存在但没对上已选的组件时，什么都不做。
+4. 去掉在这里装不了的组件，这些是**排除的组件**。每个排除的组件都要附上原因。测试用例用下表的代码表示原因，怎么向用户说明，由安装工具自己决定。
+
+   | 情况 | 代码 | 是否排除 |
+   | --- | --- | --- |
+   | 有 `distributions`，但没有列当前发行版 | `distributions` | 一律排除。启用的组件另外显示 `left-out` 警告 |
+   | 当前 profile 的 `defaults` 是 `unsupported` | `unsupported` | 一律排除。启用的组件另外显示 `left-out` 警告 |
+   | `testedOn` 没有列当前发行版 | `untested` | 只排除默认组件。启用的组件照样安装，并显示 `untested` 警告 |
+5. 按 ID 顺序遍历已选的组件，取每个组件在当前 profile 的 `installOrder`，排出**安装顺序**。`installOrder` 先列它需要的组件，最后是它自己。结果里还没有的 ID 就依次加进去。结果里没有被选中的组件，是因为其他组件需要才安装的。
+
+   加入一个组件的列表之前，先检查列表里每个没停用的 ID。catalog 有这个组件，但它的 `testedOn` 没有列当前发行版时，默认组件会被排除，代码是 `needs-untested`，并指出是哪个依赖组件。启用的组件照样加入列表，并对这个依赖组件显示 `untested` 警告。列表里有停用或排除的 ID 时，也会报错。
+
+选择的结果有三部分：
+
+- 按安装顺序排好的组件，以及各自的安装原因：`default`、`enabled` 或 `dependency`。
+- 排除的组件和原因。
+- 警告。
+
+每个 `installOrder` 都已经把组件排在它需要的组件之后，所以结果也是这样。`enable` 和 `disable` 怎么排列，都不影响结果。
+
+## 错误
+
+遇到下列错误时，安装工具会停下来，什么都不装。`kind` 是测试用例里的错误名称。
+
+| `kind` | 情况 | 要告诉用户 |
+| --- | --- | --- |
+| `unknown` | 名称对不上任何 capability 或组件 ID | 这个名称 |
+| `replaced` | `enable` 或 `disable` 写的 ID 已由其他组件接手，见下一节 | 要改写的新 ID |
+| `needs-disabled` | 已选的组件需要的组件已停用或排除 | 两个组件的名称 |
+
+## 接手旧组件
+
+组件接手了 catalog 已移除的组件时，用 `replaces` 列出旧 ID。例如 zot 现在随 Zeabur Builder 一起安装，所以 `builds/zeabur-builder` 写了 `replaces: [container-registry/zot]`。现有组件的 ID 不会出现在其他组件的 `replaces` 里。
+
+安装工具不会自动替用户换掉组件。`enable` 或 `disable` 写了旧 ID 会报错，错误信息会给出新 ID，让用户自己改配置文件。
+
+`replaces` 不是必填项。不读这个字段的安装工具遇到旧 ID 时，会报告找不到。
+
+## 安装与检查
+
+按结果的顺序安装组件，并移除结果里没有的已装组件。每个组件的 releases、固定内容的 digest，以及安装工具会读取的其他字段，见[组件文件格式](component-format.mdx)。
+
+组件装好后，每项 `health` 检查各运行一次 `kubectl wait`。`wait` 的每一项各是一个参数，最后再加上 `--timeout=<timeout>`，例如：
+
+```sh
+kubectl wait --for=condition=Ready nodes.longhorn.io --all -n longhorn-system --timeout=60s
+```
+
+安装工具可以用自己的等待时间代替 `timeout`。例如 `zeabur-installer apply` 刚装完时最多等 5 分钟，`zeabur-installer doctor` 则用每项检查自己的 `timeout`。检查失败时，显示它的 `advice`。
+
+## 测试用例
+
+上面每条规则在 `conformance/select/` 都有一个用例。这个目录在仓库里，也包含在 `bundle.tar.gz` 中，所以固定某个 catalog commit 或版本的安装工具，读到的就是那个版本的用例。格式定义在 [`schema/v1/select-case.schema.json`](https://github.com/zeabur-oss/catalog/blob/main/schema/v1/select-case.schema.json)。
+
+```yaml
+description: A default not tested on the distribution is left out with a reason.
+components:            # index.json components, with only the fields selection reads
+  - id: ingress/traefik
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, rke2, kubesolo]
+  - id: logs/victoria-logs
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, kubesolo]
+config:
+  profile: multi-node
+  distribution: rke2
+  # add: what the installer adds to the defaults
+  # enable, disable: the person's lists
+want:
+  components:          # in install order
+    - {id: ingress/traefik, why: default}
+  leftOut:
+    logs/victoria-logs: {reason: untested, distribution: rke2}
+  # warnings: [{kind: untested, component: …, distribution: …}], in any order
+  # error: {kind: unknown, name: …}, in place of the rest
+```
+
+运行用例的步骤如下。
+
+1. 用 `components` 建立索引。每个组件的 capability 是 ID 斜杠前的部分。某个 profile 没有 `installOrder` 时，只装组件本身。没有 `distributions` 时，任何发行版都可以。
+2. 按 `config` 选择组件。
+3. 和 `want` 比对。`want` 没写的列表或映射就是空的。原因、警告和错误都比对代码和字段，不比对安装工具显示的文字。

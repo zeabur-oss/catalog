@@ -86,6 +86,9 @@ func Check(root string, cat *Catalog) error {
 			}
 		}
 	}
+	for _, p := range cat.replaceProblems() {
+		fail("components", "%s", p)
+	}
 	for _, p := range Profiles {
 		var ids []string
 		for _, c := range cat.Components {
@@ -98,6 +101,24 @@ func Check(root string, cat *Catalog) error {
 		}
 	}
 	return errors.Join(errs...)
+}
+
+// replaceProblems checks that each id in replaces is no component now and
+// that only one component replaces it.
+func (cat *Catalog) replaceProblems() []string {
+	var problems []string
+	replacedBy := map[string]string{}
+	for _, c := range cat.Components {
+		for _, old := range c.Replaces {
+			if _, ok := cat.Get(old); ok {
+				problems = append(problems, fmt.Sprintf("%s replaces %s, which is still a component", c.ID, old))
+			} else if other, ok := replacedBy[old]; ok {
+				problems = append(problems, fmt.Sprintf("%s replaces %s, which %s replaces too", c.ID, old, other))
+			}
+			replacedBy[old] = c.ID
+		}
+	}
+	return problems
 }
 
 // provisionProblems checks what provides, internalCRDs, generated inputs and

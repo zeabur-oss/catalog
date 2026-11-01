@@ -1,0 +1,14 @@
+description: A component unsupported on the profile is left out. When enable names it, a warning says so.
+components:
+  - id: replicated-storage/longhorn
+    defaults: {single-node: unsupported, multi-node: recommended}
+    testedOn: [k3s, rke2]
+config:
+  profile: single-node
+  distribution: k3s
+  enable: [replicated-storage/longhorn]
+want:
+  leftOut:
+    replicated-storage/longhorn: {reason: unsupported, profile: single-node}
+  warnings:
+    - {kind: left-out, component: replicated-storage/longhorn}

@@ -1,0 +1,17 @@
+description: The components recommended for the profile are installed. Optional and unsupported ones are not.
+components:
+  - id: ingress/traefik
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, rke2, kubesolo]
+  - id: logs/victoria-logs
+    defaults: {single-node: optional, multi-node: recommended}
+    testedOn: [k3s, rke2, kubesolo]
+  - id: replicated-storage/longhorn
+    defaults: {single-node: unsupported, multi-node: recommended}
+    testedOn: [k3s, rke2]
+config:
+  profile: single-node
+  distribution: k3s
+want:
+  components:
+    - {id: ingress/traefik, why: default}

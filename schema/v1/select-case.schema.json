@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zeabur-oss/catalog/schema/v1/select-case.schema.json",
+  "title": "Selection case",
+  "description": "One case of conformance/select/: a small catalog, an installer configuration and the components an installer chooses. docs/reference/installers.mdx gives the rules.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["description", "components", "config", "want"],
+  "properties": {
+    "description": { "type": "string", "description": "The rule the case checks, in one or two sentences." },
+    "components": {
+      "type": "array",
+      "description": "The catalog: index.json components with only the fields selection reads. The capability is the part of the id before the slash.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "defaults", "testedOn"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "defaults": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["single-node", "multi-node"],
+            "properties": {
+              "single-node": { "enum": ["recommended", "optional", "unsupported"] },
+              "multi-node": { "enum": ["recommended", "optional", "unsupported"] }
+            }
+          },
+          "distributions": { "$ref": "#/$defs/distributions", "description": "Omitted means any distribution." },
+          "testedOn": { "$ref": "#/$defs/distributions" },
+          "installOrder": {
+            "type": "object",
+            "description": "Per profile. A profile left out means the component alone.",
+            "additionalProperties": false,
+            "properties": {
+              "single-node": { "$ref": "#/$defs/ids" },
+              "multi-node": { "$ref": "#/$defs/ids" }
+            }
+          },
+          "replaces": { "$ref": "#/$defs/ids" }
+        }
+      }
+    },
+    "config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile", "distribution"],
+      "properties": {
+        "profile": { "enum": ["single-node", "multi-node"] },
+        "distribution": { "enum": ["k3s", "rke2", "kubesolo"] },
+        "add": { "$ref": "#/$defs/names", "description": "What the installer adds to the defaults." },
+        "enable": { "$ref": "#/$defs/names" },
+        "disable": { "$ref": "#/$defs/names" }
+      }
+    },
+    "want": {
+      "type": "object",
+      "description": "Either the selection or an error. A list or map left out is empty.",
+      "additionalProperties": false,
+      "properties": {
+        "components": {
+          "type": "array",
+          "description": "In install order.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "why"],
+            "properties": {
+              "id": { "$ref": "#/$defs/id" },
+              "why": { "enum": ["default", "enabled", "dependency"] }
+            }
+          }
+        },
+        "leftOut": {
+          "type": "object",
+          "description": "Component id to why it is left out.",
+          "propertyNames": { "$ref": "#/$defs/id" },
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["reason", "distributions"],
+                "properties": { "reason": { "const": "distributions" }, "distributions": { "$ref": "#/$defs/distributions" } }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["reason", "profile"],
+                "properties": { "reason": { "const": "unsupported" }, "profile": { "enum": ["single-node", "multi-node"] } }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["reason", "distribution"],
+                "properties": { "reason": { "const": "untested" }, "distribution": { "type": "string" } }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["reason", "dependency", "distribution"],
+                "properties": { "reason": { "const": "needs-untested" }, "dependency": { "$ref": "#/$defs/id" }, "distribution": { "type": "string" } }
+              }
+            ]
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "description": "In any order.",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "component", "distribution"],
+                "properties": { "kind": { "const": "untested" }, "component": { "$ref": "#/$defs/id" }, "distribution": { "type": "string" } }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "component"],
+                "properties": { "kind": { "const": "left-out" }, "component": { "$ref": "#/$defs/id" } }
+              }
+            ]
+          }
+        },
+        "error": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "name"],
+              "properties": { "kind": { "const": "unknown" }, "name": { "type": "string" } }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "old", "new"],
+              "properties": { "kind": { "const": "replaced" }, "old": { "$ref": "#/$defs/id" }, "new": { "$ref": "#/$defs/id" } }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "component", "dependency"],
+              "properties": { "kind": { "const": "needs-disabled" }, "component": { "$ref": "#/$defs/id" }, "dependency": { "$ref": "#/$defs/id" } }
+            }
+          ]
+        }
+      },
+      "not": { "required": ["error", "components"] }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+$" },
+    "ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "names": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z0-9-]+(/[a-z0-9-]+)?$" } },
+    "distributions": { "type": "array", "uniqueItems": true, "items": { "enum": ["k3s", "rke2", "kubesolo"] } }
+  }
+}

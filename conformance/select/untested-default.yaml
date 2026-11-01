@@ -1,0 +1,16 @@
+description: A default not tested on the distribution is left out with a reason.
+components:
+  - id: ingress/traefik
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, rke2, kubesolo]
+  - id: logs/victoria-logs
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, kubesolo]
+config:
+  profile: multi-node
+  distribution: rke2
+want:
+  components:
+    - {id: ingress/traefik, why: default}
+  leftOut:
+    logs/victoria-logs: {reason: untested, distribution: rke2}

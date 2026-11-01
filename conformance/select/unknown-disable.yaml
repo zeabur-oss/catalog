@@ -1,0 +1,11 @@
+description: A disable name that is no capability or component id in the catalog is an error.
+components:
+  - id: ingress/traefik
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, rke2, kubesolo]
+config:
+  profile: multi-node
+  distribution: k3s
+  disable: [ingress/nginx]
+want:
+  error: {kind: unknown, name: ingress/nginx}

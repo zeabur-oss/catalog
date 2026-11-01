@@ -25,6 +25,8 @@ defaults:
 persistsData: true
 # zot's certificates.
 requires: [certificates]
+# zot was its own component before it came with Builder.
+replaces: [container-registry/zot]
 resources:
   # buildkitd running one small Railpack build, pushing to zot.
   workMemoryMiB: 500

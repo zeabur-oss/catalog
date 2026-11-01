@@ -47,6 +47,7 @@ maturity: independent             # cncf-graduated | cncf-incubating | cncf-sand
 defaults: {single-node: recommended, multi-node: recommended}
 requires: [certificates]          # installed first
 distributions: [k3s]              # optional; distributions to test it on, omitted means all
+replaces: [container-registry/zot] # optional; ids of removed components it took over
 
 releases:                         # installed in order
   - name: traefik
@@ -123,6 +124,8 @@ health:
 ```
 
 `distributions` 和 `testedOn` 是两份不同的列表。组件文件里的 `distributions` 列出要在哪些发行版上测试这个组件；`index.json` 里的 `testedOn` 列出测试通过的发行版，版本以 `config/kubernetes.yaml` 固定的为准。安装工具会读取 `testedOn`，只在测试通过的发行版上提供这个组件。`testedOn` 由 `catalog index` 从 `measurements/` 生成，无需手写。每个组件都有这个字段，可以是空列表。
+
+`replaces` 列出这个组件接手的旧组件 ID，这些组件已从 catalog 移除，例如 `builds/zeabur-builder` 的 `container-registry/zot`。配置文件写了旧 ID 时，安装工具会提示用户改写新 ID。现有组件的 ID 不能出现在其他组件的 `replaces` 里。`catalog validate` 会检查这一点。完整规则见[安装工具如何选择和安装组件](installers.mdx)。
 
 `networkPolicies` 给默认拦截每个命名空间入站流量的安装工具用。内容是组件自己命名空间里的标准 NetworkPolicy 对象，这类安装工具会在安装 releases 前应用，放行组件需要从其他地方进来的流量。其他安装工具可以忽略它。`catalog validate` 会检查每个对象都是组件命名空间里的 NetworkPolicy。
 

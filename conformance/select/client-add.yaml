@@ -1,0 +1,18 @@
+description: >
+  A client may add components it needs on top of the defaults. They count as
+  defaults. A capability name with no recommended component resolves to the
+  first optional one in id order.
+components:
+  - id: databases/cloudnative-pg
+    defaults: {single-node: optional, multi-node: optional}
+    testedOn: [k3s, rke2, kubesolo]
+  - id: databases/percona
+    defaults: {single-node: optional, multi-node: optional}
+    testedOn: [k3s, rke2, kubesolo]
+config:
+  profile: multi-node
+  distribution: rke2
+  add: [databases]
+want:
+  components:
+    - {id: databases/cloudnative-pg, why: default}

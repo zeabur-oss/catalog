@@ -1,0 +1,17 @@
+description: A chosen component that needs a disabled component is an error.
+components:
+  - id: certificates/cert-manager
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, rke2, kubesolo]
+  - id: ingress/traefik
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, rke2, kubesolo]
+    installOrder:
+      single-node: [certificates/cert-manager, ingress/traefik]
+      multi-node: [certificates/cert-manager, ingress/traefik]
+config:
+  profile: multi-node
+  distribution: k3s
+  disable: [certificates]
+want:
+  error: {kind: needs-disabled, component: ingress/traefik, dependency: certificates/cert-manager}

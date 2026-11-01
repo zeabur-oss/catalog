@@ -1,0 +1,40 @@
+description: >
+  The install order is each chosen component's installOrder, taken in id order,
+  with each component once. A component only another one needs is installed as
+  a dependency.
+components:
+  - id: builds/zeabur-builder
+    defaults: {single-node: optional, multi-node: optional}
+    testedOn: [k3s, rke2, kubesolo]
+    installOrder:
+      single-node: [certificates/cert-manager, builds/zeabur-builder]
+      multi-node: [certificates/cert-manager, builds/zeabur-builder]
+  - id: certificates/cert-manager
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, rke2, kubesolo]
+  - id: ingress/traefik
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, rke2, kubesolo]
+    installOrder:
+      single-node: [certificates/cert-manager, ingress/traefik]
+      multi-node: [certificates/cert-manager, ingress/traefik]
+  - id: logs/victoria-logs
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, rke2, kubesolo]
+    installOrder:
+      single-node: [observability-operator/victoria-metrics-operator, logs/victoria-logs]
+      multi-node: [observability-operator/victoria-metrics-operator, logs/victoria-logs]
+  - id: observability-operator/victoria-metrics-operator
+    defaults: {single-node: optional, multi-node: optional}
+    testedOn: [k3s, rke2, kubesolo]
+config:
+  profile: multi-node
+  distribution: rke2
+  enable: [builds/zeabur-builder]
+want:
+  components:
+    - {id: certificates/cert-manager, why: default}
+    - {id: builds/zeabur-builder, why: enabled}
+    - {id: ingress/traefik, why: default}
+    - {id: observability-operator/victoria-metrics-operator, why: dependency}
+    - {id: logs/victoria-logs, why: default}

@@ -12,6 +12,7 @@
     template-format: 範本檔案格式
     template-standards: 範本標準
     releases: 版本與套件包
+    installers: 安裝工具如何選擇和安裝元件
     licenses: 授權
 - group: contribute
   label: 貢獻

@@ -1,0 +1,17 @@
+description: >
+  distributions is a hard limit. A component is left out on any other
+  distribution. When enable names it, a warning says so.
+components:
+  - id: node-updates/system-upgrade-controller
+    defaults: {single-node: optional, multi-node: optional}
+    distributions: [k3s, rke2]
+    testedOn: [k3s, rke2]
+config:
+  profile: single-node
+  distribution: kubesolo
+  enable: [node-updates/system-upgrade-controller]
+want:
+  leftOut:
+    node-updates/system-upgrade-controller: {reason: distributions, distributions: [k3s, rke2]}
+  warnings:
+    - {kind: left-out, component: node-updates/system-upgrade-controller}

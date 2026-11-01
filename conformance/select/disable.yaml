@@ -1,0 +1,23 @@
+description: >
+  disable takes out a default by its capability or its id. Naming a known
+  component that is not chosen is not an error.
+components:
+  - id: ingress/traefik
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, rke2, kubesolo]
+  - id: logs/victoria-logs
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, rke2, kubesolo]
+  - id: metrics/metrics-server
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn: [k3s, rke2, kubesolo]
+  - id: uptime-probes/gatus
+    defaults: {single-node: optional, multi-node: optional}
+    testedOn: [k3s, rke2, kubesolo]
+config:
+  profile: multi-node
+  distribution: k3s
+  disable: [logs, metrics/metrics-server, uptime-probes]
+want:
+  components:
+    - {id: ingress/traefik, why: default}
