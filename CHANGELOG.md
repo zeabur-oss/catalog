@@ -1,31 +1,6 @@
 # Changelog
 
-All notable changes to this catalog are documented in this file.
-
-## Unreleased
-
-### Added
-
-- `builds/zeabur-builder` installs Zeabur Builder 0.1.1 together with the zot registry it pushes to, so the two are added and removed as one component.
-- The `k3s` and `rke2` e2e profiles install k3s v1.36.5+k3s1 and RKE2 v1.36.5+rke2r1 on the runner, the releases Zeabur Installer pins. Their measurements are keyed `k3s-<architecture>-<version>` and `rke2-<architecture>-<version>`.
-- `index.json` gives each component `testedOn`, the distributions among k3s, RKE2 and KubeSolo where its e2e test passed at the pinned version. A failed run marks its environment `failed` in `measurements/`. The distribution then stays out of `testedOn` until a run passes again, and `measured` in the index leaves the environment out.
-- A component's `health` lists read-only checks that an installer can run on a cluster. Each is one `kubectl wait`, with a timeout and advice for when it fails. e2e runs them after install. Longhorn, cert-manager, Traefik and metrics-server have them.
-
-### Changed
-
-- The `kubesolo` profile pins KubeSolo v1.2.3, which keeps a Job's `nodeSelector`, and tests the `databases` capability.
-- The `kubesolo` profile, like `k3s` and `rke2`, tests every component that single-node supports and whose `distributions` include it. `distributions` now lists the distributions to test a component on, and `testedOn` the ones where that test passed.
-- Traefik's smoke check of its GatewayClass is now a health check.
-
-### Fixed
-
-- `databases/mariadb-operator` turns off client-go's streaming list. On a new KubeSolo cluster its controllers started too late to sync their caches, so a MariaDB object was never reconciled.
-
-### Removed
-
-- `container-registry/zot`. zot only serves Builder's images and now comes with `builds/zeabur-builder`.
-- KubeSolo from Longhorn's `distributions`.
-- The hand-written `capabilities` list of the `kubesolo` block in `config/kubernetes.yaml`.
+All notable changes to this catalog are documented in this file; each section comes from the change files in `.changeset/` (CONTRIBUTING.md, "Releases").
 
 ## 0.1.1 (2026-10-28)
 
