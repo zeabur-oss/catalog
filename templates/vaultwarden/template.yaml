@@ -7,6 +7,12 @@ metadata:
   description: >-
     Vaultwarden, a Bitwarden-compatible password manager server, with SQLite
     on a persistent volume. Sign-up is closed; the administrator invites users.
+  summary: A Bitwarden-compatible password manager; sign-up is closed and the admin invites people.
+  locales:
+    zh-TW:
+      summary: "相容 Bitwarden 的密碼管理器，不開放註冊，由管理員邀請使用者。"
+    zh-CN:
+      summary: "兼容 Bitwarden 的密码管理器，不开放注册，由管理员邀请用户。"
   # Server AGPL-3.0-only; the bundled web vault (dani-garcia/bw_web_builds,
   # built from the Bitwarden clients) GPL-3.0-only.
   license: AGPL-3.0-only AND GPL-3.0-only

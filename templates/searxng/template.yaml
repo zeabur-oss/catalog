@@ -7,6 +7,12 @@ metadata:
   description: >-
     Privacy-respecting metasearch with generated signing secret and HTML/JSON
     search.
+  summary: A private metasearch engine.
+  locales:
+    zh-TW:
+      summary: "注重隱私的整合搜尋引擎。"
+    zh-CN:
+      summary: "注重隐私的元搜索引擎。"
   license: AGPL-3.0-or-later
   homepage: https://github.com/searxng/searxng
   icon: https://github.com/searxng.png

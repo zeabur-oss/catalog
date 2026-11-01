@@ -13,6 +13,12 @@ metadata:
     (https://github.com/dragonflydb/dragonfly/blob/main/LICENSE.md): offering
     it to third parties as a hosted service or in-memory data store product
     needs a separate license.
+  summary: A platform for building LLM apps, with PostgreSQL, a queue, a code sandbox and S3 storage.
+  locales:
+    zh-TW:
+      summary: "開發 LLM 應用程式的平台，內含 PostgreSQL、佇列、程式碼沙箱和 S3 儲存空間。"
+    zh-CN:
+      summary: "构建 LLM 应用的平台，内含 PostgreSQL、队列、代码沙箱和 S3 存储。"
   license: LicenseRef-Dify-Modified-Apache-2.0 AND BUSL-1.1 AND Apache-2.0 AND PostgreSQL
   # Also: https://github.com/langgenius/dify-sandbox, https://cloudnative-pg.io/docs/, https://github.com/dragonflydb/dragonfly, https://github.com/dragonflydb/dragonfly-operator
   homepage: https://github.com/langgenius/dify

@@ -5,6 +5,12 @@ metadata:
   # renovate: depName=docker.io/ollama/ollama
   version: "0.40.11"
   description: Private CPU-only local model runtime. The API has no public ingress.
+  summary: Runs local models on the CPU; its API is reachable only inside the cluster.
+  locales:
+    zh-TW:
+      summary: "在 CPU 上執行本機模型，API 只能從叢集內連線。"
+    zh-CN:
+      summary: "在 CPU 上运行本地模型，API 只能从集群内访问。"
   license: MIT
   homepage: https://github.com/ollama/ollama
   categories: [ai]

@@ -9,6 +9,12 @@ metadata:
     Licensed under the n8n Sustainable Use License
     (https://docs.n8n.io/sustainable-use-license/): internal business,
     personal or noncommercial use only.
+  summary: Workflow automation for AI, with PostgreSQL and isolated code runners.
+  locales:
+    zh-TW:
+      summary: "為 AI 準備的工作流程自動化，搭配 PostgreSQL 和隔離的程式碼執行器。"
+    zh-CN:
+      summary: "面向 AI 的工作流自动化，搭配 PostgreSQL 和隔离的代码执行器。"
   license: LicenseRef-n8n-Sustainable-Use AND PostgreSQL AND Apache-2.0
   # Also: https://cloudnative-pg.io/
   homepage: https://github.com/n8n-io/n8n

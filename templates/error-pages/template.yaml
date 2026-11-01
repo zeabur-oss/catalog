@@ -8,6 +8,12 @@ metadata:
     Serves a maintenance page and error pages (404, 502, 503, 504) from HTML in a
     ConfigMap, for Traefik errors middlewares and Ingress or HTTPRoute backends
     in the same namespace.
+  summary: Shows a maintenance page and error pages for the project's domains.
+  locales:
+    zh-TW:
+      summary: "為專案的網域顯示維護頁面和錯誤頁面。"
+    zh-CN:
+      summary: "为项目的域名显示维护页面和错误页面。"
   license: BSD-2-Clause AND Apache-2.0
   # Also: https://github.com/nginx/docker-nginx-unprivileged
   homepage: https://nginx.org/

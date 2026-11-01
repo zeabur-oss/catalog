@@ -9,6 +9,7 @@ Zeabur Catalog 的每个模板都必须符合以下规则。新增或修改模�
 ## `template.yaml`
 
 - `metadata` 必须列出应用名称、许可证、主页与分类。
+- `metadata.summary` 用一句大白话说明这是什么应用，给挑选模板的人看。`zh-TW` 与 `zh-CN` 的摘要写在 `metadata.locales`。
 - 每个服务都必须指定安全 profile（`restricted` 或 `baseline`）、资源请求与上限，以及端口。服务名称必须与对应的 Deployment、StatefulSet 或数据库对象名称相同。服务的 CPU 与内存数值必须是该对象所有容器的总和，端口则必须对应容器的命名端口。`catalog template lint` 会检查资源总和与端口。
 - `security`、`scalability` 与 `upgradeNotes` 必须说明管理员在部署前需要知道的信息，包括风险与降低风险的措施、副本数范围与限制增加副本的因素，以及升级所需的步骤。
 - `smoke` 必须包含能证明应用正常运行的冒烟测试（smoke check），包括资源状态条件，以及对运行中服务的 HTTP 或 SQL 检查。

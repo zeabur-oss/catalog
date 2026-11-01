@@ -9,6 +9,12 @@ metadata:
     private community Meilisearch. The Percona MongoDB server is SSPL-1.0
     (https://www.mongodb.com/legal/licensing/server-side-public-license); read
     section 13 on service-offering obligations before you offer this to others.
+  summary: An AI chat app with sign-in, MongoDB, PostgreSQL for document search and Meilisearch.
+  locales:
+    zh-TW:
+      summary: "需要登入的 AI 聊天應用程式，搭配 MongoDB、用來搜尋文件的 PostgreSQL 和 Meilisearch。"
+    zh-CN:
+      summary: "需要登录的 AI 聊天应用，搭配 MongoDB、用于文档检索的 PostgreSQL 和 Meilisearch。"
   license: MIT AND SSPL-1.0 AND PostgreSQL AND Apache-2.0
   # Also: https://github.com/danny-avila/rag_api, https://github.com/percona/percona-server-mongodb-operator, https://cloudnative-pg.io/, https://github.com/meilisearch/meilisearch
   homepage: https://github.com/danny-avila/LibreChat

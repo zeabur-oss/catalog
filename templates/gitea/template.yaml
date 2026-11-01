@@ -7,6 +7,12 @@ metadata:
   description: >-
     Gitea Git hosting over HTTPS, with repositories and LFS objects on a
     persistent volume and PostgreSQL 18 managed by CloudNativePG.
+  summary: Git hosting, with repositories on a volume and PostgreSQL.
+  locales:
+    zh-TW:
+      summary: "Git 代管服務，儲存庫放在磁碟區，搭配 PostgreSQL。"
+    zh-CN:
+      summary: "Git 托管服务，仓库放在卷上，搭配 PostgreSQL。"
   license: MIT AND PostgreSQL AND Apache-2.0
   # Also: https://cloudnative-pg.io/
   homepage: https://about.gitea.com/

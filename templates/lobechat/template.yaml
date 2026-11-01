@@ -11,6 +11,12 @@ metadata:
     (https://github.com/lobehub/lobe-chat/blob/d718de7e1af2dd7281c4eaca70f627e4b9deddb1/LICENSE)
     allows unmodified commercial use; developing or distributing derivative
     works needs a commercial license.
+  summary: A chatbot interface that keeps chats in each browser, behind an access code.
+  locales:
+    zh-TW:
+      summary: "聊天機器人介面，對話存在各自的瀏覽器裡，用存取碼保護。"
+    zh-CN:
+      summary: "聊天机器人界面，对话存在各自的浏览器里，用访问码保护。"
   license: LicenseRef-LobeHub-Community
   # Also: https://github.com/lobehub/lobe-chat/blob/d718de7e1af2dd7281c4eaca70f627e4b9deddb1/LICENSE
   homepage: https://github.com/lobehub/lobe-chat

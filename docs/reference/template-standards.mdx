@@ -8,6 +8,7 @@ Every template in Zeabur Catalog must follow these rules. When you add or update
 ## `template.yaml`
 
 - `metadata` must list the application name, license, homepage, and category.
+- `metadata.summary` says what the application is in one plain sentence, for people choosing a template. Provide `zh-TW` and `zh-CN` summaries in `metadata.locales`.
 - Every service must specify a security profile (`restricted` or `baseline`), resource requests and limits, and ports. The service name must match the corresponding Deployment, StatefulSet, or database object name. The service's CPU and memory values must equal the totals across all containers in that object, and its ports must match the containers' named ports. `catalog template lint` checks resource totals and ports.
 - `security`, `scalability`, and `upgradeNotes` must cover what administrators need to know before deployment: risks and mitigations, the supported replica range and constraints on adding replicas, and the steps required to upgrade.
 - `smoke` must include smoke checks that prove the application works, including resource status conditions and HTTP or SQL checks against the running service.

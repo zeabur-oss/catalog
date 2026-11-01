@@ -6,6 +6,12 @@ metadata:
   version: "18-standard-trixie"
   description: >-
     CloudNativePG PostgreSQL 18 standard image with pgvector enabled.
+  summary: A PostgreSQL 18 database with pgvector.
+  locales:
+    zh-TW:
+      summary: "已啟用 pgvector 的 PostgreSQL 18 資料庫。"
+    zh-CN:
+      summary: "已启用 pgvector 的 PostgreSQL 18 数据库。"
   license: PostgreSQL AND Apache-2.0
   # Also: https://github.com/cloudnative-pg/postgres-containers, https://cloudnative-pg.io/
   homepage: https://github.com/pgvector/pgvector

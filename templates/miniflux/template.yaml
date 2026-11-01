@@ -7,6 +7,12 @@ metadata:
   description: >-
     Miniflux feed reader over HTTPS, with PostgreSQL 18 managed by
     CloudNativePG.
+  summary: A feed reader, with PostgreSQL.
+  locales:
+    zh-TW:
+      summary: "RSS 閱讀器，搭配 PostgreSQL。"
+    zh-CN:
+      summary: "RSS 阅读器，搭配 PostgreSQL。"
   license: Apache-2.0 AND PostgreSQL
   # Also: https://cloudnative-pg.io/
   homepage: https://miniflux.app/

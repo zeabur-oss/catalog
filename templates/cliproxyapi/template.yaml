@@ -7,6 +7,12 @@ metadata:
   description: >-
     Authenticated OpenAI/Gemini-compatible API proxy with private OAuth
     onboarding and management.
+  summary: An OpenAI- and Gemini-compatible API proxy, with keys and a management page.
+  locales:
+    zh-TW:
+      summary: "相容 OpenAI 與 Gemini 的 API 代理，附金鑰和管理頁面。"
+    zh-CN:
+      summary: "兼容 OpenAI 与 Gemini 的 API 代理，附密钥和管理页面。"
   license: MIT
   homepage: https://github.com/router-for-me/CLIProxyAPI
   icon: https://github.com/router-for-me.png
