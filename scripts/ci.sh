@@ -32,6 +32,12 @@ case "$job" in
   lint)
     shellcheck scripts/*.sh
     actionlint
+    unformatted=$(gofmt -l .)
+    if [[ -n "$unformatted" ]]; then
+      echo "gofmt -w these files:" >&2
+      echo "$unformatted" >&2
+      exit 1
+    fi
     bun install --frozen-lockfile
     bun fmt --check scripts/release.ts
     bun check scripts/

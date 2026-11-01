@@ -34,7 +34,7 @@ existing branch: `git rebase --signoff main`, then force-push.
 
 ## When tests run
 
-- **Every pull request (L0, about 5 minutes):** Go tests, schema and license
+- **Every pull request (L0, about 5 minutes):** Go formatting and tests, schema and license
   checks, rendering, template safety rules, and a dry run of every manifest
   against a real API server. Nothing is installed.
 - **After a merge to `main` (L1, about 15 to 20 minutes):** what you changed,
