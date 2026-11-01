@@ -43,7 +43,7 @@ type Metadata struct {
 }
 
 type Security struct {
-	Summary string              `yaml:"summary" json:"summary"`
+	Summary string `yaml:"summary" json:"summary"`
 	Locales map[string]struct {
 		Summary string `yaml:"summary" json:"summary"`
 	} `yaml:"locales" json:"locales,omitempty"`
