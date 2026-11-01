@@ -200,7 +200,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: runners
-          image: n8nio/runners:2.45.1@sha256:b31e505e6f41ce11388ce0a7ada5eebfb973d80cd58110ba7e8c087e4c478eee
+          image: n8nio/runners:2.45.3@sha256:c57f7d17c37e89fc8128c165063874db788b599ed9c5d263c7adc6d3b59a0477
           env:
             - {name: N8N_RUNNERS_TASK_BROKER_URI, value: 'http://n8n-broker:5679'}
             - name: N8N_RUNNERS_AUTH_TOKEN
