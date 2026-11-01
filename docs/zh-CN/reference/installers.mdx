@@ -39,7 +39,14 @@ source: "070a2deaa0c8"
    | `testedOn` 没有列当前发行版 | `untested` | 只排除默认组件。启用的组件照样安装，并显示 `untested` 警告 |
 5. 按 ID 顺序遍历已选的组件，取每个组件在当前 profile 的 `installOrder`，排出**安装顺序**。`installOrder` 先列它需要的组件，最后是它自己。结果里还没有的 ID 就依次加进去。结果里没有被选中的组件，是因为其他组件需要才安装的。
 
-   加入一个组件的列表之前，先检查列表里每个没停用的 ID。catalog 有这个组件，但它的 `testedOn` 没有列当前发行版时，默认组件会被排除，代码是 `needs-untested`，并指出是哪个依赖组件。启用的组件照样加入列表，并对这个依赖组件显示 `untested` 警告。依赖组件在第 4 步因为没测过而被排除时也一样。列表里有停用的 ID，或因为 `distributions`、`unsupported` 排除的 ID 时，会报错。
+   `installOrder` 里需要的组件，可能已停用、被排除或没测试过。结果取决于是谁需要它：
+
+   | 需要的组件 | 默认组件需要它 | 启用的组件需要它 |
+   | --- | --- | --- |
+   | 已停用，或因为 `distributions`、`unsupported` 排除 | 报错，代码是 `needs-disabled` | 报错，代码是 `needs-disabled` |
+   | `testedOn` 没有列当前发行版 | 这个默认组件也不装，代码是 `needs-untested`，并指出它需要哪个组件 | 照样安装需要的组件，并显示 `untested` 警告 |
+
+   例如 VictoriaLogs 需要 VictoriaMetrics operator，而 operator 只在 k3s 上测试过。在 rke2 上启用 VictoriaLogs，会连 operator 一起装，并提示 operator 在 rke2 上没测试过。VictoriaLogs 只是默认组件时，两个都不装。
 
 选择的结果有三部分：
 
@@ -57,7 +64,7 @@ source: "070a2deaa0c8"
 | --- | --- | --- |
 | `unknown` | 名称对不上任何 capability 或组件 ID | 这个名称 |
 | `replaced` | `enable` 或 `disable` 写的 ID 已由其他组件接手，见下一节 | 要改写的新 ID |
-| `needs-disabled` | 已选的组件需要的组件已停用或排除 | 两个组件的名称 |
+| `needs-disabled` | 已选的组件需要的组件已停用，或因为 `distributions`、`unsupported` 排除 | 两个组件的名称 |
 
 ## 接手旧组件
 
