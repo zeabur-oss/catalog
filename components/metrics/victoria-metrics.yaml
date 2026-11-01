@@ -19,6 +19,11 @@ maturity: independent
 alternatives:
   metrics-server: Serves live CPU and memory only; it is installed alongside for the metrics API.
   kube-prometheus-stack: An existing installation is reused, but its memory use keeps it from being recommended.
+resources:
+  # Peak over idle of vmsingle, vmagent, vmalert, alertmanager and the exporters on KubeSolo,
+  # with 10 pods logging every 100 ms and repeated 1 h range queries.
+  workMemoryMiB: 100
+
 defaults:
   single-node: recommended
   multi-node: recommended
