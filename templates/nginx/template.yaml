@@ -7,6 +7,12 @@ metadata:
   description: >-
     An unprivileged stateless NGINX web server with private service and Traefik
     HTTPS ingress.
+  summary: An NGINX web server over HTTPS.
+  locales:
+    zh-TW:
+      summary: "透過 HTTPS 提供服務的 NGINX 網頁伺服器。"
+    zh-CN:
+      summary: "通过 HTTPS 提供服务的 NGINX 网页服务器。"
   license: BSD-2-Clause AND Apache-2.0
   # Also: https://github.com/nginx/docker-nginx-unprivileged
   homepage: https://nginx.org/

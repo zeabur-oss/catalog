@@ -5,6 +5,12 @@ metadata:
   # renovate: depName=openlistteam/openlist
   version: "latest-aio"
   description: File listing and WebDAV with FFmpeg and authenticated local Aria2 downloads.
+  summary: File listing and WebDAV, with FFmpeg and Aria2 downloads.
+  locales:
+    zh-TW:
+      summary: "檔案列表與 WebDAV，內含 FFmpeg 和 Aria2 下載。"
+    zh-CN:
+      summary: "文件列表与 WebDAV，内含 FFmpeg 和 Aria2 下载。"
   license: AGPL-3.0-only
   homepage: https://github.com/OpenListTeam/OpenList
   icon: https://github.com/OpenListTeam.png

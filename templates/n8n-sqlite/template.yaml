@@ -9,6 +9,12 @@ metadata:
     persistence. Licensed under the n8n Sustainable Use License
     (https://docs.n8n.io/sustainable-use-license/): internal business, personal
     or noncommercial use only.
+  summary: Workflow automation with SQLite and separate code runners.
+  locales:
+    zh-TW:
+      summary: "工作流程自動化，資料存在 SQLite，搭配獨立的程式碼執行器。"
+    zh-CN:
+      summary: "工作流自动化，数据存在 SQLite，搭配独立的代码执行器。"
   license: LicenseRef-n8n-sustainable-use
   # Also: https://docs.n8n.io/hosting/, https://docs.n8n.io/sustainable-use-license/
   homepage: https://github.com/n8n-io/n8n

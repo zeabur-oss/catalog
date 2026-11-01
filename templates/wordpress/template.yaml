@@ -6,6 +6,12 @@ metadata:
   version: "php8.3-fpm-alpine"
   description: >-
     WordPress PHP 8.3 with TLS MariaDB Operator 11.4 LTS and preinstalled owner.
+  summary: WordPress, with MariaDB and an owner account ready.
+  locales:
+    zh-TW:
+      summary: "WordPress 網站，搭配 MariaDB，並先建好擁有者帳號。"
+    zh-CN:
+      summary: "WordPress 网站，搭配 MariaDB，并预先建好所有者账号。"
   license: GPL-2.0-or-later AND GPL-2.0-only AND BSD-2-Clause AND MIT
   # Also: https://github.com/docker-library/wordpress, https://mariadb.org/, https://github.com/nginx/docker-nginx-unprivileged, https://github.com/mariadb-operator/mariadb-operator
   homepage: https://wordpress.org/

@@ -7,6 +7,12 @@ metadata:
   description: >-
     Umami web analytics over HTTPS, with PostgreSQL 18 managed by
     CloudNativePG.
+  summary: Website analytics, with PostgreSQL.
+  locales:
+    zh-TW:
+      summary: "網站流量分析，搭配 PostgreSQL。"
+    zh-CN:
+      summary: "网站流量分析，搭配 PostgreSQL。"
   license: MIT AND PostgreSQL AND Apache-2.0
   # Also: https://cloudnative-pg.io/
   homepage: https://umami.is/

@@ -8,6 +8,12 @@ metadata:
     Authenticated LLM interface with private pipelines. Open WebUI's license
     (https://github.com/open-webui/open-webui/blob/main/LICENSE) requires you
     to keep its branding.
+  summary: A chat interface for LLMs with sign-in; its licence asks you to keep its branding.
+  locales:
+    zh-TW:
+      summary: "需要登入的 LLM 聊天介面，授權要求保留它的品牌標示。"
+    zh-CN:
+      summary: "需要登录的 LLM 聊天界面，许可要求保留其品牌标识。"
   license: LicenseRef-Open-WebUI AND MIT
   # Also: https://github.com/open-webui/pipelines
   homepage: https://github.com/open-webui/open-webui

@@ -8,6 +8,12 @@ metadata:
     OpenClaw (formerly Clawdbot, Moltbot) is a personal AI assistant that runs
     locally and connects to multiple messaging platforms (WhatsApp, Telegram,
     Slack, Discord, etc.) via a WebSocket-based Gateway architecture.
+  summary: A personal AI assistant that connects to WhatsApp, Telegram, Slack, Discord and more.
+  locales:
+    zh-TW:
+      summary: "個人 AI 助理，可以串接 WhatsApp、Telegram、Slack、Discord 等通訊軟體。"
+    zh-CN:
+      summary: "个人 AI 助手，可以连接 WhatsApp、Telegram、Slack、Discord 等通讯软件。"
   license: MIT
   # Also: https://docs.openclaw.ai/gateway/security
   homepage: https://github.com/openclaw/openclaw

@@ -5,6 +5,12 @@ metadata:
   # renovate: depName=louislam/uptime-kuma
   version: "2.5.7-rootless"
   description: Self-hosted uptime monitoring with persistent SQLite data.
+  summary: Uptime monitoring, with its data on a volume.
+  locales:
+    zh-TW:
+      summary: "監控服務是否正常上線，資料存在磁碟區。"
+    zh-CN:
+      summary: "监控服务是否正常在线，数据存在卷上。"
   license: MIT
   homepage: https://github.com/louislam/uptime-kuma
   icon: https://github.com/louislam.png

@@ -7,6 +7,12 @@ metadata:
   description: >-
     Ghost 6 publishing with a real MySQL dependency, persistent content and
     external SMTP.
+  summary: Ghost 6 for blogs and newsletters, with MySQL and your own SMTP server.
+  locales:
+    zh-TW:
+      summary: "Ghost 6 部落格與電子報，搭配 MySQL 和你自己的 SMTP 伺服器。"
+    zh-CN:
+      summary: "Ghost 6 博客与邮件通讯，搭配 MySQL 和你自己的 SMTP 服务器。"
   license: MIT AND GPL-2.0-only
   # Also: https://github.com/docker-library/mysql, https://github.com/TryGhost/ghost-docker
   homepage: https://github.com/TryGhost/Ghost

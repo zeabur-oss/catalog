@@ -5,6 +5,12 @@ metadata:
   # renovate: depName=neosmemo/memos
   version: "0.31.0"
   description: Memos note-taking service with SQLite on a persistent volume and a provisioned administrator.
+  summary: A note-taking app with SQLite on a volume and an admin account ready.
+  locales:
+    zh-TW:
+      summary: "筆記服務，資料用 SQLite 存在磁碟區，並先建好管理員帳號。"
+    zh-CN:
+      summary: "笔记服务，数据用 SQLite 存在卷上，并预先建好管理员账号。"
   license: MIT
   homepage: https://usememos.com/
   icon: https://github.com/usememos.png

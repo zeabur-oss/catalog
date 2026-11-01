@@ -10,6 +10,12 @@ metadata:
     litellm_enterprise package under the BerriAI Enterprise license
     (https://github.com/BerriAI/litellm/blob/main/enterprise/LICENSE.md),
     which allows production use only with a subscription.
+  summary: One proxy for many LLM providers, with keys, models and spend kept in PostgreSQL.
+  locales:
+    zh-TW:
+      summary: "用一個代理串接多家 LLM 服務，金鑰、模型和花費存在 PostgreSQL。"
+    zh-CN:
+      summary: "用一个代理接入多家 LLM 服务，密钥、模型和花费存在 PostgreSQL。"
   # enterprise/ and the bundled litellm_enterprise package use the BerriAI
   # Enterprise license; the rest of LiteLLM is MIT.
   license: MIT AND LicenseRef-LiteLLM-Enterprise AND PostgreSQL AND Apache-2.0

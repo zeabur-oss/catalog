@@ -10,6 +10,12 @@ metadata:
     automation capabilities. For one trusted owner and caller only: Chromium
     runs with --no-sandbox and CDP has no application authentication, so it
     gives no isolation from hostile pages or other users.
+  summary: A headless Chrome that OpenClaw or other services drive through the DevTools protocol.
+  locales:
+    zh-TW:
+      summary: "無頭 Chrome 沙箱，讓 OpenClaw 或其他服務透過 DevTools 協定操作。"
+    zh-CN:
+      summary: "无头 Chrome 沙箱，供 OpenClaw 或其他服务通过 DevTools 协议操作。"
   license: MIT
   # Also: https://docs.openclaw.ai/tools/browser
   homepage: https://github.com/canyugs/openclaw-sandbox-browser

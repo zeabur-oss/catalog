@@ -5,6 +5,12 @@ metadata:
   # renovate: depName=getmeili/meilisearch
   version: "v1.55.0"
   description: Meilisearch Community Edition search engine with a master key and indexes on a persistent volume.
+  summary: A fast search engine with a master key and indexes on a volume.
+  locales:
+    zh-TW:
+      summary: "快速的搜尋引擎，用主金鑰保護，索引存在磁碟區。"
+    zh-CN:
+      summary: "快速的搜索引擎，用主密钥保护，索引存在卷上。"
   # The getmeili/meilisearch image is built without the enterprise feature, so
   # it ships only the MIT-licensed code. Enterprise Edition code (BUSL-1.1) is
   # in getmeili/meilisearch-enterprise.

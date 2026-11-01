@@ -5,6 +5,12 @@ metadata:
   # renovate: depName=qdrant/qdrant
   version: "v1.20.0-unprivileged"
   description: Qdrant vector database with API key authentication and data on a persistent volume.
+  summary: A vector database with an API key and data on a volume.
+  locales:
+    zh-TW:
+      summary: "向量資料庫，用 API 金鑰保護，資料存在磁碟區。"
+    zh-CN:
+      summary: "向量数据库，用 API 密钥保护，数据存在卷上。"
   license: Apache-2.0
   homepage: https://qdrant.tech/
   icon: https://github.com/qdrant.png

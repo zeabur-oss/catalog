@@ -12,10 +12,18 @@
     "metadata": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "description", "version", "license", "homepage", "categories"],
+      "required": ["name", "description", "summary", "locales", "version", "license", "homepage", "categories"],
       "properties": {
         "name": { "$ref": "#/$defs/text", "description": "Name for people." },
         "description": { "$ref": "#/$defs/text", "description": "What the application does and how the template runs it, in one or two sentences." },
+        "summary": { "type": "string", "pattern": "^[^\\n]+$", "description": "What the application is, in one plain sentence for people choosing a template." },
+        "locales": {
+          "type": "object",
+          "description": "The summary in other languages.",
+          "additionalProperties": false,
+          "required": ["zh-TW", "zh-CN"],
+          "properties": { "zh-TW": { "$ref": "#/$defs/summaryLocale" }, "zh-CN": { "$ref": "#/$defs/summaryLocale" } }
+        },
         "license": { "$ref": "#/$defs/text", "description": "SPDX expression for the application, its images and charts." },
         "homepage": { "type": "string", "format": "uri", "pattern": "^https?://" },
         "version": { "type": "string", "description": "The application version: the tag of its main image. Objects get it as the label app.kubernetes.io/version." },

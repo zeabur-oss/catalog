@@ -7,6 +7,12 @@ metadata:
   description: >-
     OpenAI-compatible model gateway with secure initial owner provisioning and
     CloudNativePG PostgreSQL.
+  summary: An OpenAI-compatible model gateway with PostgreSQL and an owner account ready.
+  locales:
+    zh-TW:
+      summary: "相容 OpenAI 的模型閘道，搭配 PostgreSQL，並先建好擁有者帳號。"
+    zh-CN:
+      summary: "兼容 OpenAI 的模型网关，搭配 PostgreSQL，并预先建好所有者账号。"
   license: AGPL-3.0-only AND PostgreSQL AND Apache-2.0
   # Also: https://docs.newapi.pro/
   homepage: https://github.com/QuantumNous/new-api

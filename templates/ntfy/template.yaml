@@ -7,6 +7,12 @@ metadata:
   description: >-
     ntfy push notification server over HTTP. Topics need an account, and the
     message cache, users and attachments are on a persistent volume.
+  summary: A push notification server where topics need an account and messages stay on a volume.
+  locales:
+    zh-TW:
+      summary: "推播通知伺服器，主題需要帳號，訊息存在磁碟區。"
+    zh-CN:
+      summary: "推送通知服务器，主题需要账号，消息存在卷上。"
   license: Apache-2.0 OR GPL-2.0-only
   homepage: https://ntfy.sh/
   icon: https://github.com/binwiederhier/ntfy/raw/main/web/public/static/images/ntfy.png

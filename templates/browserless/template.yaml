@@ -10,6 +10,12 @@ metadata:
     (https://github.com/browserless/browserless/blob/main/LICENSE), which is
     not OSI-approved; closed-source commercial sites, apps or CI may need a
     commercial license.
+  summary: A headless Chrome that your automation tools drive with a token.
+  locales:
+    zh-TW:
+      summary: "讓自動化工具用權杖操作的無頭 Chrome 瀏覽器。"
+    zh-CN:
+      summary: "让自动化工具用令牌操作的无头 Chrome 浏览器。"
   license: SSPL-1.0 OR LicenseRef-Browserless-Commercial
   # Also: https://docs.browserless.io/
   homepage: https://github.com/browserless/browserless

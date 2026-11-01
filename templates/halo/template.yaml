@@ -6,6 +6,12 @@ metadata:
   version: "2.27.1"
   description: >-
     Halo publishing with persistent site assets and CloudNativePG PostgreSQL 16.
+  summary: Halo for websites and blogs, with PostgreSQL.
+  locales:
+    zh-TW:
+      summary: "Halo 網站與部落格系統，搭配 PostgreSQL。"
+    zh-CN:
+      summary: "Halo 建站与博客系统，搭配 PostgreSQL。"
   license: GPL-3.0-only AND PostgreSQL
   # Also: https://cloudnative-pg.io/
   homepage: https://github.com/halo-dev/halo

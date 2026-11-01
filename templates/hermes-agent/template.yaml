@@ -7,6 +7,12 @@ metadata:
   description: >-
     Hermes gateway, authenticated API and protected dashboard with
     OpenRouter or another OpenAI-compatible provider.
+  summary: The Hermes AI agent with an API and a dashboard, using OpenRouter or another OpenAI-compatible provider.
+  locales:
+    zh-TW:
+      summary: "Hermes AI 代理，附 API 和管理面板，可接 OpenRouter 或其他相容 OpenAI 的服務。"
+    zh-CN:
+      summary: "Hermes AI 智能体，附 API 和管理面板，可接 OpenRouter 或其他兼容 OpenAI 的服务。"
   license: MIT
   homepage: https://github.com/NousResearch/hermes-agent
   icon: https://raw.githubusercontent.com/NousResearch/hermes-agent/main/website/static/img/logo.png

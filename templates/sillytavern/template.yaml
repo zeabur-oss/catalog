@@ -7,6 +7,12 @@ metadata:
   description: >-
     Private LLM frontend with generated Basic authentication and persistent
     conversations.
+  summary: An LLM chat frontend behind a password, with conversations kept on a volume.
+  locales:
+    zh-TW:
+      summary: "用密碼保護的 LLM 聊天前端，對話存在磁碟區。"
+    zh-CN:
+      summary: "用密码保护的 LLM 聊天前端，对话存在卷上。"
   license: AGPL-3.0-only
   homepage: https://github.com/SillyTavern/SillyTavern
   icon: https://github.com/SillyTavern.png
