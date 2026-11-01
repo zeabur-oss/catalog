@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: Error pages
   # renovate: depName=docker.io/nginxinc/nginx-unprivileged
-  version: "1.30.5-alpine-slim"
+  version: "1.31.7-alpine-slim"
   description: >-
     Serves a maintenance page and error pages (404, 502, 503, 504) from HTML in a
     ConfigMap, for Traefik errors middlewares and Ingress or HTTPRoute backends
