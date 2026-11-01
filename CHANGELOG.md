@@ -2,6 +2,28 @@
 
 All notable changes to this catalog are documented in this file; each section comes from the change files in `.changeset/` (CONTRIBUTING.md, "Releases").
 
+## 0.1.3 (2026-11-01)
+
+### Features
+
+#### Components can list the ids they replace, and `conformance/select/` gives cases for how installers choose components
+
+`replaces` on a component lists the ids of removed components it took over. `builds/zeabur-builder` replaces `container-registry/zot`. An installer reads an install record with the old id as having the new component. The new reference page "How installers choose and install components" gives the rules, and `bundle.tar.gz` now has `conformance/select/`, with one case per rule in the format of `schema/v1/select-case.schema.json`.
+
+#### `conformance/template/` gives cases for how clients render templates
+
+The new reference page "How clients render templates" gives the checks before rendering, the labels every object gets, how a client tells whether what a template requires is installed, and which language it shows. `bundle.tar.gz` now has `conformance/template/`, with one case per rule in the format of `schema/v1/template-case.schema.json`. `catalog template render` names each failed check by a code, and a missing cluster issuer is now its own error.
+
+#### Templates have a one-sentence summary in each language
+
+`metadata.summary` holds the summary in English and `metadata.locales.<zh-TW|zh-CN>.summary` in Chinese, as for components. `index.json` carries both, so Zeabur no longer keeps its own copy.
+
+### Fixes
+
+#### A personal install leaves VictoriaMetrics and VictoriaLogs off machines with less than about 1.7 GiB of memory
+
+`victoria-metrics` and `victoria-logs` give `resources.workMemoryMiB`, measured on KubeSolo under load. The VictoriaMetrics operator is now optional on `single-node`, so it is installed only with them.
+
 ## 0.1.2 (2026-11-01)
 
 ### Features
