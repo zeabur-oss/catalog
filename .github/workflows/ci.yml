@@ -20,12 +20,12 @@ concurrency:
 
 jobs:
   l0:
-    uses: zeabur-oss/.github/.github/workflows/ci.yml@d372cc7913ed9692161a23a65ac5f3aa73f30eab # main
+    uses: zeabur-oss/.github/.github/workflows/ci.yml@9f67bcbecd22239636877a838d7359278a0e765e # main
     with:
       runner: ubuntu-26.04
 
   dco:
-    uses: zeabur-oss/.github/.github/workflows/dco.yml@d372cc7913ed9692161a23a65ac5f3aa73f30eab # main
+    uses: zeabur-oss/.github/.github/workflows/dco.yml@9f67bcbecd22239636877a838d7359278a0e765e # main
 
   l1-matrix:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
