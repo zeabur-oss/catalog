@@ -623,12 +623,14 @@ func podNames() (map[string]bool, error) {
 	return names, err
 }
 
-// ignored resources churn on their own or belong to tracked objects.
+// ignored resources churn on their own or belong to tracked objects. K3s and RKE2 record each
+// scheduled etcd snapshot (every 12 hours by default) as an ETCDSnapshotFile.
 var ignored = []string{
 	"events", "events.events.k8s.io", "leases.coordination.k8s.io", "endpoints",
 	"endpointslices.discovery.k8s.io", "pods", "replicasets.apps", "controllerrevisions.apps",
 	"jobs.batch", "componentstatuses", "certificatesigningrequests.certificates.k8s.io",
 	"nodes.metrics.k8s.io", "pods.metrics.k8s.io", "selfsubjectreviews.authentication.k8s.io",
+	"etcdsnapshotfiles.k3s.cattle.io",
 }
 
 // inventory lists every object in the cluster as "resource namespace/name".
