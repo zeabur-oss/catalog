@@ -10,7 +10,7 @@
       "measuredAt": "2026-10-31"
     },
     "k3s-arm64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 27,
+      "idleMemoryMiB": 26,
       "idleCPUm": 1,
       "versions": {
         "seaweedfs-operator": "0.1.43"
@@ -42,7 +42,7 @@
       "measuredAt": "2026-10-31"
     },
     "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 40,
+      "idleMemoryMiB": 41,
       "idleCPUm": 1,
       "versions": {
         "seaweedfs-operator": "0.1.43"
@@ -66,7 +66,7 @@
       "measuredAt": "2026-10-31"
     },
     "rke2-arm64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 28,
+      "idleMemoryMiB": 26,
       "idleCPUm": 1,
       "versions": {
         "seaweedfs-operator": "0.1.43"
@@ -74,7 +74,7 @@
       "measuredAt": "2026-10-31"
     },
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 25,
+      "idleMemoryMiB": 26,
       "idleCPUm": 1,
       "versions": {
         "seaweedfs-operator": "0.1.43"

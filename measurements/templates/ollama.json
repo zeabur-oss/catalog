@@ -2,7 +2,7 @@
   "template": "ollama",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 15,
+      "idleMemoryMiB": 8,
       "idleCPUm": 0,
       "versions": {
         "docker.io/ollama/ollama": "0.40.10"

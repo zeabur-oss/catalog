@@ -2,8 +2,8 @@
   "component": "builds/zeabur-builder",
   "environments": {
     "k3s-amd64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 50,
-      "idleCPUm": 1,
+      "idleMemoryMiB": 49,
+      "idleCPUm": 2,
       "versions": {
         "builder": "0.1.1",
         "zot": "0.1.128"
@@ -47,8 +47,8 @@
       "measuredAt": "2026-10-29"
     },
     "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
-      "idleMemoryMiB": 49,
-      "idleCPUm": 3,
+      "idleMemoryMiB": 50,
+      "idleCPUm": 2,
       "versions": {
         "builder": "0.1.1",
         "zot": "0.1.128"
@@ -66,7 +66,7 @@
     },
     "multi-node-arm64-v1.36.4": {
       "idleMemoryMiB": 49,
-      "idleCPUm": 2,
+      "idleCPUm": 3,
       "versions": {
         "builder": "0.1.1",
         "zot": "0.1.128"
@@ -83,7 +83,7 @@
       "measuredAt": "2026-10-31"
     },
     "rke2-arm64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 48,
+      "idleMemoryMiB": 49,
       "idleCPUm": 2,
       "versions": {
         "builder": "0.1.1",
@@ -102,7 +102,7 @@
     },
     "single-node-arm64-v1.36.4": {
       "idleMemoryMiB": 49,
-      "idleCPUm": 3,
+      "idleCPUm": 8,
       "versions": {
         "builder": "0.1.1",
         "zot": "0.1.128"

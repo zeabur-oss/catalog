@@ -3,7 +3,7 @@
   "environments": {
     "single-node-amd64-v1.36.4": {
       "idleMemoryMiB": 199,
-      "idleCPUm": 5,
+      "idleCPUm": 7,
       "versions": {
         "ghcr.io/umami-software/umami": "3.4.1"
       },

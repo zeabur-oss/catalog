@@ -3,7 +3,7 @@
   "environments": {
     "single-node-amd64-v1.36.4": {
       "idleMemoryMiB": 149,
-      "idleCPUm": 12,
+      "idleCPUm": 9,
       "versions": {
         "docker.io/mariadb": "11.4.13",
         "docker.io/nginxinc/nginx-unprivileged": "stable-alpine",

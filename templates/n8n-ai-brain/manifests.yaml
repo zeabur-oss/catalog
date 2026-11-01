@@ -33,7 +33,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: n8n
-          image: n8nio/n8n:2.45.1@sha256:d099edfa840d4b9c4a68f2ee4c0f4b6dad49d5d1237c7f1203ef48d7e6e7b4a5
+          image: n8nio/n8n:2.45.3@sha256:bf88c3783fc4b2a90a007bb99b04ad2f6a9627f41499baf72ca67559c51c7f4c
           env:
             - {name: DB_TYPE, value: postgresdb}
             - {name: DB_POSTGRESDB_HOST, value: n8n-db-rw}
@@ -200,7 +200,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: runners
-          image: n8nio/runners:2.45.1@sha256:b31e505e6f41ce11388ce0a7ada5eebfb973d80cd58110ba7e8c087e4c478eee
+          image: n8nio/runners:2.45.3@sha256:c57f7d17c37e89fc8128c165063874db788b599ed9c5d263c7adc6d3b59a0477
           env:
             - {name: N8N_RUNNERS_TASK_BROKER_URI, value: 'http://n8n-broker:5679'}
             - name: N8N_RUNNERS_AUTH_TOKEN

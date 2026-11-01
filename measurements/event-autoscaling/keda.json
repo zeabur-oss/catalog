@@ -2,15 +2,15 @@
   "component": "event-autoscaling/keda",
   "environments": {
     "k3s-amd64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 70,
-      "idleCPUm": 4,
+      "idleMemoryMiB": 72,
+      "idleCPUm": 3,
       "versions": {
         "keda": "2.21.0"
       },
       "measuredAt": "2026-10-31"
     },
     "k3s-arm64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 72,
+      "idleMemoryMiB": 70,
       "idleCPUm": 4,
       "versions": {
         "keda": "2.21.0"
@@ -18,15 +18,15 @@
       "measuredAt": "2026-10-31"
     },
     "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
-      "idleMemoryMiB": 71,
-      "idleCPUm": 5,
+      "idleMemoryMiB": 70,
+      "idleCPUm": 4,
       "versions": {
         "keda": "2.21.0"
       },
       "measuredAt": "2026-10-31"
     },
     "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
-      "idleMemoryMiB": 70,
+      "idleMemoryMiB": 69,
       "idleCPUm": 4,
       "versions": {
         "keda": "2.21.0"
@@ -34,39 +34,39 @@
       "measuredAt": "2026-10-31"
     },
     "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 92,
-      "idleCPUm": 6,
+      "idleMemoryMiB": 89,
+      "idleCPUm": 5,
       "versions": {
         "keda": "2.21.0"
       },
       "measuredAt": "2026-10-31"
     },
     "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 91,
-      "idleCPUm": 4,
+      "idleMemoryMiB": 92,
+      "idleCPUm": 5,
       "versions": {
         "keda": "2.21.0"
       },
       "measuredAt": "2026-10-31"
     },
     "rke2-amd64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 70,
-      "idleCPUm": 4,
+      "idleMemoryMiB": 71,
+      "idleCPUm": 5,
       "versions": {
         "keda": "2.21.0"
       },
       "measuredAt": "2026-10-31"
     },
     "rke2-arm64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 69,
-      "idleCPUm": 3,
+      "idleMemoryMiB": 72,
+      "idleCPUm": 5,
       "versions": {
         "keda": "2.21.0"
       },
       "measuredAt": "2026-10-31"
     },
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 69,
+      "idleMemoryMiB": 68,
       "idleCPUm": 4,
       "versions": {
         "keda": "2.21.0"
