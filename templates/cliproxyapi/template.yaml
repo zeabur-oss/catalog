@@ -2,7 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: CLIProxyAPI
-  version: "v8.0.41"
+  version: "v8.0.42"
   description: >-
     Authenticated OpenAI/Gemini-compatible API proxy with private OAuth
     onboarding and management.
