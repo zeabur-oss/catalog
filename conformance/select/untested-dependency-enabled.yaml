@@ -1,6 +1,6 @@
 description: >
-  A component that enable names and that needs a component not tested on the
-  distribution is an error naming the dependency.
+  A component that enable names installs the components it needs, with a
+  warning for each one not tested on the distribution.
 components:
   - id: logs/victoria-logs
     defaults: {single-node: optional, multi-node: optional}
@@ -16,4 +16,8 @@ config:
   distribution: rke2
   enable: [logs/victoria-logs]
 want:
-  error: {kind: untested, component: observability-operator/victoria-metrics-operator, distribution: rke2}
+  components:
+    - {id: observability-operator/victoria-metrics-operator, why: dependency}
+    - {id: logs/victoria-logs, why: enabled}
+  warnings:
+    - {kind: untested, component: observability-operator/victoria-metrics-operator, distribution: rke2}

@@ -13,4 +13,4 @@ want:
   components:
     - {id: ingress/traefik, why: default}
   leftOut:
-    logs/victoria-logs: not tested on rke2
+    logs/victoria-logs: {reason: untested, distribution: rke2}

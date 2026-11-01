@@ -31,24 +31,23 @@ source: "070a2deaa0c8"
 1. 先取当前 profile 所有 `recommended` 的组件，这些是**默认组件**。安装工具可以用 ID 或 capability 再加上自己需要的组件，这些组件也算默认组件。
 2. 加入 `enable` 列出的组件，这些是**启用的组件**。
 3. 去掉 `disable` 列出的组件，这些是**停用的组件**。写组件 ID 就去掉那个组件，写 capability 就去掉这个 capability 下所有已选的组件。名称存在但没对上已选的组件时，什么都不做。
-4. 去掉在这里装不了的组件，这些是**排除的组件**。每个排除的组件都要附上下表的原因，一字不改。
+4. 去掉在这里装不了的组件，这些是**排除的组件**。每个排除的组件都要附上原因。测试用例用下表的代码表示原因，怎么向用户说明，由安装工具自己决定。
 
-   | 情况 | 原因 |
-   | --- | --- |
-   | 有 `distributions`，但没有列当前发行版 | `runs on k3s, rke2 only`，其中列出 `distributions`，用 `, ` 分隔 |
-   | 当前 profile 的 `defaults` 是 `unsupported` | `unsupported on single-node` |
-   | `testedOn` 没有列当前发行版 | `not tested on rke2` |
-
-   启用的组件遇到前两种情况，一样排除。启用的组件如果 `testedOn` 没有列当前发行版，就会报错，因为用户指定了 catalog 没在这里测过的组件。
+   | 情况 | 代码 | 是否排除 |
+   | --- | --- | --- |
+   | 有 `distributions`，但没有列当前发行版 | `distributions` | 一律排除。启用的组件另外显示 `left-out` 警告 |
+   | 当前 profile 的 `defaults` 是 `unsupported` | `unsupported` | 一律排除。启用的组件另外显示 `left-out` 警告 |
+   | `testedOn` 没有列当前发行版 | `untested` | 只排除默认组件。启用的组件照样安装，并显示 `untested` 警告 |
 5. 服务器有安装记录时，记录里没有的默认组件只列为**可安装**，不会直接装上。`enable` 指定了它，或已选的组件需要它时，照样安装。安装工具也可以准备一份一定要装的默认组件列表，例如缺了就无法运行的组件。
 6. 按 ID 顺序遍历已选的组件，取每个组件在当前 profile 的 `installOrder`，排出**安装顺序**。`installOrder` 先列它需要的组件，最后是它自己。结果里还没有的 ID 就依次加进去。结果里没有被选中的组件，是因为其他组件需要才安装的。
 
-   加入一个组件的列表之前，先检查列表里每个没停用的 ID。catalog 有这个组件，但它的 `testedOn` 没有列当前发行版时，默认组件会被排除，原因写成 `needs observability-operator/victoria-metrics-operator, not tested on rke2`。启用的组件遇到这种情况则会报错，错误会指出是哪个依赖组件。列表里有停用或排除的 ID 时，也会报错。
+   加入一个组件的列表之前，先检查列表里每个没停用的 ID。catalog 有这个组件，但它的 `testedOn` 没有列当前发行版时，默认组件会被排除，代码是 `needs-untested`，并指出是哪个依赖组件。启用的组件照样加入列表，并对这个依赖组件显示 `untested` 警告。列表里有停用或排除的 ID 时，也会报错。
 
-选择的结果有三部分：
+选择的结果有四部分：
 
 - 按安装顺序排好的组件，以及各自的安装原因：`default`、`enabled` 或 `dependency`。
 - 排除的组件和原因。
+- 警告。
 - 有安装记录时，列为可安装的默认组件。
 
 每个 `installOrder` 都已经把组件排在它需要的组件之后，所以结果也是这样。`enable` 和 `disable` 怎么排列，都不影响结果。
@@ -61,7 +60,6 @@ source: "070a2deaa0c8"
 | --- | --- | --- |
 | `unknown` | 名称对不上任何 capability 或组件 ID | 这个名称 |
 | `replaced` | `enable` 写的 ID 已由其他组件接手，见下一节 | 要改写的新 ID |
-| `untested` | 启用的组件或它需要的组件没有在当前发行版上测过 | 组件名称和 `testedOn` 列出的发行版 |
 | `needs-disabled` | 已选的组件需要的组件已停用或排除 | 两个组件的名称 |
 
 ## 接手旧组件
@@ -110,14 +108,14 @@ want:
   components:          # in install order
     - {id: ingress/traefik, why: default}
   leftOut:
-    logs/victoria-logs: not tested on rke2
+    logs/victoria-logs: {reason: untested, distribution: rke2}
   # offered: defaults not installed because the install record lacks them
-  # warnings: [{kind: replaced, old: …, new: …}]
-  # error: {kind: untested, component: …, distribution: …}, in place of the rest
+  # warnings: [{kind: untested, component: …, distribution: …}], in any order
+  # error: {kind: unknown, name: …}, in place of the rest
 ```
 
 运行用例的步骤如下。
 
 1. 用 `components` 建立索引。每个组件的 capability 是 ID 斜杠前的部分。某个 profile 没有 `installOrder` 时，只装组件本身。没有 `distributions` 时，任何发行版都可以。
 2. 按 `config` 选择组件。
-3. 和 `want` 比对。`want` 没写的列表或映射就是空的。原因要一字不差，错误只比对 `kind` 和它的字段。
+3. 和 `want` 比对。`want` 没写的列表或映射就是空的。原因、警告和错误都比对代码和字段，不比对安装工具显示的文字。

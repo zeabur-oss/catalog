@@ -76,22 +76,62 @@
         },
         "leftOut": {
           "type": "object",
-          "description": "Component id to the reason, word for word.",
+          "description": "Component id to why it is left out.",
           "propertyNames": { "$ref": "#/$defs/id" },
-          "additionalProperties": { "type": "string" }
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["reason", "distributions"],
+                "properties": { "reason": { "const": "distributions" }, "distributions": { "$ref": "#/$defs/distributions" } }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["reason", "profile"],
+                "properties": { "reason": { "const": "unsupported" }, "profile": { "enum": ["single-node", "multi-node"] } }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["reason", "distribution"],
+                "properties": { "reason": { "const": "untested" }, "distribution": { "type": "string" } }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["reason", "dependency", "distribution"],
+                "properties": { "reason": { "const": "needs-untested" }, "dependency": { "$ref": "#/$defs/id" }, "distribution": { "type": "string" } }
+              }
+            ]
+          }
         },
         "offered": { "$ref": "#/$defs/ids", "description": "Defaults not installed because the install record lacks them, in id order." },
         "warnings": {
           "type": "array",
+          "description": "In any order.",
           "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["kind", "old", "new"],
-            "properties": {
-              "kind": { "const": "replaced" },
-              "old": { "$ref": "#/$defs/id" },
-              "new": { "$ref": "#/$defs/id" }
-            }
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "old", "new"],
+                "properties": { "kind": { "const": "replaced" }, "old": { "$ref": "#/$defs/id" }, "new": { "$ref": "#/$defs/id" } }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "component", "distribution"],
+                "properties": { "kind": { "const": "untested" }, "component": { "$ref": "#/$defs/id" }, "distribution": { "type": "string" } }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "component"],
+                "properties": { "kind": { "const": "left-out" }, "component": { "$ref": "#/$defs/id" } }
+              }
+            ]
           }
         },
         "error": {
@@ -107,12 +147,6 @@
               "additionalProperties": false,
               "required": ["kind", "old", "new"],
               "properties": { "kind": { "const": "replaced" }, "old": { "$ref": "#/$defs/id" }, "new": { "$ref": "#/$defs/id" } }
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["kind", "component", "distribution"],
-              "properties": { "kind": { "const": "untested" }, "component": { "$ref": "#/$defs/id" }, "distribution": { "type": "string" } }
             },
             {
               "type": "object",

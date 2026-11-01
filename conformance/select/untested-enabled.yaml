@@ -1,4 +1,4 @@
-description: A component that enable names and that was not tested on the distribution is an error.
+description: A component that enable names and that was not tested on the distribution is installed with a warning.
 components:
   - id: logs/victoria-logs
     defaults: {single-node: optional, multi-node: optional}
@@ -8,4 +8,7 @@ config:
   distribution: kubesolo
   enable: [logs/victoria-logs]
 want:
-  error: {kind: untested, component: logs/victoria-logs, distribution: kubesolo}
+  components:
+    - {id: logs/victoria-logs, why: enabled}
+  warnings:
+    - {kind: untested, component: logs/victoria-logs, distribution: kubesolo}

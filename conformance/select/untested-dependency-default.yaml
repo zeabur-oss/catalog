@@ -14,4 +14,4 @@ config:
   distribution: rke2
 want:
   leftOut:
-    logs/victoria-logs: needs observability-operator/victoria-metrics-operator, not tested on rke2
+    logs/victoria-logs: {reason: needs-untested, dependency: observability-operator/victoria-metrics-operator, distribution: rke2}

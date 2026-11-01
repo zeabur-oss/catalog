@@ -16,4 +16,4 @@ want:
   components:
     - {id: logs/victoria-logs, why: enabled}
   leftOut:
-    logs/loki: not tested on rke2
+    logs/loki: {reason: untested, distribution: rke2}

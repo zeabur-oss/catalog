@@ -1,6 +1,6 @@
 description: >
   distributions is a hard limit. A component is left out on any other
-  distribution, even when enable names it.
+  distribution. When enable names it, a warning says so.
 components:
   - id: node-updates/system-upgrade-controller
     defaults: {single-node: optional, multi-node: optional}
@@ -12,4 +12,6 @@ config:
   enable: [node-updates/system-upgrade-controller]
 want:
   leftOut:
-    node-updates/system-upgrade-controller: runs on k3s, rke2 only
+    node-updates/system-upgrade-controller: {reason: distributions, distributions: [k3s, rke2]}
+  warnings:
+    - {kind: left-out, component: node-updates/system-upgrade-controller}

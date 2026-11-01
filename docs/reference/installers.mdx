@@ -30,21 +30,19 @@ The installer takes these steps in order.
 1. **Defaults.** Start from every component `recommended` on the profile. An installer may add components it needs on top of the defaults, by id or capability. They count as defaults.
 2. **Enable.** Add each component that `enable` names. It counts as enabled.
 3. **Disable.** Take out each chosen component that a `disable` item names. An id takes out that component, and a capability takes out every chosen component of that capability. A known name that matches nothing chosen does nothing.
-4. **Leave out what can't be installed here.** Take out the components below and list each with its reason, word for word:
+4. **Leave out what can't be installed here.** Take out the components below and list each with its reason. The test cases name a reason by its code, and the installer words it for the person.
 
-   | When | Reason |
-   | --- | --- |
-   | `distributions` is present and doesn't list the distribution | `runs on k3s, rke2 only` (the list, joined with `, `) |
-   | `defaults` is `unsupported` on the profile | `unsupported on single-node` |
-   | `testedOn` doesn't list the distribution | `not tested on rke2` |
-
-   The first two apply to enabled components too. An enabled component that `testedOn` doesn't list is an error instead, because the person asked for something the catalog didn't test there.
+   | When | Code | Left out |
+   | --- | --- | --- |
+   | `distributions` is present and doesn't list the distribution | `distributions` | Always. An enabled component also gets a `left-out` warning |
+   | `defaults` is `unsupported` on the profile | `unsupported` | Always. An enabled component also gets a `left-out` warning |
+   | `testedOn` doesn't list the distribution | `untested` | Defaults only. An enabled component is installed with an `untested` warning |
 5. **Install record.** On a server with an install record, a default that the record lacks is offered, not installed. It's still installed when `enable` names it or a chosen component needs it. An installer may also keep a list of defaults it always installs, such as the ones it can't work without.
 6. **Order.** Go through the chosen components in id order. For each one, take its `installOrder` for the profile, which lists its dependencies and then the component. Add each id that isn't in the result yet. A component in the result that wasn't chosen is there as a dependency.
 
-   Before adding a component's list, check each id in it that isn't disabled. When the catalog has that component and its `testedOn` doesn't list the distribution, a default is left out with `needs observability-operator/victoria-metrics-operator, not tested on rke2`, and an enabled component is an error naming the dependency. When an id in the list is disabled or left out, the choice is an error.
+   Before adding a component's list, check each id in it that isn't disabled. When the catalog has that component and its `testedOn` doesn't list the distribution, a default is left out with the code `needs-untested`, which names the dependency. An enabled component still adds its list, with an `untested` warning for that dependency. When an id in the list is disabled or left out, the choice is an error.
 
-The result has the components in install order, each with why it's installed (`default`, `enabled` or `dependency`), the components left out with their reasons, and the defaults offered on a server with an install record. Because each `installOrder` already places a component after its dependencies, the result does too. It doesn't depend on the order of `enable` or `disable`.
+The result has the components in install order, each with why it's installed (`default`, `enabled` or `dependency`), the components left out with their reasons, the warnings, and the defaults offered on a server with an install record. Because each `installOrder` already places a component after its dependencies, the result does too. It doesn't depend on the order of `enable` or `disable`.
 
 ## Errors
 
@@ -54,7 +52,6 @@ The installer stops and installs nothing on these errors. The `kind` names the e
 | --- | --- | --- |
 | `unknown` | A name matches no capability or component id | The name |
 | `replaced` | `enable` names an id that a component [replaces](#replaced-components) | The new id to write instead |
-| `untested` | An enabled component, or a component it needs, isn't tested on the distribution | The component and the distributions its `testedOn` lists |
 | `needs-disabled` | A chosen component needs one that is disabled or left out | Both components |
 
 ## Replaced components
@@ -103,14 +100,14 @@ want:
   components:          # in install order
     - {id: ingress/traefik, why: default}
   leftOut:
-    logs/victoria-logs: not tested on rke2
+    logs/victoria-logs: {reason: untested, distribution: rke2}
   # offered: defaults not installed because the install record lacks them
-  # warnings: [{kind: replaced, old: …, new: …}]
-  # error: {kind: untested, component: …, distribution: …}, in place of the rest
+  # warnings: [{kind: untested, component: …, distribution: …}], in any order
+  # error: {kind: unknown, name: …}, in place of the rest
 ```
 
 To run a case:
 
 1. Build an index from `components`. The capability of each component is the part of its id before the slash. A profile without `installOrder` means the component alone, and a component without `distributions` runs on any distribution.
 2. Choose with `config`.
-3. Compare the result with `want`. A list or map that `want` leaves out is empty. Compare the reasons word for word, and for an error compare only `kind` and its fields.
+3. Compare the result with `want`. A list or map that `want` leaves out is empty. Compare each reason, warning and error by its code and fields, not by the words an installer shows.
