@@ -2,14 +2,14 @@
   "template": "wordpress",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 149,
-      "idleCPUm": 9,
+      "idleMemoryMiB": 158,
+      "idleCPUm": 11,
       "versions": {
-        "docker.io/mariadb": "11.4.13",
+        "docker.io/mariadb": "11.8.8",
         "docker.io/nginxinc/nginx-unprivileged": "stable-alpine",
         "docker.io/wordpress": "php8.3-fpm-alpine"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     }
   }
 }

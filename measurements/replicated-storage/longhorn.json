@@ -2,68 +2,68 @@
   "component": "replicated-storage/longhorn",
   "environments": {
     "k3s-amd64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 157,
-      "idleCPUm": 20,
+      "idleMemoryMiB": 155,
+      "idleCPUm": 25,
       "versions": {
         "longhorn": "1.13.0"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "k3s-arm64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 154,
+      "idleMemoryMiB": 156,
       "idleCPUm": 18,
       "versions": {
         "longhorn": "1.13.0"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 352,
-      "idleCPUm": 42,
+      "idleMemoryMiB": 348,
+      "idleCPUm": 40,
       "versions": {
         "longhorn": "1.13.0"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 360,
-      "idleCPUm": 42,
+      "idleMemoryMiB": 347,
+      "idleCPUm": 39,
       "versions": {
         "longhorn": "1.13.0"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "rke2-amd64-v1.36.5+rke2r1": {
       "idleMemoryMiB": 157,
-      "idleCPUm": 18,
+      "idleCPUm": 23,
       "versions": {
         "longhorn": "1.13.0"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "rke2-arm64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 154,
-      "idleCPUm": 19,
-      "versions": {
-        "longhorn": "1.13.0"
-      },
-      "measuredAt": "2026-10-31"
-    },
-    "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 155,
-      "idleCPUm": 27,
-      "versions": {
-        "longhorn": "1.13.0"
-      },
-      "measuredAt": "2026-10-31"
-    },
-    "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 152,
+      "idleMemoryMiB": 160,
       "idleCPUm": 20,
       "versions": {
         "longhorn": "1.13.0"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
+    },
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 151,
+      "idleCPUm": 20,
+      "versions": {
+        "longhorn": "1.13.0"
+      },
+      "measuredAt": "2026-11-01"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 154,
+      "idleCPUm": 17,
+      "versions": {
+        "longhorn": "1.13.0"
+      },
+      "measuredAt": "2026-11-01"
     }
   }
 }

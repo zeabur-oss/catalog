@@ -3,12 +3,12 @@
   "environments": {
     "single-node-amd64-v1.36.4": {
       "idleMemoryMiB": 370,
-      "idleCPUm": 12,
+      "idleCPUm": 8,
       "versions": {
-        "n8nio/n8n": "2.45.1",
-        "n8nio/runners": "2.45.1"
+        "n8nio/n8n": "2.45.3",
+        "n8nio/runners": "2.45.3"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     }
   }
 }

@@ -2,22 +2,22 @@
   "component": "databases/mariadb-operator",
   "environments": {
     "k3s-amd64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 36,
+      "idleCPUm": 1,
+      "versions": {
+        "mariadb-operator": "26.10.1",
+        "mariadb-operator-crds": "26.10.1"
+      },
+      "measuredAt": "2026-11-01"
+    },
+    "k3s-arm64-v1.36.5+k3s1": {
       "idleMemoryMiB": 38,
       "idleCPUm": 1,
       "versions": {
         "mariadb-operator": "26.10.1",
         "mariadb-operator-crds": "26.10.1"
       },
-      "measuredAt": "2026-10-31"
-    },
-    "k3s-arm64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 37,
-      "idleCPUm": 1,
-      "versions": {
-        "mariadb-operator": "26.10.1",
-        "mariadb-operator-crds": "26.10.1"
-      },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "kubesolo-amd64-v1.2.3": {
       "failed": true,
@@ -26,58 +26,58 @@
       "measuredAt": "2026-10-31"
     },
     "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
-      "idleMemoryMiB": 37,
+      "idleMemoryMiB": 38,
       "idleCPUm": 1,
       "versions": {
         "mariadb-operator": "26.10.1",
         "mariadb-operator-crds": "26.10.1"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
-      "idleMemoryMiB": 37,
+      "idleMemoryMiB": 38,
       "idleCPUm": 1,
       "versions": {
         "mariadb-operator": "26.10.1",
         "mariadb-operator-crds": "26.10.1"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 62,
+      "idleCPUm": 3,
+      "versions": {
+        "mariadb-operator": "26.10.1",
+        "mariadb-operator-crds": "26.10.1"
+      },
+      "measuredAt": "2026-11-01"
+    },
+    "multi-node-arm64-v1.36.4": {
       "idleMemoryMiB": 61,
       "idleCPUm": 2,
       "versions": {
         "mariadb-operator": "26.10.1",
         "mariadb-operator-crds": "26.10.1"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
-    "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 62,
+    "rke2-amd64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 42,
       "idleCPUm": 2,
       "versions": {
         "mariadb-operator": "26.10.1",
         "mariadb-operator-crds": "26.10.1"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
-    "rke2-amd64-v1.36.5+rke2r1": {
+    "rke2-arm64-v1.36.5+rke2r1": {
       "idleMemoryMiB": 41,
       "idleCPUm": 1,
       "versions": {
         "mariadb-operator": "26.10.1",
         "mariadb-operator-crds": "26.10.1"
       },
-      "measuredAt": "2026-10-31"
-    },
-    "rke2-arm64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 42,
-      "idleCPUm": 1,
-      "versions": {
-        "mariadb-operator": "26.10.1",
-        "mariadb-operator-crds": "26.10.1"
-      },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "single-node-amd64-v1.36.4": {
       "idleMemoryMiB": 38,
@@ -86,16 +86,16 @@
         "mariadb-operator": "26.10.1",
         "mariadb-operator-crds": "26.10.1"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     },
     "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 37,
+      "idleMemoryMiB": 38,
       "idleCPUm": 1,
       "versions": {
         "mariadb-operator": "26.10.1",
         "mariadb-operator-crds": "26.10.1"
       },
-      "measuredAt": "2026-10-31"
+      "measuredAt": "2026-11-01"
     }
   }
 }
