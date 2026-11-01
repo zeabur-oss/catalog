@@ -1,0 +1,35 @@
+description: A generated input is not given, and the objects read it from its Secret.
+id: app
+template:
+  metadata: {version: "1.0.0"}
+  services: [{name: app}]
+  inputs:
+    - {name: password, generate: random, secret: {name: app-secrets, key: password}, validation: {pattern: '[A-Za-z0-9_-]{43}'}}
+manifests: |
+  apiVersion: v1
+  kind: Pod
+  metadata: {name: app, namespace: {{ .Namespace }}}
+  spec:
+    containers:
+      - name: app
+        image: app
+        env:
+          - name: PASSWORD
+            valueFrom: {secretKeyRef: {name: app-secrets, key: password}}
+options:
+  namespace: shop
+want:
+  objects:
+    - apiVersion: v1
+      kind: Pod
+      metadata:
+        name: app
+        namespace: shop
+        labels: {app.kubernetes.io/instance: app, app.kubernetes.io/version: "1.0.0", templates.zeabur.com/template: app}
+      spec:
+        containers:
+          - name: app
+            image: app
+            env:
+              - name: PASSWORD
+                valueFrom: {secretKeyRef: {name: app-secrets, key: password}}

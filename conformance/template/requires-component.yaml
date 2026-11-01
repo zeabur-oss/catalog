@@ -1,0 +1,12 @@
+description: <capability>/<name> is installed when discovery serves a CRD of that component, and missing when it serves none, even when another component of the capability is installed.
+components:          # index.json components, with only the fields matching reads
+  - id: databases/cloudnative-pg
+    detection: {crds: [clusters.postgresql.cnpg.io, poolers.postgresql.cnpg.io]}
+  - id: databases/percona-mongodb
+    detection: {crds: [perconaservermongodbs.psmdb.percona.com]}
+served:              # what discovery lists; left out when discovery fails
+  - {group: postgresql.cnpg.io, resource: clusters}
+requires: [databases/cloudnative-pg, databases/percona-mongodb]
+want:
+  databases/cloudnative-pg: installed
+  databases/percona-mongodb: missing

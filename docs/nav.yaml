@@ -4,7 +4,7 @@
   pages: [deploy-a-template]
 - group: reference
   label: Reference
-  pages: [components, templates, distributions, component-format, template-format, template-standards, releases, installers, licenses]
+  pages: [components, templates, distributions, component-format, template-format, template-standards, releases, installers, template-clients, licenses]
 - group: contribute
   label: Contribute
   pages: [add-component, add-template, tests]

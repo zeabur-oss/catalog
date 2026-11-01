@@ -1,0 +1,10 @@
+description: A CRD name is <plural>.<group>, and both parts must match a served resource.
+components:
+  - id: databases/cloudnative-pg
+    detection: {crds: [clusters.postgresql.cnpg.io]}
+served:
+  - {group: other.example.com, resource: clusters}
+  - {group: postgresql.cnpg.io, resource: backups}
+requires: [databases/cloudnative-pg]
+want:
+  databases/cloudnative-pg: missing

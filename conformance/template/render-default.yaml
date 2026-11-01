@@ -1,0 +1,26 @@
+description: An input that is not given takes its default, or is empty when it has none.
+id: app
+template:
+  metadata: {version: "1.0.0"}
+  services: [{name: app}]
+  inputs:
+    - {name: port, required: false, default: "8080", validation: {pattern: '[0-9]+'}}
+    - {name: motd, required: false, validation: {pattern: '.*'}}
+manifests: |
+  apiVersion: v1
+  kind: ConfigMap
+  metadata: {name: app, namespace: {{ .Namespace }}}
+  data:
+    port: "{{ .Inputs.port }}"
+    motd: "{{ .Inputs.motd }}"
+options:
+  namespace: shop
+want:
+  objects:
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: app
+        namespace: shop
+        labels: {app.kubernetes.io/instance: app, app.kubernetes.io/version: "1.0.0", templates.zeabur.com/template: app}
+      data: {port: "8080", motd: ""}

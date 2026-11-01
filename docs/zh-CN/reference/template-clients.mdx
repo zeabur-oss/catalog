@@ -1,0 +1,133 @@
+---
+title: 客户端如何渲染模板
+description: 客户端渲染模板前要做的检查、怎样判断模板需要的组件是否已安装、显示哪种语言，以及用来测试客户端的用例。
+source: "622727eab126"
+---
+
+客户端把[模板](template-format.mdx)安装到一个命名空间时，先检查选项，再渲染 `manifests.yaml`，最后应用生成的对象。本页列出要遵守的规则。`catalog template render` 用 `tools/internal/templates/render.go` 按这些规则渲染，Zeabur 也遵守同样的规则。每条规则在 `conformance/template/` 都有一个测试用例，用法见本页最后一节。
+
+## 渲染需要的数据
+
+- 模板的 `template.yaml` 和 `manifests.yaml`，以及模板 ID，也就是模板所在文件夹的名称。
+- 命名空间。
+- 域名和 cluster issuer。cluster issuer 是 cert-manager `ClusterIssuer` 的名称。值为空字符串时，视为没有提供。
+- 各个输入字段的值，按名称对应。值为空字符串时，仍算已提供。
+
+## 渲染前的检查
+
+客户端渲染前要先检查选项。任何一项检查不通过，就不渲染，并告诉用户原因。测试用例用代码表示没通过的检查，和输入字段有关的检查还会附上字段名称。
+
+| 检查 | 代码 | 字段 |
+| --- | --- | --- |
+| 命名空间是 DNS label：最多 63 个字符，只含小写字母、数字和连字符，以字母或数字开头和结尾 | `invalid-namespace` | |
+| 提供了域名时，域名是由这种 label 用点连接而成的 DNS 名称，最多 253 个字符，而且不是 IP 地址 | `invalid-domain` | |
+| 提供了 cluster issuer 时，名称是 DNS 名称 | `invalid-cluster-issuer` | |
+| 有服务设置了 `domains` 时，要提供域名 | `needs-domain` | |
+| 有服务设置了 `domains` 时，要提供 cluster issuer | `needs-cluster-issuer` | |
+| 不提供 `generate` 的输入字段 | `generated-input` | `input` |
+| 要提供 `required` 的输入字段 | `missing-input` | `input` |
+| 提供的每个值都要完整匹配该输入字段的 `validation.pattern`，只匹配一部分不算 | `pattern` | `input` |
+| 提供的每个名称都是模板里的输入字段 | `unknown-input` | `input` |
+
+pattern 使用 [RE2 语法](https://github.com/google/re2/wiki/Syntax)。要匹配整个值，请把 pattern 包成 `\A(?:<pattern>)\z`。
+
+有多项检查不通过时，客户端报告其中一项即可。`render.go` 按表格的顺序检查。每个测试用例只违反一条规则，所以检查顺序不影响结果。
+
+## 渲染
+
+按[模板文件格式](template-format.mdx)的说明代入 `manifests.yaml` 的字段。没有提供的输入字段取 `default`，没有 `default` 就是空字符串。自动生成的值不会出现在对象里，对象要从 Secret 读取。
+
+## 自动生成的值
+
+渲染之前，客户端把每个 `generate` 输入字段的值写入 `secret` 指定的 Secret 和 key，值按 `generate` 的设置生成。客户端也可以让用户自己提供这个值，例如从其他服务器迁移数据时，沿用原来的加密密钥。用户提供的值同样要符合 `validation.pattern`，而且只写入 Secret，不会作为渲染的输入，所以 `generated-input` 仍然适用。如果模板的自动生成字段要能沿用已有的值，就把 pattern 放宽到能接受这些值。
+
+然后在每个对象的 metadata 加上这些 label：
+
+| Label | 值 |
+| --- | --- |
+| `app.kubernetes.io/instance` | 模板 ID |
+| `templates.zeabur.com/template` | 模板 ID |
+| `app.kubernetes.io/version` | `metadata.version` |
+
+对象按 `manifests.yaml` 里的顺序排列。空的 YAML 文档不算对象。
+
+`bundle.tar.gz` 里的 `crosscheck.json` 记录了真实模板的完整渲染结果。每个模板 ID 下有一组选项（`namespace`、`domain`、`clusterIssuer`、`inputs`），以及 `render.go` 渲染出的 `objects`。客户端用这些选项渲染每个模板，再比较对象。Zeabur 的测试就是这样做的。
+
+## 模板需要的组件
+
+`requires` 的每个名称是 `<capability>/<name>` 或 `<capability>`。`catalog validate` 会检查每个名称都能对应到这个版本里的组件。
+
+- `<capability>/<name>` 对应 ID 相同的那个组件。
+- `<capability>` 对应这个 capability 下的所有组件。
+
+客户端根据 kube-apiserver 提供的资源判断组件是否已安装，也就是 discovery（`kubectl api-resources`）列出的资源。每个名称处于下面三种状态之一：
+
+| 状态 | 情况 |
+| --- | --- |
+| `installed` | discovery 提供了名称对应的某个组件 `detection.crds` 里的 CRD |
+| `missing` | discovery 没有提供其中任何一个 CRD |
+| `unknown` | 名称对应的组件都没有 `detection.crds`，或者读不到 discovery |
+
+CRD 名称的格式是 `<plural>.<group>`，例如 `clusters.postgresql.cnpg.io`。discovery 在 `postgresql.cnpg.io` 这个 group 下列出 `clusters` 资源时，就算提供了这个 CRD。Kubernetes 允许所有通过认证的用户读取 discovery，所以即使用户无权读取整个集群，看到的结果也和管理员一样。
+
+## 其他语言的文字
+
+模板的文字字段都是英文，包括 `security.summary`、每项风险及其应对方法，以及每个输入字段的 `label` 和 `description`。旁边的 `locales` 区块存放同样内容的 `zh-TW` 和 `zh-CN` 版本，两种语言总是同时存在。
+
+每个区块分别判断：读者的语言是 `locales` 里的键时，显示 `locales.<language>`，否则显示英文字段。语言要和键完全一致才算匹配。由于各区块分别判断，没有 `locales` 的摘要会以英文显示，旁边的风险仍是读者的语言。
+
+## 测试用例
+
+上面每条规则在 `conformance/template/` 都有一个用例。这个目录在仓库里，也包含在 `bundle.tar.gz` 中，所以固定某个 catalog commit 或版本的客户端，读到的就是那个版本的用例。格式定义在 [`schema/v1/template-case.schema.json`](https://github.com/zeabur-oss/catalog/blob/main/schema/v1/template-case.schema.json)。用例分为三种。
+
+渲染用例有 `manifests`：
+
+```yaml
+description: Each field takes its value, and every object gets the labels of the template.
+id: app
+template:            # template.yaml, with only the fields rendering reads
+  metadata: {version: "1.2.0"}
+  services: [{name: app, domains: ["{{ .Domain }}"]}]
+  inputs:
+    - {name: adminEmail, required: true, validation: {pattern: '[^@\s]+@[^@\s]+'}}
+manifests: |
+  apiVersion: v1
+  kind: ConfigMap
+  …
+options:
+  namespace: shop
+  domain: app.example.com
+  clusterIssuer: letsencrypt
+  inputs: {adminEmail: me@example.com}
+want:
+  objects:           # in the order of manifests.yaml
+    - apiVersion: v1
+      kind: ConfigMap
+      …
+  # error: {code: missing-input, input: adminEmail}, in place of objects
+```
+
+组件用例有 `components`：
+
+```yaml
+description: <capability>/<name> is installed when discovery serves a CRD of that component, …
+components:          # index.json components, with only the fields matching reads
+  - id: databases/cloudnative-pg
+    detection: {crds: [clusters.postgresql.cnpg.io, poolers.postgresql.cnpg.io]}
+  - id: databases/percona-mongodb
+    detection: {crds: [perconaservermongodbs.psmdb.percona.com]}
+served:              # what discovery lists; left out when discovery fails
+  - {group: postgresql.cnpg.io, resource: clusters}
+requires: [databases/cloudnative-pg, databases/percona-mongodb]
+want:
+  databases/cloudnative-pg: installed
+  databases/percona-mongodb: missing
+```
+
+文字用例有 `language`、模板的文字字段，以及读者应该看到的文字。
+
+运行用例的步骤如下。
+
+1. 渲染用例：用 `options` 渲染 `template` 和 `manifests`，再把渲染出的对象与 `want` 比较。检查没通过时，改为比较那项检查的代码和 `input`。比较代码和字段，不比较客户端显示的文字。
+2. 组件用例：每个组件的 capability 是 ID 斜杠前的部分。找出 `requires` 里每个名称的状态，再与 `want` 比较。
+3. 文字用例：按 `language` 选出要显示的文字，再与 `want` 比较。`want` 没写的列表或映射就是空的。

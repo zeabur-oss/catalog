@@ -33,7 +33,7 @@ func TestRenderRequiresValidDomainAndIssuer(t *testing.T) {
 			t.Errorf("invalid domain %q: got %v", domain, err)
 		}
 	}
-	if _, err := templates.Render(r, templates.RenderOptions{Namespace: "test", Domain: "app.example.test"}); !errors.Is(err, templates.ErrNoDomain) {
+	if _, err := templates.Render(r, templates.RenderOptions{Namespace: "test", Domain: "app.example.test"}); !errors.Is(err, templates.ErrNoClusterIssuer) {
 		t.Errorf("no issuer: got %v", err)
 	}
 	for _, issuer := range []string{"issuer:bad", "issuer#bad", "issuer\t"} {

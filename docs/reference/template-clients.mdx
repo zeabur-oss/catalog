@@ -1,0 +1,132 @@
+---
+title: How clients render templates
+description: The checks a client runs before it renders a template, how it tells whether what the template requires is installed and which language it shows, with cases to test a client against.
+---
+
+A client installs a [template](template-format.mdx) into one namespace: it checks the options, renders `manifests.yaml` and applies the objects. This page gives the rules. `catalog template render` follows them with `tools/internal/templates/render.go`, and Zeabur follows them too. Each rule has a case in [`conformance/template/`](#test-cases) to test against.
+
+## What a render takes
+
+- `template.yaml` and `manifests.yaml` of one template, and its id, the name of its directory.
+- The namespace.
+- The domain and the cluster issuer, the name of a cert-manager `ClusterIssuer`. An empty value counts as not given.
+- The values of the inputs, by name. An empty value counts as given.
+
+## Checks before rendering
+
+The client checks the options before it renders. When a check fails, it renders nothing and tells the person why. The test cases name each failed check by its code, with the input it concerns.
+
+| Check | Code | Fields |
+| --- | --- | --- |
+| The namespace is a DNS label: at most 63 lowercase letters, digits and hyphens, starting and ending with a letter or digit | `invalid-namespace` | |
+| A given domain is a DNS name of such labels, joined by dots and at most 253 characters, and not an IP address | `invalid-domain` | |
+| A given cluster issuer is a DNS name | `invalid-cluster-issuer` | |
+| When a service has `domains`, the domain is given | `needs-domain` | |
+| When a service has `domains`, the cluster issuer is given | `needs-cluster-issuer` | |
+| A `generate` input isn't given | `generated-input` | `input` |
+| A `required` input is given | `missing-input` | `input` |
+| Each given value matches the whole `validation.pattern` of its input, not only a part of it | `pattern` | `input` |
+| Each given name is an input of the template | `unknown-input` | `input` |
+
+A pattern uses [RE2 syntax](https://github.com/google/re2/wiki/Syntax). To match the whole value, wrap it as `\A(?:<pattern>)\z`.
+
+When several checks fail, the client reports one of them. `render.go` checks in the order of the table. Each case breaks one rule, so the order doesn't change the result.
+
+## Render
+
+Substitute the fields of `manifests.yaml` as [Template file format](template-format.mdx) describes. An input that isn't given takes its `default`, or is empty when it has none. A generated input never appears in the objects: they read it from its Secret.
+
+## Generated values
+
+Before rendering, the client writes each `generate` input into the Secret and key that its `secret` names. It generates the value as `generate` describes. A client may also let the person give the value instead, for example to keep the encryption key of data moved from another server. That value must match the input's `validation.pattern`, and the client writes it only into the Secret. It's still never a render option, so `generated-input` still applies. A template whose generated input should accept an existing value widens its pattern to match one.
+
+Then add these labels to the metadata of every object:
+
+| Label | Value |
+| --- | --- |
+| `app.kubernetes.io/instance` | The template id |
+| `templates.zeabur.com/template` | The template id |
+| `app.kubernetes.io/version` | `metadata.version` |
+
+The objects keep the order of `manifests.yaml`. An empty YAML document isn't an object.
+
+`crosscheck.json` in `bundle.tar.gz` holds full renders of the real templates. For each template id, it records one set of options (`namespace`, `domain`, `clusterIssuer`, `inputs`) and the `objects` that `render.go` renders. A client renders each template with those options and compares the objects. Zeabur's tests do this.
+
+## What a template requires
+
+Each name in `requires` is `<capability>/<name>` or `<capability>`. `catalog validate` checks that each name matches a component of the release.
+
+- `<capability>/<name>` matches the component with that id.
+- `<capability>` matches every component of the capability.
+
+A client tells whether a name is installed from the resources that kube-apiserver serves, as discovery (`kubectl api-resources`) lists them. Each name is in one of three states:
+
+| State | When |
+| --- | --- |
+| `installed` | Discovery serves a CRD in `detection.crds` of a component that the name matches |
+| `missing` | Discovery serves none of those CRDs |
+| `unknown` | No component that the name matches has `detection.crds`, or discovery fails |
+
+A CRD name is `<plural>.<group>`, such as `clusters.postgresql.cnpg.io`. It's served when discovery lists the resource `clusters` in the group `postgresql.cnpg.io`. Kubernetes lets every authenticated user read discovery, so a person who can't read the whole cluster gets the same answer as an administrator.
+
+## Text in other languages
+
+The text fields of a template are in English: `security.summary`, each risk with its mitigation, and the `label` and `description` of each input. A `locales` block next to them holds the same text in `zh-TW` and `zh-CN`, always both.
+
+For each block, show `locales.<language>` when the reader's language is a key there, and the English fields otherwise. The language matches the key exactly. Each block falls back on its own, so a summary without `locales` shows in English next to risks in the reader's language.
+
+## Test cases
+
+`conformance/template/` has one case for each rule above. The directory is in the repository and in `bundle.tar.gz`, so a client that pins a catalog commit or release reads the cases of that version. [`schema/v1/template-case.schema.json`](https://github.com/zeabur-oss/catalog/blob/main/schema/v1/template-case.schema.json) defines the format. There are three kinds of case.
+
+A render case has `manifests`:
+
+```yaml
+description: Each field takes its value, and every object gets the labels of the template.
+id: app
+template:            # template.yaml, with only the fields rendering reads
+  metadata: {version: "1.2.0"}
+  services: [{name: app, domains: ["{{ .Domain }}"]}]
+  inputs:
+    - {name: adminEmail, required: true, validation: {pattern: '[^@\s]+@[^@\s]+'}}
+manifests: |
+  apiVersion: v1
+  kind: ConfigMap
+  …
+options:
+  namespace: shop
+  domain: app.example.com
+  clusterIssuer: letsencrypt
+  inputs: {adminEmail: me@example.com}
+want:
+  objects:           # in the order of manifests.yaml
+    - apiVersion: v1
+      kind: ConfigMap
+      …
+  # error: {code: missing-input, input: adminEmail}, in place of objects
+```
+
+A requires case has `components`:
+
+```yaml
+description: <capability>/<name> is installed when discovery serves a CRD of that component, …
+components:          # index.json components, with only the fields matching reads
+  - id: databases/cloudnative-pg
+    detection: {crds: [clusters.postgresql.cnpg.io, poolers.postgresql.cnpg.io]}
+  - id: databases/percona-mongodb
+    detection: {crds: [perconaservermongodbs.psmdb.percona.com]}
+served:              # what discovery lists; left out when discovery fails
+  - {group: postgresql.cnpg.io, resource: clusters}
+requires: [databases/cloudnative-pg, databases/percona-mongodb]
+want:
+  databases/cloudnative-pg: installed
+  databases/percona-mongodb: missing
+```
+
+A words case has `language`, the text fields of a template and the text the reader sees.
+
+To run a case:
+
+1. Render case: render `template` and `manifests` with `options`, and compare the objects with `want`. When a check fails, compare its code and `input` instead. Compare codes and fields, not the words a client shows.
+2. Requires case: the capability of each component is the part of its id before the slash. Find the state of each name in `requires`, and compare with `want`.
+3. Words case: pick the text for `language`, and compare with `want`. A list or map that `want` leaves out is empty.
