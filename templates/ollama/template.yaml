@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Ollama
+  # renovate: depName=docker.io/ollama/ollama
   version: "0.40.10"
   description: Private CPU-only local model runtime. The API has no public ingress.
   license: MIT

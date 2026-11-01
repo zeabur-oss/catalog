@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Halo
+  # renovate: depName=halohub/halo
   version: "2.27.1"
   description: >-
     Halo publishing with persistent site assets and CloudNativePG PostgreSQL 16.

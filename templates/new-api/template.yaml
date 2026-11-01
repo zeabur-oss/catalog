@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: New API
+  # renovate: depName=docker.io/calciumion/new-api
   version: "v1.0.0-rc.46"
   description: >-
     OpenAI-compatible model gateway with secure initial owner provisioning and

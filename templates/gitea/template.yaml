@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Gitea
+  # renovate: depName=docker.gitea.com/gitea
   version: "28.2.0-rootless"
   description: >-
     Gitea Git hosting over HTTPS, with repositories and LFS objects on a

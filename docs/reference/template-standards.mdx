@@ -61,7 +61,7 @@ Every template in Zeabur Catalog must follow these rules. When you add or update
 
 ## Labels
 
-- `metadata.version` must match the tag of the application's main image. The renderer adds `app.kubernetes.io/instance: <id>`, `app.kubernetes.io/version: <version>`, and `templates.zeabur.com/template: <id>` to every rendered object and to Secrets for automatically generated input values. This lets `kubectl delete <kinds> -l app.kubernetes.io/instance=<id>` remove a single installation's resources from the Namespace.
+- `metadata.version` must match the tag of the application's main image, pinned with a digest in `manifests.yaml`. The line above it names that image as `# renovate: depName=<image>`, so Renovate moves the version and the image in one pull request. The renderer adds `app.kubernetes.io/instance: <id>`, `app.kubernetes.io/version: <version>`, and `templates.zeabur.com/template: <id>` to every rendered object and to Secrets for automatically generated input values. This lets `kubectl delete <kinds> -l app.kubernetes.io/instance=<id>` remove a single installation's resources from the Namespace.
 
 ## Data and backups
 

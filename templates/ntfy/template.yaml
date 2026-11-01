@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: ntfy
+  # renovate: depName=binwiederhier/ntfy
   version: "v2.33.1"
   description: >-
     ntfy push notification server over HTTP. Topics need an account, and the

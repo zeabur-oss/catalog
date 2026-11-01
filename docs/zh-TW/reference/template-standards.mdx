@@ -62,7 +62,7 @@ Zeabur Catalog 的每個範本都必須符合以下規則。新增或修改範�
 
 ## 標籤
 
-- `metadata.version` 必須設為應用程式主要映像檔的 tag。渲染器會在每個渲染後的物件，以及自動產生輸入值的 Secret 上，加上 `app.kubernetes.io/instance: <id>`、`app.kubernetes.io/version: <version>` 與 `templates.zeabur.com/template: <id>`。因此，使用 `kubectl delete <kinds> -l app.kubernetes.io/instance=<id>` 就能從 Namespace 中移除單次安裝的資源。
+- `metadata.version` 必須設為應用程式主要映像檔的 tag，且該映像檔在 `manifests.yaml` 裡要用 digest 固定。它的上一行要寫 `# renovate: depName=<image>` 指出是哪個映像檔，Renovate 才會在同一個 pull request 裡一起更新版本和映像檔。渲染器會在每個渲染後的物件，以及自動產生輸入值的 Secret 上，加上 `app.kubernetes.io/instance: <id>`、`app.kubernetes.io/version: <version>` 與 `templates.zeabur.com/template: <id>`。因此，使用 `kubectl delete <kinds> -l app.kubernetes.io/instance=<id>` 就能從 Namespace 中移除單次安裝的資源。
 
 ## 資料與備份
 

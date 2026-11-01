@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Vaultwarden
+  # renovate: depName=vaultwarden/server
   version: "1.37.4"
   description: >-
     Vaultwarden, a Bitwarden-compatible password manager server, with SQLite

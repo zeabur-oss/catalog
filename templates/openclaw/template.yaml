@@ -2,6 +2,7 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: OpenClaw
+  # renovate: depName=ghcr.io/openclaw/openclaw
   version: "2026.10.7"
   description: >-
     OpenClaw (formerly Clawdbot, Moltbot) is a personal AI assistant that runs
