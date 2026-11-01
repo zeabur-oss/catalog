@@ -4,18 +4,25 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    # zeabur-oss-release: checks the release tag (scripts/release.sh).
-    oss-release = {
+    # The base shell of every zeabur-oss repository: Bun, the release tools and the shared linters.
+    oss = {
       url = "github:zeabur-oss/.github";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { self, nixpkgs, flake-utils, oss-release }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+      oss,
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        # The release version: scripts/release.sh check compares the tag with it.
+        # The release version: scripts/release.ts check compares the tag with it.
         version = "0.1.1";
         catalog = pkgs.buildGoModule {
           pname = "catalog";
@@ -50,10 +57,11 @@
           ];
           doCheck = false;
         };
-      in {
+      in
+      {
         packages = {
           inherit catalog kube-apiserver;
-          # The files that scripts/release.sh signs and publishes. Zeabur builds this output at its
+          # The files that scripts/release.ts publishes. Zeabur builds this output at its
           # pinned commit, so it embeds the same bytes as the release.
           release = pkgs.runCommand "catalog-release" { nativeBuildInputs = [ catalog ]; } ''
             cp -r ${self} src
@@ -71,23 +79,18 @@
         };
 
         devShells.default = pkgs.mkShell {
+          inputsFrom = [ oss.devShells.${system}.base ];
           packages = with pkgs; [
             go
             gopls
-            kubernetes-helm
             kubectl
             kubeconform
             kind
             kube-apiserver
             etcd
-            cosign
-            gh
-            jq
-            shellcheck
-            actionlint
             yq-go
-            oss-release.packages.${system}.zeabur-oss-release
           ];
         };
-      });
+      }
+    );
 }

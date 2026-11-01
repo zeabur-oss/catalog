@@ -14,7 +14,7 @@ here), `zeabur-oss-workflow`, `zeabur-oss-cluster-tests`.
 
 ## Checks (what CI runs)
 Each pull request job is `scripts/ci.sh <job>` (`scripts/ci.sh --list`); it enters the dev shell itself.
-The release stages are `scripts/release.sh`. Underneath:
+The release stages are `bun scripts/release.ts <stage>`. Underneath:
 ```sh
 nix develop -c go test ./...
 nix develop -c go run ./tools/cmd/catalog validate   # schema, licences, references, value comments

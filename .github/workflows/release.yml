@@ -8,12 +8,8 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to rehearse or verify (v0.1.1, v0.1.2-beta.1); a rehearsal never publishes"
+        description: "Version to rehearse (v0.1.1, v0.1.2-beta.1); a rehearsal never publishes"
         required: true
-      verify_only:
-        description: "Verify the existing draft release of this version; build and publish nothing"
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -24,7 +20,7 @@ concurrency:
 
 jobs:
   release:
-    uses: zeabur-oss/.github/.github/workflows/release.yml@9a1863f91c2f8253ec3c970b6c91b3fd01a9a69f # main
+    uses: zeabur-oss/.github/.github/workflows/release.yml@bc2fba94d807c947f554f3b75be5623d86473067 # main
     permissions:
       contents: write
       packages: write
@@ -33,6 +29,5 @@ jobs:
     with:
       name: Zeabur Catalog
       version: ${{ inputs.version }}
-      verify-only: ${{ inputs.verify_only == true }}
       # The release is data, the same on every platform; it was built on arm64 before.
       platforms: '[{"os": "linux", "arch": "arm64", "runner": "ubuntu-26.04-arm"}]'

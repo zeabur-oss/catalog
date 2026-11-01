@@ -32,11 +32,14 @@ case "$job" in
   lint)
     shellcheck scripts/*.sh
     actionlint
+    bun install --frozen-lockfile
+    bun fmt --check scripts/release.ts
+    bun check scripts/
     ;;
   test) go test ./... ;;
   # Validate, render, template lint and a server-side dry run on a local API server.
   l0) go run ./tools/cmd/catalog e2e -tier l0 ;;
-  # What release.sh build makes. A go.sum change fails here first, with flake.nix's new vendorHash.
+  # What release.ts build makes. A go.sum change fails here first, with flake.nix's new vendorHash.
   release)
     nix build .#release
     out="${CI_ARTIFACTS:-$root/out/ci}"
