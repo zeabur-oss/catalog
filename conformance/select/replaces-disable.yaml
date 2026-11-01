@@ -1,4 +1,4 @@
-description: A disable name that a component replaces takes out the new id, with a warning.
+description: A disable name that a component replaces is an error naming the new id.
 components:
   - id: builds/zeabur-builder
     defaults: {single-node: optional, multi-node: optional}
@@ -13,7 +13,4 @@ config:
   add: [builds]
   disable: [container-registry/zot]
 want:
-  components:
-    - {id: ingress/traefik, why: default}
-  warnings:
-    - {kind: replaced, old: container-registry/zot, new: builds/zeabur-builder}
+  error: {kind: replaced, old: container-registry/zot, new: builds/zeabur-builder}

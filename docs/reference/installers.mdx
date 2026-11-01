@@ -11,7 +11,6 @@ An installer reads `index.json` from a [release](releases.mdx) and decides which
 - The profile, `single-node` or `multi-node`.
 - The distribution, `k3s`, `rke2` or `kubesolo`.
 - The `enable` and `disable` lists that the person writes. Each item is a component id, such as `logs/victoria-logs`, or a capability, such as `logs`.
-- The install record, which lists the ids of the components installed on the server. A server with nothing installed has none.
 
 ## Names
 
@@ -37,12 +36,11 @@ The installer takes these steps in order.
    | `distributions` is present and doesn't list the distribution | `distributions` | Always. An enabled component also gets a `left-out` warning |
    | `defaults` is `unsupported` on the profile | `unsupported` | Always. An enabled component also gets a `left-out` warning |
    | `testedOn` doesn't list the distribution | `untested` | Defaults only. An enabled component is installed with an `untested` warning |
-5. **Install record.** On a server with an install record, a default that the record lacks is offered, not installed. It's still installed when `enable` names it or a chosen component needs it. An installer may also keep a list of defaults it always installs, such as the ones it can't work without.
-6. **Order.** Go through the chosen components in id order. For each one, take its `installOrder` for the profile, which lists its dependencies and then the component. Add each id that isn't in the result yet. A component in the result that wasn't chosen is there as a dependency.
+5. **Order.** Go through the chosen components in id order. For each one, take its `installOrder` for the profile, which lists its dependencies and then the component. Add each id that isn't in the result yet. A component in the result that wasn't chosen is there as a dependency.
 
    Before adding a component's list, check each id in it that isn't disabled. When the catalog has that component and its `testedOn` doesn't list the distribution, a default is left out with the code `needs-untested`, which names the dependency. An enabled component still adds its list, with an `untested` warning for that dependency. When an id in the list is disabled or left out, the choice is an error.
 
-The result has the components in install order, each with why it's installed (`default`, `enabled` or `dependency`), the components left out with their reasons, the warnings, and the defaults offered on a server with an install record. Because each `installOrder` already places a component after its dependencies, the result does too. It doesn't depend on the order of `enable` or `disable`.
+The result has the components in install order, each with why it's installed (`default`, `enabled` or `dependency`), the components left out with their reasons and the warnings. Because each `installOrder` already places a component after its dependencies, the result does too. It doesn't depend on the order of `enable` or `disable`.
 
 ## Errors
 
@@ -51,22 +49,20 @@ The installer stops and installs nothing on these errors. The `kind` names the e
 | `kind` | When | Tell the person |
 | --- | --- | --- |
 | `unknown` | A name matches no capability or component id | The name |
-| `replaced` | `enable` names an id that a component [replaces](#replaced-components) | The new id to write instead |
+| `replaced` | `enable` or `disable` names an id that a component [replaces](#replaced-components) | The new id to write instead |
 | `needs-disabled` | A chosen component needs one that is disabled or left out | Both components |
 
 ## Replaced components
 
 When a component takes over from one the catalog removed, its `replaces` lists the old id. For example, `builds/zeabur-builder` has `replaces: [container-registry/zot]`, because zot now comes with Zeabur Builder. No component has an id that another one replaces.
 
-- `enable` with the old id is an error naming the new id.
-- `disable` with the old id takes out the new one, with a warning that names the new id.
-- An install record with the old id counts as having the new component.
+The installer doesn't swap components for the person. `enable` or `disable` with the old id is an error that names the new id, so the person changes the configuration.
 
-`replaces` is optional. An installer that doesn't read it still installs the same components. It only reports an old id as unknown.
+`replaces` is optional. An installer that doesn't read it reports an old id as unknown.
 
 ## Install and check
 
-Install the components in the order of the result. [Component file format](component-format.mdx) describes the releases of each one, the digests that pin them and the other fields an installer reads.
+Install the components in the order of the result, and remove the installed components that the result doesn't have. [Component file format](component-format.mdx) describes the releases of each one, the digests that pin them and the other fields an installer reads.
 
 Once a component is installed, run each of its `health` checks as one `kubectl wait`. Each item of `wait` is one argument, and `--timeout=<timeout>` comes last.
 
@@ -93,15 +89,12 @@ config:
   profile: multi-node
   distribution: rke2
   # add: what the installer adds to the defaults
-  # required: defaults it always installs, even when the install record lacks them
   # enable, disable: the person's lists
-  # installed: the install record's ids; left out, the server has no install record
 want:
   components:          # in install order
     - {id: ingress/traefik, why: default}
   leftOut:
     logs/victoria-logs: {reason: untested, distribution: rke2}
-  # offered: defaults not installed because the install record lacks them
   # warnings: [{kind: untested, component: …, distribution: …}], in any order
   # error: {kind: unknown, name: …}, in place of the rest
 ```

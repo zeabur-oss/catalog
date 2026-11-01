@@ -12,7 +12,6 @@ source: "070a2deaa0c8"
 - profile，即 `single-node` 或 `multi-node`。
 - 发行版，即 `k3s`、`rke2` 或 `kubesolo`。
 - 用户写的 `enable` 和 `disable` 列表。每一项可以是组件 ID（例如 `logs/victoria-logs`），也可以是 capability（例如 `logs`）。
-- 服务器上的安装记录，里面是装过的组件 ID。没装过的服务器没有这份记录。
 
 ## 名称
 
@@ -38,17 +37,15 @@ source: "070a2deaa0c8"
    | 有 `distributions`，但没有列当前发行版 | `distributions` | 一律排除。启用的组件另外显示 `left-out` 警告 |
    | 当前 profile 的 `defaults` 是 `unsupported` | `unsupported` | 一律排除。启用的组件另外显示 `left-out` 警告 |
    | `testedOn` 没有列当前发行版 | `untested` | 只排除默认组件。启用的组件照样安装，并显示 `untested` 警告 |
-5. 服务器有安装记录时，记录里没有的默认组件只列为**可安装**，不会直接装上。`enable` 指定了它，或已选的组件需要它时，照样安装。安装工具也可以准备一份一定要装的默认组件列表，例如缺了就无法运行的组件。
-6. 按 ID 顺序遍历已选的组件，取每个组件在当前 profile 的 `installOrder`，排出**安装顺序**。`installOrder` 先列它需要的组件，最后是它自己。结果里还没有的 ID 就依次加进去。结果里没有被选中的组件，是因为其他组件需要才安装的。
+5. 按 ID 顺序遍历已选的组件，取每个组件在当前 profile 的 `installOrder`，排出**安装顺序**。`installOrder` 先列它需要的组件，最后是它自己。结果里还没有的 ID 就依次加进去。结果里没有被选中的组件，是因为其他组件需要才安装的。
 
    加入一个组件的列表之前，先检查列表里每个没停用的 ID。catalog 有这个组件，但它的 `testedOn` 没有列当前发行版时，默认组件会被排除，代码是 `needs-untested`，并指出是哪个依赖组件。启用的组件照样加入列表，并对这个依赖组件显示 `untested` 警告。列表里有停用或排除的 ID 时，也会报错。
 
-选择的结果有四部分：
+选择的结果有三部分：
 
 - 按安装顺序排好的组件，以及各自的安装原因：`default`、`enabled` 或 `dependency`。
 - 排除的组件和原因。
 - 警告。
-- 有安装记录时，列为可安装的默认组件。
 
 每个 `installOrder` 都已经把组件排在它需要的组件之后，所以结果也是这样。`enable` 和 `disable` 怎么排列，都不影响结果。
 
@@ -59,22 +56,20 @@ source: "070a2deaa0c8"
 | `kind` | 情况 | 要告诉用户 |
 | --- | --- | --- |
 | `unknown` | 名称对不上任何 capability 或组件 ID | 这个名称 |
-| `replaced` | `enable` 写的 ID 已由其他组件接手，见下一节 | 要改写的新 ID |
+| `replaced` | `enable` 或 `disable` 写的 ID 已由其他组件接手，见下一节 | 要改写的新 ID |
 | `needs-disabled` | 已选的组件需要的组件已停用或排除 | 两个组件的名称 |
 
 ## 接手旧组件
 
 组件接手了 catalog 已移除的组件时，用 `replaces` 列出旧 ID。例如 zot 现在随 Zeabur Builder 一起安装，所以 `builds/zeabur-builder` 写了 `replaces: [container-registry/zot]`。现有组件的 ID 不会出现在其他组件的 `replaces` 里。
 
-- `enable` 写旧 ID 会报错，错误信息会给出新 ID。
-- `disable` 写旧 ID 会去掉新组件，并显示警告，给出新 ID。
-- 安装记录里有旧 ID 时，当作已经装了新组件。
+安装工具不会自动替用户换掉组件。`enable` 或 `disable` 写了旧 ID 会报错，错误信息会给出新 ID，让用户自己改配置文件。
 
-`replaces` 不是必填项。不读这个字段的安装工具同样会选出相同的组件，只是遇到旧 ID 时会报告找不到。
+`replaces` 不是必填项。不读这个字段的安装工具遇到旧 ID 时，会报告找不到。
 
 ## 安装与检查
 
-按结果的顺序安装组件。每个组件的 releases、固定内容的 digest，以及安装工具会读取的其他字段，见[组件文件格式](component-format.mdx)。
+按结果的顺序安装组件，并移除结果里没有的已装组件。每个组件的 releases、固定内容的 digest，以及安装工具会读取的其他字段，见[组件文件格式](component-format.mdx)。
 
 组件装好后，每项 `health` 检查各运行一次 `kubectl wait`。`wait` 的每一项各是一个参数，最后再加上 `--timeout=<timeout>`，例如：
 
@@ -101,15 +96,12 @@ config:
   profile: multi-node
   distribution: rke2
   # add: what the installer adds to the defaults
-  # required: defaults it always installs, even when the install record lacks them
   # enable, disable: the person's lists
-  # installed: the install record's ids; left out, the server has no install record
 want:
   components:          # in install order
     - {id: ingress/traefik, why: default}
   leftOut:
     logs/victoria-logs: {reason: untested, distribution: rke2}
-  # offered: defaults not installed because the install record lacks them
   # warnings: [{kind: untested, component: …, distribution: …}], in any order
   # error: {kind: unknown, name: …}, in place of the rest
 ```

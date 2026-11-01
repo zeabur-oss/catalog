@@ -50,10 +50,8 @@
         "profile": { "enum": ["single-node", "multi-node"] },
         "distribution": { "enum": ["k3s", "rke2", "kubesolo"] },
         "add": { "$ref": "#/$defs/names", "description": "What the installer adds to the defaults." },
-        "required": { "$ref": "#/$defs/names", "description": "Defaults the installer always installs, even when the install record lacks them." },
         "enable": { "$ref": "#/$defs/names" },
-        "disable": { "$ref": "#/$defs/names" },
-        "installed": { "$ref": "#/$defs/ids", "description": "The install record's components. Omitted means the server has no install record." }
+        "disable": { "$ref": "#/$defs/names" }
       }
     },
     "want": {
@@ -107,18 +105,11 @@
             ]
           }
         },
-        "offered": { "$ref": "#/$defs/ids", "description": "Defaults not installed because the install record lacks them, in id order." },
         "warnings": {
           "type": "array",
           "description": "In any order.",
           "items": {
             "oneOf": [
-              {
-                "type": "object",
-                "additionalProperties": false,
-                "required": ["kind", "old", "new"],
-                "properties": { "kind": { "const": "replaced" }, "old": { "$ref": "#/$defs/id" }, "new": { "$ref": "#/$defs/id" } }
-              },
               {
                 "type": "object",
                 "additionalProperties": false,
