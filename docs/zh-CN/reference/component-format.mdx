@@ -135,7 +135,7 @@ health:
 - `urlDigests` 使用每个下载文件的 sha256，顺序必须与 URL 一致。
 - 镜像在 `values` 中使用 `<tag>@sha256:<digest>`，也包括 chart 通过参数传给 operator 的镜像。chart 无法接受 digest 时，要在 `unpinnedImages` 中列出镜像，并用注释说明原因。URL 安装条目不受这项要求限制。
 
-Renovate 会更新镜像与 OCI chart 的标签和 digest。它无法读取 HTTP chart 或 URL 的 digest。Renovate 更新 `version` 后，`catalog render` 会失败，并输出新的 digest，供你复制填入。
+Renovate 会一起更新镜像和 chart 的版本与 digest，但无法读取 URL 的 digest。Renovate 更新 URL 的 `version` 后，`catalog render` 会失败，并输出新的 digest，供你复制填入。
 
 安装结果必须一致：chart 不得生成密钥或证书。需要生成的值放在 `inputs` 中，并存储在 Secret 中；证书由 cert-manager 提供。如果两次渲染的结果不同，`catalog render` 会失败。
 
