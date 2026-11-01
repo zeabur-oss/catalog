@@ -2,8 +2,8 @@
   "template": "ghost",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 402,
-      "idleCPUm": 9,
+      "idleMemoryMiB": 396,
+      "idleCPUm": 6,
       "versions": {
         "ghost": "6-alpine",
         "mysql": "8.4"

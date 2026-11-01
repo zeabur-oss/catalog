@@ -35,14 +35,14 @@
     },
     "multi-node-amd64-v1.36.4": {
       "idleMemoryMiB": 32,
-      "idleCPUm": 2,
+      "idleCPUm": 1,
       "versions": {
         "psmdb-operator": "1.23.2"
       },
       "measuredAt": "2026-10-31"
     },
     "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 31,
+      "idleMemoryMiB": 32,
       "idleCPUm": 1,
       "versions": {
         "psmdb-operator": "1.23.2"
@@ -74,7 +74,7 @@
       "measuredAt": "2026-10-31"
     },
     "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 17,
+      "idleMemoryMiB": 18,
       "idleCPUm": 1,
       "versions": {
         "psmdb-operator": "1.23.2"
