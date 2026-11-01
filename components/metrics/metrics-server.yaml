@@ -13,9 +13,6 @@ metadata:
       summary: "显示每个 Pod 当前用了多少 CPU 和内存。"
   license: Apache-2.0
   homepage: https://github.com/kubernetes-sigs/metrics-server
-maturity: kubernetes-sig
-alternatives:
-  victoria-metrics: Adds history and alerts at a few hundred MiB.
 defaults:
   single-node: recommended
   multi-node: recommended
@@ -65,7 +62,6 @@ detection:
 
 security:
   summary: Reads kubelet metrics; registers an aggregated API.
-  clusterWide: true
 
 health:
   - name: metrics-api

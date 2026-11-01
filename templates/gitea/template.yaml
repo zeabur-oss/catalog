@@ -16,8 +16,6 @@ metadata:
   license: MIT AND PostgreSQL AND Apache-2.0
   # Also: https://cloudnative-pg.io/
   homepage: https://about.gitea.com/
-  icon: https://github.com/go-gitea.png
-  categories: [developer-tools]
 
 requires:
   - ingress/traefik
@@ -126,33 +124,6 @@ security:
         zh-CN:
           risk: "仓库和 LFS 对象放在卷上，数据库备份不会包含它们。"
           mitigation: "另外备份 gitea-data 卷，例如用 gitea dump。正式上线前，先演练一次恢复。"
-
-scalability:
-  summary: One Gitea instance on a 20Gi volume, with one PostgreSQL primary.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - >-
-      Repositories, LFS objects, the code indexer and sessions are on a
-      ReadWriteOnce volume. More replicas need shared storage, a shared queue
-      and a shared session store.
-    - A node-local default StorageClass, such as local-path, has no snapshots or failover.
-
-upgradeNotes:
-  - >-
-    Database backups are off when the template is installed. To turn them on,
-    open the database in Zeabur and use the Backups tab.
-  - >-
-    Back up the database and the gitea-data volume, and keep gitea-secrets,
-    before you change the image digest. Without secret-key, stored two-factor
-    and OAuth secrets cannot be decrypted.
-  - >-
-    The init container runs gitea migrate before the new version starts. Old
-    and new versions cannot run together. A rollback needs the database
-    backup taken before the upgrade.
-  - >-
-    Deleting the namespace deletes the volume and the database. Backups in S3
-    stay.
 
 smoke:
   - name: postgresql-ready

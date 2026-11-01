@@ -15,7 +15,6 @@ metadata:
       summary: "检测容器内的可疑行为，例如打开 shell 或提升权限。"
   license: Apache-2.0
   homepage: https://falco.org
-maturity: cncf-graduated
 defaults:
   single-node: optional
   multi-node: optional
@@ -123,12 +122,4 @@ security:
   summary: >
     Reads pod and node metadata to enrich alerts; falcosidekick writes
     PolicyReports in every namespace.
-  clusterWide: true
   privileged: true
-  egress: [ghcr.io, docker.io]
-  risks:
-    - risk: Alerts include command lines and file paths from every tenant's containers.
-      mitigation: >
-        Each namespace's report is readable by its admins only (falco-alert-reader,
-        aggregated to admin); alerts without a namespace go to a
-        ClusterPolicyReport for cluster administrators.

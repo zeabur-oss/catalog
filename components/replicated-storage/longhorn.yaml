@@ -16,13 +16,6 @@ metadata:
       summary: "把每个卷另外复制一份到其他节点，节点故障时数据仍在。"
   license: Apache-2.0
   homepage: https://longhorn.io
-maturity: cncf-incubating
-alternatives:
-  local-path: >
-    What the cluster has without it. Faster, but a volume stays on the node
-    that created it. Still the better class for databases that replicate
-    themselves (CloudNativePG, MongoDB): a second layer of copies costs
-    write latency and disk for nothing.
 defaults:
   single-node: optional
   multi-node: recommended
@@ -30,7 +23,6 @@ defaults:
 # KubeSolo install has one node, so there is no other node to copy to.
 distributions: [k3s, rke2, k0s, microk8s, kubeadm]
 persistsData: true
-disruptsTraffic: true
 
 # Every node needs, before install: open-iscsi with iscsid running and the
 # iscsi_tcp module loaded (volumes attach over iSCSI on the node), an NFSv4
@@ -152,19 +144,7 @@ security:
     namespaces, and manage pods, PVs and storage classes cluster-wide. The
     chart binds the longhorn-support-bundle ServiceAccount to cluster-admin;
     only support bundle pods mount its token.
-  clusterWide: true
   privileged: true
-  egress: [docker.io]
-  tenants: admin-only
-  risks:
-    - risk: The UI and the manager API have no authentication; either can delete any volume.
-      mitigation: >
-        The chart's policies (restrictInternalTraffic) admit only Longhorn's own pods
-        to the manager; the ui-policy release closes the UI to every pod.
-    - risk: Replicas are plain files under /var/lib/longhorn on each node, readable by root there.
-      mitigation: Put /var/lib/longhorn on an encrypted disk, or use Longhorn's encrypted volumes (cryptsetup on every node).
-    - risk: Uninstalling deletes every Longhorn volume and its data.
-      mitigation: The chart refuses to uninstall until the deleting-confirmation-flag setting is set to true by hand.
 
 # The manager creates the storage class longhorn-static itself, without an
 # owner, and Longhorn's uninstall deletes only the class longhorn.
@@ -195,9 +175,3 @@ smoke:
       - "-n catalog-smoke pvc/smoke --for=jsonpath={.status.phase}=Bound"
       - "storageclass/longhorn --for=jsonpath={.allowVolumeExpansion}=true"
     timeout: 600s
-
-upgradeNotes:
-  - versions: "*"
-    note: >
-      Upgrade one minor version at a time (1.12 to 1.13, never 1.11 to 1.13); the
-      chart's pre-upgrade job refuses a skip. 1.13 needs Kubernetes 1.34 or later.

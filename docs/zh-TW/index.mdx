@@ -1,13 +1,13 @@
 ---
 title: 開始使用 Zeabur Catalog
 description: 經過測試的 Kubernetes 元件與應用程式範本，附版本、設定與安裝方式。
-source: "db9fbcaf722c"
+source: "0ab8d60b1ccb"
 ---
 
 Zeabur Catalog 收錄了在 CI 中實際安裝並測試過的元件和範本。每次發行都會提供一個已簽章的套件包。任何工具都能讀取套件包，產生 `helm install` 指令、Flux 或 Argo CD 清單、k3s 的 `HelmChart` 物件，或安裝範本。
 
 - **元件**由叢集管理員在每個叢集安裝一次，例如 Ingress、憑證、指標和資料庫 operator。每種用途都會寫明採用的上游 chart、版本、設定，以及選擇的原因。
-- **範本**由專案成員安裝到單一 Namespace，例如 n8n、Dify、WordPress 和 PostgreSQL。範本會固定映像檔，設定資源要求與上限，並盡可能遵守 Restricted Pod Security Standard。範本也會說明如何擴充、備份資料，以及升級前要檢查什麼，並用 `requires` 列出需要的元件。
+- **範本**由專案成員安裝到單一 Namespace，例如 n8n、Dify、WordPress 和 PostgreSQL。範本會固定映像檔，設定資源要求與上限，並盡可能遵守 Restricted Pod Security Standard。範本也會用 `requires` 列出需要的元件。
 
 ## 我想部署一個範本
 
@@ -31,7 +31,7 @@ Zeabur Catalog 收錄了在 CI 中實際安裝並測試過的元件和範本。�
 
 ```text
 components/<capability>/<upstream>.yaml   一個用途搭配一個上游，一個檔案
-templates/<id>/template.yaml              一個應用程式：輸入、服務、安全性、擴充、煙霧測試
+templates/<id>/template.yaml              一個應用程式：輸入、服務、安全性、煙霧測試
 templates/<id>/manifests.yaml             它的 Kubernetes 物件
 schema/v1/                                兩種檔案的 JSON Schema
 config/licenses.yaml                      OSI 核准的 SPDX 識別碼，以及只能選擇啟用的例外

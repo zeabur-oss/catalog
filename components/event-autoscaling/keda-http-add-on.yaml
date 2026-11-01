@@ -14,8 +14,6 @@ metadata:
       summary: "按流量调整 Web 服务的副本数，空闲时可缩到零。"
   license: Apache-2.0
   homepage: https://github.com/kedacore/http-add-on
-maturity: cncf-graduated
-stability: beta
 defaults:
   single-node: optional
   multi-node: optional
@@ -72,13 +70,3 @@ detection:
 
 security:
   summary: Reads HTTPScaledObjects, Services and EndpointSlices cluster-wide; creates ScaledObjects.
-  clusterWide: true
-  tenants: namespaced
-  tenantCRDs: [HTTPScaledObject]
-  risks:
-    - risk: An HTTPScaledObject can claim another tenant's hostname.
-      mitigation: Admit only hosts the namespace's own HTTPRoutes serve.
-
-upgradeNotes:
-  - versions: "<1.0.0"
-    note: HTTPScaledObject fields change between minor versions; read the release notes before upgrading.

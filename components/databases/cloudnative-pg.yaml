@@ -13,9 +13,6 @@ metadata:
       summary: "运行 PostgreSQL 数据库，支持故障切换和备份到 S3。"
   license: Apache-2.0
   homepage: https://cloudnative-pg.io
-maturity: cncf-sandbox
-alternatives:
-  percona-mongodb: MongoDB, not PostgreSQL.
 defaults:
   single-node: optional
   multi-node: optional
@@ -98,22 +95,6 @@ detection:
 
 security:
   summary: Manages pods, Services, Secrets and PVCs for Clusters in every namespace.
-  clusterWide: true
-  credentials: optional
-  credentialsNote: Backups need S3 credentials, stored as a Secret in the tenant namespace.
-  tenants: namespaced
-  tenantCRDs: [Cluster, Backup, ScheduledBackup, Pooler, Database, ObjectStore]
-  risks:
-    - risk: >
-        ObjectStore inheritFromIAMRole, inheritFromAzureAD, useDefaultAzureCredentials
-        and gkeEnvironment use the node's or pod's cloud identity, not the tenant's.
-      mitigation: Require explicit credentials with an admission policy where nodes carry a cloud identity.
-    - risk: externalClusters and bootstrap from pg_basebackup or recovery can pull data from any reachable host.
-      mitigation: NetworkPolicies between namespaces; the credentials still come from the tenant's own Secrets.
-    - risk: imageName and imageCatalogRef run any image as the database.
-      mitigation: It runs under the namespace's Pod Security level, as any tenant pod does.
-    - risk: managed.services can add LoadBalancer Services that expose the database.
-      mitigation: Restrict LoadBalancer Services with the same policy used for other workloads.
 
 # The chart annotates its CRDs helm.sh/resource-policy: keep.
 leftovers: [customresourcedefinitions, persistentvolumeclaims]
@@ -144,7 +125,3 @@ smoke:
             accessKeyId: {name: smoke-s3, key: ACCESS_KEY_ID}
             secretAccessKey: {name: smoke-s3, key: ACCESS_SECRET_KEY}
     wait: ["-n cnpg-system deployment/plugin-barman-cloud --for=condition=Available"]
-
-upgradeNotes:
-  - versions: "*"
-    note: Upgrade the Barman Cloud plugin with the operator; check the plugin's supported operator versions.

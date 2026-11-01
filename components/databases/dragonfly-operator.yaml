@@ -16,7 +16,6 @@ metadata:
       summary: "运行与 Redis 兼容的 Dragonfly，支持副本和快照，但不是开源许可。"
   license: Apache-2.0 AND BUSL-1.1
   homepage: https://www.dragonflydb.io/docs/managing-dragonfly/operator/installation
-maturity: independent
 defaults:
   single-node: optional
   multi-node: optional
@@ -85,30 +84,6 @@ detection:
 
 security:
   summary: Manages pods, StatefulSets, Services and PDBs for Dragonfly objects in every namespace.
-  clusterWide: true
-  egress: [docker.dragonflydb.io, quay.io]
-  credentials: optional
-  credentialsNote: S3 snapshots need credentials, stored as a Secret in the tenant namespace.
-  tenants: namespaced
-  tenantCRDs: [Dragonfly]
-  risks:
-    - risk: >
-        Dragonfly is BUSL-1.1 until four years after each release. Its
-        Additional Use Grant excludes offering it to third parties as a
-        hosted or managed service, or as an in-memory data store product.
-      mitigation: >
-        Fine for running a team's own applications; a provider selling
-        databases to others needs a licence from DragonflyDB or a
-        BSD-licensed engine such as Valkey. Show the licence before install.
-    - risk: >
-        Dragonfly pods start as root and drop to UID 999 themselves, with no
-        seccomp profile, unless the object sets podSecurityContext and
-        containerSecurityContext.
-      mitigation: Set both on each Dragonfly (see the smoke test); restricted namespaces reject the pods otherwise.
-    - risk: Without spec.authentication, any pod that reaches the Service can read and write every key.
-      mitigation: Set authentication.passwordFromSecret, and NetworkPolicies between namespaces.
-    - risk: The admin port 9999 has no TLS and no authentication.
-      mitigation: It is not on the Service; a NetworkPolicy can close it to other pods.
 
 # crds.keep annotates the CRDs helm.sh/resource-policy: keep.
 leftovers: [customresourcedefinitions]
@@ -144,9 +119,3 @@ smoke:
     wait: ["-n catalog-smoke dragonfly/smoke --for=jsonpath={.status.phase}=Ready"]
     # Pulls the Dragonfly image first.
     timeout: 600s
-
-upgradeNotes:
-  - versions: "*"
-    note: >
-      A new operator rolls Dragonfly pods to its default image unless spec.image
-      pins one; pin it in each object to upgrade Dragonfly on your own schedule.

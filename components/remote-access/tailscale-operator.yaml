@@ -16,7 +16,6 @@ metadata:
       summary: "把服务放到你的 tailnet 上，提供受信任的 HTTPS，无需对互联网开放端口。"
   license: BSD-3-Clause
   homepage: https://tailscale.com/kb/1236/kubernetes-operator
-maturity: independent
 defaults:
   single-node: optional
   multi-node: optional
@@ -93,41 +92,7 @@ security:
     Roles and RoleBindings. Installs eight CRDs (connectors, dnsconfigs,
     peerrelays, proxyclasses, proxygrouppolicies, proxygroups, recorders,
     tailnets) and the IngressClass tailscale.
-  clusterWide: true
   privileged: true
-  # Control plane, log uploads and DERP relays; proxies fetch certificates
-  # from Let's Encrypt; images come from Docker Hub.
-  egress: ["*.tailscale.com", acme-v02.api.letsencrypt.org, docker.io]
-  credentials: required
-  credentialsNote: >
-    A Tailscale OAuth client; the operator mints auth keys for itself and every
-    proxy, tagged tag:k8s-operator and tag:k8s.
-  risks:
-    - risk: >
-        Anyone who can create a Service or Ingress in any namespace can put it
-        on the tailnet (annotation tailscale.com/expose, loadBalancerClass
-        tailscale, or IngressClass tailscale), or reach a tailnet device
-        through an egress Service (annotation tailscale.com/tailnet-fqdn).
-      mitigation: >
-        Tailnet ACLs limit what tag:k8s may reach and who may reach it; a
-        ValidatingAdmissionPolicy can reserve those annotations, the class and
-        the IngressClass for approved namespaces.
-    - risk: >
-        Proxies for Services, egress and ProxyGroups run a privileged container
-        and a privileged init container that turns on IP forwarding, in the
-        operator's namespace. Ingress proxies run in userspace mode with no
-        added privileges.
-      mitigation: >
-        Label only the tailscale namespace with Pod Security privileged;
-        tenant namespaces keep restricted, since proxies never run there.
-    - risk: >
-        Pods in the cluster cannot resolve *.ts.net names by default, so an app
-        cannot call another app's tailnet name (an OIDC issuer, for example).
-      mitigation: >
-        A DNSConfig and a CoreDNS stub domain for ts.net resolve names that
-        have an egress proxy; an Ingress needs the experimental annotation
-        tailscale.com/experimental-forward-cluster-traffic-via-ingress, which
-        makes its proxy privileged. Calling the in-cluster Service avoids both.
 
 smoke:
   - name: crds-established

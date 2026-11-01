@@ -15,8 +15,6 @@ metadata:
   license: PostgreSQL AND Apache-2.0
   # Also: https://github.com/cloudnative-pg/postgres-containers, https://cloudnative-pg.io/
   homepage: https://github.com/pgvector/pgvector
-  icon: https://cdn.zeabur.com/marketplace/postgresql.svg
-  categories: [databases]
 
 requires: [databases/cloudnative-pg]
 
@@ -77,41 +75,6 @@ security:
         zh-CN:
           risk: "备份顺利完成，向量和索引也不一定能正确恢复。"
           mitigation: "正式上线前，用有代表性的向量数据实际演练一次恢复。"
-
-scalability:
-  summary: >-
-    Single primary with a 10Gi volume; vector indexes may need
-    substantially more memory and disk. No HPA. Read replicas require separate
-    nodes and a CNPG capacity check.
-  replicas: 1
-  maxReplicas: 3
-  blockers:
-    - On a node-local StorageClass, node loss requires a restore from a remote backup.
-    - Vector dimensions, index memory and extension versions constrain migrations.
-    - >-
-      The PodDisruptionBudget (enablePDB) protects the single instance from
-      voluntary eviction and can block node drains.
-
-upgradeNotes:
-  - >-
-    Database backups are off when the template is installed. To turn them on,
-    open the database in Zeabur and use the Backups tab.
-  - >-
-    Connect to postgresql-rw:5432, database zeabur, owner app, with credentials
-    from the operator-generated postgresql-app Secret. Superuser access is
-    disabled. Client Pods in the same namespace need the label
-    templates.zeabur.com/postgresql-client=true.
-  - >-
-    Check PostgreSQL and pgvector release compatibility; back up and test
-    restore with representative vectors.
-  - >-
-    Do not treat a major PostgreSQL image change as a rolling minor update; plan
-    the CNPG major upgrade or logical migration.
-  - >-
-    postInitApplicationSQL only runs on initial bootstrap. To upgrade the
-    extension, check pg_extension.extversion, pgvector release notes and index
-    compatibility, then run ALTER EXTENSION vector UPDATE as a planned
-    migration.
 
 smoke:
   - name: cluster-ready

@@ -14,7 +14,6 @@ metadata:
       summary: "在暴力破解和扫描碰到服务之前就拦下来。"
   license: MIT
   homepage: https://www.crowdsec.net
-maturity: independent
 defaults:
   single-node: optional
   multi-node: optional
@@ -162,10 +161,5 @@ detection:
 security:
   summary: The agent reads node log files read-only and makes no API writes.
   privileged: true
-  egress: [hub-data.crowdsec.net, plugins.traefik.io, github.com]
-  tenants: admin-only
-  risks:
-    - risk: A ban on a shared IP (NAT, CDN) blocks it for every tenant.
-      mitigation: Only administrators manage decisions. Configure trusted proxies before running CrowdSec behind a CDN.
 
 leftovers: [persistentvolumeclaims]

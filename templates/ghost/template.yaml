@@ -16,8 +16,6 @@ metadata:
   license: MIT AND GPL-2.0-only
   # Also: https://github.com/docker-library/mysql, https://github.com/TryGhost/ghost-docker
   homepage: https://github.com/TryGhost/Ghost
-  icon: https://github.com/TryGhost.png
-  categories: [cms]
 
 requires: [ingress/traefik, certificates/cert-manager]
 
@@ -160,40 +158,6 @@ security:
         zh-CN:
           risk: "Ghost 发送事务邮件和电子报，要依赖外部服务。"
           mitigation: "提供现成的 SMTP 机密。大量发送电子报时，在 Ghost 里设置 Mailgun。备份里的服务商凭证要妥善保护。模板不含自托管的 ActivityPub 和 Tinybird 分析。"
-
-scalability:
-  summary: >-
-    One writable instance backed by one volume. The template has no high
-    availability.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - >-
-      A node-local default StorageClass, such as local-path, has no snapshots
-      or failover.
-    - >-
-      A single writable application instance is intentional; do not increase
-      replicas without an application-specific storage/database design.
-
-upgradeNotes:
-  - >-
-    The ghost-setup Job creates the site owner at deploy time. On an existing
-    site it finds the setup already done and changes nothing. A Job cannot be
-    changed after it ran; delete it before you apply a new version.
-  - >-
-    Back up persistent application data and its database to storage outside the
-    node before updating the image digest.
-  - >-
-    Restore into a separate namespace before upgrading. Image rollback does not
-    reverse Ghost or MySQL schema migrations.
-  - >-
-    Fresh deployments use MySQL 8.4 LTS, which Ghost's official hosting guide
-    supports. Existing 8.0 volumes require a rehearsed backup/restore or
-    supported upgrade. MySQL 8.4 disables mysql_native_password by default;
-    migrate those users to caching_sha2_password before upgrading.
-  - >-
-    MySQL initialization credentials apply only to empty data directories; use
-    SQL for subsequent rotation. Back up MySQL and Ghost content together.
 
 smoke:
   - name: owner-created

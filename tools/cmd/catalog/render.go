@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"cmp"
 	"errors"
 	"flag"
 	"fmt"
@@ -70,12 +71,9 @@ func renderComponents(cat *catalog.Catalog, comps []*catalog.Component, out stri
 							errs = append(errs, fmt.Errorf("%s/%s %s: output differs between renders; supply generated values as inputs", c.ID, rel.Name, p))
 						}
 					}
-					level := "restricted"
-					if l, ok := c.Security["podSecurity"].(string); ok {
-						level = l
-					}
+					level := cmp.Or(c.Security.PodSecurity, "restricted")
 					// A privileged component's namespaces enforce no Pod Security level.
-					if priv, _ := c.Security["privileged"].(bool); priv {
+					if c.Security.Privileged {
 						level = ""
 					}
 					if err := templates.CheckPodSecurity(manifest, level); err != nil {

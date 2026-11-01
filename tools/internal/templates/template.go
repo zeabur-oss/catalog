@@ -19,17 +19,15 @@ import (
 )
 
 type Template struct {
-	ID           string      `yaml:"-" json:"id"`
-	APIVersion   string      `yaml:"apiVersion" json:"apiVersion"`
-	Kind         string      `yaml:"kind" json:"kind"`
-	Metadata     Metadata    `yaml:"metadata" json:"metadata"`
-	Requires     []string    `yaml:"requires" json:"requires,omitempty"`
-	Services     []Service   `yaml:"services" json:"services"`
-	Inputs       []Input     `yaml:"inputs" json:"inputs,omitempty"`
-	Security     Security    `yaml:"security" json:"security"`
-	Scalability  Scalability `yaml:"scalability" json:"scalability"`
-	UpgradeNotes []string    `yaml:"upgradeNotes" json:"upgradeNotes,omitempty"`
-	Smoke        []Smoke     `yaml:"smoke" json:"smoke"`
+	ID         string    `yaml:"-" json:"id"`
+	APIVersion string    `yaml:"apiVersion" json:"apiVersion"`
+	Kind       string    `yaml:"kind" json:"kind"`
+	Metadata   Metadata  `yaml:"metadata" json:"metadata"`
+	Requires   []string  `yaml:"requires" json:"requires,omitempty"`
+	Services   []Service `yaml:"services" json:"services"`
+	Inputs     []Input   `yaml:"inputs" json:"inputs,omitempty"`
+	Security   Security  `yaml:"security" json:"security"`
+	Smoke      []Smoke   `yaml:"smoke" json:"smoke"`
 
 	Dir string `yaml:"-" json:"-"` // holds template.yaml and manifests.yaml
 	raw any
@@ -37,9 +35,7 @@ type Template struct {
 
 type Metadata struct {
 	catalog.Metadata `yaml:",inline"`
-	Version          string   `yaml:"version" json:"version"`
-	Icon             string   `yaml:"icon" json:"icon,omitempty"`
-	Categories       []string `yaml:"categories" json:"categories"`
+	Version          string `yaml:"version" json:"version"`
 }
 
 type Security struct {
@@ -62,20 +58,12 @@ type Risk struct {
 	} `yaml:"locales" json:"locales,omitempty"`
 }
 
-type Scalability struct {
-	Summary     string   `yaml:"summary" json:"summary"`
-	Replicas    int      `yaml:"replicas" json:"replicas"`
-	MaxReplicas int      `yaml:"maxReplicas" json:"maxReplicas"`
-	Blockers    []string `yaml:"blockers" json:"blockers"`
-}
-
 type Service struct {
-	Name                  string                       `yaml:"name" json:"name"`
-	SecurityProfile       string                       `yaml:"securityProfile" json:"securityProfile"`
-	BaselineJustification string                       `yaml:"baselineJustification" json:"baselineJustification,omitempty"`
-	Ports                 []Port                       `yaml:"ports" json:"ports,omitempty"`
-	Resources             map[string]map[string]string `yaml:"resources" json:"resources"`
-	Domains               []string                     `yaml:"domains" json:"domains,omitempty"`
+	Name            string                       `yaml:"name" json:"name"`
+	SecurityProfile string                       `yaml:"securityProfile" json:"securityProfile"`
+	Ports           []Port                       `yaml:"ports" json:"ports,omitempty"`
+	Resources       map[string]map[string]string `yaml:"resources" json:"resources"`
+	Domains         []string                     `yaml:"domains" json:"domains,omitempty"`
 }
 
 type Port struct {
@@ -198,9 +186,6 @@ func Check(root string, cat *catalog.Catalog, all []*Template) error {
 		}
 		if _, err := validateInputs(t.Inputs); err != nil {
 			fail("%v", err)
-		}
-		if t.Scalability.MaxReplicas < t.Scalability.Replicas {
-			fail("maxReplicas is below replicas")
 		}
 		if data, err := os.ReadFile(filepath.Join(t.Dir, "manifests.yaml")); err != nil {
 			fail("%v", err)

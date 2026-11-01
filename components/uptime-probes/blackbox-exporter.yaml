@@ -14,7 +14,6 @@ metadata:
       summary: "检查网站和端口是否响应，无响应时发出告警。"
   license: Apache-2.0
   homepage: https://github.com/prometheus/blackbox_exporter
-maturity: cncf-graduated
 defaults:
   single-node: optional
   multi-node: recommended
@@ -73,8 +72,3 @@ detection:
 
 security:
   summary: Has no API access and only makes outbound probes.
-  tenants: admin-only
-  tenantCRDs: [VMProbe]
-  risks:
-    - risk: Probe targets can reach cloud metadata or private services (SSRF).
-      mitigation: Admit only the namespace's own hostnames or public URLs with an admission policy.

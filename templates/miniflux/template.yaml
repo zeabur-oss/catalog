@@ -16,8 +16,6 @@ metadata:
   license: Apache-2.0 AND PostgreSQL
   # Also: https://cloudnative-pg.io/
   homepage: https://miniflux.app/
-  icon: https://github.com/miniflux.png
-  categories: [productivity]
 
 requires:
   - ingress/traefik
@@ -80,24 +78,6 @@ security:
         zh-CN:
           risk: "数据库 Pod（CloudNativePG）会用数据库 operator 创建的身份去调用 Kubernetes API。"
           mitigation: "databases/cloudnative-pg 组件会为每个数据库集群各建一组权限。Miniflux 的 Pod 没有令牌。"
-
-scalability:
-  summary: One Miniflux instance with one PostgreSQL primary.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - >-
-      Each instance runs its own feed scheduler. More replicas need the
-      scheduler disabled on all but one instance.
-
-upgradeNotes:
-  - >-
-    Database backups are off when the template is installed. To turn them on,
-    open the database in Zeabur and use the Backups tab.
-  - >-
-    Miniflux migrates the database on start. A rollback needs the database
-    backup taken before the upgrade.
-  - Deleting the namespace deletes the database. Backups in S3 stay.
 
 smoke:
   - name: postgresql-ready

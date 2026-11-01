@@ -13,7 +13,6 @@ metadata:
       summary: "在 CPU 上运行本地模型，API 只能从集群内访问。"
   license: MIT
   homepage: https://github.com/ollama/ollama
-  categories: [ai]
 
 services:
   - name: ollama
@@ -63,27 +62,6 @@ security:
         zh-CN:
           risk: "每个模型都有自己的许可，跟 Ollama 软件本身的 MIT 许可无关。模型文件也可能把内存和磁盘用光。"
           mitigation: "不会预先加载任何模型。请先看过每个模型的许可和大小，再到 Pod 里运行 `ollama pull MODEL`。Pod 一次只加载一个模型，一次只处理一个请求。内存上限是 8Gi，存储卷是 50Gi，所以多数大型模型放不下。"
-
-scalability:
-  summary: Single replica on one volume, with no failover.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - A node-local default StorageClass, such as local-path, has no snapshots or failover.
-    - Replicas cannot share the model store. More replicas need a shared volume.
-    - Inference runs on CPU only. The template does not schedule GPUs.
-
-upgradeNotes:
-  - >-
-    Back up persistent state off-node before accepting an image digest or schema
-    migration; restore into a separate namespace before cutover.
-  - >-
-    To back up, stop writes and copy /data to encrypted off-node storage.
-    Include private model definitions and private keys, as well as public model
-    blobs. Keep the previous digest and a compatible data copy for rollback.
-  - >-
-    The Deployment uses the Recreate strategy. The API is unavailable during an
-    upgrade.
 
 smoke:
   - name: ollama-ready

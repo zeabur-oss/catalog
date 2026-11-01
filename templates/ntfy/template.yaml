@@ -15,8 +15,6 @@ metadata:
       summary: "推送通知服务器，主题需要账号，消息存在卷上。"
   license: Apache-2.0 OR GPL-2.0-only
   homepage: https://ntfy.sh/
-  icon: https://github.com/binwiederhier/ntfy/raw/main/web/public/static/images/ntfy.png
-  categories: [developer-tools]
 
 requires: [ingress/traefik, certificates/cert-manager]
 
@@ -84,25 +82,6 @@ security:
         zh-CN:
           risk: "附件会占用存储卷的磁盘空间。"
           mitigation: "附件缓存总共最多 2G，单个文件最多 15M。消息缓存只保留 12 小时的消息。"
-
-scalability:
-  summary: One instance with SQLite on a 5Gi volume.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - >-
-      Subscribers hold connections to one process, and the caches are SQLite
-      files. More replicas need PostgreSQL and the experimental cluster mode.
-    - A node-local default StorageClass, such as local-path, has no snapshots or failover.
-
-upgradeNotes:
-  - >-
-    Copy user.db off the node before you change the image digest. It holds
-    users, access rules and tokens. cache.db and attachments are temporary.
-  - >-
-    ntfy migrates its databases on start. A rollback needs the copy taken
-    before the upgrade.
-  - Deleting the namespace deletes the PVC, users and cached messages.
 
 smoke:
   - name: ntfy-ready

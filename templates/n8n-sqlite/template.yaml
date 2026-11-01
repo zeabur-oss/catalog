@@ -18,8 +18,6 @@ metadata:
   license: LicenseRef-n8n-sustainable-use
   # Also: https://docs.n8n.io/hosting/, https://docs.n8n.io/sustainable-use-license/
   homepage: https://github.com/n8n-io/n8n
-  icon: https://img.5xcamp.us/i/2732381b-be89-478f-9f82-7d63beed4d81.png
-  categories: [automation]
 
 requires: [ingress/traefik, certificates/cert-manager]
 
@@ -133,43 +131,6 @@ security:
         zh-CN:
           risk: "没有设置 SMTP 服务器。"
           mitigation: "你在 n8n 里设置好 SMTP 之前，邀请邮件和重置密码邮件都发不出去。"
-
-scalability:
-  summary: Single-writer deployment; no automatic horizontal scaling.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - A node-local default StorageClass has no HA or snapshots.
-    - >-
-      Filesystem binary-data storage has a single writer; execution
-      queue mode and shared binary store are not configured.
-    - SQLite database supports one main process only.
-
-upgradeNotes:
-  - >-
-    Preserve Secrets and PVCs. Back up data off-node and rehearse a restore
-    before changing image digests. Stop n8n before you copy the SQLite database
-    and binary files; a copy of a running database can be inconsistent. After
-    restore, check that stored credentials decrypt and workflows run.
-  - >-
-    Main n8n and runner must remain exactly 2.44.6 together; never upgrade one
-    side independently. Preserve encryption key, runner token, database, binary
-    files and owner password across upgrades.
-  - >-
-    Data lives in /home/node/.n8n. The runner token is a random Secret.
-    Settings-file permissions are enforced, node environment reads are blocked,
-    and the executeCommand and localFileTrigger nodes are disabled.
-  - >-
-    GENERIC_TIMEZONE is Asia/Taipei. Change it in the manifest if schedule
-    triggers must use another timezone.
-  - >-
-    Image rollback does not undo n8n database migrations; restore the backup
-    taken before the upgrade.
-  - >-
-    Owner email/password is controlled by deployment variables. Rotate
-    n8n-secrets/owner-password and restart to change password; recover
-    encryption-key from secure backups, never regenerate it for an existing
-    database.
 
 smoke:
   - name: workload-ready

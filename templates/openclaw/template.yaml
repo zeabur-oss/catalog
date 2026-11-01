@@ -17,8 +17,6 @@ metadata:
   license: MIT
   # Also: https://docs.openclaw.ai/gateway/security
   homepage: https://github.com/openclaw/openclaw
-  icon: https://raw.githubusercontent.com/openclaw/openclaw/main/docs/assets/pixel-lobster.svg
-  categories: [ai]
 
 requires: [ingress/traefik, certificates/cert-manager]
 
@@ -117,35 +115,6 @@ security:
         zh-CN:
           risk: "代理程序的状态和频道凭证都放在同一个 PVC（一个数据卷）里。"
           mitigation: "先停止写入，再把整个 PVC、网关机密和供应商机密做加密备份，存到集群外面。节点本地的 StorageClass 没有高可用，也不能做卷快照。"
-
-scalability:
-  summary: One instance per trusted owner; do not horizontally scale this deployment.
-  replicas: 1
-  maxReplicas: 1
-  blockers: [Single-owner gateway and persistent state on one volume.]
-
-upgradeNotes:
-  - >-
-    Back up the complete openclaw-home PVC and generated gateway-token Secret
-    before changing the pinned image.
-  - >-
-    Configuration is seeded only on first start; edit persisted configuration
-    through the Control UI or CLI. Changing provider inputs does not overwrite
-    existing user configuration.
-  - >-
-    Use https://<domain> and the generated token; approve device pairing with
-    the CLI inside the pod. Never put the token in a public URL.
-  - >-
-    Config schema and pairing behaviour change quickly. Read the upstream
-    migration notes before each upgrade. Restoring the PVC with the old image
-    rolls back only when the new version did not migrate data one-way.
-  - >-
-    Readiness uses /startupz and liveness uses /healthz. /readyz depends on
-    channels and can stay false until you configure one.
-  - >-
-    No runtime Homebrew/Go installs, Docker socket, host filesystem, local
-    Chromium, or unsafe origin-fallback flag. Tools run with the same restricted
-    pod identity as this one trusted owner.
 
 smoke:
   - name: Application available

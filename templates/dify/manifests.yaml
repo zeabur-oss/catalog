@@ -1459,6 +1459,8 @@ spec:
             drop:
             - ALL
             add:
+            # Baseline: root and these capabilities set up the chroot and the identity of each
+            # run before the sandbox applies its own seccomp filter.
             - SYS_CHROOT
             - SETUID
             - SETGID
@@ -1542,6 +1544,8 @@ spec:
           capabilities:
             drop:
             - ALL
+            # Baseline: root and these capabilities copy the ownership and modes of the
+            # image's runtime into the emptyDir.
             add:
             - CHOWN
             - DAC_OVERRIDE

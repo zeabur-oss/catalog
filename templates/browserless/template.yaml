@@ -19,8 +19,6 @@ metadata:
   license: SSPL-1.0 OR LicenseRef-Browserless-Commercial
   # Also: https://docs.browserless.io/
   homepage: https://github.com/browserless/browserless
-  icon: https://avatars.githubusercontent.com/u/51244358?s=500&v=4
-  categories: [automation]
 
 requires: [ingress/traefik, certificates/cert-manager]
 
@@ -85,39 +83,6 @@ security:
         zh-CN:
           risk: "共用的令牌可以执行很强的自动化操作，也可能出现在客户端 URL 和访问日志里。"
           mitigation: "令牌在部署时自动生成。客户端支持时，改用 Authorization 请求头传送。限制谁能读取 Kubernetes 机密和日志。外部代理的日志要去掉查询字符串。令牌一旦泄露就要更换。"
-
-scalability:
-  summary: >-
-    One stateless instance, four concurrent and four queued sessions; active
-    browser sessions cannot migrate.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - >-
-      Session and CDP/WebSocket connections are process-local; reconnect/retry
-      policy is the caller responsibility.
-    - CPU, memory and shared-memory usage bound browser concurrency.
-    - No HPA is enabled. More replicas need session-aware routing.
-    - Concurrency is set to four sessions. Load-test the node before you raise it.
-    - >-
-      Readiness removes the endpoint while the queue is full. The 90-second
-      termination window drains short work only.
-
-upgradeNotes:
-  - >-
-    Before each digest update, check the upstream license, browser security
-    fixes, and changes to the start command, paths or UID. Keep the previous
-    digest for rollback.
-  - >-
-    Drain/reconnect clients before replacing the Pod; running browser sessions
-    and ephemeral downloads are lost.
-  - >-
-    No persistent browser profiles, cookies, metrics or downloads are retained;
-    export any needed artifacts through the authenticated API before restart.
-  - >-
-    The only state to back up is the token in browserless-secrets. Back it up
-    with access control. Rotate the token if a browser compromise or a log
-    exposed it.
 
 smoke:
   - name: browserless-ready

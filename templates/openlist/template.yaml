@@ -13,8 +13,6 @@ metadata:
       summary: "文件列表与 WebDAV，内含 FFmpeg 和 Aria2 下载。"
   license: AGPL-3.0-only
   homepage: https://github.com/OpenListTeam/OpenList
-  icon: https://github.com/OpenListTeam.png
-  categories: [storage]
 
 requires: [ingress/traefik, certificates/cert-manager]
 
@@ -94,34 +92,6 @@ security:
         zh-CN:
           risk: "OpenList 采用 AGPL-3.0 许可。如果你改过代码，又通过网络提供给别人用，就必须把源代码提供给用户。"
           mitigation: "使用没改过的镜像，或者把你的修改用 AGPL-3.0 公开。保留许可声明。"
-
-scalability:
-  summary: One writable instance on one volume, with no failover.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - >-
-      A node-local default StorageClass, such as local-path, has no snapshots
-      or failover.
-    - >-
-      A single writable application instance is intentional; do not increase
-      replicas without an application-specific storage/database design.
-
-upgradeNotes:
-  - >-
-    Back up persistent application data and its database to storage outside the
-    node before updating the image digest. Stop OpenList and Aria2 first so the
-    SQLite database and download state are consistent.
-  - >-
-    Database migrations can be one-way. Restore a copy into a separate namespace
-    and test the upgrade there first: storage access, admin login, WebDAV,
-    FFmpeg and an Aria2 task.
-  - >-
-    The pinned image is v4.2.7-aio. The upstream latest-aio tag moves; update
-    only by changing the pinned digest.
-  - >-
-    The container timezone is Asia/Shanghai. Change the TZ variable if you need
-    another zone.
 
 smoke:
   - name: application-ready

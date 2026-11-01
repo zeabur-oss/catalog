@@ -15,8 +15,6 @@ metadata:
       summary: "Hermes AI 智能体，附 API 和管理面板，可接 OpenRouter 或其他兼容 OpenAI 的服务。"
   license: MIT
   homepage: https://github.com/NousResearch/hermes-agent
-  icon: https://raw.githubusercontent.com/NousResearch/hermes-agent/main/website/static/img/logo.png
-  categories: [ai, automation]
 
 requires: [ingress/traefik, certificates/cert-manager]
 
@@ -144,48 +142,6 @@ security:
         zh-CN:
           risk: "Pod 不运行镜像的 s6 /init，因为 /init 需要 DAC_OVERRIDE 权限。所以镜像第一次启动时的技能初始化不会运行，而且新版本会把随机的 API_SERVER_KEY 写进 /opt/data/.env。"
           mitigation: "这个密钥会盖过 hermes-secrets 里的密钥，用 Secret 里的密钥调用 API 可能会得到 401。这时改用 /opt/data/.env 里的 API_SERVER_KEY。镜像内置的技能不会自动设置。"
-
-scalability:
-  summary: >-
-    One supervised writer with a 10Gi PVC; profile/session state is
-    local to this instance.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - >-
-      Profile gateways, scheduler, locks and sessions are not distributed
-      shared-nothing state.
-    - A node-local StorageClass has no snapshots or cross-node HA.
-    - Provider quotas and CPU/memory limit concurrent browser/tool subprocesses.
-
-upgradeNotes:
-  - >-
-    The dashboard is open to anyone who can reach adminDomain and signs in with
-    the generated password; add an IP limit in the service's network settings if
-    you need one.
-  - >-
-    Back up /opt/data consistently before upgrades. Upstream migrates persisted
-    configuration during startup, and an older image may not read migrated
-    state. Roll back by restoring the backup.
-  - >-
-    The pod does not use the image's /init supervisor. The gateway and the
-    dashboard run as separate containers as UID 10000, which owns /opt/data.
-    After each image update, check that both start without root.
-  - >-
-    Before the gateway starts, an init container writes the provider,
-    endpoint, key and model into the config. Startup fails when that config is
-    invalid.
-  - >-
-    The smoke check tests the API listener only. Send one request through the
-    provider to confirm inference.
-  - >-
-    Keep messaging deny-by-default; configure explicit allowed messaging
-    identities before enabling any external channel. Never restore
-    GATEWAY_ALLOW_ALL_USERS=true.
-  - >-
-    Only trusted skills/plugins; lazy dependency installation is disabled and
-    application code remains read-only. Integrations that need extra packages
-    need a custom image.
 
 smoke:
   - name: hermes-api-ready

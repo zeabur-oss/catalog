@@ -16,9 +16,6 @@ metadata:
       summary: "运行 MongoDB 数据库并备份到 S3，采用 SSPL 许可。"
   license: Apache-2.0 AND SSPL-1.0
   homepage: https://docs.percona.com/percona-operator-for-mongodb/
-maturity: independent
-alternatives:
-  cloudnative-pg: PostgreSQL, under an OSI license.
 defaults:
   single-node: optional
   multi-node: optional
@@ -71,20 +68,6 @@ detection:
 
 security:
   summary: Manages pods, Services, Secrets and PVCs for MongoDB clusters in every namespace.
-  clusterWide: true
-  credentials: optional
-  credentialsNote: Backups need S3 credentials, stored as a Secret in the tenant namespace.
-  tenants: namespaced
-  tenantCRDs: [PerconaServerMongoDB, PerconaServerMongoDBBackup, PerconaServerMongoDBRestore]
-  risks:
-    - risk: A backup storage without credentialsSecret uses the node's cloud identity.
-      mitigation: Require credentialsSecret with an admission policy where nodes carry a cloud identity.
-    - risk: sidecars, serviceAccountName and volumeSpec.hostPath reach beyond the database pod.
-      mitigation: The namespace's Pod Security level applies; restricted blocks hostPath.
-    - risk: A PerconaServerMongoDBRestore can read any backup whose credentials the tenant holds.
-      mitigation: Use one bucket path and key pair per tenant.
-    - risk: Percona Server for MongoDB is SSPL-1.0; offering it as a service to third parties has licence obligations.
-      mitigation: Show the licence before install; it is opt-in only.
 
 # The chart's crds/ directory: Helm never deletes it.
 leftovers: [customresourcedefinitions, persistentvolumeclaims]
@@ -110,7 +93,3 @@ smoke:
     wait: ["-n catalog-smoke psmdb/smoke --for=jsonpath={.status.state}=ready"]
     # Pulls the MongoDB image first.
     timeout: 600s
-
-upgradeNotes:
-  - versions: "*"
-    note: Helm does not upgrade CRDs from the crds/ folder; apply the release's crd.yaml first, then bump crVersion in each cluster.

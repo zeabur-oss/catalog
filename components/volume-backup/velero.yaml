@@ -13,9 +13,6 @@ metadata:
       summary: "备份并还原整个集群，数据库备份不需要它。"
   license: Apache-2.0
   homepage: https://velero.io
-maturity: cncf-sandbox
-alternatives:
-  k8up: Backs up each namespace on its own, so tenants can use it.
 defaults:
   single-node: optional
   multi-node: optional
@@ -145,39 +142,7 @@ security:
     Pod is privileged and the velero namespace needs only the baseline Pod
     Security level. With the file-backup input, a root node agent on every
     node holds the same token, mounts host paths and needs the privileged level.
-  clusterWide: true
   privileged: false
-  credentials: required
-  credentialsNote: >
-    Needs static S3 credentials. All backups share one Kopia password and one
-    SSE-C key, both in Secrets in the velero namespace.
-  tenants: admin-only
-  risks:
-    - risk: Backups and Restores can include any namespace, including other tenants' Secrets.
-      mitigation: Never grant Velero CRDs to tenants.
-    - risk: >
-        SSE-C sends the key with each request, so the S3 server sees the
-        backup before it encrypts it. A store without SSE-C refuses the
-        uploads, or ignores the key and keeps the backups in clear text.
-      mitigation: >
-        Take one backup by hand after install, then download
-        backups/<name>/velero-backup.json without the key: the store must
-        refuse it. SeaweedFS supports SSE-C.
-    - risk: >
-        Without the velero-repo-credentials and velero-backup-key Secrets,
-        nobody can read the backups. Both are also inside the backups that
-        they encrypt.
-      mitigation: Keep a copy of both Secrets outside the cluster. Before a restore into a new cluster, create them first.
 
 # The chart's crds/ directory: Helm never deletes it.
 leftovers: [customresourcedefinitions]
-
-upgradeNotes:
-  - versions: "*"
-    note: Upgrade the AWS plugin together with Velero.
-  - versions: "*"
-    note: >
-      If Velero ran before velero-repo-credentials existed, Velero made it with
-      its public default password, and Kopia keeps the password of a
-      repository. Point the location at a new prefix to start encrypted
-      repositories. Backups made before SSE-C stay unencrypted.

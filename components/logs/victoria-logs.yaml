@@ -13,9 +13,6 @@ metadata:
       summary: "保存并搜索日志。"
   license: Apache-2.0
   homepage: https://docs.victoriametrics.com/victorialogs/
-maturity: independent
-alternatives:
-  loki: Licensed AGPL-3.0; an existing installation is reused.
 resources:
   # Peak over idle of vlsingle and vlagent on KubeSolo with 10 pods logging every 100 ms
   # and repeated 1 h range queries.
@@ -103,19 +100,7 @@ detection:
 
 security:
   summary: The collector reads pod metadata and node log files.
-  clusterWide: true
   privileged: true
-  risks:
-    - risk: The log store holds every tenant's logs in one place.
-      mitigation: >-
-        A NetworkPolicy lets only the collector, vmagent and Zeabur Proxy reach it;
-        tenants query through Zeabur Proxy, which filters by namespace.
-    - risk: >-
-        The collector adds a pod's JSON log fields to the line, so a pod can
-        print kubernetes.pod_namespace to pose as another namespace.
-      mitigation: >-
-        VictoriaLogs drops a line whose stream fields repeat, so it never lands
-        under another namespace; re-run Zeabur Proxy's canary test on upgrades.
 
 smoke:
   - name: operational

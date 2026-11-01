@@ -12,10 +12,9 @@ A tested catalog for Kubernetes clusters, in two parts:
   catalog says which upstream chart, which version, which values, and why.
 - **Templates** are applications a project member installs into one namespace:
   n8n, Dify, WordPress, PostgreSQL. Each pins its images, sets
-  resource requests and limits, runs under the Restricted Pod Security
-  Standard where the application allows it, and says how it scales, how its
-  data is backed up and what to check before an upgrade. A template names the
-  components it needs in `requires`.
+  resource requests and limits, and runs under the Restricted Pod Security
+  Standard where the application allows it. A template names the components
+  it needs in `requires`.
 
 The catalog is data. CI installs and tests every component and template, and
 each release publishes one signed bundle that any tool can read to generate
@@ -29,7 +28,7 @@ a cluster is missing; it never installs anything itself.
 
 ```text
 components/<capability>/<upstream>.yaml   one file per capability × upstream
-templates/<id>/template.yaml              one application: inputs, services, security, scaling, smoke checks
+templates/<id>/template.yaml              one application: inputs, services, security, smoke checks
 templates/<id>/manifests.yaml             its Kubernetes objects
 schema/v1/                                JSON Schemas for both
 config/licenses.yaml                      OSI-approved SPDX identifiers; opt-in-only exceptions

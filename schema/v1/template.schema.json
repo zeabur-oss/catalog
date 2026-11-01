@@ -5,14 +5,14 @@
   "description": "One application, at templates/<slug>/template.yaml with its objects in manifests.yaml next to it. A project member installs it into one namespace.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["apiVersion", "kind", "metadata", "services", "security", "scalability", "smoke"],
+  "required": ["apiVersion", "kind", "metadata", "services", "security", "smoke"],
   "properties": {
     "apiVersion": { "const": "catalog.zeabur.com/v1" },
     "kind": { "const": "Template" },
     "metadata": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "description", "summary", "locales", "version", "license", "homepage", "categories"],
+      "required": ["name", "description", "summary", "locales", "version", "license", "homepage"],
       "properties": {
         "name": { "$ref": "#/$defs/text", "description": "Name for people." },
         "description": { "$ref": "#/$defs/text", "description": "What the application does and how the template runs it, in one or two sentences." },
@@ -26,14 +26,7 @@
         },
         "license": { "$ref": "#/$defs/text", "description": "SPDX expression for the application, its images and charts." },
         "homepage": { "type": "string", "format": "uri", "pattern": "^https?://" },
-        "version": { "type": "string", "description": "The application version: the tag of its main image. Objects get it as the label app.kubernetes.io/version." },
-        "icon": { "type": "string", "format": "uri", "pattern": "^https://" },
-        "categories": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": { "enum": ["ai", "analytics", "automation", "cms", "databases", "developer-tools", "monitoring", "productivity", "search", "security", "storage", "web-servers"] }
-        }
+        "version": { "type": "string", "description": "The application version: the tag of its main image. Objects get it as the label app.kubernetes.io/version." }
       }
     },
     "requires": {
@@ -89,18 +82,6 @@
         }
       }
     },
-    "scalability": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["summary", "replicas", "maxReplicas", "blockers"],
-      "properties": {
-        "summary": { "$ref": "#/$defs/text" },
-        "replicas": { "type": "integer", "minimum": 0 },
-        "maxReplicas": { "type": "integer", "minimum": 0 },
-        "blockers": { "type": "array", "items": { "$ref": "#/$defs/text" } }
-      }
-    },
-    "upgradeNotes": { "type": "array", "items": { "$ref": "#/$defs/text" } },
     "smoke": {
       "type": "array",
       "description": "e2e checks after install, in the template's namespace.",
@@ -161,7 +142,6 @@
       "properties": {
         "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$", "maxLength": 53 },
         "securityProfile": { "enum": ["restricted", "baseline"] },
-        "baselineJustification": { "$ref": "#/$defs/text", "description": "The Restricted control it fails, and why." },
         "ports": {
           "type": "array",
           "items": {
@@ -178,9 +158,7 @@
           "properties": { "requests": { "$ref": "#/$defs/resourceValues" }, "limits": { "$ref": "#/$defs/resourceValues" } }
         },
         "domains": { "type": "array", "description": "Public hostnames; rendering then needs a domain and a ClusterIssuer.", "items": { "$ref": "#/$defs/text" } }
-      },
-      "if": { "properties": { "securityProfile": { "const": "baseline" } } },
-      "then": { "required": ["baselineJustification"] }
+      }
     },
     "input": {
       "type": "object",

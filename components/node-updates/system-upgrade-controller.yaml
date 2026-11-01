@@ -14,9 +14,6 @@ metadata:
       summary: "逐个升级各节点上的 Kubernetes。"
   license: Apache-2.0
   homepage: https://github.com/rancher/system-upgrade-controller
-maturity: independent
-alternatives:
-  kured: If installed, kured keeps handling reboots.
 defaults:
   single-node: recommended
   multi-node: recommended
@@ -49,9 +46,4 @@ detection:
 
 security:
   summary: Cordons and drains nodes, and creates privileged Jobs that run Plan images on the host.
-  clusterWide: true
   privileged: true
-  tenants: admin-only
-  risks:
-    - risk: A Plan runs any image as root on the host, so whoever writes Plans owns every node.
-      mitigation: Restrict Plan writes to administrators and use only signed, digest-pinned images.

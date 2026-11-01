@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
-	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
 
 // indexVersion changes only on incompatible changes to index.json.
@@ -23,8 +22,7 @@ type budgetConfig struct {
 }
 
 // index writes index.json: every component with its install order,
-// measurements and the distributions it was tested on, recommended components per capability, every template with
-// its measurements, the budget and the Kubernetes versions.
+// measurements and the distributions it was tested on, and the Kubernetes versions.
 func index(fs *flag.FlagSet, r *repo) error {
 	cat := r.cat
 	out := fs.String("out", "index.json", "output file")
@@ -33,25 +31,15 @@ func index(fs *flag.FlagSet, r *repo) error {
 	if err != nil {
 		return err
 	}
-	var budget budgetConfig
-	if err := catalog.ReadYAML("config/budget.yaml", &budget); err != nil {
-		return err
-	}
-	licenses, err := catalog.ReadLicenses(".")
-	if err != nil {
-		return err
-	}
 	type component struct {
 		*catalog.Component
-		InstallOrder   map[string][]string    `json:"installOrder"`
-		TestedOn       []string               `json:"testedOn"`
-		Measured       map[string]environment `json:"measured,omitempty"`
-		NonOSILicenses []string               `json:"nonOSILicenses,omitempty"`
+		InstallOrder map[string][]string    `json:"installOrder"`
+		TestedOn     []string               `json:"testedOn"`
+		Measured     map[string]environment `json:"measured,omitempty"`
 	}
-	capabilities := map[string]map[string][]string{}
 	var comps []component
 	for _, c := range cat.Components {
-		ic := component{Component: c, InstallOrder: map[string][]string{}, NonOSILicenses: licenses.NotOSIApproved(c.Metadata.License)}
+		ic := component{Component: c, InstallOrder: map[string][]string{}}
 		for _, p := range catalog.Profiles {
 			if c.Defaults[p] == "unsupported" {
 				continue
@@ -68,23 +56,12 @@ func index(fs *flag.FlagSet, r *repo) error {
 		ic.TestedOn = testedOn(cfg, measured)
 		ic.Measured = passed(measured)
 		comps = append(comps, ic)
-		if capabilities[c.Capability] == nil {
-			capabilities[c.Capability] = map[string][]string{}
-		}
-		for _, p := range catalog.Profiles {
-			if c.Defaults[p] == "recommended" {
-				capabilities[c.Capability][p] = append(capabilities[c.Capability][p], c.ID)
-			}
-		}
 	}
 	return writeJSON(*out, map[string]any{
 		"indexVersion": indexVersion,
 		"profiles":     catalog.Profiles,
 		"kubernetes":   cfg.Versions,
-		"budget":       budget,
-		"capabilities": capabilities, // capability -> profile -> recommended IDs
 		"components":   comps,
-		"templates":    indexTemplates(r.templates),
 	})
 }
 
@@ -127,24 +104,10 @@ func testedOn(cfg config, measured map[string]environment) []string {
 	return out
 }
 
-// indexTemplate is a template in index.json, with its measurements.
-type indexTemplate struct {
-	*templates.Template
-	Measured map[string]environment `json:"measured,omitempty"`
-}
-
 // passed returns the environments that are not marked failed.
 func passed(envs map[string]environment) map[string]environment {
 	maps.DeleteFunc(envs, func(_ string, e environment) bool { return e.Failed })
 	return envs
-}
-
-func indexTemplates(ts []*templates.Template) []indexTemplate {
-	out := make([]indexTemplate, 0, len(ts))
-	for _, t := range ts {
-		out = append(out, indexTemplate{Template: t, Measured: readMeasurement(templateMeasurementPath(t.ID)).Environments})
-	}
-	return out
 }
 
 // budget sums the idle memory of every component recommended on single-node,

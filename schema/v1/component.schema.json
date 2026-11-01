@@ -5,7 +5,7 @@
   "description": "One upstream for one capability, at components/<capability>/<upstream>.yaml. A cluster administrator installs it.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["apiVersion", "kind", "metadata", "maturity", "defaults", "releases", "detection", "security"],
+  "required": ["apiVersion", "kind", "metadata", "defaults", "releases", "detection", "security"],
   "properties": {
     "apiVersion": { "const": "catalog.zeabur.com/v1" },
     "kind": { "const": "Component" },
@@ -28,13 +28,6 @@
         "homepage": { "type": "string", "format": "uri" }
       }
     },
-    "maturity": { "enum": ["cncf-graduated", "cncf-incubating", "cncf-sandbox", "kubernetes-sig", "independent"] },
-    "stability": { "enum": ["stable", "beta"], "default": "stable" },
-    "alternatives": {
-      "type": "object",
-      "description": "Other upstreams for this capability, with a one-line note each.",
-      "additionalProperties": { "type": "string" }
-    },
     "defaults": {
       "type": "object",
       "description": "Per profile: recommended (on by default), optional (off by default) or unsupported.",
@@ -53,7 +46,6 @@
       "items": { "enum": ["k3s", "rke2", "k0s", "kubesolo", "microk8s", "kubeadm"] }
     },
     "persistsData": { "type": "boolean", "description": "Keeps state in volumes; uninstalling loses data." },
-    "disruptsTraffic": { "type": "boolean", "description": "Changes to it can interrupt serving traffic." },
     "requires": {
       "type": "array",
       "description": "Components installed first: <capability> (its recommended upstream, else an optional one) or <capability>/<upstream>.",
@@ -185,26 +177,8 @@
       "required": ["summary"],
       "properties": {
         "summary": { "type": "string", "description": "What its RBAC lets it do." },
-        "clusterWide": { "type": "boolean", "description": "Has cluster-scoped RBAC." },
         "privileged": { "type": "boolean" },
-        "podSecurity": { "enum": ["baseline"], "description": "The Pod Security level its namespaces need when it cannot run under restricted; omitted means restricted." },
-        "egress": { "$ref": "#/$defs/strings" },
-        "credentials": { "enum": ["optional", "required"], "description": "External credentials; omitted means none." },
-        "credentialsNote": { "type": "string" },
-        "tenants": { "enum": ["namespaced", "admin-only"], "description": "Who may use its CRDs; omitted means tenants never do." },
-        "tenantCRDs": { "$ref": "#/$defs/strings" },
-        "risks": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["risk", "mitigation"],
-            "properties": {
-              "risk": { "type": "string" },
-              "mitigation": { "type": "string" }
-            }
-          }
-        }
+        "podSecurity": { "enum": ["baseline"], "description": "The Pod Security level its namespaces need when it cannot run under restricted; omitted means restricted." }
       }
     },
     "health": {
@@ -248,18 +222,6 @@
       "type": "array",
       "description": "What the upstream keeps on uninstall: a kind (customresourcedefinitions) or <resource>/<name>.",
       "items": { "type": "string" }
-    },
-    "upgradeNotes": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["versions", "note"],
-        "properties": {
-          "versions": { "type": "string", "description": "Semver range the note applies to." },
-          "note": { "type": "string" }
-        }
-      }
     }
   },
   "$defs": {

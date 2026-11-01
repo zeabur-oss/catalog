@@ -22,8 +22,6 @@ metadata:
   license: LicenseRef-Dify-Modified-Apache-2.0 AND BUSL-1.1 AND Apache-2.0 AND PostgreSQL
   # Also: https://github.com/langgenius/dify-sandbox, https://cloudnative-pg.io/docs/, https://github.com/dragonflydb/dragonfly, https://github.com/dragonflydb/dragonfly-operator
   homepage: https://github.com/langgenius/dify
-  icon: https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/dark/dify-color.png
-  categories: [ai]
 
 requires:
   - databases/cloudnative-pg
@@ -55,14 +53,6 @@ services:
     securityProfile: baseline
     ports: [{name: http, port: 8194}]
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 2Gi}}
-    baselineJustification: >-
-      Only this isolated code runner runs as root: SYS_CHROOT/SETUID/SETGID
-      establish the chroot and per-execution identities before upstream inner
-      seccomp, CHOWN gives each Python script to the run user and DAC_OVERRIDE
-      lets root open it. The
-      prepare-runner init alone uses CHOWN/DAC_OVERRIDE/FOWNER/FSETID to copy image-bundled runtime ownership
-      and modes into emptyDir. Neither container permits escalation or
-      privileged mode; all ordinary pods remain restricted.
   - name: dify-proxy
     securityProfile: restricted
     ports: [{name: http, port: 3128}]
@@ -290,68 +280,6 @@ security:
         zh-CN:
           risk: "PostgreSQL 的管理程序（CloudNativePG instance manager）需要 Kubernetes API 的部分权限。"
           mitigation: "使用目录里的 operator 和它权限受限的服务账号。"
-
-scalability:
-  summary: One instance per trusted owner; do not horizontally scale this deployment.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - >-
-      One API migrator, one beat scheduler, single Dragonfly instance,
-      plugin state on one RWO volume, and one supported licensed workspace.
-    - >-
-      External S3 object storage must exist. A node-local StorageClass has no HA
-      or snapshots.
-
-upgradeNotes:
-  - >-
-    The dify-api pod has INIT_PASSWORD from dify-secrets/init-password. The
-    /install page asks for it before it creates the owner.
-  - >-
-    Database backups are off when the template is installed. To turn them on,
-    open the database in Zeabur and use the Backups tab.
-  - >-
-    The console is open on the domain; add an IP limit in the service's network
-    settings if you need one. The Dify license still limits you to one workspace
-    unless separately authorized; keep frontend logos and copyright unchanged.
-  - >-
-    From Dify 1.13: back up the database first, because migration 5578e028b2f2
-    (1.17.1) cannot be reversed. Scale dify-worker and dify-beat to 0 before
-    the upgrade, so that old workers do not take new queue entries; the API
-    migrates the database at start. Then run
-    `flask backfill-plugin-auto-upgrade` once in dify-api (1.15), or plugin
-    auto-upgrade settings stop working. Keep PASSWORD_PEPPER unset: setting it
-    makes every existing password fail. The plugin daemon now migrates its own
-    database at start.
-  - >-
-    Sandbox 0.2.15 runs each Python and JavaScript execution under its own UID.
-    Check code-runner protocol and syscall changes during upgrades.
-  - >-
-    Preserve CNPG application credentials, generated encryption/queue/sandbox
-    Secrets, PostgreSQL backups, external S3 documents/keys, and
-    plugin storage PVC before updates. The Dify app key and the S3 key objects
-    are needed to decrypt model provider configuration. Stop writers before
-    filesystem exports.
-  - >-
-    PostgreSQL uses the CNPG standard image with pgvector as the vector store.
-    To migrate an existing instance that uses Weaviate, reindex its data into
-    pgvector. Do not change the PostgreSQL major version with an image-only
-    rollout; migrate logically or use a CNPG major upgrade.
-  - >-
-    Application object storage is an existing S3-compatible bucket with your
-    credentials. To migrate an existing instance, copy its objects into the
-    bucket.
-  - >-
-    Only API runs migrations; beat remains a single scheduler; plugin storage
-    remains a single-node PVC. Preserve queue credentials and DB0/DB1
-    separation; stop beat/producers, drain workers and checkpoint before
-    cutover. Reconcile lost/replayed tasks and expired locks after recovery. Old
-    Valkey AOF, RDB or PVC data is not imported. Dragonfly does not provide
-    Redis Stack modules; data that depends on them needs a separate migration.
-  - >-
-    Dragonfly is BUSL-1.1. Offering third
-    parties a hosted/managed Dragonfly or an in-memory data store product needs
-    a separate license.
 
 smoke:
   - name: dify available

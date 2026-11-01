@@ -15,8 +15,6 @@ metadata:
       summary: "用密码保护的 LLM 聊天前端，对话存在卷上。"
   license: AGPL-3.0-only
   homepage: https://github.com/SillyTavern/SillyTavern
-  icon: https://github.com/SillyTavern.png
-  categories: [ai]
 
 requires: [ingress/traefik, certificates/cert-manager]
 
@@ -74,37 +72,6 @@ security:
         zh-CN:
           risk: "插件和扩展会在服务器上运行代码，或者在浏览器里运行脚本。"
           mitigation: "服务器插件已关闭，扩展的自动更新和模型下载也都关闭了。安装每个扩展之前，先看过它的代码。"
-
-scalability:
-  summary: >-
-    One replica. On a node-local StorageClass, node loss requires manual
-    recovery from off-node backups.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - Sessions and rate limits are per process; multiple replicas are not supported
-    - >-
-      A node-local StorageClass has no snapshots. In-app chat backups stay on
-      the same PVC and do not protect against node loss
-
-upgradeNotes:
-  - >-
-    Pin 1.19.0 by registry index digest; preserve app-secrets and all PVC
-    subdirectories before updates.
-  - >-
-    Stop the Deployment before copying the PVC off-node. A node-local
-    StorageClass has no snapshots or failover. Restore with the same generated
-    authentication secret. Do not run an older image on a PVC that a newer
-    version has migrated.
-  - >-
-    Login is HTTP Basic user user with the password in
-    app-secrets/basic-password. SillyTavern keeps its session secret in the data
-    directory.
-  - >-
-    config.yaml is rebuilt from the ConfigMap at each start; settings changed
-    only in the file are lost. Edit the ConfigMap instead. The host whitelist
-    contains only the deployment domain; render the template again if the domain
-    changes.
 
 smoke:
   - name: sillytavern-ready

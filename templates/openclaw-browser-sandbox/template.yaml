@@ -19,8 +19,6 @@ metadata:
   license: MIT
   # Also: https://docs.openclaw.ai/tools/browser
   homepage: https://github.com/canyugs/openclaw-sandbox-browser
-  icon: https://raw.githubusercontent.com/openclaw/openclaw/main/docs/assets/pixel-lobster.svg
-  categories: [ai, automation]
 
 services:
   - name: openclaw-sandbox-browser
@@ -93,32 +91,6 @@ security:
         zh-CN:
           risk: "CDP 端口可以完全控制浏览器，而前面的代理不会检查任何密码。"
           mitigation: "没有对外的 Ingress 或 LoadBalancer。NetworkPolicy 只放行同一个命名空间里带有批准标签的调用方，而且只开 9222 端口。能在该命名空间创建 Pod 或改标签的人都视为可信任。浏览器只以无头模式运行，VNC 和 noVNC 都已关闭。"
-
-scalability:
-  summary: >-
-    One ephemeral browser/profile per trusted owner; independent sessions are
-    not horizontally interchangeable.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - >-
-      CDP session state is process-local and ephemeral; no cross-owner shared
-      profiles.
-
-upgradeNotes:
-  - >-
-    Update the launch script, Chromium, base packages and the Caddy CDP proxy
-    together. Check the new image digest and license.
-  - >-
-    The template runs headless CDP on port 9222 only. It has no headful or VNC
-    mode, no renderer sandbox and no CDP authentication.
-  - >-
-    Configure OpenClaw attachOnly browser profile with cdpUrl
-    http://openclaw-sandbox-browser:9222.
-  - >-
-    Browser cookies and sessions are ephemeral and lost on restart; never treat
-    this as durable storage or a secure cookie vault. Encrypt any exported
-    browser data and keep it off the cluster, because it holds credentials.
 
 smoke:
   - name: Private browser available

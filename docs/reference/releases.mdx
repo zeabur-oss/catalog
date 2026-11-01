@@ -3,13 +3,13 @@ title: Releases and bundles
 description: Pin a Zeabur Catalog version, verify Sigstore signatures, and read index.json, or build release artifacts from a specific commit.
 ---
 
-Pushing a `vX.Y.Z` tag publishes `index.json`, `bundle.tar.gz`, `checksums.txt`, and `SHA256SUMS` with its Sigstore signature bundle. Tools that use Zeabur Catalog should pin a version and verify it before reading `index.json`.
+Pushing a `vX.Y.Z` tag publishes `index.json`, `bundle.tar.gz`, `checksums.txt`, and `SHA256SUMS` with its Sigstore signature bundle. Tools that use Zeabur Catalog should pin a version and verify it before reading `index.json`. Before 1.0, a minor release can change the file format, so pin an exact release.
 
 ## Release artifacts
 
 | File | Contents |
 | --- | --- |
-| `index.json` | All components, their installation order and measurements for each profile, the components enabled by default (recommended) for each capability, all templates and their measurements, resource budgets, and Kubernetes versions. A profile is a configuration for `single-node` or `multi-node`; a capability is a category of use cases. |
+| `index.json` | All components, with their installation order and measurements for each profile, and the Kubernetes versions. A profile is a configuration for `single-node` or `multi-node`. |
 | `bundle.tar.gz` | A bundle containing the index, cross-check data, components, templates, and related files. |
 | `checksums.txt` | File checksums. |
 

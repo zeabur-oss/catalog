@@ -18,8 +18,6 @@ metadata:
   license: LicenseRef-n8n-Sustainable-Use AND PostgreSQL AND Apache-2.0
   # Also: https://cloudnative-pg.io/
   homepage: https://github.com/n8n-io/n8n
-  icon: https://github.com/n8n-io.png
-  categories: [ai, automation]
 
 requires:
   - ingress/traefik
@@ -161,52 +159,6 @@ security:
         zh-CN:
           risk: "N8N_PROXY_HOPS=1 假设 n8n 前面只有 Traefik 一层代理。"
           mitigation: "如果你又加了别的代理或负载均衡器，而且它会设置转发头，请改 N8N_PROXY_HOPS。"
-
-scalability:
-  summary: >-
-    One n8n main, one runner and one PostgreSQL primary. RWO volumes on a
-    node-local StorageClass have no HA.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - >-
-      Horizontal n8n execution requires separately designed queue mode, worker
-      runners, shared binary storage and Redis/Valkey; no naive replica
-      increase.
-    - >-
-      A node-local StorageClass has no snapshots. Database backups do not
-      include the application PVC or the encryption key: stop n8n and copy the
-      PVC and encrypted app-secrets off-node.
-
-upgradeNotes:
-  - >-
-    Database backups are off when the template is installed. To turn them on,
-    open the database in Zeabur and use the Backups tab.
-  - >-
-    PostgreSQL 17 runs as a CNPG Cluster with generated least-privilege app
-    credentials and CA-verified TLS.
-  - >-
-    Back up PostgreSQL, restore it to a separate cluster and preserve n8n
-    encryption/JWT keys plus application PVC before upgrade. After restore,
-    check that stored credentials decrypt and workflows run. Never rotate the
-    encryption key without upstream credential migration.
-  - >-
-    Keep n8n and external runner image versions identical. Read n8n database
-    migration notes and PostgreSQL minor changes; never change database major
-    through an ordinary digest update. Do not downgrade n8n after it has
-    migrated the database.
-  - >-
-    The owner comes from deployment variables, as in the n8n template: change
-    the password by editing app-secrets/owner-password and restarting n8n.
-  - >-
-    The editor and all routes are open on the domain; add an IP limit in the
-    service's network settings if you need one.
-  - >-
-    GENERIC_TIMEZONE and TZ are Asia/Taipei. Change them in the manifest if
-    schedule triggers must use another timezone.
-  - >-
-    No SMTP server is configured. Invitations and password-reset mail need SMTP
-    settings.
 
 smoke:
   - name: database-ready

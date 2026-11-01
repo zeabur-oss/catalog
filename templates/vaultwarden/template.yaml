@@ -17,8 +17,6 @@ metadata:
   # built from the Bitwarden clients) GPL-3.0-only.
   license: AGPL-3.0-only AND GPL-3.0-only
   homepage: https://github.com/dani-garcia/vaultwarden
-  icon: https://github.com/dani-garcia/vaultwarden/raw/main/resources/vaultwarden-icon.svg
-  categories: [security]
 
 requires: [ingress/traefik, certificates/cert-manager]
 
@@ -108,26 +106,6 @@ security:
         zh-CN:
           risk: "图标服务会从用户保存的网站下载网站图标。"
           mitigation: "Vaultwarden 默认会拒绝非公网（内网）的地址。想关掉图标服务，就设置 ICON_SERVICE=none。"
-
-scalability:
-  summary: One instance with SQLite on a 10Gi volume.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - >-
-      SQLite allows one writer, and attachments, sends and the RSA key are on
-      the volume. More replicas need PostgreSQL and shared file storage.
-    - A node-local default StorageClass, such as local-path, has no snapshots or failover.
-
-upgradeNotes:
-  - >-
-    Back up /data off the node before you change the image digest: db.sqlite3
-    (with sqlite3 .backup, or with Vaultwarden stopped), attachments, sends,
-    config.json and rsa_key.pem. Losing rsa_key.pem signs out every client.
-  - >-
-    Vaultwarden migrates the database on start. A rollback needs the backup
-    taken before the upgrade.
-  - Deleting the namespace deletes the PVC and every vault.
 
 smoke:
   - name: vaultwarden-ready

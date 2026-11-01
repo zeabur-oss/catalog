@@ -8,10 +8,10 @@ Zeabur Catalog 的每個範本都必須符合以下規則。新增或修改範�
 
 ## `template.yaml`
 
-- `metadata` 必須列出應用程式名稱、授權、首頁與分類。
+- `metadata` 必須列出應用程式名稱、授權與首頁。
 - `metadata.summary` 用一句白話說明這是什麼應用程式，給挑選範本的人看。`zh-TW` 與 `zh-CN` 的摘要寫在 `metadata.locales`。
 - 每個服務都必須指定安全性 profile（`restricted` 或 `baseline`）、資源請求與上限，以及連接埠。服務名稱必須與對應的 Deployment、StatefulSet 或資料庫物件名稱相同。服務的 CPU 與記憶體數值必須是該物件所有容器的總和，連接埠則必須對應容器的具名連接埠。`catalog template lint` 會檢查資源總和與連接埠。
-- `security`、`scalability` 與 `upgradeNotes` 必須說明管理者在部署前需要知道的資訊，包括風險與降低風險的措施、副本數範圍與限制增加副本的因素，以及升級所需的步驟。
+- `security` 必須列出管理者在部署前需要知道的風險，每個風險都附上降低風險的措施。
 - `smoke` 必須包含能證明應用程式正常運作的煙霧測試（smoke check），包括資源狀態條件，以及對執行中服務的 HTTP 或 SQL 檢查。
 - `requires` 必須以 `<capability>` 或 `<capability>/<upstream>` 列出範本需要的元件。capability 指元件的用途類別。
 
@@ -25,7 +25,7 @@ Zeabur Catalog 的每個範本都必須符合以下規則。新增或修改範�
 
 - 每個容器都必須遵守 [Restricted Pod Security Standard](https://kubernetes.io/docs/concepts/security/pod-security-standards/)，包括初始化容器與 Job 中的容器。容器必須以非 root 使用者執行、設定 `allowPrivilegeEscalation: false`、移除所有 Linux capabilities，並設定 `seccompProfile: RuntimeDefault`。
 - 只要應用程式允許，就必須使用唯讀根檔案系統。需要寫入的路徑則必須各自使用專用的可寫入磁碟區。
-- 使用 `baseline` 的服務必須提供 `baselineJustification`，列出未符合的控制項並說明原因。不得使用特權容器、主機 Namespace、`hostPath` 或主機連接埠。
+- 使用 `baseline` 的服務，要在 `manifests.yaml` 用註解寫出未符合的每個 Restricted 控制項與原因。不得使用特權容器、主機 Namespace、`hostPath` 或主機連接埠。
 - `catalog template lint` 只允許 `net.ipv4.ip_unprivileged_port_start` 與 `net.ipv4.ping_group_range` 這兩個 sysctl，也不允許探針或 hook 設定 host。
 - 不得修改 Namespace 的 Pod Security 標籤。
 - operator 建立的 Pod 也必須依照相同規則檢查，例如資料庫執行個體與備份 Job。設定時，必須使用 operator 文件列出的欄位。
@@ -69,7 +69,7 @@ Zeabur Catalog 的每個範本都必須符合以下規則。新增或修改範�
 
 - 必須說明每份狀態資料由誰管理，包括資料庫、上傳檔案、搜尋索引、佇列、設定與加密金鑰。只有遺失也無妨的資料才能使用 `emptyDir`。
 - 如果元件中已有對應的資料庫 operator，就必須使用該 operator：PostgreSQL 使用 CloudNativePG，MongoDB 使用 Percona，MariaDB 使用 MariaDB Operator，相容 Redis 的用途使用 Dragonfly Operator。
-- 不得在範本中啟用資料庫備份。新安裝的資料庫預設不啟用備份，使用者之後可從 Zeabur 資料庫的 **Backups** 分頁啟用。`upgradeNotes` 必須說明在哪裡啟用備份，以及還原時需要哪些資料庫、檔案、Secret 與金鑰。
+- 不得在範本中啟用資料庫備份。新安裝的資料庫預設不啟用備份，使用者之後可從 Zeabur 資料庫的 **Backups** 分頁啟用。
 - 如果範本有設定備份，必須將備份送到使用 HTTPS 的 S3，啟用 TLS 驗證，並將認證資訊存放在 Secret 中。
 - 必須說明刪除應用程式時會保留什麼，以及會刪除什麼。
 - 每個 S3 端點的用戶端只要支援自訂 CA，就必須提供選填的 CA 輸入。使用者可提供包含 `ca.crt` 的 Secret，讓用戶端連線到使用私有 CA 的儲存服務。端對端測試會使用這項輸入。資源清單不得包含條件判斷。掛載 Secret 時必須設定 `optional: true`，CA 檔案路徑則必須有獨立的輸入與 `default`。
@@ -78,13 +78,11 @@ Zeabur Catalog 的每個範本都必須符合以下規則。新增或修改範�
 ## 擴充與資源
 
 - 每個容器、Job 與 sidecar 都必須設定 CPU 與記憶體的資源請求和上限。
-- 必須說明支援的副本數範圍，以及哪些因素會限制增加副本，例如節點本機磁碟區、內嵌資料庫、存放在記憶體中的工作階段，或只能在單一執行個體上執行的排程器。
 - 啟動較慢的服務必須使用啟動探針，並使用就緒探針停止接收流量。存活探針只能用於重新啟動就能修復的狀態。
 - 有多個副本的服務必須加上 PodDisruptionBudget。只有支援自動擴充的服務才能啟用自動擴充。
 
 ## 升級
 
-- `upgradeNotes` 必須寫出升級順序：備份、遷移、部署更新。也必須說明誰負責執行資料庫結構遷移，以及新舊版本能否同時執行。
 - 必須說明哪些情況在回滾到舊版時需要還原資料。回滾映像檔不會撤銷資料庫遷移。
 - 共用的 operator 必須經由其元件升級，不得從範本升級。
 

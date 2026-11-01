@@ -1,62 +1,47 @@
 ---
 title: 範本清單
-description: 尋找應用程式範本與分類，選擇要部署到單一 Namespace 的應用程式。
-source: "241275056163"
+description: 尋找應用程式範本，選擇要部署到單一 Namespace 的應用程式。
+source: "2e51d8fde060"
 ---
 
-專案成員可以選擇範本，將應用程式安裝到單一 Namespace。每個範本都會固定使用的映像檔，並設定資源要求與上限。可行時，範本也會依照 Restricted Pod Security Standard 執行應用程式。範本會說明如何擴充、備份，以及升級前要確認哪些事項，並用 `requires` 列出需要的元件。
+專案成員可以選擇範本，將應用程式安裝到單一 Namespace。每個範本都會固定使用的映像檔，並設定資源要求與上限。可行時，範本也會依照 Restricted Pod Security Standard 執行應用程式。範本也會用 `requires` 列出需要的元件。
 
 ## 範本清單
 
-| ID | 應用程式 | 分類 |
-| --- | --- | --- |
-| `browserless` | Browserless | automation |
-| `cliproxyapi` | CLIProxyAPI | ai |
-| `dify` | Dify | ai |
-| `error-pages` | Error pages | web-servers |
-| `ghost` | Ghost | cms |
-| `gitea` | Gitea | developer-tools |
-| `halo` | Halo | cms |
-| `hermes-agent` | Hermes Agent | ai, automation |
-| `librechat` | LibreChat | ai |
-| `litellm` | LiteLLM | ai |
-| `lobechat` | LobeChat | ai |
-| `meilisearch` | Meilisearch | search |
-| `memos` | Memos | productivity |
-| `miniflux` | Miniflux | productivity |
-| `n8n-ai-brain` | n8n (AI Brain) | ai, automation |
-| `n8n-sqlite` | n8n SQLite | automation |
-| `n8n` | n8n PostgreSQL | automation |
-| `new-api` | New API | ai |
-| `nginx` | nginx | web-servers |
-| `ntfy` | ntfy | developer-tools |
-| `ollama` | Ollama | ai |
-| `open-webui` | Open WebUI | ai |
-| `openclaw-browser-sandbox` | OpenClaw Browser Sandbox | ai, automation |
-| `openclaw` | OpenClaw | ai |
-| `openlist` | OpenList | storage |
-| `postgresql-pgvector` | PostgreSQL with pgvector | databases |
-| `qdrant` | Qdrant | databases, ai |
-| `searxng` | SearXNG | search |
-| `sillytavern` | SillyTavern | ai |
-| `umami` | Umami | analytics |
-| `uptime-kuma` | Uptime Kuma | monitoring |
-| `vaultwarden` | Vaultwarden | security |
-| `wordpress` | WordPress | cms |
-
-## 分類
-
-- `ai`
-- `analytics`
-- `automation`
-- `cms`
-- `databases`
-- `developer-tools`
-- `monitoring`
-- `productivity`
-- `search`
-- `security`
-- `storage`
-- `web-servers`
+| ID | 應用程式 |
+| --- | --- |
+| `browserless` | Browserless |
+| `cliproxyapi` | CLIProxyAPI |
+| `dify` | Dify |
+| `error-pages` | Error pages |
+| `ghost` | Ghost |
+| `gitea` | Gitea |
+| `halo` | Halo |
+| `hermes-agent` | Hermes Agent |
+| `librechat` | LibreChat |
+| `litellm` | LiteLLM |
+| `lobechat` | LobeChat |
+| `meilisearch` | Meilisearch |
+| `memos` | Memos |
+| `miniflux` | Miniflux |
+| `n8n-ai-brain` | n8n (AI Brain) |
+| `n8n-sqlite` | n8n SQLite |
+| `n8n` | n8n PostgreSQL |
+| `new-api` | New API |
+| `nginx` | nginx |
+| `ntfy` | ntfy |
+| `ollama` | Ollama |
+| `open-webui` | Open WebUI |
+| `openclaw-browser-sandbox` | OpenClaw Browser Sandbox |
+| `openclaw` | OpenClaw |
+| `openlist` | OpenList |
+| `postgresql-pgvector` | PostgreSQL with pgvector |
+| `qdrant` | Qdrant |
+| `searxng` | SearXNG |
+| `sillytavern` | SillyTavern |
+| `umami` | Umami |
+| `uptime-kuma` | Uptime Kuma |
+| `vaultwarden` | Vaultwarden |
+| `wordpress` | WordPress |
 
 選好範本後，依照[部署範本](../get-started/deploy-a-template.mdx)的步驟手動安裝。
