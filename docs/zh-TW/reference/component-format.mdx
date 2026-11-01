@@ -125,7 +125,7 @@ health:
 
 `distributions` 和 `testedOn` 是兩份不同的清單。元件檔案裡的 `distributions` 列出要在哪些發行版上測試這個元件；`index.json` 裡的 `testedOn` 列出測試通過的發行版，版本以 `config/kubernetes.yaml` 固定的為準。安裝工具會讀取 `testedOn`，只在測試通過的發行版上提供這個元件。`testedOn` 由 `catalog index` 從 `measurements/` 產生，不用手寫。每個元件都有這個欄位，可能是空清單。
 
-`replaces` 列出這個元件接手的舊元件 ID，這些元件已從 catalog 移除，例如 `builds/zeabur-builder` 的 `container-registry/zot`。安裝紀錄裡有舊 ID 時，安裝工具會當成已經裝了這個元件；設定檔寫了舊 ID 時，安裝工具會請使用者改寫新 ID。現有元件的 ID 不能出現在其他元件的 `replaces` 裡，`catalog validate` 會檢查。完整規則見[安裝工具如何選擇和安裝元件](installers.mdx)。
+`replaces` 列出這個元件接手的舊元件 ID，這些元件已從 catalog 移除，例如 `builds/zeabur-builder` 的 `container-registry/zot`。安裝紀錄裡有舊 ID 時，安裝工具會當成已經裝了這個元件；設定檔寫了舊 ID 時，安裝工具會請使用者改寫新 ID。現有元件的 ID 不能出現在其他元件的 `replaces` 裡。`catalog validate` 會檢查這一點。完整規則見[安裝工具如何選擇和安裝元件](installers.mdx)。
 
 `networkPolicies` 給預設擋掉每個命名空間入站流量的安裝工具用。內容是元件自己命名空間裡的標準 NetworkPolicy 物件，這類安裝工具會在安裝 releases 前套用，放行元件需要從其他地方進來的流量。其他安裝工具可以忽略它。`catalog validate` 會檢查每個物件都是元件命名空間裡的 NetworkPolicy。
 

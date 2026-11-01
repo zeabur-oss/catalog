@@ -1,21 +1,22 @@
 ---
 title: 安装工具如何选择和安装组件
 description: 安装工具从 index.json 选择组件、排定顺序、装好后检查时要遵守的规则，以及用来测试安装工具的用例。
-source: "ade94d183008"
+source: "070a2deaa0c8"
 ---
 
-安装工具从某个[版本](releases.mdx)读取 `index.json`，再决定安装哪些组件。本页列出选择的规则。Zeabur Installer 按这些规则选择；其他安装工具只要遵守同样的规则，同一份配置就会选出同样的组件。每条规则在 `conformance/select/` 都有一个测试用例，说明见本页最后一节。
+安装工具从某个[版本](releases.mdx)读取 `index.json`，再决定安装哪些组件。本页列出选择的规则。Zeabur Installer 按这些规则选择。其他安装工具只要遵守同样的规则，同一份配置就会选出同样的组件。每条规则在 `conformance/select/` 都有一个测试用例，用法见本页最后一节。
 
 ## 安装工具需要的数据
 
 - 一个 catalog 版本的 `index.json`。
-- profile（`single-node` 或 `multi-node`）和发行版（`k3s`、`rke2` 或 `kubesolo`）。
+- profile，即 `single-node` 或 `multi-node`。
+- 发行版，即 `k3s`、`rke2` 或 `kubesolo`。
 - 用户写的 `enable` 和 `disable` 列表。每一项可以是组件 ID（例如 `logs/victoria-logs`），也可以是 capability（例如 `logs`）。
-- 服务器上已有的安装记录，也就是装过的组件 ID。没装过就没有这份记录。
+- 服务器上的安装记录，里面是装过的组件 ID。没装过的服务器没有这份记录。
 
 ## 名称
 
-组件 ID 指的就是那个组件。capability 指的是它下面一个在当前 profile 不是 `unsupported` 的组件。安装工具把这些组件按下列顺序排好，取第一个：
+组件 ID 指的就是那个组件。写 capability 时，安装工具从这个 capability 下、在当前 profile 不是 `unsupported` 的组件里选一个。选法是按下列顺序排好，取第一个。
 
 1. `testedOn` 列有当前发行版的组件排前面。
 2. 然后是当前 profile `recommended` 的组件。
@@ -27,24 +28,30 @@ source: "ade94d183008"
 
 安装工具按顺序执行下面几步。
 
-1. **默认组件。**先取当前 profile 所有 `recommended` 的组件。安装工具可以再加上自己需要的组件，用 ID 或 capability 指定，这些组件也算默认组件。
-2. **启用。**加入 `enable` 列出的组件，这些组件算作启用的组件。
-3. **停用。**去掉 `disable` 列出的组件。写组件 ID 就去掉那个组件；写 capability 就去掉这个 capability 下所有已选的组件。名称存在但没有对上已选的组件时，什么都不做。
-4. **排除在这里装不了的组件。**去掉下表中的组件，并逐字列出原因：
+1. 先取当前 profile 所有 `recommended` 的组件，这些是**默认组件**。安装工具可以用 ID 或 capability 再加上自己需要的组件，这些组件也算默认组件。
+2. 加入 `enable` 列出的组件，这些是**启用的组件**。
+3. 去掉 `disable` 列出的组件，这些是**停用的组件**。写组件 ID 就去掉那个组件，写 capability 就去掉这个 capability 下所有已选的组件。名称存在但没对上已选的组件时，什么都不做。
+4. 去掉在这里装不了的组件，这些是**排除的组件**。每个排除的组件都要附上下表的原因，一字不改。
 
    | 情况 | 原因 |
    | --- | --- |
-   | 有 `distributions`，但没有列当前发行版 | `runs on k3s, rke2 only`（列出 `distributions`，用 `, ` 分隔） |
+   | 有 `distributions`，但没有列当前发行版 | `runs on k3s, rke2 only`，其中列出 `distributions`，用 `, ` 分隔 |
    | 当前 profile 的 `defaults` 是 `unsupported` | `unsupported on single-node` |
    | `testedOn` 没有列当前发行版 | `not tested on rke2` |
 
-   前两种情况对启用的组件也一样。启用的组件如果 `testedOn` 没有列当前发行版，就会报错，因为用户指定了 catalog 没在这里测过的组件。
-5. **安装记录。**服务器已有安装记录时，记录里没有的默认组件只列为可安装，不会直接安装。`enable` 指定了它，或已选的组件需要它，就照样安装。安装工具也可以有一份一定要安装的默认组件列表，例如缺了就无法运行的组件。
-6. **排定顺序。**按 ID 顺序遍历已选的组件，取每个组件在当前 profile 的 `installOrder`：先列它需要的组件，最后是它自己。结果里还没有的 ID 就依次加进去。结果里没有被选中的组件，是因为其他组件需要才安装的。
+   启用的组件遇到前两种情况，一样排除。启用的组件如果 `testedOn` 没有列当前发行版，就会报错，因为用户指定了 catalog 没在这里测过的组件。
+5. 服务器有安装记录时，记录里没有的默认组件只列为**可安装**，不会直接装上。`enable` 指定了它，或已选的组件需要它时，照样安装。安装工具也可以准备一份一定要装的默认组件列表，例如缺了就无法运行的组件。
+6. 按 ID 顺序遍历已选的组件，取每个组件在当前 profile 的 `installOrder`，排出**安装顺序**。`installOrder` 先列它需要的组件，最后是它自己。结果里还没有的 ID 就依次加进去。结果里没有被选中的组件，是因为其他组件需要才安装的。
 
-   加入一个组件的列表之前，先检查列表里没有停用的每个 ID。catalog 有这个组件、但它的 `testedOn` 没有列当前发行版时，默认组件就排除，原因写成 `needs observability-operator/victoria-metrics-operator, not tested on rke2`；启用的组件则会报错，错误会指出是哪个依赖组件。列表里有已停用或已排除的 ID 时，也会报错。
+   加入一个组件的列表之前，先检查列表里每个没停用的 ID。catalog 有这个组件，但它的 `testedOn` 没有列当前发行版时，默认组件会被排除，原因写成 `needs observability-operator/victoria-metrics-operator, not tested on rke2`。启用的组件遇到这种情况则会报错，错误会指出是哪个依赖组件。列表里有停用或排除的 ID 时，也会报错。
 
-选择的结果包括：按安装顺序排好的组件和各自的安装原因（`default`、`enabled` 或 `dependency`）、被排除的组件和原因，以及有安装记录时列为可安装的默认组件。每个 `installOrder` 都已经把组件排在它需要的组件之后，所以结果也是这样。`enable` 和 `disable` 怎么排列，都不影响结果。
+选择的结果有三部分：
+
+- 按安装顺序排好的组件，以及各自的安装原因：`default`、`enabled` 或 `dependency`。
+- 排除的组件和原因。
+- 有安装记录时，列为可安装的默认组件。
+
+每个 `installOrder` 都已经把组件排在它需要的组件之后，所以结果也是这样。`enable` 和 `disable` 怎么排列，都不影响结果。
 
 ## 错误
 
@@ -52,10 +59,10 @@ source: "ade94d183008"
 
 | `kind` | 情况 | 要告诉用户 |
 | --- | --- | --- |
-| `unknown` | 名称对不上任何 capability 或组件 ID。 | 这个名称。 |
-| `replaced` | `enable` 写的 ID 已由其他组件接手（见下一节）。 | 改写新 ID。 |
-| `untested` | 启用的组件或它需要的组件，没有在当前发行版上测过。 | 组件名称，以及 `testedOn` 列出的发行版。 |
-| `needs-disabled` | 已选的组件需要的组件已停用或被排除。 | 两个组件的名称。 |
+| `unknown` | 名称对不上任何 capability 或组件 ID | 这个名称 |
+| `replaced` | `enable` 写的 ID 已由其他组件接手，见下一节 | 要改写的新 ID |
+| `untested` | 启用的组件或它需要的组件没有在当前发行版上测过 | 组件名称和 `testedOn` 列出的发行版 |
+| `needs-disabled` | 已选的组件需要的组件已停用或排除 | 两个组件的名称 |
 
 ## 接手旧组件
 
@@ -71,13 +78,13 @@ source: "ade94d183008"
 
 按结果的顺序安装组件。每个组件的 releases、固定内容的 digest，以及安装工具会读取的其他字段，见[组件文件格式](component-format.mdx)。
 
-组件装好后，把每项 `health` 检查当作一次 `kubectl wait` 运行：`wait` 的每一项各是一个参数，最后加上 `--timeout=<timeout>`。
+组件装好后，每项 `health` 检查各运行一次 `kubectl wait`。`wait` 的每一项各是一个参数，最后再加上 `--timeout=<timeout>`，例如：
 
 ```sh
 kubectl wait --for=condition=Ready nodes.longhorn.io --all -n longhorn-system --timeout=60s
 ```
 
-安装工具可以用自己的等待时间代替 `timeout`。例如 `zeabur-installer apply` 刚装完时最多等 `--timeout=5m`，`zeabur-installer doctor` 则用每项检查自己的 `timeout`。检查失败时，显示它的 `advice`。
+安装工具可以用自己的等待时间代替 `timeout`。例如 `zeabur-installer apply` 刚装完时最多等 5 分钟，`zeabur-installer doctor` 则用每项检查自己的 `timeout`。检查失败时，显示它的 `advice`。
 
 ## 测试用例
 
@@ -109,4 +116,8 @@ want:
   # error: {kind: untested, component: …, distribution: …}, in place of the rest
 ```
 
-运行用例时，先用 `components` 建立索引：每个组件的 capability 是 ID 斜杠前的部分；某个 profile 没有 `installOrder` 时，只装组件本身；没有 `distributions` 时，任何发行版都可以。然后按 `config` 选择组件，再和 `want` 比对。`want` 没写的列表或映射就是空的。原因要逐字比对；错误只比对 `kind` 和它的字段。
+运行用例的步骤如下。
+
+1. 用 `components` 建立索引。每个组件的 capability 是 ID 斜杠前的部分。某个 profile 没有 `installOrder` 时，只装组件本身。没有 `distributions` 时，任何发行版都可以。
+2. 按 `config` 选择组件。
+3. 和 `want` 比对。`want` 没写的列表或映射就是空的。原因要一字不差，错误只比对 `kind` 和它的字段。

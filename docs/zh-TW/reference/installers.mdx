@@ -1,21 +1,22 @@
 ---
 title: 安裝工具如何選擇和安裝元件
 description: 安裝工具從 index.json 挑選元件、排定順序、裝好後檢查時要遵守的規則，以及用來測試安裝工具的案例。
-source: "ade94d183008"
+source: "070a2deaa0c8"
 ---
 
-安裝工具從某個[版本](releases.mdx)讀取 `index.json`，再決定要安裝哪些元件。這一頁列出挑選的規則。Zeabur Installer 照這些規則挑選；其他安裝工具只要遵守同樣的規則，同一份設定就會挑出同樣的元件。每條規則在 `conformance/select/` 都有一個測試案例，說明見本頁最後一節。
+安裝工具從某個[版本](releases.mdx)讀取 `index.json`，再決定要安裝哪些元件。這一頁列出挑選的規則。Zeabur Installer 照這些規則挑選。其他安裝工具只要遵守同樣的規則，同一份設定就會挑出同樣的元件。每條規則在 `conformance/select/` 都有一個測試案例，用法見本頁最後一節。
 
 ## 安裝工具需要的資料
 
 - 一個 catalog 版本的 `index.json`。
-- profile（`single-node` 或 `multi-node`）和發行版（`k3s`、`rke2` 或 `kubesolo`）。
+- profile，也就是 `single-node` 或 `multi-node`。
+- 發行版，也就是 `k3s`、`rke2` 或 `kubesolo`。
 - 使用者寫的 `enable` 和 `disable` 清單。每一項可以是元件 ID（例如 `logs/victoria-logs`），也可以是 capability（例如 `logs`）。
-- 伺服器上已有的安裝紀錄，也就是裝過的元件 ID。沒裝過就沒有這份紀錄。
+- 伺服器上的安裝紀錄，裡面是裝過的元件 ID。沒裝過的伺服器沒有這份紀錄。
 
 ## 名稱
 
-元件 ID 指的就是那個元件。capability 指的是它底下一個在這個 profile 不是 `unsupported` 的元件。安裝工具把這些元件依下列順序排好，取第一個：
+元件 ID 指的就是那個元件。寫 capability 時，安裝工具從這個 capability 底下、在這個 profile 不是 `unsupported` 的元件裡挑一個。挑法是依下列順序排好，取第一個。
 
 1. `testedOn` 列有這個發行版的元件排前面。
 2. 接著是這個 profile `recommended` 的元件。
@@ -27,24 +28,30 @@ source: "ade94d183008"
 
 安裝工具依序完成下面幾步。
 
-1. **預設元件。**先取這個 profile 所有 `recommended` 的元件。安裝工具可以再加上自己需要的元件，用 ID 或 capability 指定，這些元件也算預設元件。
-2. **啟用。**加入 `enable` 列出的元件，這些元件算是啟用的元件。
-3. **停用。**拿掉 `disable` 列出的元件。寫元件 ID 就拿掉那個元件；寫 capability 就拿掉這個 capability 底下所有已選的元件。名稱存在但沒有對到已選的元件時，什麼都不做。
-4. **排除在這裡裝不了的元件。**拿掉下表的元件，並逐字列出原因：
+1. 先取這個 profile 所有 `recommended` 的元件，這些是**預設元件**。安裝工具可以用 ID 或 capability 再加上自己需要的元件，這些元件也算預設元件。
+2. 加入 `enable` 列出的元件，這些是**啟用的元件**。
+3. 拿掉 `disable` 列出的元件，這些是**停用的元件**。寫元件 ID 就拿掉那個元件，寫 capability 就拿掉這個 capability 底下所有已選的元件。名稱存在但沒對到已選的元件時，什麼都不做。
+4. 拿掉在這裡裝不了的元件，這些是**排除的元件**。每個排除的元件都要附上下表的原因，一字不改。
 
    | 情況 | 原因 |
    | --- | --- |
-   | 有 `distributions`，但沒有列這個發行版 | `runs on k3s, rke2 only`（列出 `distributions`，以 `, ` 分隔） |
+   | 有 `distributions`，但沒有列這個發行版 | `runs on k3s, rke2 only`，其中列出 `distributions`，用 `, ` 分隔 |
    | 這個 profile 的 `defaults` 是 `unsupported` | `unsupported on single-node` |
    | `testedOn` 沒有列這個發行版 | `not tested on rke2` |
 
-   前兩種情況對啟用的元件也一樣。啟用的元件如果 `testedOn` 沒有列這個發行版，就會出錯，因為使用者指定了 catalog 沒在這裡測過的元件。
-5. **安裝紀錄。**伺服器已有安裝紀錄時，紀錄裡沒有的預設元件只列為可安裝，不會直接安裝。`enable` 指定了它，或已選的元件需要它，就照樣安裝。安裝工具也可以有一份一定要安裝的預設元件清單，例如少了就無法運作的元件。
-6. **排定順序。**依 ID 順序走過已選的元件，取每個元件在這個 profile 的 `installOrder`：先列它需要的元件，最後是它自己。結果裡還沒有的 ID 就依序加進去。結果裡沒被選到的元件，是因為其他元件需要才安裝的。
+   啟用的元件遇到前兩種情況，一樣排除。啟用的元件如果 `testedOn` 沒有列這個發行版，就會出錯，因為使用者指定了 catalog 沒在這裡測過的元件。
+5. 伺服器有安裝紀錄時，紀錄裡沒有的預設元件只列為**可安裝**，不會直接裝上。`enable` 指定了它，或已選的元件需要它時，照樣安裝。安裝工具也可以準備一份一定要裝的預設元件清單，例如少了就無法運作的元件。
+6. 依 ID 順序走過已選的元件，取每個元件在這個 profile 的 `installOrder`，排出**安裝順序**。`installOrder` 先列它需要的元件，最後是它自己。結果裡還沒有的 ID 就依序加進去。結果裡沒被選到的元件，是因為其他元件需要才安裝的。
 
-   加入一個元件的清單之前，先檢查清單裡沒被停用的每個 ID。catalog 有這個元件、但它的 `testedOn` 沒有列這個發行版時，預設元件就排除，原因寫成 `needs observability-operator/victoria-metrics-operator, not tested on rke2`；啟用的元件則會出錯，錯誤會指出是哪個依賴元件。清單裡有已停用或已排除的 ID 時，也會出錯。
+   加入一個元件的清單之前，先檢查清單裡每個沒停用的 ID。catalog 有這個元件，但它的 `testedOn` 沒有列這個發行版時，預設元件會被排除，原因寫成 `needs observability-operator/victoria-metrics-operator, not tested on rke2`。啟用的元件遇到這種情況則會出錯，錯誤會指出是哪個依賴元件。清單裡有停用或排除的 ID 時，也會出錯。
 
-挑選的結果包括：依安裝順序排好的元件和各自的安裝原因（`default`、`enabled` 或 `dependency`）、被排除的元件和原因，以及有安裝紀錄時列為可安裝的預設元件。每個 `installOrder` 都已經把元件排在它需要的元件之後，所以結果也是如此。`enable` 和 `disable` 怎麼排列，都不影響結果。
+挑選的結果有三部分：
+
+- 依安裝順序排好的元件，以及各自的安裝原因：`default`、`enabled` 或 `dependency`。
+- 排除的元件和原因。
+- 有安裝紀錄時，列為可安裝的預設元件。
+
+每個 `installOrder` 都已經把元件排在它需要的元件之後，所以結果也是這樣。`enable` 和 `disable` 怎麼排列，都不影響結果。
 
 ## 錯誤
 
@@ -52,10 +59,10 @@ source: "ade94d183008"
 
 | `kind` | 情況 | 要告訴使用者 |
 | --- | --- | --- |
-| `unknown` | 名稱對不到任何 capability 或元件 ID。 | 這個名稱。 |
-| `replaced` | `enable` 寫的 ID 已由其他元件接手（見下一節）。 | 改寫新 ID。 |
-| `untested` | 啟用的元件或它需要的元件，沒有在這個發行版上測過。 | 元件名稱，以及 `testedOn` 列出的發行版。 |
-| `needs-disabled` | 已選的元件需要的元件已停用或被排除。 | 兩個元件的名稱。 |
+| `unknown` | 名稱對不到任何 capability 或元件 ID | 這個名稱 |
+| `replaced` | `enable` 寫的 ID 已由其他元件接手，見下一節 | 要改寫的新 ID |
+| `untested` | 啟用的元件或它需要的元件沒有在這個發行版上測過 | 元件名稱和 `testedOn` 列出的發行版 |
+| `needs-disabled` | 已選的元件需要的元件已停用或排除 | 兩個元件的名稱 |
 
 ## 接手舊元件
 
@@ -71,13 +78,13 @@ source: "ade94d183008"
 
 依結果的順序安裝元件。每個元件的 releases、固定內容的 digest，以及安裝工具會讀取的其他欄位，見[元件檔案格式](component-format.mdx)。
 
-元件裝好後，把每項 `health` 檢查當成一次 `kubectl wait` 執行：`wait` 的每一項各是一個引數，最後加上 `--timeout=<timeout>`。
+元件裝好後，每項 `health` 檢查各執行一次 `kubectl wait`。`wait` 的每一項各是一個引數，最後再加上 `--timeout=<timeout>`，例如：
 
 ```sh
 kubectl wait --for=condition=Ready nodes.longhorn.io --all -n longhorn-system --timeout=60s
 ```
 
-安裝工具可以用自己的等待時間取代 `timeout`。例如 `zeabur-installer apply` 剛裝完時最多等 `--timeout=5m`，`zeabur-installer doctor` 則用每項檢查自己的 `timeout`。檢查失敗時，顯示它的 `advice`。
+安裝工具可以用自己的等待時間取代 `timeout`。例如 `zeabur-installer apply` 剛裝完時最多等 5 分鐘，`zeabur-installer doctor` 則用每項檢查自己的 `timeout`。檢查失敗時，顯示它的 `advice`。
 
 ## 測試案例
 
@@ -109,4 +116,8 @@ want:
   # error: {kind: untested, component: …, distribution: …}, in place of the rest
 ```
 
-執行案例時，先用 `components` 建立索引：每個元件的 capability 是 ID 斜線前的部分；某個 profile 沒有 `installOrder` 時，只裝元件本身；沒有 `distributions` 時，任何發行版都可以。接著依 `config` 挑選元件，再和 `want` 比對。`want` 沒寫的清單或對照表就是空的。原因要逐字比對；錯誤只比對 `kind` 和它的欄位。
+執行案例的步驟如下。
+
+1. 用 `components` 建立索引。每個元件的 capability 是 ID 斜線前的部分。某個 profile 沒有 `installOrder` 時，只裝元件本身。沒有 `distributions` 時，任何發行版都可以。
+2. 依 `config` 挑選元件。
+3. 和 `want` 比對。`want` 沒寫的清單或對照表就是空的。原因要一字不差，錯誤只比對 `kind` 和它的欄位。
