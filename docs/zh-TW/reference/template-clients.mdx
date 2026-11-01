@@ -42,6 +42,10 @@ pattern 使用 [RE2 語法](https://github.com/google/re2/wiki/Syntax)。要比�
 
 依[範本檔案格式](template-format.mdx)的說明代入 `manifests.yaml` 的欄位。沒有提供的輸入欄位用 `default`，沒有 `default` 就是空字串。自動產生的值不會出現在物件裡，物件要從 Secret 讀取。
 
+## 自動產生的值
+
+渲染之前，用戶端把每個 `generate` 輸入欄位的值寫進 `secret` 指定的 Secret 和 key，值依 `generate` 的設定產生。用戶端也可以讓使用者自己提供這個值，例如從其他伺服器搬來資料時，沿用原本的加密金鑰。使用者提供的值一樣要符合 `validation.pattern`，而且只寫進 Secret，不會當成渲染的輸入，所以 `generated-input` 仍然適用。如果範本的自動產生欄位要能沿用既有的值，就把 pattern 放寬到能接受這些值。
+
 接著在每個物件的 metadata 加上這些 label：
 
 | Label | 值 |

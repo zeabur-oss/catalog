@@ -1,4 +1,4 @@
-description: A generated input is never given.
+description: A generated input is never a render option, even when the person gave its value for the Secret.
 id: app
 template:
   metadata: {version: "1.0.0"}

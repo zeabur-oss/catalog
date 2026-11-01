@@ -36,6 +36,10 @@ When several checks fail, the client reports one of them. `render.go` checks in 
 
 Substitute the fields of `manifests.yaml` as [Template file format](template-format.mdx) describes. An input that isn't given takes its `default`, or is empty when it has none. A generated input never appears in the objects: they read it from its Secret.
 
+## Generated values
+
+Before rendering, the client writes each `generate` input into the Secret and key that its `secret` names. It generates the value as `generate` describes. A client may also let the person give the value instead, for example to keep the encryption key of data moved from another server. That value must match the input's `validation.pattern`, and the client writes it only into the Secret. It's still never a render option, so `generated-input` still applies. A template whose generated input should accept an existing value widens its pattern to match one.
+
 Then add these labels to the metadata of every object:
 
 | Label | Value |
