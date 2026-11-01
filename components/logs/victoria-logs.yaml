@@ -16,6 +16,11 @@ metadata:
 maturity: independent
 alternatives:
   loki: Licensed AGPL-3.0; an existing installation is reused.
+resources:
+  # Peak over idle of vlsingle and vlagent on KubeSolo with 10 pods logging every 100 ms
+  # and repeated 1 h range queries.
+  workMemoryMiB: 350
+
 defaults:
   single-node: recommended
   multi-node: recommended
