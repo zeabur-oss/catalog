@@ -4,9 +4,6 @@ metadata:
   name: New API
   # renovate: depName=docker.io/calciumion/new-api
   version: "v1.0.0-rc.46"
-  description: >-
-    OpenAI-compatible model gateway with secure initial owner provisioning and
-    CloudNativePG PostgreSQL.
   summary: An OpenAI-compatible model gateway with PostgreSQL and an owner account ready.
   locales:
     zh-TW:
@@ -16,8 +13,6 @@ metadata:
   license: AGPL-3.0-only AND PostgreSQL AND Apache-2.0
   # Also: https://docs.newapi.pro/
   homepage: https://github.com/QuantumNous/new-api
-  icon: https://i.imgur.com/3pRJ59s.png
-  categories: [ai]
 
 requires:
   - ingress/traefik
@@ -107,44 +102,6 @@ security:
         zh-CN:
           risk: "数据库 Pod（CloudNativePG）需要令牌才能调用 Kubernetes API。"
           mitigation: "只有 operator 创建的数据库 Pod 拿得到令牌。New API 的 Pod 已关闭自动挂载令牌。"
-
-scalability:
-  summary: >-
-    One gateway Pod and one PostgreSQL primary on a 10Gi volume; no
-    automatic horizontal scaling.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - >-
-      On a node-local StorageClass, ReadWriteOnce storage has no HA or snapshots.
-      The database is unavailable while its node is down.
-    - >-
-      More gateway replicas need shared session and crypto secrets, a cache
-      design and a single schema-migration leader.
-
-upgradeNotes:
-  - >-
-    Database backups are off when the template is installed. To turn them on,
-    open the database in Zeabur and use the Backups tab.
-  - >-
-    Preserve Secrets and PVCs. Back up data off-node and rehearse a restore
-    before changing image digests.
-  - >-
-    The image is the upstream release candidate v1.0.0-rc.46. Read upstream
-    release notes and schema migrations before each upgrade. Schema migrations
-    may not be reversible.
-  - >-
-    The database is PostgreSQL 17 managed by CloudNativePG.
-    Data from a MySQL-based New API deployment needs a logical migration; MySQL
-    data files cannot be attached to PostgreSQL.
-  - >-
-    Fresh admin username admin; initial password is literal prefix Aa1- followed
-    by newapi-secrets/admin-password. Setup runs only if /api/setup reports
-    uninitialized. Later user password changes are application-managed.
-  - >-
-    Logs and temporary files go to bounded emptyDir volumes and are lost on
-    restart. Accounts, channels and tokens live in PostgreSQL. Preserve
-    session/crypto Secrets and back up the database.
 
 smoke:
   - name: workload-ready

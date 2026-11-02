@@ -1,12 +1,10 @@
+# Keeps metrics history and evaluates alerts with a fraction of Prometheus'
+# memory. Its Alertmanager sends Zeabur's notifications: each project sets its
+# own channels, the cluster administrator sets the cluster's.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: VictoriaMetrics (k8s stack)
-  description: >
-    Keeps metrics history and evaluates alerts with a fraction of Prometheus'
-    memory. On one node it idles at about 220Mi with node-exporter, more as
-    pods add series. Its Alertmanager sends Zeabur's notifications: each
-    project sets its own channels, the cluster administrator sets the cluster's.
   summary: Keeps metrics history and sends alerts to each project's notification channels.
   locales:
     zh-TW:
@@ -15,10 +13,6 @@ metadata:
       summary: "保存指标历史，并把告警发到各项目的通知渠道。"
   license: Apache-2.0
   homepage: https://victoriametrics.com
-maturity: independent
-alternatives:
-  metrics-server: Serves live CPU and memory only; it is installed alongside for the metrics API.
-  kube-prometheus-stack: An existing installation is reused, but its memory use keeps it from being recommended.
 resources:
   # Peak over idle of vmsingle, vmagent, vmalert, alertmanager and the exporters on KubeSolo,
   # with 10 pods logging every 100 ms and repeated 1 h range queries.
@@ -700,36 +694,7 @@ security:
     Manages VictoriaMetrics objects, scrapes pods in all namespaces, and reads
     builds, databases, backups and certificates in all namespaces for alerts.
     node-exporter reads the host's /proc and /sys on the host network.
-  clusterWide: true
   privileged: true
-  tenants: admin-only
-  tenantCRDs: [VMServiceScrape, VMPodScrape, VMRule, VMProbe]
-  risks:
-    - risk: VMRule and PrometheusRule queries see every tenant's metrics.
-      mitigation: Keep rules admin-only until vmalert enforces a namespace label.
-    - risk: Probe targets can reach any address (SSRF), including cloud metadata.
-      mitigation: Admit only the namespace's own hostnames or public URLs with an admission policy.
-    - risk: Scrape objects can select pods in other namespaces.
-      mitigation: Restrict tenant scrapes to their own namespace with an admission policy.
-    - risk: >
-        Project Developers write VMAlertmanagerConfigs for their notifications.
-        A config could route other namespaces' alerts, or read files from the
-        Alertmanager pod.
-      mitigation: >
-        The operator adds a matcher for the config's own namespace to every
-        route (disableNamespaceMatcher stays false) and refuses file
-        references (arbitraryFSAccessThroughSMs.deny).
-    - risk: >
-        Webhook receivers make Alertmanager send requests to any address,
-        including cluster services and cloud metadata. Only the alert text
-        goes out and no response comes back.
-      mitigation: >
-        An egress NetworkPolicy is not practical: the config reloader needs
-        the API server. Block metadata addresses at the node if that matters.
-    - risk: Any pod could post alerts or silences to Alertmanager in another project's name.
-      mitigation: >
-        A NetworkPolicy (vmalertmanager-senders-only) admits only vmalert,
-        falcosidekick, vmagent and Alertmanager replicas.
 
 leftovers: [persistentvolumeclaims]
 

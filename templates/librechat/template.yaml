@@ -1,14 +1,13 @@
+# Document search uses PostgreSQL with pgvector, through CloudNativePG. The
+# Percona MongoDB server is SSPL-1.0
+# (https://www.mongodb.com/legal/licensing/server-side-public-license); read
+# section 13 on service-offering obligations before you offer this to others.
 apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: LibreChat
   # renovate: depName=ghcr.io/danny-avila/librechat-dev
   version: "latest"
-  description: >-
-    Authenticated AI chat with Percona-managed MongoDB, CNPG pgvector RAG and
-    private community Meilisearch. The Percona MongoDB server is SSPL-1.0
-    (https://www.mongodb.com/legal/licensing/server-side-public-license); read
-    section 13 on service-offering obligations before you offer this to others.
   summary: An AI chat app with sign-in, MongoDB, PostgreSQL for document search and Meilisearch.
   locales:
     zh-TW:
@@ -18,7 +17,6 @@ metadata:
   license: MIT AND SSPL-1.0 AND PostgreSQL AND Apache-2.0
   # Also: https://github.com/danny-avila/rag_api, https://github.com/percona/percona-server-mongodb-operator, https://cloudnative-pg.io/, https://github.com/meilisearch/meilisearch
   homepage: https://github.com/danny-avila/LibreChat
-  categories: [ai]
 
 requires:
   - databases/percona-mongodb
@@ -175,55 +173,6 @@ security:
         zh-CN:
           risk: "MongoDB 8.0.32 在 Linux 内核 6.19 以上无法启动（SERVER-121912）。模板设置了 GLIBC_TUNABLES 来绕过，但还没有在真实集群上验证过。"
           mitigation: "新内核上 MongoDB 一启动就崩溃时，请确认 Percona Pod 带有 GLIBC_TUNABLES=glibc.pthread.rseq=1。"
-
-scalability:
-  summary: >-
-    One application/RAG/Meili/PG replica and one operator-managed MongoDB
-    member, like the single CNPG instance. The stack has no HA.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - A node-local default StorageClass, such as local-path, has no snapshots or failover.
-    - >-
-      MongoDB runs one replica set member (unsafeFlags.replsetSize). Explicit
-      MongoDB FQDNs assume the cluster DNS suffix cluster.local.
-    - >-
-      Application file PVC, Meili state and pgvector database are
-      single-instance; no app HPA.
-    - >-
-      Compatible catalog CNPG and Percona operators plus real provider Secrets
-      must exist.
-
-upgradeNotes:
-  - >-
-    Database backups are off when the template is installed. To turn them on,
-    open the database in Zeabur and use the Backups tab.
-  - >-
-    Back up persistent state off-node before accepting an image digest or schema
-    migration; restore into a separate namespace before cutover.
-  - >-
-    Keep credsKey, credsIv, the JWT secrets and the database passwords. A new
-    creds key or IV makes stored provider credentials unreadable.
-  - >-
-    Upgrade the app, RAG API and Meilisearch together and test sign-in, saved
-    credentials, search and RAG. Restoring the previous image does not undo
-    database schema or index migrations.
-  - >-
-    Meilisearch migrates its database in place at start (MEILI_UPGRADE_DB).
-    The migration is not atomic, so take a snapshot of its volume first.
-  - >-
-    MongoDB feature-compatibility upgrades and Percona auto-update are off. Keep
-    the operator at CR version 1.23.1 with MongoDB 8.0.32. Change
-    PostgreSQL major versions through a CNPG migration and check pgvector
-    compatibility.
-  - >-
-    mongod runs with GLIBC_TUNABLES=glibc.pthread.rseq=1, so TCMalloc uses
-    per-thread caches. Without it, MongoDB 8.0 exits at start on Linux 6.19
-    to 7.0.13 and on Ubuntu 7.0 kernels (SERVER-121912, SERVER-136848).
-  - >-
-    This version reduces the MongoDB replica set from three members to one.
-    Back up MongoDB first. The operator removes rs0-1 and rs0-2 and keeps their
-    PVCs. Delete those PVCs after you check the data on rs0-0.
 
 smoke:
   - name: librechat-ready

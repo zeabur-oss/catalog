@@ -1,10 +1,9 @@
+# Serves metrics.k8s.io for HPA and `kubectl top`. It keeps no history, so it is
+# the cheapest source of live CPU and memory.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: Kubernetes Metrics Server
-  description: >
-    Serves metrics.k8s.io for HPA and `kubectl top`. It keeps no history, so it
-    is the cheapest source of live CPU and memory.
   summary: Shows the CPU and memory each pod uses right now.
   locales:
     zh-TW:
@@ -13,9 +12,6 @@ metadata:
       summary: "显示每个 Pod 当前用了多少 CPU 和内存。"
   license: Apache-2.0
   homepage: https://github.com/kubernetes-sigs/metrics-server
-maturity: kubernetes-sig
-alternatives:
-  victoria-metrics: Adds history and alerts at a few hundred MiB.
 defaults:
   single-node: recommended
   multi-node: recommended
@@ -65,7 +61,6 @@ detection:
 
 security:
   summary: Reads kubelet metrics; registers an aggregated API.
-  clusterWide: true
 
 health:
   - name: metrics-api

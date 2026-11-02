@@ -6,7 +6,7 @@ description: Tested Kubernetes components and application templates, with versio
 Zeabur Catalog contains data that CI has installed and tested. It has two parts: components and templates. Each release publishes a signed bundle that any tool can read to generate `helm install` commands, Flux or Argo CD manifests, k3s `HelmChart` objects, or template installations.
 
 - **Components** are installed once per cluster by cluster administrators. Examples include Ingress, certificates, metrics, and database operators. Each capability specifies the upstream chart, version, configuration, and reasons for those choices.
-- **Templates** are installed into a single Namespace by project members. Examples include n8n, Dify, WordPress, and PostgreSQL. Templates pin images, set resource requests and limits, run under the Restricted Pod Security Standard where possible, and explain how to scale, back up data, and check prerequisites before upgrading. Templates name their required components in `requires`.
+- **Templates** are installed into a single Namespace by project members. Examples include n8n, Dify, WordPress, and PostgreSQL. Templates pin images, set resource requests and limits, and run under the Restricted Pod Security Standard where possible. Templates name their required components in `requires`.
 
 ## I want to deploy a template
 
@@ -30,7 +30,7 @@ Start with [adding a component](contribute/add-component.mdx) or [adding a templ
 
 ```text
 components/<capability>/<upstream>.yaml   One file per capability and upstream pair
-templates/<id>/template.yaml              One application: inputs, services, security, scaling, smoke tests
+templates/<id>/template.yaml              One application: inputs, services, security, smoke tests
 templates/<id>/manifests.yaml             Its Kubernetes objects
 schema/v1/                                JSON Schema for both file types
 config/licenses.yaml                      OSI-approved SPDX identifiers and opt-in exceptions

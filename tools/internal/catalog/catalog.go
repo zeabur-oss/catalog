@@ -26,13 +26,9 @@ type Component struct {
 	APIVersion      string            `yaml:"apiVersion" json:"apiVersion"`
 	Kind            string            `yaml:"kind" json:"kind"`
 	Metadata        Metadata          `yaml:"metadata" json:"metadata"`
-	Maturity        string            `yaml:"maturity" json:"maturity"`
-	Stability       string            `yaml:"stability" json:"stability,omitempty"`
-	Alternatives    map[string]string `yaml:"alternatives" json:"alternatives,omitempty"`
 	Defaults        map[string]string `yaml:"defaults" json:"defaults"`
 	Distributions   []string          `yaml:"distributions" json:"distributions,omitempty"`
 	PersistsData    bool              `yaml:"persistsData" json:"persistsData,omitempty"`
-	DisruptsTraffic bool              `yaml:"disruptsTraffic" json:"disruptsTraffic,omitempty"`
 	Requires        []string          `yaml:"requires" json:"requires,omitempty"`
 	Replaces        []string          `yaml:"replaces" json:"replaces,omitempty"`
 	Inputs          []Input           `yaml:"inputs" json:"inputs,omitempty"`
@@ -43,26 +39,32 @@ type Component struct {
 	NetworkPolicies string            `yaml:"networkPolicies" json:"networkPolicies,omitempty"`
 	Contributes     []Contribution    `yaml:"contributes" json:"contributes,omitempty"`
 	Detection       map[string]any    `yaml:"detection" json:"detection"`
-	Security        map[string]any    `yaml:"security" json:"security"`
+	Security        Security          `yaml:"security" json:"security"`
 	Health          []Health          `yaml:"health" json:"health,omitempty"`
 	Smoke           []Smoke           `yaml:"smoke" json:"smoke,omitempty"`
 	Leftovers       []string          `yaml:"leftovers" json:"leftovers,omitempty"`
-	UpgradeNotes    []map[string]any  `yaml:"upgradeNotes" json:"upgradeNotes,omitempty"`
 
 	Path string `yaml:"-" json:"-"` // relative to the repository root
 }
 
-// Metadata is a component's name, description and summary.
+// Metadata is a component's name and summary.
 type Metadata struct {
-	Name        string `yaml:"name" json:"name"`
-	Description string `yaml:"description" json:"description"`
-	Summary     string `yaml:"summary" json:"summary"`
+	Name    string `yaml:"name" json:"name"`
+	Summary string `yaml:"summary" json:"summary"`
 	// Locales holds the summary in other languages, by language tag.
 	Locales map[string]struct {
 		Summary string `yaml:"summary" json:"summary"`
 	} `yaml:"locales" json:"locales,omitempty"`
 	License  string `yaml:"license" json:"license"`
 	Homepage string `yaml:"homepage" json:"homepage"`
+}
+
+// Security is what a component's RBAC lets it do and what its namespaces must allow.
+type Security struct {
+	Summary    string `yaml:"summary" json:"summary"`
+	Privileged bool   `yaml:"privileged" json:"privileged,omitempty"`
+	// PodSecurity is the Pod Security level when it is not restricted.
+	PodSecurity string `yaml:"podSecurity" json:"podSecurity,omitempty"`
 }
 
 // Provides is what a component offers other software in the cluster.

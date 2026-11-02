@@ -1,16 +1,14 @@
+# Runs in client-storage mode; a generated access code protects the server's
+# model key. The LobeHub Community License
+# (https://github.com/lobehub/lobe-chat/blob/d718de7e1af2dd7281c4eaca70f627e4b9deddb1/LICENSE)
+# allows unmodified commercial use; developing or distributing derivative works
+# needs a commercial license.
 apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: LobeChat
   # renovate: depName=docker.io/lobehub/lobe-chat
   version: "1.143.3"
-  description: >-
-    LobeChat chatbot UI in client-storage mode. Chats stay in each browser; a
-    generated access code protects the server model key. The LobeHub Community
-    License
-    (https://github.com/lobehub/lobe-chat/blob/d718de7e1af2dd7281c4eaca70f627e4b9deddb1/LICENSE)
-    allows unmodified commercial use; developing or distributing derivative
-    works needs a commercial license.
   summary: A chatbot interface that keeps chats in each browser, behind an access code.
   locales:
     zh-TW:
@@ -20,8 +18,6 @@ metadata:
   license: LicenseRef-LobeHub-Community
   # Also: https://github.com/lobehub/lobe-chat/blob/d718de7e1af2dd7281c4eaca70f627e4b9deddb1/LICENSE
   homepage: https://github.com/lobehub/lobe-chat
-  icon: https://i.imgur.com/1N9pEHJ.png
-  categories: [ai]
 
 requires: [ingress/traefik, certificates/cert-manager]
 
@@ -78,32 +74,6 @@ security:
         zh-CN:
           risk: "知道共用访问码的人，都会共用同一个实例和同一把模型密钥，费用由服务器这边承担。"
           mitigation: "只把部署分享给彼此信任的用户。访问码是高强度随机生成的，上游的登录保护已开启，Ingress 只允许 TLS 连接。"
-
-scalability:
-  summary: One instance per trusted owner; do not horizontally scale this deployment.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - >-
-      Chats are browser-local and the access code is shared. The deployment has
-      no multi-tenant backend.
-
-upgradeNotes:
-  - >-
-    This template runs LobeChat 1.143.3 in client-storage mode. LobeHub server
-    mode uses different database, identity and storage. Do not switch the image
-    to server mode without migrating user data and authentication.
-  - >-
-    Unmodified upstream image only. The license is named in the template
-    description; derivative-work distribution needs upstream commercial permission.
-  - >-
-    Access code is generated; use the UI settings to supply it. Chats live in
-    each browser. Export and import browser data for backups. Keep the
-    access-code and provider Secrets in an encrypted external backup.
-  - >-
-    Before updates, check release notes, license changes and browser data
-    migrations. Test import and rollback with exported histories. The runtime
-    cache is disposable.
 
 smoke:
   - name: Application available

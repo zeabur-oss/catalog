@@ -8,16 +8,16 @@ Zeabur Catalog 的每个模板都必须符合以下规则。新增或修改模�
 
 ## `template.yaml`
 
-- `metadata` 必须列出应用名称、许可证、主页与分类。
+- `metadata` 必须列出应用名称、许可证与主页。
 - `metadata.summary` 用一句大白话说明这是什么应用，给挑选模板的人看。`zh-TW` 与 `zh-CN` 的摘要写在 `metadata.locales`。
 - 每个服务都必须指定安全 profile（`restricted` 或 `baseline`）、资源请求与上限，以及端口。服务名称必须与对应的 Deployment、StatefulSet 或数据库对象名称相同。服务的 CPU 与内存数值必须是该对象所有容器的总和，端口则必须对应容器的命名端口。`catalog template lint` 会检查资源总和与端口。
-- `security`、`scalability` 与 `upgradeNotes` 必须说明管理员在部署前需要知道的信息，包括风险与降低风险的措施、副本数范围与限制增加副本的因素，以及升级所需的步骤。
+- `security` 必须列出管理员在部署前需要知道的风险，每个风险都附上降低风险的措施。
 - `smoke` 必须包含能证明应用正常运行的冒烟测试（smoke check），包括资源状态条件，以及对运行中服务的 HTTP 或 SQL 检查。
 - `requires` 必须以 `<capability>` 或 `<capability>/<upstream>` 列出模板需要的组件。capability 指组件的用途类别。
 
 ## 许可证与镜像
 
-- 必须列出应用与镜像的许可证。对于源码可用的软件，必须使用确切的许可证名称，例如 `BUSL-1.1` 或 `SSPL`，并在模板描述中附上许可证链接。不得新增要求用户输入接受许可字符串的输入项。
+- 必须列出应用与镜像的许可证。对于源码可用的软件，必须使用确切的许可证名称，例如 `BUSL-1.1` 或 `SSPL`，并在 `template.yaml` 开头的注释中附上许可证链接。不得新增要求用户输入接受许可字符串的输入项。
 - 每个镜像都必须固定到 digest，并在旁边保留可读的 tag。这项规则也适用于初始化、迁移与备份镜像。
 - 运行期间不得安装任何东西，包括使用包管理工具、下载内容可变的代码，或在应用模板内运行集群级别的安装程序。
 
@@ -25,7 +25,7 @@ Zeabur Catalog 的每个模板都必须符合以下规则。新增或修改模�
 
 - 每个容器都必须遵守 [Restricted Pod 安全标准](https://kubernetes.io/docs/concepts/security/pod-security-standards/)，包括初始化容器与 Job 中的容器。容器必须以非 root 用户运行、设置 `allowPrivilegeEscalation: false`、移除所有 Linux capabilities，并设置 `seccompProfile: RuntimeDefault`。
 - 应用允许时，必须使用只读根文件系统，并为需要写入的路径配置专用的可写卷。
-- 使用 `baseline` 的服务必须提供 `baselineJustification`，指出未满足的控制项与原因。不得使用特权容器、主机 Namespace、`hostPath` 或主机端口。
+- 使用 `baseline` 的服务，要在 `manifests.yaml` 中用注释写明未满足的每个 Restricted 控制项及原因。不得使用特权容器、主机 Namespace、`hostPath` 或主机端口。
 - `catalog template lint` 只允许 `net.ipv4.ip_unprivileged_port_start` 与 `net.ipv4.ping_group_range` 这两个 sysctl，并拒绝设置了 host 的探针或 hook。
 - 不得修改 Namespace 的 Pod 安全标签。
 - 必须按照相同规则检查 operator 创建的 Pod，例如数据库实例与备份 Job，并使用 operator 文档列出的字段配置。
@@ -69,7 +69,7 @@ Zeabur Catalog 的每个模板都必须符合以下规则。新增或修改模�
 
 - 必须说明每份状态数据由谁管理，包括数据库、上传文件、搜索索引、队列、配置与加密密钥。只有丢失也无妨的数据才能使用 `emptyDir`。
 - 组件中已有对应的数据库 operator 时，必须使用该 operator：PostgreSQL 使用 CloudNativePG，MongoDB 使用 Percona，MariaDB 使用 MariaDB Operator，兼容 Redis 的用途使用 Dragonfly Operator。
-- 不得在模板中启用数据库备份。新安装的数据库默认不启用备份，用户之后可从 Zeabur 数据库的 **Backups** 选项卡启用。`upgradeNotes` 必须说明启用位置，以及恢复需要哪些数据库、文件、Secret 与密钥。
+- 不得在模板中启用数据库备份。新安装的数据库默认不启用备份，用户之后可从 Zeabur 数据库的 **Backups** 选项卡启用。
 - 如果模板配置了备份，必须将备份发送到使用 HTTPS 的 S3，启用 TLS 验证，并将凭据存放在 Secret 中。
 - 必须说明删除应用时会保留什么，以及会删除什么。
 - 每个 S3 端点的客户端若支持自定义 CA，就必须提供选填的 CA 输入，通过包含 `ca.crt` 的 Secret 支持使用私有 CA 的存储服务。端到端测试会使用这项输入。资源清单不得包含条件判断：挂载 Secret 时必须设置 `optional: true`，并为 CA 文件路径提供独立输入与 `default`。
@@ -78,13 +78,11 @@ Zeabur Catalog 的每个模板都必须符合以下规则。新增或修改模�
 ## 扩展与资源
 
 - 每个容器、Job 与 sidecar 都必须设置 CPU 与内存的资源请求和上限。
-- 必须说明支持的副本数范围，以及限制增加副本的因素，例如节点本地卷、嵌入式数据库、内存中的会话或单实例调度器。
 - 启动较慢的服务必须使用启动探针，并使用就绪探针停止接收流量。存活探针只能用于重启就能修复的状态。
 - 具有多个副本的服务必须加上 PodDisruptionBudget。只有支持自动扩缩容的服务才能启用自动扩缩容。
 
 ## 升级
 
-- `upgradeNotes` 必须写出升级顺序：备份、迁移、部署更新。也必须说明谁负责执行数据库结构迁移，以及新旧版本能否同时运行。
 - 必须说明哪些情况在回滚到旧版时需要恢复数据。回滚镜像不会撤销数据库迁移。
 - 共用的 operator 必须通过其组件升级，不得从模板升级。
 

@@ -1,12 +1,10 @@
+# Generates its signing secret and answers both HTML and JSON searches.
 apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: SearXNG
   # renovate: depName=searxng/searxng
   version: "2026.10.24-ef0ec03da"
-  description: >-
-    Privacy-respecting metasearch with generated signing secret and HTML/JSON
-    search.
   summary: A private metasearch engine.
   locales:
     zh-TW:
@@ -15,8 +13,6 @@ metadata:
       summary: "注重隐私的元搜索引擎。"
   license: AGPL-3.0-or-later
   homepage: https://github.com/searxng/searxng
-  icon: https://github.com/searxng.png
-  categories: [search]
 
 requires: [ingress/traefik, certificates/cert-manager]
 
@@ -83,27 +79,6 @@ security:
         zh-CN:
           risk: "SearXNG 采用 AGPL-3.0-or-later 许可。"
           mitigation: "如果你改过代码，或者提供给其他人使用，按许可要求公开对应的源代码。"
-
-scalability:
-  summary: >-
-    One replica. Cache is ephemeral and a restart clears it. The instance stores
-    no user data.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - More replicas need a shared rate limiter. The template does not provide one.
-
-upgradeNotes:
-  - >-
-    Pinned image version 2026.10.19-81371861f. On updates, check settings,
-    entrypoint and search engine compatibility.
-  - >-
-    Settings are in a ConfigMap. Change them there; changes inside the container
-    are lost on restart. Cache is disposable. No database or PVC backup is
-    needed.
-  - >-
-    The signing key in app-secrets persists for the installation. Include it in
-    encrypted secret backups.
 
 smoke:
   - name: searxng-ready

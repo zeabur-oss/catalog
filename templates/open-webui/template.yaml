@@ -1,13 +1,12 @@
+# Open WebUI's license
+# (https://github.com/open-webui/open-webui/blob/main/LICENSE) requires you to
+# keep its branding.
 apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Open WebUI
   # renovate: depName=ghcr.io/open-webui/open-webui
   version: "main"
-  description: >-
-    Authenticated LLM interface with private pipelines. Open WebUI's license
-    (https://github.com/open-webui/open-webui/blob/main/LICENSE) requires you
-    to keep its branding.
   summary: A chat interface for LLMs with sign-in; its licence asks you to keep its branding.
   locales:
     zh-TW:
@@ -17,7 +16,6 @@ metadata:
   license: LicenseRef-Open-WebUI AND MIT
   # Also: https://github.com/open-webui/pipelines
   homepage: https://github.com/open-webui/open-webui
-  categories: [ai]
 
 requires: [ingress/traefik, certificates/cert-manager]
 
@@ -121,38 +119,6 @@ security:
         zh-CN:
           risk: "外部的模型服务商会收到你的对话内容和上传文档的数据。"
           mitigation: "连接每个服务商之前，请先读过它的隐私条款。Ollama 已停用，服务商的连接请到管理员设置里自己加。"
-
-scalability:
-  summary: >-
-    Single replica with persistent storage. The template has no high
-    availability.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - A node-local default StorageClass, such as local-path, has no snapshots or failover.
-    - >-
-      The UI stores data in SQLite on its volume; the pipeline volume holds
-      installed pipeline code and packages. Neither supports more than one
-      writer.
-
-upgradeNotes:
-  - >-
-    Back up persistent state off-node before accepting an image digest or schema
-    migration; restore into a separate namespace before cutover.
-  - >-
-    Stop both Deployments, then back up the UI volume, the pipeline volume and
-    app-secrets together. Keep the previous image digest pair; UI schema
-    migrations and pipeline dependency changes can prevent rollback.
-  - >-
-    Keep app-secrets/session-key (WEBUI_SECRET_KEY). A new value signs out all
-    users.
-  - >-
-    ENABLE_PERSISTENT_CONFIG is false. Settings from the manifest environment
-    apply again at each restart.
-  - A change of embedding model requires you to re-embed stored documents.
-  - >-
-    Both images pin a digest of the upstream main branch. Read the upstream
-    changes and the license before you move to a newer digest.
 
 smoke:
   - name: open-webui-ready

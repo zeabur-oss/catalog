@@ -1,11 +1,10 @@
+# Rolls workloads annotated keel.sh/policy to a new image tag when Zeabur
+# Builder calls its webhook after a push, or when polling finds one. Optional:
+# only annotated workloads change.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: Keel
-  description: >
-    Rolls workloads annotated keel.sh/policy to a new image tag when Zeabur
-    Builder calls its webhook after a push, or when polling finds one. Optional:
-    only annotated workloads change.
   summary: Deploys each new image to the services you turn auto-deploy on for.
   locales:
     zh-TW:
@@ -14,7 +13,6 @@ metadata:
       summary: "新的镜像一构建好，就部署到开了自动部署的服务。"
   license: MPL-2.0
   homepage: https://keel.sh
-maturity: independent
 defaults:
   single-node: optional
   multi-node: optional
@@ -122,21 +120,6 @@ security:
     tracked workloads), Namespace and Node; reads, updates and deletes Pods,
     ReplicaSets, ReplicationControllers, Deployments, StatefulSets,
     DaemonSets, Jobs and CronJobs in every namespace.
-  clusterWide: true
-  risks:
-    - risk: It reads every Secret in the cluster, so its token exposes all of them.
-      mitigation: Keep its namespace admin-only; it runs as non-root with the RuntimeDefault seccomp profile and no capabilities.
-    - risk: >
-        Port 9300 takes webhooks without credentials: whoever can call it
-        rolls any annotated workload, in any namespace, to any tag of that
-        workload's repository.
-      mitigation: >
-        The NetworkPolicy keel-webhook lets only pods in builder-system and
-        keel reach 9300; the cluster's CNI must enforce NetworkPolicy. If
-        Zeabur Builder runs in another namespace, change the policy.
-        basicauth with AUTHENTICATED_WEBHOOKS=true (extraEnv) makes every
-        webhook but /v1/webhooks/registry require it; basicauth also enables
-        the admin UI, which otherwise does not exist.
 
 smoke:
   - name: rolls-on-native-webhook

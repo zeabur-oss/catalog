@@ -4,9 +4,6 @@ metadata:
   name: CLIProxyAPI
   # renovate: depName=eceasy/cli-proxy-api
   version: "v8.0.43"
-  description: >-
-    Authenticated OpenAI/Gemini-compatible API proxy with private OAuth
-    onboarding and management.
   summary: An OpenAI- and Gemini-compatible API proxy, with keys and a management page.
   locales:
     zh-TW:
@@ -15,8 +12,6 @@ metadata:
       summary: "兼容 OpenAI 与 Gemini 的 API 代理，附密钥和管理页面。"
   license: MIT
   homepage: https://github.com/router-for-me/CLIProxyAPI
-  icon: https://github.com/router-for-me.png
-  categories: [ai]
 
 requires: [ingress/traefik, certificates/cert-manager]
 
@@ -67,41 +62,6 @@ security:
         zh-CN:
           risk: "API 密钥会消耗你账号的额度。管理界面可以读取和修改敏感的代理设置。"
           mitigation: "客户端密钥和管理密钥是分开生成的。Ingress 只开放 /v1 和 /v1beta。远程管理和可下载的控制面板都已关闭。要管理时，请执行 kubectl -n NAMESPACE port-forward deployment/cliproxyapi 8317:8317 --address 127.0.0.1，并且不要把这个隧道公开出去。"
-
-scalability:
-  summary: >-
-    One replica. On a node-local StorageClass, node loss requires manual
-    recovery from off-node backups.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - More replicas would write the same OAuth file store concurrently.
-    - >-
-      A node-local StorageClass, such as local-path, has no snapshots. Copy the
-      volume off the node for backups
-
-upgradeNotes:
-  - >-
-    The container runs /CLIProxyAPI/CLIProxyAPI --config /runtime/config.yaml
-    --local-model with v8 configuration. No callback ports or management UI are
-    exposed.
-  - >-
-    Native OAuth credentials persist under /data/auth on the PVC. Stop the
-    pod and back up that PVC and app-secrets encrypted off-node before digest
-    changes. Test a restore before production use.
-  - >-
-    Before upgrading, check v8 configuration compatibility, provider terms and
-    the stored token format. A rollback can fail after credentials migrate.
-  - >-
-    An init container regenerates the runtime config from the template settings
-    and generated keys at each pod start. Management config edits are lost when
-    the pod is replaced. Change settings in the template.
-  - >-
-    Inference fails until you connect a provider. Run native device-code login
-    with an account you own and are permitted to proxy: kubectl -n NAMESPACE
-    exec -it deployment/cliproxyapi -- /CLIProxyAPI/CLIProxyAPI --config
-    /runtime/config.yaml --codex-device-login --no-browser. Callback-based
-    provider logins need a localhost-only tunnel.
 
 smoke:
   - name: cliproxyapi-ready

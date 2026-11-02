@@ -1,10 +1,9 @@
+# One operator runs both the metrics and the logs stack from CRDs, and accepts
+# Prometheus operator objects so existing app manifests keep working.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: VictoriaMetrics operator
-  description: >
-    One operator runs both the metrics and the logs stack from CRDs, and accepts
-    Prometheus operator objects so existing app manifests keep working.
   summary: Runs the metrics and log stores.
   locales:
     zh-TW:
@@ -13,9 +12,6 @@ metadata:
       summary: "运行指标和日志的存储服务。"
   license: Apache-2.0
   homepage: https://docs.victoriametrics.com/operator/
-maturity: independent
-alternatives:
-  prometheus-operator: An existing installation is reused, and the VictoriaMetrics operator converts its objects.
 defaults:
   # VictoriaMetrics and VictoriaLogs bring it in when a single node has the memory for them.
   single-node: optional
@@ -72,8 +68,6 @@ security:
     Manages VictoriaMetrics and VictoriaLogs objects and their workloads in all
     namespaces. It can read every Secret, create pods in any namespace, and
     create ClusterRoles and bindings, so its token equals cluster-admin.
-  clusterWide: true
-  tenants: admin-only
 
 leftovers:
   # The chart annotates its CRDs helm.sh/resource-policy: keep.

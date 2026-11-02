@@ -14,21 +14,18 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: PostgreSQL
-  description: PostgreSQL 18 managed by CloudNativePG, with Barman Cloud WAL archiving and scheduled base backups.
   summary: PostgreSQL 18, with backups to S3.
   locales:
     zh-TW: {summary: "PostgreSQL 18 資料庫，備份到 S3。"}
     zh-CN: {summary: "PostgreSQL 18 数据库，备份到 S3。"}
   license: PostgreSQL AND Apache-2.0
   homepage: https://www.postgresql.org/
-  icon: https://cdn.zeabur.com/marketplace/postgresql.svg
-  categories: [databases]
 
 requires: [databases/cloudnative-pg]
 
 services:                         # the workloads in manifests.yaml
   - name: postgresql
-    securityProfile: restricted   # or baseline, with baselineJustification
+    securityProfile: restricted   # or baseline
     ports: [{name: postgresql, port: 5432}]
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "1", memory: 1Gi}}
 
@@ -43,8 +40,6 @@ inputs:
   #   secret: {name: n8n-secrets, key: encryption-key}
 
 security: {...}      # summary, risks with mitigations, unauthenticated services
-scalability: {...}   # replica range and what blocks more
-upgradeNotes: []     # what an upgrade needs
 smoke: []            # resource condition, then an HTTP or SQL check
 ```
 

@@ -1,62 +1,47 @@
 ---
 title: 模板列表
-description: 查找应用模板与分类，选择要部署到单个 Namespace 的应用。
-source: "241275056163"
+description: 查找应用模板，选择要部署到单个 Namespace 的应用。
+source: "2e51d8fde060"
 ---
 
-项目成员可以选择模板，将应用安装到单个 Namespace。每个模板固定镜像、设置资源请求与限制，并在可行时采用 Restricted Pod Security Standard 运行。模板也会说明扩容与备份方式，以及升级前要确认的事项，并用 `requires` 指定所需组件。
+项目成员可以选择模板，将应用安装到单个 Namespace。每个模板固定镜像、设置资源请求与限制，并在可行时采用 Restricted Pod Security Standard 运行。模板还会用 `requires` 指定所需组件。
 
 ## 模板列表
 
-| ID | 应用 | 分类 |
-| --- | --- | --- |
-| `browserless` | Browserless | automation |
-| `cliproxyapi` | CLIProxyAPI | ai |
-| `dify` | Dify | ai |
-| `error-pages` | Error pages | web-servers |
-| `ghost` | Ghost | cms |
-| `gitea` | Gitea | developer-tools |
-| `halo` | Halo | cms |
-| `hermes-agent` | Hermes Agent | ai, automation |
-| `librechat` | LibreChat | ai |
-| `litellm` | LiteLLM | ai |
-| `lobechat` | LobeChat | ai |
-| `meilisearch` | Meilisearch | search |
-| `memos` | Memos | productivity |
-| `miniflux` | Miniflux | productivity |
-| `n8n-ai-brain` | n8n (AI Brain) | ai, automation |
-| `n8n-sqlite` | n8n SQLite | automation |
-| `n8n` | n8n PostgreSQL | automation |
-| `new-api` | New API | ai |
-| `nginx` | nginx | web-servers |
-| `ntfy` | ntfy | developer-tools |
-| `ollama` | Ollama | ai |
-| `open-webui` | Open WebUI | ai |
-| `openclaw-browser-sandbox` | OpenClaw Browser Sandbox | ai, automation |
-| `openclaw` | OpenClaw | ai |
-| `openlist` | OpenList | storage |
-| `postgresql-pgvector` | PostgreSQL with pgvector | databases |
-| `qdrant` | Qdrant | databases, ai |
-| `searxng` | SearXNG | search |
-| `sillytavern` | SillyTavern | ai |
-| `umami` | Umami | analytics |
-| `uptime-kuma` | Uptime Kuma | monitoring |
-| `vaultwarden` | Vaultwarden | security |
-| `wordpress` | WordPress | cms |
-
-## 分类
-
-- `ai`
-- `analytics`
-- `automation`
-- `cms`
-- `databases`
-- `developer-tools`
-- `monitoring`
-- `productivity`
-- `search`
-- `security`
-- `storage`
-- `web-servers`
+| ID | 应用 |
+| --- | --- |
+| `browserless` | Browserless |
+| `cliproxyapi` | CLIProxyAPI |
+| `dify` | Dify |
+| `error-pages` | Error pages |
+| `ghost` | Ghost |
+| `gitea` | Gitea |
+| `halo` | Halo |
+| `hermes-agent` | Hermes Agent |
+| `librechat` | LibreChat |
+| `litellm` | LiteLLM |
+| `lobechat` | LobeChat |
+| `meilisearch` | Meilisearch |
+| `memos` | Memos |
+| `miniflux` | Miniflux |
+| `n8n-ai-brain` | n8n (AI Brain) |
+| `n8n-sqlite` | n8n SQLite |
+| `n8n` | n8n PostgreSQL |
+| `new-api` | New API |
+| `nginx` | nginx |
+| `ntfy` | ntfy |
+| `ollama` | Ollama |
+| `open-webui` | Open WebUI |
+| `openclaw-browser-sandbox` | OpenClaw Browser Sandbox |
+| `openclaw` | OpenClaw |
+| `openlist` | OpenList |
+| `postgresql-pgvector` | PostgreSQL with pgvector |
+| `qdrant` | Qdrant |
+| `searxng` | SearXNG |
+| `sillytavern` | SillyTavern |
+| `umami` | Umami |
+| `uptime-kuma` | Uptime Kuma |
+| `vaultwarden` | Vaultwarden |
+| `wordpress` | WordPress |
 
 选好模板后，按照[部署模板](../get-started/deploy-a-template.mdx)的步骤手动安装。

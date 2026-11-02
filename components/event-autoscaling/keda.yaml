@@ -1,11 +1,10 @@
+# Scales workloads on events, down to zero, with scaling configured per
+# namespace. Optional on a single node: there it costs more memory than scaling
+# saves.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: KEDA
-  description: >
-    Scales workloads on events, down to zero, with scaling configured per
-    namespace. Optional on a single node: there it costs more memory than
-    scaling saves.
   summary: Scales services on queues, schedules and other events, down to zero.
   locales:
     zh-TW:
@@ -14,7 +13,6 @@ metadata:
       summary: "按队列、定时等事件调整服务的副本数，可缩到零。"
   license: Apache-2.0
   homepage: https://keda.sh
-maturity: cncf-graduated
 defaults:
   single-node: optional
   multi-node: recommended
@@ -81,13 +79,3 @@ detection:
 
 security:
   summary: Reads scale targets and trigger secrets cluster-wide; serves the external metrics API.
-  clusterWide: true
-  credentials: optional
-  credentialsNote: Queue and cloud triggers use a TriggerAuthentication in the tenant namespace.
-  tenants: namespaced
-  tenantCRDs: [ScaledObject, ScaledJob, TriggerAuthentication]
-  risks:
-    - risk: A ScaledObject can use cluster-level credentials through ClusterTriggerAuthentication.
-      mitigation: Reject tenant references to ClusterTriggerAuthentication with an admission policy.
-    - risk: URL-based triggers make the operator call any address (SSRF).
-      mitigation: Reject private and link-local trigger addresses with the same policy.

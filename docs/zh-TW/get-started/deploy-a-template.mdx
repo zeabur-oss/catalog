@@ -41,7 +41,7 @@ sha256sum --check --ignore-missing SHA256SUMS
 
 ### 渲染並套用範本
 
-先閱讀 `templates/<id>/template.yaml` 中的授權、輸入、`requires`、安全風險、擴充限制和升級注意事項，再渲染物件：
+先閱讀 `templates/<id>/template.yaml` 中的授權、輸入、`requires` 和安全風險，再渲染物件：
 
 ```sh
 go run ./tools/cmd/catalog template render -namespace app \

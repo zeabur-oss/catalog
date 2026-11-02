@@ -1,11 +1,10 @@
+# Connects to MariaDB over TLS.
 apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: WordPress
   # renovate: depName=docker.io/wordpress
   version: "php8.3-fpm-alpine"
-  description: >-
-    WordPress PHP 8.3 with TLS MariaDB Operator 11.4 LTS and preinstalled owner.
   summary: WordPress, with MariaDB and an owner account ready.
   locales:
     zh-TW:
@@ -15,8 +14,6 @@ metadata:
   license: GPL-2.0-or-later AND GPL-2.0-only AND BSD-2-Clause AND MIT
   # Also: https://github.com/docker-library/wordpress, https://mariadb.org/, https://github.com/nginx/docker-nginx-unprivileged, https://github.com/mariadb-operator/mariadb-operator
   homepage: https://wordpress.org/
-  icon: https://cdn.zeabur.com/marketplace/wordpress.png
-  categories: [cms]
 
 requires:
   - ingress/traefik
@@ -170,62 +167,6 @@ security:
         zh-CN:
           risk: "数据库备份不含 wordpress-data 卷里的上传文件、插件和主题。"
           mitigation: "保留 SQL 机密和 TLS 证书，并且定期演练恢复。先让 WordPress 暂停写入，再把 wordpress-data 卷和机密，跟数据库备份在同一个恢复时间点一起归档。"
-
-scalability:
-  summary: >-
-    One WordPress Pod and one MariaDB writer, each on a 10Gi volume. There is
-    no automatic horizontal scaling.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - A node-local default StorageClass has no HA, snapshots or cross-node failover.
-
-upgradeNotes:
-  - >-
-    Database backups are off when the template is installed. To turn them on,
-    open the database in Zeabur and use the Backups tab.
-  - >-
-    A Backup of the MariaDB gives its Pods the labels
-    templates.zeabur.com/template: wordpress and app.kubernetes.io/component:
-    backup in spec.podMetadata. MariaDB accepts connections from these Pods.
-    Zeabur adds the labels to the Backups it creates.
-  - >-
-    Preserve Secrets and PVCs. Back up data off-node and rehearse a restore
-    before changing image digests.
-  - >-
-    WordPress runs PHP 8.3 on PHP-FPM (UID 82) behind unprivileged NGINX (UID
-    101). MariaDB is 11.4 LTS. Uploads are capped at 256MiB, PHP memory at 1GiB
-    and execution time at 300s.
-  - >-
-    WordPress connects to MariaDB with TLS and verifies the server certificate
-    against mariadb-ca-bundle/ca.crt. The trust bundle is built at Pod start;
-    restart WordPress after a MariaDB CA rotation.
-  - >-
-    The wordpress SQL user has SELECT, INSERT, UPDATE, DELETE, CREATE, DROP,
-    ALTER and INDEX on zeabur.* only, without GRANT OPTION. Plugins that need
-    other privileges or MySQL-only SQL can fail.
-  - >-
-    WordPress core/plugins/themes on the persistent HTML volume update through
-    WordPress; changing the seed image does not overwrite existing content.
-    Apply security updates in the admin UI or via /tools/wp inside the WordPress
-    container; retain backups for rollback.
-  - >-
-    Admin username is admin; retrieve wordpress-secrets/admin-password securely.
-    Initial installation is automatic; do not rerun core install against an
-    existing database. Domain is fixed via WP_HOME/WP_SITEURL; use pinned
-    /tools/wp search-replace for stored links.
-  - >-
-    Database storage uses operator-owned PVCs. To move from another WordPress
-    deployment, restore a logical dump and the uploads into a separate
-    namespace; do not adopt, mount or downgrade an old datadir. Verify
-    URLs, plugins, TLS and admin login, then move traffic. Keep old PVCs,
-    Secrets and backups until a restore and application acceptance test
-    succeeds.
-  - >-
-    MariaDB Operator chart26.10.1 retains PVCs on scale/delete via explicit
-    Retain policy. Keep the CRD release installed while any data exists. Engine
-    auto-update is off; check exact-version compatibility before each engine
-    upgrade. Image changes do not reverse SQL migrations.
 
 smoke:
   - name: workload-ready

@@ -1,12 +1,11 @@
+# Flags suspicious runtime behavior (container shells, privilege escalation)
+# from kernel events, and keeps each namespace's recent alerts in a PolicyReport
+# there, readable with namespace admin rights. Optional: it needs a privileged
+# eBPF probe and a kernel with BTF (5.8 or later).
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: Falco
-  description: >
-    Flags suspicious runtime behavior (container shells, privilege escalation)
-    from kernel events, and keeps each namespace's recent alerts in a
-    PolicyReport there, readable with namespace admin rights. Optional: it needs
-    a privileged eBPF probe and a BTF kernel (5.8+).
   summary: Flags suspicious activity in containers, such as a shell or a privilege escalation.
   locales:
     zh-TW:
@@ -15,7 +14,6 @@ metadata:
       summary: "检测容器内的可疑行为，例如打开 shell 或提升权限。"
   license: Apache-2.0
   homepage: https://falco.org
-maturity: cncf-graduated
 defaults:
   single-node: optional
   multi-node: optional
@@ -123,12 +121,4 @@ security:
   summary: >
     Reads pod and node metadata to enrich alerts; falcosidekick writes
     PolicyReports in every namespace.
-  clusterWide: true
   privileged: true
-  egress: [ghcr.io, docker.io]
-  risks:
-    - risk: Alerts include command lines and file paths from every tenant's containers.
-      mitigation: >
-        Each namespace's report is readable by its admins only (falco-alert-reader,
-        aggregated to admin); alerts without a namespace go to a
-        ClusterPolicyReport for cluster administrators.

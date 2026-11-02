@@ -1,14 +1,12 @@
+# Builds container images from Git in the cluster, with a Dockerfile or
+# Railpack, and keeps them in zot, an OCI registry installed with it, so builds
+# need no external registry account. Zeabur needs it to deploy services from
+# Git. Optional: without it, services deploy from images only. Nodes pull from
+# zot at the fixed address of the cluster-ip input, and must trust its CA.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: Zeabur Builder
-  description: >
-    Builds container images from Git in the cluster, with a Dockerfile or
-    Railpack, and keeps them in zot, an OCI registry installed with it, so
-    builds need no external registry account. Zeabur needs it to deploy
-    services from Git. Optional: without it, services deploy from images only.
-    Nodes pull from zot at the fixed address of the cluster-ip input, and must
-    trust its CA.
   summary: Builds images from your Git repositories and keeps them in the cluster, so services can deploy from Git.
   locales:
     zh-TW:
@@ -17,7 +15,6 @@ metadata:
       summary: "从 Git 仓库构建镜像并存放在集群里，让服务可以从 Git 部署。"
   license: Apache-2.0
   homepage: https://github.com/zeabur-oss/builder
-maturity: independent
 defaults:
   single-node: optional
   multi-node: optional
@@ -368,41 +365,7 @@ security:
     Jobs and StatefulSets it can create. zot: no RBAC, a ServiceAccount without
     roles; serves the OCI registry API over TLS on port 5000 inside the
     cluster.
-  clusterWide: true
   privileged: true
-  tenants: namespaced
-  tenantCRDs: [Build]
-  egress: [Git servers, docker.io, ghcr.io]
-  risks:
-    - risk: buildkitd runs privileged, so a build that escapes its sandbox reaches the node.
-      mitigation: >
-        Each namespace gets its own buildkitd in a user namespace (Kubernetes
-        1.33 or later), and its egress policy blocks Pods, Services, nodes and
-        the metadata endpoint. Keep builder-system admin-only, and set
-        runtimeClassName where the cluster has a sandbox such as gVisor or
-        Kata.
-    - risk: Its token reads and writes every Secret in the cluster.
-      mitigation: Keep builder-system admin-only; the controller runs as non-root with no capabilities.
-    - risk: Any pod in the cluster can pull any image anonymously.
-      mitigation: >
-        Keep secrets out of images; give them to the workload as Secrets.
-        Pushes, deletes and source reads need a token from Zeabur Builder.
-    - risk: Whoever reads the Secret zot-token-signer can sign a token for any repository.
-      mitigation: >
-        Keep the zot namespace admin-only. Zeabur Builder reads only this
-        Secret there. If the key leaks, delete the Secret and restart zot once
-        cert-manager has issued a new one.
-    - risk: Deleting the last tag of an image repository also removes the repositories below it, such as its source archives in <repository>/source.
-      mitigation: >
-        Zeabur Builder does this on purpose when a Build is deleted. Do not
-        delete every tag of an image by hand unless its sources may go too.
-    - risk: Nodes refuse to pull until they trust its CA, and a node told to skip verification trusts anything at that address.
-      mitigation: >
-        Set the cluster-ip input, and on every node mirror zot.zot.svc:5000 to
-        https://<cluster-ip>:5000 with ca.crt from the zot-tls Secret as the
-        mirror's CA: k3s or RKE2 registries.yaml (configs.<cluster-ip>:5000.tls.ca_file),
-        or /etc/containerd/certs.d/zot.zot.svc:5000/hosts.toml. zeabur-installer
-        does both. Give buildkitd the same CA; never set insecure_skip_verify.
 
 smoke:
   - name: ready

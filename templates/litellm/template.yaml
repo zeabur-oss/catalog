@@ -1,15 +1,12 @@
+# The image includes the litellm_enterprise package under the BerriAI Enterprise
+# license (https://github.com/BerriAI/litellm/blob/main/enterprise/LICENSE.md),
+# which allows production use only with a subscription.
 apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: LiteLLM
   # renovate: depName=ghcr.io/berriai/litellm-non_root
   version: "v1.106.3"
-  description: >-
-    LiteLLM proxy for LLM provider APIs over HTTPS, with keys, models and
-    spend in PostgreSQL 18 managed by CloudNativePG. The image includes the
-    litellm_enterprise package under the BerriAI Enterprise license
-    (https://github.com/BerriAI/litellm/blob/main/enterprise/LICENSE.md),
-    which allows production use only with a subscription.
   summary: One proxy for many LLM providers, with keys, models and spend kept in PostgreSQL.
   locales:
     zh-TW:
@@ -21,8 +18,6 @@ metadata:
   license: MIT AND LicenseRef-LiteLLM-Enterprise AND PostgreSQL AND Apache-2.0
   # Also: https://github.com/BerriAI/litellm/blob/main/enterprise/LICENSE.md, https://cloudnative-pg.io/
   homepage: https://www.litellm.ai/
-  icon: https://github.com/BerriAI.png
-  categories: [ai]
 
 requires:
   - ingress/traefik
@@ -91,26 +86,6 @@ security:
         zh-CN:
           risk: "CloudNativePG 的数据库实例会用 operator 创建的身份调用 Kubernetes API。"
           mitigation: "databases/cloudnative-pg 组件会为每个集群创建对应的 RBAC 权限。LiteLLM 的 Pod 没有令牌。"
-
-scalability:
-  summary: One LiteLLM instance with one PostgreSQL primary.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - >-
-      LiteLLM migrates the database at start, and rate limits and caches are
-      per process. More replicas need Redis and the migration moved to a
-      separate step.
-
-upgradeNotes:
-  - >-
-    Database backups are off when the template is installed. To turn them on,
-    open the database in Zeabur and use the Backups tab.
-  - >-
-    LiteLLM migrates the database on start. A rollback needs the database
-    backup taken before the upgrade.
-  - Keep litellm-secrets. Without salt-key, stored provider credentials cannot be decrypted.
-  - Deleting the namespace deletes the database. Backups in S3 stay.
 
 smoke:
   - name: postgresql-ready

@@ -15,13 +15,12 @@ apiVersion: catalog.zeabur.com/v1
 kind: Component                   # or Template
 metadata:
   name: Traefik Proxy
-  description: Why it is recommended, or what the template runs, in one or two sentences.
   license: MIT                    # SPDX
   homepage: https://traefik.io/traefik/
 requires: [certificates]          # <capability> or <capability>/<upstream>
 ```
 
-元件的 `metadata` 還有 `summary`：用一句白話說明它為叢集提供什麼，給挑選元件的人看，翻譯放在 `locales`。安裝工具顯示的是 summary，description 留給維運人員。
+元件的 `metadata` 還有 `summary`：用一句白話說明它為叢集提供什麼，給挑選元件的人看，翻譯放在 `locales`。檔案開頭的註解說明選用這個元件的原因。
 
 ```yaml
 metadata:
@@ -40,10 +39,8 @@ apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: Traefik Proxy
-  description: Why it is recommended, in one or two sentences.
   license: MIT                    # SPDX; OSI-approved, or opt-in only (see below)
   homepage: https://traefik.io/traefik/
-maturity: independent             # cncf-graduated | cncf-incubating | cncf-sandbox | kubernetes-sig | independent
 defaults: {single-node: recommended, multi-node: recommended}
 requires: [certificates]          # installed first
 distributions: [k3s]              # optional; distributions to test it on, omitted means all
@@ -81,7 +78,7 @@ internalCRDs: []  # CRDs of detection.crds whose objects it writes itself
 networkPolicies: |  # traffic it needs where an installer isolates namespaces
 contributes: []   # values added to another component's release (CrowdSec -> Traefik)
 detection: {...}  # CRDs, API services, Helm charts, workloads
-security: {...}   # RBAC summary, cluster-wide, privileged, podSecurity, egress, credentials, tenant risks
+security: {...}   # RBAC summary, privileged, podSecurity
 health: []        # read-only checks an installer runs on a cluster
 smoke: []         # extra e2e checks
 leftovers: []     # what the upstream keeps on uninstall (e.g. CRDs)

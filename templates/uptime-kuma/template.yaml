@@ -4,7 +4,6 @@ metadata:
   name: Uptime Kuma
   # renovate: depName=louislam/uptime-kuma
   version: "2.5.7-rootless"
-  description: Self-hosted uptime monitoring with persistent SQLite data.
   summary: Uptime monitoring, with its data on a volume.
   locales:
     zh-TW:
@@ -13,8 +12,6 @@ metadata:
       summary: "监控服务是否正常在线，数据存在卷上。"
   license: MIT
   homepage: https://github.com/louislam/uptime-kuma
-  icon: https://github.com/louislam.png
-  categories: [monitoring]
 
 requires: [ingress/traefik, certificates/cert-manager]
 
@@ -81,39 +78,6 @@ security:
         zh-CN:
           risk: "Ping 监控用的是不需特权的 ICMP socket，靠 net.ipv4.ping_group_range 这个 sysctl 设置。容器没有 NET_RAW 权限。需要原始 socket 或 Docker socket 的监控项目没办法用。"
           mitigation: "检查你的 CNI 怎么处理 ICMP。Ping 不通的地方，改用 HTTP、TCP 或 DNS 监控。"
-
-scalability:
-  summary: >-
-    One writable instance on a 10Gi volume with SQLite. There is no
-    high availability.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - >-
-      A node-local default StorageClass, such as local-path, has no snapshots
-      or failover.
-    - >-
-      The template runs one writable instance. Do not increase replicas without
-      an application-specific storage/database design.
-
-upgradeNotes:
-  - >-
-    A new install has no owner until someone creates it on the first visit.
-    Do that right after the deploy; Uptime Kuma cannot create it from a
-    Secret.
-  - >-
-    Back up persistent application data and its database to storage outside the
-    node before updating the image digest.
-  - >-
-    Test a restore into a separate namespace before upgrading. Database
-    migrations may not be reversible.
-  - >-
-    Back up /app/data while Uptime Kuma is stopped, or with a SQLite-consistent
-    backup tool. A copy of a live SQLite file can be inconsistent.
-  - >-
-    Upgrades from 2.0 to 2.5 migrate the database schema. Test the migration on
-    a restored copy first. Rolling back the image does not undo schema
-    migrations.
 
 smoke:
   - name: application-ready

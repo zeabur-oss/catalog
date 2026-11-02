@@ -7,16 +7,16 @@ Every template in Zeabur Catalog must follow these rules. When you add or update
 
 ## `template.yaml`
 
-- `metadata` must list the application name, license, homepage, and category.
+- `metadata` must list the application name, license, and homepage.
 - `metadata.summary` says what the application is in one plain sentence, for people choosing a template. Provide `zh-TW` and `zh-CN` summaries in `metadata.locales`.
 - Every service must specify a security profile (`restricted` or `baseline`), resource requests and limits, and ports. The service name must match the corresponding Deployment, StatefulSet, or database object name. The service's CPU and memory values must equal the totals across all containers in that object, and its ports must match the containers' named ports. `catalog template lint` checks resource totals and ports.
-- `security`, `scalability`, and `upgradeNotes` must cover what administrators need to know before deployment: risks and mitigations, the supported replica range and constraints on adding replicas, and the steps required to upgrade.
+- `security` must cover the risks administrators need to know before deployment, each with its mitigation.
 - `smoke` must include smoke checks that prove the application works, including resource status conditions and HTTP or SQL checks against the running service.
 - `requires` must list the components the template needs as `<capability>` or `<capability>/<upstream>`. A capability identifies a component's functional category.
 
 ## Licenses and images
 
-- You must list the licenses for the application and its images. For source-available software, use the exact license name, such as `BUSL-1.1` or `SSPL`, and include a license link in the template description. Don't add an input that asks users to enter a license acceptance string.
+- You must list the licenses for the application and its images. For source-available software, use the exact license name, such as `BUSL-1.1` or `SSPL`, and include a license link in a comment at the top of `template.yaml`. Don't add an input that asks users to enter a license acceptance string.
 - You must pin every image to a digest and keep a readable tag alongside it. This rule also applies to initialization, migration, and backup images.
 - Don't install anything at runtime. This includes using package managers, downloading code whose contents can change, or running cluster-level installers from an application template.
 
@@ -24,7 +24,7 @@ Every template in Zeabur Catalog must follow these rules. When you add or update
 
 - Every container must follow the [Restricted Pod Security Standard](https://kubernetes.io/docs/concepts/security/pod-security-standards/), including init containers and containers in Jobs. Containers must run as a non-root user, set `allowPrivilegeEscalation: false`, drop all Linux capabilities, and set `seccompProfile: RuntimeDefault`.
 - When the application supports it, use a read-only root filesystem and provide dedicated writable volumes for paths that need writes.
-- Services that use `baseline` must provide a `baselineJustification` that identifies the controls they don't meet and explains why. Don't use privileged containers, host namespaces, `hostPath`, or host ports.
+- For a service that uses `baseline`, a comment in `manifests.yaml` names each Restricted control it doesn't meet and why. Don't use privileged containers, host namespaces, `hostPath`, or host ports.
 - `catalog template lint` permits only the `net.ipv4.ip_unprivileged_port_start` and `net.ipv4.ping_group_range` sysctls and rejects probes or hooks that set a host.
 - Don't modify the Namespace's Pod Security labels.
 - Check Pods that operators create, such as database instances and backup Jobs, against the same rules. Configure them with the fields listed in the operator's documentation.
@@ -68,7 +68,7 @@ Every template in Zeabur Catalog must follow these rules. When you add or update
 
 - You must explain who manages each piece of stateful data, including databases, uploaded files, search indexes, queues, configuration, and encryption keys. Use `emptyDir` only for data that can be lost.
 - When the components include a matching database operator, you must use it: CloudNativePG for PostgreSQL, Percona for MongoDB, MariaDB Operator for MariaDB, and Dragonfly Operator for Redis-compatible use cases.
-- Don't enable database backups in templates. Backups are disabled by default for newly installed databases. Users can enable them later from the **Backups** tab of their Zeabur database. `upgradeNotes` must explain where to enable backups and which databases, files, Secrets, and keys a restore requires.
+- Don't enable database backups in templates. Backups are disabled by default for newly installed databases. Users can enable them later from the **Backups** tab of their Zeabur database.
 - If a template configures backups, it must send them to S3 over HTTPS, enable TLS verification, and store credentials in Secrets.
 - You must explain what remains and what gets deleted when users delete the application.
 - For each S3 endpoint, if the client supports a custom CA, you must provide an optional CA input. Use a Secret containing `ca.crt` to support storage services that use a private CA. End-to-end tests use this input. Manifests must not contain conditionals: set `optional: true` when mounting the Secret, and provide a separate input with a `default` for the CA file path.
@@ -77,13 +77,11 @@ Every template in Zeabur Catalog must follow these rules. When you add or update
 ## Scaling and resources
 
 - Every container, Job, and sidecar must have CPU and memory requests and limits.
-- You must describe the supported replica range and constraints on adding replicas, such as node-local volumes, embedded databases, in-memory sessions, or single-instance schedulers.
 - Services that start slowly must use startup probes and readiness probes to stop receiving traffic. Use liveness probes only for states that a restart can fix.
 - Services with multiple replicas must have a PodDisruptionBudget. Enable autoscaling only for services that support it.
 
 ## Upgrades
 
-- `upgradeNotes` must state the upgrade order: back up, migrate, and deploy the update. It must also explain who runs database schema migrations and whether old and new versions can run at the same time.
 - You must explain when rolling back to an older version requires a data restore. Rolling back an image doesn't undo database migrations.
 - Upgrade shared operators through their components, not through templates.
 

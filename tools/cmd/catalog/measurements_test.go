@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
-	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
 
 func writeFile(t *testing.T, path string, v any) {
@@ -64,42 +63,6 @@ func TestMergeRejectsBrokenFile(t *testing.T) {
 	}
 	if err := mergeMeasurements("downloaded", "measurements"); err == nil {
 		t.Fatal("merged a file that is not JSON")
-	}
-}
-
-func TestIndexTemplatesCarryTheirMeasurements(t *testing.T) {
-	t.Chdir(t.TempDir())
-	writeFile(t, "measurements/templates/ghost.json", measurement{
-		Template:     "ghost",
-		Environments: map[string]environment{"single-node-amd64-v1.36.4": {IdleMemoryMiB: 310, IdleCPUm: 4, MeasuredAt: "2026-10-25"}},
-	})
-
-	data, err := json.Marshal(indexTemplates([]*templates.Template{{ID: "ghost"}, {ID: "halo"}}))
-	if err != nil {
-		t.Fatal(err)
-	}
-	var got []map[string]json.RawMessage
-	if err := json.Unmarshal(data, &got); err != nil {
-		t.Fatal(err)
-	}
-	byID := map[string]map[string]json.RawMessage{}
-	for _, entry := range got {
-		var id string
-		json.Unmarshal(entry["id"], &id)
-		byID[id] = entry
-	}
-	var measured map[string]environment
-	if err := json.Unmarshal(byID["ghost"]["measured"], &measured); err != nil {
-		t.Fatalf("ghost has no measured: %v", err)
-	}
-	if measured["single-node-amd64-v1.36.4"].IdleMemoryMiB != 310 {
-		t.Errorf("ghost measured = %+v", measured)
-	}
-	if _, ok := byID["halo"]["measured"]; ok {
-		t.Error("halo has measured without a measurement file")
-	}
-	if _, ok := byID["halo"]; !ok {
-		t.Error("a template without a measurement is missing from the index")
 	}
 }
 

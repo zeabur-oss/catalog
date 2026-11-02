@@ -4,7 +4,6 @@ metadata:
   name: Meilisearch
   # renovate: depName=getmeili/meilisearch
   version: "v1.55.0"
-  description: Meilisearch Community Edition search engine with a master key and indexes on a persistent volume.
   summary: A fast search engine with a master key and indexes on a volume.
   locales:
     zh-TW:
@@ -16,8 +15,6 @@ metadata:
   # in getmeili/meilisearch-enterprise.
   license: MIT
   homepage: https://www.meilisearch.com/
-  icon: https://github.com/meilisearch.png
-  categories: [search]
 
 requires: [ingress/traefik, certificates/cert-manager]
 
@@ -87,29 +84,6 @@ security:
         zh-CN:
           risk: "这个镜像不含企业版功能。"
           mitigation: "分片、复制和 S3 快照会返回 requires_enterprise_edition 错误。要用这些功能得另外使用企业版镜像，它采用 BUSL-1.1 许可，生产环境使用要买商业许可。"
-
-scalability:
-  summary: One instance on a 20Gi volume. Indexing uses at most 1 GiB of memory.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - >-
-      Each instance keeps its own LMDB indexes on its volume. Replication needs
-      the Enterprise Edition.
-    - A node-local default StorageClass, such as local-path, has no snapshots or failover.
-
-upgradeNotes:
-  - >-
-    Create a dump with POST /dumps and copy it off the node before you change
-    the image digest. Dumps are the supported path between versions.
-  - >-
-    Meilisearch migrates the database on start for most upgrades. Read the
-    release notes for each version in between; some need a dump import.
-    A rollback needs the dump taken before the upgrade.
-  - >-
-    The master key in meilisearch-secrets protects all derived API keys. If
-    you rotate it, every API key changes.
-  - Deleting the namespace deletes the PVC and all indexes.
 
 smoke:
   - name: meilisearch-ready

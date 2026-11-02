@@ -84,7 +84,7 @@ func TestSafetyRejectsPrivilegeAndNetworkEscapes(t *testing.T) {
 		})
 	}
 	// One baseline service must not downgrade an unrelated restricted workload.
-	r.Services = append(r.Services, templates.Service{Name: "legacy", SecurityProfile: "baseline", BaselineJustification: "legacy UID"})
+	r.Services = append(r.Services, templates.Service{Name: "legacy", SecurityProfile: "baseline"})
 	b := strings.Replace(safeManifest, "runAsNonRoot: true", "runAsNonRoot: false", 1)
 	if err := templates.Safety(r, []byte(b), "test"); !errors.Is(err, templates.ErrPodSecurity) {
 		t.Fatalf("baseline service downgraded unrelated restricted app: %v", err)

@@ -4,8 +4,6 @@ metadata:
   name: Halo
   # renovate: depName=halohub/halo
   version: "2.27.1"
-  description: >-
-    Halo publishing with persistent site assets and CloudNativePG PostgreSQL 16.
   summary: Halo for websites and blogs, with PostgreSQL.
   locales:
     zh-TW:
@@ -15,8 +13,6 @@ metadata:
   license: GPL-3.0-only AND PostgreSQL
   # Also: https://cloudnative-pg.io/
   homepage: https://github.com/halo-dev/halo
-  icon: https://github.com/halo-dev.png
-  categories: [cms]
 
 requires:
   - databases/cloudnative-pg
@@ -77,47 +73,6 @@ security:
         zh-CN:
           risk: "数据库备份不包含 Halo 的本地附件、插件和主题。"
           mitigation: "除了数据库，也要把 Halo 的 PVC 备份到节点之外的地方，并测试两者一起恢复。Halo 内置的备份同样只存在节点上。"
-
-scalability:
-  summary: One writable instance on one volume, with no failover.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - >-
-      A node-local default StorageClass, such as local-path, has no snapshots
-      or failover.
-    - >-
-      A single writable application instance is intentional; do not increase
-      replicas without an application-specific storage/database design.
-    - >-
-      The database runs one PostgreSQL instance. More instances need multi-node
-      replicated storage; a replica count edit alone is not enough.
-
-upgradeNotes:
-  - >-
-    The super administrator admin is created at the first start with the
-    password in halo-secrets/admin-password. The password is used only when no
-    administrator exists, so a restored installation keeps its administrators.
-  - >-
-    Database backups are off when the template is installed. To turn them on,
-    open the database in Zeabur and use the Backups tab.
-  - >-
-    Back up persistent application data and its database to storage outside the
-    node before updating the image digest.
-  - >-
-    Database migrations can be one-way. Restore a copy into a separate namespace
-    and test the upgrade there first: migrations, login, publishing, file access
-    and plugin loading.
-  - >-
-    Keep PostgreSQL major version 16. The pinned image is PostgreSQL 16.15 on
-    Debian trixie. Upgrade the operator only through the catalog.
-  - >-
-    Halo keeps its work directory in /var/lib/halo. To move an existing install,
-    copy the contents of its .halo2 directory into this volume. Do not copy the
-    parent /root directory.
-  - >-
-    CNPG generates halo-db-app credentials; never overwrite or regenerate that
-    Secret during re-render.
 
 smoke:
   - name: application-ready

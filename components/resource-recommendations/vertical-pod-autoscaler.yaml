@@ -1,10 +1,8 @@
+# Recommender only: nothing changes pods unless you apply a suggestion.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: Vertical Pod Autoscaler (recommender only)
-  description: >
-    Suggests CPU and memory requests from observed usage. Recommender only:
-    nothing changes pods unless you apply a suggestion.
   summary: Suggests CPU and memory requests from actual use.
   locales:
     zh-TW:
@@ -13,7 +11,6 @@ metadata:
       summary: "根据实际用量建议 CPU 和内存的预留量。"
   license: Apache-2.0
   homepage: https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler
-maturity: kubernetes-sig
 defaults:
   single-node: optional
   multi-node: optional
@@ -59,12 +56,6 @@ detection:
 
 security:
   summary: Reads pods, workloads and metrics in all namespaces; writes VPA status.
-  clusterWide: true
-  tenants: namespaced
-  tenantCRDs: [VerticalPodAutoscaler]
-  risks:
-    - risk: A VPA's targetRef could name a workload in another namespace.
-      mitigation: targetRef has no namespace field, so a VPA only targets its own namespace.
 
 # The chart annotates its CRDs helm.sh/resource-policy: keep.
 leftovers: [customresourcedefinitions]

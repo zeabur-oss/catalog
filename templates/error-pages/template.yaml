@@ -1,13 +1,11 @@
+# Serves the pages (404, 502, 503, 504) from HTML in a ConfigMap, for Traefik
+# errors middlewares and Ingress or HTTPRoute backends in the same namespace.
 apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: Error pages
   # renovate: depName=docker.io/nginxinc/nginx-unprivileged
   version: "1.31.7-alpine-slim"
-  description: >-
-    Serves a maintenance page and error pages (404, 502, 503, 504) from HTML in a
-    ConfigMap, for Traefik errors middlewares and Ingress or HTTPRoute backends
-    in the same namespace.
   summary: Shows a maintenance page and error pages for the project's domains.
   locales:
     zh-TW:
@@ -17,8 +15,6 @@ metadata:
   license: BSD-2-Clause AND Apache-2.0
   # Also: https://github.com/nginx/docker-nginx-unprivileged
   homepage: https://nginx.org/
-  icon: https://www.svgrepo.com/show/373924/nginx.svg
-  categories: [web-servers]
 
 requires: [ingress/traefik]
 
@@ -46,24 +42,6 @@ security:
         zh-CN:
           risk: "能编辑 ConfigMap 的人，就能改变访客看到的内容。"
           mitigation: "只把 ConfigMap 的编辑权限给可以修改网站的人。服务器会原样送出 HTML，不会执行任何代码。"
-
-scalability:
-  summary: >-
-    Stateless responses; replicas can scale horizontally. The pages come from
-    the ConfigMap, and the kubelet updates them in every pod.
-  replicas: 1
-  maxReplicas: 10
-  blockers:
-    - >-
-      One replica shows no pages while its pod restarts or moves. Add replicas
-      and a PodDisruptionBudget when the maintenance page must stay up during
-      node drains.
-
-upgradeNotes:
-  - >-
-    Check the nginx configuration in the error-pages-nginx ConfigMap and the
-    image vulnerability reports before you accept a digest update.
-  - No data migration. A rollback only reverts the image.
 
 smoke:
   - name: pages

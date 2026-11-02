@@ -1,10 +1,9 @@
+# Serves Gateway API and Ingress, and hosts the CrowdSec bouncer. Ingress NGINX
+# was retired in March 2026.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: Traefik Proxy
-  description: >
-    Serves Gateway API and Ingress, and hosts the CrowdSec bouncer. Ingress NGINX
-    was retired in March 2026.
   summary: Routes traffic from your domains to your services.
   locales:
     zh-TW:
@@ -13,13 +12,9 @@ metadata:
       summary: "把域名的流量转发到你的服务。"
   license: MIT
   homepage: https://traefik.io/traefik/
-maturity: independent
-alternatives:
-  envoy-gateway: Serves Gateway API on Envoy; an existing installation is reused.
 defaults:
   single-node: recommended
   multi-node: recommended
-disruptsTraffic: true
 
 releases:
   - name: gateway-api-crds
@@ -143,14 +138,6 @@ detection:
 
 security:
   summary: Reads Services, Secrets and routes cluster-wide; writes route status.
-  clusterWide: true
-  tenants: namespaced
-  tenantCRDs: [HTTPRoute, GRPCRoute, Middleware]
-  risks:
-    - risk: A tenant HTTPRoute can claim another tenant's hostname on a shared listener.
-      mitigation: Use one listener per verified domain, with allowedRoutes limited to its namespace.
-    - risk: Traefik CRDs can reference other namespaces.
-      mitigation: allowCrossNamespace is false, so a Middleware works only in its own namespace.
 
 # The chart's crds/ directory: Helm never deletes it.
 leftovers: [customresourcedefinitions]

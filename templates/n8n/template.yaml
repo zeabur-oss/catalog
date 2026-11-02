@@ -1,14 +1,12 @@
+# Licensed under the n8n Sustainable Use License
+# (https://docs.n8n.io/sustainable-use-license/): internal business, personal or
+# noncommercial use only.
 apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: n8n PostgreSQL
   # renovate: depName=docker.io/n8nio/n8n
   version: "2.45.3"
-  description: >-
-    n8n 2.44.6 with external JavaScript/Python task runner and operator-managed
-    PostgreSQL17. Licensed under the n8n Sustainable Use License
-    (https://docs.n8n.io/sustainable-use-license/): internal business, personal
-    or noncommercial use only.
   summary: Workflow automation with PostgreSQL and separate code runners.
   locales:
     zh-TW:
@@ -18,8 +16,6 @@ metadata:
   license: LicenseRef-n8n-sustainable-use AND PostgreSQL AND Apache-2.0
   # Also: https://docs.n8n.io/hosting/, https://docs.n8n.io/sustainable-use-license/
   homepage: https://github.com/n8n-io/n8n
-  icon: https://img.5xcamp.us/i/2732381b-be89-478f-9f82-7d63beed4d81.png
-  categories: [automation]
 
 requires:
   - ingress/traefik
@@ -154,46 +150,6 @@ security:
         zh-CN:
           risk: "没有设置 SMTP 服务器。"
           mitigation: "你在 n8n 里设置好 SMTP 之前，邀请邮件和重置密码邮件都发不出去。"
-
-scalability:
-  summary: Single-writer deployment; no automatic horizontal scaling.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - A node-local default StorageClass has no HA or snapshots.
-    - >-
-      Filesystem binary-data storage has a single writer; execution
-      queue mode and shared binary store are not configured.
-    - >-
-      One PostgreSQL primary and one n8n main; scaling requires queue mode,
-      Redis and shared binary storage.
-
-upgradeNotes:
-  - >-
-    Database backups are off when the template is installed. To turn them on,
-    open the database in Zeabur and use the Backups tab.
-  - >-
-    Preserve Secrets and PVCs. Back up data off-node and rehearse a restore
-    before changing image digests.
-  - >-
-    Main n8n and runner must remain exactly 2.44.6 together; never upgrade one
-    side independently. Preserve encryption key, runner token, database, binary
-    files and owner password across upgrades.
-  - >-
-    Image rollback does not undo n8n database migrations; restore the backup
-    taken before the upgrade.
-  - >-
-    Data lives in /home/node/.n8n. The runner token is a random Secret.
-    Settings-file permissions are enforced, node environment reads are blocked,
-    and the executeCommand and localFileTrigger nodes are disabled.
-  - >-
-    GENERIC_TIMEZONE is Asia/Taipei. Change it in the manifest if schedule
-    triggers must use another timezone.
-  - >-
-    Owner email/password is controlled by deployment variables. Rotate
-    n8n-secrets/owner-password and restart to change password; recover
-    encryption-key from secure backups, never regenerate it for an existing
-    database.
 
 smoke:
   - name: workload-ready

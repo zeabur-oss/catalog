@@ -1,12 +1,11 @@
+# Runs SeaweedFS from a Seaweed object in the tenant's namespace and serves its
+# S3 API, with buckets, users, keys and policies as objects. Beta: almost all of
+# the chart comes from one maintainer, and its features and CRDs still change
+# from release to release.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: SeaweedFS Operator
-  description: >
-    Runs SeaweedFS from a Seaweed object in the tenant's namespace and serves
-    its S3 API, with buckets, users, keys and policies as objects. Beta: the
-    chart is pre-1.0, almost all of it comes from one maintainer, and its
-    features and CRDs still change from release to release.
   summary: Runs SeaweedFS object storage with an S3 API, in beta.
   locales:
     zh-TW:
@@ -15,8 +14,6 @@ metadata:
       summary: "运行提供 S3 API 的 SeaweedFS 对象存储，目前为 Beta。"
   license: Apache-2.0
   homepage: https://github.com/seaweedfs/seaweedfs-operator
-maturity: independent
-stability: beta
 defaults:
   single-node: optional
   multi-node: optional
@@ -83,29 +80,6 @@ security:
   summary: >
     Manages pods, StatefulSets, Services, Secrets, PVCs, Jobs and Ingresses
     for Seaweed objects in every namespace, and calls each cluster's admin API.
-  clusterWide: true
-  egress: [docker.io]
-  credentials: optional
-  credentialsNote: Backups and remote storage need cloud credentials, stored as a Secret in the tenant namespace.
-  tenants: namespaced
-  tenantCRDs: [Seaweed, Bucket, BucketLifecyclePolicy, S3Identity, S3Credentials, S3Policy, S3PolicyBinding, S3OIDCProvider, SeaweedBackup, SeaweedRestore, AdminScript, ResourceReferenceGrant]
-  risks:
-    - risk: >
-        SeaweedFS pods run as root unless each component of the Seaweed object
-        sets podSecurityContext and containerSecurityContext.
-      mitigation: Set them for master, volume, filer and s3 (see the smoke test); restricted namespaces reject the pods otherwise.
-    - risk: volume.kind DaemonSet stores data on hostPath and SeaweedCSIDriver installs a privileged CSI driver.
-      mitigation: Both are admin features; restricted Pod Security blocks hostPath in tenant namespaces.
-    - risk: Without IAM, the S3 gateway accepts anonymous requests.
-      mitigation: Create an S3Identity and S3Credentials for each application; IAM is embedded on the S3 port.
-    - risk: >
-        SeaweedRestore reloads filer metadata only; restoring into a new cluster
-        also needs the file data, which the operator does not re-seed yet.
-      mitigation: >
-        Keep a dataMirror to S3 and copy the objects back through the new
-        cluster's S3 API.
-    - risk: An AdminScript runs weed shell commands against a cluster with admin rights.
-      mitigation: It reaches only Seaweed objects in its namespace unless a ResourceReferenceGrant allows more.
 
 # The CRDs carry helm.sh/resource-policy: keep.
 # The chart annotates its CRDs helm.sh/resource-policy: keep.
@@ -157,10 +131,3 @@ smoke:
       - "-n catalog-smoke deployment/smoke-s3 --for=condition=Available"
     # Pulls the SeaweedFS image and starts master, volume and filer in turn.
     timeout: 600s
-
-upgradeNotes:
-  - versions: "*"
-    note: >
-      Upgrades roll every SeaweedFS component the operator manages. Pin
-      spec.image (or spec.version) in each Seaweed object so an operator
-      upgrade does not also change the SeaweedFS version.

@@ -1,11 +1,10 @@
+# Runs MySQL from a MySQLCluster object in the tenant's namespace, one instance
+# or a semi-synchronous primary with replicas, with backups and point-in-time
+# recovery from S3. For applications that need MySQL itself.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
   name: MOCO
-  description: >
-    Runs MySQL 8 from a MySQLCluster object in the tenant's namespace, one
-    instance or a semi-synchronous primary with replicas, with backups and
-    point-in-time recovery from S3. For applications that need MySQL itself.
   # The operator is Apache-2.0; the MySQL images it runs are GPL-2.0.
   summary: Runs MySQL 8 databases with replicas and backups to S3.
   locales:
@@ -15,9 +14,6 @@ metadata:
       summary: "运行 MySQL 8 数据库，支持副本，并能备份到 S3。"
   license: Apache-2.0 AND GPL-2.0-only
   homepage: https://cybozu-go.github.io/moco/
-maturity: independent
-alternatives:
-  mariadb-operator: MariaDB, for applications that accept it in place of MySQL.
 defaults:
   single-node: optional
   multi-node: optional
@@ -64,28 +60,7 @@ security:
   summary: >
     Manages pods, StatefulSets, Services, Secrets, PVCs, CronJobs, Jobs and
     Roles for MySQLClusters in every namespace, and copies certificates into them.
-  clusterWide: true
   podSecurity: baseline
-  credentials: optional
-  credentialsNote: Backups need S3 credentials, passed to the backup Job from the tenant namespace.
-  tenants: namespaced
-  tenantCRDs: [MySQLCluster, BackupPolicy]
-  risks:
-    - risk: >
-        The controller's container security context is fixed in the chart without
-        dropped capabilities or a seccomp profile, so moco-system needs baseline
-        Pod Security, not restricted. The controller keeps all default
-        capabilities and runs with no seccomp filter, so a flaw in it exposes
-        more of the node.
-      mitigation: Label moco-system baseline; MySQL pods in tenant namespaces can still be restricted.
-    - risk: >
-        MySQL pods have no seccomp profile or dropped capabilities unless the
-        MySQLCluster sets them in podTemplate and overwriteContainers.
-      mitigation: Set them on each MySQLCluster (see the smoke test); restricted namespaces reject the pods otherwise.
-    - risk: A BackupPolicy runs Jobs with any ServiceAccount in its namespace and the credentials given in its env.
-      mitigation: Use a ServiceAccount without other rights, and one bucket path and key pair per tenant.
-    - risk: Traffic between the controller and mysqld is not TLS; passwords rely on caching_sha2_password.
-      mitigation: NetworkPolicies between namespaces.
 
 # The CRDs carry helm.sh/resource-policy: keep.
 # The chart annotates its CRDs helm.sh/resource-policy: keep.
@@ -140,10 +115,3 @@ smoke:
     wait: ["-n catalog-smoke mysqlcluster/smoke --for=condition=Healthy"]
     # Pulls the MySQL image and initialises the data directory first.
     timeout: 600s
-
-upgradeNotes:
-  - versions: "*"
-    note: >
-      An operator upgrade that changes the moco-agent image restarts every MySQL pod.
-      Kubernetes 1.35 needs 1.35.4 or later, or the MaxUnavailableStatefulSet
-      feature gate off (kubernetes/kubernetes#137409).

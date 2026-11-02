@@ -1,61 +1,46 @@
 ---
 title: Template catalog
-description: Find application templates and categories, and choose an application to deploy to a single Namespace.
+description: Find application templates and choose an application to deploy to a single Namespace.
 ---
 
-Project members can choose a template to install an application in a single Namespace. Each template pins its image, sets resource requests and limits, and follows the Restricted Pod Security Standard where possible. Templates also describe scaling and backup methods, list what to check before an upgrade, and name required components in `requires`.
+Project members can choose a template to install an application in a single Namespace. Each template pins its image, sets resource requests and limits, and follows the Restricted Pod Security Standard where possible. Templates name required components in `requires`.
 
 ## Template catalog
 
-| ID | Application | Categories |
-| --- | --- | --- |
-| `browserless` | Browserless | automation |
-| `cliproxyapi` | CLIProxyAPI | ai |
-| `dify` | Dify | ai |
-| `error-pages` | Error pages | web-servers |
-| `ghost` | Ghost | cms |
-| `gitea` | Gitea | developer-tools |
-| `halo` | Halo | cms |
-| `hermes-agent` | Hermes Agent | ai, automation |
-| `librechat` | LibreChat | ai |
-| `litellm` | LiteLLM | ai |
-| `lobechat` | LobeChat | ai |
-| `meilisearch` | Meilisearch | search |
-| `memos` | Memos | productivity |
-| `miniflux` | Miniflux | productivity |
-| `n8n-ai-brain` | n8n (AI Brain) | ai, automation |
-| `n8n-sqlite` | n8n SQLite | automation |
-| `n8n` | n8n PostgreSQL | automation |
-| `new-api` | New API | ai |
-| `nginx` | nginx | web-servers |
-| `ntfy` | ntfy | developer-tools |
-| `ollama` | Ollama | ai |
-| `open-webui` | Open WebUI | ai |
-| `openclaw-browser-sandbox` | OpenClaw Browser Sandbox | ai, automation |
-| `openclaw` | OpenClaw | ai |
-| `openlist` | OpenList | storage |
-| `postgresql-pgvector` | PostgreSQL with pgvector | databases |
-| `qdrant` | Qdrant | databases, ai |
-| `searxng` | SearXNG | search |
-| `sillytavern` | SillyTavern | ai |
-| `umami` | Umami | analytics |
-| `uptime-kuma` | Uptime Kuma | monitoring |
-| `vaultwarden` | Vaultwarden | security |
-| `wordpress` | WordPress | cms |
-
-## Categories
-
-- `ai`
-- `analytics`
-- `automation`
-- `cms`
-- `databases`
-- `developer-tools`
-- `monitoring`
-- `productivity`
-- `search`
-- `security`
-- `storage`
-- `web-servers`
+| ID | Application |
+| --- | --- |
+| `browserless` | Browserless |
+| `cliproxyapi` | CLIProxyAPI |
+| `dify` | Dify |
+| `error-pages` | Error pages |
+| `ghost` | Ghost |
+| `gitea` | Gitea |
+| `halo` | Halo |
+| `hermes-agent` | Hermes Agent |
+| `librechat` | LibreChat |
+| `litellm` | LiteLLM |
+| `lobechat` | LobeChat |
+| `meilisearch` | Meilisearch |
+| `memos` | Memos |
+| `miniflux` | Miniflux |
+| `n8n-ai-brain` | n8n (AI Brain) |
+| `n8n-sqlite` | n8n SQLite |
+| `n8n` | n8n PostgreSQL |
+| `new-api` | New API |
+| `nginx` | nginx |
+| `ntfy` | ntfy |
+| `ollama` | Ollama |
+| `open-webui` | Open WebUI |
+| `openclaw-browser-sandbox` | OpenClaw Browser Sandbox |
+| `openclaw` | OpenClaw |
+| `openlist` | OpenList |
+| `postgresql-pgvector` | PostgreSQL with pgvector |
+| `qdrant` | Qdrant |
+| `searxng` | SearXNG |
+| `sillytavern` | SillyTavern |
+| `umami` | Umami |
+| `uptime-kuma` | Uptime Kuma |
+| `vaultwarden` | Vaultwarden |
+| `wordpress` | WordPress |
 
 After choosing a template, follow the steps in [Deploy a template](../get-started/deploy-a-template.mdx) to install it manually.

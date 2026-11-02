@@ -4,9 +4,6 @@ metadata:
   name: Umami
   # renovate: depName=ghcr.io/umami-software/umami
   version: "3.4.1"
-  description: >-
-    Umami web analytics over HTTPS, with PostgreSQL 18 managed by
-    CloudNativePG.
   summary: Website analytics, with PostgreSQL.
   locales:
     zh-TW:
@@ -16,8 +13,6 @@ metadata:
   license: MIT AND PostgreSQL AND Apache-2.0
   # Also: https://cloudnative-pg.io/
   homepage: https://umami.is/
-  icon: https://github.com/umami-software.png
-  categories: [analytics]
 
 requires:
   - ingress/traefik
@@ -95,24 +90,6 @@ security:
         zh-CN:
           risk: "数据库 Pod（CloudNativePG）会用运算符创建的身份去调用 Kubernetes API。"
           mitigation: "databases/cloudnative-pg 组件会为每个集群创建对应的权限（RBAC）。Umami 的 Pod 本身没有令牌。"
-
-scalability:
-  summary: One Umami instance with one PostgreSQL primary.
-  replicas: 1
-  maxReplicas: 1
-  blockers:
-    - >-
-      The init container migrates the database. More replicas need the
-      migration moved to a separate step.
-
-upgradeNotes:
-  - >-
-    Database backups are off when the template is installed. To turn them on,
-    open the database in Zeabur and use the Backups tab.
-  - >-
-    The init container runs prisma migrate deploy before the new version
-    starts. A rollback needs the database backup taken before the upgrade.
-  - Deleting the namespace deletes the database. Backups in S3 stay.
 
 smoke:
   - name: postgresql-ready
