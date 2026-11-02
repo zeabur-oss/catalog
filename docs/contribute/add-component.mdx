@@ -41,11 +41,12 @@ Run the following commands:
 ```sh
 go run ./tools/cmd/catalog validate          # schema, license, references, comments
 go run ./tools/cmd/catalog render            # helm template + kubeconform
+go run ./tools/cmd/catalog requests          # memory requests, into requests.json
 go run ./tools/cmd/catalog e2e -tier l0      # what every pull request runs
 go run ./tools/cmd/catalog e2e -tier l2 <id>
 ```
 
-`validate` checks the schema, license, references, and comments. `render` runs `helm template` and kubeconform. Every pull request runs L0 checks.
+`validate` checks the schema, license, references, and comments. `render` runs `helm template` and kubeconform. `requests` writes the memory your component's pods request to `requests.json`. Run it after you change values or versions, because L0 fails when the file is out of date. Every pull request runs L0 checks.
 
 </Step>
 

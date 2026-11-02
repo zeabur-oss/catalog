@@ -9,7 +9,7 @@ Pushing a `vX.Y.Z` tag publishes `index.json`, `bundle.tar.gz`, `checksums.txt`,
 
 | File | Contents |
 | --- | --- |
-| `index.json` | All components, with their installation order and measurements for each profile, and the Kubernetes versions. A profile is a configuration for `single-node` or `multi-node`. |
+| `index.json` | All components, with their installation order, memory requests and measurements for each profile, and the Kubernetes versions. A profile is a configuration for `single-node` or `multi-node`. |
 | `bundle.tar.gz` | A bundle containing the index, cross-check data, components, templates, and related files. |
 | `checksums.txt` | File checksums. |
 
@@ -46,6 +46,8 @@ To check the attestation instead, run `gh attestation verify index.json --repo z
 ### Read the index and generate installation content
 
 After verification, the tool reads `index.json`. Only incompatible changes affect `indexVersion`.
+
+Each component has `requests.<profile>.memoryMiB`, the memory its pods request, in whole MiB. The scheduler places pods by requests, not by use, so an installer compares the sum over the components it installs with the node's allocatable memory. `catalog requests` computes the value from the rendered charts with the profile's values: the pods in Deployments, StatefulSets (times `replicas`) and DaemonSets (once, for one node), each the larger of its containers' total and its largest init container, with sidecar init containers added to both. A container with only a memory limit counts as requesting the limit, as the API server sets it. Jobs and CronJobs are not counted, and neither are pods that an operator creates for a custom resource. `requests.json` stores the values and L0 fails when it is out of date. `idleMemoryMiB` in `measured` is the memory a component actually uses.
 
 When installing components, the tool runs `detection`, offers the components enabled by default (recommended) for the cluster's profile, and collects each component's `inputs` from the user. It then generates installation content according to `installOrder` and merges `contributes` into the corresponding targets. [How installers choose and install components](installers.mdx) gives the rules for choosing them.
 

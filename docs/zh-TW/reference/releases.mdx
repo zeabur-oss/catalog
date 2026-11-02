@@ -10,7 +10,7 @@ source: "94d7e744e570"
 
 | 檔案 | 內容 |
 | --- | --- |
-| `index.json` | 包含所有元件在各個 profile 下的安裝順序與量測資料，以及 Kubernetes 版本。profile 是 `single-node` 或 `multi-node` 的設定組合。 |
+| `index.json` | 包含所有元件在各個 profile 下的安裝順序、記憶體請求量與量測資料，以及 Kubernetes 版本。profile 是 `single-node` 或 `multi-node` 的設定組合。 |
 | `bundle.tar.gz` | 套件包（bundle），包含索引、交叉檢查資料、元件、範本及相關檔案。 |
 | `checksums.txt` | 檔案的檢查碼。 |
 
@@ -47,6 +47,8 @@ sha256sum --check --ignore-missing SHA256SUMS
 ### 讀取索引並產生安裝內容
 
 驗證後，工具讀取 `index.json`。只有不相容的變更才會改動 `indexVersion`。
+
+每個元件有 `requests.<profile>.memoryMiB`，是它的 Pod 請求（request）的記憶體，單位是 MiB，無條件進位。排程器依請求量而不是實際用量來放置 Pod，所以安裝工具會把要安裝的元件加總，和節點可分配的記憶體比較。`catalog requests` 用該 profile 的值，從算繪後的 chart 算出這個數字：計入 Deployment、StatefulSet（乘以 `replicas`）和 DaemonSet（只算一次，代表一個節點）裡的 Pod。每個 Pod 取容器請求總和與最大 init 容器請求兩者中較大的，sidecar init 容器同時加進兩邊。只設了記憶體上限的容器，視為請求量等於上限，與 API server 的預設一致。Job 和 CronJob 不計入，Operator 為自訂資源建立的 Pod 也不計入。`requests.json` 保存這些數值，過期時 L0 會失敗。`measured` 裡的 `idleMemoryMiB` 則是元件實際用掉的記憶體。
 
 安裝元件時，工具先執行 `detection`，再根據叢集使用的 profile，提供預設啟用（recommended）的元件。接著，工具向使用者取得各元件的 `inputs`，依 `installOrder` 產生安裝內容，再將 `contributes` 合併到對應目標。挑選元件的規則見[安裝工具如何選擇和安裝元件](installers.mdx)。
 

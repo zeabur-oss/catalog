@@ -1,0 +1,114 @@
+{
+  "builds/zeabur-builder": {
+    "multi-node": 192,
+    "single-node": 96
+  },
+  "certificates/cert-manager": {
+    "multi-node": 0,
+    "single-node": 88
+  },
+  "config-reload/reloader": {
+    "multi-node": 256,
+    "single-node": 64
+  },
+  "databases/cloudnative-pg": {
+    "multi-node": 320,
+    "single-node": 96
+  },
+  "databases/dragonfly-operator": {
+    "multi-node": 320,
+    "single-node": 96
+  },
+  "databases/mariadb-operator": {
+    "multi-node": 320,
+    "single-node": 96
+  },
+  "databases/moco": {
+    "multi-node": 256,
+    "single-node": 64
+  },
+  "databases/percona-mongodb": {
+    "multi-node": 256,
+    "single-node": 64
+  },
+  "event-autoscaling/keda": {
+    "multi-node": 400,
+    "single-node": 144
+  },
+  "event-autoscaling/keda-http-add-on": {
+    "multi-node": 80,
+    "single-node": 60
+  },
+  "external-secrets/external-secrets": {
+    "multi-node": 320,
+    "single-node": 96
+  },
+  "image-updates/keel": {
+    "multi-node": 64,
+    "single-node": 32
+  },
+  "ingress/traefik": {
+    "multi-node": 128,
+    "single-node": 64
+  },
+  "intrusion-prevention/crowdsec": {
+    "multi-node": 160,
+    "single-node": 112
+  },
+  "logs/victoria-logs": {
+    "multi-node": 0,
+    "single-node": 0
+  },
+  "metrics/metrics-server": {
+    "multi-node": 192,
+    "single-node": 48
+  },
+  "metrics/victoria-metrics": {
+    "multi-node": 0,
+    "single-node": 16
+  },
+  "node-updates/system-upgrade-controller": {
+    "multi-node": 0,
+    "single-node": 0
+  },
+  "object-storage/seaweedfs-operator": {
+    "multi-node": 256,
+    "single-node": 64
+  },
+  "observability-operator/victoria-metrics-operator": {
+    "multi-node": 0,
+    "single-node": 48
+  },
+  "remote-access/tailscale-operator": {
+    "multi-node": 128,
+    "single-node": 64
+  },
+  "replicated-storage/longhorn": {
+    "multi-node": 128,
+    "single-node": 128
+  },
+  "resource-recommendations/vertical-pod-autoscaler": {
+    "multi-node": 0,
+    "single-node": 0
+  },
+  "runtime-security/falco": {
+    "multi-node": 288,
+    "single-node": 160
+  },
+  "uptime-probes/blackbox-exporter": {
+    "multi-node": 64,
+    "single-node": 16
+  },
+  "volume-backup/k8up": {
+    "multi-node": 128,
+    "single-node": 32
+  },
+  "volume-backup/velero": {
+    "multi-node": 128,
+    "single-node": 64
+  },
+  "vulnerability-scanning/trivy-operator": {
+    "multi-node": 128,
+    "single-node": 64
+  }
+}
