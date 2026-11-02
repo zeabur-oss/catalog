@@ -71,7 +71,7 @@ releases:
         # Pinned by digest; a tag alone can move.
         image:
           repository: falcosecurity/falcoctl
-          tag: 0.14.2@sha256:90ba9627886e8f26b746fa52465d755b28ee49b76eb1d047a0fefd8cadb21907
+          tag: 0.14.3@sha256:2230fb4802aafe09455b58d38f8f1faedd8f09f042e9a18fffd397e63488c023
         artifact:
           follow:
             # Rules change only with chart upgrades; no background downloads.
