@@ -2,8 +2,8 @@
   "template": "librechat",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 776,
-      "idleCPUm": 44,
+      "idleMemoryMiB": 775,
+      "idleCPUm": 57,
       "versions": {
         "docker.io/getmeili/meilisearch": "v1.55.0",
         "docker.io/percona/percona-server-mongodb": "8.0.32-14",

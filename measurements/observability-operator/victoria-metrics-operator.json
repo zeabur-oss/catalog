@@ -2,16 +2,16 @@
   "component": "observability-operator/victoria-metrics-operator",
   "environments": {
     "k3s-amd64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 20,
-      "idleCPUm": 1,
+      "idleMemoryMiB": 19,
+      "idleCPUm": 2,
       "versions": {
         "operator": "0.68.1"
       },
       "measuredAt": "2026-11-01"
     },
     "k3s-arm64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 19,
-      "idleCPUm": 1,
+      "idleMemoryMiB": 20,
+      "idleCPUm": 2,
       "versions": {
         "operator": "0.68.1"
       },
@@ -26,7 +26,7 @@
       "measuredAt": "2026-11-01"
     },
     "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
-      "idleMemoryMiB": 22,
+      "idleMemoryMiB": 23,
       "idleCPUm": 1,
       "versions": {
         "operator": "0.68.1"
@@ -35,7 +35,7 @@
     },
     "multi-node-amd64-v1.36.4": {
       "idleMemoryMiB": 19,
-      "idleCPUm": 2,
+      "idleCPUm": 1,
       "versions": {
         "operator": "0.68.1"
       },
@@ -43,23 +43,23 @@
     },
     "multi-node-arm64-v1.36.4": {
       "idleMemoryMiB": 19,
-      "idleCPUm": 1,
+      "idleCPUm": 2,
       "versions": {
         "operator": "0.68.1"
       },
       "measuredAt": "2026-11-01"
     },
     "rke2-amd64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 19,
-      "idleCPUm": 2,
+      "idleMemoryMiB": 20,
+      "idleCPUm": 1,
       "versions": {
         "operator": "0.68.1"
       },
       "measuredAt": "2026-11-01"
     },
     "rke2-arm64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 21,
-      "idleCPUm": 2,
+      "idleMemoryMiB": 20,
+      "idleCPUm": 1,
       "versions": {
         "operator": "0.68.1"
       },
@@ -75,7 +75,7 @@
     },
     "single-node-arm64-v1.36.4": {
       "idleMemoryMiB": 20,
-      "idleCPUm": 1,
+      "idleCPUm": 2,
       "versions": {
         "operator": "0.68.1"
       },

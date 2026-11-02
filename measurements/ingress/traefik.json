@@ -2,7 +2,7 @@
   "component": "ingress/traefik",
   "environments": {
     "k3s-amd64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 23,
+      "idleMemoryMiB": 24,
       "idleCPUm": 0,
       "versions": {
         "gateway-api-crds": "v1.6.3",
@@ -11,7 +11,7 @@
       "measuredAt": "2026-11-01"
     },
     "k3s-arm64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 25,
+      "idleMemoryMiB": 26,
       "idleCPUm": 0,
       "versions": {
         "gateway-api-crds": "v1.6.3",
@@ -29,7 +29,7 @@
       "measuredAt": "2026-10-29"
     },
     "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
-      "idleMemoryMiB": 23,
+      "idleMemoryMiB": 22,
       "idleCPUm": 0,
       "versions": {
         "gateway-api-crds": "v1.6.3",
@@ -56,7 +56,7 @@
       "measuredAt": "2026-11-01"
     },
     "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 66,
+      "idleMemoryMiB": 70,
       "idleCPUm": 1,
       "versions": {
         "gateway-api-crds": "v1.6.3",
@@ -65,7 +65,7 @@
       "measuredAt": "2026-11-01"
     },
     "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 70,
+      "idleMemoryMiB": 72,
       "idleCPUm": 0,
       "versions": {
         "gateway-api-crds": "v1.6.3",
@@ -74,7 +74,7 @@
       "measuredAt": "2026-11-01"
     },
     "rke2-amd64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 25,
+      "idleMemoryMiB": 22,
       "idleCPUm": 0,
       "versions": {
         "gateway-api-crds": "v1.6.3",

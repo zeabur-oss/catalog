@@ -2,8 +2,8 @@
   "template": "wordpress",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 158,
-      "idleCPUm": 11,
+      "idleMemoryMiB": 157,
+      "idleCPUm": 10,
       "versions": {
         "docker.io/mariadb": "11.8.8",
         "docker.io/nginxinc/nginx-unprivileged": "stable-alpine",

@@ -10,7 +10,7 @@
       "measuredAt": "2026-11-01"
     },
     "k3s-arm64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 34,
+      "idleMemoryMiB": 35,
       "idleCPUm": 4,
       "versions": {
         "http-add-on": "0.16.0"
@@ -34,8 +34,8 @@
       "measuredAt": "2026-11-01"
     },
     "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 71,
-      "idleCPUm": 9,
+      "idleMemoryMiB": 67,
+      "idleCPUm": 10,
       "versions": {
         "http-add-on": "0.16.0"
       },
@@ -43,14 +43,14 @@
     },
     "multi-node-arm64-v1.36.4": {
       "idleMemoryMiB": 68,
-      "idleCPUm": 10,
+      "idleCPUm": 9,
       "versions": {
         "http-add-on": "0.16.0"
       },
       "measuredAt": "2026-11-01"
     },
     "rke2-amd64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 33,
+      "idleMemoryMiB": 36,
       "idleCPUm": 4,
       "versions": {
         "http-add-on": "0.16.0"
@@ -66,15 +66,15 @@
       "measuredAt": "2026-11-01"
     },
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 33,
-      "idleCPUm": 4,
+      "idleMemoryMiB": 32,
+      "idleCPUm": 3,
       "versions": {
         "http-add-on": "0.16.0"
       },
       "measuredAt": "2026-11-01"
     },
     "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 35,
+      "idleMemoryMiB": 33,
       "idleCPUm": 4,
       "versions": {
         "http-add-on": "0.16.0"

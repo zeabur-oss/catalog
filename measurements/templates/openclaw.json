@@ -2,8 +2,8 @@
   "template": "openclaw",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 840,
-      "idleCPUm": 15,
+      "idleMemoryMiB": 843,
+      "idleCPUm": 10,
       "versions": {
         "ghcr.io/openclaw/openclaw": "2026.10.7"
       },

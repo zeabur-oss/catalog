@@ -5,7 +5,7 @@
       "idleMemoryMiB": 2,
       "idleCPUm": 0,
       "versions": {
-        "docker.io/nginxinc/nginx-unprivileged": "1.30.5-alpine-slim"
+        "docker.io/nginxinc/nginx-unprivileged": "1.31.7-alpine-slim"
       },
       "measuredAt": "2026-11-01"
     }

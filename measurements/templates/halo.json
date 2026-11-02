@@ -2,7 +2,7 @@
   "template": "halo",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 424,
+      "idleMemoryMiB": 433,
       "idleCPUm": 12,
       "versions": {
         "halohub/halo": "2.27.1"
