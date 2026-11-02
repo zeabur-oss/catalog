@@ -27,11 +27,14 @@ type measurement struct {
 type environment struct {
 	// Failed marks an environment whose last run failed. It replaces the
 	// passing measurement before it, which catalog merge would keep.
-	Failed        bool              `json:"failed,omitempty"`
-	IdleMemoryMiB float64           `json:"idleMemoryMiB"`
-	IdleCPUm      float64           `json:"idleCPUm"`
-	Versions      map[string]string `json:"versions,omitempty"`
-	MeasuredAt    string            `json:"measuredAt"`
+	Failed        bool    `json:"failed,omitempty"`
+	IdleMemoryMiB float64 `json:"idleMemoryMiB"`
+	// RequestMemoryMiB is the memory that the pods request, from the same run.
+	// Measurements from before it was recorded omit it.
+	RequestMemoryMiB float64           `json:"requestMemoryMiB,omitempty"`
+	IdleCPUm         float64           `json:"idleCPUm"`
+	Versions         map[string]string `json:"versions,omitempty"`
+	MeasuredAt       string            `json:"measuredAt"`
 }
 
 func e2e(fs *flag.FlagSet, r *repo) error {
@@ -116,10 +119,11 @@ func writeMeasurement(c *catalog.Component, key string, res catalog.Result) erro
 		}
 	}
 	m.Environments[key] = environment{
-		IdleMemoryMiB: math.Round(res.IdleMemoryMiB),
-		IdleCPUm:      math.Round(res.IdleCPUm),
-		Versions:      versions,
-		MeasuredAt:    time.Now().UTC().Format(time.DateOnly),
+		IdleMemoryMiB:    math.Round(res.IdleMemoryMiB),
+		RequestMemoryMiB: math.Ceil(res.RequestMemoryMiB),
+		IdleCPUm:         math.Round(res.IdleCPUm),
+		Versions:         versions,
+		MeasuredAt:       time.Now().UTC().Format(time.DateOnly),
 	}
 	return writeJSON(measurementPath(c.ID), m)
 }

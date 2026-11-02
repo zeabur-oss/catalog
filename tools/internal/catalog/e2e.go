@@ -62,9 +62,11 @@ type Result struct {
 	ID            string
 	IdleMemoryMiB float64
 	IdleCPUm      float64
-	UpgradedFrom  string
-	Unmeasured    bool // installed without waiting; nothing ran long enough to measure
-	Err           error
+	// RequestMemoryMiB is the memory the same pods request.
+	RequestMemoryMiB float64
+	UpgradedFrom     string
+	Unmeasured       bool // installed without waiting; nothing ran long enough to measure
+	Err              error
 }
 
 // run tracks one test so it can be undone in reverse order.
@@ -171,10 +173,13 @@ func (t *Tester) Test(id string) (res Result) {
 		for _, rel := range c.Releases {
 			namespaces[rel.Namespace] = true
 		}
-		res.IdleMemoryMiB, res.IdleCPUm, err = IdleUsage(func(ns, name string) bool {
-			return namespaces[ns] && !existing[ns+"/"+name]
-		})
+		mine := func(ns, name string) bool { return namespaces[ns] && !existing[ns+"/"+name] }
+		res.IdleMemoryMiB, res.IdleCPUm, err = IdleUsage(mine)
 		if err != nil {
+			res.Err = err
+			return
+		}
+		if res.RequestMemoryMiB, err = podRequests(mine); err != nil {
 			res.Err = err
 			return
 		}
@@ -610,6 +615,15 @@ func podUsage(match func(ns, name string) bool) (mem, cpu float64, err error) {
 		}
 	}
 	return mem, cpu, nil
+}
+
+// podRequests returns the MiB of memory that matching pods request.
+func podRequests(match func(ns, name string) bool) (float64, error) {
+	out, err := kubectl("get", "pods", "-A", "-o", "json")
+	if err != nil {
+		return 0, err
+	}
+	return RequestedMemory([]byte(out), match)
 }
 
 // podNames returns "namespace/name" for every pod. Names, not UIDs: the

@@ -260,3 +260,21 @@ func TestSameDayRerunReplacesWhatMainHeld(t *testing.T) {
 		t.Errorf("rke2-amd64 = %+v, want the rerun's pass over main's failure", got)
 	}
 }
+
+func TestRequestMemoryIsPublishedWhenMeasured(t *testing.T) {
+	with, err := json.Marshal(environment{IdleMemoryMiB: 50, RequestMemoryMiB: 96})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got map[string]any
+	json.Unmarshal(with, &got)
+	if got["requestMemoryMiB"] != float64(96) {
+		t.Errorf("measured = %s, want requestMemoryMiB 96", with)
+	}
+	without, _ := json.Marshal(environment{IdleMemoryMiB: 50})
+	got = nil
+	json.Unmarshal(without, &got)
+	if _, ok := got["requestMemoryMiB"]; ok {
+		t.Errorf("measured = %s, want no requestMemoryMiB for an older measurement", without)
+	}
+}

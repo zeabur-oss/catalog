@@ -42,12 +42,11 @@ source: "f9ac25395134"
 ```sh
 go run ./tools/cmd/catalog validate          # schema, license, references, comments
 go run ./tools/cmd/catalog render            # helm template + kubeconform
-go run ./tools/cmd/catalog requests          # memory requests, into requests.json
 go run ./tools/cmd/catalog e2e -tier l0      # what every pull request runs
 go run ./tools/cmd/catalog e2e -tier l2 <id>
 ```
 
-`validate` 检查 schema、许可证、引用和注释。`render` 运行 `helm template` 和 kubeconform。`requests` 把组件 Pod 请求的内存写进 `requests.json`。改了 values 或版本后请运行一次，因为文件过期时 L0 会失败。每个 pull request 都会运行 L0 检查。
+`validate` 检查 schema、许可证、引用和注释。`render` 运行 `helm template` 和 kubeconform。每个 pull request 都会运行 L0 检查。
 
 </Step>
 

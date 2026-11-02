@@ -1,56 +1,45 @@
 package catalog
 
 import (
+	"encoding/json"
 	"fmt"
-	"strings"
+	"slices"
 
-	"go.yaml.in/yaml/v3"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-// MemoryRequests returns the bytes of memory that the long-running pods in
-// manifest request, the way the scheduler counts them. A Deployment or
-// StatefulSet counts once per replica and a DaemonSet once, for the node it
-// runs on. Jobs and CronJobs are not counted, because they do not run all the
-// time. Pods that a custom resource makes an operator create are not in the
-// manifest and not counted.
-func MemoryRequests(manifest []byte) (int64, error) {
-	var total int64
-	for _, doc := range strings.Split(string(manifest), "\n---") {
-		var obj struct {
-			Kind     string
+// RequestedMemory returns the MiB of memory that the pods in podList, the
+// JSON of a kubectl pod list, request for the scheduler. Each pod counts at
+// its spec as the API server holds it, so pods that operators create and a
+// DaemonSet's pod on every node are in. Pods that match rejects, finished
+// pods and pods that a Job owns are not.
+func RequestedMemory(podList []byte, match func(ns, name string) bool) (float64, error) {
+	var list struct {
+		Items []struct {
 			Metadata struct {
-				Name        string
-				Annotations map[string]string
+				Namespace, Name string
+				OwnerReferences []struct{ Kind string }
 			}
-			Spec map[string]any
+			Spec   map[string]any
+			Status struct{ Phase string }
 		}
-		if yaml.Unmarshal([]byte(doc), &obj) != nil || obj.Metadata.Annotations["helm.sh/hook"] != "" {
-			continue
-		}
-		var pod any
-		replicas := int64(1)
-		switch obj.Kind {
-		case "Pod":
-			pod = obj.Spec
-		case "DaemonSet":
-			pod = dig(obj.Spec, "template", "spec")
-		case "Deployment", "StatefulSet":
-			pod = dig(obj.Spec, "template", "spec")
-			if n, ok := obj.Spec["replicas"].(int); ok {
-				replicas = int64(n)
-			}
-		default:
-			continue
-		}
-		p, _ := pod.(map[string]any)
-		n, err := podMemoryRequest(p)
-		if err != nil {
-			return 0, fmt.Errorf("%s/%s: %w", obj.Kind, obj.Metadata.Name, err)
-		}
-		total += n * replicas
 	}
-	return total, nil
+	if err := json.Unmarshal(podList, &list); err != nil {
+		return 0, err
+	}
+	var total int64
+	for _, p := range list.Items {
+		if !match(p.Metadata.Namespace, p.Metadata.Name) || p.Status.Phase == "Succeeded" || p.Status.Phase == "Failed" ||
+			slices.ContainsFunc(p.Metadata.OwnerReferences, func(o struct{ Kind string }) bool { return o.Kind == "Job" }) {
+			continue
+		}
+		n, err := podMemoryRequest(p.Spec)
+		if err != nil {
+			return 0, fmt.Errorf("pod %s/%s: %w", p.Metadata.Namespace, p.Metadata.Name, err)
+		}
+		total += n
+	}
+	return float64(total) / (1 << 20), nil
 }
 
 // podMemoryRequest returns the memory a pod needs to be scheduled: the larger
@@ -105,6 +94,3 @@ func containerMemoryRequest(c map[string]any) (int64, error) {
 	}
 	return 0, nil
 }
-
-// MiB converts bytes to whole MiB, rounding up.
-func MiB(bytes int64) int64 { return (bytes + 1<<20 - 1) >> 20 }

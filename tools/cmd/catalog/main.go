@@ -5,7 +5,6 @@
 //	catalog list -tier l1|l2 [-since <ref>]  e2e CI matrix as JSON
 //	catalog e2e -tier l0|l1|l2 [-cluster current] [ids]  run a test tier (see tier.go)
 //	catalog budget                      single-node memory budget
-//	catalog requests                    write requests.json, the memory each component requests
 //	catalog index                       write index.json
 //	catalog crosscheck                  write crosscheck.json, the render of every template with its e2e values
 //	catalog merge <dir>                 merge measurements uploaded by CI jobs into measurements/
@@ -41,7 +40,6 @@ var commands = map[string]func(*flag.FlagSet, *repo) error{
 	"list":       list,
 	"e2e":        e2e,
 	"budget":     budget,
-	"requests":   requests,
 	"index":      index,
 	"crosscheck": crosscheck,
 	"merge":      merge,
@@ -50,7 +48,7 @@ var commands = map[string]func(*flag.FlagSet, *repo) error{
 
 func main() {
 	if len(os.Args) < 2 || commands[os.Args[1]] == nil {
-		fmt.Fprintln(os.Stderr, "usage: catalog validate|render|list|e2e|budget|requests|index|crosscheck|merge|template [flags] [ids]")
+		fmt.Fprintln(os.Stderr, "usage: catalog validate|render|list|e2e|budget|index|crosscheck|merge|template [flags] [ids]")
 		os.Exit(2)
 	}
 	if dir, err := os.UserCacheDir(); err == nil {

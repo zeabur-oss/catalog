@@ -21,13 +21,8 @@ type budgetConfig struct {
 	} `yaml:"singleNode" json:"singleNode"`
 }
 
-// request is what a component's pods ask the scheduler for on a profile.
-type request struct {
-	MemoryMiB int64 `json:"memoryMiB"`
-}
-
 // index writes index.json: every component with its install order,
-// memory requests, measurements and the distributions it was tested on, and the Kubernetes versions.
+// measurements and the distributions it was tested on, and the Kubernetes versions.
 func index(fs *flag.FlagSet, r *repo) error {
 	cat := r.cat
 	out := fs.String("out", "index.json", "output file")
@@ -41,9 +36,7 @@ func index(fs *flag.FlagSet, r *repo) error {
 		InstallOrder map[string][]string    `json:"installOrder"`
 		TestedOn     []string               `json:"testedOn"`
 		Measured     map[string]environment `json:"measured,omitempty"`
-		Requests     map[string]request     `json:"requests,omitempty"`
 	}
-	reqs := readRequests()
 	var comps []component
 	for _, c := range cat.Components {
 		ic := component{Component: c, InstallOrder: map[string][]string{}}
@@ -51,14 +44,6 @@ func index(fs *flag.FlagSet, r *repo) error {
 			if c.Defaults[p] == "unsupported" {
 				continue
 			}
-			mib, ok := reqs[c.ID][p]
-			if !ok {
-				return fmt.Errorf("%s: no memory requests on %s in %s; run catalog requests", c.ID, p, requestsPath)
-			}
-			if ic.Requests == nil {
-				ic.Requests = map[string]request{}
-			}
-			ic.Requests[p] = request{MemoryMiB: mib}
 			order, err := cat.InstallOrder([]string{c.ID}, p)
 			if err != nil {
 				return err
