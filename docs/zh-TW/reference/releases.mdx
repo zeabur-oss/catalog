@@ -48,6 +48,8 @@ sha256sum --check --ignore-missing SHA256SUMS
 
 驗證後，工具讀取 `index.json`。只有不相容的變更才會改動 `indexVersion`。
 
+`measured` 下的每個環境都有 `idleMemoryMiB`（元件實際用掉的記憶體）和 `requestMemoryMiB`（它的 Pod 請求的記憶體），單位是 MiB，無條件進位。排程器依請求量放置 Pod，所以安裝工具會把 `requestMemoryMiB` 加總，和節點可分配的記憶體比較。兩個數字來自同一次 L2 執行，計入元件自己的 namespace 裡實際在叢集上跑的 Pod，包含 Operator 建立的 Pod。這個欄位出現之前的量測不會有它。
+
 安裝元件時，工具先執行 `detection`，再根據叢集使用的 profile，提供預設啟用（recommended）的元件。接著，工具向使用者取得各元件的 `inputs`，依 `installOrder` 產生安裝內容，再將 `contributes` 合併到對應目標。挑選元件的規則見[安裝工具如何選擇和安裝元件](installers.mdx)。
 
 部署範本時，工具先檢查叢集是否符合 `requires` 列出的所有需求，再向使用者取得範本輸入值。工具會將其餘自動產生的值寫入 Secret，接著依專案的 Namespace 渲染並套用 `manifests.yaml`。

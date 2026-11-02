@@ -48,6 +48,8 @@ sha256sum --check --ignore-missing SHA256SUMS
 
 验证后，工具读取 `index.json`。只有不兼容的变更才会改动 `indexVersion`。
 
+`measured` 下的每个环境都有 `idleMemoryMiB`（组件实际用掉的内存）和 `requestMemoryMiB`（它的 Pod 请求的内存），单位是 MiB，向上取整。调度器按请求量放置 Pod，所以安装工具会把 `requestMemoryMiB` 加总，和节点可分配的内存比较。两个数字来自同一次 L2 运行，计入组件自己的 namespace 里实际在集群上运行的 Pod，包括 Operator 创建的 Pod。这个字段出现之前的测量不会有它。
+
 安装组件时，工具执行 `detection`，根据集群的 profile 提供默认启用（recommended）的组件，并向用户获取各组件的 `inputs`。接着按 `installOrder` 生成安装内容，将 `contributes` 合并到对应目标。选择组件的规则见[安装工具如何选择和安装组件](installers.mdx)。
 
 部署模板时，工具检查集群是否满足 `requires` 列出的所有要求，再向用户获取模板输入值，并将其余自动生成的值写入 Secret。接着按项目的 Namespace 渲染并应用 `manifests.yaml`。
