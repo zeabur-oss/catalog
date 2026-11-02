@@ -29,9 +29,9 @@ type environment struct {
 	// passing measurement before it, which catalog merge would keep.
 	Failed        bool    `json:"failed,omitempty"`
 	IdleMemoryMiB float64 `json:"idleMemoryMiB"`
-	// RequestMemoryMiB is the memory that the pods request, from the same run.
-	// Measurements from before it was recorded omit it.
-	RequestMemoryMiB float64           `json:"requestMemoryMiB,omitempty"`
+	// RequestMemoryMiB is the memory that the pods request, from the same run,
+	// zero included. Measurements from before it was recorded omit it.
+	RequestMemoryMiB *float64          `json:"requestMemoryMiB,omitempty"`
 	IdleCPUm         float64           `json:"idleCPUm"`
 	Versions         map[string]string `json:"versions,omitempty"`
 	MeasuredAt       string            `json:"measuredAt"`
@@ -120,7 +120,7 @@ func writeMeasurement(c *catalog.Component, key string, res catalog.Result) erro
 	}
 	m.Environments[key] = environment{
 		IdleMemoryMiB:    math.Round(res.IdleMemoryMiB),
-		RequestMemoryMiB: math.Ceil(res.RequestMemoryMiB),
+		RequestMemoryMiB: new(math.Ceil(res.RequestMemoryMiB)),
 		IdleCPUm:         math.Round(res.IdleCPUm),
 		Versions:         versions,
 		MeasuredAt:       time.Now().UTC().Format(time.DateOnly),

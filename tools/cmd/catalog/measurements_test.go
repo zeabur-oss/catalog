@@ -261,20 +261,27 @@ func TestSameDayRerunReplacesWhatMainHeld(t *testing.T) {
 	}
 }
 
-func TestRequestMemoryIsPublishedWhenMeasured(t *testing.T) {
-	with, err := json.Marshal(environment{IdleMemoryMiB: 50, RequestMemoryMiB: 96})
-	if err != nil {
-		t.Fatal(err)
-	}
-	var got map[string]any
-	json.Unmarshal(with, &got)
-	if got["requestMemoryMiB"] != float64(96) {
-		t.Errorf("measured = %s, want requestMemoryMiB 96", with)
-	}
-	without, _ := json.Marshal(environment{IdleMemoryMiB: 50})
-	got = nil
-	json.Unmarshal(without, &got)
-	if _, ok := got["requestMemoryMiB"]; ok {
-		t.Errorf("measured = %s, want no requestMemoryMiB for an older measurement", without)
+func TestRequestMemoryIsPublishedWhenMeasuredAndOmittedWhenNot(t *testing.T) {
+	for _, c := range []struct {
+		env  environment
+		want any
+	}{
+		{environment{IdleMemoryMiB: 50, RequestMemoryMiB: new(96.0)}, float64(96)},
+		// No pod asks for memory.
+		{environment{IdleMemoryMiB: 50, RequestMemoryMiB: new(0.0)}, float64(0)},
+		// Measured before requests were recorded.
+		{environment{IdleMemoryMiB: 50}, nil},
+	} {
+		out, err := json.Marshal(c.env)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var got map[string]any
+		if err := json.Unmarshal(out, &got); err != nil {
+			t.Fatal(err)
+		}
+		if got["requestMemoryMiB"] != c.want {
+			t.Errorf("%s: requestMemoryMiB = %v, want %v", out, got["requestMemoryMiB"], c.want)
+		}
 	}
 }
