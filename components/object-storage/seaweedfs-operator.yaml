@@ -99,7 +99,7 @@ smoke:
       kind: Seaweed
       metadata: {name: smoke, namespace: catalog-smoke}
       spec:
-        image: chrislusf/seaweedfs:4.50
+        image: chrislusf/seaweedfs:4.51
         volumeServerDiskCount: 1
         master:
           replicas: 1
