@@ -600,7 +600,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: meilisearch
-        image: docker.io/getmeili/meilisearch:v1.55.0@sha256:ff546679970126f8822e15d1b6a06bfbff1f2ce2e43f810cfb5258012f92de5c
+        image: docker.io/getmeili/meilisearch:v1.56.0@sha256:1f578fa865f8251894b3bf38d6668d6209a3f451f8f65ab953e129d4c1db5ef4
         ports:
         - name: http
           containerPort: 7700
@@ -714,7 +714,7 @@ spec:
   crVersion: 1.23.1
   unsafeFlags:
     replsetSize: true
-  image: docker.io/percona/percona-server-mongodb:8.0.32-14@sha256:5ba5f240d2dc98bc6236ab1d79c0862c4b62dba9d98cd0ffdf716c30473d2d11
+  image: docker.io/percona/percona-server-mongodb:8.3.11-3@sha256:532a26202d537656e3b7ac058b0bc553a722ca4d1199625633260e51e0e143e0
   initImage: docker.io/percona/percona-server-mongodb-operator:1.23.1@sha256:78c87b933e184b9af36dbb0078751862c75934c1521c33d3be4d0a38aa58dd0a
   initContainerSecurityContext:
     runAsNonRoot: true
