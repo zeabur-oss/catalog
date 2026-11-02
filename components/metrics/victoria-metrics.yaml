@@ -273,11 +273,13 @@ releases:
             - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|run/containerd/.+|run/k3s/.+|var/lib/docker/.+|var/lib/kubelet/.+)($|/)
             - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tracefs)$
           resources:
-            # One small exporter per node.
+            # One small exporter per node, idles near 16Mi.
             requests: {cpu: 10m, memory: 16Mi}
             limits: {memory: 64Mi}
         kube-state-metrics:
-          # Only the objects needed to map pods to workloads.
+          # Only the objects needed to map pods to workloads. Idles near 40Mi.
+          resources:
+            requests: {cpu: 10m, memory: 64Mi}
           collectors: [pods, replicasets, deployments, statefulsets, daemonsets, jobs, cronjobs, nodes, persistentvolumeclaims, namespaces]
         kubeControllerManager:
           # Embedded in k3s; nothing to scrape.
@@ -311,24 +313,25 @@ releases:
             storage:
               resources:
                 requests: {storage: 5Gi}
+            # Idles near 150Mi with 35 pods.
             resources:
-              requests: {cpu: 50m, memory: 128Mi}
+              requests: {cpu: 50m, memory: 224Mi}
               limits: {memory: 512Mi}
         vmagent:
           spec:
-            # Small scrape set on one node.
+            # Small scrape set on one node. Idles near 85Mi.
             resources:
-              requests: {cpu: 20m, memory: 64Mi}
+              requests: {cpu: 20m, memory: 128Mi}
               limits: {memory: 256Mi}
         vmalert:
           spec:
-            # Evaluates the default alert rules.
+            # Evaluates the default alert rules. Idles near 40Mi.
             resources:
-              requests: {cpu: 10m, memory: 32Mi}
+              requests: {cpu: 10m, memory: 64Mi}
               limits: {memory: 128Mi}
         alertmanager:
           spec:
-            # Routes alerts to configured receivers.
+            # Routes alerts to configured receivers. Idles near 24Mi.
             resources:
               requests: {cpu: 10m, memory: 32Mi}
               limits: {memory: 128Mi}

@@ -34,8 +34,8 @@ releases:
     profiles:
       single-node: |
         resources:
-          # The chart's 200Mi request is sized for 100+ nodes.
-          requests: {cpu: 20m, memory: 48Mi}
+          # Idles near 25Mi; the chart's 200Mi request is sized for 100+ nodes.
+          requests: {cpu: 20m, memory: 32Mi}
           limits: {memory: 128Mi}
       multi-node: |
         # HPA stops while metrics.k8s.io is down; two replicas.

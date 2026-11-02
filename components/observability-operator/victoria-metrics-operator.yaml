@@ -52,9 +52,12 @@ releases:
     profiles:
       single-node: |
         resources:
-          # The operator idles near 40Mi.
-          requests: {cpu: 10m, memory: 48Mi}
+          # The operator idles near 54Mi.
+          requests: {cpu: 10m, memory: 72Mi}
           limits: {memory: 256Mi}
+        env:
+          # The config reloaders it adds to vmagent, vmalert and Alertmanager idle near 12Mi; its default asks 25Mi each.
+          - {name: VM_CONFIG_RELOADER_REQUEST_MEMORY, value: 16Mi}
 
 detection:
   crds: [vmsingles.operator.victoriametrics.com, vlsingles.operator.victoriametrics.com]
