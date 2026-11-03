@@ -32,7 +32,7 @@ The `detection` rules in each component file identify existing installations for
 | logs | VictoriaLogs | Enabled by default | Enabled by default | |
 | metrics | Kubernetes Metrics Server | Enabled by default | Enabled by default | |
 | metrics | VictoriaMetrics (k8s stack) | Enabled by default | Enabled by default | |
-| node-updates | System Upgrade Controller | Enabled by default | Enabled by default | `k3s` and `rke2` only |
+| node-updates | System Upgrade Controller | Optional | Optional | `k3s` and `rke2` only. Not for the Kubernetes version of a zeabur-installer cluster, which `apply` sets |
 | object-storage | SeaweedFS Operator | Optional | Optional | `beta` |
 | observability-operator | VictoriaMetrics operator | Enabled by default | Enabled by default | |
 | remote-access | Tailscale Kubernetes operator | Optional | Optional | |

@@ -33,7 +33,7 @@ source: "7fe2f49f51b2"
 | logs | VictoriaLogs | 默认启用 | 默认启用 | |
 | metrics | Kubernetes Metrics Server | 默认启用 | 默认启用 | |
 | metrics | VictoriaMetrics (k8s stack) | 默认启用 | 默认启用 | |
-| node-updates | System Upgrade Controller | 默认启用 | 默认启用 | 仅限 `k3s`、`rke2` |
+| node-updates | System Upgrade Controller | 可选 | 可选 | 仅限 `k3s`、`rke2`。zeabur-installer 安装的集群由 `apply` 决定 Kubernetes 版本，不要用它升级 |
 | object-storage | SeaweedFS Operator | 可选 | 可选 | `beta` |
 | observability-operator | VictoriaMetrics operator | 默认启用 | 默认启用 | |
 | remote-access | Tailscale Kubernetes operator | 可选 | 可选 | |
