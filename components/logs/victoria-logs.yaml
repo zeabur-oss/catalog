@@ -14,7 +14,8 @@ metadata:
   homepage: https://docs.victoriametrics.com/victorialogs/
 resources:
   # Peak over idle of vlsingle and vlagent on K3s with 12 project namespaces of 36 pods
-  # logging every 100 ms and three loops of 1 h range queries: 71 MiB over 23 MiB.
+  # logging every 100 ms and three loops of 1 h range queries: 71 MiB over 23 MiB, measured
+  # with Kubernetes' and the catalog's namespaces left out.
   workMemoryMiB: 64
 
 defaults:
@@ -58,22 +59,6 @@ releases:
       spec:
         k8sCollector:
           enabled: true
-          # The history reads Zeabur projects only, so Kubernetes' and the catalog's own
-          # namespaces are never opened. The filter runs before a log file is read.
-          excludeFilter: >-
-            kubernetes.pod_namespace:in(
-            kube-system, kube-public, kube-node-lease, zeabur, zeabur-identity, builder-system,
-            cert-manager, cnpg-system, crowdsec, dragonfly-operator-system, external-secrets,
-            falco, k8up-system, keda, keel, longhorn-system, mariadb-operator, moco-system,
-            observability, psmdb-operator, reloader, seaweedfs-operator, system-upgrade,
-            tailscale, traefik, trivy-system, velero, vpa-system, zot
-            )
-          # The history reads only the time, the line, the pod and the container.
-          ignoreFields:
-            - kubernetes.container_id
-            - kubernetes.pod_ip
-            - kubernetes.pod_node_name
-            - output_stream
         # Namespace, pod and container suffice; labels add cardinality. The
         # operator (v0.75.0) passes no flag for k8sCollector.includePodLabels:
         # false, and vlagent's default is true.
