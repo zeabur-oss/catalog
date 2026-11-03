@@ -14,8 +14,8 @@ metadata:
   homepage: https://docs.victoriametrics.com/victorialogs/
 resources:
   # Peak over idle of vlsingle and vlagent on K3s with 12 project namespaces of 36 pods
-  # logging every 100 ms and three loops of 1 h range queries: 71 MiB over 23 MiB, measured
-  # with Kubernetes' and the catalog's namespaces left out.
+  # logging every 100 ms and three loops of 1 h range queries: 81 MiB over 53 MiB. With
+  # Traefik and kube-system logging every 10 ms the work was about 45 MiB.
   workMemoryMiB: 64
 
 defaults:
@@ -59,11 +59,26 @@ releases:
       spec:
         k8sCollector:
           enabled: true
+          # Their lines are noise that shares the 8GiB budget with the project logs, and
+          # observability would feed the collector's own errors back.
+          excludeFilter: kubernetes.pod_namespace:in(kube-system, kube-public, kube-node-lease, observability)
         # Namespace, pod and container suffice; labels add cardinality. The
         # operator (v0.75.0) passes no flag for k8sCollector.includePodLabels:
         # false, and vlagent's default is true.
         extraArgs:
           kubernetesCollector.includePodLabels: "false"
+          # kube-apiserver's audit log, under the /var/lib the collector already mounts
+          # read-only. K3s and RKE2 write it in their own directory, and only
+          # control-plane nodes have the file. Rotated backups are followed, not read again.
+          fileCollector.glob: /var/lib/rancher/*/server/logs/audit.log
+          fileCollector.extraFields: '{"app":"kube-apiserver-audit","node":"%{NODE_NAME}"}'
+          fileCollector.streamFields: app,node
+          fileCollector.timeField: stageTimestamp
+          fileCollector.msgField: requestURI
+          envflag.enable: "true"
+        extraEnvs:
+          - name: NODE_NAME
+            valueFrom: {fieldRef: {fieldPath: spec.nodeName}}
         remoteWriteSettings:
           queues: 1
           # What the node keeps while the log store is down.
@@ -108,7 +123,7 @@ detection:
       labels: {app.kubernetes.io/name: victoria-logs-single}
 
 security:
-  summary: The collector reads pod metadata and node log files.
+  summary: The collector reads pod metadata, node log files and kube-apiserver's audit log.
   privileged: true
 
 smoke:
