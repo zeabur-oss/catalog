@@ -13,9 +13,9 @@ metadata:
   license: Apache-2.0
   homepage: https://docs.victoriametrics.com/victorialogs/
 resources:
-  # Peak over idle of vlsingle and vlagent on KubeSolo with 10 pods logging every 100 ms
-  # and repeated 1 h range queries.
-  workMemoryMiB: 350
+  # Peak over idle of vlsingle and vlagent on K3s with 12 project namespaces of 36 pods
+  # logging every 100 ms and three loops of 1 h range queries: 71 MiB over 23 MiB.
+  workMemoryMiB: 64
 
 defaults:
   single-node: recommended
@@ -40,10 +40,14 @@ releases:
         storage:
           resources:
             requests: {storage: 10Gi}
+        extraArgs:
+          # Caches stop at 128MiB instead of 60% of the limit.
+          memory.allowedBytes: 128MiB
+          search.maxConcurrentRequests: "2"
+          defaultParallelReaders: "2"
         resources:
-          # Idles near 40Mi with 35 pods logging.
           requests: {cpu: 50m, memory: 64Mi}
-          limits: {memory: 1Gi}
+          limits: {memory: 384Mi}
       ---
       # One collector per node, reading container logs.
       apiVersion: operator.victoriametrics.com/v1
@@ -54,16 +58,36 @@ releases:
       spec:
         k8sCollector:
           enabled: true
+          # The history reads Zeabur projects only, so Kubernetes' and the catalog's own
+          # namespaces are never opened. The filter runs before a log file is read.
+          excludeFilter: >-
+            kubernetes.pod_namespace:in(
+            kube-system, kube-public, kube-node-lease, zeabur, zeabur-identity, builder-system,
+            cert-manager, cnpg-system, crowdsec, dragonfly-operator-system, external-secrets,
+            falco, k8up-system, keda, keel, longhorn-system, mariadb-operator, moco-system,
+            observability, psmdb-operator, reloader, seaweedfs-operator, system-upgrade,
+            tailscale, traefik, trivy-system, velero, vpa-system, zot
+            )
+          # The history reads only the time, the line, the pod and the container.
+          ignoreFields:
+            - kubernetes.container_id
+            - kubernetes.pod_ip
+            - kubernetes.pod_node_name
+            - output_stream
         # Namespace, pod and container suffice; labels add cardinality. The
         # operator (v0.75.0) passes no flag for k8sCollector.includePodLabels:
         # false, and vlagent's default is true.
         extraArgs:
           kubernetesCollector.includePodLabels: "false"
+        remoteWriteSettings:
+          queues: 1
+          # What the node keeps while the log store is down.
+          maxDiskUsagePerURL: 512MiB
         remoteWrite:
           - url: http://vlsingle-victoria-logs.observability.svc:9428/internal/insert
         resources:
-          requests: {cpu: 20m, memory: 32Mi}
-          limits: {memory: 256Mi}
+          requests: {cpu: 20m, memory: 16Mi}
+          limits: {memory: 128Mi}
       ---
       # Only the collector, the metrics stack's vmagent (the operator's scrape of
       # /metrics) and Zeabur Proxy in the zeabur namespace reach the log store.
