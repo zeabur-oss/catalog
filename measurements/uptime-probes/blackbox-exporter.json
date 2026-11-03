@@ -3,83 +3,93 @@
   "environments": {
     "k3s-amd64-v1.36.5+k3s1": {
       "idleMemoryMiB": 4,
+      "requestMemoryMiB": 16,
       "idleCPUm": 0,
       "versions": {
         "blackbox-exporter": "11.20.2"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
     "k3s-arm64-v1.36.5+k3s1": {
       "idleMemoryMiB": 4,
+      "requestMemoryMiB": 16,
       "idleCPUm": 0,
       "versions": {
         "blackbox-exporter": "11.20.2"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
     "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
       "idleMemoryMiB": 4,
+      "requestMemoryMiB": 16,
       "idleCPUm": 0,
       "versions": {
         "blackbox-exporter": "11.20.2"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
     "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
       "idleMemoryMiB": 4,
+      "requestMemoryMiB": 16,
       "idleCPUm": 0,
       "versions": {
         "blackbox-exporter": "11.20.2"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
     "multi-node-amd64-v1.36.4": {
       "idleMemoryMiB": 8,
+      "requestMemoryMiB": 64,
       "idleCPUm": 0,
       "versions": {
         "blackbox-exporter": "11.20.2"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
     "multi-node-arm64-v1.36.4": {
       "idleMemoryMiB": 8,
+      "requestMemoryMiB": 64,
       "idleCPUm": 0,
       "versions": {
         "blackbox-exporter": "11.20.2"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
     "rke2-amd64-v1.36.5+rke2r1": {
       "idleMemoryMiB": 4,
+      "requestMemoryMiB": 16,
       "idleCPUm": 0,
       "versions": {
         "blackbox-exporter": "11.20.2"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
     "rke2-arm64-v1.36.5+rke2r1": {
       "idleMemoryMiB": 4,
+      "requestMemoryMiB": 16,
       "idleCPUm": 0,
       "versions": {
         "blackbox-exporter": "11.20.2"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
     "single-node-amd64-v1.36.4": {
       "idleMemoryMiB": 4,
+      "requestMemoryMiB": 16,
       "idleCPUm": 0,
       "versions": {
         "blackbox-exporter": "11.20.2"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
     "single-node-arm64-v1.36.4": {
       "idleMemoryMiB": 4,
+      "requestMemoryMiB": 16,
       "idleCPUm": 0,
       "versions": {
         "blackbox-exporter": "11.20.2"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     }
   }
 }

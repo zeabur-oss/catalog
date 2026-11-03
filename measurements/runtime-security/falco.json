@@ -3,93 +3,103 @@
   "environments": {
     "k3s-amd64-v1.36.5+k3s1": {
       "idleMemoryMiB": 67,
-      "idleCPUm": 2,
-      "versions": {
-        "falco": "9.2.1",
-        "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
-      },
-      "measuredAt": "2026-11-01"
-    },
-    "k3s-arm64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 71,
+      "requestMemoryMiB": 160,
       "idleCPUm": 3,
       "versions": {
         "falco": "9.2.1",
         "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
+    },
+    "k3s-arm64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 70,
+      "requestMemoryMiB": 160,
+      "idleCPUm": 3,
+      "versions": {
+        "falco": "9.2.1",
+        "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+      },
+      "measuredAt": "2026-11-03"
     },
     "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
       "idleMemoryMiB": 63,
+      "requestMemoryMiB": 160,
       "idleCPUm": 3,
       "versions": {
         "falco": "9.2.1",
         "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
     "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
       "idleMemoryMiB": 66,
-      "idleCPUm": 2,
+      "requestMemoryMiB": 160,
+      "idleCPUm": 3,
       "versions": {
         "falco": "9.2.1",
         "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
     "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 169,
-      "idleCPUm": 33,
+      "idleMemoryMiB": 168,
+      "requestMemoryMiB": 800,
+      "idleCPUm": 32,
       "versions": {
         "falco": "9.2.1",
         "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
     "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 174,
+      "idleMemoryMiB": 175,
+      "requestMemoryMiB": 800,
       "idleCPUm": 23,
       "versions": {
         "falco": "9.2.1",
         "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
     "rke2-amd64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 73,
-      "idleCPUm": 6,
-      "versions": {
-        "falco": "9.2.1",
-        "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
-      },
-      "measuredAt": "2026-11-01"
-    },
-    "rke2-arm64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 75,
-      "idleCPUm": 7,
-      "versions": {
-        "falco": "9.2.1",
-        "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
-      },
-      "measuredAt": "2026-11-01"
-    },
-    "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 67,
+      "idleMemoryMiB": 72,
+      "requestMemoryMiB": 160,
       "idleCPUm": 5,
       "versions": {
         "falco": "9.2.1",
         "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
-    "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 70,
-      "idleCPUm": 4,
+    "rke2-arm64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 75,
+      "requestMemoryMiB": 160,
+      "idleCPUm": 6,
       "versions": {
         "falco": "9.2.1",
         "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
+    },
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 66,
+      "requestMemoryMiB": 160,
+      "idleCPUm": 7,
+      "versions": {
+        "falco": "9.2.1",
+        "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+      },
+      "measuredAt": "2026-11-03"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 69,
+      "requestMemoryMiB": 160,
+      "idleCPUm": 5,
+      "versions": {
+        "falco": "9.2.1",
+        "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+      },
+      "measuredAt": "2026-11-03"
     }
   }
 }

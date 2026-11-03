@@ -2,13 +2,13 @@
   "template": "n8n-ai-brain",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 411,
-      "idleCPUm": 10,
+      "idleMemoryMiB": 404,
+      "idleCPUm": 13,
       "versions": {
-        "n8nio/n8n": "2.45.3",
-        "n8nio/runners": "2.45.3"
+        "n8nio/n8n": "2.45.4",
+        "n8nio/runners": "2.45.4"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     }
   }
 }

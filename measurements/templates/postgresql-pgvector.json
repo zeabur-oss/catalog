@@ -3,8 +3,8 @@
   "environments": {
     "single-node-amd64-v1.36.4": {
       "idleMemoryMiB": 50,
-      "idleCPUm": 4,
-      "measuredAt": "2026-11-01"
+      "idleCPUm": 6,
+      "measuredAt": "2026-11-03"
     }
   }
 }

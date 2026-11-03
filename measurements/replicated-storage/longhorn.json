@@ -3,67 +3,75 @@
   "environments": {
     "k3s-amd64-v1.36.5+k3s1": {
       "idleMemoryMiB": 154,
-      "idleCPUm": 20,
-      "versions": {
-        "longhorn": "1.13.0"
-      },
-      "measuredAt": "2026-11-01"
-    },
-    "k3s-arm64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 157,
-      "idleCPUm": 19,
-      "versions": {
-        "longhorn": "1.13.0"
-      },
-      "measuredAt": "2026-11-01"
-    },
-    "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 349,
-      "idleCPUm": 41,
-      "versions": {
-        "longhorn": "1.13.0"
-      },
-      "measuredAt": "2026-11-01"
-    },
-    "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 355,
-      "idleCPUm": 42,
-      "versions": {
-        "longhorn": "1.13.0"
-      },
-      "measuredAt": "2026-11-01"
-    },
-    "rke2-amd64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 157,
-      "idleCPUm": 24,
-      "versions": {
-        "longhorn": "1.13.0"
-      },
-      "measuredAt": "2026-11-01"
-    },
-    "rke2-arm64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 155,
+      "requestMemoryMiB": 128,
       "idleCPUm": 18,
       "versions": {
         "longhorn": "1.13.0"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
+    },
+    "k3s-arm64-v1.36.5+k3s1": {
+      "idleMemoryMiB": 154,
+      "requestMemoryMiB": 128,
+      "idleCPUm": 20,
+      "versions": {
+        "longhorn": "1.13.0"
+      },
+      "measuredAt": "2026-11-03"
+    },
+    "multi-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 356,
+      "requestMemoryMiB": 256,
+      "idleCPUm": 36,
+      "versions": {
+        "longhorn": "1.13.0"
+      },
+      "measuredAt": "2026-11-03"
+    },
+    "multi-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 359,
+      "requestMemoryMiB": 256,
+      "idleCPUm": 37,
+      "versions": {
+        "longhorn": "1.13.0"
+      },
+      "measuredAt": "2026-11-03"
+    },
+    "rke2-amd64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 156,
+      "requestMemoryMiB": 128,
+      "idleCPUm": 25,
+      "versions": {
+        "longhorn": "1.13.0"
+      },
+      "measuredAt": "2026-11-03"
+    },
+    "rke2-arm64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 156,
+      "requestMemoryMiB": 128,
+      "idleCPUm": 18,
+      "versions": {
+        "longhorn": "1.13.0"
+      },
+      "measuredAt": "2026-11-03"
     },
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 150,
-      "idleCPUm": 23,
+      "idleMemoryMiB": 155,
+      "requestMemoryMiB": 128,
+      "idleCPUm": 20,
       "versions": {
         "longhorn": "1.13.0"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
     "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 154,
-      "idleCPUm": 23,
+      "idleMemoryMiB": 153,
+      "requestMemoryMiB": 128,
+      "idleCPUm": 20,
       "versions": {
         "longhorn": "1.13.0"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     }
   }
 }
