@@ -13,9 +13,12 @@ metadata:
       summary: "逐个升级各节点上的 Kubernetes。"
   license: Apache-2.0
   homepage: https://github.com/rancher/system-upgrade-controller
+# Off by default: zeabur-installer upgrades k3s and RKE2 itself, and its apply puts back the
+# version it pins on a node that a Plan upgraded. Install it for Plans that do not change the
+# Kubernetes version, such as OS package upgrades.
 defaults:
-  single-node: recommended
-  multi-node: recommended
+  single-node: optional
+  multi-node: optional
 # Its Plans replace the k3s or RKE2 binary (rancher/k3s-upgrade, rancher/rke2-upgrade), and its
 # manifest needs a control-plane node label that other distributions (KubeSolo) do not set.
 distributions: [k3s, rke2]
