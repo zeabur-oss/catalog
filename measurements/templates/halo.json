@@ -2,12 +2,12 @@
   "template": "halo",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 433,
-      "idleCPUm": 12,
+      "idleMemoryMiB": 513,
+      "idleCPUm": 9,
       "versions": {
         "halohub/halo": "2.27.1"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     }
   }
 }

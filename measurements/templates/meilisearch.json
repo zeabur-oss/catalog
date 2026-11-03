@@ -5,9 +5,9 @@
       "idleMemoryMiB": 9,
       "idleCPUm": 0,
       "versions": {
-        "getmeili/meilisearch": "v1.55.0"
+        "getmeili/meilisearch": "v1.56.0"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     }
   }
 }

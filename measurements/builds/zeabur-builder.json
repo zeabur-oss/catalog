@@ -3,21 +3,23 @@
   "environments": {
     "k3s-amd64-v1.36.5+k3s1": {
       "idleMemoryMiB": 50,
+      "requestMemoryMiB": 120,
       "idleCPUm": 2,
       "versions": {
         "builder": "0.1.1",
         "zot": "0.1.128"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
     "k3s-arm64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 50,
-      "idleCPUm": 3,
+      "idleMemoryMiB": 49,
+      "requestMemoryMiB": 120,
+      "idleCPUm": 2,
       "versions": {
         "builder": "0.1.1",
         "zot": "0.1.128"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
     "kubesolo-amd64-v1.35.7+kubesolo-v1.2.2": {
       "idleMemoryMiB": 50,
@@ -29,13 +31,14 @@
       "measuredAt": "2026-10-29"
     },
     "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
-      "idleMemoryMiB": 50,
-      "idleCPUm": 3,
+      "idleMemoryMiB": 49,
+      "requestMemoryMiB": 120,
+      "idleCPUm": 2,
       "versions": {
         "builder": "0.1.1",
         "zot": "0.1.128"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
     "kubesolo-arm64-v1.35.7+kubesolo-v1.2.2": {
       "idleMemoryMiB": 49,
@@ -48,66 +51,73 @@
     },
     "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
       "idleMemoryMiB": 49,
+      "requestMemoryMiB": 120,
       "idleCPUm": 2,
       "versions": {
         "builder": "0.1.1",
         "zot": "0.1.128"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
     "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 48,
-      "idleCPUm": 4,
+      "idleMemoryMiB": 49,
+      "requestMemoryMiB": 192,
+      "idleCPUm": 2,
       "versions": {
         "builder": "0.1.1",
         "zot": "0.1.128"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
     "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 49,
+      "idleMemoryMiB": 48,
+      "requestMemoryMiB": 192,
       "idleCPUm": 3,
       "versions": {
         "builder": "0.1.1",
         "zot": "0.1.128"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
     "rke2-amd64-v1.36.5+rke2r1": {
       "idleMemoryMiB": 49,
-      "idleCPUm": 2,
-      "versions": {
-        "builder": "0.1.1",
-        "zot": "0.1.128"
-      },
-      "measuredAt": "2026-11-01"
-    },
-    "rke2-arm64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 48,
-      "idleCPUm": 2,
-      "versions": {
-        "builder": "0.1.1",
-        "zot": "0.1.128"
-      },
-      "measuredAt": "2026-11-01"
-    },
-    "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 50,
+      "requestMemoryMiB": 120,
       "idleCPUm": 3,
       "versions": {
         "builder": "0.1.1",
         "zot": "0.1.128"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
     },
-    "single-node-arm64-v1.36.4": {
+    "rke2-arm64-v1.36.5+rke2r1": {
       "idleMemoryMiB": 49,
-      "idleCPUm": 2,
+      "requestMemoryMiB": 120,
+      "idleCPUm": 3,
       "versions": {
         "builder": "0.1.1",
         "zot": "0.1.128"
       },
-      "measuredAt": "2026-11-01"
+      "measuredAt": "2026-11-03"
+    },
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 50,
+      "requestMemoryMiB": 120,
+      "idleCPUm": 3,
+      "versions": {
+        "builder": "0.1.1",
+        "zot": "0.1.128"
+      },
+      "measuredAt": "2026-11-03"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 49,
+      "requestMemoryMiB": 120,
+      "idleCPUm": 3,
+      "versions": {
+        "builder": "0.1.1",
+        "zot": "0.1.128"
+      },
+      "measuredAt": "2026-11-03"
     }
   }
 }
