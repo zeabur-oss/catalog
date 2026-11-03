@@ -43,8 +43,8 @@ releases:
     profiles:
       single-node: |
         resources:
-          # Idles near 25Mi; grows with Clusters. Chart sets none.
-          requests: {cpu: 10m, memory: 64Mi}
+          # Idles near 40Mi; grows with Clusters. Chart sets none.
+          requests: {cpu: 10m, memory: 56Mi}
           limits: {memory: 256Mi}
       multi-node: |
         # Leader election keeps one active; the webhook stays up during drains.
@@ -74,8 +74,8 @@ releases:
     profiles:
       single-node: |
         resources:
-          # Idles near 15Mi; backups run in the instance sidecar, not here.
-          requests: {cpu: 10m, memory: 32Mi}
+          # Idles near 18Mi; backups run in the instance sidecar, not here.
+          requests: {cpu: 10m, memory: 24Mi}
           limits: {memory: 128Mi}
       multi-node: |
         resources:

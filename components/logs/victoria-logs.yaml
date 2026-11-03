@@ -41,6 +41,7 @@ releases:
           resources:
             requests: {storage: 10Gi}
         resources:
+          # Idles near 40Mi with 35 pods logging.
           requests: {cpu: 50m, memory: 64Mi}
           limits: {memory: 1Gi}
       ---

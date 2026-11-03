@@ -292,8 +292,8 @@ releases:
           # About 20 builds of a few apps; resize the claim as they grow.
           storage: 20Gi
         resources:
-          # Idles small without extensions; pushes stream to disk.
-          requests: {cpu: 20m, memory: 64Mi}
+          # Idles near 50Mi without extensions, 70Mi after a push; pushes stream to disk.
+          requests: {cpu: 20m, memory: 104Mi}
           limits: {memory: 512Mi}
       multi-node: |
         # Still one replica: filesystem storage has a single writer, and the
@@ -335,8 +335,8 @@ releases:
     profiles:
       single-node: |
         resources:
-          # The controller only; each namespace's buildkitd sizes itself.
-          requests: {cpu: 10m, memory: 32Mi}
+          # The controller only; each namespace's buildkitd sizes itself. Idles near 6Mi.
+          requests: {cpu: 10m, memory: 16Mi}
           limits: {memory: 256Mi}
         extraArgs:
           # Each namespace's build cache on the node's disk.
