@@ -2,6 +2,24 @@
 
 All notable changes to this catalog are documented in this file; each section comes from the change files in `.changeset/` (CONTRIBUTING.md, "Releases").
 
+## 0.2.1-beta.0 (2026-11-03)
+
+### Features
+
+#### The index publishes each component's memory requests, measured in L2
+
+`measured.<env>.requestMemoryMiB` is the sum of the memory requests of the pods a component runs, read from the cluster after L2 settles. Jobs and finished pods are left out.
+
+### Fixes
+
+#### Single-node memory requests follow what the default components use
+
+Most default components ask for less memory on one node, such as Zeabur Builder's controller, metrics-server, CloudNativePG and the VictoriaMetrics operator's config reloaders. VictoriaMetrics, vmagent, vmalert, kube-state-metrics, cert-manager, the VictoriaMetrics operator and zot ask for more, because they used more than they asked for with 35 pods running.
+
+#### VictoriaLogs uses less memory and keeps the audit log
+
+The log store limits its caches to 128 MiB and runs two searches at a time, and the collector keeps at most 512 MiB of lines for a log store that is down. On a single node VictoriaLogs works with 64 MiB over its idle use instead of 350 MiB, and its memory limits fall to 384 MiB and 128 MiB. The collector leaves out the logs of kube-system and observability, which only add noise to the 8 GiB the logs share, and now also keeps kube-apiserver's audit log as its own stream, so you can search who did what.
+
 ## 0.2.0 (2026-11-02)
 
 ### Breaking Changes
