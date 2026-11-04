@@ -1,7 +1,7 @@
 ---
 title: 安裝工具如何選擇和安裝元件
 description: 安裝工具從 index.json 挑選元件、排定順序、裝好後檢查時要遵守的規則，以及用來測試安裝工具的案例。
-source: "070a2deaa0c8"
+source: "93d8984055ff"
 ---
 
 安裝工具從某個[版本](releases.mdx)讀取 `index.json`，再決定要安裝哪些元件。這一頁列出挑選的規則。Zeabur Installer 照這些規則挑選。其他安裝工具只要遵守同樣的規則，同一份設定就會挑出同樣的元件。每條規則在 `conformance/select/` 都有一個測試案例，用法見本頁最後一節。
@@ -11,13 +11,14 @@ source: "070a2deaa0c8"
 - 一個 catalog 版本的 `index.json`。
 - profile，也就是 `single-node` 或 `multi-node`。
 - 發行版，也就是 `k3s`、`rke2` 或 `kubesolo`。
+- 叢集節點的平台，例如 `linux/amd64`。
 - 使用者寫的 `enable` 和 `disable` 清單。每一項可以是元件 ID（例如 `logs/victoria-logs`），也可以是 capability（例如 `logs`）。
 
 ## 名稱
 
 元件 ID 指的就是那個元件。寫 capability 時，安裝工具從這個 capability 底下、在這個 profile 不是 `unsupported` 的元件裡挑一個。挑法是依下列順序排好，取第一個。
 
-1. `testedOn` 列有這個發行版的元件排前面。
+1. `testedOn` 在這個發行版底下列有這個平台的元件排前面。
 2. 接著是這個 profile `recommended` 的元件。
 3. 最後依 ID 排序。
 
@@ -36,17 +37,18 @@ source: "070a2deaa0c8"
    | --- | --- | --- |
    | 有 `distributions`，但沒有列這個發行版 | `distributions` | 一律排除。啟用的元件另外顯示 `left-out` 警告 |
    | 這個 profile 的 `defaults` 是 `unsupported` | `unsupported` | 一律排除。啟用的元件另外顯示 `left-out` 警告 |
-   | `testedOn` 沒有列這個發行版 | `untested` | 只排除預設元件。啟用的元件照樣安裝，並顯示 `untested` 警告 |
+
+   `testedOn` 沒有在這個發行版底下列出這個平台的已選元件，照樣保留，並顯示 `untested` 警告。從沒在這裡測過的元件，和最近一次在這裡測試失敗的元件，都是這樣處理。
 5. 依 ID 順序走過已選的元件，取每個元件在這個 profile 的 `installOrder`，排出**安裝順序**。`installOrder` 先列它需要的元件，最後是它自己。結果裡還沒有的 ID 就依序加進去。結果裡沒被選到的元件，是因為其他元件需要才安裝的。
 
-   `installOrder` 裡需要的元件，可能已停用、被排除或沒測過。結果要看是誰需要它：
+   `installOrder` 裡需要的元件，可能已停用、被排除或沒測過：
 
-   | 需要的元件 | 預設元件需要它 | 啟用的元件需要它 |
-   | --- | --- | --- |
-   | 已停用，或因為 `distributions`、`unsupported` 排除 | 出錯，代碼是 `needs-disabled` | 出錯，代碼是 `needs-disabled` |
-   | `testedOn` 沒有列這個發行版 | 這個預設元件也不裝，代碼是 `needs-untested`，並指出它需要哪個元件 | 照樣安裝需要的元件，並顯示 `untested` 警告 |
+   | 需要的元件 | 結果 |
+   | --- | --- |
+   | 已停用，或因為 `distributions`、`unsupported` 排除 | 出錯，代碼是 `needs-disabled` |
+   | `testedOn` 沒有在這個發行版底下列出這個平台 | 照樣安裝需要的元件，並顯示 `untested` 警告 |
 
-   例如 VictoriaLogs 需要 VictoriaMetrics operator，而 operator 只在 k3s 測過。在 rke2 上啟用 VictoriaLogs，會連 operator 一起裝，並提醒 operator 在 rke2 沒測過。VictoriaLogs 只是預設元件時，兩個都不裝。
+   例如 VictoriaLogs 需要 VictoriaMetrics operator，而 operator 只在 k3s 測過。在 rke2 上，不管 VictoriaLogs 是預設元件還是啟用的元件，都會連 operator 一起裝，並提醒 operator 在 rke2 沒測過。
 
 挑選的結果有三部分：
 
@@ -91,25 +93,32 @@ kubectl wait --for=condition=Ready nodes.longhorn.io --all -n longhorn-system --
 上面每條規則在 `conformance/select/` 都有一個案例。這個目錄在儲存庫裡，也包含在 `bundle.tar.gz` 中，所以固定某個 catalog commit 或版本的安裝工具，讀到的就是那個版本的案例。格式定義在 [`schema/v1/select-case.schema.json`](https://github.com/zeabur-oss/catalog/blob/main/schema/v1/select-case.schema.json)。
 
 ```yaml
-description: A default not tested on the distribution is left out with a reason.
+description: A default not tested on the distribution is installed with a warning.
 components:            # index.json components, with only the fields selection reads
   - id: ingress/traefik
     defaults: {single-node: recommended, multi-node: recommended}
-    testedOn: [k3s, rke2, kubesolo]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
+      - {distribution: rke2, platforms: [linux/amd64]}
+      - {distribution: kubesolo, platforms: [linux/amd64]}
   - id: logs/victoria-logs
     defaults: {single-node: recommended, multi-node: recommended}
-    testedOn: [k3s, kubesolo]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
+      - {distribution: kubesolo, platforms: [linux/amd64]}
 config:
   profile: multi-node
   distribution: rke2
+  platform: linux/amd64
   # add: what the installer adds to the defaults
   # enable, disable: the person's lists
 want:
   components:          # in install order
     - {id: ingress/traefik, why: default}
-  leftOut:
-    logs/victoria-logs: {reason: untested, distribution: rke2}
-  # warnings: [{kind: untested, component: …, distribution: …}], in any order
+    - {id: logs/victoria-logs, why: default}
+  warnings:            # in any order
+    - {kind: untested, component: logs/victoria-logs, distribution: rke2}
+  # leftOut: {<id>: {reason: …, …}}
   # error: {kind: unknown, name: …}, in place of the rest
 ```
 

@@ -2,10 +2,13 @@ description: A component that enable names and that was not tested on the distri
 components:
   - id: logs/victoria-logs
     defaults: {single-node: optional, multi-node: optional}
-    testedOn: [k3s, rke2]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
+      - {distribution: rke2, platforms: [linux/amd64]}
 config:
   profile: single-node
   distribution: kubesolo
+  platform: linux/amd64
   enable: [logs/victoria-logs]
 want:
   components:

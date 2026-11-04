@@ -4,12 +4,11 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"maps"
 	"os"
 	"slices"
-	"strings"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
+	"k8s.io/apimachinery/pkg/util/version"
 )
 
 // indexVersion changes only on incompatible changes to index.json.
@@ -35,8 +34,8 @@ func index(fs *flag.FlagSet, r *repo) error {
 		*catalog.Component
 		Resources    *catalog.IndexResources `json:"resources,omitempty"`
 		InstallOrder map[string][]string     `json:"installOrder"`
-		TestedOn     []string                `json:"testedOn"`
-		Measured     map[string]environment  `json:"measured,omitempty"`
+		TestedOn     []tested                `json:"testedOn"`
+		Measured     []environment           `json:"measured,omitempty"`
 	}
 	var comps []component
 	for _, c := range cat.Components {
@@ -70,49 +69,56 @@ func index(fs *flag.FlagSet, r *repo) error {
 	})
 }
 
-// testedOn returns the host profiles, in the order of hostProfiles, with a
-// passing measurement of the version that cfg pins. A failed run marks its
-// environment failed, so one failed architecture leaves the distribution out
-// until it passes again. Its key is "<profile>-<architecture>-<server version>", and
-// the server version ends in the pinned release: v1.36.5+k3s1 for k3s,
-// v1.35.7+kubesolo-v1.2.3 for KubeSolo v1.2.3.
-func testedOn(cfg config, measured map[string]environment) []string {
-	out := []string{}
+// tested is a distribution in testedOn with the platforms it passed on.
+type tested struct {
+	Distribution string   `json:"distribution"`
+	Platforms    []string `json:"platforms"`
+}
+
+// testedOn returns the host profiles, in the order of hostProfiles, with the
+// platforms where the newest run of the pinned release passed. A failure
+// stands until a later run passes on the same platform, at any Kubernetes
+// version. A pass on the same day as a failure wins.
+func testedOn(cfg config, envs []environment) []tested {
+	out := []tested{}
 	for _, p := range hostProfiles {
-		suffix := "-" + cfg.pinnedVersion(p)
-		// A failure marker stands until a later run passes on the same
-		// architecture, whatever key that run measured under.
 		passAt, failAt := map[string]string{}, map[string]string{}
-		for key, env := range measured {
-			if !strings.HasPrefix(key, p+"-") || !strings.HasSuffix(key, suffix) {
+		for _, e := range envs {
+			if e.Distribution != p || e.DistributionVersion != cfg.pinnedVersion(p) {
 				continue
 			}
-			arch, _, _ := strings.Cut(strings.TrimPrefix(key, p+"-"), "-")
-			at := passAt
-			if env.Failed {
-				at = failAt
+			at := failAt
+			if e.Result == resultPassed {
+				at = passAt
 			}
-			if old, ok := at[arch]; !ok || env.MeasuredAt > old {
-				at[arch] = env.MeasuredAt
-			}
-		}
-		ok := len(passAt) > 0
-		for arch, f := range failAt {
-			if pass, has := passAt[arch]; !has || f > pass {
-				ok = false
+			if pl := e.Platform.String(); e.MeasuredAt > at[pl] {
+				at[pl] = e.MeasuredAt
 			}
 		}
-		if ok {
-			out = append(out, p)
+		var platforms []string
+		for pl, pass := range passAt {
+			if fail, ok := failAt[pl]; !ok || pass >= fail {
+				platforms = append(platforms, pl)
+			}
+		}
+		if len(platforms) > 0 {
+			slices.Sort(platforms)
+			out = append(out, tested{Distribution: p, Platforms: platforms})
 		}
 	}
 	return out
 }
 
-// passed returns the environments that passed with a measurement.
-func passed(envs map[string]environment) map[string]environment {
-	maps.DeleteFunc(envs, func(_ string, e environment) bool { return e.Failed || e.Idle == nil })
-	return envs
+// passed returns the runs that passed with a measurement, without their result.
+func passed(envs []environment) []environment {
+	var out []environment
+	for _, e := range envs {
+		if e.Result == resultPassed && e.Idle != nil {
+			e.Result = ""
+			out = append(out, e)
+		}
+	}
+	return out
 }
 
 // budget sums the idle memory of every component recommended on single-node,
@@ -127,7 +133,7 @@ func budget(fs *flag.FlagSet, r *repo) error {
 	var total int64
 	var errs []error
 	for _, id := range recommended(cat, "single-node") {
-		mib, ok := latest(readMeasurement(measurementPath(id)), "single-node-amd64")
+		mib, ok := latest(readMeasurement(measurementPath(id)))
 		if !ok {
 			errs = append(errs, fmt.Errorf("%s: not measured on single-node amd64", id))
 			continue
@@ -142,14 +148,31 @@ func budget(fs *flag.FlagSet, r *repo) error {
 	return errors.Join(errs...)
 }
 
-// latest returns the idle memory of the newest cluster version measured for
-// a prefix ("single-node-amd64" matches "single-node-amd64-v1.36.4").
-func latest(m measurement, prefix string) (int64, bool) {
-	keys := slices.Sorted(maps.Keys(m.Environments))
-	for _, k := range slices.Backward(keys) {
-		if e := m.Environments[k]; strings.HasPrefix(k, prefix+"-") && !e.Failed && e.Idle != nil {
-			return e.Idle.MemoryMiB, true
+// latest returns the idle memory of the newest Kubernetes version that
+// passed on single-node kind on linux/amd64.
+func latest(m measurement) (int64, bool) {
+	var best *environment
+	for _, e := range m.Environments {
+		if e.Distribution != kindDistribution || e.Profile != "single-node" || e.Platform != (platform{"linux", "amd64"}) ||
+			e.Result != resultPassed || e.Idle == nil {
+			continue
+		}
+		if best == nil || olderVersion(best.KubernetesVersion, e.KubernetesVersion) {
+			best = &e
 		}
 	}
-	return 0, false
+	if best == nil {
+		return 0, false
+	}
+	return best.Idle.MemoryMiB, true
+}
+
+// olderVersion reports whether Kubernetes version a is older than b.
+func olderVersion(a, b string) bool {
+	va, errA := version.ParseGeneric(a)
+	vb, errB := version.ParseGeneric(b)
+	if errA != nil || errB != nil {
+		return a < b
+	}
+	return va.LessThan(vb)
 }

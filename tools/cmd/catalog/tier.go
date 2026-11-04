@@ -571,8 +571,8 @@ func runTemplate(r *repo, t *catalog.Tester, id string, measure bool) (*template
 
 // testTemplate runs the full template test on the current cluster and writes
 // the measurement if write is set.
-func testTemplate(r *repo, t *catalog.Tester, id string, write bool) (status string, err error) {
-	key, err := currentEnvironment(t.Profile)
+func testTemplate(r *repo, t *catalog.Tester, cfg config, id string, write bool) (status string, err error) {
+	env, err := currentEnvironment(cfg, t.Profile)
 	if err != nil {
 		return "", err
 	}
@@ -590,7 +590,7 @@ func testTemplate(r *repo, t *catalog.Tester, id string, write bool) (status str
 		if err != nil {
 			return "", err
 		}
-		if err := writeTemplateMeasurement(id, key, *usage, imagesOf(manifest)); err != nil {
+		if err := writeTemplateMeasurement(id, env, *usage, imagesOf(manifest)); err != nil {
 			return "", err
 		}
 	}
@@ -644,7 +644,7 @@ func l2(r *repo, cfg config, o tierOptions, args []string) error {
 			if err != nil {
 				if o.write && strings.Contains(s.id, "/") {
 					c, _ := r.cat.Get(s.id)
-					err = errors.Join(err, markFailed(cfg, o.profile, runtime.GOARCH, c, ""))
+					err = errors.Join(err, markFailed(cfg, o.profile, runtime.GOARCH, c, nil))
 				}
 				rows = append(rows, row{subject: s.id, timings: t.Timings, err: err})
 				continue
@@ -654,7 +654,7 @@ func l2(r *repo, cfg config, o tierOptions, args []string) error {
 		if strings.Contains(s.id, "/") {
 			rw.status, rw.err = testComponent(t, cfg, o.profile, s.id, o.write)
 		} else {
-			rw.status, rw.err = testTemplate(r, t, s.id, o.write)
+			rw.status, rw.err = testTemplate(r, t, cfg, s.id, o.write)
 		}
 		rw.timings = t.Timings
 		rows = append(rows, rw)
@@ -670,18 +670,18 @@ func l2(r *repo, cfg config, o tierOptions, args []string) error {
 // environment failed.
 func testComponent(t *catalog.Tester, cfg config, profile, id string, write bool) (status string, err error) {
 	c, _ := t.Catalog.Get(id)
-	key, err := currentEnvironment(profile)
+	env, err := currentEnvironment(cfg, profile)
 	if err != nil {
 		if write {
-			err = errors.Join(err, markFailed(cfg, profile, runtime.GOARCH, c, ""))
+			err = errors.Join(err, markFailed(cfg, profile, runtime.GOARCH, c, nil))
 		}
 		return "", err
 	}
-	slog.Info("testing", "component", id, "env", key)
+	slog.Info("testing", "component", id, "distribution", env.Distribution, "platform", env.Platform.String(), "kubernetes", env.KubernetesVersion)
 	res := t.Test(id)
 	if res.Err != nil {
 		if write {
-			return "", errors.Join(res.Err, markFailed(cfg, profile, runtime.GOARCH, c, key))
+			return "", errors.Join(res.Err, markFailed(cfg, profile, runtime.GOARCH, c, &env))
 		}
 		return "", res.Err
 	}
@@ -689,7 +689,7 @@ func testComponent(t *catalog.Tester, cfg config, profile, id string, write bool
 	if res.Unmeasured {
 		status = "PASS (installed without credentials; not measured)"
 	} else if write {
-		if err := writeMeasurement(c, key, res); err != nil {
+		if err := writeMeasurement(c, env, res); err != nil {
 			return "", err
 		}
 	}
@@ -699,11 +699,11 @@ func testComponent(t *catalog.Tester, cfg config, profile, id string, write bool
 	return status, nil
 }
 
-// currentEnvironment returns the environment key of the current cluster.
-func currentEnvironment(profile string) (string, error) {
+// currentEnvironment returns the environment of the current cluster.
+func currentEnvironment(cfg config, profile string) (environment, error) {
 	out, err := catalog.Run(nil, "kubectl", "version", "-o", "json")
 	if err != nil {
-		return "", err
+		return environment{}, err
 	}
-	return environmentKey(profile, out)
+	return environmentOf(cfg, profile, out)
 }

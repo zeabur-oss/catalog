@@ -4,16 +4,21 @@ description: >
 components:
   - id: logs/loki
     defaults: {single-node: recommended, multi-node: recommended}
-    testedOn: [k3s]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
   - id: logs/victoria-logs
     defaults: {single-node: optional, multi-node: optional}
-    testedOn: [k3s, rke2]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
+      - {distribution: rke2, platforms: [linux/amd64]}
 config:
   profile: multi-node
   distribution: rke2
+  platform: linux/amd64
   enable: [logs]
 want:
   components:
+    - {id: logs/loki, why: default}
     - {id: logs/victoria-logs, why: enabled}
-  leftOut:
-    logs/loki: {reason: untested, distribution: rke2}
+  warnings:
+    - {kind: untested, component: logs/loki, distribution: rke2}

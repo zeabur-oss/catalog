@@ -2,11 +2,15 @@ description: An enable name that a component replaces is an error naming the new
 components:
   - id: builds/zeabur-builder
     defaults: {single-node: optional, multi-node: optional}
-    testedOn: [k3s, rke2, kubesolo]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
+      - {distribution: rke2, platforms: [linux/amd64]}
+      - {distribution: kubesolo, platforms: [linux/amd64]}
     replaces: [container-registry/zot]
 config:
   profile: multi-node
   distribution: k3s
+  platform: linux/amd64
   enable: [container-registry/zot]
 want:
   error: {kind: replaced, old: container-registry/zot, new: builds/zeabur-builder}
