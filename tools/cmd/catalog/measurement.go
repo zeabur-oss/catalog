@@ -121,12 +121,17 @@ func environmentOf(cfg config, profile, kubectlVersion string) (environment, err
 	return e, nil
 }
 
-// hostEnvironment returns the environment of profile on linux/arch, without
-// a Kubernetes version. A host profile runs the single-node values.
+// hostEnvironment returns the environment of profile on linux/arch. A host
+// profile runs the single-node values. Its Kubernetes version is the one that
+// the pinned release names before the plus, such as v1.36.5 for v1.36.5+k3s1,
+// and empty when the release does not name one, such as KubeSolo's.
 func hostEnvironment(cfg config, profile, arch string) environment {
 	e := environment{Distribution: kindDistribution, Profile: profile, Platform: platform{"linux", arch}}
 	if slices.Contains(hostProfiles, profile) {
 		e.Distribution, e.Profile, e.DistributionVersion = profile, templateProfile, cfg.pinnedVersion(profile)
+		if kubernetes, _, ok := strings.Cut(e.DistributionVersion, "+"); ok {
+			e.KubernetesVersion = kubernetes
+		}
 	}
 	return e
 }
@@ -233,7 +238,22 @@ func readMeasurement(path string) measurement {
 	return m
 }
 
+// dropPlaceholders removes each run without a Kubernetes version, which a
+// failure before the cluster answered leaves, once a run in the same
+// distribution, profile, platform and release is as new and has one. Otherwise
+// a failed placeholder stays beside the passing run that replaced it.
+func (m *measurement) dropPlaceholders() {
+	all := slices.Clone(m.Environments)
+	m.Environments = slices.DeleteFunc(m.Environments, func(p environment) bool {
+		return p.KubernetesVersion == "" && slices.ContainsFunc(all, func(e environment) bool {
+			return e.KubernetesVersion != "" && e.MeasuredAt >= p.MeasuredAt && e.Distribution == p.Distribution &&
+				e.Profile == p.Profile && e.Platform == p.Platform && e.DistributionVersion == p.DistributionVersion
+		})
+	})
+}
+
 func writeMeasurementFile(path string, m measurement) error {
+	m.dropPlaceholders()
 	slices.SortFunc(m.Environments, compareEnvironments)
 	if m.Environments == nil {
 		m.Environments = []environment{}

@@ -359,3 +359,82 @@ func TestRequestMemoryIsPublishedWhenMeasuredAndOmittedWhenNot(t *testing.T) {
 		}
 	}
 }
+
+func TestFailureAndPassUseTheSameEnvironment(t *testing.T) {
+	for _, c := range []struct {
+		name, distribution, pin, git string
+	}{
+		{"k3s", "k3s", "v1.36.5+k3s1", "v1.36.5+k3s1"},
+		{"rke2", "rke2", "v1.36.5+rke2r1", "v1.36.5+rke2r1"},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			t.Chdir(t.TempDir())
+			var cfg config
+			cfg.K3s.Version, cfg.RKE2.Version = "v1.36.5+k3s1", "v1.36.5+rke2r1"
+			comp := &catalog.Component{ID: "ingress/traefik"}
+			if err := markFailed(cfg, c.distribution, "amd64", comp, nil); err != nil {
+				t.Fatal(err)
+			}
+			failed := readMeasurement(measurementPath(comp.ID))
+			version := `{"serverVersion":{"gitVersion":"` + c.git + `","platform":"linux/amd64"}}`
+			ran, err := environmentOf(cfg, c.distribution, version)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(failed.Environments) != 1 || !failed.Environments[0].same(ran) {
+				t.Errorf("failure = %+v, want the environment of a run, %+v", failed.Environments, ran)
+			}
+		})
+	}
+}
+
+func TestPassReplacesAnEarlierFailure(t *testing.T) {
+	t.Chdir(t.TempDir())
+	var cfg config
+	cfg.Kubesolo.Version = "v1.2.3"
+	comp := &catalog.Component{ID: "ingress/traefik"}
+	// KubeSolo's release names no Kubernetes version, so the failure before the cluster answered has none.
+	if err := markFailed(cfg, kubesoloProfile, "amd64", comp, nil); err != nil {
+		t.Fatal(err)
+	}
+	pass := env("kubesolo", "single-node", "amd64", "v1.35.7", "v1.2.3", 20, today())
+	if err := writeMeasurement(comp, pass, catalog.Result{IdleMemoryMiB: 20}); err != nil {
+		t.Fatal(err)
+	}
+	m := readMeasurement(measurementPath(comp.ID))
+	if len(m.Environments) != 1 || m.Environments[0].Result != resultPassed {
+		t.Errorf("environments = %+v, want the pass alone", m.Environments)
+	}
+}
+
+func TestMergeDropsStalePlaceholders(t *testing.T) {
+	t.Chdir(t.TempDir())
+	placeholder := func(release, day string) environment {
+		e := env("kubesolo", "single-node", "amd64", "", release, 0, day)
+		e.Result, e.Idle = resultFailed, nil
+		return e
+	}
+	main := measurement{Component: "ingress/traefik", Environments: []environment{
+		placeholder("v1.2.3", "2026-10-31"),
+		env("kubesolo", "single-node", "amd64", "v1.35.7", "v1.2.3", 20, "2026-11-03"),
+		// A newer failure than the pass beside it, and another release's failure, are not stale.
+		placeholder("v1.2.2", "2026-11-04"),
+		env("kubesolo", "single-node", "amd64", "v1.35.6", "v1.2.2", 20, "2026-11-03"),
+	}}
+	writeFile(t, "main/components/ingress/traefik.json", main)
+	writeFile(t, "downloaded/job/components/ingress/traefik.json", measurement{Component: main.Component, Environments: []environment{
+		env("kubesolo", "single-node", "amd64", "v1.35.7", "v1.2.3", 21, "2026-11-04"),
+	}})
+	if err := mergeMeasurements("downloaded", "main"); err != nil {
+		t.Fatal(err)
+	}
+	got := readMeasurement("main/components/ingress/traefik.json").Environments
+	var keys []string
+	for _, e := range got {
+		keys = append(keys, e.DistributionVersion+"/"+e.KubernetesVersion+"/"+e.Result)
+	}
+	want := []string{"v1.2.2//failed", "v1.2.2/v1.35.6/passed", "v1.2.3/v1.35.7/passed"}
+	if !slices.Equal(keys, want) {
+		t.Errorf("environments = %q, want %q", keys, want)
+	}
+}
