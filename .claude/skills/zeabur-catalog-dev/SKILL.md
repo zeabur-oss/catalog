@@ -30,3 +30,8 @@ nix develop -c go run ./tools/cmd/catalog e2e -tier check            # every pul
 nix develop -c go run ./tools/cmd/catalog e2e -tier smoke <ids>      # merge queue: install, smoke
 nix develop -c go run ./tools/cmd/catalog e2e -tier full <id>        # weekly
 ```
+Without IDs, smoke tests everything. With `-since <commit>` it picks from the files changed between
+that commit and `HEAD`, as the merge queue does (`tools/cmd/catalog/smokescope.go`; uncommitted
+edits do not count): a changed component or template, with what installs it; a change under
+`tools/`, `go.*`, `flake.*`, `config/` or `.github/workflows/`, the `smokeRepresentative` list in
+`config/e2e.yaml`; a change to `config/kubernetes.yaml`, everything.
