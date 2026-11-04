@@ -5,7 +5,7 @@
 # what it needs and what installs it, in groups. A merge group that changes no component or
 # template has an empty matrix and skips the job, so require smoke-ok, which fails only when a
 # smoke job failed. CONTRIBUTING.md lists what each tier checks.
-# full is e2e.yml, which nightly.yml calls.
+# full is e2e.yml, which weekly.yml calls.
 name: ci
 
 on:
@@ -14,7 +14,7 @@ on:
   pull_request:
   merge_group:
   schedule:
-    - cron: "0 17 * * *" # every job on main, which also keeps main's caches warm
+    - cron: "30 17 * * *" # every job on main, which also keeps main's caches warm
   workflow_dispatch:
 
 permissions:

@@ -198,7 +198,7 @@ func TestFailedRunTakesThePlatformOutOfTestedOn(t *testing.T) {
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			t.Chdir(t.TempDir())
-			// The nightly job checks out main, fails on k3s arm64 and uploads its file.
+			// The weekly job checks out main, fails on k3s arm64 and uploads its file.
 			writeFile(t, "measurements/components/ingress/traefik.json", main)
 			if err := markFailed(cfg, "k3s", "arm64", comp, c.env); err != nil {
 				t.Fatal(err)

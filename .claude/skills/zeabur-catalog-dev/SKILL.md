@@ -28,5 +28,5 @@ needs no Docker. `smoke` and `full` create their own kind clusters, where and ho
 ```sh
 nix develop -c go run ./tools/cmd/catalog e2e -tier check            # every pull request
 nix develop -c go run ./tools/cmd/catalog e2e -tier smoke <ids>      # merge queue: install, smoke
-nix develop -c go run ./tools/cmd/catalog e2e -tier full <id>        # nightly
+nix develop -c go run ./tools/cmd/catalog e2e -tier full <id>        # weekly
 ```

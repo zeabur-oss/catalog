@@ -41,7 +41,7 @@ existing branch: `git rebase --signoff main`, then force-push.
   what you changed, what it needs and what installs it is installed on one node and
   smoke tested. A change to a shared file such as `config/` or `tools/` tests the
   `smokeRepresentative` list in `config/e2e.yaml` instead of everything. A queued change that touches no component or template skips it.
-- **Every night and before a release (`full`):** everything on one and three
+- **Every week and before a release (`full`):** everything on one and three
   nodes, amd64 and arm64, with idle memory and CPU, uninstall and leftover checks.
 
 Run the same tiers with `go run ./tools/cmd/catalog e2e -tier check`,
