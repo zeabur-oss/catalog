@@ -72,7 +72,7 @@ func Check(root string, cat *Catalog) error {
 			if in.Path != "" && c.inputRelease(in) == "" {
 				fail(c.Path, "input %s: no chart release for its path", in.Name)
 			}
-			if in.Required && in.Default == nil && in.TestValue == nil && in.Generate == "" {
+			if in.Required && in.Default == nil && in.TestValue == nil && in.Generate == nil {
 				fail(c.Path, "input %s: required, so set default, testValue or generate for CI to install it", in.Name)
 			}
 		}
@@ -194,7 +194,7 @@ func (c *Component) provisionProblems() []string {
 		}
 	}
 	for _, in := range c.Inputs {
-		if in.Generate == "clusterIP" && in.Path == "" {
+		if in.Generates(GenerateClusterIP) && in.Path == "" {
 			out = append(out, fmt.Sprintf("input %s: generate clusterIP needs a path", in.Name))
 		}
 	}

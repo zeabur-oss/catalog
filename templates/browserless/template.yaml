@@ -33,7 +33,7 @@ inputs:
       Generated Browserless bearer/query token. Retrieve from
       browserless-secrets/token through authorized Kubernetes access; never put
       the value in a URL logged by a proxy.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: browserless-secrets, key: token}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 

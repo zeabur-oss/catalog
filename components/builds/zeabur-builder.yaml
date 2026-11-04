@@ -2,7 +2,7 @@
 # Railpack, and keeps them in zot, an OCI registry installed with it, so builds
 # need no external registry account. Zeabur needs it to deploy services from
 # Git. Optional: without it, services deploy from images only. Nodes pull from
-# zot at the fixed address of the cluster-ip input, and must trust its CA.
+# zot at the fixed address of the clusterIp input, and must trust its CA.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
@@ -40,14 +40,14 @@ inputs:
   # A node's container runtime cannot resolve zot.zot.svc. With a fixed
   # ClusterIP, a registry mirror on each node (k3s and RKE2 registries.yaml)
   # sends zot.zot.svc:5000 there, and the certificate names that address.
-  - name: cluster-ip
+  - name: clusterIp
     description: >
       A free address in the cluster's Service CIDR for the registry's Service,
       such as 10.43.0.50 on k3s and RKE2. Nodes pull through a registry mirror
       to it. Left out: an address is assigned and only pods reach the registry.
     release: zot
     path: service.clusterIP
-    generate: clusterIP
+    generate: {type: clusterIP}
 
 provides:
   registry:
@@ -171,7 +171,7 @@ releases:
         # default is NodePort).
         type: ClusterIP
         port: 5000
-        # Set by the cluster-ip input; the certificate below names it.
+        # Set by the clusterIp input; the certificate below names it.
         clusterIP: ""
       httpGet:
         # The probes must speak TLS once zot does.

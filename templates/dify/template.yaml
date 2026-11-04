@@ -69,28 +69,26 @@ inputs:
     description: >-
       Generated password that Dify asks for before it creates the first
       administrator; retrieve it from Secret dify-secrets, key init-password.
-    generate: random
-    generateBytes: 14
-    generateEncoding: hex
+    generate: {type: random, bytes: 14, encoding: hex}
     secret: {name: dify-secrets, key: init-password}
     validation: {pattern: '^[0-9a-f]{28}$'}
   - name: appKey
     description: Generated app-key; retrieve from Secret dify-secrets, never from a public URL.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: dify-secrets, key: app-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: redisPassword
     description: >-
       Generated redis-password; retrieve from Secret dify-secrets, never from a
       public URL.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: dify-secrets, key: redis-password}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: sandboxKey
     description: >-
       Generated sandbox-key; retrieve from Secret dify-secrets, never from a
       public URL.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: dify-secrets, key: sandbox-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: storageEndpoint

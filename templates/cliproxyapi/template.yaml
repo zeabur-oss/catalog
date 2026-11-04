@@ -25,14 +25,14 @@ services:
 inputs:
   - name: apiKey
     description: Client Bearer API key for /v1 requests. Provider credentials are separate.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: app-secrets, key: api-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: managementKey
     description: >-
       Management API key; management remains localhost-only and never receives
       public ingress.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: app-secrets, key: management-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 

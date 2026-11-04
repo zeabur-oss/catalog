@@ -2,9 +2,6 @@ package templates
 
 import (
 	"bytes"
-	"crypto/rand"
-	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,6 +13,7 @@ import (
 	"regexp"
 	"slices"
 
+	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"go.yaml.in/yaml/v3"
 )
 
@@ -92,7 +90,7 @@ func (o RenderOptions) validate(r *Template) error {
 	for i, in := range r.Inputs {
 		known[in.Name] = true
 		v, ok := o.Inputs[in.Name]
-		if in.Generate != "" {
+		if in.Generate != nil {
 			if ok {
 				return refuseInput("generated-input", in.Name, ErrGenerated)
 			}
@@ -133,7 +131,7 @@ func Render(r *Template, o RenderOptions) ([]byte, error) {
 		inputs = map[string]string{}
 	}
 	for _, in := range r.Inputs {
-		if _, ok := inputs[in.Name]; !ok && in.Generate == "" {
+		if _, ok := inputs[in.Name]; !ok && in.Generate == nil {
 			inputs[in.Name] = in.Default
 		}
 	}
@@ -157,24 +155,14 @@ func GenerateInputs(r *Template, namespace string) ([]byte, error) {
 	}
 	values := make(map[string]string, len(r.Inputs))
 	for _, in := range r.Inputs {
-		if in.Generate != "random" {
+		if in.Generate == nil || in.Generate.Type != catalog.GenerateRandom {
 			continue
 		}
-		size := 32
-		if in.GenerateBytes != nil {
-			size = *in.GenerateBytes
-		}
-		b := make([]byte, size)
-		rand.Read(b)
-		if in.GenerateEncoding == "hex" {
-			values[in.Name] = hex.EncodeToString(b)
-		} else {
-			values[in.Name] = base64.RawURLEncoding.EncodeToString(b)
-		}
+		values[in.Name] = in.Generate.Random()
 	}
 	grouped := map[string]map[string]string{}
 	for i, in := range r.Inputs {
-		if in.Generate == "" {
+		if in.Generate == nil {
 			continue
 		}
 		v := values[in.Name]

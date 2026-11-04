@@ -27,14 +27,14 @@ inputs:
       Password for the OpenList user admin. It is applied again at each restart,
       so a password changed in the UI is lost on restart. Change this Secret to
       rotate it.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: openlist-secrets, key: admin-password}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: aria2Password
     description: >-
       Aria2 loopback JSON-RPC secret. In OpenList offline download settings, set
       endpoint http://127.0.0.1:6800/jsonrpc and this token.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: openlist-secrets, key: aria2-password}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 

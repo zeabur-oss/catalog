@@ -6,11 +6,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"go.yaml.in/yaml/v3"
 )
 
 func TestManifestsAllowOnlyFieldSubstitution(t *testing.T) {
-	inputs := []Input{{Name: "a_b"}, {Name: "gen", Generate: "random"}}
+	inputs := []Input{{Name: "a_b"}, {Name: "gen", Generate: &catalog.Generate{Type: catalog.GenerateRandom, Bytes: 32, Encoding: "base64url"}}}
 	ok := []string{
 		"ns: {{ .Namespace }} d: {{.Domain}} i: {{ .ClusterIssuer }} x: '{{ .Inputs.a_b }}'",
 	}

@@ -143,7 +143,7 @@ func E2E(t *catalog.Tester, r *Template, values E2EValues, measure bool) (usage 
 		return nil, err
 	}
 	// kubectl refuses to apply an empty List.
-	if slices.ContainsFunc(r.Inputs, func(in Input) bool { return in.Generate != "" }) {
+	if slices.ContainsFunc(r.Inputs, func(in Input) bool { return in.Generate != nil }) {
 		if _, err := kubectl(secrets, "apply", "-n", ns, "-f", "-"); err != nil {
 			return nil, err
 		}

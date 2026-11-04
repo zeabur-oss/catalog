@@ -33,7 +33,7 @@ inputs:
     description: >-
       Generated access-code; retrieve from Secret lobechat-secrets, never from a
       public URL.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: lobechat-secrets, key: access-code}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: providerSecret

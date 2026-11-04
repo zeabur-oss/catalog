@@ -52,7 +52,7 @@ func TestRenderingNeverGeneratesSecretValues(t *testing.T) {
 		t.Fatal(err)
 	}
 	r := &templates.Template{}
-	if err := yaml.Unmarshal([]byte(`{"services":[{"name":"app"}],"inputs":[{"name":"password","description":"password","generate":"random","secret":{"name":"app-secrets","key":"password"},"validation":{"pattern":"^[A-Za-z0-9_-]{43}$"}}]}`), r); err != nil {
+	if err := yaml.Unmarshal([]byte(`{"services":[{"name":"app"}],"inputs":[{"name":"password","description":"password","generate":{"type":"random","bytes":32,"encoding":"base64url"},"secret":{"name":"app-secrets","key":"password"},"validation":{"pattern":"^[A-Za-z0-9_-]{43}$"}}]}`), r); err != nil {
 		t.Fatal(err)
 	}
 	r.Dir = dir
@@ -115,11 +115,11 @@ func generatedSecrets(t *testing.T, r *templates.Template) map[string]map[string
 
 func TestRandomInputsMeetComponentByteAndASCIIConstraints(t *testing.T) {
 	r := inputRecord(t, `[
-		{"name":"realtime","generate":"random","generateBytes":12,"secret":{"name":"z-components","key":"realtime"},"validation":{"pattern":"[A-Za-z0-9_-]{16}"}},
-		{"name":"encryption","generate":"random","generateBytes":16,"generateEncoding":"hex","secret":{"name":"a-components","key":"encryption"},"validation":{"pattern":"[0-9a-f]{32}"}},
-		{"name":"vault","generate":"random","generateBytes":32,"generateEncoding":"hex","secret":{"name":"a-components","key":"vault"},"validation":{"pattern":"[0-9a-f]{64}"}},
-		{"name":"default","generate":"random","secret":{"name":"z-components","key":"default"},"validation":{"pattern":"[A-Za-z0-9_-]{43}"}},
-		{"name":"maximum","generate":"random","generateBytes":64,"generateEncoding":"base64url","secret":{"name":"z-components","key":"maximum"},"validation":{"pattern":"[A-Za-z0-9_-]{86}"}}
+		{"name":"realtime","generate":{"type":"random","bytes":12,"encoding":"base64url"},"secret":{"name":"z-components","key":"realtime"},"validation":{"pattern":"[A-Za-z0-9_-]{16}"}},
+		{"name":"encryption","generate":{"type":"random","bytes":16,"encoding":"hex"},"secret":{"name":"a-components","key":"encryption"},"validation":{"pattern":"[0-9a-f]{32}"}},
+		{"name":"vault","generate":{"type":"random","bytes":32,"encoding":"hex"},"secret":{"name":"a-components","key":"vault"},"validation":{"pattern":"[0-9a-f]{64}"}},
+		{"name":"default","generate":{"type":"random","bytes":32,"encoding":"base64url"},"secret":{"name":"z-components","key":"default"},"validation":{"pattern":"[A-Za-z0-9_-]{43}"}},
+		{"name":"maximum","generate":{"type":"random","bytes":64,"encoding":"base64url"},"secret":{"name":"z-components","key":"maximum"},"validation":{"pattern":"[A-Za-z0-9_-]{86}"}}
 	]`)
 	secrets := generatedSecrets(t, r)
 	for _, tc := range []struct {
@@ -151,7 +151,7 @@ func TestRandomInputsMeetComponentByteAndASCIIConstraints(t *testing.T) {
 }
 
 func TestGeneratedValuesRequireFullPatternMatch(t *testing.T) {
-	r := inputRecord(t, `[{"name":"seed","generate":"random","secret":{"name":"app","key":"secret"},"validation":{"pattern":"[A-Za-z0-9_-]{42}"}}]`)
+	r := inputRecord(t, `[{"name":"seed","generate":{"type":"random","bytes":32,"encoding":"base64url"},"secret":{"name":"app","key":"secret"},"validation":{"pattern":"[A-Za-z0-9_-]{42}"}}]`)
 	if b, err := templates.GenerateInputs(r, "test"); !errors.Is(err, templates.ErrInputPattern) || len(b) != 0 {
 		t.Fatalf("partial random value match: got %v", err)
 	}
@@ -160,7 +160,7 @@ func TestGeneratedValuesRequireFullPatternMatch(t *testing.T) {
 }
 
 func TestGenerateInputsRejectsInvalidNamespaces(t *testing.T) {
-	r := inputRecord(t, `[{"name":"seed","generate":"random","secret":{"name":"app","key":"secret"},"validation":{"pattern":".+"}}]`)
+	r := inputRecord(t, `[{"name":"seed","generate":{"type":"random","bytes":32,"encoding":"base64url"},"secret":{"name":"app","key":"secret"},"validation":{"pattern":".+"}}]`)
 	for _, namespace := range []string{"", "UPPER", "bad/name", "-bad", strings.Repeat("a", 64)} {
 		if b, err := templates.GenerateInputs(r, namespace); !errors.Is(err, templates.ErrNamespace) || len(b) != 0 {
 			t.Fatalf("invalid namespace %q: got %v", namespace, err)

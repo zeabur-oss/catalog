@@ -79,10 +79,8 @@ type Input struct {
 		Label       string `yaml:"label" json:"label"`
 		Description string `yaml:"description" json:"description"`
 	} `yaml:"locales" json:"locales,omitempty"`
-	Generate         string `yaml:"generate" json:"generate,omitempty"`
-	GenerateBytes    *int   `yaml:"generateBytes" json:"generateBytes,omitempty"`
-	GenerateEncoding string `yaml:"generateEncoding" json:"generateEncoding,omitempty"`
-	Required         bool   `yaml:"required" json:"required,omitempty"`
+	Generate *catalog.Generate `yaml:"generate" json:"generate,omitempty"`
+	Required bool              `yaml:"required" json:"required,omitempty"`
 	// Default is the value of an input that is not given.
 	Default string `yaml:"default" json:"default,omitempty"`
 	Secret  *struct {
@@ -251,7 +249,7 @@ func checkActions(manifests []byte, inputs []Input) error {
 	}
 	given := map[string]bool{}
 	for _, in := range inputs {
-		if in.Generate == "" {
+		if in.Generate == nil {
 			given[in.Name] = true
 		}
 	}

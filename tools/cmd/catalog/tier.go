@@ -446,7 +446,7 @@ func dryRun(r *repo, dir string) error {
 			return err
 		}
 		docs := [][]byte{[]byte(v.Setup), manifest}
-		if slices.ContainsFunc(t.Inputs, func(in templates.Input) bool { return in.Generate != "" }) {
+		if slices.ContainsFunc(t.Inputs, func(in templates.Input) bool { return in.Generate != nil }) {
 			docs = append(docs, secrets)
 		}
 		for _, d := range docs {

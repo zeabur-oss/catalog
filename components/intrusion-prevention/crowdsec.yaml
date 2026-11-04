@@ -22,18 +22,18 @@ persistsData: true
 requires: [{component: ingress/traefik}]
 
 inputs:
-  - name: bouncer-key
+  - name: bouncerKey
     description: The Traefik bouncer uses this key to call the CrowdSec local API.
     secret: {name: crowdsec-bouncer-key, key: key, namespace: crowdsec}
-    generate: random
-  - name: lapi-secret
+    generate: {type: random, bytes: 64, encoding: hex}
+  - name: lapiSecret
     description: The local API (LAPI) signs agent sessions with this shared secret.
     secret: {name: crowdsec-lapi, key: csLapiSecret, namespace: crowdsec}
-    generate: random
-  - name: registration-token
+    generate: {type: random, bytes: 64, encoding: hex}
+  - name: registrationToken
     description: Agents register with the local API using this token.
     secret: {name: crowdsec-lapi, key: registrationToken, namespace: crowdsec}
-    generate: random
+    generate: {type: random, bytes: 64, encoding: hex}
 
 releases:
   - name: crowdsec
@@ -68,7 +68,7 @@ releases:
           # No data leaves the cluster unless the user opts in.
           - name: DISABLE_ONLINE_API
             value: "true"
-          # Registers the Traefik bouncer (input bouncer-key).
+          # Registers the Traefik bouncer (input bouncerKey).
           - name: BOUNCER_KEY_traefik
             valueFrom:
               secretKeyRef: {name: crowdsec-bouncer-key, key: key}
