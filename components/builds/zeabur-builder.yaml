@@ -25,8 +25,14 @@ requires: [certificates]
 # zot was its own component before it came with Builder.
 replaces: [container-registry/zot]
 resources:
-  # buildkitd running one small Railpack build, pushing to zot.
-  workMemoryMiB: 500
+  work:
+    - name: build
+      # The build pod, which the controller creates and no render shows. A copy
+      # of buildkitd.resources in chart 0.1.2-beta.1. Change it with the chart.
+      requests: {cpu: 100m, memory: 256Mi}
+      limits: {cpu: "1", memory: 1Gi}
+      # buildkitd running one small Railpack build, pushing to zot.
+      use: {memory: 500Mi}
 
 inputs:
   # A node's container runtime cannot resolve zot.zot.svc. With a fixed
@@ -310,8 +316,8 @@ releases:
   - name: builder
     namespace: builder-system
     chart: oci://ghcr.io/zeabur-oss/charts/zeabur-builder
-    version: 0.1.1
-    chartDigest: sha256:c3c2a8091ef6dd2572bcd2cd5d77c1cad166330dc3653bc4733ddde4a0c468c8
+    version: 0.1.2-beta.1
+    chartDigest: sha256:fa221b419f1986bd53833f06426924d36fc25f11bdda69954e0fd81d4a03b016
     values: |
       registry:
         # zot above: images go to zot.zot.svc:5000/<namespace>/<build>.

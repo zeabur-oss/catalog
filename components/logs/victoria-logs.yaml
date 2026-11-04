@@ -13,10 +13,12 @@ metadata:
   license: Apache-2.0
   homepage: https://docs.victoriametrics.com/victorialogs/
 resources:
-  # Peak over idle of vlsingle and vlagent on K3s with 12 project namespaces of 36 pods
-  # logging every 100 ms and three loops of 1 h range queries: 81 MiB over 53 MiB. With
-  # Traefik and kube-system logging every 10 ms the work was about 45 MiB.
-  workMemoryMiB: 64
+  work:
+    - name: load
+      # Peak over idle of vlsingle and vlagent on K3s with 12 project namespaces of 36 pods
+      # logging every 100 ms and three loops of 1 h range queries: 81 MiB over 53 MiB. With
+      # Traefik and kube-system logging every 10 ms the work was about 45 MiB.
+      use: {memory: 64Mi}
 
 defaults:
   single-node: recommended

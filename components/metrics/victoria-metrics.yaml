@@ -14,9 +14,11 @@ metadata:
   license: Apache-2.0
   homepage: https://victoriametrics.com
 resources:
-  # Peak over idle of vmsingle, vmagent, vmalert, alertmanager and the exporters on KubeSolo,
-  # with 10 pods logging every 100 ms and repeated 1 h range queries.
-  workMemoryMiB: 100
+  work:
+    - name: load
+      # Peak over idle of vmsingle, vmagent, vmalert, alertmanager and the exporters on KubeSolo,
+      # with 10 pods logging every 100 ms and repeated 1 h range queries.
+      use: {memory: 100Mi}
 
 defaults:
   single-node: recommended
