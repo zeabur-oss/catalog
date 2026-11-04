@@ -37,9 +37,9 @@ existing branch: `git rebase --signoff main`, then force-push.
 - **Every pull request (`check`, about 5 minutes):** Go formatting and tests, schema and license
   checks, rendering, template safety rules, and a dry run of every manifest
   against a real API server. Nothing is installed.
-- **Every pull request and every merge to `main` (`smoke`, about 15 to 20 minutes):**
+- **The merge queue (`smoke`, about 15 to 20 minutes):**
   what you changed, what it needs and what installs it is installed on one node and
-  smoke tested. A pull request that changes no component or template skips it.
+  smoke tested. A queued change that touches no component or template skips it.
 - **A pull request with the `e2e` label (`full`):** the components and templates the
   pull request affects, on a single-node cluster, with uninstall and leftover checks. It writes no measurements. Ask a maintainer to add the
   label when a change needs more than a smoke test. Renovate adds it to chart updates.
@@ -49,8 +49,8 @@ existing branch: `git rebase --signoff main`, then force-push.
 Run the same tiers with `go run ./tools/cmd/catalog e2e -tier check`,
 `-tier smoke <ids>` or `-tier full <id>`. `check` needs no Docker. `smoke` and `full`
 create kind clusters on a Linux machine with Docker.
-`scripts/ci.sh <job>` runs one pull request job as CI does, in the dev shell;
-`scripts/ci.sh --list` lists them.
+`scripts/ci.sh <job>` runs one job as CI does, in the dev shell; the jobs are the rows of
+`scripts/ci/jobs`, and each one is `scripts/ci/<job>.sh`. `scripts/ci.sh --list` lists them.
 
 ## Releases
 

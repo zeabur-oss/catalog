@@ -4,7 +4,7 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 source: "cfee11888f66"
 ---
 
-`check` 和 `smoke` 在每个 pull request 中运行，`smoke` 在合并到 `main` 后也会运行。`full` 在每晚（nightly）运行，带有 `e2e` 标签的 pull request 也会运行。打发布 tag 前，要确认该 commit 的每晚运行已通过。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以用 `catalog e2e -tier check|smoke|full` 运行与 CI 相同的测试。
+`check` 在每个 pull request 中运行，`smoke` 在 merge queue 中、对即将合并的 commit 运行。`full` 在每晚（nightly）运行，带有 `e2e` 标签的 pull request 也会运行。打发布 tag 前，要确认该 commit 的每晚运行已通过。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以用 `catalog e2e -tier check|smoke|full` 运行与 CI 相同的测试。
 
 ## 开始前
 
@@ -81,13 +81,13 @@ source: "cfee11888f66"
 
 ## `smoke`：安装变更影响的项目
 
-`ci.yml` 在每个 pull request 和合并到 `main` 后，会在单节点 amd64 kind 集群中安装以下项目，再运行冒烟测试（smoke check）：
+`ci.yml` 在 merge queue 中会在单节点 amd64 kind 集群中安装以下项目，再运行冒烟测试（smoke check）：
 
 - 有变更的组件和模板。
 - 变更的项目所需要的组件。
 - 会安装变更组件的组件和模板。
 
-pull request 测试的是它和目标分支的 merge base 之间的差异，合并到 `main` 则测试那次推送新增的内容。pull request 没有改动任何组件或模板时，没有东西要测，GitHub 会跳过 `smoke` job。请把 `smoke-ok` 设为必需检查，job 被跳过时它会通过，`smoke` job 失败时它会失败。
+进入 merge queue 时，测试的是它和队列基准 commit 之间的差异，pull request 本身不会启动 `smoke`。没有改动任何组件或模板时，没有东西要测，GitHub 会跳过 `smoke` job。请把 `smoke-ok` 设为必需检查，job 被跳过时它会通过，`smoke` job 失败时它会失败。
 
 共用依赖组件的测试会共用集群，依赖组件在每个集群中只安装一次。组件完成冒烟测试后就会卸载，除非同一集群后续的测试仍需要它。
 

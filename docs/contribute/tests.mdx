@@ -3,7 +3,7 @@ title: Tests and CI
 description: Learn when each CI tier runs, what it checks, and how to configure template test inputs.
 ---
 
-`check` and `smoke` run on every pull request, and `smoke` also runs after merges to `main`. `full` runs nightly, and on a pull request that has the `e2e` label. Check that the nightly run passed on a commit before tagging it. Each tier covers different checks, and later tiers run checks that earlier tiers don't cover. You can also run the same tests as CI with `catalog e2e -tier check|smoke|full`.
+`check` runs on every pull request, and `smoke` runs in the merge queue, on the commit about to land. `full` runs nightly, and on a pull request that has the `e2e` label. Check that the nightly run passed on a commit before tagging it. Each tier covers different checks, and later tiers run checks that earlier tiers don't cover. You can also run the same tests as CI with `catalog e2e -tier check|smoke|full`.
 
 ## Before you start
 
@@ -80,13 +80,13 @@ Each template's Namespace generates warnings at its own enforce level. Any warni
 
 ## `smoke`: Install what a change affects
 
-On every pull request and after merges to `main`, `ci.yml` installs the following items in a single-node amd64 kind cluster, then runs smoke checks:
+In the merge queue, `ci.yml` installs the following items in a single-node amd64 kind cluster, then runs smoke checks:
 
 - Changed components and templates.
 - Components and templates that a changed item needs.
 - Components and templates that install a changed component.
 
-A pull request tests what differs from its merge base with the base branch. A merge to `main` tests what the push added. A pull request that changes no component or template has nothing to test, so GitHub skips the `smoke` job. Require the `smoke-ok` check, which passes when the job is skipped and fails when a `smoke` job fails.
+A queued pull request tests what differs from the queue's base commit. A pull request itself doesn't start `smoke`. When the change touches no component or template there is nothing to test, so GitHub skips the `smoke` job. Require the `smoke-ok` check, which passes when the job is skipped and fails when a `smoke` job fails.
 
 Tests that share dependencies share a cluster. Each dependency is installed only once per cluster. After a component passes its smoke check, the test uninstalls it unless a later test in the same cluster still needs it.
 
