@@ -26,6 +26,16 @@ unready:
   # The operator exits when it cannot mint an auth key with its OAuth client.
   - remote-access/tailscale-operator
 
+# What the smoke tier tests when a shared file changes: tools/, go.*, flake.*,
+# another config/ file or a workflow. Component and template IDs.
+smokeRepresentative:
+  - certificates/cert-manager
+  - ingress/traefik
+  - logs/victoria-logs
+  - metrics/metrics-server
+  - metrics/victoria-metrics
+  - browserless
+
 # Smoke checks to skip, per component, with the reason. A check that does not
 # exist fails the run.
 skipSmoke:

@@ -39,20 +39,15 @@ existing branch: `git rebase --signoff main`, then force-push.
   against a real API server. Nothing is installed.
 - **The merge queue (`smoke`, about 15 to 20 minutes):**
   what you changed, what it needs and what installs it is installed on one node and
-  smoke tested. A change to a shared file such as `config/` or `tools/` tests a fixed set
-  of recommended components and one template instead of everything, and nothing if the
-  test tool did not change. A queued change that touches no component or template skips it.
-- **A pull request with the `e2e` label (`full`):** the components and templates the
-  pull request affects, on a single-node cluster, with uninstall and leftover checks. It writes no measurements. Ask a maintainer to add the
-  label when a change needs more than a smoke test. Renovate adds it to chart updates.
+  smoke tested. A change to a shared file such as `config/` or `tools/` tests the
+  `smokeRepresentative` list in `config/e2e.yaml` instead of everything. A queued change that touches no component or template skips it.
 - **Every night and before a release (`full`):** everything on one and three
   nodes, amd64 and arm64, with idle memory and CPU, uninstall and leftover checks.
 
 Run the same tiers with `go run ./tools/cmd/catalog e2e -tier check`,
 `-tier smoke <ids>` or `-tier full <id>`. `check` needs no Docker. `smoke` and `full`
 create kind clusters on a Linux machine with Docker.
-`scripts/ci.sh <job>` runs one job as CI does, in the dev shell; the jobs are the rows of
-`scripts/ci/jobs`, and each one is `scripts/ci/<job>.sh`. `scripts/ci.sh --list` lists them.
+`nix develop -c scripts/ci/<job>.sh` runs one job of `.github/workflows/ci.yml` as CI does.
 
 ## Releases
 

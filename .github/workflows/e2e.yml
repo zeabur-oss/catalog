@@ -2,8 +2,7 @@
 # dependencies first, idle memory and CPU once they are stable, health and
 # smoke checks, uninstall and residue check. profiles picks the profiles of one call; a
 # matrix holds at most 256 jobs, so nightly.yml calls it once for kind and once
-# for the host distributions. e2e-label.yml calls it for a pull request with
-# the e2e label, on single-node with components set and measure off.
+# for the host distributions.
 # - single-node and multi-node run on kind, one node and three. single-node
 #   amd64 also installs every template with the components it requires, runs
 #   its smoke checks, then measures its idle memory and CPU.

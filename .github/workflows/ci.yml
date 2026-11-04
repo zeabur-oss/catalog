@@ -1,15 +1,11 @@
-# The jobs of scripts/ci/jobs (Go tests, lint, validate, render, template lint, a server-side dry
-# run on a local API server and nix build .#release), run by zeabur-oss/.github's shared CI, and
-# the DCO check. Pull requests and pushes run its fast tier; the merge queue, the nightly run and a
-# manual run take every job.
-# smoke in the merge queue: install and smoke test what changed since the queue's base, what it
-# needs and what installs it, in groups. It starts as soon as the matrix is listed and does not wait
-# for check, which the queue requires on its own. A merge group that changes no component or
-# template has an empty matrix and skips the job, so require smoke-ok, which fails only when a smoke
-# job failed. The shared CI has no dynamic matrix, so smoke stays here. CONTRIBUTING.md lists what
-# each tier checks.
-# full is e2e.yml. nightly.yml calls it, and e2e-label.yml calls it for a pull request with the e2e
-# label.
+# Each check job runs scripts/ci/<job>.sh in the Nix dev shell, the same as locally: Go tests and
+# lint, then validate, render, template lint and a server-side dry run on a local API server, then
+# nix build .#release. Rulesets require check / ok.
+# smoke runs in the merge queue: it installs and smoke tests what changed since the queue's base,
+# what it needs and what installs it, in groups. A merge group that changes no component or
+# template has an empty matrix and skips the job, so require smoke-ok, which fails only when a
+# smoke job failed. CONTRIBUTING.md lists what each tier checks.
+# full is e2e.yml, which nightly.yml calls.
 name: ci
 
 on:
@@ -30,17 +26,68 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: zeabur-oss/.github/actions/ci-setup@64a6547509a1911f03c4b1e62965ef9f2b4c39b6 # main
+      - run: nix develop -c scripts/ci/lint.sh
+
+  test:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: zeabur-oss/.github/actions/ci-setup@64a6547509a1911f03c4b1e62965ef9f2b4c39b6 # main
+      - run: nix develop -c scripts/ci/test.sh
+
   check:
-    uses: zeabur-oss/.github/.github/workflows/ci.yml@5efa62e01e1b103d1431d780658eaa74bb417438 # main
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: zeabur-oss/.github/actions/ci-setup@64a6547509a1911f03c4b1e62965ef9f2b4c39b6 # main
+      - run: nix develop -c scripts/ci/check.sh
+
+  release:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: zeabur-oss/.github/actions/ci-setup@64a6547509a1911f03c4b1e62965ef9f2b4c39b6 # main
+      - run: nix develop -c scripts/ci/release.sh
+        env:
+          CI_ARTIFACTS: ${{ runner.temp }}/ci-artifacts
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release
+          path: ${{ runner.temp }}/ci-artifacts/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  zizmor:
+    uses: zeabur-oss/.github/.github/workflows/zizmor.yml@64a6547509a1911f03c4b1e62965ef9f2b4c39b6 # main
+
+  ok:
+    name: check / ok
+    if: always()
+    needs: [lint, test, check, release, zizmor]
+    runs-on: ubuntu-slim
+    steps:
+      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
 
   dco:
     uses: zeabur-oss/.github/.github/workflows/dco.yml@6ab106525ce16169ab0ecfebe4b0248e096797fa # main
 
-  # Lists the smoke groups in the merge queue. On main and the nightly run it only builds the tool, so
-  # setup-go saves the Go module and build caches there, where the merge queue's runs can restore
-  # them. Queue branches do not see each other's caches.
   smoke-matrix:
-    if: github.event_name != 'pull_request'
+    if: github.event_name == 'merge_group'
     runs-on: ubuntu-slim
     outputs:
       matrix: ${{ steps.list.outputs.matrix }}
@@ -55,15 +102,8 @@ jobs:
           cache-dependency-path: go.sum
       - id: list
         env:
-          EVENT: ${{ github.event_name }}
           BASE: ${{ github.event.merge_group.base_sha }}
-        run: |
-          if [[ "$EVENT" == merge_group ]]; then
-            echo "matrix=$(go run ./tools/cmd/catalog list -tier smoke -since "$BASE")" >> "$GITHUB_OUTPUT"
-          else
-            go build -trimpath -o /dev/null ./tools/cmd/catalog
-            echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
-          fi
+        run: echo "matrix=$(go run ./tools/cmd/catalog list -tier smoke -since "$BASE")" >> "$GITHUB_OUTPUT"
 
   smoke:
     needs: [smoke-matrix]
@@ -96,9 +136,5 @@ jobs:
     needs: [smoke-matrix, smoke]
     runs-on: ubuntu-slim
     steps:
-      - env:
-          RESULTS: ${{ join(needs.*.result, ' ') }}
-        run: |
-          for result in $RESULTS; do
-            [[ "$result" == success || "$result" == skipped ]] || { echo "::error::a job ended with $result"; exit 1; }
-          done
+      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1

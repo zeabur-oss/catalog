@@ -79,7 +79,8 @@ func main() {
 
 func validate(fs *flag.FlagSet, r *repo) error {
 	fs.Parse(os.Args[2:])
-	if err := errors.Join(catalog.Check(".", r.cat), templates.Check(".", r.cat, r.templates)); err != nil {
+	_, repErr := representative(r)
+	if err := errors.Join(catalog.Check(".", r.cat), templates.Check(".", r.cat, r.templates), repErr); err != nil {
 		return err
 	}
 	fmt.Println("ok")

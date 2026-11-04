@@ -4,7 +4,7 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 source: "cfee11888f66"
 ---
 
-`check` 在每个 pull request 中运行，`smoke` 在 merge queue 中、对即将合并的 commit 运行。`full` 在每晚（nightly）运行，带有 `e2e` 标签的 pull request 也会运行。打发布 tag 前，要确认该 commit 的每晚运行已通过。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以用 `catalog e2e -tier check|smoke|full` 运行与 CI 相同的测试。
+`check` 在每个 pull request 中运行，`smoke` 在 merge queue 中、对即将合并的 commit 运行。`full` 在每晚（nightly）运行。打发布 tag 前，要确认该 commit 的每晚运行已通过。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以用 `catalog e2e -tier check|smoke|full` 运行与 CI 相同的测试。
 
 ## 开始前
 
@@ -16,7 +16,7 @@ source: "cfee11888f66"
 
 ## `check`：检查每个 pull request
 
-`ci.yml` 以 [`scripts/ci.sh`](https://github.com/zeabur-oss/catalog/blob/main/scripts/ci.sh) 的各个 job 运行以下检查。在本地用 `scripts/ci.sh <job>` 运行其中一个，`scripts/ci.sh --list` 会列出所有 job。
+`ci.yml` 会运行以下检查，每个 job 都是 `nix develop -c scripts/ci/<job>.sh`。在本地用同样的命令就能运行其中一个。
 
 <Steps>
 
@@ -91,13 +91,11 @@ source: "cfee11888f66"
 
 共用依赖组件的测试会共用集群，依赖组件在每个集群中只安装一次。组件完成冒烟测试后就会卸载，除非同一集群后续的测试仍需要它。
 
-变更 `config/kubernetes.yaml` 时，`smoke` 会测试所有项目。变更 `config/` 的其他文件或工作流时，`smoke` 改测一组固定的项目：单节点推荐安装的组件，加上安装其中最多组件的一个模板。变更 `tools/`、`go.mod`、`go.sum` 或 flake 时，只有测试工具的可执行文件，或开发环境的 `kubectl`、`kind`、`helm` 真的不同，才会测这组项目，否则不添加任何项目。每晚的运行仍会测试所有项目。
+变更 `config/kubernetes.yaml` 时，`smoke` 会测试所有项目。变更 `tools/`、`go.mod`、`go.sum`、flake、`config/` 的其他文件或工作流时，`smoke` 改测 [`config/e2e.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/e2e.yaml) 中 `smokeRepresentative` 列出的项目。每晚的运行仍会测试所有项目。
 
 ## `full`：测试资源用量和清理
 
 `nightly.yml` 会调用 `e2e.yml`，每晚运行 `full`。打发布 tag 前，如果 `nightly.yml` 最后一次运行的不是这个 commit，先在 `main` 上手动运行一次，通过后再打 tag。
-
-带有 `e2e` 标签的 pull request 会对它影响的项目运行 `full`。冒烟测试不够用时，就给 pull request 加上这个标签。`e2e-label.yml` 会列出有变更的组件和模板，加上会安装它们的项目，再用 `single-node` profile 调用 `e2e.yml`。加上标签时会开始运行，标签还在时每次推送也会再运行一次。它不写入测量结果，也不会开测量结果的 pull request。Renovate 会给 chart 更新加上这个标签。
 
 `full` 会在 amd64 和 arm64 上，为每个组件、每种 profile 创建新的 kind 集群。`single-node` 使用单节点，`multi-node` 使用三节点。
 

@@ -13,7 +13,7 @@ Follow the shared skills (install: `npx skills add zeabur-oss/skills --skill <na
 here), `zeabur-oss-workflow`, `zeabur-oss-cluster-tests`.
 
 ## Checks (what CI runs)
-Each pull request job is `scripts/ci.sh <job>` (`scripts/ci.sh --list`); it enters the dev shell itself.
+Each pull request job is `nix develop -c scripts/ci/<job>.sh` (the jobs of `.github/workflows/ci.yml`).
 The release stages are `bun scripts/release.ts <stage>`. Underneath:
 ```sh
 nix develop -c go test ./...
@@ -27,6 +27,6 @@ needs no Docker. `smoke` and `full` create their own kind clusters, where and ho
 `zeabur-oss-cluster-tests` says:
 ```sh
 nix develop -c go run ./tools/cmd/catalog e2e -tier check            # every pull request
-nix develop -c go run ./tools/cmd/catalog e2e -tier smoke <ids>      # every pull request and merge: install, smoke
-nix develop -c go run ./tools/cmd/catalog e2e -tier full <id>        # nightly, or a pull request with the e2e label
+nix develop -c go run ./tools/cmd/catalog e2e -tier smoke <ids>      # merge queue: install, smoke
+nix develop -c go run ./tools/cmd/catalog e2e -tier full <id>        # nightly
 ```
