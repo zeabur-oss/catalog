@@ -2,9 +2,9 @@
   "component": "volume-backup/k8up",
   "environments": {
     "k3s-amd64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 13,
+      "idleMemoryMiB": 11,
       "requestMemoryMiB": 32,
-      "idleCPUm": 1,
+      "idleCPUm": 0,
       "versions": {
         "k8up": "4.10.1"
       },
@@ -29,7 +29,7 @@
       "measuredAt": "2026-11-03"
     },
     "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
-      "idleMemoryMiB": 11,
+      "idleMemoryMiB": 13,
       "requestMemoryMiB": 32,
       "idleCPUm": 1,
       "versions": {
@@ -40,23 +40,23 @@
     "multi-node-amd64-v1.36.4": {
       "idleMemoryMiB": 21,
       "requestMemoryMiB": 128,
-      "idleCPUm": 1,
+      "idleCPUm": 2,
       "versions": {
         "k8up": "4.10.1"
       },
-      "measuredAt": "2026-11-03"
+      "measuredAt": "2026-11-04"
     },
     "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 22,
+      "idleMemoryMiB": 21,
       "requestMemoryMiB": 128,
       "idleCPUm": 1,
       "versions": {
         "k8up": "4.10.1"
       },
-      "measuredAt": "2026-11-03"
+      "measuredAt": "2026-11-04"
     },
     "rke2-amd64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 10,
+      "idleMemoryMiB": 11,
       "requestMemoryMiB": 32,
       "idleCPUm": 1,
       "versions": {
@@ -67,7 +67,7 @@
     "rke2-arm64-v1.36.5+rke2r1": {
       "idleMemoryMiB": 11,
       "requestMemoryMiB": 32,
-      "idleCPUm": 0,
+      "idleCPUm": 1,
       "versions": {
         "k8up": "4.10.1"
       },
