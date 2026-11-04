@@ -1,7 +1,7 @@
 # full: installs every component in a fresh cluster each, on amd64 and arm64:
 # dependencies first, idle memory and CPU once they are stable, health and
 # smoke checks, uninstall and residue check. profiles picks the profiles of one call; a
-# matrix holds at most 256 jobs, so nightly.yml calls it once for kind and once
+# matrix holds at most 256 jobs, so weekly.yml calls it once for kind and once
 # for the host distributions.
 # - single-node and multi-node run on kind, one node and three. single-node
 #   amd64 also installs every template with the components it requires, runs
@@ -27,7 +27,7 @@ on:
         type: boolean
         default: true
   # A manual run, such as one distribution and a few components. Only
-  # nightly.yml opens the measurements pull request.
+  # weekly.yml opens the measurements pull request.
   workflow_dispatch:
     inputs:
       profiles:
@@ -70,7 +70,7 @@ jobs:
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
     strategy:
       fail-fast: false
-      # The organisation runs 20 jobs at once and nightly.yml calls this twice: 12 at most,
+      # The organisation runs 20 jobs at once and weekly.yml calls this twice: 12 at most,
       # so pull requests still get runners.
       max-parallel: 6
       matrix:
