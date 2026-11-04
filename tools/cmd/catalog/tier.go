@@ -212,9 +212,13 @@ func profileSubjects(r *repo, profile string, sel func(string, []*catalog.Compon
 }
 
 // selection returns a function that reports whether a test runs: one that
-// args names or, without args, one that changed since ref (see selector).
-func selection(r *repo, since string, args []string) (func(string, []*catalog.Component) bool, error) {
+// args names or, without args, one that changed since ref (see selector and
+// smokeSelector).
+func selection(r *repo, tier, since string, args []string) (func(string, []*catalog.Component) bool, error) {
 	if len(args) == 0 {
+		if tier == "smoke" {
+			return smokeSelector(r, since)
+		}
 		return selector(r, since)
 	}
 	for _, id := range args {
@@ -492,7 +496,7 @@ func dryRun(r *repo, dir string) error {
 // runSmoke installs and smoke tests each group in its own single-node cluster.
 // Without ids it tests what changed since o.since.
 func runSmoke(r *repo, cfg config, o tierOptions, args []string) error {
-	sel, err := selection(r, o.since, args)
+	sel, err := selection(r, "smoke", o.since, args)
 	if err != nil {
 		return err
 	}
@@ -604,7 +608,7 @@ func runFull(r *repo, cfg config, o tierOptions, args []string) error {
 	if !slices.Contains(fullProfiles(), o.profile) {
 		return fmt.Errorf("unknown -profile %q; use %s", o.profile, strings.Join(fullProfiles(), ", "))
 	}
-	sel, err := selection(r, o.since, args)
+	sel, err := selection(r, "full", o.since, args)
 	if err != nil {
 		return err
 	}

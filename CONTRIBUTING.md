@@ -39,7 +39,9 @@ existing branch: `git rebase --signoff main`, then force-push.
   against a real API server. Nothing is installed.
 - **The merge queue (`smoke`, about 15 to 20 minutes):**
   what you changed, what it needs and what installs it is installed on one node and
-  smoke tested. A queued change that touches no component or template skips it.
+  smoke tested. A change to a shared file such as `config/` or `tools/` tests a fixed set
+  of recommended components and one template instead of everything, and nothing if the
+  test tool did not change. A queued change that touches no component or template skips it.
 - **A pull request with the `e2e` label (`full`):** the components and templates the
   pull request affects, on a single-node cluster, with upgrades from the last release,
   uninstall and leftover checks. It writes no measurements. Ask a maintainer to add the
