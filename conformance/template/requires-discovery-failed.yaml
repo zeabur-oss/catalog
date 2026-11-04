@@ -2,7 +2,7 @@ description: When discovery fails, every name is unknown.
 components:
   - id: databases/cloudnative-pg
     detection: {crds: [clusters.postgresql.cnpg.io]}
-requires: [databases/cloudnative-pg, databases]
+requires: [{component: databases/cloudnative-pg}, {capability: databases}]
 want:
   databases/cloudnative-pg: unknown
   databases: unknown

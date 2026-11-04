@@ -17,8 +17,11 @@ defaults:
   single-node: optional
   multi-node: recommended
 
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.23.0-0"
 releases:
   - name: keda
+    type: helm
     namespace: keda
     repo: https://kedacore.github.io/charts
     chart: keda
@@ -79,3 +82,4 @@ detection:
 
 security:
   summary: Reads scale targets and trigger secrets cluster-wide; serves the external metrics API.
+  podSecurity: restricted

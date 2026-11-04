@@ -180,7 +180,7 @@ var hostProfiles = []string{"k3s", "rke2", kubesoloProfile}
 // hostRuns reports whether host profile p tests c.
 func hostRuns(p string, c *catalog.Component) bool {
 	return c.Defaults[templateProfile] != "unsupported" &&
-		(len(c.Distributions) == 0 || slices.Contains(c.Distributions, p))
+		slices.Contains(c.Distributions, p)
 }
 
 // pinnedVersion returns the release of the distribution that cfg pins for

@@ -1,7 +1,7 @@
 ---
 title: 安装工具如何选择和安装组件
 description: 安装工具从 index.json 选择组件、排定顺序、装好后检查时要遵守的规则，以及用来测试安装工具的用例。
-source: "93d8984055ff"
+source: "02e9c1a643fc"
 ---
 
 安装工具从某个[版本](releases.mdx)读取 `index.json`，再决定安装哪些组件。本页列出选择的规则。Zeabur Installer 按这些规则选择。其他安装工具只要遵守同样的规则，同一份配置就会选出同样的组件。每条规则在 `conformance/select/` 都有一个测试用例，用法见本页最后一节。
@@ -35,7 +35,7 @@ source: "93d8984055ff"
 
    | 情况 | 代码 | 是否排除 |
    | --- | --- | --- |
-   | 有 `distributions`，但没有列当前发行版 | `distributions` | 一律排除。启用的组件另外显示 `left-out` 警告 |
+   | `distributions` 没有列当前发行版 | `distributions` | 一律排除。启用的组件另外显示 `left-out` 警告 |
    | 当前 profile 的 `defaults` 是 `unsupported` | `unsupported` | 一律排除。启用的组件另外显示 `left-out` 警告 |
 
    `testedOn` 没有在当前发行版下列出当前平台的已选组件，照样保留，并显示 `untested` 警告。从未在这里测试过的组件，和最近一次在这里测试失败的组件，都这样处理。
@@ -70,7 +70,7 @@ source: "93d8984055ff"
 
 ## 接手旧组件
 
-组件接手了 catalog 已移除的组件时，用 `replaces` 列出旧 ID。例如 zot 现在随 Zeabur Builder 一起安装，所以 `builds/zeabur-builder` 写了 `replaces: [container-registry/zot]`。现有组件的 ID 不会出现在其他组件的 `replaces` 里。
+组件接手了 catalog 已移除的组件时，用 `replaces` 列出旧 ID。例如 zot 现在随 Zeabur Builder 一起安装，所以 `builds/zeabur-builder` 写了 `replaces: [{component: container-registry/zot}]`。现有组件的 ID 不会出现在其他组件的 `replaces` 里。
 
 安装工具不会自动替用户换掉组件。`enable` 或 `disable` 写了旧 ID 会报错，错误信息会给出新 ID，让用户自己改配置文件。
 
@@ -124,6 +124,6 @@ want:
 
 运行用例的步骤如下。
 
-1. 用 `components` 建立索引。每个组件的 capability 是 ID 斜杠前的部分。某个 profile 没有 `installOrder` 时，只装组件本身。没有 `distributions` 时，任何发行版都可以。
+1. 用 `components` 建立索引。每个组件的 capability 是 ID 斜杠前的部分。某个 profile 没有 `installOrder` 时，只装组件本身。
 2. 按 `config` 选择组件。
 3. 和 `want` 比对。`want` 没写的列表或映射就是空的。原因、警告和错误都比对代码和字段，不比对安装工具显示的文字。

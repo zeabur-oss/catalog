@@ -54,10 +54,10 @@ The objects keep the order of `manifests.yaml`. An empty YAML document isn't an 
 
 ## What a template requires
 
-Each name in `requires` is `<capability>/<name>` or `<capability>`. `catalog validate` checks that each name matches a component of the release.
+Each entry in `requires` is `{component: <capability>/<name>}` or `{capability: <capability>}`. The name of an entry is the value of its one field. `catalog validate` checks that each entry matches a component of the release.
 
-- `<capability>/<name>` matches the component with that id.
-- `<capability>` matches every component of the capability.
+- `{component: <capability>/<name>}` matches the component with that id.
+- `{capability: <capability>}` matches every component of the capability.
 
 A client tells whether a name is installed from the resources that kube-apiserver serves, as discovery (`kubectl api-resources`) lists them. Each name is in one of three states:
 
@@ -117,7 +117,7 @@ components:          # index.json components, with only the fields matching read
     detection: {crds: [perconaservermongodbs.psmdb.percona.com]}
 served:              # what discovery lists; left out when discovery fails
   - {group: postgresql.cnpg.io, resource: clusters}
-requires: [databases/cloudnative-pg, databases/percona-mongodb]
+requires: [{component: databases/cloudnative-pg}, {component: databases/percona-mongodb}]
 want:
   databases/cloudnative-pg: installed
   databases/percona-mongodb: missing
@@ -128,5 +128,5 @@ A words case has `language`, the text fields of a template and the text the read
 To run a case:
 
 1. Render case: render `template` and `manifests` with `options`, and compare the objects with `want`. When a check fails, compare its code and `input` instead. Compare codes and fields, not the words a client shows.
-2. Requires case: the capability of each component is the part of its id before the slash. Find the state of each name in `requires`, and compare with `want`.
+2. Requires case: the capability of each component is the part of its id before the slash. Find the state of each entry in `requires`, and compare with `want`, which is keyed by the name of the entry.
 3. Words case: pick the text for `language`, and compare with `want`. A list or map that `want` leaves out is empty.

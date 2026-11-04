@@ -15,7 +15,7 @@ metadata:
 
 services:
   - name: ollama
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: http, port: 11434}]
     resources: {requests: {cpu: 500m, memory: 2Gi}, limits: {cpu: "4", memory: 8Gi}}
 

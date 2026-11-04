@@ -166,7 +166,7 @@ func Safety(r *Template, b []byte, namespace string) error {
 		if p != nil {
 			profile := "restricted"
 			for _, s := range r.Services {
-				if s.SecurityProfile == "baseline" && (len(r.Services) == 1 || s.Name == name || s.Name == text(object(pm["labels"])["app.kubernetes.io/name"])) {
+				if s.PodSecurity == "baseline" && (len(r.Services) == 1 || s.Name == name || s.Name == text(object(pm["labels"])["app.kubernetes.io/name"])) {
 					profile = "baseline"
 				}
 			}
@@ -184,13 +184,7 @@ func Safety(r *Template, b []byte, namespace string) error {
 			if text(object(object(spec["inheritedMetadata"])["labels"])[TemplateLabel]) != r.ID {
 				fail(where+"/inheritedMetadata", ErrTemplateLabel)
 			}
-			provider := false
-			for _, ref := range r.Requires {
-				if ref == "databases/cloudnative-pg" {
-					provider = true
-				}
-			}
-			if !provider {
+			if !hasProvider(r, "databases/cloudnative-pg") {
 				fail(where, ErrCNPGProvider)
 			}
 			if len(r.Security.Risks) == 0 {

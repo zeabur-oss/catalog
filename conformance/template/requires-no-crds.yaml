@@ -3,7 +3,7 @@ components:
   - id: ingress/traefik
 served:
   - {group: traefik.io, resource: ingressroutes}
-requires: [ingress/traefik, ingress]
+requires: [{component: ingress/traefik}, {capability: ingress}]
 want:
   ingress/traefik: unknown
   ingress: unknown

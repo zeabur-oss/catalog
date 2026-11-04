@@ -2,13 +2,15 @@ description: A disable name that a component replaces is an error naming the new
 components:
   - id: builds/zeabur-builder
     defaults: {single-node: optional, multi-node: optional}
+    distributions: [k3s, rke2, kubesolo]
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
       - {distribution: rke2, platforms: [linux/amd64]}
       - {distribution: kubesolo, platforms: [linux/amd64]}
-    replaces: [container-registry/zot]
+    replaces: [{component: container-registry/zot}]
   - id: ingress/traefik
     defaults: {single-node: recommended, multi-node: recommended}
+    distributions: [k3s, rke2, kubesolo]
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
       - {distribution: rke2, platforms: [linux/amd64]}

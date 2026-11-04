@@ -16,8 +16,10 @@ metadata:
 defaults:
   single-node: optional
   multi-node: optional
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.34.0-0"
 persistsData: true
-requires: [ingress/traefik]
+requires: [{component: ingress/traefik}]
 
 inputs:
   - name: bouncer-key
@@ -35,6 +37,7 @@ inputs:
 
 releases:
   - name: crowdsec
+    type: helm
     namespace: crowdsec
     chart: oci://ghcr.io/crowdsecurity/helm-charts/crowdsec
     version: 0.24.2
@@ -101,6 +104,7 @@ releases:
             limits: {memory: 384Mi}
 
   - name: bouncer-middleware
+    type: inline
     namespace: crowdsec
     manifests: |
       # Referenced from Traefik's entrypoints as crowdsec-bouncer@kubernetescrd.
@@ -123,8 +127,7 @@ releases:
             updateMaxFailure: -1
 
 contributes:
-  - target: ingress/traefik
-    release: traefik
+  - target: {component: ingress/traefik, release: traefik}
     values: |
       experimental:
         plugins:
@@ -159,6 +162,6 @@ detection:
 
 security:
   summary: The agent reads node log files read-only and makes no API writes.
-  privileged: true
+  podSecurity: privileged
 
 leftovers: [persistentvolumeclaims]

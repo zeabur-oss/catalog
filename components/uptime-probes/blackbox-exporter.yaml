@@ -16,10 +16,13 @@ metadata:
 defaults:
   single-node: optional
   multi-node: recommended
-requires: [metrics/victoria-metrics]
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.21.0-0"
+requires: [{component: metrics/victoria-metrics}]
 
 releases:
   - name: blackbox-exporter
+    type: helm
     namespace: observability
     chart: oci://ghcr.io/prometheus-community/charts/prometheus-blackbox-exporter
     version: 11.20.2
@@ -71,3 +74,4 @@ detection:
 
 security:
   summary: Has no API access and only makes outbound probes.
+  podSecurity: restricted

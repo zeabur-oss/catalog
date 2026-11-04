@@ -18,7 +18,7 @@ func TestHostRuns(t *testing.T) {
 		comp    catalog.Component
 		want    bool
 	}{
-		{"any distribution", "rke2", catalog.Component{}, true},
+		{"listed alone", "rke2", catalog.Component{Distributions: []string{"rke2"}}, true},
 		{"listed distribution", "k3s", catalog.Component{Distributions: []string{"k3s", "rke2"}}, true},
 		{"distribution left out", "kubesolo", catalog.Component{Distributions: []string{"k3s", "rke2"}}, false},
 		{"single-node unsupported", "k3s", catalog.Component{Defaults: map[string]string{"single-node": "unsupported"}}, false},

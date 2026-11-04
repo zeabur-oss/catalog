@@ -18,11 +18,11 @@ metadata:
   # Also: https://docs.browserless.io/
   homepage: https://github.com/browserless/browserless
 
-requires: [ingress/traefik, certificates/cert-manager]
+requires: [{component: ingress/traefik}, {component: certificates/cert-manager}]
 
 services:
   - name: browserless
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: web, port: 3000}]
     resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
     domains: ['{{ .Domain }}']

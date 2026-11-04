@@ -54,7 +54,7 @@ func matches(err error, rule templates.Rule) bool {
 
 func TestSafetyRejectsPrivilegeAndNetworkEscapes(t *testing.T) {
 	r := &templates.Template{ID: "app"}
-	r.Services = []templates.Service{{Name: "app", SecurityProfile: "restricted"}}
+	r.Services = []templates.Service{{Name: "app", PodSecurity: "restricted"}}
 	if err := templates.Safety(r, []byte(safeManifest+allow("{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: traefik}}, podSelector: {matchLabels: {app: traefik}}}")), "test"); err != nil {
 		t.Fatal(err)
 	}
@@ -84,7 +84,7 @@ func TestSafetyRejectsPrivilegeAndNetworkEscapes(t *testing.T) {
 		})
 	}
 	// One baseline service must not downgrade an unrelated restricted workload.
-	r.Services = append(r.Services, templates.Service{Name: "legacy", SecurityProfile: "baseline"})
+	r.Services = append(r.Services, templates.Service{Name: "legacy", PodSecurity: "baseline"})
 	b := strings.Replace(safeManifest, "runAsNonRoot: true", "runAsNonRoot: false", 1)
 	if err := templates.Safety(r, []byte(b), "test"); !errors.Is(err, templates.ErrPodSecurity) {
 		t.Fatalf("baseline service downgraded unrelated restricted app: %v", err)
@@ -116,7 +116,7 @@ func TestRenderChecksRequiredInputPattern(t *testing.T) {
 
 func TestRestrictedAllowsIsolatedPingWithoutAllowingHostSysctls(t *testing.T) {
 	r := &templates.Template{ID: "app"}
-	r.Services = []templates.Service{{Name: "app", SecurityProfile: "restricted"}}
+	r.Services = []templates.Service{{Name: "app", PodSecurity: "restricted"}}
 	for _, tc := range []struct {
 		name, value string
 		rule        templates.Rule

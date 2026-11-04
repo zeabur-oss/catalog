@@ -27,10 +27,11 @@ type Component struct {
 	Kind            string            `yaml:"kind" json:"kind"`
 	Metadata        Metadata          `yaml:"metadata" json:"metadata"`
 	Defaults        map[string]string `yaml:"defaults" json:"defaults"`
-	Distributions   []string          `yaml:"distributions" json:"distributions,omitempty"`
+	Distributions   []string          `yaml:"distributions" json:"distributions"`
+	KubeVersion     string            `yaml:"kubeVersion" json:"kubeVersion"`
 	PersistsData    bool              `yaml:"persistsData" json:"persistsData,omitempty"`
-	Requires        []string          `yaml:"requires" json:"requires,omitempty"`
-	Replaces        []string          `yaml:"replaces" json:"replaces,omitempty"`
+	Requires        []Ref             `yaml:"requires" json:"requires,omitempty"`
+	Replaces        []Ref             `yaml:"replaces" json:"replaces,omitempty"`
 	Inputs          []Input           `yaml:"inputs" json:"inputs,omitempty"`
 	Releases        []Release         `yaml:"releases" json:"releases"`
 	Provides        *Provides         `yaml:"provides" json:"provides,omitempty"`
@@ -61,10 +62,33 @@ type Metadata struct {
 
 // Security is what a component's RBAC lets it do and what its namespaces must allow.
 type Security struct {
-	Summary    string `yaml:"summary" json:"summary"`
-	Privileged bool   `yaml:"privileged" json:"privileged,omitempty"`
-	// PodSecurity is the Pod Security level when it is not restricted.
-	PodSecurity string `yaml:"podSecurity" json:"podSecurity,omitempty"`
+	Summary string `yaml:"summary" json:"summary"`
+	// PodSecurity is the Pod Security Standard level: restricted, baseline or privileged.
+	PodSecurity string `yaml:"podSecurity" json:"podSecurity"`
+}
+
+// Ref names a component by ID, or a capability.
+type Ref struct {
+	Component  string `yaml:"component" json:"component,omitempty"`
+	Capability string `yaml:"capability" json:"capability,omitempty"`
+}
+
+// Name is the component ID or the capability.
+func (r Ref) Name() string { return cmp.Or(r.Component, r.Capability) }
+
+// RefNames returns the name of each ref.
+func RefNames(refs []Ref) []string {
+	var out []string
+	for _, r := range refs {
+		out = append(out, r.Name())
+	}
+	return out
+}
+
+// ReleaseRef names a release of a component.
+type ReleaseRef struct {
+	Component string `yaml:"component" json:"component"`
+	Release   string `yaml:"release" json:"release"`
 }
 
 // Provides is what a component offers other software in the cluster.
@@ -95,7 +119,9 @@ type Work struct {
 }
 
 type Release struct {
-	Name          string            `yaml:"name" json:"name"`
+	Name string `yaml:"name" json:"name"`
+	// Type is helm, manifest (files at urls) or inline (manifests).
+	Type          string            `yaml:"type" json:"type"`
 	Namespace     string            `yaml:"namespace" json:"namespace"`
 	ReleaseName   string            `yaml:"releaseName" json:"releaseName,omitempty"`
 	SkipIfPresent []string          `yaml:"skipIfPresent" json:"skipIfPresent,omitempty"`
@@ -133,9 +159,8 @@ type SecretRef struct {
 }
 
 type Contribution struct {
-	Target  string `yaml:"target" json:"target"`
-	Release string `yaml:"release" json:"release"`
-	Values  string `yaml:"values" json:"values"`
+	Target ReleaseRef `yaml:"target" json:"target"`
+	Values string     `yaml:"values" json:"values"`
 }
 
 // Health is a read-only check of an installed component: one kubectl wait
@@ -156,17 +181,6 @@ type Smoke struct {
 
 // HelmName is the Helm release name.
 func (r Release) HelmName() string { return cmp.Or(r.ReleaseName, r.Name) }
-
-// Kind is helm, manifest or inline.
-func (r Release) Kind() string {
-	switch {
-	case r.Chart != "":
-		return "helm"
-	case len(r.URLs) > 0:
-		return "manifest"
-	}
-	return "inline"
-}
 
 // Release returns the named release.
 func (c *Component) Release(name string) (Release, bool) {
@@ -234,6 +248,7 @@ func (c *Component) addDefaultAccounts() {
 		seen[r.Namespace] = true
 		added = append(added, Release{
 			Name:      defaultAccountPrefix + r.Namespace,
+			Type:      "inline",
 			Namespace: r.Namespace,
 			Manifests: fmt.Sprintf("apiVersion: v1\nkind: ServiceAccount\nmetadata:\n  name: default\n  namespace: %s\nautomountServiceAccountToken: false\n", r.Namespace),
 		})
@@ -291,7 +306,7 @@ func (cat *Catalog) InstallOrder(ids []string, profile string) ([]*Component, er
 		}
 		state[c] = 1
 		for _, ref := range c.Requires {
-			dep, err := cat.provider(ref, profile)
+			dep, err := cat.provider(ref.Name(), profile)
 			if err != nil {
 				return fmt.Errorf("%s: %w", c.ID, err)
 			}
@@ -343,7 +358,7 @@ func (c *Component) inputRelease(in Input) string {
 		return in.Release
 	}
 	for _, r := range c.Releases {
-		if r.Kind() == "helm" {
+		if r.Type == "helm" {
 			return r.Name
 		}
 	}

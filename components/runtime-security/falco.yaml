@@ -18,8 +18,11 @@ defaults:
   single-node: optional
   multi-node: optional
 
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.34.0-0"
 releases:
   - name: policy-report-crds
+    type: manifest
     namespace: falco
     # Falcosidekick writes wgpolicyk8s.io/v1alpha2 reports; the chart lacks the CRDs.
     # Kyverno and other report producers may have installed them already.
@@ -34,6 +37,7 @@ releases:
       - sha256:8bb518a3f12e6cb199c8cc252970d9a8383f419e0b59e8312f4a2c1105710919
 
   - name: alert-readers
+    type: inline
     namespace: falco
     manifests: |
       # Alerts carry command lines and file paths, so only namespace admins
@@ -51,6 +55,7 @@ releases:
           verbs: [get, list, watch]
 
   - name: falco
+    type: helm
     namespace: falco
     chart: oci://ghcr.io/falcosecurity/charts/falco
     version: 9.2.1
@@ -121,4 +126,4 @@ security:
   summary: >
     Reads pod and node metadata to enrich alerts; falcosidekick writes
     PolicyReports in every namespace.
-  privileged: true
+  podSecurity: privileged

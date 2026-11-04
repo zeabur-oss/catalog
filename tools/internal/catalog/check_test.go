@@ -36,14 +36,14 @@ func TestReplaceProblems(t *testing.T) {
 		components []*Component
 		bad        bool
 	}{
-		{"an id no component has", []*Component{{ID: "builds/zeabur-builder", Replaces: []string{"container-registry/zot"}}}, false},
+		{"an id no component has", []*Component{{ID: "builds/zeabur-builder", Replaces: []Ref{{Component: "container-registry/zot"}}}}, false},
 		{"an id a component still has", []*Component{
-			{ID: "builds/zeabur-builder", Replaces: []string{"container-registry/zot"}},
+			{ID: "builds/zeabur-builder", Replaces: []Ref{{Component: "container-registry/zot"}}},
 			{ID: "container-registry/zot"},
 		}, true},
 		{"an id two components replace", []*Component{
-			{ID: "builds/a", Replaces: []string{"container-registry/zot"}},
-			{ID: "builds/b", Replaces: []string{"container-registry/zot"}},
+			{ID: "builds/a", Replaces: []Ref{{Component: "container-registry/zot"}}},
+			{ID: "builds/b", Replaces: []Ref{{Component: "container-registry/zot"}}},
 		}, true},
 	}
 	for _, tt := range tests {
@@ -128,6 +128,24 @@ func TestHealthChecksStayReadOnlyKubectlWaits(t *testing.T) {
 			}
 			if c.name != "valid" && err == nil {
 				t.Error("Check accepted the health check")
+			}
+		})
+	}
+}
+
+func TestKubeVersionMustCoverTheTestedVersions(t *testing.T) {
+	for _, c := range []struct {
+		name, kubeVersion, version string
+		ok                         bool
+	}{
+		{"chart floor below the tested version", ">=1.25.0-0", "1.36.0", true},
+		{"distribution release", ">=1.34.0-0", "v1.36.5+k3s1", true},
+		{"tested version left out", ">=1.37.0-0", "1.36.0", false},
+		{"not a range", "1.3x", "1.36.0", false},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			if err := checkKubeVersion(c.kubeVersion, c.version); (err == nil) != c.ok {
+				t.Errorf("checkKubeVersion(%q, %q) = %v, want ok %v", c.kubeVersion, c.version, err, c.ok)
 			}
 		})
 	}

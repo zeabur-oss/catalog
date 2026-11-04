@@ -1,7 +1,7 @@
 ---
 title: 安裝工具如何選擇和安裝元件
 description: 安裝工具從 index.json 挑選元件、排定順序、裝好後檢查時要遵守的規則，以及用來測試安裝工具的案例。
-source: "93d8984055ff"
+source: "02e9c1a643fc"
 ---
 
 安裝工具從某個[版本](releases.mdx)讀取 `index.json`，再決定要安裝哪些元件。這一頁列出挑選的規則。Zeabur Installer 照這些規則挑選。其他安裝工具只要遵守同樣的規則，同一份設定就會挑出同樣的元件。每條規則在 `conformance/select/` 都有一個測試案例，用法見本頁最後一節。
@@ -35,7 +35,7 @@ source: "93d8984055ff"
 
    | 情況 | 代碼 | 是否排除 |
    | --- | --- | --- |
-   | 有 `distributions`，但沒有列這個發行版 | `distributions` | 一律排除。啟用的元件另外顯示 `left-out` 警告 |
+   | `distributions` 沒有列這個發行版 | `distributions` | 一律排除。啟用的元件另外顯示 `left-out` 警告 |
    | 這個 profile 的 `defaults` 是 `unsupported` | `unsupported` | 一律排除。啟用的元件另外顯示 `left-out` 警告 |
 
    `testedOn` 沒有在這個發行版底下列出這個平台的已選元件，照樣保留，並顯示 `untested` 警告。從沒在這裡測過的元件，和最近一次在這裡測試失敗的元件，都是這樣處理。
@@ -70,7 +70,7 @@ source: "93d8984055ff"
 
 ## 接手舊元件
 
-元件接手了 catalog 已移除的元件時，用 `replaces` 列出舊 ID。例如 zot 現在跟著 Zeabur Builder 一起安裝，所以 `builds/zeabur-builder` 寫了 `replaces: [container-registry/zot]`。現有元件的 ID 不會出現在其他元件的 `replaces` 裡。
+元件接手了 catalog 已移除的元件時，用 `replaces` 列出舊 ID。例如 zot 現在跟著 Zeabur Builder 一起安裝，所以 `builds/zeabur-builder` 寫了 `replaces: [{component: container-registry/zot}]`。現有元件的 ID 不會出現在其他元件的 `replaces` 裡。
 
 安裝工具不會自動幫使用者換掉元件。`enable` 或 `disable` 寫了舊 ID 會出錯，錯誤訊息會提供新 ID，讓使用者自己改設定檔。
 
@@ -124,6 +124,6 @@ want:
 
 執行案例的步驟如下。
 
-1. 用 `components` 建立索引。每個元件的 capability 是 ID 斜線前的部分。某個 profile 沒有 `installOrder` 時，只裝元件本身。沒有 `distributions` 時，任何發行版都可以。
+1. 用 `components` 建立索引。每個元件的 capability 是 ID 斜線前的部分。某個 profile 沒有 `installOrder` 時，只裝元件本身。
 2. 依 `config` 挑選元件。
 3. 和 `want` 比對。`want` 沒寫的清單或對照表就是空的。原因、警告和錯誤都比對代碼和欄位，不比對安裝工具顯示的文字。

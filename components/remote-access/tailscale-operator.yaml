@@ -19,6 +19,8 @@ defaults:
   single-node: optional
   multi-node: optional
 
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.34.0-0"
 inputs:
   - name: oauth-client-id
     description: >
@@ -37,6 +39,7 @@ inputs:
 
 releases:
   - name: tailscale-operator
+    type: helm
     namespace: tailscale
     repo: https://pkgs.tailscale.com/helmcharts
     chart: tailscale-operator
@@ -91,7 +94,7 @@ security:
     Roles and RoleBindings. Installs eight CRDs (connectors, dnsconfigs,
     peerrelays, proxyclasses, proxygrouppolicies, proxygroups, recorders,
     tailnets) and the IngressClass tailscale.
-  privileged: true
+  podSecurity: privileged
 
 smoke:
   - name: crds-established

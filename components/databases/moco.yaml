@@ -17,12 +17,15 @@ metadata:
 defaults:
   single-node: optional
   multi-node: optional
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.22.0-0"
 # The webhook and the controller-agent mTLS certificates come from cert-manager.
-requires: [certificates]
+requires: [{capability: certificates}]
 persistsData: true
 
 releases:
   - name: moco
+    type: helm
     namespace: moco-system
     repo: https://cybozu-go.github.io/moco/
     chart: moco

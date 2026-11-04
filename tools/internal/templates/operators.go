@@ -5,15 +5,12 @@ import (
 	"net/netip"
 	"slices"
 	"strings"
+
+	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 )
 
 func hasProvider(r *Template, id string) bool {
-	for _, ref := range r.Requires {
-		if ref == id {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(r.Requires, func(ref catalog.Ref) bool { return ref.Component == id })
 }
 
 // safeOperandContext checks the security contexts that an operator copies

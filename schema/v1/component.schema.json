@@ -5,7 +5,7 @@
   "description": "One upstream for one capability, at components/<capability>/<upstream>.yaml. A cluster administrator installs it.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["apiVersion", "kind", "metadata", "defaults", "releases", "detection", "security"],
+  "required": ["apiVersion", "kind", "metadata", "defaults", "distributions", "kubeVersion", "releases", "detection", "security"],
   "properties": {
     "apiVersion": { "const": "catalog.zeabur.com/v1" },
     "kind": { "const": "Component" },
@@ -39,24 +39,29 @@
     },
     "distributions": {
       "type": "array",
-      "description": "Distributions to test it on. Omitted means every distribution that e2e covers: k3s, RKE2 and KubeSolo. kind tests it regardless. The distributions where its test passed are a separate list, testedOn in index.json.",
+      "description": "Distributions it runs on and e2e tests it on, of k3s, rke2 and kubesolo. kind tests it regardless. A reader ignores a value it does not know. The distributions where its test passed are a separate list, testedOn in index.json.",
       "minItems": 1,
       "uniqueItems": true,
-      "items": { "enum": ["k3s", "rke2", "k0s", "kubesolo", "microk8s", "kubeadm"] }
+      "items": { "enum": ["k3s", "rke2", "kubesolo"] }
+    },
+    "kubeVersion": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The Kubernetes versions it supports, as a SemVer range like Helm's Chart.yaml kubeVersion: the strictest kubeVersion of its charts, else the oldest version that config/kubernetes.yaml renders. Every version that config/kubernetes.yaml renders or tests on must be in it."
     },
     "persistsData": { "type": "boolean", "description": "Keeps state in volumes; uninstalling loses data." },
     "requires": {
       "type": "array",
-      "description": "Components installed first: <capability> (its recommended upstream, else an optional one) or <capability>/<upstream>.",
+      "description": "Components installed first.",
       "uniqueItems": true,
-      "items": { "type": "string", "pattern": "^[a-z0-9-]+(/[a-z0-9-]+)?$" }
+      "items": { "$ref": "#/$defs/ref" }
     },
     "replaces": {
       "type": "array",
       "description": "Component ids this one took over, which no component has now. An installer treats an install record with an old id as having this component.",
       "minItems": 1,
       "uniqueItems": true,
-      "items": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+$" }
+      "items": { "$ref": "#/$defs/componentRef" }
     },
     "inputs": {
       "type": "array",
@@ -151,10 +156,18 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["target", "release", "values"],
+        "required": ["target", "values"],
         "properties": {
-          "target": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+$" },
-          "release": { "type": "string" },
+          "target": {
+            "type": "object",
+            "description": "The release of another component that receives the values.",
+            "additionalProperties": false,
+            "required": ["component", "release"],
+            "properties": {
+              "component": { "$ref": "#/$defs/id" },
+              "release": { "type": "string" }
+            }
+          },
           "values": { "$ref": "#/$defs/values" }
         }
       }
@@ -171,7 +184,19 @@
         "ingressControllers": { "$ref": "#/$defs/strings" },
         "csiDrivers": { "$ref": "#/$defs/strings", "description": "CSI drivers of the PersistentVolumes it provides." },
         "helmCharts": { "$ref": "#/$defs/strings" },
-        "k3sAddons": { "$ref": "#/$defs/strings" },
+        "addons": {
+          "type": "array",
+          "description": "Add-ons of a distribution that install the same upstream, such as k3s's packaged Traefik.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["distribution", "name"],
+            "properties": {
+              "distribution": { "type": "string", "description": "A reader ignores an entry of a distribution it does not know." },
+              "name": { "type": "string" }
+            }
+          }
+        },
         "workloads": {
           "type": "array",
           "items": {
@@ -189,11 +214,10 @@
     "security": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["summary"],
+      "required": ["summary", "podSecurity"],
       "properties": {
         "summary": { "type": "string", "description": "What its RBAC lets it do." },
-        "privileged": { "type": "boolean" },
-        "podSecurity": { "enum": ["baseline"], "description": "The Pod Security level its namespaces need when it cannot run under restricted; omitted means restricted." }
+        "podSecurity": { "$ref": "#/$defs/podSecurity", "description": "The Pod Security Standard level its namespaces need." }
       }
     },
     "health": {
@@ -251,6 +275,26 @@
       }
     },
     "mode": { "enum": ["recommended", "optional", "unsupported"] },
+    "podSecurity": { "enum": ["restricted", "baseline", "privileged"] },
+    "id": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+$" },
+    "componentRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["component"],
+      "properties": { "component": { "$ref": "#/$defs/id", "description": "<capability>/<upstream>." } }
+    },
+    "ref": {
+      "description": "A component by id, or a capability: its recommended upstream on the profile, else an optional one.",
+      "oneOf": [
+        { "$ref": "#/$defs/componentRef" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["capability"],
+          "properties": { "capability": { "type": "string", "pattern": "^[a-z0-9-]+$" } }
+        }
+      ]
+    },
     "summaryLocale": {
       "type": "object",
       "additionalProperties": false,
@@ -272,9 +316,10 @@
     "release": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "namespace"],
+      "required": ["name", "type", "namespace"],
       "properties": {
         "name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "type": { "enum": ["helm", "manifest", "inline"], "description": "helm: a chart. manifest: files downloaded from urls. inline: the objects in manifests." },
         "namespace": { "type": "string" },
         "releaseName": { "type": "string", "description": "Helm release name; defaults to name." },
         "skipIfPresent": { "$ref": "#/$defs/strings", "description": "Skip when these CRDs already exist." },
@@ -314,9 +359,9 @@
         }
       },
       "oneOf": [
-        { "required": ["chart", "version", "chartDigest"] },
-        { "required": ["urls", "version", "urlDigests"] },
-        { "required": ["manifests"] }
+        { "properties": { "type": { "const": "helm" } }, "required": ["chart", "version", "chartDigest"], "not": { "anyOf": [{ "required": ["urls"] }, { "required": ["manifests"] }] } },
+        { "properties": { "type": { "const": "manifest" } }, "required": ["urls", "version", "urlDigests"], "not": { "anyOf": [{ "required": ["chart"] }, { "required": ["manifests"] }] } },
+        { "properties": { "type": { "const": "inline" } }, "required": ["manifests"], "not": { "anyOf": [{ "required": ["chart"] }, { "required": ["urls"] }] } }
       ],
       "dependentRequired": { "repo": ["chart"], "values": ["chart"], "profiles": ["chart"], "chartDigest": ["chart"], "urlDigests": ["urls"] }
     }

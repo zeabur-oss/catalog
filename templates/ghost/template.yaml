@@ -14,15 +14,15 @@ metadata:
   # Also: https://github.com/docker-library/mysql, https://github.com/TryGhost/ghost-docker
   homepage: https://github.com/TryGhost/Ghost
 
-requires: [ingress/traefik, certificates/cert-manager]
+requires: [{component: ingress/traefik}, {component: certificates/cert-manager}]
 
 services:
   - name: ghost
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: http, port: 2368}]
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 1Gi}}
   - name: ghost-mysql
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: mysql, port: 3306}]
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 1Gi}}
 

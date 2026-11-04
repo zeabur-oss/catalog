@@ -19,15 +19,15 @@ import (
 )
 
 type Template struct {
-	ID         string    `yaml:"-" json:"id"`
-	APIVersion string    `yaml:"apiVersion" json:"apiVersion"`
-	Kind       string    `yaml:"kind" json:"kind"`
-	Metadata   Metadata  `yaml:"metadata" json:"metadata"`
-	Requires   []string  `yaml:"requires" json:"requires,omitempty"`
-	Services   []Service `yaml:"services" json:"services"`
-	Inputs     []Input   `yaml:"inputs" json:"inputs,omitempty"`
-	Security   Security  `yaml:"security" json:"security"`
-	Smoke      []Smoke   `yaml:"smoke" json:"smoke"`
+	ID         string        `yaml:"-" json:"id"`
+	APIVersion string        `yaml:"apiVersion" json:"apiVersion"`
+	Kind       string        `yaml:"kind" json:"kind"`
+	Metadata   Metadata      `yaml:"metadata" json:"metadata"`
+	Requires   []catalog.Ref `yaml:"requires" json:"requires,omitempty"`
+	Services   []Service     `yaml:"services" json:"services"`
+	Inputs     []Input       `yaml:"inputs" json:"inputs,omitempty"`
+	Security   Security      `yaml:"security" json:"security"`
+	Smoke      []Smoke       `yaml:"smoke" json:"smoke"`
 
 	Dir string `yaml:"-" json:"-"` // holds template.yaml and manifests.yaml
 	raw any
@@ -59,11 +59,11 @@ type Risk struct {
 }
 
 type Service struct {
-	Name            string                       `yaml:"name" json:"name"`
-	SecurityProfile string                       `yaml:"securityProfile" json:"securityProfile"`
-	Ports           []Port                       `yaml:"ports" json:"ports,omitempty"`
-	Resources       map[string]map[string]string `yaml:"resources" json:"resources"`
-	Domains         []string                     `yaml:"domains" json:"domains,omitempty"`
+	Name        string                       `yaml:"name" json:"name"`
+	PodSecurity string                       `yaml:"podSecurity" json:"podSecurity"`
+	Ports       []Port                       `yaml:"ports" json:"ports,omitempty"`
+	Resources   map[string]map[string]string `yaml:"resources" json:"resources"`
+	Domains     []string                     `yaml:"domains" json:"domains,omitempty"`
 }
 
 type Port struct {
@@ -197,7 +197,7 @@ func Check(root string, cat *catalog.Catalog, all []*Template) error {
 			fail("%v", err)
 		}
 		for _, p := range catalog.Profiles {
-			if _, err := cat.InstallOrder(t.Requires, p); err != nil {
+			if _, err := cat.InstallOrder(catalog.RefNames(t.Requires), p); err != nil {
 				fail("requires on %s: %v", p, err)
 			}
 		}
@@ -226,7 +226,7 @@ func CheckVersion(templateYAML, manifests []byte, version string) error {
 // RequiresCertificates reports whether the template installs certificates.
 func (t *Template) RequiresCertificates() bool {
 	for _, r := range t.Requires {
-		if r == "certificates" || strings.HasPrefix(r, "certificates/") {
+		if r.Capability == "certificates" || strings.HasPrefix(r.Component, "certificates/") {
 			return true
 		}
 	}

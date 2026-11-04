@@ -1,14 +1,14 @@
 ---
 title: 元件檔案格式
 description: 按照共用外框與元件欄位撰寫 YAML，並用 digest 固定安裝內容。
-source: "8918ee026fb2"
+source: "09933174a95f"
 ---
 
 把元件檔案放在 `components/<capability>/<upstream>.yaml`。每個 capability（用途類別）與上游的組合各用一個檔案。檔案使用 YAML，包含共用外框、安裝內容與設定。路徑就是 ID，例如 `components/ingress/traefik.yaml` 的 ID 是 `ingress/traefik`。
 
 ## 共用外框
 
-元件與範本共用 `apiVersion`、`kind`、`metadata` 與 `requires` 這組外框。`kind` 用來區分元件與範本，`requires` 可填 capability 或 `<capability>/<upstream>`。
+元件與範本共用 `apiVersion`、`kind`、`metadata` 與 `requires` 這組外框。`kind` 用來區分元件與範本，`requires` 的每一項是 `{capability: <capability>}` 或 `{component: <capability>/<upstream>}`。
 
 ```yaml
 apiVersion: catalog.zeabur.com/v1
@@ -17,7 +17,7 @@ metadata:
   name: Traefik Proxy
   license: MIT                    # SPDX
   homepage: https://traefik.io/traefik/
-requires: [certificates]          # <capability> or <capability>/<upstream>
+requires: [{capability: certificates}]   # or {component: <capability>/<upstream>}
 ```
 
 元件的 `metadata` 還有 `summary`：用一句白話說明它為叢集提供什麼，給挑選元件的人看，翻譯放在 `locales`。檔案開頭的註解說明選用這個元件的原因。
@@ -42,12 +42,14 @@ metadata:
   license: MIT                    # SPDX; OSI-approved, or opt-in only (see below)
   homepage: https://traefik.io/traefik/
 defaults: {single-node: recommended, multi-node: recommended}
-requires: [certificates]          # installed first
-distributions: [k3s]              # optional; distributions to test it on, omitted means all
-replaces: [container-registry/zot] # optional; ids of removed components it took over
+requires: [{capability: certificates}]  # installed first
+distributions: [k3s, rke2, kubesolo]    # distributions it supports and e2e tests it on
+kubeVersion: ">=1.30.0-0"               # Kubernetes versions it supports
+replaces: [{component: container-registry/zot}]  # optional; removed components it took over
 
 releases:                         # installed in order
   - name: traefik
+    type: helm                                  # helm, manifest or inline
     namespace: traefik
     chart: oci://ghcr.io/traefik/helm/traefik   # or repo: https://… plus chart: <name>
     version: 41.7.1                             # exact; Renovate bumps it
@@ -65,11 +67,12 @@ releases:                         # installed in order
           # One node: a second replica gains nothing.
           replicas: 1
   - name: crds
+    type: manifest
     namespace: kube-system
     urls: [https://github.com/…/releases/download/{version}/standard-install.yaml]
     version: v1.6.2
     urlDigests: [sha256:…]                      # one per URL, in order
-  # or: manifests: |  objects applied as written
+  # or type: inline with manifests: |  objects applied as written
 
 inputs: []        # values to ask for or generate; Secrets are created from them
 provides: {...}   # an in-cluster registry other software uses
@@ -77,8 +80,8 @@ resources: {...}  # memory it needs while working, on top of idle
 internalCRDs: []  # CRDs of detection.crds whose objects it writes itself
 networkPolicies: |  # traffic it needs where an installer isolates namespaces
 contributes: []   # values added to another component's release (CrowdSec -> Traefik)
-detection: {...}  # CRDs, API services, Helm charts, workloads
-security: {...}   # RBAC summary, privileged, podSecurity
+detection: {...}  # CRDs, API services, Helm charts, workloads, distribution add-ons
+security: {...}   # RBAC summary, podSecurity
 health: []        # read-only checks an installer runs on a cluster
 smoke: []         # extra e2e checks
 leftovers: []     # what the upstream keeps on uninstall (e.g. CRDs)
@@ -149,9 +152,24 @@ health:
     advice: "A node that joined without Longhorn needs longhorn: true under join in its configuration. Add it, then run zeabur-installer apply on that node."
 ```
 
-`distributions` 和 `testedOn` 是兩份不同的清單。元件檔案裡的 `distributions` 列出要在哪些發行版上測試這個元件。`index.json` 裡的 `testedOn` 列出測試通過的發行版和通過的平台，例如 `{"distribution": "k3s", "platforms": ["linux/amd64", "linux/arm64"]}`，版本以 `config/kubernetes.yaml` 固定的為準。安裝工具會讀取 `testedOn`，元件要裝在沒列出的發行版和平台上時，提醒使用者它沒測過。`testedOn` 由 `catalog index` 從 `measurements/` 產生，不用手寫。每個元件都有這個欄位，可能是空清單。
+`distributions` 和 `testedOn` 是兩份不同的清單。元件檔案裡的 `distributions` 列出這個元件支援的發行版，e2e 會在每個發行版上測試它。`index.json` 裡的 `testedOn` 列出測試通過的發行版和通過的平台，例如 `{"distribution": "k3s", "platforms": ["linux/amd64", "linux/arm64"]}`，版本以 `config/kubernetes.yaml` 固定的為準。安裝工具會讀取 `testedOn`，元件要裝在沒列出的發行版和平台上時，提醒使用者它沒測過。`testedOn` 由 `catalog index` 從 `measurements/` 產生，不用手寫。每個元件都有這個欄位，可能是空清單。
 
-`replaces` 列出這個元件接手的舊元件 ID，這些元件已從 catalog 移除，例如 `builds/zeabur-builder` 的 `container-registry/zot`。設定檔寫了舊 ID 時，安裝工具會請使用者改寫新 ID。現有元件的 ID 不能出現在其他元件的 `replaces` 裡。`catalog validate` 會檢查這一點。完整規則見[安裝工具如何選擇和安裝元件](installers.mdx)。
+`kubeVersion` 是元件支援的 Kubernetes 版本範圍，寫法和 Helm chart 的 `kubeVersion` 相同。填入各 chart 裡最嚴格的範圍，chart 都沒寫時填 `">=1.34.0-0"`。範圍沒有涵蓋 catalog 測試的某個 Kubernetes 版本時，`catalog validate` 會失敗。叢集版本不在範圍內時，安裝工具不會提供這個元件。
+
+`replaces` 列出這個元件接手的舊元件，這些元件已從 catalog 移除，例如 `builds/zeabur-builder` 的 `{component: container-registry/zot}`。設定檔寫了舊 ID 時，安裝工具會請使用者改寫新 ID。現有元件的 ID 不能出現在其他元件的 `replaces` 裡。`catalog validate` 會檢查這一點。完整規則見[安裝工具如何選擇和安裝元件](installers.mdx)。
+
+`contributes` 會把設定值加到另一個元件的 release。`target` 寫出元件和它的 release，`values` 放設定值。
+
+```yaml
+contributes:
+  - target: {component: ingress/traefik, release: traefik}
+    values: |
+      ...
+```
+
+`detection.addons` 列出發行版自帶、安裝同一個上游的附加元件，例如 k3s 內建的 Traefik 寫成 `{distribution: k3s, name: traefik}`，RKE2 的寫成 `{distribution: rke2, name: rke2-traefik}`。名稱是該附加元件在 `kube-system` 裡的 HelmChart。讀取方遇到不認得的發行版時，略過那一項。
+
+`security.podSecurity` 是元件自己的 namespace 需要的 Pod Security 等級：`restricted`、`baseline` 或 `privileged`。`catalog render` 會用它檢查算繪出的每個 Pod。
 
 `networkPolicies` 給預設擋掉每個命名空間入站流量的安裝工具用。內容是元件自己命名空間裡的標準 NetworkPolicy 物件，這類安裝工具會在安裝 releases 前套用，放行元件需要從其他地方進來的流量。其他安裝工具可以忽略它。`catalog validate` 會檢查每個物件都是元件命名空間裡的 NetworkPolicy。
 

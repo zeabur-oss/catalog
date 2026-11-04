@@ -14,11 +14,11 @@ metadata:
   # Also: https://github.com/nginx/docker-nginx-unprivileged
   homepage: https://nginx.org/
 
-requires: [ingress/traefik, certificates/cert-manager]
+requires: [{component: ingress/traefik}, {component: certificates/cert-manager}]
 
 services:
   - name: nginx
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: http, port: 8080}]
     domains: ['{{ .Domain }}']
     resources: {requests: {cpu: 10m, memory: 32Mi}, limits: {cpu: 500m, memory: 128Mi}}
