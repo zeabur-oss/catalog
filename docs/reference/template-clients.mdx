@@ -71,7 +71,7 @@ A CRD name is `<plural>.<group>`, such as `clusters.postgresql.cnpg.io`. It's se
 
 ## Text in other languages
 
-The text fields of a template are in English: `security.summary`, each risk with its mitigation, and the `label` and `description` of each input. A `locales` block next to them holds the same text in `zh-TW` and `zh-CN`, always both.
+The text fields of a template are in English: `security.summary`, each risk with its mitigation, and the `label` and `description` of each input. A `locales` block next to them holds the same text by BCP 47 tag. Every block has each tag that `config/locales.yaml` of the release requires, now `zh-TW` and `zh-CN`, and it may have more.
 
 For each block, show `locales.<language>` when the reader's language is a key there, and the English fields otherwise. The language matches the key exactly. Each block falls back on its own, so a summary without `locales` shows in English next to risks in the reader's language.
 

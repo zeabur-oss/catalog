@@ -18,10 +18,9 @@
         "summary": { "type": "string", "pattern": "^[^\\n]+$", "description": "What the application is, in one plain sentence for people choosing a template." },
         "locales": {
           "type": "object",
-          "description": "The summary in other languages.",
-          "additionalProperties": false,
-          "required": ["zh-TW", "zh-CN"],
-          "properties": { "zh-TW": { "$ref": "#/$defs/summaryLocale" }, "zh-CN": { "$ref": "#/$defs/summaryLocale" } }
+          "description": "The summary in other languages, by BCP 47 tag. config/locales.yaml lists the tags each needs.",
+          "propertyNames": { "$ref": "#/$defs/locale" },
+          "additionalProperties": { "$ref": "#/$defs/summaryLocale" }
         },
         "license": { "$ref": "#/$defs/text", "description": "SPDX expression for the application, its images and charts." },
         "homepage": { "type": "string", "format": "uri", "pattern": "^https?://" },
@@ -49,10 +48,9 @@
         "summary": { "$ref": "#/$defs/text" },
         "locales": {
           "type": "object",
-          "description": "The summary in other languages.",
-          "additionalProperties": false,
-          "required": ["zh-TW", "zh-CN"],
-          "properties": { "zh-TW": { "$ref": "#/$defs/summaryLocale" }, "zh-CN": { "$ref": "#/$defs/summaryLocale" } }
+          "description": "The summary in other languages, by BCP 47 tag. config/locales.yaml lists the tags each needs.",
+          "propertyNames": { "$ref": "#/$defs/locale" },
+          "additionalProperties": { "$ref": "#/$defs/summaryLocale" }
         },
         "unauthenticated": {
           "type": "array",
@@ -71,10 +69,9 @@
               "mitigation": { "$ref": "#/$defs/text" },
               "locales": {
                 "type": "object",
-                "description": "The risk and mitigation in other languages.",
-                "additionalProperties": false,
-                "required": ["zh-TW", "zh-CN"],
-                "properties": { "zh-TW": { "$ref": "#/$defs/riskLocale" }, "zh-CN": { "$ref": "#/$defs/riskLocale" } }
+                "description": "The risk and mitigation in other languages, by BCP 47 tag. config/locales.yaml lists the tags each needs.",
+                "propertyNames": { "$ref": "#/$defs/locale" },
+                "additionalProperties": { "$ref": "#/$defs/riskLocale" }
               }
             }
           }
@@ -124,6 +121,7 @@
     }
   },
   "$defs": {
+    "locale": { "type": "string", "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$", "description": "A BCP 47 tag: language, then optional script and region, such as zh-TW or zh-Hant-TW." },
     "generate": {
       "type": "object",
       "description": "How the installer makes the value instead of asking.",
@@ -198,10 +196,9 @@
         "label": { "type": "string", "maxLength": 40, "description": "A short name for the field, in English." },
         "locales": {
           "type": "object",
-          "description": "The label and description in other languages.",
-          "additionalProperties": false,
-          "required": ["zh-TW", "zh-CN"],
-          "properties": { "zh-TW": { "$ref": "#/$defs/inputLocale" }, "zh-CN": { "$ref": "#/$defs/inputLocale" } }
+          "description": "The label and description in other languages, by BCP 47 tag. config/locales.yaml lists the tags each needs.",
+          "propertyNames": { "$ref": "#/$defs/locale" },
+          "additionalProperties": { "$ref": "#/$defs/inputLocale" }
         },
         "required": { "type": "boolean" },
         "default": { "type": "string", "description": "The value when a deploy does not give the input." },

@@ -18,10 +18,9 @@
         "summary": { "type": "string", "pattern": "^[^\\n]+$", "description": "What it gives the cluster, in one plain sentence for people choosing components." },
         "locales": {
           "type": "object",
-          "description": "The summary in other languages.",
-          "additionalProperties": false,
-          "required": ["zh-TW", "zh-CN"],
-          "properties": { "zh-TW": { "$ref": "#/$defs/summaryLocale" }, "zh-CN": { "$ref": "#/$defs/summaryLocale" } }
+          "description": "The summary in other languages, by BCP 47 tag. config/locales.yaml lists the tags each needs.",
+          "propertyNames": { "$ref": "#/$defs/locale" },
+          "additionalProperties": { "$ref": "#/$defs/summaryLocale" }
         },
         "license": { "type": "string", "description": "SPDX expression; every identifier must be OSI-approved, or listed under optInOnly in config/licenses.yaml with no profile recommending the component." },
         "homepage": { "type": "string", "format": "uri" }
@@ -261,6 +260,7 @@
     }
   },
   "$defs": {
+    "locale": { "type": "string", "pattern": "^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$", "description": "A BCP 47 tag: language, then optional script and region, such as zh-TW or zh-Hant-TW." },
     "generate": {
       "type": "object",
       "description": "How the installer makes the value instead of asking. A reader does not fill in an input whose type it does not know.",

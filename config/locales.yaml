@@ -1,0 +1,3 @@
+# Languages that every locales map in components and templates must have.
+# locales may hold other BCP 47 tags too. catalog validate checks this list.
+required: [zh-TW, zh-CN]

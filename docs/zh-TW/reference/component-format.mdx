@@ -1,7 +1,7 @@
 ---
 title: 元件檔案格式
 description: 按照共用外框與元件欄位撰寫 YAML，並用 digest 固定安裝內容。
-source: "c7ede2787cd8"
+source: "b656223bc77a"
 ---
 
 把元件檔案放在 `components/<capability>/<upstream>.yaml`。每個 capability（用途類別）與上游的組合各用一個檔案。檔案使用 YAML，包含共用外框、安裝內容與設定。路徑就是 ID，例如 `components/ingress/traefik.yaml` 的 ID 是 `ingress/traefik`。
@@ -30,6 +30,8 @@ metadata:
     zh-CN: {summary: 把域名的流量转发到你的服务。}
 ```
 
+`locales` 的鍵是 BCP 47 語言標籤。`config/locales.yaml` 列出元件和範本裡每個 `locales` 都要有的語言，`catalog validate` 會檢查。也可以加上其他語言。
+
 ## 元件欄位
 
 以下是精簡範例。每個 profile 是一組設定，例如 `single-node` 或 `multi-node`。在 `defaults` 中設定各 profile 是否啟用，填入 `recommended` 表示預設啟用（recommended）。`releases` 按安裝順序列出內容。每個 profile 會先套用共用的 `values`，再合併 `profiles` 中對應的設定。
@@ -45,7 +47,7 @@ defaults: {single-node: recommended, multi-node: recommended}
 requires: [{capability: certificates}]  # installed first
 distributions: [k3s, rke2, kubesolo]    # distributions it supports and e2e tests it on
 kubeVersion: ">=1.30.0-0"               # Kubernetes versions it supports
-replaces: [{component: container-registry/zot}]  # optional; removed components it took over
+replaces: [{component: container-registry/zot}]  # optional, removed components it took over
 
 releases:                         # installed in order
   - name: traefik
