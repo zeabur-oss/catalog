@@ -1,0 +1,291 @@
+{
+  "component": "runtime-security/falco",
+  "environments": [
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 66,
+        "cpuMillis": 4
+      },
+      "requests": {
+        "memoryMiB": 160
+      },
+      "versions": [
+        {
+          "release": "policy-report-crds",
+          "version": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+        },
+        {
+          "release": "falco",
+          "version": "9.2.1"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 71,
+        "cpuMillis": 3
+      },
+      "requests": {
+        "memoryMiB": 160
+      },
+      "versions": [
+        {
+          "release": "policy-report-crds",
+          "version": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+        },
+        {
+          "release": "falco",
+          "version": "9.2.1"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 168,
+        "cpuMillis": 15
+      },
+      "requests": {
+        "memoryMiB": 800
+      },
+      "versions": [
+        {
+          "release": "policy-report-crds",
+          "version": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+        },
+        {
+          "release": "falco",
+          "version": "9.2.1"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 174,
+        "cpuMillis": 24
+      },
+      "requests": {
+        "memoryMiB": 800
+      },
+      "versions": [
+        {
+          "release": "policy-report-crds",
+          "version": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+        },
+        {
+          "release": "falco",
+          "version": "9.2.1"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 66,
+        "cpuMillis": 7
+      },
+      "requests": {
+        "memoryMiB": 160
+      },
+      "versions": [
+        {
+          "release": "policy-report-crds",
+          "version": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+        },
+        {
+          "release": "falco",
+          "version": "9.2.1"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 69,
+        "cpuMillis": 5
+      },
+      "requests": {
+        "memoryMiB": 160
+      },
+      "versions": [
+        {
+          "release": "policy-report-crds",
+          "version": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+        },
+        {
+          "release": "falco",
+          "version": "9.2.1"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 62,
+        "cpuMillis": 3
+      },
+      "requests": {
+        "memoryMiB": 160
+      },
+      "versions": [
+        {
+          "release": "policy-report-crds",
+          "version": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+        },
+        {
+          "release": "falco",
+          "version": "9.2.1"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 67,
+        "cpuMillis": 2
+      },
+      "requests": {
+        "memoryMiB": 160
+      },
+      "versions": [
+        {
+          "release": "policy-report-crds",
+          "version": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+        },
+        {
+          "release": "falco",
+          "version": "9.2.1"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 72,
+        "cpuMillis": 5
+      },
+      "requests": {
+        "memoryMiB": 160
+      },
+      "versions": [
+        {
+          "release": "policy-report-crds",
+          "version": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+        },
+        {
+          "release": "falco",
+          "version": "9.2.1"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 73,
+        "cpuMillis": 6
+      },
+      "requests": {
+        "memoryMiB": 160
+      },
+      "versions": [
+        {
+          "release": "policy-report-crds",
+          "version": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+        },
+        {
+          "release": "falco",
+          "version": "9.2.1"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    }
+  ]
+}

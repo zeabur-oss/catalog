@@ -1,0 +1,26 @@
+{
+  "template": "searxng",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 99
+      },
+      "versions": [
+        {
+          "image": "searxng/searxng",
+          "version": "2026.10.24-ef0ec03da",
+          "digest": "sha256:7c7cbe509429e82755104b2a95f52085a98633c95d53f44e4e905fa3a59f08c8"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    }
+  ]
+}

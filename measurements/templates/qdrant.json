@@ -1,0 +1,26 @@
+{
+  "template": "qdrant",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 16
+      },
+      "versions": [
+        {
+          "image": "qdrant/qdrant",
+          "version": "v1.20.0-unprivileged",
+          "digest": "sha256:8c215051dc7bc15221b5f89c100a84a4b04d0dd8497fb73e6fa86fc948d1a41d"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    }
+  ]
+}

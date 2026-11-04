@@ -1,0 +1,201 @@
+{
+  "component": "replicated-storage/longhorn",
+  "environments": [
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 155,
+        "cpuMillis": 23
+      },
+      "requests": {
+        "memoryMiB": 128
+      },
+      "versions": [
+        {
+          "release": "longhorn",
+          "version": "1.13.0"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 153,
+        "cpuMillis": 17
+      },
+      "requests": {
+        "memoryMiB": 128
+      },
+      "versions": [
+        {
+          "release": "longhorn",
+          "version": "1.13.0"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 355,
+        "cpuMillis": 54
+      },
+      "requests": {
+        "memoryMiB": 256
+      },
+      "versions": [
+        {
+          "release": "longhorn",
+          "version": "1.13.0"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 364,
+        "cpuMillis": 39
+      },
+      "requests": {
+        "memoryMiB": 256
+      },
+      "versions": [
+        {
+          "release": "longhorn",
+          "version": "1.13.0"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 150,
+        "cpuMillis": 29
+      },
+      "requests": {
+        "memoryMiB": 128
+      },
+      "versions": [
+        {
+          "release": "longhorn",
+          "version": "1.13.0"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 154,
+        "cpuMillis": 19
+      },
+      "requests": {
+        "memoryMiB": 128
+      },
+      "versions": [
+        {
+          "release": "longhorn",
+          "version": "1.13.0"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 157,
+        "cpuMillis": 19
+      },
+      "requests": {
+        "memoryMiB": 128
+      },
+      "versions": [
+        {
+          "release": "longhorn",
+          "version": "1.13.0"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 159,
+        "cpuMillis": 18
+      },
+      "requests": {
+        "memoryMiB": 128
+      },
+      "versions": [
+        {
+          "release": "longhorn",
+          "version": "1.13.0"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    }
+  ]
+}

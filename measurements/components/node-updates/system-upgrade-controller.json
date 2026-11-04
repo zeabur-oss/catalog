@@ -1,0 +1,211 @@
+{
+  "component": "node-updates/system-upgrade-controller",
+  "environments": [
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 13,
+        "cpuMillis": 1
+      },
+      "requests": {},
+      "versions": [
+        {
+          "release": "crds",
+          "version": "v0.20.2"
+        },
+        {
+          "release": "controller",
+          "version": "v0.20.2"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 12
+      },
+      "requests": {},
+      "versions": [
+        {
+          "release": "crds",
+          "version": "v0.20.2"
+        },
+        {
+          "release": "controller",
+          "version": "v0.20.2"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 11
+      },
+      "requests": {},
+      "versions": [
+        {
+          "release": "crds",
+          "version": "v0.20.2"
+        },
+        {
+          "release": "controller",
+          "version": "v0.20.2"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 11
+      },
+      "requests": {},
+      "versions": [
+        {
+          "release": "crds",
+          "version": "v0.20.2"
+        },
+        {
+          "release": "controller",
+          "version": "v0.20.2"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 11,
+        "cpuMillis": 1
+      },
+      "requests": {},
+      "versions": [
+        {
+          "release": "crds",
+          "version": "v0.20.2"
+        },
+        {
+          "release": "controller",
+          "version": "v0.20.2"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 11
+      },
+      "requests": {},
+      "versions": [
+        {
+          "release": "crds",
+          "version": "v0.20.2"
+        },
+        {
+          "release": "controller",
+          "version": "v0.20.2"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 14
+      },
+      "requests": {},
+      "versions": [
+        {
+          "release": "crds",
+          "version": "v0.20.2"
+        },
+        {
+          "release": "controller",
+          "version": "v0.20.2"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 13
+      },
+      "requests": {},
+      "versions": [
+        {
+          "release": "crds",
+          "version": "v0.20.2"
+        },
+        {
+          "release": "controller",
+          "version": "v0.20.2"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    }
+  ]
+}
