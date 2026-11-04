@@ -6,7 +6,8 @@
 # needs and what installs it, in groups. It starts as soon as the matrix is listed and does not wait
 # for check, which the queue requires on its own. A merge group that changes no component or
 # template has an empty matrix and skips the job, so require smoke-ok, which fails only when a smoke
-# job failed. The shared CI has no dynamic matrix, so smoke stays here. CONTRIBUTING.md lists what each tier checks.
+# job failed. The shared CI has no dynamic matrix, so smoke stays here. CONTRIBUTING.md lists what
+# each tier checks.
 # full is e2e.yml. nightly.yml calls it, and e2e-label.yml calls it for a pull request with the e2e
 # label.
 name: ci
