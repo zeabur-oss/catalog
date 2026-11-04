@@ -1,37 +1,41 @@
-# check on every pull request and on main: the jobs of scripts/ci.sh (Go tests,
-# lint, validate, render, template lint, a server-side dry run on a local API server and
-# nix build .#release), run by zeabur-oss/.github's shared CI, and the DCO check.
-# smoke on every pull request and on main: install and smoke test what changed, what
-# it needs and what installs it, in groups. A pull request that changes no component
-# or template has an empty matrix and skips the job, so require smoke-ok, which
-# fails only when a smoke job failed. The shared CI has no dynamic matrix, so smoke
-# stays here. CONTRIBUTING.md lists what each tier checks.
-# full is e2e.yml. nightly.yml calls it, and e2e-label.yml calls it for a pull
-# request with the e2e label.
+# The jobs of scripts/ci/jobs (Go tests, lint, validate, render, template lint, a server-side dry
+# run on a local API server and nix build .#release), run by zeabur-oss/.github's shared CI, and
+# the DCO check. Pull requests and pushes run its fast tier; the merge queue, the nightly run and a
+# manual run take every job.
+# smoke in the merge queue: install and smoke test what changed since the queue's base, what it
+# needs and what installs it, in groups. A merge group that changes no component or template has an
+# empty matrix and skips the job, so require smoke-ok, which fails only when a smoke job failed. The
+# shared CI has no dynamic matrix, so smoke stays here. CONTRIBUTING.md lists what each tier checks.
+# full is e2e.yml. nightly.yml calls it, and e2e-label.yml calls it for a pull request with the e2e
+# label.
 name: ci
 
 on:
-  pull_request:
   push:
     branches: [main]
+  pull_request:
+  merge_group:
+  schedule:
+    - cron: "0 17 * * *" # every job on main, which also keeps main's caches warm
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+# A new push to a pull request stops its older run; a push to main does not stop the schedule.
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check:
-    uses: zeabur-oss/.github/.github/workflows/ci.yml@6ab106525ce16169ab0ecfebe4b0248e096797fa # main
-    with:
-      runner: ubuntu-26.04
+    uses: zeabur-oss/.github/.github/workflows/ci.yml@38db3b831202938021111168e1a6f77f607707fe # main
 
   dco:
     uses: zeabur-oss/.github/.github/workflows/dco.yml@6ab106525ce16169ab0ecfebe4b0248e096797fa # main
 
   smoke-matrix:
+    if: github.event_name == 'merge_group'
     runs-on: ubuntu-slim
     outputs:
       matrix: ${{ steps.list.outputs.matrix }}
@@ -45,17 +49,8 @@ jobs:
           go-version-file: go.mod
       - id: list
         env:
-          EVENT: ${{ github.event_name }}
-          BASE_REF: ${{ github.base_ref }}
-          BEFORE: ${{ github.event.before }}
-        run: |
-          # A pull request tests what differs from its base, a push what it added to main.
-          if [ "$EVENT" = pull_request ]; then
-            since=$(git merge-base "origin/$BASE_REF" HEAD)
-          else
-            since=$BEFORE
-          fi
-          echo "matrix=$(go run ./tools/cmd/catalog list -tier smoke -since "$since")" >> "$GITHUB_OUTPUT"
+          BASE: ${{ github.event.merge_group.base_sha }}
+        run: echo "matrix=$(go run ./tools/cmd/catalog list -tier smoke -since "$BASE")" >> "$GITHUB_OUTPUT"
 
   smoke:
     needs: [check, smoke-matrix]
@@ -81,8 +76,8 @@ jobs:
           # shellcheck disable=SC2086 # IDS is a list of IDs
           nix develop -c go run ./tools/cmd/catalog e2e -tier smoke $IDS
 
-  # The check to require. A smoke job that is skipped, because the matrix is
-  # empty or check failed, counts as passed here.
+  # The check to require. A smoke job that is skipped, because the run is not the merge queue's,
+  # the matrix is empty or check failed, counts as passed here.
   smoke-ok:
     if: always()
     needs: [smoke-matrix, smoke]
