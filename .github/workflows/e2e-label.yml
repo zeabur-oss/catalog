@@ -10,8 +10,12 @@ on:
 permissions:
   contents: read
 
+# Another label starts a run that does nothing: a group of its own, so it cancels no tests.
 concurrency:
-  group: e2e-label-${{ github.event.pull_request.number }}
+  group: >-
+    e2e-label-${{ github.event.pull_request.number }}${{
+    github.event.action == 'labeled' && github.event.label.name != 'e2e'
+    && format('-{0}', github.run_id) || '' }}
   cancel-in-progress: true
 
 jobs:
