@@ -31,7 +31,6 @@ type Component struct {
 	KubeVersion     string            `yaml:"kubeVersion" json:"kubeVersion"`
 	PersistsData    bool              `yaml:"persistsData" json:"persistsData,omitempty"`
 	Requires        []Ref             `yaml:"requires" json:"requires,omitempty"`
-	Replaces        []Ref             `yaml:"replaces" json:"replaces,omitempty"`
 	Inputs          []Input           `yaml:"inputs" json:"inputs,omitempty"`
 	Releases        []Release         `yaml:"releases" json:"releases"`
 	Provides        *Provides         `yaml:"provides" json:"provides,omitempty"`

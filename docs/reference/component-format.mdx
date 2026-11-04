@@ -46,7 +46,6 @@ defaults: {single-node: recommended, multi-node: recommended}
 requires: [{capability: certificates}]  # installed first
 distributions: [k3s, rke2, kubesolo]    # distributions it supports and e2e tests it on
 kubeVersion: ">=1.30.0-0"               # Kubernetes versions it supports
-replaces: [{component: container-registry/zot}]  # optional, removed components it took over
 
 releases:                         # installed in order
   - name: traefik
@@ -158,8 +157,6 @@ health:
 `distributions` and `testedOn` are two different lists. `distributions` in the component file names the distributions the component supports, and e2e tests it on each of them. `testedOn` in `index.json` lists each distribution where that test passed, at the release that `config/kubernetes.yaml` pins, with the platforms it passed on, such as `{"distribution": "k3s", "platforms": ["linux/amd64", "linux/arm64"]}`. An installer reads `testedOn` to warn that a component is untested on a distribution and platform it doesn't list. `catalog index` derives `testedOn` from `measurements/`, so don't write it by hand. It's present on every component and can be empty.
 
 `kubeVersion` is the range of Kubernetes versions the component supports, in the syntax of a Helm chart's `kubeVersion`. Give the strictest range of its charts, or `">=1.34.0-0"` when they give none. `catalog validate` fails when the range leaves out a Kubernetes version that the catalog tests. An installer doesn't offer the component on a cluster outside the range.
-
-`replaces` lists the removed components that this one took over, such as `{component: container-registry/zot}` on `builds/zeabur-builder`. An installer tells a person who writes an old id in the configuration to write the new one. No current component may have an id that another one replaces, and `catalog validate` checks this. [How installers choose and install components](installers.mdx#replaced-components) gives the rules.
 
 `contributes` adds values to a release of another component. `target` names the component and its release, and `values` holds the values.
 

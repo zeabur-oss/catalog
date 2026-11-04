@@ -37,8 +37,7 @@
               "single-node": { "$ref": "#/$defs/ids" },
               "multi-node": { "$ref": "#/$defs/ids" }
             }
-          },
-          "replaces": { "type": "array", "uniqueItems": true, "items": { "type": "object", "additionalProperties": false, "required": ["component"], "properties": { "component": { "$ref": "#/$defs/id" } } } }
+          }
         }
       }
     },
@@ -121,12 +120,6 @@
               "additionalProperties": false,
               "required": ["kind", "name"],
               "properties": { "kind": { "const": "unknown" }, "name": { "type": "string" } }
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["kind", "old", "new"],
-              "properties": { "kind": { "const": "replaced" }, "old": { "$ref": "#/$defs/id" }, "new": { "$ref": "#/$defs/id" } }
             },
             {
               "type": "object",
