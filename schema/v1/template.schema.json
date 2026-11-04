@@ -30,9 +30,9 @@
     },
     "requires": {
       "type": "array",
-      "description": "Components the cluster must have: <capability> (its recommended upstream, else an optional one) or <capability>/<upstream>.",
+      "description": "Components the cluster must have.",
       "uniqueItems": true,
-      "items": { "type": "string", "pattern": "^[a-z0-9-]+(/[a-z0-9-]+)?$" }
+      "items": { "$ref": "#/$defs/ref" }
     },
     "services": {
       "type": "array",
@@ -125,6 +125,23 @@
   },
   "$defs": {
     "text": { "type": "string", "minLength": 1 },
+    "ref": {
+      "description": "A component by id, or a capability: its recommended upstream on the profile, else an optional one.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["component"],
+          "properties": { "component": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+$" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["capability"],
+          "properties": { "capability": { "type": "string", "pattern": "^[a-z0-9-]+$" } }
+        }
+      ]
+    },
     "resourceValues": {
       "type": "object",
       "additionalProperties": false,
@@ -137,10 +154,10 @@
     "service": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "securityProfile", "resources"],
+      "required": ["name", "podSecurity", "resources"],
       "properties": {
         "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$", "maxLength": 53 },
-        "securityProfile": { "enum": ["restricted", "baseline"] },
+        "podSecurity": { "enum": ["restricted", "baseline"], "description": "The Pod Security Standard level its pods meet." },
         "ports": {
           "type": "array",
           "items": {

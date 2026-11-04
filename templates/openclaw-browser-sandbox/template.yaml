@@ -19,7 +19,7 @@ metadata:
 
 services:
   - name: openclaw-sandbox-browser
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: cdp, port: 9222}]
     resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
 

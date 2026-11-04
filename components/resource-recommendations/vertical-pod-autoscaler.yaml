@@ -14,10 +14,13 @@ metadata:
 defaults:
   single-node: optional
   multi-node: optional
-requires: [metrics/metrics-server]
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.34.0-0"
+requires: [{component: metrics/metrics-server}]
 
 releases:
   - name: vpa
+    type: helm
     namespace: vpa-system
     repo: https://kubernetes.github.io/autoscaler
     chart: vertical-pod-autoscaler
@@ -56,6 +59,7 @@ detection:
 
 security:
   summary: Reads pods, workloads and metrics in all namespaces; writes VPA status.
+  podSecurity: restricted
 
 # The chart annotates its CRDs helm.sh/resource-policy: keep.
 leftovers: [customresourcedefinitions]

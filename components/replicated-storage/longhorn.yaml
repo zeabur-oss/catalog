@@ -18,9 +18,10 @@ metadata:
 defaults:
   single-node: optional
   multi-node: recommended
+kubeVersion: ">=1.34.0-0"
 # On KubeSolo v1.2.3 its driver deployer never becomes available, and a
 # KubeSolo install has one node, so there is no other node to copy to.
-distributions: [k3s, rke2, k0s, microk8s, kubeadm]
+distributions: [k3s, rke2]
 persistsData: true
 
 # Every node needs, before install: open-iscsi with iscsid running and the
@@ -38,6 +39,7 @@ persistsData: true
 # "bak" needs Longhorn's own backup target, which is left unset here.
 releases:
   - name: longhorn
+    type: helm
     namespace: longhorn-system
     repo: https://charts.longhorn.io
     chart: longhorn
@@ -116,6 +118,7 @@ releases:
   # pod. kubectl port-forward does not pass through NetworkPolicies, so it
   # still works.
   - name: ui-policy
+    type: inline
     namespace: longhorn-system
     manifests: |
       apiVersion: networking.k8s.io/v1
@@ -143,7 +146,7 @@ security:
     namespaces, and manage pods, PVs and storage classes cluster-wide. The
     chart binds the longhorn-support-bundle ServiceAccount to cluster-admin;
     only support bundle pods mount its token.
-  privileged: true
+  podSecurity: privileged
 
 # The manager creates the storage class longhorn-static itself, without an
 # owner, and Longhorn's uninstall deletes only the class longhorn.

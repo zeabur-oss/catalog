@@ -1,7 +1,7 @@
 ---
 title: 用戶端如何渲染範本
 description: 用戶端渲染範本前要做的檢查、怎麼判斷範本需要的元件裝好了沒，以及要顯示哪種語言，還有用來測試用戶端的案例。
-source: "622727eab126"
+source: "105ee58d9485"
 ---
 
 用戶端把[範本](template-format.mdx)安裝到一個命名空間時，會先檢查選項，再渲染 `manifests.yaml`，最後套用產生的物件。這一頁列出要遵守的規則。`catalog template render` 用 `tools/internal/templates/render.go` 照這些規則渲染，Zeabur 也遵守同樣的規則。每條規則在 `conformance/template/` 都有一個測試案例，用法見本頁最後一節。
@@ -60,10 +60,10 @@ pattern 使用 [RE2 語法](https://github.com/google/re2/wiki/Syntax)。要比�
 
 ## 範本需要的元件
 
-`requires` 的每個名稱是 `<capability>/<name>` 或 `<capability>`。`catalog validate` 會檢查每個名稱都對得到這個版本裡的元件。
+`requires` 的每一項是 `{component: <capability>/<name>}` 或 `{capability: <capability>}`，項目唯一欄位的值就是它的名稱。`catalog validate` 會檢查每一項都對得到這個版本裡的元件。
 
-- `<capability>/<name>` 對到 ID 相同的那個元件。
-- `<capability>` 對到這個 capability 底下所有的元件。
+- `{component: <capability>/<name>}` 對到 ID 相同的那個元件。
+- `{capability: <capability>}` 對到這個 capability 底下所有的元件。
 
 用戶端依 kube-apiserver 提供的資源判斷元件裝好了沒，也就是 discovery（`kubectl api-resources`）列出的資源。每個名稱會是下列三種狀態之一：
 
@@ -123,7 +123,7 @@ components:          # index.json components, with only the fields matching read
     detection: {crds: [perconaservermongodbs.psmdb.percona.com]}
 served:              # what discovery lists; left out when discovery fails
   - {group: postgresql.cnpg.io, resource: clusters}
-requires: [databases/cloudnative-pg, databases/percona-mongodb]
+requires: [{component: databases/cloudnative-pg}, {component: databases/percona-mongodb}]
 want:
   databases/cloudnative-pg: installed
   databases/percona-mongodb: missing
@@ -136,7 +136,7 @@ want:
 {/* vale ZeaburZhTW.Terms = NO */}
 
 1. 渲染案例：用 `options` 渲染 `template` 和 `manifests`，再把渲染出的物件和 `want` 比對。檢查沒過時，改比對那項檢查的代碼和 `input`。比對代碼和欄位，不比對用戶端顯示的文字。
-2. 元件案例：每個元件的 capability 是 ID 斜線前的部分。找出 `requires` 裡每個名稱的狀態，再和 `want` 比對。
+2. 元件案例：每個元件的 capability 是 ID 斜線前的部分。找出 `requires` 裡每一項的狀態，再和以名稱為鍵的 `want` 比對。
 3. 文字案例：依 `language` 挑出要顯示的文字，再和 `want` 比對。`want` 沒寫的清單或對照表就是空的。
 
 {/* vale ZeaburZhTW.Terms = YES */}

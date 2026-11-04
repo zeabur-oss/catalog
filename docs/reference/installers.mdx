@@ -34,7 +34,7 @@ The installer takes these steps in order.
 
    | When | Code | Left out |
    | --- | --- | --- |
-   | `distributions` is present and doesn't list the distribution | `distributions` | Always. An enabled component also gets a `left-out` warning |
+   | `distributions` doesn't list the distribution | `distributions` | Always. An enabled component also gets a `left-out` warning |
    | `defaults` is `unsupported` on the profile | `unsupported` | Always. An enabled component also gets a `left-out` warning |
 
    A chosen component that `testedOn` doesn't list with the distribution and the platform stays chosen, with an `untested` warning. This covers a component never tested there and one whose latest run there failed.
@@ -63,7 +63,7 @@ The installer stops and installs nothing on these errors. The `kind` names the e
 
 ## Replaced components
 
-When a component takes over from one the catalog removed, its `replaces` lists the old id. For example, `builds/zeabur-builder` has `replaces: [container-registry/zot]`, because zot now comes with Zeabur Builder. No component has an id that another one replaces.
+When a component takes over from one the catalog removed, its `replaces` lists the old id. For example, `builds/zeabur-builder` has `replaces: [{component: container-registry/zot}]`, because zot now comes with Zeabur Builder. No component has an id that another one replaces.
 
 The installer doesn't swap components for the person. `enable` or `disable` with the old id is an error that names the new id, so the person changes the configuration.
 
@@ -117,6 +117,6 @@ want:
 
 To run a case:
 
-1. Build an index from `components`. The capability of each component is the part of its id before the slash. A profile without `installOrder` means the component alone, and a component without `distributions` runs on any distribution.
+1. Build an index from `components`. The capability of each component is the part of its id before the slash. A profile without `installOrder` means the component alone.
 2. Choose with `config`.
 3. Compare the result with `want`. A list or map that `want` leaves out is empty. Compare each reason, warning and error by its code and fields, not by the words an installer shows.

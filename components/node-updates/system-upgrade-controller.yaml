@@ -19,12 +19,14 @@ metadata:
 defaults:
   single-node: optional
   multi-node: optional
+kubeVersion: ">=1.34.0-0"
 # Its Plans replace the k3s or RKE2 binary (rancher/k3s-upgrade, rancher/rke2-upgrade), and its
 # manifest needs a control-plane node label that other distributions (KubeSolo) do not set.
 distributions: [k3s, rke2]
 
 releases:
   - name: crds
+    type: manifest
     namespace: system-upgrade
     urls:
       - https://github.com/rancher/system-upgrade-controller/releases/download/{version}/crd.yaml
@@ -32,6 +34,7 @@ releases:
     urlDigests:
       - sha256:1fb061e0d8bf9534da0145e614a9e03ca376cd5d1adcca17d13cfa12e211c48c
   - name: controller
+    type: manifest
     namespace: system-upgrade
     urls:
       - https://github.com/rancher/system-upgrade-controller/releases/download/{version}/system-upgrade-controller.yaml
@@ -48,4 +51,4 @@ detection:
 
 security:
   summary: Cordons and drains nodes, and creates privileged Jobs that run Plan images on the host.
-  privileged: true
+  podSecurity: privileged

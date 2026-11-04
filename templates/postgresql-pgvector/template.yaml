@@ -14,11 +14,11 @@ metadata:
   # Also: https://github.com/cloudnative-pg/postgres-containers, https://cloudnative-pg.io/
   homepage: https://github.com/pgvector/pgvector
 
-requires: [databases/cloudnative-pg]
+requires: [{component: databases/cloudnative-pg}]
 
 services:
   - name: postgresql
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: postgresql, port: 5432}]
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "1", memory: 1Gi}}
 

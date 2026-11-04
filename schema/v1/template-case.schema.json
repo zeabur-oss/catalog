@@ -158,10 +158,18 @@
             "properties": { "group": { "type": "string" }, "resource": { "type": "string" } }
           }
         },
-        "requires": { "$ref": "#/$defs/names" },
+        "requires": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "object", "additionalProperties": false, "required": ["component"], "properties": { "component": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+$" } } },
+              { "type": "object", "additionalProperties": false, "required": ["capability"], "properties": { "capability": { "type": "string", "pattern": "^[a-z0-9-]+$" } } }
+            ]
+          }
+        },
         "want": {
           "type": "object",
-          "description": "Each name of requires, with its state.",
+          "description": "The component or capability of each item of requires, with its state.",
           "propertyNames": { "$ref": "#/$defs/name" },
           "additionalProperties": { "enum": ["installed", "missing", "unknown"] }
         }
@@ -237,7 +245,6 @@
     "description": { "type": "string", "description": "The rule the case checks, in one or two sentences." },
     "inputName": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
     "name": { "type": "string", "pattern": "^[a-z0-9-]+(/[a-z0-9-]+)?$" },
-    "names": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/name" } },
     "locales": {
       "type": "object",
       "description": "The same text in zh-TW and zh-CN.",

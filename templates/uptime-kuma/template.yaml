@@ -13,11 +13,11 @@ metadata:
   license: MIT
   homepage: https://github.com/louislam/uptime-kuma
 
-requires: [ingress/traefik, certificates/cert-manager]
+requires: [{component: ingress/traefik}, {component: certificates/cert-manager}]
 
 services:
   - name: uptime-kuma
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: http, port: 3001}]
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 1Gi}}
 

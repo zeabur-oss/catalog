@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	"go.yaml.in/yaml/v3"
 )
@@ -41,6 +42,10 @@ func Check(root string, cat *Catalog) error {
 	}
 
 	licenses, err := ReadLicenses(root)
+	if err != nil {
+		return err
+	}
+	kube, err := testedKubeVersions(root)
 	if err != nil {
 		return err
 	}
@@ -87,14 +92,20 @@ func Check(root string, cat *Catalog) error {
 			}
 		}
 		for _, ct := range c.Contributes {
-			t, ok := cat.Get(ct.Target)
+			t, ok := cat.Get(ct.Target.Component)
 			if !ok {
-				fail(c.Path, "contributes: unknown target %s", ct.Target)
-			} else if _, ok := t.Release(ct.Release); !ok {
-				fail(c.Path, "contributes: %s has no release %s", ct.Target, ct.Release)
+				fail(c.Path, "contributes: unknown target %s", ct.Target.Component)
+			} else if _, ok := t.Release(ct.Target.Release); !ok {
+				fail(c.Path, "contributes: %s has no release %s", ct.Target.Component, ct.Target.Release)
 			}
 			for _, p := range unexplained(ct.Values) {
-				fail(c.Path, "contributes to %s: %s has no comment saying why", ct.Target, p)
+				fail(c.Path, "contributes to %s: %s has no comment saying why", ct.Target.Component, p)
+			}
+		}
+		for _, v := range kube {
+			if err := checkKubeVersion(c.KubeVersion, v); err != nil {
+				fail(c.Path, "kubeVersion: %v", err)
+				break
 			}
 		}
 	}
@@ -115,13 +126,46 @@ func Check(root string, cat *Catalog) error {
 	return errors.Join(errs...)
 }
 
+// testedKubeVersions returns the Kubernetes versions that
+// config/kubernetes.yaml renders and tests on.
+func testedKubeVersions(root string) ([]string, error) {
+	var cfg struct {
+		Versions []string                 `yaml:"versions"`
+		E2E      struct{ Version string } `yaml:"e2e"`
+		K3s      struct{ Version string } `yaml:"k3s"`
+		RKE2     struct{ Version string } `yaml:"rke2"`
+	}
+	if err := ReadYAML(filepath.Join(root, "config", "kubernetes.yaml"), &cfg); err != nil {
+		return nil, err
+	}
+	return append(slices.Clone(cfg.Versions), cfg.E2E.Version, cfg.K3s.Version, cfg.RKE2.Version), nil
+}
+
+// checkKubeVersion reports whether Kubernetes version v is in the SemVer
+// range kubeVersion.
+func checkKubeVersion(kubeVersion, v string) error {
+	c, err := semver.NewConstraint(kubeVersion)
+	if err != nil {
+		return fmt.Errorf("%q is not a SemVer range: %v", kubeVersion, err)
+	}
+	sv, err := semver.NewVersion(v)
+	if err != nil {
+		return fmt.Errorf("config/kubernetes.yaml: %q is not a version", v)
+	}
+	if !c.Check(sv) {
+		return fmt.Errorf("%s leaves out %s, which config/kubernetes.yaml tests", kubeVersion, v)
+	}
+	return nil
+}
+
 // replaceProblems checks that each id in replaces is no component now and
 // that only one component replaces it.
 func (cat *Catalog) replaceProblems() []string {
 	var problems []string
 	replacedBy := map[string]string{}
 	for _, c := range cat.Components {
-		for _, old := range c.Replaces {
+		for _, ref := range c.Replaces {
+			old := ref.Component
 			if _, ok := cat.Get(old); ok {
 				problems = append(problems, fmt.Sprintf("%s replaces %s, which is still a component", c.ID, old))
 			} else if other, ok := replacedBy[old]; ok {

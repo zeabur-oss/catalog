@@ -11,7 +11,7 @@ import (
 
 func TestFiniteJobsUseCompletionInsteadOfLongRunningProbes(t *testing.T) {
 	r := &templates.Template{ID: "app"}
-	r.Services = []templates.Service{{Name: "app", SecurityProfile: "restricted"}}
+	r.Services = []templates.Service{{Name: "app", PodSecurity: "restricted"}}
 	for _, kind := range []string{"Deployment", "Job", "CronJob"} {
 		t.Run(kind, func(t *testing.T) {
 			manifest := strings.ReplaceAll(safeManifest, "          readinessProbe: {tcpSocket: {port: 8080}}\n", "")

@@ -19,31 +19,31 @@ metadata:
   homepage: https://github.com/danny-avila/LibreChat
 
 requires:
-  - databases/percona-mongodb
-  - databases/cloudnative-pg
-  - ingress/traefik
-  - certificates/cert-manager
+  - {component: databases/percona-mongodb}
+  - {component: databases/cloudnative-pg}
+  - {component: ingress/traefik}
+  - {component: certificates/cert-manager}
 
 services:
   - name: librechat
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: http, port: 3080}]
     resources: {requests: {cpu: 500m, memory: 1Gi}, limits: {cpu: "2", memory: 3Gi}}
     domains: ['{{ .Domain }}']
   - name: rag-api
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: http, port: 8000}]
     resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
   - name: meilisearch
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: http, port: 7700}]
     resources: {requests: {cpu: 200m, memory: 512Mi}, limits: {cpu: "1", memory: 2Gi}}
   - name: rag-db
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: postgresql, port: 5432}]
     resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
   - name: mongodb
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: mongodb, port: 27017}]
     resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
 

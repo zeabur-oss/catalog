@@ -17,8 +17,11 @@ defaults:
   single-node: optional
   multi-node: optional
 
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.34.0-0"
 releases:
   - name: keel
+    type: helm
     namespace: keel
     repo: https://keel-hq.github.io/keel/
     chart: keel
@@ -89,6 +92,7 @@ releases:
   # Port 9300 takes webhooks without credentials. Only Zeabur Builder's
   # namespace may call it, and Keel's own namespace for checks.
   - name: webhook-policy
+    type: inline
     namespace: keel
     manifests: |
       apiVersion: networking.k8s.io/v1
@@ -120,6 +124,7 @@ security:
     tracked workloads), Namespace and Node; reads, updates and deletes Pods,
     ReplicaSets, ReplicationControllers, Deployments, StatefulSets,
     DaemonSets, Jobs and CronJobs in every namespace.
+  podSecurity: restricted
 
 smoke:
   - name: rolls-on-native-webhook

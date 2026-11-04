@@ -7,7 +7,7 @@ Place component files in `components/<capability>/<upstream>.yaml`, with one fil
 
 ## Shared envelope
 
-Components and templates share an envelope of `apiVersion`, `kind`, `metadata`, and `requires`. `kind` distinguishes components from templates. `requires` accepts a capability or `<capability>/<upstream>`.
+Components and templates share an envelope of `apiVersion`, `kind`, `metadata`, and `requires`. `kind` distinguishes components from templates. Each entry of `requires` is `{capability: <capability>}` or `{component: <capability>/<upstream>}`.
 
 ```yaml
 apiVersion: catalog.zeabur.com/v1
@@ -16,7 +16,7 @@ metadata:
   name: Traefik Proxy
   license: MIT                    # SPDX
   homepage: https://traefik.io/traefik/
-requires: [certificates]          # <capability> or <capability>/<upstream>
+requires: [{capability: certificates}]   # or {component: <capability>/<upstream>}
 ```
 
 A component's `metadata` also has a `summary`: what it gives the cluster, in one plain sentence for people choosing components, with its translations in `locales`. A comment at the top of the file says why the catalog recommends the component.
@@ -41,12 +41,14 @@ metadata:
   license: MIT                    # SPDX; OSI-approved, or opt-in only (see below)
   homepage: https://traefik.io/traefik/
 defaults: {single-node: recommended, multi-node: recommended}
-requires: [certificates]          # installed first
-distributions: [k3s]              # optional; distributions to test it on, omitted means all
-replaces: [container-registry/zot] # optional; ids of removed components it took over
+requires: [{capability: certificates}]  # installed first
+distributions: [k3s, rke2, kubesolo]    # distributions it supports and e2e tests it on
+kubeVersion: ">=1.30.0-0"               # Kubernetes versions it supports
+replaces: [{component: container-registry/zot}]  # optional; removed components it took over
 
 releases:                         # installed in order
   - name: traefik
+    type: helm                                  # helm, manifest or inline
     namespace: traefik
     chart: oci://ghcr.io/traefik/helm/traefik   # or repo: https://… plus chart: <name>
     version: 41.7.1                             # exact; Renovate bumps it
@@ -64,11 +66,12 @@ releases:                         # installed in order
           # One node: a second replica gains nothing.
           replicas: 1
   - name: crds
+    type: manifest
     namespace: kube-system
     urls: [https://github.com/…/releases/download/{version}/standard-install.yaml]
     version: v1.6.2
     urlDigests: [sha256:…]                      # one per URL, in order
-  # or: manifests: |  objects applied as written
+  # or type: inline with manifests: |  objects applied as written
 
 inputs: []        # values to ask for or generate; Secrets are created from them
 provides: {...}   # an in-cluster registry other software uses
@@ -76,8 +79,8 @@ resources: {...}  # memory it needs while working, on top of idle
 internalCRDs: []  # CRDs of detection.crds whose objects it writes itself
 networkPolicies: |  # traffic it needs where an installer isolates namespaces
 contributes: []   # values added to another component's release (CrowdSec -> Traefik)
-detection: {...}  # CRDs, API services, Helm charts, workloads
-security: {...}   # RBAC summary, privileged, podSecurity
+detection: {...}  # CRDs, API services, Helm charts, workloads, distribution add-ons
+security: {...}   # RBAC summary, podSecurity
 health: []        # read-only checks an installer runs on a cluster
 smoke: []         # extra e2e checks
 leftovers: []     # what the upstream keeps on uninstall (e.g. CRDs)
@@ -148,9 +151,24 @@ health:
     advice: "A node that joined without Longhorn needs longhorn: true under join in its configuration. Add it, then run zeabur-installer apply on that node."
 ```
 
-`distributions` and `testedOn` are two different lists. `distributions` in the component file names the distributions to test the component on. `testedOn` in `index.json` lists each distribution where that test passed, at the release that `config/kubernetes.yaml` pins, with the platforms it passed on, such as `{"distribution": "k3s", "platforms": ["linux/amd64", "linux/arm64"]}`. An installer reads `testedOn` to warn that a component is untested on a distribution and platform it doesn't list. `catalog index` derives `testedOn` from `measurements/`, so don't write it by hand. It's present on every component and can be empty.
+`distributions` and `testedOn` are two different lists. `distributions` in the component file names the distributions the component supports, and e2e tests it on each of them. `testedOn` in `index.json` lists each distribution where that test passed, at the release that `config/kubernetes.yaml` pins, with the platforms it passed on, such as `{"distribution": "k3s", "platforms": ["linux/amd64", "linux/arm64"]}`. An installer reads `testedOn` to warn that a component is untested on a distribution and platform it doesn't list. `catalog index` derives `testedOn` from `measurements/`, so don't write it by hand. It's present on every component and can be empty.
 
-`replaces` lists the ids of removed components that this one took over, such as `container-registry/zot` on `builds/zeabur-builder`. An installer tells a person who writes an old id in the configuration to write the new one. No current component may have an id that another one replaces, and `catalog validate` checks this. [How installers choose and install components](installers.mdx#replaced-components) gives the rules.
+`kubeVersion` is the range of Kubernetes versions the component supports, in the syntax of a Helm chart's `kubeVersion`. Give the strictest range of its charts, or `">=1.34.0-0"` when they give none. `catalog validate` fails when the range leaves out a Kubernetes version that the catalog tests. An installer doesn't offer the component on a cluster outside the range.
+
+`replaces` lists the removed components that this one took over, such as `{component: container-registry/zot}` on `builds/zeabur-builder`. An installer tells a person who writes an old id in the configuration to write the new one. No current component may have an id that another one replaces, and `catalog validate` checks this. [How installers choose and install components](installers.mdx#replaced-components) gives the rules.
+
+`contributes` adds values to a release of another component. `target` names the component and its release, and `values` holds the values.
+
+```yaml
+contributes:
+  - target: {component: ingress/traefik, release: traefik}
+    values: |
+      ...
+```
+
+`detection.addons` lists the add-ons of a distribution that install the same upstream, such as `{distribution: k3s, name: traefik}` for the Traefik that k3s packages and `{distribution: rke2, name: rke2-traefik}` for RKE2's. The name is the add-on's HelmChart in `kube-system`. A reader ignores an entry of a distribution it doesn't know.
+
+`security.podSecurity` is the Pod Security level that the component's own namespaces need: `restricted`, `baseline` or `privileged`. `catalog render` checks every Pod of the render against it.
 
 `networkPolicies` is for installers that block incoming traffic to each namespace by default. It holds standard NetworkPolicy objects in the component's own namespaces, which such an installer applies before the releases, for the traffic the component needs from elsewhere. Other installers can ignore it. `catalog validate` checks that each object is a NetworkPolicy in one of the component's namespaces.
 

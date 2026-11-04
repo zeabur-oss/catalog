@@ -2,6 +2,7 @@ description: A component unsupported on the profile is left out. When enable nam
 components:
   - id: replicated-storage/longhorn
     defaults: {single-node: unsupported, multi-node: recommended}
+    distributions: [k3s, rke2, kubesolo]
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
       - {distribution: rke2, platforms: [linux/amd64]}

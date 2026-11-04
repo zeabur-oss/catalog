@@ -76,7 +76,7 @@ func requiredSchemas(cat *catalog.Catalog, t *templates.Template, versions []str
 		return "", err
 	}
 	defer os.RemoveAll(dir)
-	order, err := cat.InstallOrder(t.Requires, templateProfile)
+	order, err := cat.InstallOrder(catalog.RefNames(t.Requires), templateProfile)
 	if err != nil {
 		return "", err
 	}

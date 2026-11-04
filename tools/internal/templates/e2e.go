@@ -87,9 +87,9 @@ func E2E(t *catalog.Tester, r *Template, values E2EValues, measure bool) (usage 
 		return nil, err
 	}
 
-	refs := r.Requires
+	refs := catalog.RefNames(r.Requires)
 	if useS3 {
-		refs = append(slices.Clone(refs), S3Component)
+		refs = append(refs, S3Component)
 	}
 	uninstall, err := t.Install(refs)
 	defer func() { err = errors.Join(err, uninstall()) }()
@@ -202,7 +202,7 @@ func Namespace(r *Template) string { return "templates-e2e-" + r.ID }
 func CreateNamespace(r *Template, ns string) error {
 	profile := "restricted"
 	for _, s := range r.Services {
-		if s.SecurityProfile == "baseline" {
+		if s.PodSecurity == "baseline" {
 			profile = "baseline"
 		}
 	}

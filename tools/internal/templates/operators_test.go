@@ -5,17 +5,18 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	templates "github.com/zeabur-oss/catalog/tools/internal/templates"
 )
 
 func TestCNPGCannotBorrowUnrelatedProviderTrust(t *testing.T) {
-	r := &templates.Template{ID: "app", Requires: []string{"ingress/traefik"}}
+	r := &templates.Template{ID: "app", Requires: []catalog.Ref{{Component: "ingress/traefik"}}}
 	r.Security.Risks = []templates.Risk{{Risk: "Operator generated pods and SA", Mitigation: "Pinned catalog review"}}
 	b := safeManifest + "---\napiVersion: postgresql.cnpg.io/v1\nkind: Cluster\nmetadata: {name: database}\nspec:\n  inheritedMetadata: {labels: {templates.zeabur.com/template: app}}\n  imageName: ghcr.io/example/postgres@sha256:" + strings.Repeat("a", 64) + "\n  seccompProfile: {type: RuntimeDefault}\n  resources:\n    requests: {cpu: 10m, memory: 16Mi}\n    limits: {cpu: 100m, memory: 32Mi}\n"
 	if err := templates.Safety(r, []byte(b), "test"); !errors.Is(err, templates.ErrCNPGProvider) {
 		t.Fatalf("CNPG without its exact catalog provider: got %v", err)
 	}
-	r.Requires = []string{"databases/cloudnative-pg"}
+	r.Requires = []catalog.Ref{{Component: "databases/cloudnative-pg"}}
 	if err := templates.Safety(r, []byte(b), "test"); err != nil {
 		t.Fatal(err)
 	}
@@ -25,7 +26,7 @@ func TestCNPGCannotBorrowUnrelatedProviderTrust(t *testing.T) {
 	}
 }
 func TestMiddlewareAdapterOnlyAllowsExplicitIPAllowList(t *testing.T) {
-	r := &templates.Template{ID: "app", Requires: []string{"ingress/traefik"}}
+	r := &templates.Template{ID: "app", Requires: []catalog.Ref{{Component: "ingress/traefik"}}}
 	prefix := safeManifest + "---\napiVersion: traefik.io/v1alpha1\nkind: Middleware\nmetadata: {name: admin}\nspec:\n"
 	if err := templates.Safety(r, []byte(prefix+"  ipAllowList: {sourceRange: [192.0.2.0/24]}\n"), "test"); err != nil {
 		t.Fatal(err)
@@ -53,12 +54,12 @@ spec:
 `
 	for _, tc := range []struct {
 		name      string
-		providers []string
+		providers []catalog.Ref
 		rule      templates.Rule
 	}{
-		{name: "complete", providers: []string{"ingress/traefik", "certificates/cert-manager"}},
-		{name: "missing-certificates", providers: []string{"ingress/traefik"}, rule: templates.ErrClusterIssuerProvider},
-		{name: "missing-ingress", providers: []string{"certificates/cert-manager"}, rule: templates.ErrTraefikProvider},
+		{name: "complete", providers: []catalog.Ref{{Component: "ingress/traefik"}, {Component: "certificates/cert-manager"}}},
+		{name: "missing-certificates", providers: []catalog.Ref{{Component: "ingress/traefik"}}, rule: templates.ErrClusterIssuerProvider},
+		{name: "missing-ingress", providers: []catalog.Ref{{Component: "certificates/cert-manager"}}, rule: templates.ErrTraefikProvider},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			r := &templates.Template{ID: "app", Requires: tc.providers}
@@ -150,7 +151,7 @@ spec:
 		{name: "mariadb-backup-plain", manifest: strings.Replace(mariadb, "tls: {enabled: true}", "tls: {enabled: false}", 1), provider: "databases/mariadb-operator", rule: templates.ErrMariaDBBackupS3},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			r := &templates.Template{ID: "app", Requires: []string{tc.provider}}
+			r := &templates.Template{ID: "app", Requires: []catalog.Ref{{Component: tc.provider}}}
 			r.Security.Risks = []templates.Risk{{Risk: "Operator generated pods", Mitigation: "Pinned catalog review"}}
 			if err := templates.Safety(r, []byte(tc.manifest), "test"); !matches(err, tc.rule) {
 				t.Fatalf("got %v, want %v", err, tc.rule)
