@@ -6,7 +6,7 @@ kind: Template
 metadata:
   name: n8n SQLite
   # renovate: depName=docker.io/n8nio/n8n
-  version: "3.0.0"
+  version: "3.0.1"
   summary: Workflow automation with SQLite and separate code runners.
   locales:
     zh-TW:
