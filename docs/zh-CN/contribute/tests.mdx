@@ -4,7 +4,7 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 source: "cfee11888f66"
 ---
 
-`check` 在每个 pull request 中运行，`smoke` 在 merge queue 中、对即将合并的 commit 运行。`full` 每周运行一次。打发布 tag 前，要确认该 commit 的每周运行已通过。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以用 `catalog e2e -tier check|smoke|full` 运行与 CI 相同的测试。
+`check` 在每个 pull request 中运行，`smoke` 在 merge queue 中、对即将合并的 commit 运行。`full` 每周运行一次。打发布 tag 前，要确认每周运行已通过。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以用 `catalog e2e -tier check|smoke|full` 运行与 CI 相同的测试。
 
 ## 开始前
 
@@ -95,7 +95,7 @@ source: "cfee11888f66"
 
 ## `full`：测试资源用量和清理
 
-`weekly.yml` 会调用 `e2e.yml`，每周六运行 `full`。打发布 tag 前，如果 `weekly.yml` 最后一次运行的不是这个 commit，先在 `main` 上手动运行一次，通过后再打 tag。
+`weekly.yml` 会调用 `e2e.yml`，每周六运行 `full`。打发布 tag 前，确认 `weekly.yml` 在 `main` 上最后一次运行已通过。运行的可以是这个 commit，也可以是更早的 commit，只要之后的 commit 都只更新 `measurements/`，或者是发布 pull request（`CHANGELOG.md`、`flake.nix` 中的版本号、`.changeset/`）。其他情况要先在 `main` 上手动运行一次，通过后再打 tag。
 
 `full` 会在 amd64 和 arm64 上，为每个组件、每种 profile 创建新的 kind 集群。`single-node` 使用单节点，`multi-node` 使用三节点。
 
