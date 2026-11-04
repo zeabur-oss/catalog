@@ -46,57 +46,57 @@ inputs:
     validation: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
   - name: databasePassword
     description: Deploy-time random secret; preserve it across upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: wordpress-secrets, key: database-password}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: databaseRootPassword
     description: Deploy-time random secret; preserve it across upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: wordpress-secrets, key: database-root-password}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: adminPassword
     description: Deploy-time random secret; preserve it across upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: wordpress-secrets, key: admin-password}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: wordpressAuthKey
     description: Deploy-time random secret; preserve it across upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: wordpress-secrets, key: auth-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: wordpressSecureAuthKey
     description: Deploy-time random secret; preserve it across upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: wordpress-secrets, key: secure-auth-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: wordpressLoggedInKey
     description: Deploy-time random secret; preserve it across upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: wordpress-secrets, key: logged-in-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: wordpressNonceKey
     description: Deploy-time random secret; preserve it across upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: wordpress-secrets, key: nonce-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: wordpressAuthSalt
     description: Deploy-time random secret; preserve it across upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: wordpress-secrets, key: auth-salt}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: wordpressSecureAuthSalt
     description: Deploy-time random secret; preserve it across upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: wordpress-secrets, key: secure-auth-salt}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: wordpressLoggedInSalt
     description: Deploy-time random secret; preserve it across upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: wordpress-secrets, key: logged-in-salt}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: wordpressNonceSalt
     description: Deploy-time random secret; preserve it across upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: wordpress-secrets, key: nonce-salt}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 

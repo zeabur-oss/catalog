@@ -45,17 +45,17 @@ inputs:
     validation: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
   - name: ownerPassword
     description: Deploy-time random secret; preserve it across upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: n8n-secrets, key: owner-password}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: encryptionKey
     description: Deploy-time random secret; preserve it across upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: n8n-secrets, key: encryption-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: runnerToken
     description: Deploy-time random secret; preserve it across upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: n8n-secrets, key: runner-token}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 

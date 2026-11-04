@@ -26,7 +26,7 @@ services:
 inputs:
   - name: signingKey
     description: Persistent server signing key; generated at installation.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: app-secrets, key: signing-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 

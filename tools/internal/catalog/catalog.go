@@ -143,13 +143,10 @@ type Input struct {
 	Release     string     `yaml:"release" json:"release,omitempty"`
 	Path        string     `yaml:"path" json:"path,omitempty"`
 	Secret      *SecretRef `yaml:"secret" json:"secret,omitempty"`
-	Generate    string     `yaml:"generate" json:"generate,omitempty"`
-	// GenerateBytes and GenerateEncoding default to 64 and hex.
-	GenerateBytes    int    `yaml:"generateBytes" json:"generateBytes,omitempty"`
-	GenerateEncoding string `yaml:"generateEncoding" json:"generateEncoding,omitempty"`
-	Required         bool   `yaml:"required" json:"required,omitempty"`
-	Default          any    `yaml:"default" json:"default,omitempty"`
-	TestValue        any    `yaml:"testValue" json:"testValue,omitempty"`
+	Generate    *Generate  `yaml:"generate" json:"generate,omitempty"`
+	Required    bool       `yaml:"required" json:"required,omitempty"`
+	Default     any        `yaml:"default" json:"default,omitempty"`
+	TestValue   any        `yaml:"testValue" json:"testValue,omitempty"`
 }
 
 type SecretRef struct {
@@ -365,19 +362,34 @@ func (c *Component) inputRelease(in Input) string {
 	return ""
 }
 
-// random returns a value as an installer generates it for the input.
-func (in Input) random() string {
-	n := in.GenerateBytes
-	if n == 0 {
-		n = 64
-	}
-	b := make([]byte, n)
-	rand.Read(b)
-	if in.GenerateEncoding == "base64url" {
-		return base64.RawURLEncoding.EncodeToString(b)
-	}
-	return hex.EncodeToString(b)
+// Generate is how an installer makes the value of an input it does not ask
+// for. A random value has Bytes and Encoding. A reader does not fill in the
+// value of an input whose Type it does not know.
+type Generate struct {
+	Type     string `yaml:"type" json:"type"`
+	Bytes    int    `yaml:"bytes" json:"bytes,omitempty"`
+	Encoding string `yaml:"encoding" json:"encoding,omitempty"`
 }
+
+// Types of Generate.
+const (
+	GenerateRandom    = "random"
+	GenerateClusterIP = "clusterIP"
+)
+
+// Random returns g.Bytes random bytes in g.Encoding, hex or base64url
+// without padding.
+func (g Generate) Random() string {
+	b := make([]byte, g.Bytes)
+	rand.Read(b)
+	if g.Encoding == "hex" {
+		return hex.EncodeToString(b)
+	}
+	return base64.RawURLEncoding.EncodeToString(b)
+}
+
+// Generates reports whether an installer generates the value of in as t.
+func (in Input) Generates(t string) bool { return in.Generate != nil && in.Generate.Type == t }
 
 // testInputs returns the values CI installs with: testValue, else default.
 func (c *Component) testInputs() map[string]any {

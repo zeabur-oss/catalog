@@ -33,17 +33,17 @@ services:
 inputs:
   - name: initialAdminPassword
     description: Deploy-time random secret; preserve it across upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: newapi-secrets, key: admin-password}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: sessionSecret
     description: Deploy-time random secret; preserve it across upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: newapi-secrets, key: session-secret}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: cryptoSecret
     description: Deploy-time random secret; preserve it across upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: newapi-secrets, key: crypto-secret}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 

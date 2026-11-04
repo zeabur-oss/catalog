@@ -5,7 +5,7 @@ template:
   services: [{name: app, domains: ["{{ .Domain }}"]}]
   inputs:
     - {name: adminEmail, required: true, validation: {pattern: '[^@\s]+@[^@\s]+'}}
-    - {name: password, generate: random, secret: {name: app-secrets, key: password}, validation: {pattern: '[A-Za-z0-9_-]{43}'}}
+    - {name: password, generate: {type: random, bytes: 32, encoding: base64url}, secret: {name: app-secrets, key: password}, validation: {pattern: '[A-Za-z0-9_-]{43}'}}
 manifests: |
   apiVersion: v1
   kind: ConfigMap

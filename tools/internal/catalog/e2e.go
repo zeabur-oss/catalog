@@ -424,8 +424,8 @@ func createSecrets(r *run, c *Component) error {
 			continue
 		}
 		value := fmt.Sprint(inputs[in.Name])
-		if in.Generate == "random" {
-			value = in.random()
+		if in.Generates(GenerateRandom) {
+			value = in.Generate.Random()
 		} else if inputs[in.Name] == nil {
 			continue
 		}

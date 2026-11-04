@@ -71,7 +71,7 @@
         "additionalProperties": false,
         "required": ["name", "description"],
         "properties": {
-          "name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "name": { "type": "string", "pattern": "^[a-z][A-Za-z0-9]*$", "description": "camelCase." },
           "description": { "type": "string" },
           "release": { "type": "string", "description": "Release whose values receive the input; defaults to the first chart release." },
           "path": { "type": "string", "description": "Dotted values path; numbers index lists." },
@@ -86,15 +86,12 @@
               "namespace": { "type": "string" }
             }
           },
-          "generate": { "enum": ["random", "clusterIP"], "description": "Generate the value instead of asking. random: generateBytes random bytes in generateEncoding. clusterIP: a free address in the cluster's Service CIDR, for a Service's fixed ClusterIP." },
-          "generateBytes": { "type": "integer", "minimum": 12, "maximum": 64, "default": 64, "description": "Random bytes to generate." },
-          "generateEncoding": { "enum": ["hex", "base64url"], "default": "hex", "description": "hex, or base64url without padding." },
+          "generate": { "$ref": "#/$defs/generate" },
           "required": { "type": "boolean" },
           "default": {},
           "testValue": { "description": "Value CI installs with." }
         },
-        "oneOf": [{ "required": ["path"] }, { "required": ["secret"] }],
-        "dependentRequired": { "generateBytes": ["generate"], "generateEncoding": ["generate"] }
+        "oneOf": [{ "required": ["path"] }, { "required": ["secret"] }]
       }
     },
     "releases": {
@@ -264,6 +261,21 @@
     }
   },
   "$defs": {
+    "generate": {
+      "type": "object",
+      "description": "How the installer makes the value instead of asking. A reader does not fill in an input whose type it does not know.",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "type": "string", "description": "random: bytes random bytes in encoding. clusterIP: a free address in the cluster's Service CIDR, for a Service's fixed ClusterIP." },
+        "bytes": { "type": "integer", "minimum": 12, "maximum": 64, "description": "Random bytes to generate." },
+        "encoding": { "enum": ["hex", "base64url"], "description": "hex, or base64url without padding." }
+      },
+      "oneOf": [
+        { "properties": { "type": { "const": "random" } }, "required": ["bytes", "encoding"] },
+        { "properties": { "type": { "const": "clusterIP" } }, "not": { "anyOf": [{ "required": ["bytes"] }, { "required": ["encoding"] }] } }
+      ]
+    },
     "quantities": {
       "type": "object",
       "additionalProperties": false,

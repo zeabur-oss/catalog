@@ -34,7 +34,7 @@ inputs:
     description: >-
       Generated password of the Halo super administrator admin; retrieve it
       from Secret halo-secrets, key admin-password.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: halo-secrets, key: admin-password}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 

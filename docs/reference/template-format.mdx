@@ -36,7 +36,7 @@ inputs:
     validation: {pattern: '^s3://[a-z0-9][a-z0-9.-]+/[A-Za-z0-9/_-]+$'}
   # From n8n: the installer generates this value into a Secret.
   # - name: encryptionKey
-  #   generate: random
+  #   generate: {type: random, bytes: 32, encoding: base64url}
   #   secret: {name: n8n-secrets, key: encryption-key}
 
 security: {...}      # summary, risks with mitigations, unauthenticated services

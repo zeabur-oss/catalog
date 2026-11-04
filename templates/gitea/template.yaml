@@ -35,27 +35,27 @@ inputs:
     description: >-
       Password of the administrator gitea_admin, created at the first start.
       Change it in Gitea after you sign in; the Secret is not applied again.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: gitea-secrets, key: admin-password}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: secretKey
     description: Encrypts stored credentials such as two-factor secrets. Keep it for the life of the database.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: gitea-secrets, key: secret-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: internalToken
     description: Authenticates Git hooks to the Gitea web process.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: gitea-secrets, key: internal-token}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: jwtSecret
     description: Signs OAuth2 tokens. Rotating it signs out OAuth2 clients.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: gitea-secrets, key: jwt-secret}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: lfsJwtSecret
     description: Signs Git LFS tokens.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: gitea-secrets, key: lfs-jwt-secret}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 

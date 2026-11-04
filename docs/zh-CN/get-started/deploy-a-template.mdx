@@ -1,7 +1,7 @@
 ---
 title: 用 catalog 命令部署模板
 description: 验证版本签名、准备集群，渲染并应用模板，完成部署。
-source: "acfb4344d60b"
+source: "04bd600e8557"
 ---
 
 验证版本签名后，用 `catalog` 命令渲染并应用一个模板，再运行冒烟测试（smoke check）和你自己的测试，确认部署结果。
@@ -84,9 +84,9 @@ kubectl -n app apply -f plan.yaml
 
 | 字段 | 说明 |
 | --- | --- |
-| `generate` | `random`。 |
-| `generateBytes` | 编码前的随机字节数，范围为 12 到 64，默认为 32。 |
-| `generateEncoding` | `base64url`（默认，不含填充字符）或小写 `hex`。 |
+| `generate.type` | `random`。 |
+| `generate.bytes` | 编码前的随机字节数，范围为 12 到 64，必填。 |
+| `generate.encoding` | `base64url`（不含填充字符）或小写 `hex`，必填。 |
 
 用户提供的输入包含 `required`，不包含自动生成字段。12 个字节以 `base64url` 编码后会得到 16 个字符；16 或 32 个字节以 `hex` 编码后会分别得到 32 或 64 个字符。
 

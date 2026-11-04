@@ -40,14 +40,14 @@ inputs:
     description: >-
       Admin API key without the sk- prefix. The key is sk- followed by this
       value; it is also the password of the admin user in the UI.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: litellm-secrets, key: master-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: saltKey
     description: >-
       Encrypts provider credentials stored in the database. Never change it
       after you add a model.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: litellm-secrets, key: salt-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 

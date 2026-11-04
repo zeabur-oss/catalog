@@ -22,7 +22,7 @@ defaults:
 distributions: [k3s, rke2, kubesolo]
 kubeVersion: ">=1.34.0-0"
 inputs:
-  - name: oauth-client-id
+  - name: oauthClientId
     description: >
       The operator uses the Tailscale OAuth client with this ID. The client
       needs write scope for Services, Devices Core and Auth Keys, and the tag
@@ -31,7 +31,7 @@ inputs:
     secret: {name: operator-oauth, key: client_id, namespace: tailscale}
     required: true
     testValue: catalog-ci
-  - name: oauth-client-secret
+  - name: oauthClientSecret
     description: The operator authenticates with this OAuth client secret.
     secret: {name: operator-oauth, key: client_secret, namespace: tailscale}
     required: true
