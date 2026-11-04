@@ -2,10 +2,14 @@ description: enable installs an optional component by its id.
 components:
   - id: uptime-probes/gatus
     defaults: {single-node: optional, multi-node: optional}
-    testedOn: [k3s, rke2, kubesolo]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
+      - {distribution: rke2, platforms: [linux/amd64]}
+      - {distribution: kubesolo, platforms: [linux/amd64]}
 config:
   profile: single-node
   distribution: kubesolo
+  platform: linux/amd64
   enable: [uptime-probes/gatus]
 want:
   components:

@@ -1,17 +1,26 @@
-description: A default that needs a component not tested on the distribution is left out with a reason.
+description: >
+  A default installs the components it needs, with a warning for each one not
+  tested on the distribution.
 components:
   - id: logs/victoria-logs
     defaults: {single-node: recommended, multi-node: recommended}
-    testedOn: [k3s, rke2]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
+      - {distribution: rke2, platforms: [linux/amd64]}
     installOrder:
       single-node: [observability-operator/victoria-metrics-operator, logs/victoria-logs]
       multi-node: [observability-operator/victoria-metrics-operator, logs/victoria-logs]
   - id: observability-operator/victoria-metrics-operator
     defaults: {single-node: optional, multi-node: optional}
-    testedOn: [k3s]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
 config:
   profile: multi-node
   distribution: rke2
+  platform: linux/amd64
 want:
-  leftOut:
-    logs/victoria-logs: {reason: needs-untested, dependency: observability-operator/victoria-metrics-operator, distribution: rke2}
+  components:
+    - {id: observability-operator/victoria-metrics-operator, why: dependency}
+    - {id: logs/victoria-logs, why: default}
+  warnings:
+    - {kind: untested, component: observability-operator/victoria-metrics-operator, distribution: rke2}

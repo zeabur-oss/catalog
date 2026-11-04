@@ -2,10 +2,14 @@ description: A disable name that is no capability or component id in the catalog
 components:
   - id: ingress/traefik
     defaults: {single-node: recommended, multi-node: recommended}
-    testedOn: [k3s, rke2, kubesolo]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
+      - {distribution: rke2, platforms: [linux/amd64]}
+      - {distribution: kubesolo, platforms: [linux/amd64]}
 config:
   profile: multi-node
   distribution: k3s
+  platform: linux/amd64
   disable: [ingress/nginx]
 want:
   error: {kind: unknown, name: ingress/nginx}

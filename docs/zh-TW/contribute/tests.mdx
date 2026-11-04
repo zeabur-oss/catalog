@@ -1,7 +1,7 @@
 ---
 title: 測試與 CI
 description: 了解各層 CI 的執行時機與檢查內容，並設定範本測試輸入。
-source: "5a3b297a90db"
+source: "f7beab1dec1e"
 ---
 
 L0 在每個 pull request 執行。L1 在合併到 `main` 後執行。L2 每晚（nightly）執行，打發行 tag 前要確認那個 commit 通過了 L2。各層分工檢查，後續層級會補上前一層沒涵蓋的項目。你也能用 `catalog e2e -tier l0|l1|l2` 執行與 CI 相同的測試。
@@ -136,7 +136,27 @@ L2 安裝這些元件後，不會等待它們就緒，就會執行煙霧測試�
 
 L2 會在單節點 amd64 叢集安裝每個範本及其所需元件，再執行煙霧測試。接著，L2 會量測範本 Namespace 內各 Pod 閒置時的記憶體與 CPU 用量，取樣方式與前述相同。
 
-範本量測結果存放在 `measurements/templates/<id>.json`。
+元件的量測結果存放在 `measurements/components/<capability>/<upstream>.json`，範本的存放在 `measurements/templates/<id>.json`。`environments` 裡每個環境各有一筆，由 `distribution`、`profile`、`platform`、`kubernetesVersion` 和 `distributionVersion` 指出是哪個環境。`distribution` 是 `kind`、`k3s`、`rke2` 或 `kubesolo`。`distributionVersion` 是裝在主機上的發行版的版本，kind 沒有這個欄位。`result` 是 `passed` 或 `failed`，讀取端遇到其他值一律當作沒有通過。`versions` 列出元件每個 release 的版本，或範本每個映像檔的 tag 與 digest。
+
+```json
+{
+  "component": "ingress/traefik",
+  "environments": [
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {"os": "linux", "architecture": "arm64"},
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "idle": {"memoryMiB": 22, "cpuMillis": 3},
+      "requests": {"memoryMiB": 50},
+      "versions": [{"release": "traefik", "version": "41.7.1"}],
+      "measuredAt": "2026-11-03"
+    }
+  ]
+}
+```
 
 L2 也會檢查 amd64 上 `single-node` profile 所有預設啟用元件的總用量，確認未超過 [`config/budget.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/budget.yaml) 設定的預算。
 
@@ -152,9 +172,9 @@ L2 也會檢查 amd64 上 `single-node` profile 所有預設啟用元件的總�
 
 接著，測試會用 `single-node` 的設定值，對 `single-node` 支援的每個元件執行 L2。元件的 `distributions` 沒有列出這個發行版時，就不會在上面測試。範本不在這些發行版上測試。
 
-量測結果與 kind 的結果放在一起，識別鍵為 `<profile>-<architecture>-<version>`，例如 `k3s-amd64-v1.36.5+k3s1`。測試失敗時，該環境會改標記為 `failed`。
+量測結果與 kind 的結果放在一起，`profile` 為 `single-node`，`distribution` 是發行版，`distributionVersion` 是它的版本，例如 `v1.36.5+k3s1`。測試失敗時，該環境會改成 `result: failed`。如果叢集一直沒有回應，這筆就沒有 `kubernetesVersion`。
 
-元件在 `config/kubernetes.yaml` 固定的版本上通過測試後，`catalog index` 會把這個發行版列進元件的 `testedOn`。之後只要測試失敗，這個發行版就會移出清單，等下一次通過再列回來。
+元件在 `config/kubernetes.yaml` 固定的版本、某個平台上通過測試後，`catalog index` 會把這個發行版連同該平台列進元件的 `testedOn`。之後只要在這個平台上測試失敗，這個平台就會移出清單，等下一次在這個平台上通過再列回來。
 
 ## 設定範本測試輸入
 

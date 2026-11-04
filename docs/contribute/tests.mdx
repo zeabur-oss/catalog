@@ -135,7 +135,27 @@ L2 installs these components without waiting for readiness, then runs smoke chec
 
 L2 installs each template and its required components in a single-node amd64 cluster, runs smoke checks, then uses the same sampling method to measure idle memory and CPU usage for Pods in the template's Namespace.
 
-Template measurements are stored in `measurements/templates/<id>.json`.
+Component measurements are stored in `measurements/components/<capability>/<upstream>.json`, and template measurements in `measurements/templates/<id>.json`. `environments` has one entry for each environment. `distribution`, `profile`, `platform`, `kubernetesVersion` and `distributionVersion` name the environment. `distribution` is `kind`, `k3s`, `rke2` or `kubesolo`, and `distributionVersion` is the release of a distribution on the host. kind has none. `result` is `passed` or `failed`, and a reader treats any other value as not passed. `versions` lists the version of each release for a component, and the tag and digest of each image for a template.
+
+```json
+{
+  "component": "ingress/traefik",
+  "environments": [
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {"os": "linux", "architecture": "arm64"},
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "idle": {"memoryMiB": 22, "cpuMillis": 3},
+      "requests": {"memoryMiB": 50},
+      "versions": [{"release": "traefik", "version": "41.7.1"}],
+      "measuredAt": "2026-11-03"
+    }
+  ]
+}
+```
 
 L2 also checks the total usage of components enabled by default in the `single-node` profile on amd64 against the budget in [`config/budget.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/budget.yaml).
 
@@ -151,9 +171,9 @@ With `-profile k3s`, `-profile rke2` or `-profile kubesolo`, the tests install t
 
 The tests then run L2 with the `single-node` settings for every component that `single-node` supports. A component whose `distributions` leaves out the distribution isn't tested on it. Templates aren't tested on these distributions.
 
-Measurements are stored alongside the kind results, keyed by `<profile>-<architecture>-<version>`, for example `k3s-amd64-v1.36.5+k3s1`. A failed run marks its environment `failed` instead.
+Measurements are stored alongside the kind results, with `profile: single-node`, the distribution in `distribution` and its release in `distributionVersion`, for example `v1.36.5+k3s1`. A failed run sets `result: failed` on its environment instead. When the cluster never answered, the entry has no `kubernetesVersion`.
 
-Once a component passes at the version that `config/kubernetes.yaml` pins, `catalog index` adds the distribution to the component's `testedOn`. A failed run takes it out again, and the next passing run puts it back.
+Once a component passes on a platform at the release that `config/kubernetes.yaml` pins, `catalog index` lists the distribution with that platform in the component's `testedOn`. A failed run takes the platform out again, and the next passing run on it puts it back.
 
 ## Configure template test inputs
 

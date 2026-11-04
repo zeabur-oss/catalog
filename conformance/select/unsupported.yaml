@@ -2,10 +2,13 @@ description: A component unsupported on the profile is left out. When enable nam
 components:
   - id: replicated-storage/longhorn
     defaults: {single-node: unsupported, multi-node: recommended}
-    testedOn: [k3s, rke2]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
+      - {distribution: rke2, platforms: [linux/amd64]}
 config:
   profile: single-node
   distribution: k3s
+  platform: linux/amd64
   enable: [replicated-storage/longhorn]
 want:
   leftOut:

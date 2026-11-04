@@ -148,7 +148,7 @@ health:
     advice: "A node that joined without Longhorn needs longhorn: true under join in its configuration. Add it, then run zeabur-installer apply on that node."
 ```
 
-`distributions` and `testedOn` are two different lists. `distributions` in the component file names the distributions to test the component on. `testedOn` in `index.json` names the distributions where that test passed, at the versions that `config/kubernetes.yaml` pins. An installer reads `testedOn` to offer the component only where it passed. `catalog index` derives `testedOn` from `measurements/`, so don't write it by hand. It's present on every component and can be empty.
+`distributions` and `testedOn` are two different lists. `distributions` in the component file names the distributions to test the component on. `testedOn` in `index.json` lists each distribution where that test passed, at the release that `config/kubernetes.yaml` pins, with the platforms it passed on, such as `{"distribution": "k3s", "platforms": ["linux/amd64", "linux/arm64"]}`. An installer reads `testedOn` to warn that a component is untested on a distribution and platform it doesn't list. `catalog index` derives `testedOn` from `measurements/`, so don't write it by hand. It's present on every component and can be empty.
 
 `replaces` lists the ids of removed components that this one took over, such as `container-registry/zot` on `builds/zeabur-builder`. An installer tells a person who writes an old id in the configuration to write the new one. No current component may have an id that another one replaces, and `catalog validate` checks this. [How installers choose and install components](installers.mdx#replaced-components) gives the rules.
 

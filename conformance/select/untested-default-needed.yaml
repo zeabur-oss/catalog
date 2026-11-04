@@ -1,23 +1,27 @@
 description: >
-  A default left out as untested is still installed, with a warning, when a
-  component that enable names needs it.
+  A default not tested on the distribution stays a default, with a warning,
+  when a component that enable names needs it.
 components:
   - id: logs/victoria-logs
     defaults: {single-node: optional, multi-node: optional}
-    testedOn: [k3s, rke2]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
+      - {distribution: rke2, platforms: [linux/amd64]}
     installOrder:
       single-node: [observability-operator/victoria-metrics-operator, logs/victoria-logs]
       multi-node: [observability-operator/victoria-metrics-operator, logs/victoria-logs]
   - id: observability-operator/victoria-metrics-operator
     defaults: {single-node: recommended, multi-node: recommended}
-    testedOn: [k3s]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
 config:
   profile: multi-node
   distribution: rke2
+  platform: linux/amd64
   enable: [logs/victoria-logs]
 want:
   components:
-    - {id: observability-operator/victoria-metrics-operator, why: dependency}
+    - {id: observability-operator/victoria-metrics-operator, why: default}
     - {id: logs/victoria-logs, why: enabled}
   warnings:
     - {kind: untested, component: observability-operator/victoria-metrics-operator, distribution: rke2}

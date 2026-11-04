@@ -28,7 +28,7 @@ func supersedes(env, old environment) bool {
 	if old.MeasuredAt != env.MeasuredAt {
 		return old.MeasuredAt > env.MeasuredAt
 	}
-	return old.Failed && !env.Failed
+	return old.Result == resultFailed && env.Result != resultFailed
 }
 
 // mergeMeasurements merges each subdirectory of src into dst. A subdirectory
@@ -74,17 +74,18 @@ func mergeMeasurements(src, dst string) error {
 			}
 			out.Component = cmp.Or(in.Component, out.Component)
 			out.Template = cmp.Or(in.Template, out.Template)
-			for k, env := range in.Environments {
-				if was, ok := before.Environments[k]; ok && reflect.DeepEqual(env, was) {
+			for _, env := range in.Environments {
+				was, ok := before.find(env)
+				if ok && reflect.DeepEqual(env, was) {
 					continue
 				}
-				old, ok := out.Environments[k]
-				fromBefore := ok && reflect.DeepEqual(old, before.Environments[k])
+				old, ok := out.find(env)
+				fromBefore := ok && reflect.DeepEqual(old, was)
 				if !ok || fromBefore || !supersedes(env, old) {
-					out.Environments[k] = env
+					out.put(env)
 				}
 			}
-			return writeJSON(target, out)
+			return writeMeasurementFile(target, out)
 		})
 		if err != nil {
 			return err

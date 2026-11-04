@@ -105,8 +105,8 @@ jobs:
       - name: Keep only this job's measurement
         if: always()
         env:
-          FILE: measurements/${{ matrix.component || format('templates/{0}', matrix.template) }}.json
-        run: find measurements -type f ! -path "$FILE" -delete
+          FILE: measurements/${{ matrix.component && format('components/{0}', matrix.component) || format('templates/{0}', matrix.template) }}.json
+        run: mkdir -p measurements && find measurements -type f ! -path "$FILE" -delete
       - id: name
         if: always()
         env:
