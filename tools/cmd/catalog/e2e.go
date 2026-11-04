@@ -27,14 +27,14 @@ type measurement struct {
 type environment struct {
 	// Failed marks an environment whose last run failed. It replaces the
 	// passing measurement before it, which catalog merge would keep.
-	Failed        bool    `json:"failed,omitempty"`
-	IdleMemoryMiB float64 `json:"idleMemoryMiB"`
-	// RequestMemoryMiB is the memory that the pods request, from the same run,
-	// zero included. Measurements from before it was recorded omit it.
-	RequestMemoryMiB *float64          `json:"requestMemoryMiB,omitempty"`
-	IdleCPUm         float64           `json:"idleCPUm"`
-	Versions         map[string]string `json:"versions,omitempty"`
-	MeasuredAt       string            `json:"measuredAt"`
+	Failed bool `json:"failed,omitempty"`
+	// Idle is what the pods use at rest. Measurements in an older shape have
+	// none, and index.json leaves them out until a run replaces them.
+	Idle *catalog.Amounts `json:"idle,omitempty"`
+	// Requests is what the same pods request, from the same run.
+	Requests   *catalog.Amounts  `json:"requests,omitempty"`
+	Versions   map[string]string `json:"versions,omitempty"`
+	MeasuredAt string            `json:"measuredAt"`
 }
 
 func e2e(fs *flag.FlagSet, r *repo) error {
@@ -119,11 +119,10 @@ func writeMeasurement(c *catalog.Component, key string, res catalog.Result) erro
 		}
 	}
 	m.Environments[key] = environment{
-		IdleMemoryMiB:    math.Round(res.IdleMemoryMiB),
-		RequestMemoryMiB: new(math.Ceil(res.RequestMemoryMiB)),
-		IdleCPUm:         math.Round(res.IdleCPUm),
-		Versions:         versions,
-		MeasuredAt:       time.Now().UTC().Format(time.DateOnly),
+		Idle:       catalog.MeasuredAmounts(res.IdleMemoryMiB, res.IdleCPUm),
+		Requests:   &catalog.Amounts{MemoryMiB: int64(math.Ceil(res.RequestMemoryMiB))},
+		Versions:   versions,
+		MeasuredAt: time.Now().UTC().Format(time.DateOnly),
 	}
 	return writeJSON(measurementPath(c.ID), m)
 }
@@ -159,10 +158,9 @@ func writeTemplateMeasurement(id, key string, usage templates.Usage, images []st
 	m := readMeasurement(path)
 	m.Template = id
 	m.Environments[key] = environment{
-		IdleMemoryMiB: math.Round(usage.IdleMemoryMiB),
-		IdleCPUm:      math.Round(usage.IdleCPUm),
-		Versions:      imageVersions(images),
-		MeasuredAt:    time.Now().UTC().Format(time.DateOnly),
+		Idle:       catalog.MeasuredAmounts(usage.IdleMemoryMiB, usage.IdleCPUm),
+		Versions:   imageVersions(images),
+		MeasuredAt: time.Now().UTC().Format(time.DateOnly),
 	}
 	return writeJSON(path, m)
 }

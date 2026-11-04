@@ -13,7 +13,7 @@ import (
 )
 
 // indexVersion changes only on incompatible changes to index.json.
-const indexVersion = 2
+const indexVersion = 3
 
 type budgetConfig struct {
 	SingleNode struct {
@@ -33,13 +33,18 @@ func index(fs *flag.FlagSet, r *repo) error {
 	}
 	type component struct {
 		*catalog.Component
-		InstallOrder map[string][]string    `json:"installOrder"`
-		TestedOn     []string               `json:"testedOn"`
-		Measured     map[string]environment `json:"measured,omitempty"`
+		Resources    *catalog.IndexResources `json:"resources,omitempty"`
+		InstallOrder map[string][]string     `json:"installOrder"`
+		TestedOn     []string                `json:"testedOn"`
+		Measured     map[string]environment  `json:"measured,omitempty"`
 	}
 	var comps []component
 	for _, c := range cat.Components {
-		ic := component{Component: c, InstallOrder: map[string][]string{}}
+		res, err := c.IndexResources()
+		if err != nil {
+			return err
+		}
+		ic := component{Component: c, Resources: res, InstallOrder: map[string][]string{}}
 		for _, p := range catalog.Profiles {
 			if c.Defaults[p] == "unsupported" {
 				continue
@@ -104,9 +109,9 @@ func testedOn(cfg config, measured map[string]environment) []string {
 	return out
 }
 
-// passed returns the environments that are not marked failed.
+// passed returns the environments that passed with a measurement.
 func passed(envs map[string]environment) map[string]environment {
-	maps.DeleteFunc(envs, func(_ string, e environment) bool { return e.Failed })
+	maps.DeleteFunc(envs, func(_ string, e environment) bool { return e.Failed || e.Idle == nil })
 	return envs
 }
 
@@ -119,7 +124,7 @@ func budget(fs *flag.FlagSet, r *repo) error {
 	if err := catalog.ReadYAML("config/budget.yaml", &cfg); err != nil {
 		return err
 	}
-	var total float64
+	var total int64
 	var errs []error
 	for _, id := range recommended(cat, "single-node") {
 		mib, ok := latest(readMeasurement(measurementPath(id)), "single-node-amd64")
@@ -128,22 +133,22 @@ func budget(fs *flag.FlagSet, r *repo) error {
 			continue
 		}
 		total += mib
-		fmt.Printf("%-48s %5.0f MiB\n", id, mib)
+		fmt.Printf("%-48s %5d MiB\n", id, mib)
 	}
-	fmt.Printf("%-48s %5.0f MiB of %.0f\n", "total", total, cfg.SingleNode.BudgetMiB)
-	if total > cfg.SingleNode.BudgetMiB {
-		errs = append(errs, fmt.Errorf("%.0f MiB exceeds the %.0f MiB budget", total, cfg.SingleNode.BudgetMiB))
+	fmt.Printf("%-48s %5d MiB of %.0f\n", "total", total, cfg.SingleNode.BudgetMiB)
+	if float64(total) > cfg.SingleNode.BudgetMiB {
+		errs = append(errs, fmt.Errorf("%d MiB exceeds the %.0f MiB budget", total, cfg.SingleNode.BudgetMiB))
 	}
 	return errors.Join(errs...)
 }
 
 // latest returns the idle memory of the newest cluster version measured for
 // a prefix ("single-node-amd64" matches "single-node-amd64-v1.36.4").
-func latest(m measurement, prefix string) (float64, bool) {
+func latest(m measurement, prefix string) (int64, bool) {
 	keys := slices.Sorted(maps.Keys(m.Environments))
 	for _, k := range slices.Backward(keys) {
-		if strings.HasPrefix(k, prefix+"-") && !m.Environments[k].Failed {
-			return m.Environments[k].IdleMemoryMiB, true
+		if e := m.Environments[k]; strings.HasPrefix(k, prefix+"-") && !e.Failed && e.Idle != nil {
+			return e.Idle.MemoryMiB, true
 		}
 	}
 	return 0, false

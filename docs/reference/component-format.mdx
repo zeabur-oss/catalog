@@ -107,7 +107,36 @@ provides:
 
 Removing a component also waits for the objects of its `detection.crds` outside its namespaces, except those in `internalCRDs`: CRDs whose objects the component writes itself, such as scan reports. Every entry of `internalCRDs` must be in `detection.crds`.
 
-`resources.workMemoryMiB` is the memory the component uses on top of its idle use while working, such as one build. Its idle use is measured in e2e and published in `index.json`.
+`resources.work` lists each kind of work the component does, such as a build. Each entry has a `name`, unique in the list, and one or more of these, each in Kubernetes quantities of `cpu` and `memory`:
+
+- `requests` and `limits` are the resource requests and limits of each pod doing one unit of the work. Give them when a controller creates those pods and no render shows them, such as a build pod. Copy them from the chart's values, and change them when a chart upgrade changes those values.
+- `use` is what the component uses on top of its idle use while doing one unit of the work. Its idle use is measured in e2e and published in `index.json`.
+
+```yaml
+resources:
+  work:
+    - name: build
+      requests: {cpu: 100m, memory: 256Mi}
+      limits: {cpu: "1", memory: 1Gi}
+      use: {memory: 500Mi}
+```
+
+`catalog index` publishes each entry under `resources.work` in `index.json`, with memory in whole MiB and CPU in whole millicores, both rounded up. A resource that the entry doesn't give is left out:
+
+```json
+"resources": {
+  "work": [
+    {
+      "name": "build",
+      "requests": {"memoryMiB": 256, "cpuMillis": 100},
+      "limits": {"memoryMiB": 1024, "cpuMillis": 1000},
+      "use": {"memoryMiB": 500}
+    }
+  ]
+}
+```
+
+An installer adds `requests.memoryMiB` to the component's measured `requests.memoryMiB`, because the scheduler counts requests. `validate` fails on a resource other than `cpu` and `memory`, or on an amount that is not above zero. Profiles and inputs don't change the result.
 
 `health` lists read-only checks that an installer such as `zeabur-installer doctor` runs on an installed cluster. Each check runs `kubectl wait` once, with the arguments in `wait` and the time limit in `timeout`. Put a `--for` condition in `wait`, and leave out `--timeout`. When a check fails, the installer shows its `advice`, which tells the reader in English what to do. A health check has no manifest and applies nothing. Put checks that create objects in `smoke`, which only e2e runs. e2e runs `health` after install and before `smoke`.
 
