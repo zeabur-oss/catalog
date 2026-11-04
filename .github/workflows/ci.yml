@@ -3,9 +3,11 @@
 # the DCO check. Pull requests and pushes run its fast tier; the merge queue, the nightly run and a
 # manual run take every job.
 # smoke in the merge queue: install and smoke test what changed since the queue's base, what it
-# needs and what installs it, in groups. A merge group that changes no component or template has an
-# empty matrix and skips the job, so require smoke-ok, which fails only when a smoke job failed. The
-# shared CI has no dynamic matrix, so smoke stays here. CONTRIBUTING.md lists what each tier checks.
+# needs and what installs it, in groups. It starts as soon as the matrix is listed and does not wait
+# for check, which the queue requires on its own. A merge group that changes no component or
+# template has an empty matrix and skips the job, so require smoke-ok, which fails only when a smoke
+# job failed. The shared CI has no dynamic matrix, so smoke stays here. CONTRIBUTING.md lists what
+# each tier checks.
 # full is e2e.yml. nightly.yml calls it, and e2e-label.yml calls it for a pull request with the e2e
 # label.
 name: ci
@@ -34,8 +36,11 @@ jobs:
   dco:
     uses: zeabur-oss/.github/.github/workflows/dco.yml@6ab106525ce16169ab0ecfebe4b0248e096797fa # main
 
+  # Lists the smoke groups in the merge queue. On main and the nightly run it only builds the tool, so
+  # setup-go saves the Go module and build caches there, where the merge queue's runs can restore
+  # them. Queue branches do not see each other's caches.
   smoke-matrix:
-    if: github.event_name == 'merge_group'
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-slim
     outputs:
       matrix: ${{ steps.list.outputs.matrix }}
@@ -47,14 +52,22 @@ jobs:
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
+          cache-dependency-path: go.sum
       - id: list
         env:
+          EVENT: ${{ github.event_name }}
           BASE: ${{ github.event.merge_group.base_sha }}
-        run: echo "matrix=$(go run ./tools/cmd/catalog list -tier smoke -since "$BASE")" >> "$GITHUB_OUTPUT"
+        run: |
+          if [[ "$EVENT" == merge_group ]]; then
+            echo "matrix=$(go run ./tools/cmd/catalog list -tier smoke -since "$BASE")" >> "$GITHUB_OUTPUT"
+          else
+            go build -trimpath -o /dev/null ./tools/cmd/catalog
+            echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
+          fi
 
   smoke:
-    needs: [check, smoke-matrix]
-    if: fromJSON(needs.smoke-matrix.outputs.matrix).include[0]
+    needs: [smoke-matrix]
+    if: github.event_name == 'merge_group' && fromJSON(needs.smoke-matrix.outputs.matrix).include[0]
     runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
@@ -77,7 +90,7 @@ jobs:
           nix develop -c go run ./tools/cmd/catalog e2e -tier smoke $IDS
 
   # The check to require. A smoke job that is skipped, because the run is not the merge queue's,
-  # the matrix is empty or check failed, counts as passed here.
+  # or the matrix is empty, counts as passed here.
   smoke-ok:
     if: always()
     needs: [smoke-matrix, smoke]

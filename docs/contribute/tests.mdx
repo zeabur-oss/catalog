@@ -90,7 +90,7 @@ A queued pull request tests what differs from the queue's base commit. A pull re
 
 Tests that share dependencies share a cluster. Each dependency is installed only once per cluster. After a component passes its smoke check, the test uninstalls it unless a later test in the same cluster still needs it.
 
-If a change affects `config/`, `tools/`, the flake, or workflows, `smoke` tests everything.
+If a change affects `config/kubernetes.yaml`, `smoke` tests everything. If it affects another file in `config/`, or a workflow, `smoke` tests a fixed set instead: the components recommended on single-node and the one template that installs the most of them. A change to `tools/`, `go.mod`, `go.sum` or the flake tests the same set only when it changes the test tool's binary, or the `kubectl`, `kind` or `helm` of the dev shell. Otherwise it adds nothing. The nightly run still tests everything.
 
 ## `full`: Test resource usage and cleanup
 

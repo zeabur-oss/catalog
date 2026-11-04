@@ -113,7 +113,11 @@ func list(fs *flag.FlagSet, r *repo) error {
 	if err != nil {
 		return err
 	}
-	selected, err := selector(r, *since)
+	pick := selector
+	if *tier == "smoke" {
+		pick = smokeSelector
+	}
+	selected, err := pick(r, *since)
 	if err != nil {
 		return err
 	}
@@ -194,13 +198,20 @@ var shared = []string{"config/", "tools/", "go.", "flake.", ".github/workflows/"
 // changed returns the IDs of the components and templates whose files
 // changed, or nil when a shared file changed.
 func changed(r *repo, files []string) map[string]bool {
-	ids := map[string]bool{}
 	for _, f := range files {
 		for _, s := range shared {
 			if strings.HasPrefix(f, s) {
 				return nil
 			}
 		}
+	}
+	return ownIDs(r, files)
+}
+
+// ownIDs returns the IDs of the components and templates whose files are in files.
+func ownIDs(r *repo, files []string) map[string]bool {
+	ids := map[string]bool{}
+	for _, f := range files {
 		for _, c := range r.cat.Components {
 			if c.Path == f {
 				ids[c.ID] = true
