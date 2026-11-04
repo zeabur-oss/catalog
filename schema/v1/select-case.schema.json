@@ -28,7 +28,7 @@
             }
           },
           "distributions": { "$ref": "#/$defs/distributions", "description": "Omitted means any distribution." },
-          "testedOn": { "$ref": "#/$defs/distributions" },
+          "testedOn": { "$ref": "#/$defs/testedOn" },
           "installOrder": {
             "type": "object",
             "description": "Per profile. A profile left out means the component alone.",
@@ -45,10 +45,11 @@
     "config": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["profile", "distribution"],
+      "required": ["profile", "distribution", "platform"],
       "properties": {
         "profile": { "enum": ["single-node", "multi-node"] },
         "distribution": { "enum": ["k3s", "rke2", "kubesolo"] },
+        "platform": { "$ref": "#/$defs/platform", "description": "The platform of the cluster's nodes." },
         "add": { "$ref": "#/$defs/names", "description": "What the installer adds to the defaults." },
         "enable": { "$ref": "#/$defs/names" },
         "disable": { "$ref": "#/$defs/names" }
@@ -89,18 +90,6 @@
                 "additionalProperties": false,
                 "required": ["reason", "profile"],
                 "properties": { "reason": { "const": "unsupported" }, "profile": { "enum": ["single-node", "multi-node"] } }
-              },
-              {
-                "type": "object",
-                "additionalProperties": false,
-                "required": ["reason", "distribution"],
-                "properties": { "reason": { "const": "untested" }, "distribution": { "type": "string" } }
-              },
-              {
-                "type": "object",
-                "additionalProperties": false,
-                "required": ["reason", "dependency", "distribution"],
-                "properties": { "reason": { "const": "needs-untested" }, "dependency": { "$ref": "#/$defs/id" }, "distribution": { "type": "string" } }
               }
             ]
           }
@@ -155,6 +144,20 @@
     "id": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+$" },
     "ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
     "names": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z0-9-]+(/[a-z0-9-]+)?$" } },
-    "distributions": { "type": "array", "uniqueItems": true, "items": { "enum": ["k3s", "rke2", "kubesolo"] } }
+    "distributions": { "type": "array", "uniqueItems": true, "items": { "enum": ["k3s", "rke2", "kubesolo"] } },
+    "platform": { "type": "string", "pattern": "^[a-z0-9]+/[a-z0-9]+$" },
+    "testedOn": {
+      "type": "array",
+      "description": "Each distribution where the test passed, with the platforms it passed on.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["distribution", "platforms"],
+        "properties": {
+          "distribution": { "enum": ["k3s", "rke2", "kubesolo"] },
+          "platforms": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/platform" } }
+        }
+      }
+    }
   }
 }

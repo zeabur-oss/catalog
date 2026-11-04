@@ -5,31 +5,47 @@ description: >
 components:
   - id: builds/zeabur-builder
     defaults: {single-node: optional, multi-node: optional}
-    testedOn: [k3s, rke2, kubesolo]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
+      - {distribution: rke2, platforms: [linux/amd64]}
+      - {distribution: kubesolo, platforms: [linux/amd64]}
     installOrder:
       single-node: [certificates/cert-manager, builds/zeabur-builder]
       multi-node: [certificates/cert-manager, builds/zeabur-builder]
   - id: certificates/cert-manager
     defaults: {single-node: recommended, multi-node: recommended}
-    testedOn: [k3s, rke2, kubesolo]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
+      - {distribution: rke2, platforms: [linux/amd64]}
+      - {distribution: kubesolo, platforms: [linux/amd64]}
   - id: ingress/traefik
     defaults: {single-node: recommended, multi-node: recommended}
-    testedOn: [k3s, rke2, kubesolo]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
+      - {distribution: rke2, platforms: [linux/amd64]}
+      - {distribution: kubesolo, platforms: [linux/amd64]}
     installOrder:
       single-node: [certificates/cert-manager, ingress/traefik]
       multi-node: [certificates/cert-manager, ingress/traefik]
   - id: logs/victoria-logs
     defaults: {single-node: recommended, multi-node: recommended}
-    testedOn: [k3s, rke2, kubesolo]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
+      - {distribution: rke2, platforms: [linux/amd64]}
+      - {distribution: kubesolo, platforms: [linux/amd64]}
     installOrder:
       single-node: [observability-operator/victoria-metrics-operator, logs/victoria-logs]
       multi-node: [observability-operator/victoria-metrics-operator, logs/victoria-logs]
   - id: observability-operator/victoria-metrics-operator
     defaults: {single-node: optional, multi-node: optional}
-    testedOn: [k3s, rke2, kubesolo]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
+      - {distribution: rke2, platforms: [linux/amd64]}
+      - {distribution: kubesolo, platforms: [linux/amd64]}
 config:
   profile: multi-node
   distribution: rke2
+  platform: linux/amd64
   enable: [builds/zeabur-builder]
 want:
   components:

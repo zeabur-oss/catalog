@@ -1,0 +1,22 @@
+description: >
+  testedOn lists the platforms where a distribution passed. A default whose
+  test passed on k3s for amd64 only is installed on k3s for arm64 with a warning.
+components:
+  - id: ingress/traefik
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64, linux/arm64]}
+  - id: logs/victoria-logs
+    defaults: {single-node: recommended, multi-node: recommended}
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
+config:
+  profile: single-node
+  distribution: k3s
+  platform: linux/arm64
+want:
+  components:
+    - {id: ingress/traefik, why: default}
+    - {id: logs/victoria-logs, why: default}
+  warnings:
+    - {kind: untested, component: logs/victoria-logs, distribution: k3s}

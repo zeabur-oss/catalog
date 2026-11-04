@@ -10,13 +10,14 @@ An installer reads `index.json` from a [release](releases.mdx) and decides which
 - `index.json` of one catalog release.
 - The profile, `single-node` or `multi-node`.
 - The distribution, `k3s`, `rke2` or `kubesolo`.
+- The platform of the cluster's nodes, such as `linux/amd64`.
 - The `enable` and `disable` lists that the person writes. Each item is a component id, such as `logs/victoria-logs`, or a capability, such as `logs`.
 
 ## Names
 
 A component id names that component. A capability names one of its components that isn't `unsupported` on the profile. The installer sorts those components and takes the first:
 
-1. Components whose `testedOn` lists the distribution come first.
+1. Components whose `testedOn` lists the distribution with the platform come first.
 2. Then components `recommended` on the profile.
 3. Then id order.
 
@@ -35,17 +36,18 @@ The installer takes these steps in order.
    | --- | --- | --- |
    | `distributions` is present and doesn't list the distribution | `distributions` | Always. An enabled component also gets a `left-out` warning |
    | `defaults` is `unsupported` on the profile | `unsupported` | Always. An enabled component also gets a `left-out` warning |
-   | `testedOn` doesn't list the distribution | `untested` | Defaults only. An enabled component is installed with an `untested` warning |
+
+   A chosen component that `testedOn` doesn't list with the distribution and the platform stays chosen, with an `untested` warning. This covers a component never tested there and one whose latest run there failed.
 5. **Order.** Go through the chosen components in id order. For each one, take its `installOrder` for the profile, which lists its dependencies and then the component. Add each id that isn't in the result yet. A component in the result that wasn't chosen is there as a dependency.
 
-   A component in `installOrder` may be disabled, left out or untested. What happens depends on what needs it:
+   A component in `installOrder` may be disabled, left out or untested:
 
-   | The needed component | A default needs it | An enabled component needs it |
-   | --- | --- | --- |
-   | Is disabled, or left out for `distributions` or `unsupported` | Error `needs-disabled` | Error `needs-disabled` |
-   | Has a `testedOn` without the distribution | The default is left out too, with the code `needs-untested` and the needed component's id | The needed component is installed, with an `untested` warning |
+   | The needed component | Result |
+   | --- | --- |
+   | Is disabled, or left out for `distributions` or `unsupported` | Error `needs-disabled` |
+   | Has a `testedOn` without the distribution and the platform | The needed component is installed, with an `untested` warning |
 
-   For example, say VictoriaLogs needs the VictoriaMetrics operator, which is tested only on k3s. When VictoriaLogs is enabled on rke2, the installer installs the operator too and warns that the operator is untested there. When VictoriaLogs is only a default, neither is installed.
+   For example, say VictoriaLogs needs the VictoriaMetrics operator, which is tested only on k3s. On rke2, the installer installs the operator with VictoriaLogs and warns that the operator is untested there, whether VictoriaLogs is a default or enabled.
 
 The result has the components in install order, each with why it's installed (`default`, `enabled` or `dependency`), the components left out with their reasons and the warnings. Because each `installOrder` already places a component after its dependencies, the result does too. It doesn't depend on the order of `enable` or `disable`.
 
@@ -84,25 +86,32 @@ An installer may use its own time limit in place of `timeout`. For example, `zea
 `conformance/select/` has one case for each rule above. The directory is in the repository and in `bundle.tar.gz`, so an installer that pins a catalog commit or release reads the cases of that version. [`schema/v1/select-case.schema.json`](https://github.com/zeabur-oss/catalog/blob/main/schema/v1/select-case.schema.json) defines the format.
 
 ```yaml
-description: A default not tested on the distribution is left out with a reason.
+description: A default not tested on the distribution is installed with a warning.
 components:            # index.json components, with only the fields selection reads
   - id: ingress/traefik
     defaults: {single-node: recommended, multi-node: recommended}
-    testedOn: [k3s, rke2, kubesolo]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
+      - {distribution: rke2, platforms: [linux/amd64]}
+      - {distribution: kubesolo, platforms: [linux/amd64]}
   - id: logs/victoria-logs
     defaults: {single-node: recommended, multi-node: recommended}
-    testedOn: [k3s, kubesolo]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
+      - {distribution: kubesolo, platforms: [linux/amd64]}
 config:
   profile: multi-node
   distribution: rke2
+  platform: linux/amd64
   # add: what the installer adds to the defaults
   # enable, disable: the person's lists
 want:
   components:          # in install order
     - {id: ingress/traefik, why: default}
-  leftOut:
-    logs/victoria-logs: {reason: untested, distribution: rke2}
-  # warnings: [{kind: untested, component: …, distribution: …}], in any order
+    - {id: logs/victoria-logs, why: default}
+  warnings:            # in any order
+    - {kind: untested, component: logs/victoria-logs, distribution: rke2}
+  # leftOut: {<id>: {reason: …, …}}
   # error: {kind: unknown, name: …}, in place of the rest
 ```
 

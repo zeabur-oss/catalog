@@ -5,10 +5,13 @@ components:
   - id: node-updates/system-upgrade-controller
     defaults: {single-node: optional, multi-node: optional}
     distributions: [k3s, rke2]
-    testedOn: [k3s, rke2]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
+      - {distribution: rke2, platforms: [linux/amd64]}
 config:
   profile: single-node
   distribution: kubesolo
+  platform: linux/amd64
   enable: [node-updates/system-upgrade-controller]
 want:
   leftOut:
