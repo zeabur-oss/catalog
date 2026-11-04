@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/rand"
 	"crypto/sha256"
+	_ "embed"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -141,6 +142,34 @@ rm -rf /var/lib/kubesolo /var/lib/cni /etc/cni/net.d /run/flannel
 true
 `
 
+// containerdProfile is containerd's default AppArmor profile, which K3s, RKE2
+// and KubeSolo (whose embedded containerd 2.2 uses the same name, and skips
+// loading when it is already loaded) apply to containers.
+//
+//go:embed cri-containerd.apparmor.d
+var containerdProfile []byte
+
+const (
+	containerdProfilePath = "/etc/apparmor.d/cri-containerd.apparmor.d"
+	restrictUnconfined    = "/proc/sys/kernel/apparmor_restrict_unprivileged_unconfined"
+)
+
+// loadContainerdProfile loads containerdProfile before the distribution
+// starts, when the kernel stacks unconfined containers under the profile
+// (restrictUnconfined is 1) and containerd's own would deny their signals.
+func loadContainerdProfile() error {
+	if b, err := os.ReadFile(restrictUnconfined); err != nil || strings.TrimSpace(string(b)) != "1" {
+		return nil
+	}
+	if _, err := catalog.Run(containerdProfile, "sudo", "tee", containerdProfilePath); err != nil {
+		return fmt.Errorf("write %s: %w", containerdProfilePath, err)
+	}
+	if _, err := catalog.Run(nil, "sudo", "apparmor_parser", "-r", containerdProfilePath); err != nil {
+		return fmt.Errorf("load %s: %w", containerdProfilePath, err)
+	}
+	return nil
+}
+
 // resetHost removes the distribution of host profile p and what it left on
 // the host. It is safe on a host without p, so a run starts from it too.
 func resetHost(p string) {
@@ -156,6 +185,7 @@ func resetHost(p string) {
 		catalog.Run(nil, "sudo", "systemctl", "stop", "kubesolo")
 		catalog.Run(nil, "sudo", "systemctl", "reset-failed", "kubesolo")
 	}
+	catalog.Run(nil, "sudo", "sh", "-c", "[ ! -e "+containerdProfilePath+" ] || apparmor_parser -R "+containerdProfilePath+"; rm -f "+containerdProfilePath)
 	if _, err := catalog.Run(nil, "sudo", "sh", "-c", hostCleanup); err != nil {
 		slog.Warn("host cleanup", "profile", p, "err", err)
 	}
@@ -239,6 +269,10 @@ func createHost(cfg config, p string, needs []*catalog.Component) (*cluster, err
 		return nil, fmt.Errorf("the FORWARD policy of this host is DROP, as Docker sets it, so pods cannot reach the outside; remove Docker and its rules as .github/workflows/e2e.yml does")
 	}
 	resetHost(p)
+	if err := loadContainerdProfile(); err != nil {
+		os.RemoveAll(dir)
+		return nil, err
+	}
 	switch p {
 	case "k3s":
 		err = c.startK3s(cfg.K3s)

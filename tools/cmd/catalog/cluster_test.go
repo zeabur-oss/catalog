@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
@@ -73,5 +74,17 @@ func TestHostCleanupIsValidShell(t *testing.T) {
 	}
 	if out, err := exec.Command(sh, "-n", "-c", hostCleanup).CombinedOutput(); err != nil {
 		t.Fatalf("sh -n: %v: %s", err, out)
+	}
+}
+
+func TestContainerdProfileAllowsStackedPeer(t *testing.T) {
+	for _, rule := range []string{
+		"profile cri-containerd.apparmor.d ",
+		"signal (send,receive) peer=cri-containerd.apparmor.d//&unconfined,",
+		"ptrace (trace,tracedby,read,readby) peer=cri-containerd.apparmor.d//&unconfined,",
+	} {
+		if !strings.Contains(string(containerdProfile), rule) {
+			t.Errorf("profile lacks %q", rule)
+		}
 	}
 }
