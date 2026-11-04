@@ -2,6 +2,54 @@
 
 All notable changes to this catalog are documented in this file; each section comes from the change files in `.changeset/` (CONTRIBUTING.md, "Releases").
 
+## 0.3.0 (2026-11-04)
+
+### Breaking Changes
+
+#### Components no longer have `replaces`
+
+`builds/zeabur-builder` no longer lists `container-registry/zot`, `index.json` and `schema/v1/component.schema.json` no longer have `replaces`, and `conformance/select/` no longer has the `replaced` error. An installer reports `container-registry/zot` in `enable` or `disable` as unknown. An installer no longer knows that Zeabur Builder's zot is the old component, so on a server that still has `container-registry/zot`, remove it before you install Builder. With zeabur-installer, run `kubectl -n kube-system delete helmchart zot`, wait until `kubectl -n zot get pods` lists none, then `kubectl delete namespace zot`. Builds push their images again.
+
+### Features
+
+#### References, release types and Pod Security are explicit fields
+
+Components and templates name what they need with objects: `requires` entries are `{capability}` or `{component}`, and a contribution's `target` is `{component, release}`. Every release has a `type` (`helm`, `manifest` or `inline`). `security.podSecurity` replaces `security.privileged`, and template services use `podSecurity` in place of `securityProfile`. Every component lists its `distributions` and a `kubeVersion` range, and `detection.addons` replaces `detection.k3sAddons` with an entry for each distribution, such as `rke2-traefik` for RKE2. Distributions that e2e does not test (k0s, MicroK8s, kubeadm) are no longer accepted, and Longhorn no longer lists them.
+
+#### The index names its release, and locales take any language
+
+`index.json` has `catalog` with the `version` of the release that built it. The keys of every `locales` map are BCP 47 tags, and `config/locales.yaml` lists the languages each map must have, now `zh-TW` and `zh-CN`. The release docs give the rule for each value a reader doesn't know, such as an unknown release `type` or `generate.type`.
+
+#### Generated inputs state their length and encoding
+
+`generate` on a component or template input is an object: `{type: random, bytes, encoding}` or `{type: clusterIP}`. `bytes` and `encoding` are required, so components and templates no longer have different hidden defaults (64 hex and 32 base64url). `generateBytes` and `generateEncoding` are removed. Input names are camelCase on components too, such as `clusterIp` on Zeabur Builder and `s3Url` on Velero.
+
+#### Measurements name each environment by its fields
+
+`measured` in `index.json` and `environments` in each measurement file are lists. Each entry names its environment with `distribution`, `profile`, `platform` (`os` and `architecture`), `kubernetesVersion` and, for a distribution on the host, `distributionVersion`. A measurement file gives each run a `result`, `passed` or `failed`, and a reader treats any other value as not passed. `versions` lists `{release, version}` for a component and `{image, version, digest}` for a template. `testedOn` lists `{distribution, platforms}`, with each platform where the test of the pinned release passed, so a failure on arm64 no longer hides a pass on amd64. Component measurements move to `measurements/components/<capability>/<upstream>.json`. The files in the old layout are removed, and the next weekly run measures every component again. An untested component is no longer left out: a default that `testedOn` doesn't list for the distribution and platform is installed with an `untested` warning, as an enabled one is, and the `untested` reason and the `needs-untested` error are removed.
+
+#### The index publishes each component's memory requests, measured in the full tier
+
+`measured.<env>.requests.memoryMiB` is the sum of the memory requests of the pods a component runs, read from the cluster after the full tier settles. Jobs and finished pods are left out.
+
+#### System Upgrade Controller is no longer installed by default
+
+`node-updates/system-upgrade-controller` is now optional on both profiles. Nothing installs a Plan for it, and zeabur-installer upgrades k3s and RKE2 itself: `apply` puts back the version it pins on a node that a Plan upgraded. Install it for Plans that leave the Kubernetes version alone, such as OS package upgrades.
+
+#### Resources are amounts of each resource, and the index moves to version 3
+
+`resources.work` on a component lists each kind of work it does. An entry gives `requests`, `limits` and `use` in Kubernetes quantities of `cpu` and `memory`, such as `use: {memory: 500Mi}`, and `use` replaces `resources.workMemoryMiB`. `index.json` publishes each as an object with `memoryMiB` and `cpuMillis`, so a resource added later is one more field in that object. `measured.<env>` moves to the same shape: `idle` replaces `idleMemoryMiB` and `idleCPUm`, and `requests` replaces `requestMemoryMiB`. An environment measured in the old format is left out of `index.json` until the next weekly run measures it again. `builds/zeabur-builder` publishes the requests and limits of a build pod, copied from `buildkitd.resources` of its chart. The controller creates that pod, and no render shows it. An installer adds the build pod's `requests.memoryMiB` to the measured `requests.memoryMiB` when it counts the memory a team needs. Zeabur Builder moves to chart 0.1.2-beta.1, which sets that value.
+
+### Fixes
+
+#### Single-node memory requests follow what the default components use
+
+Most default components ask for less memory on one node, such as Zeabur Builder's controller, metrics-server, CloudNativePG and the VictoriaMetrics operator's config reloaders. VictoriaMetrics, vmagent, vmalert, kube-state-metrics, cert-manager, the VictoriaMetrics operator and zot ask for more, because they used more than they asked for with 35 pods running.
+
+#### VictoriaLogs uses less memory and keeps the audit log
+
+The log store limits its caches to 128 MiB and runs two searches at a time, and the collector keeps at most 512 MiB of lines for a log store that is down. On a single node VictoriaLogs works with 64 MiB over its idle use instead of 350 MiB, and its memory limits fall to 384 MiB and 128 MiB. The collector leaves out the logs of kube-system and observability, which only add noise to the 8 GiB the logs share, and now also keeps kube-apiserver's audit log as its own stream, so you can search who did what.
+
 ## 0.2.1-beta.0 (2026-11-03)
 
 ### Features
