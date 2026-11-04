@@ -71,20 +71,21 @@ func newTester(cat *catalog.Catalog, profile string) (*catalog.Tester, error) {
 	var cfg struct {
 		Overrides    map[string]map[string]string            `yaml:"overrides"`
 		Replacements map[string]map[string]map[string]string `yaml:"replacements"`
+		SkipSmoke    map[string]map[string]string            `yaml:"skipSmoke"`
 		Unready      []string                                `yaml:"unready"`
 	}
 	if err := catalog.ReadYAML("config/e2e.yaml", &cfg); err != nil {
 		return nil, err
 	}
 	t := &catalog.Tester{Catalog: cat, Profile: profile, Overrides: cfg.Overrides,
-		Replacements: cfg.Replacements, Unready: map[string]bool{}}
+		Replacements: cfg.Replacements, SkipSmoke: cfg.SkipSmoke, Unready: map[string]bool{}}
 	for _, id := range cfg.Unready {
 		if _, ok := cat.Get(id); !ok {
 			return nil, fmt.Errorf("config/e2e.yaml: unready: unknown component %q", id)
 		}
 		t.Unready[id] = true
 	}
-	return t, nil
+	return t, t.CheckSkipSmoke()
 }
 
 func readPrevious(path string) (map[string]*catalog.Component, error) {

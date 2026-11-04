@@ -93,3 +93,20 @@ esac
 		}
 	}
 }
+
+func TestSkipSmokeNamesExistingChecks(t *testing.T) {
+	c := &Component{ID: "a/b", Smoke: []Smoke{{Name: "ok"}}}
+	cat := &Catalog{Components: []*Component{c}}
+	tt := &Tester{Catalog: cat, SkipSmoke: map[string]map[string]string{"a/b": {"ok": "why"}}}
+	if err := tt.CheckSkipSmoke(); err != nil {
+		t.Errorf("existing check: %v", err)
+	}
+	tt.SkipSmoke["a/b"]["gone"] = "why"
+	if err := tt.CheckSkipSmoke(); err == nil {
+		t.Error("unknown check passed")
+	}
+	tt.SkipSmoke = map[string]map[string]string{"x/y": {"ok": "why"}}
+	if err := tt.CheckSkipSmoke(); err == nil {
+		t.Error("unknown component passed")
+	}
+}

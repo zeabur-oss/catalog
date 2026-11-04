@@ -25,7 +25,9 @@ type Tester struct {
 	Unready   map[string]bool              // components that cannot become ready without credentials
 	// Test-only text replacements in manifests, per component and release.
 	Replacements map[string]map[string]map[string]string
-	Previous     map[string]*Component // last release's components, for upgrade tests
+	// SkipSmoke maps a component and a smoke check to the reason e2e skips it.
+	SkipSmoke map[string]map[string]string
+	Previous  map[string]*Component // last release's components, for upgrade tests
 	// Timings collects the phases of every Test, Quick and Install call.
 	Timings Timings
 	// shared is set by Share: Quick and Install keep components installed for later calls.
@@ -494,6 +496,23 @@ func waitReady(manifest []byte, defaultNS string) error {
 	return nil
 }
 
+// CheckSkipSmoke fails when SkipSmoke names a component or a smoke check that
+// does not exist, so a skip cannot go stale unnoticed.
+func (t *Tester) CheckSkipSmoke() error {
+	for id, checks := range t.SkipSmoke {
+		c, ok := t.Catalog.Get(id)
+		if !ok {
+			return fmt.Errorf("skipSmoke: unknown component %q", id)
+		}
+		for name := range checks {
+			if !slices.ContainsFunc(c.Smoke, func(s Smoke) bool { return s.Name == name }) {
+				return fmt.Errorf("skipSmoke: %s has no smoke check %q", id, name)
+			}
+		}
+	}
+	return nil
+}
+
 // smoke runs the health checks of c, then its smoke checks.
 func (t *Tester) smoke(c *Component) error {
 	if len(c.Health) == 0 && len(c.Smoke) == 0 {
@@ -524,6 +543,10 @@ func (t *Tester) smoke(c *Component) error {
 	}
 	defer kubectl("delete", "namespace", smokeNamespace, "--wait", "--timeout=5m")
 	for _, s := range c.Smoke {
+		if reason, ok := t.SkipSmoke[c.ID][s.Name]; ok {
+			slog.Warn("smoke skipped", "component", c.ID, "check", s.Name, "reason", reason)
+			continue
+		}
 		slog.Info("smoke", "component", c.ID, "check", s.Name)
 		if s.Manifest != "" {
 			if err := retry(2*time.Minute, func() error {
