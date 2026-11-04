@@ -65,16 +65,7 @@ source: "02e9c1a643fc"
 | `kind` | 情況 | 要告訴使用者 |
 | --- | --- | --- |
 | `unknown` | 名稱對不到任何 capability 或元件 ID | 這個名稱 |
-| `replaced` | `enable` 或 `disable` 寫的 ID 已由其他元件接手，見下一節 | 要改寫的新 ID |
 | `needs-disabled` | 已選的元件需要的元件已停用，或因為 `distributions`、`unsupported` 排除 | 兩個元件的名稱 |
-
-## 接手舊元件
-
-元件接手了 catalog 已移除的元件時，用 `replaces` 列出舊 ID。例如 zot 現在跟著 Zeabur Builder 一起安裝，所以 `builds/zeabur-builder` 寫了 `replaces: [{component: container-registry/zot}]`。現有元件的 ID 不會出現在其他元件的 `replaces` 裡。
-
-安裝工具不會自動幫使用者換掉元件。`enable` 或 `disable` 寫了舊 ID 會出錯，錯誤訊息會提供新 ID，讓使用者自己改設定檔。
-
-`replaces` 不是必填。不讀這個欄位的安裝工具遇到舊 ID 時，會回報找不到。
 
 ## 安裝與檢查
 

@@ -58,16 +58,7 @@ The installer stops and installs nothing on these errors. The `kind` names the e
 | `kind` | When | Tell the person |
 | --- | --- | --- |
 | `unknown` | A name matches no capability or component id | The name |
-| `replaced` | `enable` or `disable` names an id that a component [replaces](#replaced-components) | The new id to write instead |
 | `needs-disabled` | A chosen component needs one that is disabled, or left out for `distributions` or `unsupported` | Both components |
-
-## Replaced components
-
-When a component takes over from one the catalog removed, its `replaces` lists the old id. For example, `builds/zeabur-builder` has `replaces: [{component: container-registry/zot}]`, because zot now comes with Zeabur Builder. No component has an id that another one replaces.
-
-The installer doesn't swap components for the person. `enable` or `disable` with the old id is an error that names the new id, so the person changes the configuration.
-
-`replaces` is optional. An installer that doesn't read it reports an old id as unknown.
 
 ## Install and check
 

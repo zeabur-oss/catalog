@@ -47,7 +47,6 @@ defaults: {single-node: recommended, multi-node: recommended}
 requires: [{capability: certificates}]  # installed first
 distributions: [k3s, rke2, kubesolo]    # distributions it supports and e2e tests it on
 kubeVersion: ">=1.30.0-0"               # Kubernetes versions it supports
-replaces: [{component: container-registry/zot}]  # optional, removed components it took over
 
 releases:                         # installed in order
   - name: traefik
@@ -159,8 +158,6 @@ health:
 `distributions` 和 `testedOn` 是兩份不同的清單。元件檔案裡的 `distributions` 列出這個元件支援的發行版，e2e 會在每個發行版上測試它。`index.json` 裡的 `testedOn` 列出測試通過的發行版和通過的平台，例如 `{"distribution": "k3s", "platforms": ["linux/amd64", "linux/arm64"]}`，版本以 `config/kubernetes.yaml` 固定的為準。安裝工具會讀取 `testedOn`，元件要裝在沒列出的發行版和平台上時，提醒使用者它沒測過。`testedOn` 由 `catalog index` 從 `measurements/` 產生，不用手寫。每個元件都有這個欄位，可能是空清單。
 
 `kubeVersion` 是元件支援的 Kubernetes 版本範圍，寫法和 Helm chart 的 `kubeVersion` 相同。填入各 chart 裡最嚴格的範圍，chart 都沒寫時填 `">=1.34.0-0"`。範圍沒有涵蓋 catalog 測試的某個 Kubernetes 版本時，`catalog validate` 會失敗。叢集版本不在範圍內時，安裝工具不會提供這個元件。
-
-`replaces` 列出這個元件接手的舊元件，這些元件已從 catalog 移除，例如 `builds/zeabur-builder` 的 `{component: container-registry/zot}`。設定檔寫了舊 ID 時，安裝工具會請使用者改寫新 ID。現有元件的 ID 不能出現在其他元件的 `replaces` 裡。`catalog validate` 會檢查這一點。完整規則見[安裝工具如何選擇和安裝元件](installers.mdx)。
 
 `contributes` 會把設定值加到另一個元件的 release。`target` 寫出元件和它的 release，`values` 放設定值。
 

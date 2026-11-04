@@ -24,8 +24,6 @@ kubeVersion: ">=1.34.0-0"
 persistsData: true
 # zot's certificates.
 requires: [{capability: certificates}]
-# zot was its own component before it came with Builder.
-replaces: [{component: container-registry/zot}]
 resources:
   work:
     - name: build

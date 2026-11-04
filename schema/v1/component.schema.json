@@ -55,13 +55,6 @@
       "uniqueItems": true,
       "items": { "$ref": "#/$defs/ref" }
     },
-    "replaces": {
-      "type": "array",
-      "description": "Component ids this one took over, which no component has now. An installer treats an install record with an old id as having this component.",
-      "minItems": 1,
-      "uniqueItems": true,
-      "items": { "$ref": "#/$defs/componentRef" }
-    },
     "inputs": {
       "type": "array",
       "description": "Values the installer asks for or generates.",
