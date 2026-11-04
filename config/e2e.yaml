@@ -26,14 +26,13 @@ unready:
   # The operator exits when it cannot mint an auth key with its OAuth client.
   - remote-access/tailscale-operator
 
-# Test-only text replacements in manifests releases, per component and release.
-# A replacement that matches nothing fails the run.
-replacements:
+# Smoke checks to skip, per component, with the reason. A check that does not
+# exist fails the run.
+skipSmoke:
   certificates/cert-manager:
-    issuers:
-      # Every CI install registers ACME accounts; Let's Encrypt production allows
-      # 10 per IP every 3 hours, staging 50, so both issuers use staging.
-      https://acme-v02.api.letsencrypt.org/directory: https://acme-staging-v02.api.letsencrypt.org/directory
+    # The ACME issuers need Let's Encrypt, and e2e does not depend on outside
+    # services. They never become Ready in CI, and nothing else waits for them.
+    acme-issuers: needs Let's Encrypt
 
 # Input values for template e2e runs, for every template that declares the
 # input. A value is a text/template with .ID, the template, and .S3, the
