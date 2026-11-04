@@ -1,7 +1,7 @@
 ---
 title: 客户端如何渲染模板
 description: 客户端渲染模板前要做的检查、怎样判断模板需要的组件是否已安装、显示哪种语言，以及用来测试客户端的用例。
-source: "105ee58d9485"
+source: "11ea4632f6b8"
 ---
 
 客户端把[模板](template-format.mdx)安装到一个命名空间时，先检查选项，再渲染 `manifests.yaml`，最后应用生成的对象。本页列出要遵守的规则。`catalog template render` 用 `tools/internal/templates/render.go` 按这些规则渲染，Zeabur 也遵守同样的规则。每条规则在 `conformance/template/` 都有一个测试用例，用法见本页最后一节。
@@ -72,7 +72,7 @@ CRD 名称的格式是 `<plural>.<group>`，例如 `clusters.postgresql.cnpg.io`
 
 ## 其他语言的文字
 
-模板的文字字段都是英文，包括 `security.summary`、每项风险及其应对方法，以及每个输入字段的 `label` 和 `description`。旁边的 `locales` 区块存放同样内容的 `zh-TW` 和 `zh-CN` 版本，两种语言总是同时存在。
+模板的文字字段都是英文，包括 `security.summary`、每项风险及其应对方法，以及每个输入字段的 `label` 和 `description`。旁边的 `locales` 区块用 BCP 47 语言标签存放同样内容的译文。每个区块一定包含该版本 `config/locales.yaml` 要求的语言，目前是 `zh-TW` 和 `zh-CN`，也可能有其他语言。
 
 每个区块分别判断：读者的语言是 `locales` 里的键时，显示 `locales.<language>`，否则显示英文字段。语言要和键完全一致才算匹配。由于各区块分别判断，没有 `locales` 的摘要会以英文显示，旁边的风险仍是读者的语言。
 

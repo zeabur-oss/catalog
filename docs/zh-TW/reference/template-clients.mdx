@@ -1,7 +1,7 @@
 ---
 title: 用戶端如何渲染範本
 description: 用戶端渲染範本前要做的檢查、怎麼判斷範本需要的元件裝好了沒，以及要顯示哪種語言，還有用來測試用戶端的案例。
-source: "105ee58d9485"
+source: "11ea4632f6b8"
 ---
 
 用戶端把[範本](template-format.mdx)安裝到一個命名空間時，會先檢查選項，再渲染 `manifests.yaml`，最後套用產生的物件。這一頁列出要遵守的規則。`catalog template render` 用 `tools/internal/templates/render.go` 照這些規則渲染，Zeabur 也遵守同樣的規則。每條規則在 `conformance/template/` 都有一個測試案例，用法見本頁最後一節。
@@ -77,7 +77,7 @@ CRD 名稱的格式是 `<plural>.<group>`，例如 `clusters.postgresql.cnpg.io`
 
 ## 其他語言的文字
 
-範本的文字欄位都是英文，包括 `security.summary`、每項風險和對應的因應方式，以及每個輸入欄位的 `label` 和 `description`。旁邊的 `locales` 區塊放同樣內容的 `zh-TW` 和 `zh-CN` 版本，兩種語言一定同時存在。
+範本的文字欄位都是英文，包括 `security.summary`、每項風險和對應的因應方式，以及每個輸入欄位的 `label` 和 `description`。旁邊的 `locales` 區塊用 BCP 47 語言標籤放同樣內容的譯文。每個區塊一定有該版本 `config/locales.yaml` 要求的語言，目前是 `zh-TW` 和 `zh-CN`，也可能有其他語言。
 
 每個區塊分開判斷：讀者的語言是 `locales` 裡的鍵時，顯示 `locales.<language>`，否則顯示英文欄位。語言要和鍵完全相同才算對到。因為各區塊分開判斷，沒有 `locales` 的摘要會以英文顯示，旁邊的風險仍是讀者的語言。
 

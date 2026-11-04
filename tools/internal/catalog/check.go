@@ -49,9 +49,16 @@ func Check(root string, cat *Catalog) error {
 	if err != nil {
 		return err
 	}
+	locales, err := ReadLocales(root)
+	if err != nil {
+		return err
+	}
 
 	for _, c := range cat.Components {
 		for _, p := range licenses.problems(c) {
+			fail(c.Path, "%s", p)
+		}
+		for _, p := range MissingLocales(cat.Raw[c.Path], locales) {
 			fail(c.Path, "%s", p)
 		}
 		for _, r := range c.Releases {

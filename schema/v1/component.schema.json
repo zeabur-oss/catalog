@@ -18,10 +18,9 @@
         "summary": { "type": "string", "pattern": "^[^\\n]+$", "description": "What it gives the cluster, in one plain sentence for people choosing components." },
         "locales": {
           "type": "object",
-          "description": "The summary in other languages.",
-          "additionalProperties": false,
-          "required": ["zh-TW", "zh-CN"],
-          "properties": { "zh-TW": { "$ref": "#/$defs/summaryLocale" }, "zh-CN": { "$ref": "#/$defs/summaryLocale" } }
+          "description": "The summary in other languages, by BCP 47 tag. config/locales.yaml lists the tags each needs.",
+          "propertyNames": { "$ref": "#/$defs/locale" },
+          "additionalProperties": { "$ref": "#/$defs/summaryLocale" }
         },
         "license": { "type": "string", "description": "SPDX expression; every identifier must be OSI-approved, or listed under optInOnly in config/licenses.yaml with no profile recommending the component." },
         "homepage": { "type": "string", "format": "uri" }
@@ -261,6 +260,7 @@
     }
   },
   "$defs": {
+    "locale": { "type": "string", "pattern": "^([a-z]{2,3}(-[a-z]{3}){0,3}|[a-z]{4,8})(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?(-([a-z0-9]{5,8}|[0-9][a-z0-9]{3}))*(-[a-wyz0-9](-[a-z0-9]{2,8})+)*(-x(-[a-z0-9]{1,8})+)?$", "description": "A BCP 47 tag (RFC 5646 langtag, in its recommended case): language, then optional script, region, variants, extensions and private use, such as zh-TW, zh-Hant-TW or ca-ES-valencia." },
     "generate": {
       "type": "object",
       "description": "How the installer makes the value instead of asking. A reader does not fill in an input whose type it does not know.",
