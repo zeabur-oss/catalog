@@ -55,6 +55,16 @@ jobs:
         run: |
           mkdir -p downloaded
           go run ./tools/cmd/catalog merge downloaded
+      # Moving an earlier run's branch onto this main also moves it over every change to
+      # .github/workflows since, which GitHub refuses without the workflows permission. This run
+      # measures everything again, so delete that branch (closing its pull request) instead.
+      - name: Delete the earlier measurements branch
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/ci/measurements" --silent 2>/dev/null; then
+            gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/ci/measurements"
+          fi
       - uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ steps.token.outputs.token }}
