@@ -166,7 +166,8 @@ func writeMeasurement(c *catalog.Component, env environment, res catalog.Result)
 // markFailed records that the test of c failed in env, or before the cluster
 // answered when env is nil. On a host profile it also marks every run of the
 // pinned release on linux/arch, so a failure before the cluster answered
-// counts too. With no such run, it records one without a Kubernetes version.
+// counts too. With no such run, it records nothing, because a component with
+// no run already shows as untested.
 func markFailed(cfg config, profile, arch string, c *catalog.Component, env *environment) error {
 	m := readMeasurement(measurementPath(c.ID))
 	m.Component = c.ID
@@ -180,15 +181,10 @@ func markFailed(cfg config, profile, arch string, c *catalog.Component, env *env
 	}
 	if slices.Contains(hostProfiles, profile) {
 		host := hostEnvironment(cfg, profile, arch)
-		marked := false
 		for i, e := range m.Environments {
 			if e.Distribution == host.Distribution && e.Platform == host.Platform && e.DistributionVersion == host.DistributionVersion {
 				m.Environments[i] = failed(e)
-				marked = true
 			}
-		}
-		if !marked {
-			m.put(failed(host))
 		}
 	}
 	return writeMeasurementFile(measurementPath(c.ID), m)
