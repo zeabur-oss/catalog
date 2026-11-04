@@ -3,17 +3,17 @@ title: Tests and CI
 description: Learn when each CI tier runs, what it checks, and how to configure template test inputs.
 ---
 
-L0 runs on every pull request. L1 runs after merges to `main`. L2 runs nightly; check that it passed on a commit before tagging it. Each tier covers different checks, and later tiers run checks that earlier tiers don't cover. You can also run the same tests as CI with `catalog e2e -tier l0|l1|l2`.
+`check` and `smoke` run on every pull request, and `smoke` also runs after merges to `main`. `full` runs nightly, and on a pull request that has the `e2e` label. Check that the nightly run passed on a commit before tagging it. Each tier covers different checks, and later tiers run checks that earlier tiers don't cover. You can also run the same tests as CI with `catalog e2e -tier check|smoke|full`.
 
 ## Before you start
 
-- L0 doesn't require Docker.
-- L1 and L2 create kind clusters and require Linux and Docker. Add `-cluster current` to use the cluster specified by `KUBECONFIG` instead.
+- `check` doesn't require Docker.
+- `smoke` and `full` create kind clusters and require Linux and Docker. Add `-cluster current` to use the cluster specified by `KUBECONFIG` instead.
 - Tests on k3s, RKE2 and KubeSolo install the distribution on the host itself. They need root on a disposable Linux host without Docker. Before and after each test, they remove the distribution and clean up the mounts, network links, routes and firewall rules that its pods left on the host.
 
 Standard tests use the `single-node` or `multi-node` profile, each with its own set of settings.
 
-## L0: Check every pull request
+## `check`: Check every pull request
 
 `ci.yml` runs the following checks as the jobs of [`scripts/ci.sh`](https://github.com/zeabur-oss/catalog/blob/main/scripts/ci.sh). Run one locally with `scripts/ci.sh <job>`; `scripts/ci.sh --list` lists them.
 
@@ -78,22 +78,27 @@ Each template's Namespace generates warnings at its own enforce level. Any warni
 
 </Steps>
 
-## L1: Test components and templates affected by changes
+## `smoke`: Install what a change affects
 
-After merges to `main`, `ci.yml` installs the following items in a single-node amd64 kind cluster, then runs smoke checks:
+On every pull request and after merges to `main`, `ci.yml` installs the following items in a single-node amd64 kind cluster, then runs smoke checks:
 
 - Changed components and templates.
+- Components and templates that a changed item needs.
 - Components and templates that install a changed component.
+
+A pull request tests what differs from its merge base with the base branch. A merge to `main` tests what the push added. A pull request that changes no component or template has nothing to test, so GitHub skips the `smoke` job. Require the `smoke-ok` check, which passes when the job is skipped and fails when a `smoke` job fails.
 
 Tests that share dependencies share a cluster. Each dependency is installed only once per cluster. After a component passes its smoke check, the test uninstalls it unless a later test in the same cluster still needs it.
 
-If a change affects `config/`, `tools/`, the flake, or workflows, L1 tests everything.
+If a change affects `config/`, `tools/`, the flake, or workflows, `smoke` tests everything.
 
-## L2: Test upgrades, resource usage, and cleanup
+## `full`: Test upgrades, resource usage, and cleanup
 
-`nightly.yml` calls `e2e.yml` to run L2 every night. Before tagging a release, run `nightly.yml` on `main` if its last run was on another commit, and tag only once it passed.
+`nightly.yml` calls `e2e.yml` to run `full` every night. Before tagging a release, run `nightly.yml` on `main` if its last run was on another commit, and tag only once it passed.
 
-L2 creates a fresh kind cluster for each component and profile on amd64 and arm64. `single-node` uses one node, and `multi-node` uses three nodes.
+A pull request with the `e2e` label runs `full` on what the pull request affects. Add the label to a pull request when a smoke test isn't enough. `e2e-label.yml` lists the changed components and templates, plus the ones that install them, and calls `e2e.yml` for them on the `single-node` profile. The run starts when you add the label and again on each push while the label stays. It writes no measurements and opens no measurements pull request. Renovate adds the label to chart updates.
+
+`full` creates a fresh kind cluster for each component and profile on amd64 and arm64. `single-node` uses one node, and `multi-node` uses three nodes.
 
 <Steps>
 
@@ -129,11 +134,11 @@ Run the component's health checks and smoke checks, then uninstall the component
 
 The `unready` list in [`config/e2e.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/e2e.yaml) identifies components that require credentials CI doesn't have.
 
-L2 installs these components without waiting for readiness, then runs smoke checks and uninstalls them.
+`full` installs these components without waiting for readiness, then runs smoke checks and uninstalls them.
 
 ### Templates and resource budgets
 
-L2 installs each template and its required components in a single-node amd64 cluster, runs smoke checks, then uses the same sampling method to measure idle memory and CPU usage for Pods in the template's Namespace.
+`full` installs each template and its required components in a single-node amd64 cluster, runs smoke checks, then uses the same sampling method to measure idle memory and CPU usage for Pods in the template's Namespace.
 
 Component measurements are stored in `measurements/components/<capability>/<upstream>.json`, and template measurements in `measurements/templates/<id>.json`. `environments` has one entry for each environment. `distribution`, `profile`, `platform`, `kubernetesVersion` and `distributionVersion` name the environment. `distribution` is `kind`, `k3s`, `rke2` or `kubesolo`, and `distributionVersion` is the release of a distribution on the host. kind has none. `result` is `passed` or `failed`, and a reader treats any other value as not passed. `versions` lists the version of each release for a component, and the tag and digest of each image for a template.
 
@@ -157,7 +162,7 @@ Component measurements are stored in `measurements/components/<capability>/<upst
 }
 ```
 
-L2 also checks the total usage of components enabled by default in the `single-node` profile on amd64 against the budget in [`config/budget.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/budget.yaml).
+`full` also checks the total usage of components enabled by default in the `single-node` profile on amd64 against the budget in [`config/budget.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/budget.yaml).
 
 `nightly.yml` opens a pull request to update `measurements/`. You can also run this workflow manually to get measurements immediately. Renovate opens a pull request for each new upstream version and image digest.
 
@@ -169,7 +174,7 @@ With `-profile k3s`, `-profile rke2` or `-profile kubesolo`, the tests install t
 - RKE2 runs without its ingress controller and metrics-server, and gets local-path-provisioner as its default StorageClass.
 - KubeSolo gets the standalone helm-controller.
 
-The tests then run L2 with the `single-node` settings for every component that `single-node` supports. A component whose `distributions` leaves out the distribution isn't tested on it. Templates aren't tested on these distributions.
+The tests then run `full` with the `single-node` settings for every component that `single-node` supports. A component whose `distributions` leaves out the distribution isn't tested on it. Templates aren't tested on these distributions.
 
 Measurements are stored alongside the kind results, with `profile: single-node`, the distribution in `distribution` and its release in `distributionVersion`, for example `v1.36.5+k3s1`. A failed run sets `result: failed` on its environment instead. When the cluster never answered, the entry has no `kubernetesVersion`.
 
@@ -212,7 +217,7 @@ To use a different storage service, change the template's input values in `confi
 
 ## Check results
 
-L0 starts its own API server. L1 and L2 create their own kind clusters, each with a separate kubeconfig.
+`check` starts its own API server. `smoke` and `full` create their own kind clusters, each with a separate kubeconfig.
 
 After testing, each tier deletes the test environment it created. Add `-keep` to retain the environment.
 
@@ -220,7 +225,7 @@ After testing, each tier deletes the test environment it created. Add `-keep` to
 
 | Symptom or result | Next step |
 | --- | --- |
-| L0 fails because of Pod Security warnings for a template's Namespace | Fix the template according to the warnings. Warnings fail the template test. |
+| `check` fails because of Pod Security warnings for a template's Namespace | Fix the template according to the warnings. Warnings fail the template test. |
 | A component appears in `unready` and has no resource measurements | Check `config/e2e.yaml`. These components require credentials CI doesn't have, so the tests don't measure their resource usage. |
 | k3s, RKE2 or KubeSolo doesn't test a component | Check whether the component's `distributions` includes that distribution. |
 | Nodes need to pull images from registry mirrors | Set `ZEABUR_REGISTRY_MIRRORS` with a value in the format `docker.io=http://mirror:5001,ghcr.io=...`. |

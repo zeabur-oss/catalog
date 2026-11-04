@@ -2,8 +2,8 @@
 //
 //	catalog validate                    schema, licenses, references, value comments
 //	catalog render [ids]                helm template every profile and Kubernetes version, then kubeconform
-//	catalog list -tier l1|l2 [-since <ref>]  e2e CI matrix as JSON
-//	catalog e2e -tier l0|l1|l2 [-cluster current] [ids]  run a test tier (see tier.go)
+//	catalog list -tier smoke|full [-since <ref>]  e2e CI matrix as JSON
+//	catalog e2e -tier check|smoke|full [-cluster current] [ids]  run a test tier (see tier.go)
 //	catalog budget                      single-node memory budget
 //	catalog index                       write index.json
 //	catalog crosscheck                  write crosscheck.json, the render of every template with its e2e values
@@ -86,26 +86,26 @@ func validate(fs *flag.FlagSet, r *repo) error {
 	return nil
 }
 
-// list prints the e2e CI matrix of a tier. For l1: one job per group, with
-// the IDs it tests. For l2: every profile × architecture × component it
+// list prints the e2e CI matrix of a tier. For smoke: one job per group, with
+// the IDs it tests. For full: every profile × architecture × component it
 // supports, and every template on single-node amd64. Both carry the kind node
 // version.
 func list(fs *flag.FlagSet, r *repo) error {
 	since := fs.String("since", "", "only what changed since this git commit")
-	tier := fs.String("tier", "l2", "l1 or l2")
-	only := fs.String("profiles", "", "l2: only these profiles, separated by commas")
-	idList := fs.String("ids", "", "l2: only these component or template IDs, separated by commas")
+	tier := fs.String("tier", "full", "smoke or full")
+	only := fs.String("profiles", "", "full: only these profiles, separated by commas")
+	idList := fs.String("ids", "", "full: only these component or template IDs, separated by commas")
 	fs.Parse(os.Args[2:])
 	ids, err := onlyIDs(r, *idList)
 	if err != nil {
 		return err
 	}
-	profiles := l2Profiles()
+	profiles := fullProfiles()
 	if *only != "" {
 		profiles = strings.Split(*only, ",")
 		for _, p := range profiles {
-			if !slices.Contains(l2Profiles(), p) {
-				return fmt.Errorf("unknown profile %q; use %s", p, strings.Join(l2Profiles(), ", "))
+			if !slices.Contains(fullProfiles(), p) {
+				return fmt.Errorf("unknown profile %q; use %s", p, strings.Join(fullProfiles(), ", "))
 			}
 		}
 	}
@@ -126,15 +126,15 @@ func list(fs *flag.FlagSet, r *repo) error {
 	}
 	jobs := []job{}
 	switch *tier {
-	case "l1":
-		groups, err := l1Groups(r, selected)
+	case "smoke":
+		groups, err := smokeGroups(r, selected)
 		if err != nil {
 			return err
 		}
 		for _, g := range groups {
 			jobs = append(jobs, job{IDs: strings.Join(g.IDs, " ")})
 		}
-	case "l2":
+	case "full":
 		for _, p := range profiles {
 			subs, err := profileSubjects(r, p, selected)
 			if err != nil {
@@ -154,7 +154,7 @@ func list(fs *flag.FlagSet, r *repo) error {
 			}
 		}
 	default:
-		return fmt.Errorf("unknown -tier %q; use l1 or l2", *tier)
+		return fmt.Errorf("unknown -tier %q; use smoke or full", *tier)
 	}
 	return json.NewEncoder(os.Stdout).Encode(map[string]any{
 		"include": jobs, "version": cfg.E2E.Version,

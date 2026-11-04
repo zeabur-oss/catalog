@@ -1,9 +1,13 @@
-# L0 on every pull request and on main: the jobs of scripts/ci.sh (Go tests,
+# check on every pull request and on main: the jobs of scripts/ci.sh (Go tests,
 # lint, validate, render, template lint, a server-side dry run on a local API server and
-# nix build .#release), run by zeabur-oss/.github's shared CI, and the DCO check. L1 on main only:
-# install and smoke test what changed and what installs it, in groups; the shared CI has no
-# dynamic matrix, so L1 stays here. CONTRIBUTING.md lists what each tier checks.
-# L2 is e2e.yml, which nightly.yml calls.
+# nix build .#release), run by zeabur-oss/.github's shared CI, and the DCO check.
+# smoke on every pull request and on main: install and smoke test what changed, what
+# it needs and what installs it, in groups. A pull request that changes no component
+# or template has an empty matrix and skips the job, so require smoke-ok, which
+# fails only when a smoke job failed. The shared CI has no dynamic matrix, so smoke
+# stays here. CONTRIBUTING.md lists what each tier checks.
+# full is e2e.yml. nightly.yml calls it, and e2e-label.yml calls it for a pull
+# request with the e2e label.
 name: ci
 
 on:
@@ -19,7 +23,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  l0:
+  check:
     uses: zeabur-oss/.github/.github/workflows/ci.yml@6ab106525ce16169ab0ecfebe4b0248e096797fa # main
     with:
       runner: ubuntu-26.04
@@ -27,8 +31,7 @@ jobs:
   dco:
     uses: zeabur-oss/.github/.github/workflows/dco.yml@6ab106525ce16169ab0ecfebe4b0248e096797fa # main
 
-  l1-matrix:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  smoke-matrix:
     runs-on: ubuntu-slim
     outputs:
       matrix: ${{ steps.list.outputs.matrix }}
@@ -42,18 +45,27 @@ jobs:
           go-version-file: go.mod
       - id: list
         env:
-          SINCE: ${{ github.event.before }}
-        run: echo "matrix=$(go run ./tools/cmd/catalog list -tier l1 -since "$SINCE")" >> "$GITHUB_OUTPUT"
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          # A pull request tests what differs from its base, a push what it added to main.
+          if [ "$EVENT" = pull_request ]; then
+            since=$(git merge-base "origin/$BASE_REF" HEAD)
+          else
+            since=$BEFORE
+          fi
+          echo "matrix=$(go run ./tools/cmd/catalog list -tier smoke -since "$since")" >> "$GITHUB_OUTPUT"
 
-  l1:
-    needs: [l0, l1-matrix]
-    if: fromJSON(needs.l1-matrix.outputs.matrix).include[0]
+  smoke:
+    needs: [check, smoke-matrix]
+    if: fromJSON(needs.smoke-matrix.outputs.matrix).include[0]
     runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(needs.l1-matrix.outputs.matrix).include }}
-    name: l1 ${{ matrix.ids }}
+        include: ${{ fromJSON(needs.smoke-matrix.outputs.matrix).include }}
+    name: smoke ${{ matrix.ids }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -67,4 +79,18 @@ jobs:
           IDS: ${{ matrix.ids }}
         run: |
           # shellcheck disable=SC2086 # IDS is a list of IDs
-          nix develop -c go run ./tools/cmd/catalog e2e -tier l1 $IDS
+          nix develop -c go run ./tools/cmd/catalog e2e -tier smoke $IDS
+
+  # The check to require. A smoke job that is skipped, because the matrix is
+  # empty or check failed, counts as passed here.
+  smoke-ok:
+    if: always()
+    needs: [smoke-matrix, smoke]
+    runs-on: ubuntu-slim
+    steps:
+      - env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for result in $RESULTS; do
+            [[ "$result" == success || "$result" == skipped ]] || { echo "::error::a job ended with $result"; exit 1; }
+          done

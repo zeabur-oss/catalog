@@ -1,7 +1,7 @@
 ---
 title: 版本与软件包
 description: 固定 Zeabur Catalog 版本、验证 Sigstore 签名，并读取 index.json，或从指定 commit 构建版本产物。
-source: "d7d2499a272e"
+source: "52881f40ece2"
 ---
 
 打上 `vX.Y.Z` tag 会发布 `index.json`、`bundle.tar.gz`、`checksums.txt`，以及 `SHA256SUMS` 和它的 Sigstore 签名包。使用 Zeabur Catalog 的工具应固定一个版本，验证后再读取 `index.json`。1.0 之前，像 0.1 升到 0.2 这样的更新也可能改变文件格式，所以请固定到某个具体版本。
@@ -81,7 +81,7 @@ sha256sum --check --ignore-missing SHA256SUMS
 ]
 ```
 
-每个环境都有 `idle`（组件实际用掉的资源）和 `requests`（它的 Pod 请求的资源）。两者都有 `memoryMiB` 和 `cpuMillis`，取整到整数，没测到的资源不会出现。目前 `requests` 只有 `memoryMiB`。调度器按请求量放置 Pod，所以安装工具会把 `requests.memoryMiB` 加总，和节点可分配的内存比较。两组数字来自同一次 L2 运行，计入组件自己的 namespace 里实际在集群上运行的 Pod，包括 Operator 创建的 Pod。
+每个环境都有 `idle`（组件实际用掉的资源）和 `requests`（它的 Pod 请求的资源）。两者都有 `memoryMiB` 和 `cpuMillis`，取整到整数，没测到的资源不会出现。目前 `requests` 只有 `memoryMiB`。调度器按请求量放置 Pod，所以安装工具会把 `requests.memoryMiB` 加总，和节点可分配的内存比较。两组数字来自同一次 `full` 运行，计入组件自己的 namespace 里实际在集群上运行的 Pod，包括 Operator 创建的 Pod。
 
 安装组件时，工具执行 `detection`，根据集群的 profile 提供默认启用（recommended）的组件，并向用户获取各组件的 `inputs`。接着按 `installOrder` 生成安装内容，将 `contributes` 合并到对应目标。选择组件的规则见[安装工具如何选择和安装组件](installers.mdx)。
 

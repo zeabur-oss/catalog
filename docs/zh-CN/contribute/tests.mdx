@@ -1,20 +1,20 @@
 ---
 title: 测试与 CI
 description: 了解各层 CI 的运行时机和检查内容，并配置模板测试输入。
-source: "f7beab1dec1e"
+source: "aecf0c7b4fc3"
 ---
 
-L0 在每个 pull request 中运行；L1 在合并到 `main` 后运行；L2 在每晚（nightly）运行，打发布 tag 前要确认该 commit 已通过 L2。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以用 `catalog e2e -tier l0|l1|l2` 运行与 CI 相同的测试。
+`check` 和 `smoke` 在每个 pull request 中运行，`smoke` 在合并到 `main` 后也会运行。`full` 在每晚（nightly）运行，带有 `e2e` 标签的 pull request 也会运行。打发布 tag 前，要确认该 commit 的每晚运行已通过。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以用 `catalog e2e -tier check|smoke|full` 运行与 CI 相同的测试。
 
 ## 开始前
 
-- L0 不需要 Docker。
-- L1 和 L2 会创建 kind 集群，需要 Linux 和 Docker。加上 `-cluster current`，就会改用 `KUBECONFIG` 指定的集群。
+- `check` 不需要 Docker。
+- `smoke` 和 `full` 会创建 kind 集群，需要 Linux 和 Docker。加上 `-cluster current`，就会改用 `KUBECONFIG` 指定的集群。
 - 在 k3s、RKE2 和 KubeSolo 上测试时，发行版会直接装在主机上，所以要用一台没有 Docker、用完即弃的 Linux 主机，并有 root 权限。每项测试前后都会移除发行版，并清理 Pod 在主机上留下的挂载、网络接口、路由和防火墙规则。
 
 常规测试使用 `single-node` 或 `multi-node` profile，也就是各自的配置组合。
 
-## L0：检查每个 pull request
+## `check`：检查每个 pull request
 
 `ci.yml` 以 [`scripts/ci.sh`](https://github.com/zeabur-oss/catalog/blob/main/scripts/ci.sh) 的各个 job 运行以下检查。在本地用 `scripts/ci.sh <job>` 运行其中一个，`scripts/ci.sh --list` 会列出所有 job。
 
@@ -79,22 +79,27 @@ L0 在每个 pull request 中运行；L1 在合并到 `main` 后运行；L2 在�
 
 </Steps>
 
-## L1：测试变更影响的组件和模板
+## `smoke`：安装变更影响的项目
 
-`ci.yml` 在合并到 `main` 后，会在单节点 amd64 kind 集群中安装以下项目，再运行冒烟测试（smoke check）：
+`ci.yml` 在每个 pull request 和合并到 `main` 后，会在单节点 amd64 kind 集群中安装以下项目，再运行冒烟测试（smoke check）：
 
 - 有变更的组件和模板。
+- 变更的项目所需要的组件。
 - 会安装变更组件的组件和模板。
+
+pull request 测试的是它和目标分支的 merge base 之间的差异，合并到 `main` 则测试那次推送新增的内容。pull request 没有改动任何组件或模板时，没有东西要测，GitHub 会跳过 `smoke` job。请把 `smoke-ok` 设为必需检查，job 被跳过时它会通过，`smoke` job 失败时它会失败。
 
 共用依赖组件的测试会共用集群，依赖组件在每个集群中只安装一次。组件完成冒烟测试后就会卸载，除非同一集群后续的测试仍需要它。
 
-只要变更涉及 `config/`、`tools/`、flake 或工作流，L1 就会测试所有项目。
+只要变更涉及 `config/`、`tools/`、flake 或工作流，`smoke` 就会测试所有项目。
 
-## L2：测试升级、资源用量和清理
+## `full`：测试升级、资源用量和清理
 
-`nightly.yml` 会调用 `e2e.yml`，每晚运行 L2。打发布 tag 前，如果 `nightly.yml` 最后一次运行的不是这个 commit，先在 `main` 上手动运行一次，通过后再打 tag。
+`nightly.yml` 会调用 `e2e.yml`，每晚运行 `full`。打发布 tag 前，如果 `nightly.yml` 最后一次运行的不是这个 commit，先在 `main` 上手动运行一次，通过后再打 tag。
 
-L2 会在 amd64 和 arm64 上，为每个组件、每种 profile 创建新的 kind 集群。`single-node` 使用单节点，`multi-node` 使用三节点。
+带有 `e2e` 标签的 pull request 会对它影响的项目运行 `full`。冒烟测试不够用时，就给 pull request 加上这个标签。`e2e-label.yml` 会列出有变更的组件和模板，加上会安装它们的项目，再用 `single-node` profile 调用 `e2e.yml`。加上标签时会开始运行，标签还在时每次推送也会再运行一次。它不写入测量结果，也不会开测量结果的 pull request。Renovate 会给 chart 更新加上这个标签。
+
+`full` 会在 amd64 和 arm64 上，为每个组件、每种 profile 创建新的 kind 集群。`single-node` 使用单节点，`multi-node` 使用三节点。
 
 <Steps>
 
@@ -130,11 +135,11 @@ L2 会在 amd64 和 arm64 上，为每个组件、每种 profile 创建新的 ki
 
 [`config/e2e.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/e2e.yaml) 的 `unready` 列出需要 CI 未持有凭据的组件。
 
-L2 安装这些组件时不等待就绪，接着运行冒烟测试并卸载。
+`full` 安装这些组件时不等待就绪，接着运行冒烟测试并卸载。
 
 ### 模板和资源预算
 
-L2 会在单节点 amd64 集群中安装每个模板及其需要的组件，运行冒烟测试，再用相同的采样方式测量模板 Namespace 内 Pod 的空闲内存和 CPU 用量。
+`full` 会在单节点 amd64 集群中安装每个模板及其需要的组件，运行冒烟测试，再用相同的采样方式测量模板 Namespace 内 Pod 的空闲内存和 CPU 用量。
 
 组件的测量结果存放在 `measurements/components/<capability>/<upstream>.json`，模板的存放在 `measurements/templates/<id>.json`。`environments` 里每个环境各有一条，由 `distribution`、`profile`、`platform`、`kubernetesVersion` 和 `distributionVersion` 指明是哪个环境。`distribution` 是 `kind`、`k3s`、`rke2` 或 `kubesolo`。`distributionVersion` 是装在主机上的发行版的版本，kind 没有这个字段。`result` 是 `passed` 或 `failed`，读取方遇到其他值一律当作没有通过。`versions` 列出组件每个 release 的版本，或模板每个镜像的 tag 和 digest。
 
@@ -158,7 +163,7 @@ L2 会在单节点 amd64 集群中安装每个模板及其需要的组件，运�
 }
 ```
 
-L2 也会检查 amd64 上 `single-node` profile 的默认启用组件总用量，确认符合 [`config/budget.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/budget.yaml) 的预算。
+`full` 也会检查 amd64 上 `single-node` profile 的默认启用组件总用量，确认符合 [`config/budget.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/budget.yaml) 的预算。
 
 `nightly.yml` 会创建 pull request，更新 `measurements/`。你也可以手动运行这个工作流，立即获取测量结果。Renovate 则会针对每个新的上游版本和镜像 digest 创建 pull request。
 
@@ -170,7 +175,7 @@ L2 也会检查 amd64 上 `single-node` profile 的默认启用组件总用量�
 - RKE2 不启用自带的 ingress controller 和 metrics-server，并加装 local-path-provisioner 作为默认 StorageClass。
 - KubeSolo 会另外安装独立的 helm-controller。
 
-接着，测试会使用 `single-node` 的配置值，对 `single-node` 支持的每个组件运行 L2。组件的 `distributions` 没有列出这个发行版时，就不会在上面测试。模板不在这些发行版上测试。
+接着，测试会使用 `single-node` 的配置值，对 `single-node` 支持的每个组件运行 `full`。组件的 `distributions` 没有列出这个发行版时，就不会在上面测试。模板不在这些发行版上测试。
 
 测量结果与 kind 的结果放在一起，`profile` 为 `single-node`，`distribution` 是发行版，`distributionVersion` 是它的版本，例如 `v1.36.5+k3s1`。测试失败时，该环境会改为 `result: failed`。如果集群一直没有响应，这一条就没有 `kubernetesVersion`。
 
@@ -213,7 +218,7 @@ L2 也会检查 amd64 上 `single-node` profile 的默认启用组件总用量�
 
 ## 确认结果
 
-L0 会启动自己的 API server；L1 和 L2 会创建自己的 kind 集群，各自使用独立的 kubeconfig。
+`check` 会启动自己的 API server；`smoke` 和 `full` 会创建自己的 kind 集群，各自使用独立的 kubeconfig。
 
 测试结束后，各层级会删除自己创建的测试环境。加上 `-keep` 可保留环境。
 
@@ -221,7 +226,7 @@ L0 会启动自己的 API server；L1 和 L2 会创建自己的 kind 集群，�
 
 | 界面或结果 | 接下来怎么处理 |
 | --- | --- |
-| L0 因模板 Namespace 的 Pod Security 警告而失败 | 按照警告修正模板。警告会让模板测试失败。 |
+| `check` 因模板 Namespace 的 Pod Security 警告而失败 | 按照警告修正模板。警告会让模板测试失败。 |
 | 组件列在 `unready`，没有资源测量结果 | 检查 `config/e2e.yaml`。这些组件需要 CI 未持有的凭据，测试不测量资源用量。 |
 | k3s、RKE2 或 KubeSolo 没有测试某个组件 | 检查组件的 `distributions` 是否包含该发行版。 |
 | 需要让节点从镜像站拉取镜像 | 配置 `ZEABUR_REGISTRY_MIRRORS`，值的格式为 `docker.io=http://mirror:5001,ghcr.io=...`。 |

@@ -1,7 +1,7 @@
 ---
 title: 新增範本
 description: 建立符合標準的範本，完成本機檢查後提交 Pull Request。
-source: "c918b7a0756a"
+source: "4243c2f9b2cb"
 ---
 
 參考類似的範本建立檔案，加入煙霧測試（smoke check）。完成本機檢查後，再提交 Pull Request。
@@ -52,7 +52,7 @@ source: "c918b7a0756a"
 go run ./tools/cmd/catalog validate
 go run ./tools/cmd/catalog template lint -values values.json \
   -domain app.example.test -cluster-issuer letsencrypt <id>
-go run ./tools/cmd/catalog e2e -tier l2 <id>
+go run ./tools/cmd/catalog e2e -tier full <id>
 ```
 
 </Step>

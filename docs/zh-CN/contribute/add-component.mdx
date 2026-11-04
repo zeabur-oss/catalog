@@ -1,7 +1,7 @@
 ---
 title: 添加组件
 description: 创建组件文件、通过本地检查，并提交包含 signed-off commits 的 pull request。
-source: "f9ac25395134"
+source: "123a54270731"
 ---
 
 选择 capability 和上游项目，创建组件文件并完成本地检查，再提交 pull request。完成后，你会得到一个通过检查的组件文件和一个 pull request。
@@ -9,7 +9,7 @@ source: "f9ac25395134"
 ## 开始前
 
 - 使用 `nix develop` 获取 Go、Helm、kubectl、kubeconform、etcd、kube-apiserver 和 kind。
-- 运行 L1 和 L2 检查时，还需要 Linux 上的 Docker。
+- 运行 `smoke` 和 `full` 检查时，还需要 Linux 上的 Docker。
 
 <Steps>
 
@@ -42,11 +42,11 @@ source: "f9ac25395134"
 ```sh
 go run ./tools/cmd/catalog validate          # schema, license, references, comments
 go run ./tools/cmd/catalog render            # helm template + kubeconform
-go run ./tools/cmd/catalog e2e -tier l0      # what every pull request runs
-go run ./tools/cmd/catalog e2e -tier l2 <id>
+go run ./tools/cmd/catalog e2e -tier check   # what every pull request runs
+go run ./tools/cmd/catalog e2e -tier full <id>
 ```
 
-`validate` 检查 schema、许可证、引用和注释。`render` 运行 `helm template` 和 kubeconform。每个 pull request 都会运行 L0 检查。
+`validate` 检查 schema、许可证、引用和注释。`render` 运行 `helm template` 和 kubeconform。每个 pull request 都会运行 `check` 层。
 
 </Step>
 

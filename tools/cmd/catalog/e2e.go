@@ -12,13 +12,13 @@ import (
 )
 
 func e2e(fs *flag.FlagSet, r *repo) error {
-	tier := fs.String("tier", "l2", strings.Join(tiers, ", ")+" (see tier.go)")
-	cluster := fs.String("cluster", "kind", "l1, l2: kind creates a cluster for each group or test; current uses the cluster that KUBECONFIG names")
-	profile := fs.String("profile", templateProfile, "l2: single-node, multi-node (kind), or k3s, rke2 or kubesolo (installed on this host)")
-	write := fs.Bool("write", false, "l2: update measurements/ for passing tests")
-	previous := fs.String("previous", "", "l2: previous release's index.json, for upgrade tests")
-	since := fs.String("since", "", "l1, l2: without ids, only what changed since this git commit")
-	keep := fs.Bool("keep", false, "keep the clusters and the L0 API server")
+	tier := fs.String("tier", "full", strings.Join(tiers, ", ")+" (see tier.go)")
+	cluster := fs.String("cluster", "kind", "smoke, full: kind creates a cluster for each group or test; current uses the cluster that KUBECONFIG names")
+	profile := fs.String("profile", templateProfile, "full: single-node, multi-node (kind), or k3s, rke2 or kubesolo (installed on this host)")
+	write := fs.Bool("write", false, "full: update measurements/ for passing tests")
+	previous := fs.String("previous", "", "full: previous release's index.json, for upgrade tests")
+	since := fs.String("since", "", "smoke, full: without ids, only what changed since this git commit")
+	keep := fs.Bool("keep", false, "keep the clusters and the check tier's API server")
 	fs.Parse(os.Args[2:])
 	if *cluster != "kind" && *cluster != "current" {
 		return fmt.Errorf("unknown -cluster %q; use kind or current", *cluster)
