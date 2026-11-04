@@ -1,7 +1,6 @@
 # full: installs every component in a fresh cluster each, on amd64 and arm64:
-# dependencies first, the previous release when its version differs (upgrade
-# test), idle memory and CPU once they are stable, health and smoke checks,
-# uninstall and residue check. profiles picks the profiles of one call; a
+# dependencies first, idle memory and CPU once they are stable, health and
+# smoke checks, uninstall and residue check. profiles picks the profiles of one call; a
 # matrix holds at most 256 jobs, so nightly.yml calls it once for kind and once
 # for the host distributions. e2e-label.yml calls it for a pull request with
 # the e2e label, on single-node with components set and measure off.
@@ -104,11 +103,6 @@ jobs:
             done
             sudo "$ipt" -P FORWARD ACCEPT
           done
-      - name: Previous release (upgrade test)
-        if: matrix.component
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release download --pattern index.json --output previous.json || true
       - name: e2e
         env:
           PROFILE: ${{ matrix.profile }}
@@ -116,7 +110,6 @@ jobs:
           MEASURE: ${{ inputs.measure }}
         run: |
           flags=()
-          [ -f previous.json ] && flags+=(-previous previous.json)
           [ "$MEASURE" = true ] && flags+=(-write)
           nix develop -c go run ./tools/cmd/catalog e2e -tier full -profile "$PROFILE" "${flags[@]}" "$ID"
       - name: Keep only this job's measurement

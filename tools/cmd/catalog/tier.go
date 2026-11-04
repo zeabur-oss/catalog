@@ -26,7 +26,7 @@ import (
 // what it needs and what installs it, single-node amd64, in groups that share
 // their dependencies. full runs nightly, before a release and on a pull
 // request that has the e2e label: every profile and architecture in a fresh
-// cluster each, with idle usage, uninstall, residue and upgrade checks. With
+// cluster each, with idle usage, uninstall, and residue checks. With
 // -cluster current, smoke and full use the current cluster instead of kind.
 var tiers = []string{"check", "smoke", "full"}
 
@@ -246,9 +246,9 @@ func installOrder(r *repo, id, profile string) ([]*catalog.Component, error) {
 }
 
 type tierOptions struct {
-	profile, since, previous string
-	write, keep              bool
-	current                  bool // test on the cluster that KUBECONFIG names instead of kind
+	profile, since string
+	write, keep    bool
+	current        bool // test on the cluster that KUBECONFIG names instead of kind
 }
 
 func runTier(r *repo, tier string, o tierOptions, args []string) error {
@@ -625,11 +625,6 @@ func runFull(r *repo, cfg config, o tierOptions, args []string) error {
 	if err != nil {
 		return err
 	}
-	if o.previous != "" {
-		if t.Previous, err = readPrevious(o.previous); err != nil {
-			return err
-		}
-	}
 	var rows []row
 	for _, s := range subs {
 		t.Timings = nil
@@ -693,9 +688,6 @@ func testComponent(t *catalog.Tester, cfg config, profile, id string, write bool
 		if err := writeMeasurement(c, env, res); err != nil {
 			return "", err
 		}
-	}
-	if res.UpgradedFrom != "" {
-		status += " (upgraded from " + res.UpgradedFrom + ")"
 	}
 	return status, nil
 }

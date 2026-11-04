@@ -41,12 +41,10 @@ existing branch: `git rebase --signoff main`, then force-push.
   what you changed, what it needs and what installs it is installed on one node and
   smoke tested. A queued change that touches no component or template skips it.
 - **A pull request with the `e2e` label (`full`):** the components and templates the
-  pull request affects, on a single-node cluster, with upgrades from the last release,
-  uninstall and leftover checks. It writes no measurements. Ask a maintainer to add the
+  pull request affects, on a single-node cluster, with uninstall and leftover checks. It writes no measurements. Ask a maintainer to add the
   label when a change needs more than a smoke test. Renovate adds it to chart updates.
 - **Every night and before a release (`full`):** everything on one and three
-  nodes, amd64 and arm64, with upgrades from the last release, idle memory and
-  CPU, uninstall and leftover checks.
+  nodes, amd64 and arm64, with idle memory and CPU, uninstall and leftover checks.
 
 Run the same tiers with `go run ./tools/cmd/catalog e2e -tier check`,
 `-tier smoke <ids>` or `-tier full <id>`. `check` needs no Docker. `smoke` and `full`
