@@ -22,45 +22,45 @@ metadata:
   homepage: https://github.com/langgenius/dify
 
 requires:
-  - databases/cloudnative-pg
-  - databases/dragonfly-operator
-  - ingress/traefik
-  - certificates/cert-manager
+  - {component: databases/cloudnative-pg}
+  - {component: databases/dragonfly-operator}
+  - {component: ingress/traefik}
+  - {component: certificates/cert-manager}
 
 services:
   - name: dify
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: http, port: 8080}]
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 2Gi}}
     domains: ['{{ .Domain }}']
   - name: dify-api
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: http, port: 5001}]
     resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
-  - {name: dify-worker, securityProfile: restricted, resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}}
-  - {name: dify-beat, securityProfile: restricted, resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}}
+  - {name: dify-worker, podSecurity: restricted, resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}}
+  - {name: dify-beat, podSecurity: restricted, resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}}
   - name: dify-web
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: http, port: 3000}]
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 2Gi}}
   - name: dify-plugin
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: http, port: 5002}]
     resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
   - name: dify-sandbox
-    securityProfile: baseline
+    podSecurity: baseline
     ports: [{name: http, port: 8194}]
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 2Gi}}
   - name: dify-proxy
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: http, port: 3128}]
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 2Gi}}
   - name: dify-dragonfly
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: redis, port: 6379}]
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 2Gi}}
   - name: dify-db
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: postgresql, port: 5432}]
     resources: {requests: {cpu: 250m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
 

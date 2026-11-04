@@ -18,12 +18,14 @@ metadata:
 defaults:
   single-node: optional
   multi-node: optional
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.34.0-0"
 # zot's images.
 persistsData: true
 # zot's certificates.
-requires: [certificates]
+requires: [{capability: certificates}]
 # zot was its own component before it came with Builder.
-replaces: [container-registry/zot]
+replaces: [{component: container-registry/zot}]
 resources:
   work:
     - name: build
@@ -87,6 +89,7 @@ releases:
   # Before the chart: the CA that signs zot-tls, and the key that signs push
   # tokens.
   - name: tls
+    type: inline
     namespace: zot
     manifests: |
       # Signs the CA below; nothing else uses it.
@@ -152,6 +155,7 @@ releases:
           name: zot-selfsigned
 
   - name: zot
+    type: helm
     namespace: zot
     repo: https://zotregistry.dev/helm-charts
     chart: zot
@@ -314,6 +318,7 @@ releases:
           limits: {memory: 1Gi}
 
   - name: builder
+    type: helm
     namespace: builder-system
     chart: oci://ghcr.io/zeabur-oss/charts/zeabur-builder
     version: 0.1.2-beta.1
@@ -371,7 +376,7 @@ security:
     Jobs and StatefulSets it can create. zot: no RBAC, a ServiceAccount without
     roles; serves the OCI registry API over TLS on port 5000 inside the
     cluster.
-  privileged: true
+  podSecurity: privileged
 
 smoke:
   - name: ready

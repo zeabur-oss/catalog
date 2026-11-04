@@ -15,10 +15,13 @@ metadata:
 defaults:
   single-node: optional
   multi-node: optional
-requires: [event-autoscaling/keda]
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.23.0-0"
+requires: [{component: event-autoscaling/keda}]
 
 releases:
   - name: http-add-on
+    type: helm
     namespace: keda
     releaseName: keda-add-ons-http
     repo: https://kedacore.github.io/charts
@@ -68,3 +71,4 @@ detection:
 
 security:
   summary: Reads HTTPScaledObjects, Services and EndpointSlices cluster-wide; creates ScaledObjects.
+  podSecurity: restricted

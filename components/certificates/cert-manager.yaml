@@ -15,11 +15,14 @@ metadata:
 defaults:
   single-node: recommended
   multi-node: recommended
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.22.0-0"
 # Gateway API CRDs come with ingress; the controller exits without them.
-requires: [ingress]
+requires: [{capability: ingress}]
 
 releases:
   - name: cert-manager
+    type: helm
     namespace: cert-manager
     chart: oci://quay.io/jetstack/charts/cert-manager
     version: v1.21.3
@@ -102,6 +105,7 @@ releases:
   # Applied after the chart: helm --wait and the chart's startupapicheck hook
   # wait for the webhook that validates these objects.
   - name: issuers
+    type: inline
     namespace: cert-manager
     manifests: |
       # Try here first; production rate limits are far lower. Staging
@@ -151,6 +155,7 @@ detection:
 
 security:
   summary: Writes Secrets in all namespaces and manages webhook CA bundles.
+  podSecurity: restricted
 
 # ACME account keys have no owner; keeping them keeps the accounts on reinstall.
 leftovers:

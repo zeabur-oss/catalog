@@ -19,11 +19,11 @@ metadata:
   # Also: https://github.com/lobehub/lobe-chat/blob/d718de7e1af2dd7281c4eaca70f627e4b9deddb1/LICENSE
   homepage: https://github.com/lobehub/lobe-chat
 
-requires: [ingress/traefik, certificates/cert-manager]
+requires: [{component: ingress/traefik}, {component: certificates/cert-manager}]
 
 services:
   - name: lobechat
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: http, port: 3210}]
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 2Gi}}
     domains: ['{{ .Domain }}']

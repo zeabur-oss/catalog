@@ -17,13 +17,16 @@ metadata:
 defaults:
   single-node: optional
   multi-node: optional
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.26.0-0"
 # The webhook's serving certificate comes from cert-manager.
-requires: [certificates]
+requires: [{capability: certificates}]
 persistsData: true
 
 releases:
   # Its own chart so CRDs upgrade before the operator, as upstream installs it.
   - name: mariadb-operator-crds
+    type: helm
     namespace: mariadb-operator
     repo: https://helm.mariadb.com/mariadb-operator
     chart: mariadb-operator-crds
@@ -31,6 +34,7 @@ releases:
     chartDigest: sha256:2a0c8ae8ec848e18144eb2606d7860f01d08c783a512066d2cf8b784d13a64d4
 
   - name: mariadb-operator
+    type: helm
     namespace: mariadb-operator
     repo: https://helm.mariadb.com/mariadb-operator
     chart: mariadb-operator
@@ -116,6 +120,7 @@ detection:
 
 security:
   summary: Manages pods, Services, Secrets, PVCs, Jobs and RBAC for MariaDB objects in every namespace.
+  podSecurity: restricted
 
 leftovers: [persistentvolumeclaims]
 

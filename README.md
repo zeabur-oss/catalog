@@ -49,7 +49,7 @@ metadata:
   name: Traefik Proxy
   license: MIT                    # SPDX
   homepage: https://traefik.io/traefik/
-requires: [certificates]          # <capability> or <capability>/<upstream>
+requires: [{capability: certificates}]   # or {component: <capability>/<upstream>}
 ```
 
 The path is the ID: `components/ingress/traefik.yaml` is `ingress/traefik`,

@@ -8,7 +8,7 @@ components:
     detection: {crds: [certificates.cert-manager.io]}
 served:
   - {group: psmdb.percona.com, resource: perconaservermongodbs}
-requires: [databases, certificates]
+requires: [{capability: databases}, {capability: certificates}]
 want:
   databases: installed
   certificates: missing

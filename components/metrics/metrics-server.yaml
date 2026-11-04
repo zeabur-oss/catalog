@@ -16,8 +16,11 @@ defaults:
   single-node: recommended
   multi-node: recommended
 
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.34.0-0"
 releases:
   - name: metrics-server
+    type: helm
     namespace: kube-system
     repo: https://kubernetes-sigs.github.io/metrics-server
     chart: metrics-server
@@ -52,7 +55,9 @@ releases:
 detection:
   apiServices: [v1beta1.metrics.k8s.io]
   helmCharts: [metrics-server]
-  k3sAddons: [metrics-server]
+  addons:
+    - {distribution: k3s, name: metrics-server}
+    - {distribution: rke2, name: rke2-metrics-server}
   workloads:
     - kind: Deployment
       labels: {app.kubernetes.io/name: metrics-server}
@@ -61,6 +66,7 @@ detection:
 
 security:
   summary: Reads kubelet metrics; registers an aggregated API.
+  podSecurity: restricted
 
 health:
   - name: metrics-api

@@ -142,7 +142,7 @@ func templateRefs(r *repo, t *templates.Template) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	refs := slices.Clone(t.Requires)
+	refs := catalog.RefNames(t.Requires)
 	if slices.ContainsFunc(slices.Collect(maps.Values(values.Inputs)), func(v string) bool { return strings.Contains(v, ".S3") }) {
 		refs = append(refs, templates.S3Component)
 	}

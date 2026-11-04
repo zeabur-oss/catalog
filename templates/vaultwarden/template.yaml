@@ -16,11 +16,11 @@ metadata:
   license: AGPL-3.0-only AND GPL-3.0-only
   homepage: https://github.com/dani-garcia/vaultwarden
 
-requires: [ingress/traefik, certificates/cert-manager]
+requires: [{component: ingress/traefik}, {component: certificates/cert-manager}]
 
 services:
   - name: vaultwarden
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: http, port: 8080}]
     resources: {requests: {cpu: 50m, memory: 64Mi}, limits: {cpu: "1", memory: 512Mi}}
     domains: ['{{ .Domain }}']

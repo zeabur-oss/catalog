@@ -5,6 +5,6 @@ components:
 served:
   - {group: other.example.com, resource: clusters}
   - {group: postgresql.cnpg.io, resource: backups}
-requires: [databases/cloudnative-pg]
+requires: [{component: databases/cloudnative-pg}]
 want:
   databases/cloudnative-pg: missing

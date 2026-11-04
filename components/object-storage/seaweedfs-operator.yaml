@@ -17,12 +17,15 @@ metadata:
 defaults:
   single-node: optional
   multi-node: optional
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.34.0-0"
 # The webhook's serving certificate comes from cert-manager.
-requires: [certificates]
+requires: [{capability: certificates}]
 persistsData: true
 
 releases:
   - name: seaweedfs-operator
+    type: helm
     namespace: seaweedfs-operator
     repo: https://seaweedfs.github.io/seaweedfs-operator/
     chart: seaweedfs-operator
@@ -80,6 +83,7 @@ security:
   summary: >
     Manages pods, StatefulSets, Services, Secrets, PVCs, Jobs and Ingresses
     for Seaweed objects in every namespace, and calls each cluster's admin API.
+  podSecurity: restricted
 
 # The CRDs carry helm.sh/resource-policy: keep.
 # The chart annotates its CRDs helm.sh/resource-policy: keep.

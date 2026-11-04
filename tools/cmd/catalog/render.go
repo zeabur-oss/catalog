@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"cmp"
 	"errors"
 	"flag"
 	"fmt"
@@ -58,25 +57,20 @@ func renderComponents(cat *catalog.Catalog, comps []*catalog.Component, out stri
 						continue
 					}
 					// urlDigests pin a URL release. Its images are the upstream's choice.
-					if kv == versions[0] && rel.Kind() != "manifest" {
+					if kv == versions[0] && rel.Type != "manifest" {
 						for _, u := range catalog.UnpinnedImages(manifest, rel.Unpinned) {
 							errs = append(errs, fmt.Errorf("%s/%s %s: %s needs a sha256 digest (<tag>@sha256:<digest>)", c.ID, rel.Name, p, u))
 						}
 					}
 					// Charts must not generate secrets or certificates: the same
 					// values must give the same objects on every install.
-					if kv == versions[0] && rel.Kind() == "helm" {
+					if kv == versions[0] && rel.Type == "helm" {
 						again, err := catalog.Template(c, rel, p, kv, extra...)
 						if err == nil && !bytes.Equal(again, manifest) {
 							errs = append(errs, fmt.Errorf("%s/%s %s: output differs between renders; supply generated values as inputs", c.ID, rel.Name, p))
 						}
 					}
-					level := cmp.Or(c.Security.PodSecurity, "restricted")
-					// A privileged component's namespaces enforce no Pod Security level.
-					if c.Security.Privileged {
-						level = ""
-					}
-					if err := templates.CheckPodSecurity(manifest, level); err != nil {
+					if err := templates.CheckPodSecurity(manifest, c.Security.PodSecurity); err != nil {
 						errs = append(errs, fmt.Errorf("%s/%s %s %s: %w", c.ID, rel.Name, p, kv, err))
 					}
 					f := filepath.Join(out, kv, p, c.ID, rel.Name+".yaml")
@@ -114,7 +108,7 @@ func contributions(cat *catalog.Catalog, target, release string) ([]map[string]a
 	var out []map[string]any
 	for _, c := range cat.Components {
 		for _, ct := range c.Contributes {
-			if ct.Target == target && ct.Release == release {
+			if ct.Target == (catalog.ReleaseRef{Component: target, Release: release}) {
 				m, err := catalog.ParseValues(ct.Values)
 				if err != nil {
 					return nil, fmt.Errorf("%s: %w", c.ID, err)

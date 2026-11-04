@@ -16,6 +16,8 @@ defaults:
   single-node: optional
   multi-node: optional
 
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.16.0-0"
 inputs:
   - name: bucket
     description: Velero stores backups in this S3 bucket.
@@ -63,6 +65,7 @@ inputs:
 
 releases:
   - name: velero
+    type: helm
     namespace: velero
     repo: https://vmware-tanzu.github.io/helm-charts
     chart: velero
@@ -141,7 +144,7 @@ security:
     Pod is privileged and the velero namespace needs only the baseline Pod
     Security level. With the file-backup input, a root node agent on every
     node holds the same token, mounts host paths and needs the privileged level.
-  privileged: false
+  podSecurity: restricted
 
 # The chart's crds/ directory: Helm never deletes it.
 leftovers: [customresourcedefinitions]

@@ -4,6 +4,7 @@ description: >
 components:
   - id: logs/victoria-logs
     defaults: {single-node: optional, multi-node: optional}
+    distributions: [k3s, rke2, kubesolo]
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
       - {distribution: rke2, platforms: [linux/amd64]}
@@ -12,6 +13,7 @@ components:
       multi-node: [observability-operator/victoria-metrics-operator, logs/victoria-logs]
   - id: observability-operator/victoria-metrics-operator
     defaults: {single-node: optional, multi-node: optional}
+    distributions: [k3s, rke2, kubesolo]
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
 config:

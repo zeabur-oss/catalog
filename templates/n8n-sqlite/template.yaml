@@ -17,16 +17,16 @@ metadata:
   # Also: https://docs.n8n.io/hosting/, https://docs.n8n.io/sustainable-use-license/
   homepage: https://github.com/n8n-io/n8n
 
-requires: [ingress/traefik, certificates/cert-manager]
+requires: [{component: ingress/traefik}, {component: certificates/cert-manager}]
 
 services:
   - name: n8n
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: http, port: 5678}, {name: broker, port: 5679}]
     resources: {requests: {cpu: 200m, memory: 512Mi}, limits: {cpu: 2000m, memory: 2Gi}}
     domains: ['{{ .Domain }}']
   - name: task-runner
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: database, port: 5680}]
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}
 

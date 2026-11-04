@@ -13,11 +13,11 @@ metadata:
   license: MIT
   homepage: https://github.com/router-for-me/CLIProxyAPI
 
-requires: [ingress/traefik, certificates/cert-manager]
+requires: [{component: ingress/traefik}, {component: certificates/cert-manager}]
 
 services:
   - name: cliproxyapi
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: http, port: 8317}]
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: 1000m, memory: 1Gi}}
     domains: ['{{ .Domain }}']

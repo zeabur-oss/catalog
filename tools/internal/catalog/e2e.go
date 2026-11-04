@@ -312,13 +312,13 @@ func (t *Tester) install(r *run, c *Component) error {
 	}
 	r.installed[c.ID] = true
 	for _, ct := range c.Contributes {
-		key := ct.Target + "/" + ct.Release
+		key := ct.Target.Component + "/" + ct.Target.Release
 		r.contributions[key] = append(r.contributions[key], ct.Values)
-		if !r.installed[ct.Target] {
+		if !r.installed[ct.Target.Component] {
 			continue
 		}
-		target, _ := t.Catalog.Get(ct.Target)
-		rel, _ := target.Release(ct.Release)
+		target, _ := t.Catalog.Get(ct.Target.Component)
+		rel, _ := target.Release(ct.Target.Release)
 		slog.Info("adding contributed values", "component", c.ID, "target", key)
 		if err := t.installRelease(r, target, rel); err != nil {
 			return err
@@ -332,7 +332,7 @@ func (t *Tester) installRelease(r *run, c *Component, rel Release) error {
 		return err
 	}
 	key := c.ID + "/" + rel.Name
-	if rel.Kind() != "helm" {
+	if rel.Type != "helm" {
 		manifest, err := releaseManifest(rel)
 		if err != nil {
 			return err

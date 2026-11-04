@@ -6,7 +6,7 @@ components:          # index.json components, with only the fields matching read
     detection: {crds: [perconaservermongodbs.psmdb.percona.com]}
 served:              # what discovery lists; left out when discovery fails
   - {group: postgresql.cnpg.io, resource: clusters}
-requires: [databases/cloudnative-pg, databases/percona-mongodb]
+requires: [{component: databases/cloudnative-pg}, {component: databases/percona-mongodb}]
 want:
   databases/cloudnative-pg: installed
   databases/percona-mongodb: missing

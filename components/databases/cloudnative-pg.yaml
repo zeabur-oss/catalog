@@ -15,12 +15,15 @@ metadata:
 defaults:
   single-node: optional
   multi-node: optional
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.29.0-0"
 # The Barman Cloud plugin talks to the operator over mTLS from cert-manager.
-requires: [certificates]
+requires: [{capability: certificates}]
 persistsData: true
 
 releases:
   - name: cloudnative-pg
+    type: helm
     namespace: cnpg-system
     releaseName: cnpg
     repo: https://cloudnative-pg.github.io/charts
@@ -56,6 +59,7 @@ releases:
 
   # Must share the operator's namespace; it registers itself with the operator.
   - name: plugin-barman-cloud
+    type: helm
     namespace: cnpg-system
     repo: https://cloudnative-pg.github.io/charts
     chart: plugin-barman-cloud
@@ -94,6 +98,7 @@ detection:
 
 security:
   summary: Manages pods, Services, Secrets and PVCs for Clusters in every namespace.
+  podSecurity: restricted
 
 # The chart annotates its CRDs helm.sh/resource-policy: keep.
 leftovers: [customresourcedefinitions, persistentvolumeclaims]

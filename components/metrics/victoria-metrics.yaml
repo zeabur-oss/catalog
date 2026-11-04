@@ -23,11 +23,14 @@ resources:
 defaults:
   single-node: recommended
   multi-node: recommended
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.25.0-0"
 persistsData: true
-requires: [observability-operator/victoria-metrics-operator]
+requires: [{component: observability-operator/victoria-metrics-operator}]
 
 releases:
   - name: k8s-stack
+    type: helm
     namespace: observability
     releaseName: vm
     chart: oci://ghcr.io/victoriametrics/helm-charts/victoria-metrics-k8s-stack
@@ -366,6 +369,7 @@ releases:
   # rules move the object's namespace to object_namespace and set the
   # namespace to observability, where the cluster's channels are.
   - name: notifications
+    type: inline
     namespace: observability
     manifests: |
       apiVersion: operator.victoriametrics.com/v1beta1
@@ -671,8 +675,7 @@ releases:
               - {port: 9094, protocol: UDP}
 
 contributes:
-  - target: runtime-security/falco
-    release: falco
+  - target: {component: runtime-security/falco, release: falco}
     values: |
       falcosidekick:
         config:
@@ -699,7 +702,7 @@ security:
     Manages VictoriaMetrics objects, scrapes pods in all namespaces, and reads
     builds, databases, backups and certificates in all namespaces for alerts.
     node-exporter reads the host's /proc and /sys on the host network.
-  privileged: true
+  podSecurity: privileged
 
 leftovers: [persistentvolumeclaims]
 

@@ -15,7 +15,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "defaults", "testedOn"],
+        "required": ["id", "defaults", "distributions", "testedOn"],
         "properties": {
           "id": { "$ref": "#/$defs/id" },
           "defaults": {
@@ -27,7 +27,7 @@
               "multi-node": { "enum": ["recommended", "optional", "unsupported"] }
             }
           },
-          "distributions": { "$ref": "#/$defs/distributions", "description": "Omitted means any distribution." },
+          "distributions": { "$ref": "#/$defs/distributions" },
           "testedOn": { "$ref": "#/$defs/testedOn" },
           "installOrder": {
             "type": "object",
@@ -38,7 +38,7 @@
               "multi-node": { "$ref": "#/$defs/ids" }
             }
           },
-          "replaces": { "$ref": "#/$defs/ids" }
+          "replaces": { "type": "array", "uniqueItems": true, "items": { "type": "object", "additionalProperties": false, "required": ["component"], "properties": { "component": { "$ref": "#/$defs/id" } } } }
         }
       }
     },

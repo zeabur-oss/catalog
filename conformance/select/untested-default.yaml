@@ -2,12 +2,14 @@ description: A default not tested on the distribution is installed with a warnin
 components:
   - id: ingress/traefik
     defaults: {single-node: recommended, multi-node: recommended}
+    distributions: [k3s, rke2, kubesolo]
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
       - {distribution: rke2, platforms: [linux/amd64]}
       - {distribution: kubesolo, platforms: [linux/amd64]}
   - id: logs/victoria-logs
     defaults: {single-node: recommended, multi-node: recommended}
+    distributions: [k3s, rke2, kubesolo]
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
       - {distribution: kubesolo, platforms: [linux/amd64]}

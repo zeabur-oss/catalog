@@ -106,7 +106,7 @@ func valuesFiles(docs ...map[string]any) ([]string, func(), error) {
 // releaseManifest returns a release's objects: downloaded for URLs, as written for
 // inline manifests.
 func releaseManifest(rel Release) ([]byte, error) {
-	if rel.Kind() == "inline" {
+	if rel.Type == "inline" {
 		return []byte(rel.Manifests), nil
 	}
 	var buf bytes.Buffer
@@ -130,7 +130,7 @@ func releaseManifest(rel Release) ([]byte, error) {
 // Template renders a release for a profile with CI test inputs and extra
 // values documents layered on top.
 func Template(c *Component, rel Release, profile, kubeVersion string, extra ...map[string]any) ([]byte, error) {
-	if rel.Kind() != "helm" {
+	if rel.Type != "helm" {
 		return releaseManifest(rel)
 	}
 	chart, err := pull(rel)

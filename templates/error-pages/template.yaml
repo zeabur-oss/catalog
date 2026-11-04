@@ -16,11 +16,11 @@ metadata:
   # Also: https://github.com/nginx/docker-nginx-unprivileged
   homepage: https://nginx.org/
 
-requires: [ingress/traefik]
+requires: [{component: ingress/traefik}]
 
 services:
   - name: error-pages
-    securityProfile: restricted
+    podSecurity: restricted
     # pages: GET /<status>.html. maintenance: status 503 and maintenance.html for every request.
     ports: [{name: pages, port: 8080}, {name: maintenance, port: 8081}]
     resources: {requests: {cpu: 5m, memory: 8Mi}, limits: {cpu: 100m, memory: 32Mi}}

@@ -17,16 +17,16 @@ metadata:
   # Also: https://github.com/open-webui/pipelines
   homepage: https://github.com/open-webui/open-webui
 
-requires: [ingress/traefik, certificates/cert-manager]
+requires: [{component: ingress/traefik}, {component: certificates/cert-manager}]
 
 services:
   - name: open-webui
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: http, port: 8080}]
     resources: {requests: {cpu: 500m, memory: 1Gi}, limits: {cpu: "2", memory: 4Gi}}
     domains: ['{{ .Domain }}']
   - name: pipeline
-    securityProfile: restricted
+    podSecurity: restricted
     ports: [{name: http, port: 9099}]
     resources: {requests: {cpu: 200m, memory: 512Mi}, limits: {cpu: "2", memory: 2Gi}}
 
