@@ -266,15 +266,14 @@ func TestFailureSurvivesAnotherJobsStaleCopy(t *testing.T) {
 	}
 }
 
-func TestStartupFailureWithoutMeasurementIsRecorded(t *testing.T) {
+func TestStartupFailureMarksTheExistingRun(t *testing.T) {
 	t.Chdir(t.TempDir())
 	var cfg config
 	cfg.Kubesolo.Version = "v1.2.3"
 	comp := &catalog.Component{ID: "ingress/traefik"}
-	// amd64 passed. arm64 has never been measured and its cluster never answered.
 	writeFile(t, "measurements/components/ingress/traefik.json", measurement{Component: comp.ID, Environments: []environment{
 		env("kubesolo", "single-node", "amd64", "v1.35.7", "v1.2.3", 20, "2026-10-30"),
-		env("kubesolo", "single-node", "arm64", "v1.35.7", "v1.2.2", 20, "2026-10-30"),
+		env("kubesolo", "single-node", "arm64", "v1.35.7", "v1.2.3", 20, "2026-10-30"),
 	}})
 	if err := markFailed(cfg, kubesoloProfile, "arm64", comp, nil); err != nil {
 		t.Fatal(err)
@@ -284,10 +283,24 @@ func TestStartupFailureWithoutMeasurementIsRecorded(t *testing.T) {
 		t.Errorf("testedOn = %+v after arm64 failed to start, want amd64 only", got)
 	}
 
-	// A later arm64 run passes under its real Kubernetes version and replaces the mark.
+	// A later arm64 run passes and replaces the mark.
 	m.put(env("kubesolo", "single-node", "arm64", "v1.35.7", "v1.2.3", 21, "2999-01-01"))
 	if got := testedOn(cfg, m.Environments); !reflect.DeepEqual(got, []tested{{"kubesolo", []string{"linux/amd64", "linux/arm64"}}}) {
 		t.Errorf("testedOn = %+v after arm64 passed", got)
+	}
+}
+
+func TestStartupFailureWithoutRunRecordsNothing(t *testing.T) {
+	t.Chdir(t.TempDir())
+	var cfg config
+	cfg.Kubesolo.Version = "v1.2.3"
+	comp := &catalog.Component{ID: "ingress/traefik"}
+	if err := markFailed(cfg, kubesoloProfile, "arm64", comp, nil); err != nil {
+		t.Fatal(err)
+	}
+	m := readMeasurement("measurements/components/ingress/traefik.json")
+	if slices.ContainsFunc(m.Environments, func(e environment) bool { return e.KubernetesVersion == "" }) {
+		t.Errorf("a failure before the cluster answered wrote an environment without a Kubernetes version: %+v", m.Environments)
 	}
 }
 
