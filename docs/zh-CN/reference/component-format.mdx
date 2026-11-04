@@ -1,7 +1,7 @@
 ---
 title: 组件文件格式
 description: 按照通用结构和组件字段编写 YAML，并用 digest 固定安装内容。
-source: "c7ede2787cd8"
+source: "b656223bc77a"
 ---
 
 把组件文件放在 `components/<capability>/<upstream>.yaml`，每个 capability（用途类别）与上游的组合各用一个文件。文件使用 YAML，包含通用结构、安装内容和配置。路径就是 ID，例如 `components/ingress/traefik.yaml` 的 ID 是 `ingress/traefik`。
@@ -30,6 +30,8 @@ metadata:
     zh-CN: {summary: 把域名的流量转发到你的服务。}
 ```
 
+`locales` 的键是 BCP 47 语言标签。`config/locales.yaml` 列出组件和模板里每个 `locales` 都必须包含的语言，`catalog validate` 会检查。也可以加上其他语言。
+
 ## 组件字段
 
 下面是一个精简示例。`defaults` 指定各 profile（`single-node` 或 `multi-node` 的配置组合）的启用配置，`recommended` 表示默认启用（recommended）。`releases` 列出按顺序安装的内容，`profiles` 的配置会合并到共用的 `values`。
@@ -45,7 +47,7 @@ defaults: {single-node: recommended, multi-node: recommended}
 requires: [{capability: certificates}]  # installed first
 distributions: [k3s, rke2, kubesolo]    # distributions it supports and e2e tests it on
 kubeVersion: ">=1.30.0-0"               # Kubernetes versions it supports
-replaces: [{component: container-registry/zot}]  # optional; removed components it took over
+replaces: [{component: container-registry/zot}]  # optional, removed components it took over
 
 releases:                         # installed in order
   - name: traefik

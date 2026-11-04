@@ -164,6 +164,10 @@ func Check(root string, cat *catalog.Catalog, all []*Template) error {
 	if err != nil {
 		return err
 	}
+	locales, err := catalog.ReadLocales(root)
+	if err != nil {
+		return err
+	}
 	for _, t := range all {
 		fail := func(format string, a ...any) {
 			errs = append(errs, fmt.Errorf("templates/%s: %s", t.ID, fmt.Sprintf(format, a...)))
@@ -171,6 +175,9 @@ func Check(root string, cat *catalog.Catalog, all []*Template) error {
 		if err := schema.Validate(t.raw); err != nil {
 			fail("%v", err)
 			continue
+		}
+		for _, p := range catalog.MissingLocales(t.raw, locales) {
+			fail("%s", p)
 		}
 		if !idPattern.MatchString(t.ID) || len(t.ID) > 49 {
 			fail("directory name must be a DNS label of at most 49 characters")

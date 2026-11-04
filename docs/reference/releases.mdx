@@ -47,6 +47,22 @@ To check the attestation instead, run `gh attestation verify index.json --repo z
 
 After verification, the tool reads `index.json`. Only incompatible changes affect `indexVersion`.
 
+`catalog` names the release that built the index: `version` is the catalog version, such as `0.3.0`. An index that `catalog index` writes without `-version`, such as in CI, has no `catalog`.
+
+```json
+"catalog": {"version": "0.3.0"}
+```
+
+A newer release can add a value to a field without a new `indexVersion`. A reader handles a value it doesn't know as follows, and ignores a field it doesn't know:
+
+| Field | A value the reader doesn't know |
+| --- | --- |
+| `defaults.<profile>` | Treat it as `unsupported`. |
+| `releases[].type`, `security.podSecurity` | Don't offer the component. |
+| `inputs[].generate.type` | Don't fill in the input. A component or template that needs the input can't be installed. |
+| `distributions`, `testedOn[].distribution`, `detection.addons[].distribution` | Ignore the entry. |
+| `result` in a measurement file | The run didn't pass. |
+
 `measured` lists each environment where the component's test passed. `distribution` (`kind`, `k3s`, `rke2` or `kubesolo`), `profile`, `platform`, `kubernetesVersion` and `distributionVersion`, the release of a distribution on the host, name the environment. `versions` gives the version of each release that the run installed.
 
 ```json

@@ -29,6 +29,8 @@ metadata:
     zh-CN: {summary: 把域名的流量转发到你的服务。}
 ```
 
+The keys of `locales` are BCP 47 tags. `config/locales.yaml` lists the tags that every `locales` map in components and templates must have, and `catalog validate` checks them. A map may have other tags too.
+
 ## Component fields
 
 The following example shows a minimal component. `defaults` specifies whether to enable the component for each profile (the `single-node` or `multi-node` configuration), and `recommended` means enabled by default (recommended). `releases` lists the content to install in order. Settings in `profiles` merge into the shared `values`.
@@ -44,7 +46,7 @@ defaults: {single-node: recommended, multi-node: recommended}
 requires: [{capability: certificates}]  # installed first
 distributions: [k3s, rke2, kubesolo]    # distributions it supports and e2e tests it on
 kubeVersion: ">=1.30.0-0"               # Kubernetes versions it supports
-replaces: [{component: container-registry/zot}]  # optional; removed components it took over
+replaces: [{component: container-registry/zot}]  # optional, removed components it took over
 
 releases:                         # installed in order
   - name: traefik

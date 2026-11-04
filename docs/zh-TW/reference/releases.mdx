@@ -1,7 +1,7 @@
 ---
 title: 版本與套件包
 description: 固定 Zeabur Catalog 版本、驗證 Sigstore 簽章，再讀取 index.json，或從指定 commit 建置版本產物。
-source: "3ebe04ba9ef5"
+source: "d7d2499a272e"
 ---
 
 打上 `vX.Y.Z` tag 後，就會發布 `index.json`、`bundle.tar.gz`、`checksums.txt`，以及 `SHA256SUMS` 和它的 Sigstore 簽章套件。使用 Zeabur Catalog 的工具應固定使用一個版本，驗證後再讀取 `index.json`。1.0 之前，像 0.1 升到 0.2 這樣的更新也可能改變檔案格式，所以請固定使用某個確切版本。
@@ -47,6 +47,22 @@ sha256sum --check --ignore-missing SHA256SUMS
 ### 讀取索引並產生安裝內容
 
 驗證後，工具讀取 `index.json`。只有不相容的變更才會改動 `indexVersion`。
+
+`catalog` 指出建置這份索引的版本：`version` 是 catalog 的版本，例如 `0.3.0`。`catalog index` 沒帶 `-version` 時（例如在 CI），索引裡沒有 `catalog`。
+
+```json
+"catalog": {"version": "0.3.0"}
+```
+
+新版本可以替欄位加上新值，不改 `indexVersion`。讀取方遇到不認得的值時照下表處理，遇到不認得的欄位則略過：
+
+| 欄位 | 遇到不認得的值 |
+| --- | --- |
+| `defaults.<profile>` | 當成 `unsupported`。 |
+| `releases[].type`、`security.podSecurity` | 不提供這個元件。 |
+| `inputs[].generate.type` | 不替這個輸入填值。需要這個輸入的元件或範本無法安裝。 |
+| `distributions`、`testedOn[].distribution`、`detection.addons[].distribution` | 略過這一項。 |
+| 測量檔案裡的 `result` | 視為沒通過。 |
 
 `measured` 列出元件測試通過的每個環境。`distribution`（`kind`、`k3s`、`rke2` 或 `kubesolo`）、`profile`、`platform`、`kubernetesVersion` 和 `distributionVersion`（裝在主機上的發行版的版本）指出是哪個環境。`versions` 列出這次執行安裝的每個 release 的版本。
 

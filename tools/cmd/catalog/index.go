@@ -25,6 +25,7 @@ type budgetConfig struct {
 func index(fs *flag.FlagSet, r *repo) error {
 	cat := r.cat
 	out := fs.String("out", "index.json", "output file")
+	version := fs.String("version", "", "catalog release version, written to catalog.version")
 	fs.Parse(os.Args[2:])
 	cfg, err := loadConfig()
 	if err != nil {
@@ -61,12 +62,16 @@ func index(fs *flag.FlagSet, r *repo) error {
 		ic.Measured = passed(measured)
 		comps = append(comps, ic)
 	}
-	return writeJSON(*out, map[string]any{
+	doc := map[string]any{
 		"indexVersion": indexVersion,
 		"profiles":     catalog.Profiles,
 		"kubernetes":   cfg.Versions,
 		"components":   comps,
-	})
+	}
+	if *version != "" {
+		doc["catalog"] = map[string]string{"version": *version}
+	}
+	return writeJSON(*out, doc)
 }
 
 // tested is a distribution in testedOn with the platforms it passed on.
