@@ -30,7 +30,7 @@ inputs:
     description: >-
       Master key. Use it only to manage API keys, and give clients the search
       or admin keys from GET /keys. Generated at installation.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: meilisearch-secrets, key: master-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 

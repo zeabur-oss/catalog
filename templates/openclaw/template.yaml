@@ -30,7 +30,7 @@ inputs:
     description: >-
       Generated gateway-token; retrieve from Secret openclaw-secrets, never from
       a public URL.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: openclaw-secrets, key: gateway-token}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: providerSecret

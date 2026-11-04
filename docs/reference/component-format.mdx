@@ -92,19 +92,21 @@ These fields tell an installer what a component offers, so the installer never n
 
 `provides.registry` is an OCI registry in the cluster: `host` is the `host:port` images name, and `ca` is the Secret key with the CA that signs its certificate. Removing the component waits until no Pod outside its namespaces runs an image from the host.
 
-An input with `generate: clusterIP` takes a fixed ClusterIP for a Service of the component. A node's container runtime cannot resolve the registry host, so an installer fills the input with a free address in the Service CIDR and points a registry mirror on each node there. Left empty, as in CI, Kubernetes assigns an address and only Pods reach the registry.
+An input with `generate: {type: clusterIP}` takes a fixed ClusterIP for a Service of the component. A node's container runtime cannot resolve the registry host, so an installer fills the input with a free address in the Service CIDR and points a registry mirror on each node there. Left empty, as in CI, Kubernetes assigns an address and only Pods reach the registry.
 
 ```yaml
 inputs:
-  - name: cluster-ip
+  - name: clusterIp
     release: zot
     path: service.clusterIP
-    generate: clusterIP
+    generate: {type: clusterIP}
 provides:
   registry:
     host: zot.zot.svc:5000
     ca: {name: zot-tls, key: ca.crt, namespace: zot}
 ```
+
+An input's `name` is camelCase. An input with `generate: {type: random, bytes: 64, encoding: hex}` takes `bytes` random bytes, from 12 to 64, in `encoding`: lowercase `hex` or `base64url` without padding. Both fields are required, so an installer never guesses a length. An installer doesn't fill in an input whose `generate.type` it doesn't know.
 
 `detection.csiDrivers` lists the CSI drivers of the volumes the component provides. Removing the component waits until no PersistentVolume uses one of them. Find the StorageClass by its `provisioner`.
 

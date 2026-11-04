@@ -35,12 +35,12 @@ inputs:
     description: >-
       Password of the admin user. It replaces the default password once, at
       the first start. Change it in Umami after you sign in.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: umami-secrets, key: admin-password}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: appSecret
     description: Signs sign-in tokens and share links. Rotating it signs everyone out.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: umami-secrets, key: app-secret}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 

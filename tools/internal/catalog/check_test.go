@@ -58,7 +58,7 @@ func TestProvisionProblems(t *testing.T) {
 	component := func(edit func(*Component)) *Component {
 		c := &Component{
 			Releases:  []Release{{Name: "zot", Namespace: "zot"}},
-			Inputs:    []Input{{Name: "cluster-ip", Path: "service.clusterIP", Generate: "clusterIP"}},
+			Inputs:    []Input{{Name: "clusterIp", Path: "service.clusterIP", Generate: &Generate{Type: GenerateClusterIP}}},
 			Provides:  &Provides{Registry: &Registry{Host: "zot.zot.svc:5000", CA: SecretRef{Name: "zot-tls", Key: "ca.crt", Namespace: "zot"}}},
 			Detection: map[string]any{"crds": []any{"reports.example.com", "jobs.example.com"}},
 		}

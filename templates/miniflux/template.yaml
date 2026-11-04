@@ -35,7 +35,7 @@ inputs:
     description: >-
       Password of the admin user, created at the first start. Change it in
       Miniflux after you sign in; the Secret is not applied again.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: miniflux-secrets, key: admin-password}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 

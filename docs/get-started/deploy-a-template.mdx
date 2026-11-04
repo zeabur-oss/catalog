@@ -83,9 +83,9 @@ Generated inputs include `secret` (`name` and `key`) and a `validation.pattern` 
 
 | Field | Description |
 | --- | --- |
-| `generate` | `random`. |
-| `generateBytes` | Number of random bytes before encoding, from 12 to 64. Defaults to 32. |
-| `generateEncoding` | `base64url` (the default, without padding) or lowercase `hex`. |
+| `generate.type` | `random`. |
+| `generate.bytes` | Number of random bytes before encoding, from 12 to 64. Required. |
+| `generate.encoding` | `base64url` (without padding) or lowercase `hex`. Required. |
 
 User-provided inputs include `required` and don't include generation fields. Encoding 12 bytes as `base64url` produces 16 characters; encoding 16 or 32 bytes as `hex` produces 32 or 64 characters, respectively.
 

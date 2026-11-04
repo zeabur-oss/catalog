@@ -53,7 +53,7 @@ inputs:
     description: >-
       Generated API bearer key; retrieve hermes-secrets/api-key through
       authorized Kubernetes access.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: hermes-secrets, key: api-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: providerEndpoint
@@ -86,12 +86,12 @@ inputs:
     validation: {pattern: '^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$'}
   - name: dashboardPassword
     description: Independent generated dashboard password for user admin.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: hermes-secrets, key: dashboard-password}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: dashboardSessionKey
     description: Independent generated dashboard session-signing key.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: hermes-secrets, key: dashboard-session-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 

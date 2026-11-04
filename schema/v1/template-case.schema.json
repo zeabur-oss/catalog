@@ -52,7 +52,12 @@
                   "name": { "$ref": "#/$defs/inputName" },
                   "required": { "type": "boolean" },
                   "default": { "type": "string" },
-                  "generate": { "const": "random" },
+                  "generate": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["type", "bytes", "encoding"],
+                    "properties": { "type": { "const": "random" }, "bytes": { "type": "integer" }, "encoding": { "enum": ["hex", "base64url"] } }
+                  },
                   "secret": {
                     "type": "object",
                     "additionalProperties": false,
@@ -243,7 +248,7 @@
       }
     },
     "description": { "type": "string", "description": "The rule the case checks, in one or two sentences." },
-    "inputName": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
+    "inputName": { "type": "string", "pattern": "^[a-z][A-Za-z0-9]*$" },
     "name": { "type": "string", "pattern": "^[a-z0-9-]+(/[a-z0-9-]+)?$" },
     "locales": {
       "type": "object",

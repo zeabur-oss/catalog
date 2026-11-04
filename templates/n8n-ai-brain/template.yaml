@@ -51,24 +51,24 @@ inputs:
     validation: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
   - name: ownerPassword
     description: Generated owner password; preserve it across upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: app-secrets, key: owner-password}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: encryptionKey
     description: >-
       Encryption key for stored workflow credentials. Preserve permanently with
       encrypted backups.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: app-secrets, key: encryption-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: runnerToken
     description: Shared authentication token for isolated external JavaScript/Python runners.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: app-secrets, key: runner-token}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: jwtKey
     description: Persistent user-management JWT secret.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: app-secrets, key: jwt-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 

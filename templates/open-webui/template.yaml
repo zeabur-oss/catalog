@@ -47,17 +47,17 @@ inputs:
     validation: {pattern: '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'}
   - name: adminPassword
     description: adminPassword generated credential; retain during upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: app-secrets, key: admin-password}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: sessionKey
     description: sessionKey generated credential; retain during upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: app-secrets, key: session-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: pipelineKey
     description: pipelineKey generated credential; retain during upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: app-secrets, key: pipeline-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 

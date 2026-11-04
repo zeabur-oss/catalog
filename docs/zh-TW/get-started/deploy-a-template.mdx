@@ -1,7 +1,7 @@
 ---
 title: 用 catalog 指令部署範本
 description: 驗證版本簽章、準備叢集，再渲染並套用範本，完成部署。
-source: "acfb4344d60b"
+source: "04bd600e8557"
 ---
 
 先驗證版本簽章，再用 `catalog` 指令渲染並套用範本。最後執行範本的煙霧測試（smoke check），再執行你自己的測試，確認部署結果。
@@ -84,9 +84,9 @@ kubectl -n app apply -f plan.yaml
 
 | 欄位 | 說明 |
 | --- | --- |
-| `generate` | `random`。 |
-| `generateBytes` | 編碼前的隨機位元組數，範圍為 12 到 64，預設為 32。 |
-| `generateEncoding` | `base64url`（預設，不含填補字元）或小寫 `hex`。 |
+| `generate.type` | `random`。 |
+| `generate.bytes` | 編碼前的隨機位元組數，範圍為 12 到 64，必填。 |
+| `generate.encoding` | `base64url`（不含填補字元）或小寫 `hex`，必填。 |
 
 使用者提供的輸入包含 `required`，不包含自動產生欄位。12 個位元組用 `base64url` 編碼後會得到 16 個字元。16 或 32 個位元組用 `hex` 編碼後，會分別得到 32 或 64 個字元。
 

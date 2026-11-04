@@ -27,7 +27,7 @@ inputs:
     description: >-
       Password of the admin user. It is applied at each start, so change the
       Secret to rotate it. Generated at installation.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: ntfy-secrets, key: admin-password}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 

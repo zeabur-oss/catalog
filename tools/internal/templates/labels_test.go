@@ -21,7 +21,7 @@ func TestEveryObjectOfAnInstallHasItsLabels(t *testing.T) {
 		t.Fatal(err)
 	}
 	r := &templates.Template{}
-	if err := yaml.Unmarshal([]byte(`{"metadata":{"version":"1.2.3"},"services":[{"name":"app"}],"inputs":[{"name":"password","description":"password","generate":"random","secret":{"name":"app-secrets","key":"password"},"validation":{"pattern":"^[A-Za-z0-9_-]{43}$"}}]}`), r); err != nil {
+	if err := yaml.Unmarshal([]byte(`{"metadata":{"version":"1.2.3"},"services":[{"name":"app"}],"inputs":[{"name":"password","description":"password","generate":{"type":"random","bytes":32,"encoding":"base64url"},"secret":{"name":"app-secrets","key":"password"},"validation":{"pattern":"^[A-Za-z0-9_-]{43}$"}}]}`), r); err != nil {
 		t.Fatal(err)
 	}
 	r.ID, r.Dir = "app", dir

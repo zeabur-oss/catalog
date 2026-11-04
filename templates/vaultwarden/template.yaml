@@ -30,7 +30,7 @@ inputs:
     description: >-
       Token for the admin page at /admin, where you invite users. Generated
       at installation.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: vaultwarden-secrets, key: admin-token}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 

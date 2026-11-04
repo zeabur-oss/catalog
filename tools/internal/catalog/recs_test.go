@@ -87,13 +87,13 @@ func TestReplace(t *testing.T) {
 
 func TestRandom(t *testing.T) {
 	for _, c := range []struct {
-		in   Input
+		in   Generate
 		want string
 	}{
-		{Input{}, "^[0-9a-f]{128}$"},
-		{Input{GenerateBytes: 24, GenerateEncoding: "base64url"}, "^[A-Za-z0-9_-]{32}$"},
+		{Generate{Type: GenerateRandom, Bytes: 64, Encoding: "hex"}, "^[0-9a-f]{128}$"},
+		{Generate{Type: GenerateRandom, Bytes: 24, Encoding: "base64url"}, "^[A-Za-z0-9_-]{32}$"},
 	} {
-		if v := c.in.random(); !regexp.MustCompile(c.want).MatchString(v) {
+		if v := c.in.Random(); !regexp.MustCompile(c.want).MatchString(v) {
 			t.Errorf("%+v: %q does not match %s", c.in, v, c.want)
 		}
 	}

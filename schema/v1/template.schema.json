@@ -124,6 +124,17 @@
     }
   },
   "$defs": {
+    "generate": {
+      "type": "object",
+      "description": "How the installer makes the value instead of asking.",
+      "additionalProperties": false,
+      "required": ["type", "bytes", "encoding"],
+      "properties": {
+        "type": { "const": "random", "description": "bytes random bytes in encoding." },
+        "bytes": { "type": "integer", "minimum": 12, "maximum": 64, "description": "Random bytes to generate." },
+        "encoding": { "enum": ["hex", "base64url"], "description": "hex, or base64url without padding." }
+      }
+    },
     "text": { "type": "string", "minLength": 1 },
     "ref": {
       "description": "A component by id, or a capability: its recommended upstream on the profile, else an optional one.",
@@ -182,7 +193,7 @@
       "additionalProperties": false,
       "required": ["name", "description", "validation"],
       "properties": {
-        "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
+        "name": { "type": "string", "pattern": "^[a-z][A-Za-z0-9]*$", "description": "camelCase." },
         "description": { "$ref": "#/$defs/text" },
         "label": { "type": "string", "maxLength": 40, "description": "A short name for the field, in English." },
         "locales": {
@@ -194,9 +205,7 @@
         },
         "required": { "type": "boolean" },
         "default": { "type": "string", "description": "The value when a deploy does not give the input." },
-        "generate": { "const": "random" },
-        "generateBytes": { "type": "integer", "minimum": 12, "maximum": 64, "default": 32 },
-        "generateEncoding": { "enum": ["base64url", "hex"], "default": "base64url" },
+        "generate": { "$ref": "#/$defs/generate" },
         "secret": {
           "type": "object",
           "additionalProperties": false,
@@ -221,7 +230,7 @@
         {
           "description": "A person gives the value, so the field has a label in every language.",
           "required": ["required", "label", "locales"],
-          "not": { "anyOf": [{ "required": ["generate"] }, { "required": ["secret"] }, { "required": ["generateBytes"] }, { "required": ["generateEncoding"] }] }
+          "not": { "anyOf": [{ "required": ["generate"] }, { "required": ["secret"] }] }
         }
       ]
     },

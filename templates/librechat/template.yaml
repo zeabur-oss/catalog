@@ -77,37 +77,37 @@ inputs:
     validation: {pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'}
   - name: adminPassword
     description: adminPassword generated credential; retain during upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: app-secrets, key: admin-password}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: mongoPassword
     description: mongoPassword generated credential; retain during upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: app-secrets, key: mongo-password}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: jwtSecret
     description: jwtSecret generated credential; retain during upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: app-secrets, key: jwt-secret}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: jwtRefreshSecret
     description: jwtRefreshSecret generated credential; retain during upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: app-secrets, key: jwt-refresh-secret}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: credsKey
     description: credsKey generated credential; retain during upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: app-secrets, key: creds-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: credsIv
     description: credsIv generated credential; retain during upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: app-secrets, key: creds-iv}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
   - name: meiliKey
     description: meiliKey generated credential; retain during upgrades.
-    generate: random
+    generate: {type: random, bytes: 32, encoding: base64url}
     secret: {name: app-secrets, key: meili-key}
     validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 

@@ -1,7 +1,7 @@
 ---
 title: 模板文件格式
 description: 了解 template.yaml 的字段和 manifests.yaml 的替换规则，编写模板文件。
-source: "7febff97ff18"
+source: "cd3cd2bba82f"
 ---
 
 模板由 `template.yaml` 和 `manifests.yaml` 组成。你在 `template.yaml` 中定义模板信息，并在 `manifests.yaml` 中使用允许的字段替换。
@@ -37,7 +37,7 @@ inputs:
     validation: {pattern: '^s3://[a-z0-9][a-z0-9.-]+/[A-Za-z0-9/_-]+$'}
   # From n8n: the installer generates this value into a Secret.
   # - name: encryptionKey
-  #   generate: random
+  #   generate: {type: random, bytes: 32, encoding: base64url}
   #   secret: {name: n8n-secrets, key: encryption-key}
 
 security: {...}      # summary, risks with mitigations, unauthenticated services
