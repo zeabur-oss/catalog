@@ -35,8 +35,11 @@ jobs:
   dco:
     uses: zeabur-oss/.github/.github/workflows/dco.yml@6ab106525ce16169ab0ecfebe4b0248e096797fa # main
 
+  # Lists the smoke groups in the merge queue. On main and the nightly run it only builds the tool, so
+  # setup-go saves the Go module and build caches there, where the merge queue's runs can restore
+  # them. Queue branches do not see each other's caches.
   smoke-matrix:
-    if: github.event_name == 'merge_group'
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-slim
     outputs:
       matrix: ${{ steps.list.outputs.matrix }}
@@ -48,14 +51,22 @@ jobs:
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
+          cache-dependency-path: go.sum
       - id: list
         env:
+          EVENT: ${{ github.event_name }}
           BASE: ${{ github.event.merge_group.base_sha }}
-        run: echo "matrix=$(go run ./tools/cmd/catalog list -tier smoke -since "$BASE")" >> "$GITHUB_OUTPUT"
+        run: |
+          if [[ "$EVENT" == merge_group ]]; then
+            echo "matrix=$(go run ./tools/cmd/catalog list -tier smoke -since "$BASE")" >> "$GITHUB_OUTPUT"
+          else
+            go build -trimpath -o /dev/null ./tools/cmd/catalog
+            echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
+          fi
 
   smoke:
     needs: [smoke-matrix]
-    if: fromJSON(needs.smoke-matrix.outputs.matrix).include[0]
+    if: github.event_name == 'merge_group' && fromJSON(needs.smoke-matrix.outputs.matrix).include[0]
     runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
