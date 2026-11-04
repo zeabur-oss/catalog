@@ -1,7 +1,7 @@
 ---
 title: 测试与 CI
 description: 了解各层 CI 的运行时机和检查内容，并配置模板测试输入。
-source: "aecf0c7b4fc3"
+source: "cfee11888f66"
 ---
 
 `check` 和 `smoke` 在每个 pull request 中运行，`smoke` 在合并到 `main` 后也会运行。`full` 在每晚（nightly）运行，带有 `e2e` 标签的 pull request 也会运行。打发布 tag 前，要确认该 commit 的每晚运行已通过。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以用 `catalog e2e -tier check|smoke|full` 运行与 CI 相同的测试。
@@ -93,7 +93,7 @@ pull request 测试的是它和目标分支的 merge base 之间的差异，合�
 
 只要变更涉及 `config/`、`tools/`、flake 或工作流，`smoke` 就会测试所有项目。
 
-## `full`：测试升级、资源用量和清理
+## `full`：测试资源用量和清理
 
 `nightly.yml` 会调用 `e2e.yml`，每晚运行 `full`。打发布 tag 前，如果 `nightly.yml` 最后一次运行的不是这个 commit，先在 `main` 上手动运行一次，通过后再打 tag。
 
@@ -105,11 +105,9 @@ pull request 测试的是它和目标分支的 merge base 之间的差异，合�
 
 <Step>
 
-### 安装依赖组件并测试升级
+### 安装依赖组件
 
-先安装依赖组件。
-
-如果最新发布版本中的组件版本与待测版本不同，就先安装最新发布版本中的版本，再升级到待测版本。
+先安装依赖组件，再安装待测组件。
 
 </Step>
 

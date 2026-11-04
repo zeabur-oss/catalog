@@ -92,7 +92,7 @@ Tests that share dependencies share a cluster. Each dependency is installed only
 
 If a change affects `config/`, `tools/`, the flake, or workflows, `smoke` tests everything.
 
-## `full`: Test upgrades, resource usage, and cleanup
+## `full`: Test resource usage and cleanup
 
 `nightly.yml` calls `e2e.yml` to run `full` every night. Before tagging a release, run `nightly.yml` on `main` if its last run was on another commit, and tag only once it passed.
 
@@ -104,11 +104,9 @@ A pull request with the `e2e` label runs `full` on what the pull request affects
 
 <Step>
 
-### Install dependencies and test upgrades
+### Install dependencies
 
-Install dependencies first.
-
-If the component version in the latest release differs from the version under test, install the version from the latest release first, then upgrade to the version under test.
+Install dependencies first, then the component under test.
 
 </Step>
 

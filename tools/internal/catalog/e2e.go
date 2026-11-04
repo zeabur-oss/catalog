@@ -27,7 +27,6 @@ type Tester struct {
 	Replacements map[string]map[string]map[string]string
 	// SkipSmoke maps a component and a smoke check to the reason e2e skips it.
 	SkipSmoke map[string]map[string]string
-	Previous  map[string]*Component // last release's components, for upgrade tests
 	// Timings collects the phases of every Test, Quick and Install call.
 	Timings Timings
 	// shared is set by Share: Quick and Install keep components installed for later calls.
@@ -66,7 +65,6 @@ type Result struct {
 	IdleCPUm      float64
 	// RequestMemoryMiB is the memory the same pods request.
 	RequestMemoryMiB float64
-	UpgradedFrom     string
 	Unmeasured       bool // installed without waiting; nothing ran long enough to measure
 	Err              error
 }
@@ -136,16 +134,6 @@ func (t *Tester) Test(id string) (res Result) {
 				res.Err = err
 				return
 			}
-			if prev, ok := t.Previous[id]; ok && versions(prev) != versions(c) {
-				slog.Info("installing previous release for the upgrade test", "component", id, "versions", versions(prev))
-				start := time.Now()
-				if err := t.install(r, prev); err != nil {
-					res.Err = fmt.Errorf("install previous: %w", err)
-					return
-				}
-				t.Timings.Since("previous release", start)
-				res.UpgradedFrom = versions(prev)
-			}
 			phase = time.Now()
 		}
 		if err := t.install(r, c); err != nil {
@@ -155,11 +143,7 @@ func (t *Tester) Test(id string) (res Result) {
 		if !target {
 			continue
 		}
-		if res.UpgradedFrom != "" {
-			t.Timings.Since("upgrade", phase)
-		} else {
-			t.Timings.Since("install", phase)
-		}
+		t.Timings.Since("install", phase)
 		if t.Unready[id] {
 			slog.Info("installed without credentials; not measured", "component", id)
 			res.Unmeasured = true
@@ -287,16 +271,6 @@ func (t *Tester) Install(refs []string) (uninstall func() error, err error) {
 	return uninstall, nil
 }
 
-func versions(c *Component) string {
-	var v []string
-	for _, r := range c.Releases {
-		if r.Version != "" {
-			v = append(v, r.Name+"@"+r.Version)
-		}
-	}
-	return strings.Join(v, ",")
-}
-
 // install installs a component's secrets and releases, then re-applies the
 // releases it contributes values to.
 func (t *Tester) install(r *run, c *Component) error {
@@ -415,7 +389,7 @@ func replace(manifest []byte, replacements map[string]string) ([]byte, error) {
 }
 
 // createSecrets creates the Secrets that inputs live in, one per name, with
-// every key. Existing Secrets are kept, so an upgrade test reuses them.
+// every key. Existing Secrets are kept.
 func createSecrets(r *run, c *Component) error {
 	inputs := c.testInputs()
 	keys := map[SecretRef][]string{} // Key unset: one entry per Secret
