@@ -21,13 +21,13 @@ import (
 )
 
 // Tiers. check runs on every pull request: static checks, then a server-side
-// dry run on a local API server with only the CRDs and no nodes. smoke runs on
-// every pull request and on main: it installs and smoke tests what changed,
-// what it needs and what installs it, single-node amd64, in groups that share
-// their dependencies. full runs nightly, before a release and on a pull
-// request that has the e2e label: every profile and architecture in a fresh
-// cluster each, with idle usage, uninstall, and residue checks. With
-// -cluster current, smoke and full use the current cluster instead of kind.
+// dry run on a local API server with only the CRDs and no nodes. smoke runs in
+// the merge queue: it installs and smoke tests what changed, what it needs and
+// what installs it, single-node amd64, in groups that share their
+// dependencies. full runs nightly and before a release: every profile and
+// architecture in a fresh cluster each, with idle usage, uninstall, and residue
+// checks. With -cluster current, smoke and full use the current cluster
+// instead of kind.
 var tiers = []string{"check", "smoke", "full"}
 
 // row is one line of the tier report.
@@ -285,7 +285,8 @@ func runCheck(r *repo, cfg config, o tierOptions) error {
 		return err
 	}
 	if err := step("validate", func() error {
-		return errors.Join(catalog.Check(".", r.cat), templates.Check(".", r.cat, r.templates))
+		_, repErr := representative(r)
+		return errors.Join(catalog.Check(".", r.cat), templates.Check(".", r.cat, r.templates), repErr)
 	}); err != nil {
 		return err
 	}

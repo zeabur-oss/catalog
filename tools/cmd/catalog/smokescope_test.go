@@ -10,16 +10,16 @@ import (
 	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
 
-// scopeRepo is a catalog where ingress/traefik and storage/local are
-// recommended, metrics/server is optional and needs traefik, and three
-// templates need different parts of them.
+// scopeRepo is a catalog where metrics/server needs ingress/traefik, three
+// templates need different parts of it, and the representative list is
+// traefik, storage/local and beta.
 func scopeRepo(t *testing.T) *repo {
 	t.Helper()
 	dir := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(dir, "config"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, "config", "e2e.yaml"), []byte("templates: {}\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "config", "e2e.yaml"), []byte("templates: {}\nsmokeRepresentative: [ingress/traefik, storage/local, beta]\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	t.Chdir(dir)
@@ -67,36 +67,23 @@ func selected(t *testing.T, r *repo, s scope) []string {
 	return ids
 }
 
-func neverChecked(t *testing.T) toolsChanged {
-	return func(bool, bool) (bool, error) {
-		t.Error("compared the test tools")
-		return false, nil
-	}
-}
-
 func TestSmokeScopeSharedChange(t *testing.T) {
 	r := scopeRepo(t)
 	want := []string{"beta", "ingress/traefik", "storage/local"}
 	for _, c := range []struct {
 		name  string
 		files []string
-		check toolsChanged
 		want  []string
 	}{
-		{"tool changed", []string{"tools/cmd/catalog/tier.go"}, func(goTool, nixTools bool) (bool, error) { return goTool && !nixTools, nil }, want},
-		{"flake changed the tools", []string{"flake.lock"}, func(goTool, nixTools bool) (bool, error) { return nixTools && !goTool, nil }, want},
-		{"tool unchanged", []string{"tools/cmd/catalog/tier_test.go", "go.sum"}, func(bool, bool) (bool, error) { return false, nil }, nil},
-		{"cannot compare", []string{"go.mod"}, func(bool, bool) (bool, error) { return false, os.ErrNotExist }, want},
-		{"other config", []string{"config/e2e.yaml"}, nil, want},
-		{"workflow", []string{".github/workflows/ci.yml"}, nil, want},
-		{"documentation", []string{"README.md"}, nil, nil},
+		{"tool", []string{"tools/cmd/catalog/tier.go"}, want},
+		{"go.sum", []string{"go.sum"}, want},
+		{"flake", []string{"flake.lock"}, want},
+		{"other config", []string{"config/e2e.yaml"}, want},
+		{"workflow", []string{".github/workflows/ci.yml"}, want},
+		{"documentation", []string{"README.md"}, nil},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			check := c.check
-			if check == nil {
-				check = neverChecked(t)
-			}
-			s, err := smokeScope(r, c.files, check)
+			s, err := smokeScope(r, c.files)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -109,7 +96,7 @@ func TestSmokeScopeSharedChange(t *testing.T) {
 
 func TestSmokeScopeKubernetesVersions(t *testing.T) {
 	r := scopeRepo(t)
-	s, err := smokeScope(r, []string{"config/kubernetes.yaml"}, neverChecked(t))
+	s, err := smokeScope(r, []string{"config/kubernetes.yaml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -123,7 +110,7 @@ func TestSmokeScopeKubernetesVersions(t *testing.T) {
 
 func TestSmokeScopeComponentChange(t *testing.T) {
 	r := scopeRepo(t)
-	s, err := smokeScope(r, []string{"components/ingress/traefik.yaml"}, neverChecked(t))
+	s, err := smokeScope(r, []string{"components/ingress/traefik.yaml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -135,7 +122,7 @@ func TestSmokeScopeComponentChange(t *testing.T) {
 
 func TestSharedChangeKeepsOwnChange(t *testing.T) {
 	r := scopeRepo(t)
-	s, err := smokeScope(r, []string{"config/e2e.yaml", "components/db/postgres.yaml"}, neverChecked(t))
+	s, err := smokeScope(r, []string{"config/e2e.yaml", "components/db/postgres.yaml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -147,13 +134,12 @@ func TestSharedChangeKeepsOwnChange(t *testing.T) {
 	}
 }
 
-func TestRepresentativeTemplate(t *testing.T) {
+func TestRepresentativeUnknownID(t *testing.T) {
 	r := scopeRepo(t)
-	ids, err := representative(r)
-	if err != nil {
+	if err := os.WriteFile(filepath.Join("config", "e2e.yaml"), []byte("smokeRepresentative: [nope]\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if !slices.Contains(ids, "beta") || slices.Contains(ids, "gamma") || slices.Contains(ids, "alpha") {
-		t.Errorf("representative = %v, want beta, the first template that installs the most recommended components", ids)
+	if _, err := representative(r); err == nil {
+		t.Error("representative accepted an unknown ID")
 	}
 }

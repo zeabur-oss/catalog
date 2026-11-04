@@ -145,15 +145,6 @@
       ]
     },
     {
-      "description": "A chart bump runs the full tier on what it affects: the e2e label starts e2e-label.yml",
-      "matchManagers": [
-        "custom.jsonata"
-      ],
-      "addLabels": [
-        "e2e"
-      ]
-    },
-    {
       "description": "Each component file gets its own pull request, with its chart and images together, so CI tests one component at a time. Every image carries a digest",
       "matchFileNames": [
         "components/**"

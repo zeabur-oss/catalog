@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# shellcheck source-path=SCRIPTDIR
-source "$(dirname "$0")/lib.sh"
+set -euo pipefail
+cd "$(dirname "$0")/../.."
 
 unformatted=$(gofmt -l .)
 if [[ -n "$unformatted" ]]; then
@@ -8,5 +8,8 @@ if [[ -n "$unformatted" ]]; then
   echo "$unformatted" >&2
   exit 1
 fi
+shellcheck scripts/ci/*.sh
+actionlint
 bun install --frozen-lockfile
 bun fmt --check scripts/release.ts
+bun check scripts/

@@ -3,7 +3,7 @@ title: Tests and CI
 description: Learn when each CI tier runs, what it checks, and how to configure template test inputs.
 ---
 
-`check` runs on every pull request, and `smoke` runs in the merge queue, on the commit about to land. `full` runs nightly, and on a pull request that has the `e2e` label. Check that the nightly run passed on a commit before tagging it. Each tier covers different checks, and later tiers run checks that earlier tiers don't cover. You can also run the same tests as CI with `catalog e2e -tier check|smoke|full`.
+`check` runs on every pull request, and `smoke` runs in the merge queue, on the commit about to land. `full` runs nightly. Check that the nightly run passed on a commit before tagging it. Each tier covers different checks, and later tiers run checks that earlier tiers don't cover. You can also run the same tests as CI with `catalog e2e -tier check|smoke|full`.
 
 ## Before you start
 
@@ -15,7 +15,7 @@ Standard tests use the `single-node` or `multi-node` profile, each with its own 
 
 ## `check`: Check every pull request
 
-`ci.yml` runs the following checks as the jobs of [`scripts/ci.sh`](https://github.com/zeabur-oss/catalog/blob/main/scripts/ci.sh). Run one locally with `scripts/ci.sh <job>`; `scripts/ci.sh --list` lists them.
+`ci.yml` runs the following checks. Each job runs `nix develop -c scripts/ci/<job>.sh`; run one locally the same way.
 
 <Steps>
 
@@ -90,13 +90,11 @@ A queued pull request tests what differs from the queue's base commit. A pull re
 
 Tests that share dependencies share a cluster. Each dependency is installed only once per cluster. After a component passes its smoke check, the test uninstalls it unless a later test in the same cluster still needs it.
 
-If a change affects `config/kubernetes.yaml`, `smoke` tests everything. If it affects another file in `config/`, or a workflow, `smoke` tests a fixed set instead: the components recommended on single-node and the one template that installs the most of them. A change to `tools/`, `go.mod`, `go.sum` or the flake tests the same set only when it changes the test tool's binary, or the `kubectl`, `kind` or `helm` of the dev shell. Otherwise it adds nothing. The nightly run still tests everything.
+If a change affects `config/kubernetes.yaml`, `smoke` tests everything. If it affects `tools/`, `go.mod`, `go.sum`, the flake, another file in `config/`, or a workflow, `smoke` tests the `smokeRepresentative` list in [`config/e2e.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/e2e.yaml) instead. The nightly run still tests everything.
 
 ## `full`: Test resource usage and cleanup
 
 `nightly.yml` calls `e2e.yml` to run `full` every night. Before tagging a release, run `nightly.yml` on `main` if its last run was on another commit, and tag only once it passed.
-
-A pull request with the `e2e` label runs `full` on what the pull request affects. Add the label to a pull request when a smoke test isn't enough. `e2e-label.yml` lists the changed components and templates, plus the ones that install them, and calls `e2e.yml` for them on the `single-node` profile. The run starts when you add the label and again on each push while the label stays. It writes no measurements and opens no measurements pull request. Renovate adds the label to chart updates.
 
 `full` creates a fresh kind cluster for each component and profile on amd64 and arm64. `single-node` uses one node, and `multi-node` uses three nodes.
 
