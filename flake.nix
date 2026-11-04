@@ -34,7 +34,7 @@
           vendorHash = "sha256-GcSSIDEmDdEuWx7kxDwnCnDhim1GtpjYl/eKqp+EQtY=";
           doCheck = false;
         };
-        # L0 runs this API server with etcd and no nodes. Keep the version equal to the RKE2
+        # The check tier runs this API server with etcd and no nodes. Keep the version equal to the RKE2
         # release that the Zeabur installer pins.
         kube-apiserver = pkgs.buildGoModule rec {
           pname = "kube-apiserver";

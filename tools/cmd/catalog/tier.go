@@ -20,14 +20,15 @@ import (
 	"go.yaml.in/yaml/v3"
 )
 
-// Tiers. L0 runs on every pull request: static checks, then a server-side dry
-// run on a local API server with only the CRDs and no nodes. L1 runs on main
-// only: it installs and smoke tests what changed, single-node amd64, in
-// groups that share their dependencies. L2 runs nightly
-// and before a release: every profile and architecture in a fresh cluster
-// each, with idle usage, uninstall, residue and upgrade checks. With -cluster
-// current, L1 and L2 use the current cluster instead of kind.
-var tiers = []string{"l0", "l1", "l2"}
+// Tiers. check runs on every pull request: static checks, then a server-side
+// dry run on a local API server with only the CRDs and no nodes. smoke runs on
+// every pull request and on main: it installs and smoke tests what changed,
+// what it needs and what installs it, single-node amd64, in groups that share
+// their dependencies. full runs nightly, before a release and on a pull
+// request that has the e2e label: every profile and architecture in a fresh
+// cluster each, with idle usage, uninstall, residue and upgrade checks. With
+// -cluster current, smoke and full use the current cluster instead of kind.
+var tiers = []string{"check", "smoke", "full"}
 
 // row is one line of the tier report.
 type row struct {
@@ -75,21 +76,21 @@ func selector(r *repo, since string) (func(id string, order []*catalog.Component
 	}, nil
 }
 
-// group is what one L1 cluster tests, in order. Its members share dependencies.
+// group is what one smoke cluster tests, in order. Its members share dependencies.
 type group struct {
 	IDs  []string
 	deps map[string]bool
 	cost int
 }
 
-// groupCost caps the cost of one L1 group. A component costs 1, and a template
+// groupCost caps the cost of one smoke group. A component costs 1, and a template
 // 1 per service and per component it requires. On a 4-CPU VM, one unit took
 // about 40 seconds.
 const groupCost = 20
 
-// l1Groups returns the single-node subjects that sel selects, in groups that
+// smokeGroups returns the single-node subjects that sel selects, in groups that
 // share dependencies. The grouping is deterministic.
-func l1Groups(r *repo, sel func(string, []*catalog.Component) bool) ([]*group, error) {
+func smokeGroups(r *repo, sel func(string, []*catalog.Component) bool) ([]*group, error) {
 	items, err := subjects(r, templateProfile, sel)
 	if err != nil {
 		return nil, err
@@ -191,8 +192,8 @@ func subjects(r *repo, profile string, sel func(string, []*catalog.Component) bo
 // kubesoloProfile is the host profile that installs KubeSolo.
 const kubesoloProfile = "kubesolo"
 
-// l2Profiles returns the catalog profiles, then the host profiles.
-func l2Profiles() []string { return append(slices.Clone(catalog.Profiles), hostProfiles...) }
+// fullProfiles returns the catalog profiles, then the host profiles.
+func fullProfiles() []string { return append(slices.Clone(catalog.Profiles), hostProfiles...) }
 
 // profileSubjects is subjects for a catalog profile or a host profile. A host
 // profile tests components only.
@@ -256,26 +257,26 @@ func runTier(r *repo, tier string, o tierOptions, args []string) error {
 		return err
 	}
 	switch tier {
-	case "l0":
-		return l0(r, cfg, o)
-	case "l1":
-		return l1(r, cfg, o, args)
-	case "l2":
-		return l2(r, cfg, o, args)
+	case "check":
+		return runCheck(r, cfg, o)
+	case "smoke":
+		return runSmoke(r, cfg, o, args)
+	case "full":
+		return runFull(r, cfg, o, args)
 	}
 	return fmt.Errorf("unknown -tier %q; use %s", tier, strings.Join(tiers, ", "))
 }
 
-// l0 validates, renders and lints everything, then sends every rendered
+// runCheck validates, renders and lints everything, then sends every rendered
 // component and template to a local API server with --dry-run=server.
-func l0(r *repo, cfg config, o tierOptions) error {
+func runCheck(r *repo, cfg config, o tierOptions) error {
 	var ts catalog.Timings
 	step := func(name string, f func() error) error {
 		start := time.Now()
 		err := f()
 		ts.Since(name, start)
 		if err != nil {
-			report("l0", []row{{subject: "l0", timings: ts, err: fmt.Errorf("%s: %w", name, err)}})
+			report("check", []row{{subject: "check", timings: ts, err: fmt.Errorf("%s: %w", name, err)}})
 		}
 		return err
 	}
@@ -313,7 +314,7 @@ func l0(r *repo, cfg config, o tierOptions) error {
 	kv := cfg.Versions[i]
 	err = step("dry run", func() error { return dryRun(r, filepath.Join(out, kv)) })
 	if err == nil {
-		err = report("l0", []row{{subject: "l0", timings: ts}})
+		err = report("check", []row{{subject: "check", timings: ts}})
 	}
 	return err
 }
@@ -488,26 +489,26 @@ func dryRun(r *repo, dir string) error {
 	return errors.Join(errs...)
 }
 
-// l1 installs and smoke tests each group in its own single-node cluster.
+// runSmoke installs and smoke tests each group in its own single-node cluster.
 // Without ids it tests what changed since o.since.
-func l1(r *repo, cfg config, o tierOptions, args []string) error {
+func runSmoke(r *repo, cfg config, o tierOptions, args []string) error {
 	sel, err := selection(r, o.since, args)
 	if err != nil {
 		return err
 	}
-	groups, err := l1Groups(r, sel)
+	groups, err := smokeGroups(r, sel)
 	if err != nil {
 		return err
 	}
 	var rows []row
 	for i, g := range groups {
-		slog.Info("l1 group", "n", i+1, "of", len(groups), "tests", strings.Join(g.IDs, " "))
-		rows = append(rows, l1Group(r, cfg, o, g)...)
+		slog.Info("smoke group", "n", i+1, "of", len(groups), "tests", strings.Join(g.IDs, " "))
+		rows = append(rows, smokeGroup(r, cfg, o, g)...)
 	}
-	return report("l1", rows)
+	return report("smoke", rows)
 }
 
-func l1Group(r *repo, cfg config, o tierOptions, g *group) []row {
+func smokeGroup(r *repo, cfg config, o tierOptions, g *group) []row {
 	var needs []*catalog.Component
 	for _, id := range g.IDs {
 		order, _ := installOrder(r, id, templateProfile)
@@ -597,11 +598,11 @@ func testTemplate(r *repo, t *catalog.Tester, cfg config, id string, write bool)
 	return fmt.Sprintf("PASS %4.0f MiB %3.0fm CPU", usage.IdleMemoryMiB, usage.IdleCPUm), nil
 }
 
-// l2 tests each component and template in a fresh cluster with the full
+// runFull tests each component and template in a fresh cluster with the full
 // checks.
-func l2(r *repo, cfg config, o tierOptions, args []string) error {
-	if !slices.Contains(l2Profiles(), o.profile) {
-		return fmt.Errorf("unknown -profile %q; use %s", o.profile, strings.Join(l2Profiles(), ", "))
+func runFull(r *repo, cfg config, o tierOptions, args []string) error {
+	if !slices.Contains(fullProfiles(), o.profile) {
+		return fmt.Errorf("unknown -profile %q; use %s", o.profile, strings.Join(fullProfiles(), ", "))
 	}
 	sel, err := selection(r, o.since, args)
 	if err != nil {
@@ -662,7 +663,7 @@ func l2(r *repo, cfg config, o tierOptions, args []string) error {
 			c.delete()
 		}
 	}
-	return report("l2 "+o.profile, rows)
+	return report("full "+o.profile, rows)
 }
 
 // testComponent runs the full component test on the current cluster. If

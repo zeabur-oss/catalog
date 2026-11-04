@@ -1,7 +1,7 @@
 ---
 title: 版本與套件包
 description: 固定 Zeabur Catalog 版本、驗證 Sigstore 簽章，再讀取 index.json，或從指定 commit 建置版本產物。
-source: "d7d2499a272e"
+source: "52881f40ece2"
 ---
 
 打上 `vX.Y.Z` tag 後，就會發布 `index.json`、`bundle.tar.gz`、`checksums.txt`，以及 `SHA256SUMS` 和它的 Sigstore 簽章套件。使用 Zeabur Catalog 的工具應固定使用一個版本，驗證後再讀取 `index.json`。1.0 之前，像 0.1 升到 0.2 這樣的更新也可能改變檔案格式，所以請固定使用某個確切版本。
@@ -81,7 +81,7 @@ sha256sum --check --ignore-missing SHA256SUMS
 ]
 ```
 
-每個環境都有 `idle`（元件實際用掉的資源）和 `requests`（它的 Pod 請求的資源）。兩者都有 `memoryMiB` 和 `cpuMillis`，取到整數，沒量到的資源不會出現。目前 `requests` 只有 `memoryMiB`。排程器依請求量放置 Pod，所以安裝工具會把 `requests.memoryMiB` 加總，和節點可分配的記憶體比較。兩組數字來自同一次 L2 執行，計入元件自己的 namespace 裡實際在叢集上跑的 Pod，包含 Operator 建立的 Pod。
+每個環境都有 `idle`（元件實際用掉的資源）和 `requests`（它的 Pod 請求的資源）。兩者都有 `memoryMiB` 和 `cpuMillis`，取到整數，沒量到的資源不會出現。目前 `requests` 只有 `memoryMiB`。排程器依請求量放置 Pod，所以安裝工具會把 `requests.memoryMiB` 加總，和節點可分配的記憶體比較。兩組數字來自同一次 `full` 執行，計入元件自己的 namespace 裡實際在叢集上跑的 Pod，包含 Operator 建立的 Pod。
 
 安裝元件時，工具先執行 `detection`，再根據叢集使用的 profile，提供預設啟用（recommended）的元件。接著，工具向使用者取得各元件的 `inputs`，依 `installOrder` 產生安裝內容，再將 `contributes` 合併到對應目標。挑選元件的規則見[安裝工具如何選擇和安裝元件](installers.mdx)。
 

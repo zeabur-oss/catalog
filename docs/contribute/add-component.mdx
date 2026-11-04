@@ -8,7 +8,7 @@ Choose a capability and an upstream project, create a component file, run local 
 ## Before you begin
 
 - Use `nix develop` to get Go, Helm, kubectl, kubeconform, etcd, kube-apiserver, and kind.
-- L1 and L2 checks also require Docker on Linux.
+- `smoke` and `full` checks also require Docker on Linux.
 
 <Steps>
 
@@ -41,11 +41,11 @@ Run the following commands:
 ```sh
 go run ./tools/cmd/catalog validate          # schema, license, references, comments
 go run ./tools/cmd/catalog render            # helm template + kubeconform
-go run ./tools/cmd/catalog e2e -tier l0      # what every pull request runs
-go run ./tools/cmd/catalog e2e -tier l2 <id>
+go run ./tools/cmd/catalog e2e -tier check   # what every pull request runs
+go run ./tools/cmd/catalog e2e -tier full <id>
 ```
 
-`validate` checks the schema, license, references, and comments. `render` runs `helm template` and kubeconform. Every pull request runs L0 checks.
+`validate` checks the schema, license, references, and comments. `render` runs `helm template` and kubeconform. Every pull request runs the `check` tier.
 
 </Step>
 

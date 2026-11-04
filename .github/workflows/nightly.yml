@@ -1,4 +1,4 @@
-# Every night and on demand: L2, the full e2e matrix. Opens a pull request
+# Every night and on demand: the full tier, the e2e matrix. Opens a pull request
 # with the idle memory and CPU it measured for components and templates, so
 # measurements/ is only ever written by CI. The pull request is zeabur-oss-bot's:
 # GitHub signs its commit, and CI runs on it, which it would not for GITHUB_TOKEN.

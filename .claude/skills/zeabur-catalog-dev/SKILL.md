@@ -22,11 +22,11 @@ nix develop -c go run ./tools/cmd/catalog index
 nix develop -c go run ./tools/cmd/catalog render     # helm template every profile, kubeconform
 nix develop -c go run ./tools/cmd/catalog template lint -values values.json <id>   # safety rules, kubeconform
 ```
-Cluster tests come in tiers (`docs/contribute/tests.mdx`). L0 starts its own etcd and kube-apiserver and
-needs no Docker. L1 and L2 create their own kind clusters, where and how
+Cluster tests come in tiers (`docs/contribute/tests.mdx`). `check` starts its own etcd and kube-apiserver and
+needs no Docker. `smoke` and `full` create their own kind clusters, where and how
 `zeabur-oss-cluster-tests` says:
 ```sh
-nix develop -c go run ./tools/cmd/catalog e2e -tier l0               # every pull request
-nix develop -c go run ./tools/cmd/catalog e2e -tier l1 <ids>         # after a merge: install, smoke
-nix develop -c go run ./tools/cmd/catalog e2e -tier l2 <id>          # nightly: full
+nix develop -c go run ./tools/cmd/catalog e2e -tier check            # every pull request
+nix develop -c go run ./tools/cmd/catalog e2e -tier smoke <ids>      # every pull request and merge: install, smoke
+nix develop -c go run ./tools/cmd/catalog e2e -tier full <id>        # nightly, or a pull request with the e2e label
 ```

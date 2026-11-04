@@ -91,10 +91,10 @@ func (s *apiServer) start() error {
 	kubeconfig := filepath.Join(s.dir, "kubeconfig")
 	cfg := fmt.Sprintf(`apiVersion: v1
 kind: Config
-clusters: [{name: l0, cluster: {server: "https://127.0.0.1:%d", certificate-authority: %q}}]
+clusters: [{name: check, cluster: {server: "https://127.0.0.1:%d", certificate-authority: %q}}]
 users: [{name: admin, user: {token: %q}}]
-contexts: [{name: l0, context: {cluster: l0, user: admin}}]
-current-context: l0
+contexts: [{name: check, context: {cluster: check, user: admin}}]
+current-context: check
 `, ports[2], filepath.Join(certs, "apiserver.crt"), token)
 	if err := os.WriteFile(kubeconfig, []byte(cfg), 0o600); err != nil {
 		return err
