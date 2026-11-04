@@ -35,7 +35,7 @@ type Component struct {
 	Releases        []Release         `yaml:"releases" json:"releases"`
 	Provides        *Provides         `yaml:"provides" json:"provides,omitempty"`
 	InternalCRDs    []string          `yaml:"internalCRDs" json:"internalCRDs,omitempty"`
-	Resources       *Resources        `yaml:"resources" json:"resources,omitempty"`
+	Resources       *Resources        `yaml:"resources" json:"-"`
 	NetworkPolicies string            `yaml:"networkPolicies" json:"networkPolicies,omitempty"`
 	Contributes     []Contribution    `yaml:"contributes" json:"contributes,omitempty"`
 	Detection       map[string]any    `yaml:"detection" json:"detection"`
@@ -80,7 +80,18 @@ type Registry struct {
 
 // Resources is what a component needs beyond its measured idle use.
 type Resources struct {
-	WorkMemoryMiB int `yaml:"workMemoryMiB" json:"workMemoryMiB,omitempty"`
+	Work []Work `yaml:"work"`
+}
+
+// Work is one kind of work a component does, such as a build.
+type Work struct {
+	Name string `yaml:"name"`
+	// Requests and Limits are those of the pods doing one unit of it, for
+	// pods that no render shows.
+	Requests Quantities `yaml:"requests"`
+	Limits   Quantities `yaml:"limits"`
+	// Use is what one unit uses on top of the component's idle use.
+	Use Quantities `yaml:"use"`
 }
 
 type Release struct {

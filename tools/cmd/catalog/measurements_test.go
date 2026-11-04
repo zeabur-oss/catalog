@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"testing"
 
@@ -22,17 +23,17 @@ func TestMergeKeepsEnvironmentsNoJobMeasured(t *testing.T) {
 	writeFile(t, "measurements/ingress/traefik.json", measurement{
 		Component: "ingress/traefik",
 		Environments: map[string]environment{
-			"multi-node-arm64-v1.36.4":  {IdleMemoryMiB: 56, MeasuredAt: "2026-10-11"},
-			"single-node-amd64-v1.36.4": {IdleMemoryMiB: 23, MeasuredAt: "2026-10-11"},
+			"multi-node-arm64-v1.36.4":  {Idle: &catalog.Amounts{MemoryMiB: 56}, MeasuredAt: "2026-10-11"},
+			"single-node-amd64-v1.36.4": {Idle: &catalog.Amounts{MemoryMiB: 23}, MeasuredAt: "2026-10-11"},
 		},
 	})
 	writeFile(t, "downloaded/measurements-single-node-amd64-ingress-traefik/ingress/traefik.json", measurement{
 		Component:    "ingress/traefik",
-		Environments: map[string]environment{"single-node-amd64-v1.36.4": {IdleMemoryMiB: 25, MeasuredAt: "2026-10-25"}},
+		Environments: map[string]environment{"single-node-amd64-v1.36.4": {Idle: &catalog.Amounts{MemoryMiB: 25}, MeasuredAt: "2026-10-25"}},
 	})
 	writeFile(t, "downloaded/measurements-single-node-amd64-template-ghost/templates/ghost.json", measurement{
 		Template:     "ghost",
-		Environments: map[string]environment{"single-node-amd64-v1.36.4": {IdleMemoryMiB: 310, IdleCPUm: 4, MeasuredAt: "2026-10-25"}},
+		Environments: map[string]environment{"single-node-amd64-v1.36.4": {Idle: &catalog.Amounts{MemoryMiB: 310, CPUMillis: 4}, MeasuredAt: "2026-10-25"}},
 	})
 
 	if err := mergeMeasurements("downloaded", "measurements"); err != nil {
@@ -40,14 +41,14 @@ func TestMergeKeepsEnvironmentsNoJobMeasured(t *testing.T) {
 	}
 
 	traefik := readMeasurement("measurements/ingress/traefik.json")
-	if got := traefik.Environments["single-node-amd64-v1.36.4"]; got.IdleMemoryMiB != 25 || got.MeasuredAt != "2026-10-25" {
+	if got := traefik.Environments["single-node-amd64-v1.36.4"]; got.Idle.MemoryMiB != 25 || got.MeasuredAt != "2026-10-25" {
 		t.Errorf("single-node-amd64 = %+v, want the new measurement", got)
 	}
-	if got := traefik.Environments["multi-node-arm64-v1.36.4"]; got.IdleMemoryMiB != 56 {
+	if got := traefik.Environments["multi-node-arm64-v1.36.4"]; got.Idle.MemoryMiB != 56 {
 		t.Errorf("multi-node-arm64 = %+v, want it kept", got)
 	}
 	ghost := readMeasurement("measurements/templates/ghost.json")
-	if ghost.Template != "ghost" || ghost.Environments["single-node-amd64-v1.36.4"].IdleMemoryMiB != 310 {
+	if ghost.Template != "ghost" || ghost.Environments["single-node-amd64-v1.36.4"].Idle.MemoryMiB != 310 {
 		t.Errorf("templates/ghost.json = %+v, want the uploaded template measurement", ghost)
 	}
 }
@@ -118,7 +119,7 @@ func TestFailedRunTakesTheDistributionOutOfTestedOn(t *testing.T) {
 	var cfg config
 	cfg.K3s.Version = "v1.36.5+k3s1"
 	comp := &catalog.Component{ID: "ingress/traefik"}
-	pass := environment{IdleMemoryMiB: 22, MeasuredAt: "2026-10-30"}
+	pass := environment{Idle: &catalog.Amounts{MemoryMiB: 22}, MeasuredAt: "2026-10-30"}
 	main := measurement{Component: comp.ID, Environments: map[string]environment{
 		"k3s-amd64-v1.36.5+k3s1":    pass,
 		"k3s-arm64-v1.36.5+k3s1":    pass,
@@ -166,7 +167,7 @@ func TestFailureSurvivesAnotherJobsStaleCopy(t *testing.T) {
 	var cfg config
 	cfg.K3s.Version = "v1.36.5+k3s1"
 	comp := &catalog.Component{ID: "ingress/traefik"}
-	pass := environment{IdleMemoryMiB: 22, MeasuredAt: "2026-10-30"}
+	pass := environment{Idle: &catalog.Amounts{MemoryMiB: 22}, MeasuredAt: "2026-10-30"}
 	main := measurement{Component: comp.ID, Environments: map[string]environment{
 		"k3s-amd64-v1.36.5+k3s1":    pass,
 		"k3s-arm64-v1.36.5+k3s1":    pass,
@@ -184,7 +185,7 @@ func TestFailureSurvivesAnotherJobsStaleCopy(t *testing.T) {
 	for k, e := range main.Environments {
 		fresh.Environments[k] = e
 	}
-	fresh.Environments["single-node-amd64-v1.36.4"] = environment{IdleMemoryMiB: 25, MeasuredAt: "2026-10-31"}
+	fresh.Environments["single-node-amd64-v1.36.4"] = environment{Idle: &catalog.Amounts{MemoryMiB: 25}, MeasuredAt: "2026-10-31"}
 	writeFile(t, "downloaded/measurements-single-node-amd64-ingress-traefik/ingress/traefik.json", fresh)
 	writeFile(t, "main/ingress/traefik.json", main)
 
@@ -195,7 +196,7 @@ func TestFailureSurvivesAnotherJobsStaleCopy(t *testing.T) {
 	if !merged["k3s-arm64-v1.36.5+k3s1"].Failed {
 		t.Error("a stale passing copy undid the failure marker")
 	}
-	if merged["single-node-amd64-v1.36.4"].IdleMemoryMiB != 25 {
+	if merged["single-node-amd64-v1.36.4"].Idle.MemoryMiB != 25 {
 		t.Error("the new measurement was not merged")
 	}
 	if slices.Contains(testedOn(cfg, merged), "k3s") {
@@ -210,7 +211,7 @@ func TestStartupFailureWithoutMeasurementIsRecorded(t *testing.T) {
 	comp := &catalog.Component{ID: "ingress/traefik"}
 	// amd64 passed; arm64 has never been measured and its cluster never answered.
 	writeFile(t, "measurements/ingress/traefik.json", measurement{Component: comp.ID, Environments: map[string]environment{
-		"kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {IdleMemoryMiB: 20, MeasuredAt: "2026-10-30"},
+		"kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {Idle: &catalog.Amounts{MemoryMiB: 20}, MeasuredAt: "2026-10-30"},
 	}})
 	if err := markFailed(cfg, kubesoloProfile, "arm64", comp, ""); err != nil {
 		t.Fatal(err)
@@ -221,7 +222,7 @@ func TestStartupFailureWithoutMeasurementIsRecorded(t *testing.T) {
 	}
 
 	// A later arm64 run passes under its real key and replaces the mark.
-	envs["kubesolo-arm64-v1.35.7+kubesolo-v1.2.3"] = environment{IdleMemoryMiB: 21, MeasuredAt: "2999-01-01"}
+	envs["kubesolo-arm64-v1.35.7+kubesolo-v1.2.3"] = environment{Idle: &catalog.Amounts{MemoryMiB: 21}, MeasuredAt: "2999-01-01"}
 	if got := testedOn(cfg, envs); !slices.Equal(got, []string{kubesoloProfile}) {
 		t.Errorf("testedOn = %q after arm64 passed", got)
 	}
@@ -234,17 +235,17 @@ func TestSameDayRerunReplacesWhatMainHeld(t *testing.T) {
 	// environments it didn't measure.
 	day := "2026-10-31"
 	main := measurement{Component: "ingress/traefik", Environments: map[string]environment{
-		"k3s-amd64-v1.36.5+k3s1":    {IdleMemoryMiB: 22, MeasuredAt: day},
+		"k3s-amd64-v1.36.5+k3s1":    {Idle: &catalog.Amounts{MemoryMiB: 22}, MeasuredAt: day},
 		"rke2-amd64-v1.36.5+rke2r1": {Failed: true, MeasuredAt: day},
 	}}
 	writeFile(t, "main/ingress/traefik.json", main)
 	k3s := measurement{Component: main.Component, Environments: map[string]environment{
-		"k3s-amd64-v1.36.5+k3s1":    {IdleMemoryMiB: 30, MeasuredAt: day},
+		"k3s-amd64-v1.36.5+k3s1":    {Idle: &catalog.Amounts{MemoryMiB: 30}, MeasuredAt: day},
 		"rke2-amd64-v1.36.5+rke2r1": main.Environments["rke2-amd64-v1.36.5+rke2r1"],
 	}}
 	rke2 := measurement{Component: main.Component, Environments: map[string]environment{
 		"k3s-amd64-v1.36.5+k3s1":    main.Environments["k3s-amd64-v1.36.5+k3s1"],
-		"rke2-amd64-v1.36.5+rke2r1": {IdleMemoryMiB: 40, MeasuredAt: day},
+		"rke2-amd64-v1.36.5+rke2r1": {Idle: &catalog.Amounts{MemoryMiB: 40}, MeasuredAt: day},
 	}}
 	writeFile(t, "downloaded/measurements-k3s-amd64-ingress-traefik/ingress/traefik.json", k3s)
 	writeFile(t, "downloaded/measurements-rke2-amd64-ingress-traefik/ingress/traefik.json", rke2)
@@ -253,24 +254,25 @@ func TestSameDayRerunReplacesWhatMainHeld(t *testing.T) {
 		t.Fatal(err)
 	}
 	merged := readMeasurement("main/ingress/traefik.json").Environments
-	if got := merged["k3s-amd64-v1.36.5+k3s1"]; got.IdleMemoryMiB != 30 {
+	if got := merged["k3s-amd64-v1.36.5+k3s1"]; got.Idle.MemoryMiB != 30 {
 		t.Errorf("k3s-amd64 = %+v, want the rerun's pass, not main's copy from the rke2 job", got)
 	}
-	if got := merged["rke2-amd64-v1.36.5+rke2r1"]; got.Failed || got.IdleMemoryMiB != 40 {
+	if got := merged["rke2-amd64-v1.36.5+rke2r1"]; got.Failed || got.Idle.MemoryMiB != 40 {
 		t.Errorf("rke2-amd64 = %+v, want the rerun's pass over main's failure", got)
 	}
 }
 
 func TestRequestMemoryIsPublishedWhenMeasuredAndOmittedWhenNot(t *testing.T) {
+	idle := &catalog.Amounts{MemoryMiB: 50}
 	for _, c := range []struct {
 		env  environment
 		want any
 	}{
-		{environment{IdleMemoryMiB: 50, RequestMemoryMiB: new(96.0)}, float64(96)},
+		{environment{Idle: idle, Requests: &catalog.Amounts{MemoryMiB: 96}}, map[string]any{"memoryMiB": float64(96)}},
 		// No pod asks for memory.
-		{environment{IdleMemoryMiB: 50, RequestMemoryMiB: new(0.0)}, float64(0)},
+		{environment{Idle: idle, Requests: &catalog.Amounts{}}, map[string]any{}},
 		// Measured before requests were recorded.
-		{environment{IdleMemoryMiB: 50}, nil},
+		{environment{Idle: idle}, nil},
 	} {
 		out, err := json.Marshal(c.env)
 		if err != nil {
@@ -280,8 +282,8 @@ func TestRequestMemoryIsPublishedWhenMeasuredAndOmittedWhenNot(t *testing.T) {
 		if err := json.Unmarshal(out, &got); err != nil {
 			t.Fatal(err)
 		}
-		if got["requestMemoryMiB"] != c.want {
-			t.Errorf("%s: requestMemoryMiB = %v, want %v", out, got["requestMemoryMiB"], c.want)
+		if !reflect.DeepEqual(got["requests"], c.want) {
+			t.Errorf("%s: requests = %v, want %v", out, got["requests"], c.want)
 		}
 	}
 }

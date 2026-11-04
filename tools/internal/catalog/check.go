@@ -74,6 +74,18 @@ func Check(root string, cat *Catalog) error {
 		for _, p := range c.provisionProblems() {
 			fail(c.Path, "%s", p)
 		}
+		if c.Resources != nil {
+			seen := map[string]bool{}
+			for _, w := range c.Resources.Work {
+				if seen[w.Name] {
+					fail(c.Path, "resources.work: %s is listed twice", w.Name)
+				}
+				seen[w.Name] = true
+			}
+			if _, err := c.IndexResources(); err != nil {
+				fail(c.Path, "%v", err)
+			}
+		}
 		for _, ct := range c.Contributes {
 			t, ok := cat.Get(ct.Target)
 			if !ok {

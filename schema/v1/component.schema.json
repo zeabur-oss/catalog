@@ -123,9 +123,25 @@
     "resources": {
       "type": "object",
       "additionalProperties": false,
-      "minProperties": 1,
+      "required": ["work"],
       "properties": {
-        "workMemoryMiB": { "type": "integer", "minimum": 1, "description": "Memory it uses on top of its idle use while working, such as one build." }
+        "work": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Each kind of work the component does, such as a build. Names are unique.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name"],
+            "anyOf": [{ "required": ["requests"] }, { "required": ["limits"] }, { "required": ["use"] }],
+            "properties": {
+              "name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+              "requests": { "$ref": "#/$defs/quantities", "description": "Resource requests of each pod doing one unit of work, for pods that no render shows, such as a build pod." },
+              "limits": { "$ref": "#/$defs/quantities", "description": "Resource limits of each pod doing one unit of work." },
+              "use": { "$ref": "#/$defs/quantities", "description": "What one unit of work uses on top of the component's idle use." }
+            }
+          }
+        }
       }
     },
     "networkPolicies": { "type": "string", "description": "Standard NetworkPolicy objects in its namespaces, for installers that block incoming traffic to each namespace by default: applied before the releases, they admit the traffic the component needs from elsewhere." },
@@ -224,6 +240,16 @@
     }
   },
   "$defs": {
+    "quantities": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "description": "Kubernetes quantities by resource name, such as memory: 256Mi. Each is above zero.",
+      "properties": {
+        "cpu": { "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "number", "exclusiveMinimum": 0 }] },
+        "memory": { "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "number", "exclusiveMinimum": 0 }] }
+      }
+    },
     "mode": { "enum": ["recommended", "optional", "unsupported"] },
     "summaryLocale": {
       "type": "object",
