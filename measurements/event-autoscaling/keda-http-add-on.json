@@ -2,16 +2,16 @@
   "component": "event-autoscaling/keda-http-add-on",
   "environments": {
     "k3s-amd64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 37,
+      "idleMemoryMiB": 34,
       "requestMemoryMiB": 60,
-      "idleCPUm": 5,
+      "idleCPUm": 3,
       "versions": {
         "http-add-on": "0.16.0"
       },
       "measuredAt": "2026-11-03"
     },
     "k3s-arm64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 36,
+      "idleMemoryMiB": 37,
       "requestMemoryMiB": 60,
       "idleCPUm": 4,
       "versions": {
@@ -20,16 +20,16 @@
       "measuredAt": "2026-11-03"
     },
     "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
-      "idleMemoryMiB": 35,
+      "idleMemoryMiB": 34,
       "requestMemoryMiB": 60,
-      "idleCPUm": 3,
+      "idleCPUm": 4,
       "versions": {
         "http-add-on": "0.16.0"
       },
       "measuredAt": "2026-11-03"
     },
     "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
-      "idleMemoryMiB": 34,
+      "idleMemoryMiB": 33,
       "requestMemoryMiB": 60,
       "idleCPUm": 4,
       "versions": {
@@ -38,42 +38,24 @@
       "measuredAt": "2026-11-03"
     },
     "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 67,
+      "idleMemoryMiB": 68,
       "requestMemoryMiB": 120,
-      "idleCPUm": 10,
+      "idleCPUm": 9,
       "versions": {
         "http-add-on": "0.16.0"
       },
       "measuredAt": "2026-11-03"
     },
     "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 70,
+      "idleMemoryMiB": 72,
       "requestMemoryMiB": 120,
-      "idleCPUm": 10,
+      "idleCPUm": 8,
       "versions": {
         "http-add-on": "0.16.0"
       },
-      "measuredAt": "2026-11-03"
+      "measuredAt": "2026-11-04"
     },
     "rke2-amd64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 34,
-      "requestMemoryMiB": 60,
-      "idleCPUm": 4,
-      "versions": {
-        "http-add-on": "0.16.0"
-      },
-      "measuredAt": "2026-11-03"
-    },
-    "rke2-arm64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 36,
-      "requestMemoryMiB": 60,
-      "idleCPUm": 4,
-      "versions": {
-        "http-add-on": "0.16.0"
-      },
-      "measuredAt": "2026-11-03"
-    },
-    "single-node-amd64-v1.36.4": {
       "idleMemoryMiB": 35,
       "requestMemoryMiB": 60,
       "idleCPUm": 4,
@@ -82,8 +64,26 @@
       },
       "measuredAt": "2026-11-03"
     },
-    "single-node-arm64-v1.36.4": {
+    "rke2-arm64-v1.36.5+rke2r1": {
       "idleMemoryMiB": 34,
+      "requestMemoryMiB": 60,
+      "idleCPUm": 4,
+      "versions": {
+        "http-add-on": "0.16.0"
+      },
+      "measuredAt": "2026-11-03"
+    },
+    "single-node-amd64-v1.36.4": {
+      "idleMemoryMiB": 34,
+      "requestMemoryMiB": 60,
+      "idleCPUm": 4,
+      "versions": {
+        "http-add-on": "0.16.0"
+      },
+      "measuredAt": "2026-11-03"
+    },
+    "single-node-arm64-v1.36.4": {
+      "idleMemoryMiB": 33,
       "requestMemoryMiB": 60,
       "idleCPUm": 4,
       "versions": {

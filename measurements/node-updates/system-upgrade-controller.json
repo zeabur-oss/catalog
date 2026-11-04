@@ -22,27 +22,27 @@
       "measuredAt": "2026-11-03"
     },
     "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 12,
+      "idleMemoryMiB": 11,
       "requestMemoryMiB": 0,
       "idleCPUm": 0,
       "versions": {
         "controller": "v0.20.2",
         "crds": "v0.20.2"
       },
-      "measuredAt": "2026-11-03"
+      "measuredAt": "2026-11-04"
     },
     "multi-node-arm64-v1.36.4": {
       "idleMemoryMiB": 11,
       "requestMemoryMiB": 0,
-      "idleCPUm": 1,
+      "idleCPUm": 0,
       "versions": {
         "controller": "v0.20.2",
         "crds": "v0.20.2"
       },
-      "measuredAt": "2026-11-03"
+      "measuredAt": "2026-11-04"
     },
     "rke2-amd64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 12,
+      "idleMemoryMiB": 13,
       "requestMemoryMiB": 0,
       "idleCPUm": 0,
       "versions": {
@@ -54,7 +54,7 @@
     "rke2-arm64-v1.36.5+rke2r1": {
       "idleMemoryMiB": 12,
       "requestMemoryMiB": 0,
-      "idleCPUm": 1,
+      "idleCPUm": 0,
       "versions": {
         "controller": "v0.20.2",
         "crds": "v0.20.2"
@@ -74,7 +74,7 @@
     "single-node-arm64-v1.36.4": {
       "idleMemoryMiB": 12,
       "requestMemoryMiB": 0,
-      "idleCPUm": 0,
+      "idleCPUm": 1,
       "versions": {
         "controller": "v0.20.2",
         "crds": "v0.20.2"

@@ -4,7 +4,7 @@
     "k3s-amd64-v1.36.5+k3s1": {
       "idleMemoryMiB": 67,
       "requestMemoryMiB": 160,
-      "idleCPUm": 3,
+      "idleCPUm": 4,
       "versions": {
         "falco": "9.2.1",
         "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
@@ -12,7 +12,7 @@
       "measuredAt": "2026-11-03"
     },
     "k3s-arm64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 70,
+      "idleMemoryMiB": 69,
       "requestMemoryMiB": 160,
       "idleCPUm": 3,
       "versions": {
@@ -44,27 +44,27 @@
     "multi-node-amd64-v1.36.4": {
       "idleMemoryMiB": 168,
       "requestMemoryMiB": 800,
-      "idleCPUm": 32,
+      "idleCPUm": 35,
       "versions": {
         "falco": "9.2.1",
         "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
       },
-      "measuredAt": "2026-11-03"
+      "measuredAt": "2026-11-04"
     },
     "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 175,
+      "idleMemoryMiB": 171,
       "requestMemoryMiB": 800,
-      "idleCPUm": 23,
+      "idleCPUm": 24,
       "versions": {
         "falco": "9.2.1",
         "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
       },
-      "measuredAt": "2026-11-03"
+      "measuredAt": "2026-11-04"
     },
     "rke2-amd64-v1.36.5+rke2r1": {
       "idleMemoryMiB": 72,
       "requestMemoryMiB": 160,
-      "idleCPUm": 5,
+      "idleCPUm": 10,
       "versions": {
         "falco": "9.2.1",
         "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
@@ -74,7 +74,7 @@
     "rke2-arm64-v1.36.5+rke2r1": {
       "idleMemoryMiB": 75,
       "requestMemoryMiB": 160,
-      "idleCPUm": 6,
+      "idleCPUm": 7,
       "versions": {
         "falco": "9.2.1",
         "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
@@ -82,9 +82,9 @@
       "measuredAt": "2026-11-03"
     },
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 66,
+      "idleMemoryMiB": 68,
       "requestMemoryMiB": 160,
-      "idleCPUm": 7,
+      "idleCPUm": 5,
       "versions": {
         "falco": "9.2.1",
         "policy-report-crds": "ed0ca5a1c7788055074c7500915b76fc4518ed33"

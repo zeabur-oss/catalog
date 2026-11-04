@@ -2,7 +2,7 @@
   "component": "databases/mariadb-operator",
   "environments": {
     "k3s-amd64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 38,
+      "idleMemoryMiB": 37,
       "requestMemoryMiB": 96,
       "idleCPUm": 1,
       "versions": {
@@ -12,7 +12,7 @@
       "measuredAt": "2026-11-03"
     },
     "k3s-arm64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 38,
+      "idleMemoryMiB": 37,
       "requestMemoryMiB": 96,
       "idleCPUm": 1,
       "versions": {
@@ -48,14 +48,14 @@
       "measuredAt": "2026-11-03"
     },
     "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 61,
+      "idleMemoryMiB": 62,
       "requestMemoryMiB": 320,
-      "idleCPUm": 4,
+      "idleCPUm": 2,
       "versions": {
         "mariadb-operator": "26.10.1",
         "mariadb-operator-crds": "26.10.1"
       },
-      "measuredAt": "2026-11-03"
+      "measuredAt": "2026-11-04"
     },
     "multi-node-arm64-v1.36.4": {
       "idleMemoryMiB": 62,
@@ -65,10 +65,10 @@
         "mariadb-operator": "26.10.1",
         "mariadb-operator-crds": "26.10.1"
       },
-      "measuredAt": "2026-11-03"
+      "measuredAt": "2026-11-04"
     },
     "rke2-amd64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 41,
+      "idleMemoryMiB": 40,
       "requestMemoryMiB": 96,
       "idleCPUm": 2,
       "versions": {
@@ -78,17 +78,13 @@
       "measuredAt": "2026-11-03"
     },
     "rke2-arm64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 41,
-      "requestMemoryMiB": 96,
-      "idleCPUm": 1,
-      "versions": {
-        "mariadb-operator": "26.10.1",
-        "mariadb-operator-crds": "26.10.1"
-      },
+      "failed": true,
+      "idleMemoryMiB": 0,
+      "idleCPUm": 0,
       "measuredAt": "2026-11-03"
     },
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 38,
+      "idleMemoryMiB": 37,
       "requestMemoryMiB": 96,
       "idleCPUm": 1,
       "versions": {
@@ -98,7 +94,7 @@
       "measuredAt": "2026-11-03"
     },
     "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 38,
+      "idleMemoryMiB": 36,
       "requestMemoryMiB": 96,
       "idleCPUm": 1,
       "versions": {
