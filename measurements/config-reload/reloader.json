@@ -2,7 +2,7 @@
   "component": "config-reload/reloader",
   "environments": {
     "k3s-amd64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 9,
+      "idleMemoryMiB": 10,
       "requestMemoryMiB": 64,
       "idleCPUm": 0,
       "versions": {
@@ -11,7 +11,7 @@
       "measuredAt": "2026-11-03"
     },
     "k3s-arm64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 9,
+      "idleMemoryMiB": 10,
       "requestMemoryMiB": 64,
       "idleCPUm": 0,
       "versions": {
@@ -29,7 +29,7 @@
       "measuredAt": "2026-11-03"
     },
     "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
-      "idleMemoryMiB": 9,
+      "idleMemoryMiB": 10,
       "requestMemoryMiB": 64,
       "idleCPUm": 0,
       "versions": {
@@ -38,13 +38,13 @@
       "measuredAt": "2026-11-03"
     },
     "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 18,
+      "idleMemoryMiB": 17,
       "requestMemoryMiB": 256,
       "idleCPUm": 1,
       "versions": {
         "reloader": "2.2.18"
       },
-      "measuredAt": "2026-11-03"
+      "measuredAt": "2026-11-04"
     },
     "multi-node-arm64-v1.36.4": {
       "idleMemoryMiB": 17,
@@ -53,7 +53,7 @@
       "versions": {
         "reloader": "2.2.18"
       },
-      "measuredAt": "2026-11-03"
+      "measuredAt": "2026-11-04"
     },
     "rke2-amd64-v1.36.5+rke2r1": {
       "idleMemoryMiB": 11,
@@ -74,7 +74,7 @@
       "measuredAt": "2026-11-03"
     },
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 9,
+      "idleMemoryMiB": 10,
       "requestMemoryMiB": 64,
       "idleCPUm": 0,
       "versions": {

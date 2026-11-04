@@ -2,16 +2,16 @@
   "component": "event-autoscaling/keda",
   "environments": {
     "k3s-amd64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 72,
+      "idleMemoryMiB": 71,
       "requestMemoryMiB": 144,
-      "idleCPUm": 3,
+      "idleCPUm": 5,
       "versions": {
         "keda": "2.21.0"
       },
       "measuredAt": "2026-11-03"
     },
     "k3s-arm64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 70,
+      "idleMemoryMiB": 74,
       "requestMemoryMiB": 144,
       "idleCPUm": 4,
       "versions": {
@@ -20,7 +20,7 @@
       "measuredAt": "2026-11-03"
     },
     "kubesolo-amd64-v1.35.7+kubesolo-v1.2.3": {
-      "idleMemoryMiB": 69,
+      "idleMemoryMiB": 70,
       "requestMemoryMiB": 144,
       "idleCPUm": 4,
       "versions": {
@@ -29,7 +29,7 @@
       "measuredAt": "2026-11-03"
     },
     "kubesolo-arm64-v1.35.7+kubesolo-v1.2.3": {
-      "idleMemoryMiB": 70,
+      "idleMemoryMiB": 74,
       "requestMemoryMiB": 144,
       "idleCPUm": 4,
       "versions": {
@@ -44,28 +44,28 @@
       "versions": {
         "keda": "2.21.0"
       },
-      "measuredAt": "2026-11-03"
+      "measuredAt": "2026-11-04"
     },
     "multi-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 91,
+      "idleMemoryMiB": 93,
       "requestMemoryMiB": 400,
+      "idleCPUm": 4,
+      "versions": {
+        "keda": "2.21.0"
+      },
+      "measuredAt": "2026-11-04"
+    },
+    "rke2-amd64-v1.36.5+rke2r1": {
+      "idleMemoryMiB": 71,
+      "requestMemoryMiB": 144,
       "idleCPUm": 4,
       "versions": {
         "keda": "2.21.0"
       },
       "measuredAt": "2026-11-03"
     },
-    "rke2-amd64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 71,
-      "requestMemoryMiB": 144,
-      "idleCPUm": 5,
-      "versions": {
-        "keda": "2.21.0"
-      },
-      "measuredAt": "2026-11-03"
-    },
     "rke2-arm64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 69,
+      "idleMemoryMiB": 72,
       "requestMemoryMiB": 144,
       "idleCPUm": 4,
       "versions": {
@@ -74,16 +74,16 @@
       "measuredAt": "2026-11-03"
     },
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 74,
+      "idleMemoryMiB": 68,
       "requestMemoryMiB": 144,
-      "idleCPUm": 5,
+      "idleCPUm": 4,
       "versions": {
         "keda": "2.21.0"
       },
       "measuredAt": "2026-11-03"
     },
     "single-node-arm64-v1.36.4": {
-      "idleMemoryMiB": 70,
+      "idleMemoryMiB": 72,
       "requestMemoryMiB": 144,
       "idleCPUm": 4,
       "versions": {

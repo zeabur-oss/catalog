@@ -2,12 +2,12 @@
   "template": "umami",
   "environments": {
     "single-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 199,
-      "idleCPUm": 6,
+      "idleMemoryMiB": 197,
+      "idleCPUm": 7,
       "versions": {
         "ghcr.io/umami-software/umami": "3.4.1"
       },
-      "measuredAt": "2026-11-03"
+      "measuredAt": "2026-11-04"
     }
   }
 }

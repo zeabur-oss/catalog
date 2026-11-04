@@ -11,7 +11,7 @@
       "measuredAt": "2026-11-03"
     },
     "k3s-arm64-v1.36.5+k3s1": {
-      "idleMemoryMiB": 22,
+      "idleMemoryMiB": 23,
       "requestMemoryMiB": 64,
       "idleCPUm": 1,
       "versions": {
@@ -38,13 +38,13 @@
       "measuredAt": "2026-11-03"
     },
     "multi-node-amd64-v1.36.4": {
-      "idleMemoryMiB": 23,
+      "idleMemoryMiB": 22,
       "requestMemoryMiB": 128,
       "idleCPUm": 1,
       "versions": {
         "velero": "12.2.1"
       },
-      "measuredAt": "2026-11-03"
+      "measuredAt": "2026-11-04"
     },
     "multi-node-arm64-v1.36.4": {
       "idleMemoryMiB": 22,
@@ -53,19 +53,19 @@
       "versions": {
         "velero": "12.2.1"
       },
-      "measuredAt": "2026-11-03"
+      "measuredAt": "2026-11-04"
     },
     "rke2-amd64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 23,
+      "idleMemoryMiB": 24,
       "requestMemoryMiB": 64,
-      "idleCPUm": 1,
+      "idleCPUm": 0,
       "versions": {
         "velero": "12.2.1"
       },
       "measuredAt": "2026-11-03"
     },
     "rke2-arm64-v1.36.5+rke2r1": {
-      "idleMemoryMiB": 24,
+      "idleMemoryMiB": 23,
       "requestMemoryMiB": 64,
       "idleCPUm": 1,
       "versions": {
