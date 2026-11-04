@@ -1,0 +1,27 @@
+{
+  "template": "umami",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 199,
+        "cpuMillis": 6
+      },
+      "versions": [
+        {
+          "image": "ghcr.io/umami-software/umami",
+          "version": "3.4.1",
+          "digest": "sha256:e69d1a7932e9dab0fc523edc7be1f3a53f3c261f57856fc2167ae74a8fc022e8"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    }
+  ]
+}

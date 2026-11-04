@@ -1,0 +1,32 @@
+{
+  "template": "ghost",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 404,
+        "cpuMillis": 6
+      },
+      "versions": [
+        {
+          "image": "ghost",
+          "version": "6-alpine",
+          "digest": "sha256:4195f6c405e40230cd10c0770425cf500c1f542a96e9f6584c11649c150e5a89"
+        },
+        {
+          "image": "mysql",
+          "version": "8.4",
+          "digest": "sha256:76f0358884cb92d9a086d24e5671c38048d3fef40f2588703d73eb55392d6b69"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    }
+  ]
+}

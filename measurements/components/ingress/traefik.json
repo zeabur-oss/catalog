@@ -1,0 +1,283 @@
+{
+  "component": "ingress/traefik",
+  "environments": [
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 24
+      },
+      "requests": {
+        "memoryMiB": 64
+      },
+      "versions": [
+        {
+          "release": "gateway-api-crds",
+          "version": "v1.6.3"
+        },
+        {
+          "release": "traefik",
+          "version": "42.1.3"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 24
+      },
+      "requests": {
+        "memoryMiB": 64
+      },
+      "versions": [
+        {
+          "release": "gateway-api-crds",
+          "version": "v1.6.3"
+        },
+        {
+          "release": "traefik",
+          "version": "42.1.3"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 70,
+        "cpuMillis": 1
+      },
+      "requests": {
+        "memoryMiB": 384
+      },
+      "versions": [
+        {
+          "release": "gateway-api-crds",
+          "version": "v1.6.3"
+        },
+        {
+          "release": "traefik",
+          "version": "42.1.3"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 70,
+        "cpuMillis": 1
+      },
+      "requests": {
+        "memoryMiB": 384
+      },
+      "versions": [
+        {
+          "release": "gateway-api-crds",
+          "version": "v1.6.3"
+        },
+        {
+          "release": "traefik",
+          "version": "42.1.3"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 23
+      },
+      "requests": {
+        "memoryMiB": 64
+      },
+      "versions": [
+        {
+          "release": "gateway-api-crds",
+          "version": "v1.6.3"
+        },
+        {
+          "release": "traefik",
+          "version": "42.1.3"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 24
+      },
+      "requests": {
+        "memoryMiB": 64
+      },
+      "versions": [
+        {
+          "release": "gateway-api-crds",
+          "version": "v1.6.3"
+        },
+        {
+          "release": "traefik",
+          "version": "42.1.3"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 23
+      },
+      "requests": {
+        "memoryMiB": 64
+      },
+      "versions": [
+        {
+          "release": "gateway-api-crds",
+          "version": "v1.6.3"
+        },
+        {
+          "release": "traefik",
+          "version": "42.1.3"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 24
+      },
+      "requests": {
+        "memoryMiB": 64
+      },
+      "versions": [
+        {
+          "release": "gateway-api-crds",
+          "version": "v1.6.3"
+        },
+        {
+          "release": "traefik",
+          "version": "42.1.3"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 23
+      },
+      "requests": {
+        "memoryMiB": 64
+      },
+      "versions": [
+        {
+          "release": "gateway-api-crds",
+          "version": "v1.6.3"
+        },
+        {
+          "release": "traefik",
+          "version": "42.1.3"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 23
+      },
+      "requests": {
+        "memoryMiB": 64
+      },
+      "versions": [
+        {
+          "release": "gateway-api-crds",
+          "version": "v1.6.3"
+        },
+        {
+          "release": "traefik",
+          "version": "42.1.3"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    }
+  ]
+}

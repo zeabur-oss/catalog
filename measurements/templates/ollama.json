@@ -1,0 +1,26 @@
+{
+  "template": "ollama",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 10
+      },
+      "versions": [
+        {
+          "image": "docker.io/ollama/ollama",
+          "version": "0.40.12",
+          "digest": "sha256:20d1bbfbabe1c97ba4b16301f08a20d8484bcf77047742a3cb71c613d8e12d0b"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    }
+  ]
+}

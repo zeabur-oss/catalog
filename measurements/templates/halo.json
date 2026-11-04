@@ -1,0 +1,27 @@
+{
+  "template": "halo",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 446,
+        "cpuMillis": 14
+      },
+      "versions": [
+        {
+          "image": "halohub/halo",
+          "version": "2.27.1",
+          "digest": "sha256:cc28f8bab142b79bf1bc5bdb07c2e0746821af5c814705e72b5beda6e9cabbc9"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    }
+  ]
+}

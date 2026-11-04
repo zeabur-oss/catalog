@@ -1,0 +1,27 @@
+{
+  "template": "gitea",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 154,
+        "cpuMillis": 6
+      },
+      "versions": [
+        {
+          "image": "docker.gitea.com/gitea",
+          "version": "28.2.0-rootless",
+          "digest": "sha256:94807314454f6525994a3b76286ba12bc7e7f8cd14f61d9e67431767f8103306"
+        }
+      ],
+      "measuredAt": "2026-11-04"
+    }
+  ]
+}
