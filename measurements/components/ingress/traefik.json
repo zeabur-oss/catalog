@@ -27,7 +27,8 @@
           "version": "42.1.3"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:dvpnoOioerhiTAiY0KdAr+hBRqPRreASgaqFGyQAVfk=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "k3s",
@@ -40,6 +41,91 @@
       "distributionVersion": "v1.36.5+k3s1",
       "result": "passed",
       "idle": {
+        "memoryMiB": 23
+      },
+      "requests": {
+        "memoryMiB": 64
+      },
+      "versions": [
+        {
+          "release": "gateway-api-crds",
+          "version": "v1.6.3"
+        },
+        {
+          "release": "traefik",
+          "version": "42.1.3"
+        }
+      ],
+      "sourceDigest": "h1:dvpnoOioerhiTAiY0KdAr+hBRqPRreASgaqFGyQAVfk=",
+      "measuredAt": "2026-11-05"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 69,
+        "cpuMillis": 1
+      },
+      "requests": {
+        "memoryMiB": 384
+      },
+      "versions": [
+        {
+          "release": "gateway-api-crds",
+          "version": "v1.6.3"
+        },
+        {
+          "release": "traefik",
+          "version": "42.1.3"
+        }
+      ],
+      "sourceDigest": "h1:dvpnoOioerhiTAiY0KdAr+hBRqPRreASgaqFGyQAVfk=",
+      "measuredAt": "2026-11-05"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 70
+      },
+      "requests": {
+        "memoryMiB": 384
+      },
+      "versions": [
+        {
+          "release": "gateway-api-crds",
+          "version": "v1.6.3"
+        },
+        {
+          "release": "traefik",
+          "version": "42.1.3"
+        }
+      ],
+      "sourceDigest": "h1:dvpnoOioerhiTAiY0KdAr+hBRqPRreASgaqFGyQAVfk=",
+      "measuredAt": "2026-11-05"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
         "memoryMiB": 24
       },
       "requests": {
@@ -55,70 +141,15 @@
           "version": "42.1.3"
         }
       ],
-      "measuredAt": "2026-11-04"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "idle": {
-        "memoryMiB": 70,
-        "cpuMillis": 1
-      },
-      "requests": {
-        "memoryMiB": 384
-      },
-      "versions": [
-        {
-          "release": "gateway-api-crds",
-          "version": "v1.6.3"
-        },
-        {
-          "release": "traefik",
-          "version": "42.1.3"
-        }
-      ],
-      "measuredAt": "2026-11-04"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "idle": {
-        "memoryMiB": 70,
-        "cpuMillis": 1
-      },
-      "requests": {
-        "memoryMiB": 384
-      },
-      "versions": [
-        {
-          "release": "gateway-api-crds",
-          "version": "v1.6.3"
-        },
-        {
-          "release": "traefik",
-          "version": "42.1.3"
-        }
-      ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:dvpnoOioerhiTAiY0KdAr+hBRqPRreASgaqFGyQAVfk=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kind",
       "profile": "single-node",
       "platform": {
         "os": "linux",
-        "architecture": "amd64"
+        "architecture": "arm64"
       },
       "kubernetesVersion": "v1.36.4",
       "result": "passed",
@@ -138,34 +169,8 @@
           "version": "42.1.3"
         }
       ],
-      "measuredAt": "2026-11-04"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "idle": {
-        "memoryMiB": 24
-      },
-      "requests": {
-        "memoryMiB": 64
-      },
-      "versions": [
-        {
-          "release": "gateway-api-crds",
-          "version": "v1.6.3"
-        },
-        {
-          "release": "traefik",
-          "version": "42.1.3"
-        }
-      ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:dvpnoOioerhiTAiY0KdAr+hBRqPRreASgaqFGyQAVfk=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kubesolo",
@@ -193,7 +198,8 @@
           "version": "42.1.3"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:dvpnoOioerhiTAiY0KdAr+hBRqPRreASgaqFGyQAVfk=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kubesolo",
@@ -206,7 +212,7 @@
       "distributionVersion": "v1.2.3",
       "result": "passed",
       "idle": {
-        "memoryMiB": 24
+        "memoryMiB": 25
       },
       "requests": {
         "memoryMiB": 64
@@ -221,7 +227,8 @@
           "version": "42.1.3"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:dvpnoOioerhiTAiY0KdAr+hBRqPRreASgaqFGyQAVfk=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "rke2",
@@ -234,7 +241,7 @@
       "distributionVersion": "v1.36.5+rke2r1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 23
+        "memoryMiB": 25
       },
       "requests": {
         "memoryMiB": 64
@@ -249,7 +256,8 @@
           "version": "42.1.3"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:dvpnoOioerhiTAiY0KdAr+hBRqPRreASgaqFGyQAVfk=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "rke2",
@@ -277,7 +285,8 @@
           "version": "42.1.3"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:dvpnoOioerhiTAiY0KdAr+hBRqPRreASgaqFGyQAVfk=",
+      "measuredAt": "2026-11-05"
     }
   ]
 }

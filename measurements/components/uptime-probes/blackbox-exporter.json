@@ -23,7 +23,8 @@
           "version": "11.20.2"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:77BdOv81zpRGPnAwSFrgqZQrYL6qXow8ry89pfqih4A=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "k3s",
@@ -47,7 +48,8 @@
           "version": "11.20.2"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:77BdOv81zpRGPnAwSFrgqZQrYL6qXow8ry89pfqih4A=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kind",
@@ -70,7 +72,8 @@
           "version": "11.20.2"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:77BdOv81zpRGPnAwSFrgqZQrYL6qXow8ry89pfqih4A=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kind",
@@ -93,7 +96,8 @@
           "version": "11.20.2"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:77BdOv81zpRGPnAwSFrgqZQrYL6qXow8ry89pfqih4A=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kind",
@@ -116,7 +120,8 @@
           "version": "11.20.2"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:77BdOv81zpRGPnAwSFrgqZQrYL6qXow8ry89pfqih4A=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kind",
@@ -139,7 +144,8 @@
           "version": "11.20.2"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:77BdOv81zpRGPnAwSFrgqZQrYL6qXow8ry89pfqih4A=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kubesolo",
@@ -163,7 +169,8 @@
           "version": "11.20.2"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:77BdOv81zpRGPnAwSFrgqZQrYL6qXow8ry89pfqih4A=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kubesolo",
@@ -187,7 +194,8 @@
           "version": "11.20.2"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:77BdOv81zpRGPnAwSFrgqZQrYL6qXow8ry89pfqih4A=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "rke2",
@@ -211,7 +219,8 @@
           "version": "11.20.2"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:77BdOv81zpRGPnAwSFrgqZQrYL6qXow8ry89pfqih4A=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "rke2",
@@ -235,7 +244,8 @@
           "version": "11.20.2"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:77BdOv81zpRGPnAwSFrgqZQrYL6qXow8ry89pfqih4A=",
+      "measuredAt": "2026-11-05"
     }
   ]
 }

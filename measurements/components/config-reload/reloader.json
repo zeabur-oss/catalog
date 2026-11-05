@@ -23,7 +23,8 @@
           "version": "2.2.19"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:s9kliupU/Iz7xcF2FhKCIhHodeLZcME+OqZUMzsb1Fo=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "k3s",
@@ -47,7 +48,8 @@
           "version": "2.2.19"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:s9kliupU/Iz7xcF2FhKCIhHodeLZcME+OqZUMzsb1Fo=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kind",
@@ -71,7 +73,8 @@
           "version": "2.2.19"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:s9kliupU/Iz7xcF2FhKCIhHodeLZcME+OqZUMzsb1Fo=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kind",
@@ -95,7 +98,8 @@
           "version": "2.2.19"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:s9kliupU/Iz7xcF2FhKCIhHodeLZcME+OqZUMzsb1Fo=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kind",
@@ -118,7 +122,8 @@
           "version": "2.2.19"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:s9kliupU/Iz7xcF2FhKCIhHodeLZcME+OqZUMzsb1Fo=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kind",
@@ -141,7 +146,8 @@
           "version": "2.2.19"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:s9kliupU/Iz7xcF2FhKCIhHodeLZcME+OqZUMzsb1Fo=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kubesolo",
@@ -154,7 +160,7 @@
       "distributionVersion": "v1.2.3",
       "result": "passed",
       "idle": {
-        "memoryMiB": 10
+        "memoryMiB": 9
       },
       "requests": {
         "memoryMiB": 64
@@ -165,7 +171,8 @@
           "version": "2.2.19"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:s9kliupU/Iz7xcF2FhKCIhHodeLZcME+OqZUMzsb1Fo=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kubesolo",
@@ -189,7 +196,8 @@
           "version": "2.2.19"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:s9kliupU/Iz7xcF2FhKCIhHodeLZcME+OqZUMzsb1Fo=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "rke2",
@@ -202,7 +210,7 @@
       "distributionVersion": "v1.36.5+rke2r1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 12
+        "memoryMiB": 11
       },
       "requests": {
         "memoryMiB": 64
@@ -213,7 +221,8 @@
           "version": "2.2.19"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:s9kliupU/Iz7xcF2FhKCIhHodeLZcME+OqZUMzsb1Fo=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "rke2",
@@ -237,7 +246,8 @@
           "version": "2.2.19"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:s9kliupU/Iz7xcF2FhKCIhHodeLZcME+OqZUMzsb1Fo=",
+      "measuredAt": "2026-11-05"
     }
   ]
 }

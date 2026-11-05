@@ -20,7 +20,8 @@
           "digest": "sha256:1f578fa865f8251894b3bf38d6668d6209a3f451f8f65ab953e129d4c1db5ef4"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:784i2gGi7f9JVipo/YBCUlZ90G3FT53yOCATTWSJwJg=",
+      "measuredAt": "2026-11-05"
     }
   ]
 }

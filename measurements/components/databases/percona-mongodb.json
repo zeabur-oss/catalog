@@ -24,7 +24,8 @@
           "version": "1.23.2"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:3tGPPCLyJ01FalQ4MmNE4fmTAAameklhhzVNaWNrIbU=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "k3s",
@@ -35,102 +36,6 @@
       },
       "kubernetesVersion": "v1.36.5",
       "distributionVersion": "v1.36.5+k3s1",
-      "result": "passed",
-      "idle": {
-        "memoryMiB": 18,
-        "cpuMillis": 1
-      },
-      "requests": {
-        "memoryMiB": 64
-      },
-      "versions": [
-        {
-          "release": "psmdb-operator",
-          "version": "1.23.2"
-        }
-      ],
-      "measuredAt": "2026-11-04"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "idle": {
-        "memoryMiB": 32,
-        "cpuMillis": 1
-      },
-      "requests": {
-        "memoryMiB": 256
-      },
-      "versions": [
-        {
-          "release": "psmdb-operator",
-          "version": "1.23.2"
-        }
-      ],
-      "measuredAt": "2026-11-04"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "idle": {
-        "memoryMiB": 32,
-        "cpuMillis": 1
-      },
-      "requests": {
-        "memoryMiB": 256
-      },
-      "versions": [
-        {
-          "release": "psmdb-operator",
-          "version": "1.23.2"
-        }
-      ],
-      "measuredAt": "2026-11-04"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "idle": {
-        "memoryMiB": 18,
-        "cpuMillis": 1
-      },
-      "requests": {
-        "memoryMiB": 64
-      },
-      "versions": [
-        {
-          "release": "psmdb-operator",
-          "version": "1.23.2"
-        }
-      ],
-      "measuredAt": "2026-11-04"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.4",
       "result": "passed",
       "idle": {
         "memoryMiB": 17,
@@ -145,7 +50,108 @@
           "version": "1.23.2"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:3tGPPCLyJ01FalQ4MmNE4fmTAAameklhhzVNaWNrIbU=",
+      "measuredAt": "2026-11-05"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 32,
+        "cpuMillis": 1
+      },
+      "requests": {
+        "memoryMiB": 256
+      },
+      "versions": [
+        {
+          "release": "psmdb-operator",
+          "version": "1.23.2"
+        }
+      ],
+      "sourceDigest": "h1:3tGPPCLyJ01FalQ4MmNE4fmTAAameklhhzVNaWNrIbU=",
+      "measuredAt": "2026-11-05"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 32,
+        "cpuMillis": 1
+      },
+      "requests": {
+        "memoryMiB": 256
+      },
+      "versions": [
+        {
+          "release": "psmdb-operator",
+          "version": "1.23.2"
+        }
+      ],
+      "sourceDigest": "h1:3tGPPCLyJ01FalQ4MmNE4fmTAAameklhhzVNaWNrIbU=",
+      "measuredAt": "2026-11-05"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 18,
+        "cpuMillis": 1
+      },
+      "requests": {
+        "memoryMiB": 64
+      },
+      "versions": [
+        {
+          "release": "psmdb-operator",
+          "version": "1.23.2"
+        }
+      ],
+      "sourceDigest": "h1:3tGPPCLyJ01FalQ4MmNE4fmTAAameklhhzVNaWNrIbU=",
+      "measuredAt": "2026-11-05"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 18,
+        "cpuMillis": 1
+      },
+      "requests": {
+        "memoryMiB": 64
+      },
+      "versions": [
+        {
+          "release": "psmdb-operator",
+          "version": "1.23.2"
+        }
+      ],
+      "sourceDigest": "h1:3tGPPCLyJ01FalQ4MmNE4fmTAAameklhhzVNaWNrIbU=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kubesolo",
@@ -170,7 +176,8 @@
           "version": "1.23.2"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:3tGPPCLyJ01FalQ4MmNE4fmTAAameklhhzVNaWNrIbU=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kubesolo",
@@ -195,7 +202,8 @@
           "version": "1.23.2"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:3tGPPCLyJ01FalQ4MmNE4fmTAAameklhhzVNaWNrIbU=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "rke2",
@@ -208,7 +216,7 @@
       "distributionVersion": "v1.36.5+rke2r1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 19,
+        "memoryMiB": 21,
         "cpuMillis": 1
       },
       "requests": {
@@ -220,7 +228,8 @@
           "version": "1.23.2"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:3tGPPCLyJ01FalQ4MmNE4fmTAAameklhhzVNaWNrIbU=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "rke2",
@@ -245,7 +254,8 @@
           "version": "1.23.2"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:3tGPPCLyJ01FalQ4MmNE4fmTAAameklhhzVNaWNrIbU=",
+      "measuredAt": "2026-11-05"
     }
   ]
 }
