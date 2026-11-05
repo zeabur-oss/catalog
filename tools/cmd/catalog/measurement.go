@@ -2,16 +2,16 @@ package main
 
 import (
 	"cmp"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
-	"fmt"
+	"io"
 	"math"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 	"time"
+
+	"golang.org/x/mod/sumdb/dirhash"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"github.com/zeabur-oss/catalog/tools/internal/templates"
@@ -59,8 +59,8 @@ type environment struct {
 	Idle     *catalog.Amounts  `json:"idle,omitempty"`
 	Requests *catalog.Amounts  `json:"requests,omitempty"`
 	Versions []measuredVersion `json:"versions,omitempty"`
-	// SourceDigest identifies the component file, or the template.yaml and
-	// manifests.yaml, that the run installed.
+	// SourceDigest is the Go module hash of the component file, or of the
+	// template directory, that the run installed.
 	SourceDigest string `json:"sourceDigest,omitempty"`
 	MeasuredAt   string `json:"measuredAt"`
 }
@@ -145,18 +145,18 @@ func templateMeasurementPath(id string) string {
 	return filepath.Join("measurements", "templates", id+".json")
 }
 
-// sourceDigest returns the digest of the files at paths, in order.
-func sourceDigest(paths ...string) (string, error) {
-	h := sha256.New()
-	for _, p := range paths {
-		data, err := os.ReadFile(p)
-		if err != nil {
-			return "", err
-		}
-		fmt.Fprintf(h, "%d\n", len(data))
-		h.Write(data)
+// sourceDigest returns the Go module hash (dirhash.Hash1, "h1:...") of the
+// file at path, or of every file under it when it is a directory.
+func sourceDigest(path string) (string, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return "", err
 	}
-	return "sha256:" + hex.EncodeToString(h.Sum(nil)), nil
+	if info.IsDir() {
+		return dirhash.HashDir(path, "", dirhash.Hash1)
+	}
+	open := func(string) (io.ReadCloser, error) { return os.Open(path) }
+	return dirhash.Hash1([]string{filepath.Base(path)}, open)
 }
 
 func today() string { return time.Now().UTC().Format(time.DateOnly) }
@@ -216,10 +216,9 @@ func markFailed(cfg config, profile, arch string, c *catalog.Component, env *env
 }
 
 // writeTemplateMeasurement records the usage of tmpl in env, with the
-// images in its manifest. A template's source is its template.yaml and
-// manifests.yaml.
+// images in its manifest. A template's source is its directory.
 func writeTemplateMeasurement(tmpl *templates.Template, env environment, usage templates.Usage, images []string) error {
-	digest, err := sourceDigest(filepath.Join(tmpl.Dir, "template.yaml"), filepath.Join(tmpl.Dir, "manifests.yaml"))
+	digest, err := sourceDigest(tmpl.Dir)
 	if err != nil {
 		return err
 	}
