@@ -138,8 +138,8 @@ releases:
             # SQLite decisions and bouncer registrations.
             enabled: true
           config:
-            # Keeps machine credentials stable across restarts.
-            enabled: true
+            # Agents sign in with certificates, and a kept credentials file with a login would clash.
+            enabled: false
     profiles:
       single-node: |
         agent:
