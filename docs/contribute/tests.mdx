@@ -3,7 +3,7 @@ title: Tests and CI
 description: Learn when each CI tier runs, what it checks, and how to configure template test inputs.
 ---
 
-`check` runs on every pull request, and `smoke` runs in the merge queue, on the commit about to land. `full` runs weekly. Check that the weekly run passed on a commit before tagging it. Each tier covers different checks, and later tiers run checks that earlier tiers don't cover. You can also run the same tests as CI with `catalog e2e -tier check|smoke|full`.
+`check` runs on every pull request, and `smoke` runs in the merge queue, on the commit about to land. `full` runs weekly. Check that the weekly run passed before tagging a commit. Each tier covers different checks, and later tiers run checks that earlier tiers don't cover. You can also run the same tests as CI with `catalog e2e -tier check|smoke|full`.
 
 ## Before you start
 
@@ -94,7 +94,7 @@ If a change affects `config/kubernetes.yaml`, `smoke` tests everything. If it af
 
 ## `full`: Test resource usage and cleanup
 
-`weekly.yml` calls `e2e.yml` to run `full` every Saturday. Before tagging a release, run `weekly.yml` on `main` if its last run was on another commit, and tag only once it passed.
+`weekly.yml` calls `e2e.yml` to run `full` every Saturday. Before tagging a release, check that the last `weekly.yml` run on `main` passed on that commit, or on an earlier one when every commit since only updates `measurements/` or is the release pull request (`CHANGELOG.md`, the version in `flake.nix`, `.changeset/`). Otherwise run `weekly.yml` on `main` and tag only once it passed.
 
 `full` creates a fresh kind cluster for each component and profile on amd64 and arm64. `single-node` uses one node, and `multi-node` uses three nodes.
 
