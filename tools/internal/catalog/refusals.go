@@ -1,9 +1,6 @@
 package catalog
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -69,70 +66,4 @@ func immutableFields(causes string) ([]string, bool) {
 		fields = append(fields, causes[m[2]:m[3]])
 	}
 	return fields, true
-}
-
-// Break is an object a change file declares it intends to break, with a
-// `Breaks: <component> <Kind> <namespace>/<name>` line.
-type Break struct {
-	Component, Kind, Namespace, Name string
-}
-
-func (b Break) String() string {
-	return fmt.Sprintf("%s %s %s/%s", b.Component, b.Kind, b.Namespace, b.Name)
-}
-
-// ParseBreaks returns the Breaks: lines of a change file.
-func ParseBreaks(text string) ([]Break, error) {
-	var out []Break
-	for _, line := range strings.Split(text, "\n") {
-		rest, ok := strings.CutPrefix(strings.TrimSpace(line), "Breaks:")
-		if !ok {
-			continue
-		}
-		f := strings.Fields(rest)
-		ns, name, slash := "", "", false
-		if len(f) == 3 {
-			ns, name, slash = strings.Cut(f[2], "/")
-		}
-		if !slash || ns == "" || name == "" {
-			return nil, fmt.Errorf("%q is not a Breaks: line; write `Breaks: <component> <Kind> <namespace>/<name>`", strings.TrimSpace(line))
-		}
-		out = append(out, Break{f[0], f[1], ns, name})
-	}
-	return out, nil
-}
-
-// ReadBreaks returns the Breaks: lines of every change file in dir.
-func ReadBreaks(dir string) ([]Break, error) {
-	files, err := filepath.Glob(filepath.Join(dir, "*.md"))
-	if err != nil {
-		return nil, err
-	}
-	var out []Break
-	for _, f := range files {
-		data, err := os.ReadFile(f)
-		if err != nil {
-			return nil, err
-		}
-		b, err := ParseBreaks(string(data))
-		if err != nil {
-			return nil, fmt.Errorf("%s: %w", f, err)
-		}
-		out = append(out, b...)
-	}
-	return out, nil
-}
-
-// UnreleasedChangelog returns the part of CHANGELOG.md above the section of
-// the previous release. A release pull request moves the change files there
-// before it is tagged, so their Breaks: lines still count until the tag
-// exists.
-func UnreleasedChangelog(changelog, previous string) (string, error) {
-	lines := strings.Split(changelog, "\n")
-	for i, line := range lines {
-		if strings.HasPrefix(line, "## "+previous+" ") {
-			return strings.Join(lines[:i], "\n"), nil
-		}
-	}
-	return "", fmt.Errorf("CHANGELOG.md has no section for the previous release %s", previous)
 }

@@ -15,42 +15,46 @@ import (
 	"sync"
 
 	"go.yaml.in/yaml/v3"
-	"k8s.io/apimachinery/pkg/util/version"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 )
 
-// previousRender is the previous release's render, made in the background.
-type previousRender struct {
-	version string // empty when there is no previous release
-	dir     string
-	done    chan error
+// baseRender is the render of the pull request's base, made in the background.
+type baseRender struct {
+	sha  string // empty when there is nothing to upgrade from
+	dir  string
+	done chan error
 }
 
-// startPreviousRender renders the previous release with its own tools, the
-// way that release rendered itself.
-func startPreviousRender() *previousRender {
-	p := &previousRender{done: make(chan error, 1)}
-	tag, err := previousRelease()
-	if err != nil || tag == "" {
-		if tag == "" && err == nil {
-			slog.Info("no previous release tag; no upgrade to dry-run")
-		}
-		p.done <- err
-		return p
+// startBaseRender renders the merge-base of HEAD and the base branch with its
+// own tools. The base branch is $CATALOG_BASE, origin/main by default.
+func startBaseRender() *baseRender {
+	b := &baseRender{done: make(chan error, 1)}
+	ref := cmp.Or(os.Getenv("CATALOG_BASE"), "origin/main")
+	sha, err := catalog.Run(nil, "git", "merge-base", "HEAD", ref)
+	if err != nil {
+		slog.Warn("no base to upgrade from", "ref", ref, "error", err)
+		b.done <- nil
+		return b
 	}
-	p.version = strings.TrimPrefix(tag, "v")
-	go func() { p.done <- p.render(tag) }()
-	return p
+	head, err := catalog.Run(nil, "git", "rev-parse", "HEAD")
+	b.sha = strings.TrimSpace(sha)
+	if err != nil || b.sha == strings.TrimSpace(head) {
+		b.sha = ""
+		b.done <- err
+		return b
+	}
+	go func() { b.done <- b.render() }()
+	return b
 }
 
-func (p *previousRender) render(tag string) error {
-	src, err := os.MkdirTemp("", "catalog-"+tag+"-")
+func (b *baseRender) render() error {
+	src, err := os.MkdirTemp("", "catalog-base-")
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(src)
-	archive := exec.Command("git", "archive", tag)
+	archive := exec.Command("git", "archive", b.sha)
 	extract := exec.Command("tar", "-x", "-C", src)
 	extract.Stdin, err = archive.StdoutPipe()
 	if err != nil {
@@ -60,79 +64,80 @@ func (p *previousRender) render(tag string) error {
 		return err
 	}
 	if err := errors.Join(archive.Run(), extract.Wait()); err != nil {
-		return fmt.Errorf("git archive %s: %w", tag, err)
+		return fmt.Errorf("git archive %s: %w", b.sha, err)
 	}
-	p.dir, err = filepath.Abs(filepath.Join("out", "render-"+tag))
-	if err != nil {
+	if b.dir, err = filepath.Abs(filepath.Join("out", "render-base")); err != nil {
 		return err
 	}
-	slog.Info("rendering the previous release", "tag", tag)
-	cmd := exec.Command("go", "run", "./tools/cmd/catalog", "render", "-out", p.dir)
+	slog.Info("rendering the base", "sha", b.sha)
+	cmd := exec.Command("go", "run", "./tools/cmd/catalog", "render", "-out", b.dir)
 	cmd.Dir = src
 	if out, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("render %s: %w: %s", tag, err, tail(string(out), 20))
+		return fmt.Errorf("render %s: %w: %s", b.sha, err, tail(string(out), 20))
 	}
 	return nil
 }
 
-// wait returns the previous render's directory for the Kubernetes version
-// with the same minor as kv, or "" when there is no previous release.
-func (p *previousRender) wait(kv string) (string, error) {
-	if err := <-p.done; err != nil || p.version == "" {
+// wait returns the base render's directory for the Kubernetes version with
+// the same minor as kv, or "" when there is no base.
+func (b *baseRender) wait(kv string) (string, error) {
+	if err := <-b.done; err != nil || b.sha == "" {
 		return "", err
 	}
-	m, _ := filepath.Glob(filepath.Join(p.dir, minorVersion(kv)+".*"))
+	m, _ := filepath.Glob(filepath.Join(b.dir, minorVersion(kv)+".*"))
 	if len(m) != 1 {
-		return "", fmt.Errorf("release %s rendered no Kubernetes %s", p.version, minorVersion(kv))
+		return "", fmt.Errorf("the base renders no Kubernetes %s", minorVersion(kv))
 	}
 	return m[0], nil
 }
 
-// previousRelease returns the newest release tag in HEAD's history, other
-// than one on HEAD itself: the release that the next one upgrades from.
-func previousRelease() (string, error) {
-	merged, err := catalog.Run(nil, "git", "tag", "--merged", "HEAD", "--list", "v[0-9]*")
-	if err != nil {
-		return "", err
-	}
-	here, err := catalog.Run(nil, "git", "tag", "--points-at", "HEAD")
-	if err != nil {
-		return "", err
-	}
-	var best string
-	var bestVersion *version.Version
-	for _, tag := range strings.Fields(merged) {
-		if slices.Contains(strings.Fields(here), tag) {
-			continue
-		}
-		v, err := version.ParseSemantic(strings.TrimPrefix(tag, "v"))
-		if err != nil {
-			continue
-		}
-		if bestVersion == nil || bestVersion.LessThan(v) {
-			best, bestVersion = tag, v
-		}
-	}
-	return best, nil
-}
-
 func minorVersion(v string) string { return strings.Join(strings.SplitN(v, ".", 3)[:2], ".") }
+
+// addsMajorChangeFile reports whether HEAD adds a change file under
+// .changeset/ since base whose frontmatter says `default: major`.
+func addsMajorChangeFile(dir, base string) (bool, error) {
+	cmd := exec.Command("git", "diff", "--name-only", "--diff-filter=A", base, "HEAD", "--", ".changeset/")
+	cmd.Dir = dir
+	names, err := cmd.Output()
+	if err != nil {
+		return false, err
+	}
+	for _, name := range strings.Fields(string(names)) {
+		data, err := os.ReadFile(filepath.Join(dir, name))
+		if err != nil {
+			return false, err
+		}
+		lines := strings.Split(string(data), "\n")
+		if lines[0] != "---" {
+			continue
+		}
+		for _, line := range lines[1:] {
+			if line == "---" {
+				break
+			}
+			if strings.TrimSpace(line) == "default: major" {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
 
 // refusal is an object the API server refused to update, and in which
 // upgrade or profile switch.
 type refusal struct {
 	component string
 	when      string
-	upgrade   bool // an upgrade from the previous release, not a profile switch
+	upgrade   bool // an upgrade from the base, not a profile switch
 	catalog.Refusal
 }
 
 // checkRefusals applies one render to the API server for real, sends the
 // other with --dry-run=server, and fails on what the API server refuses: the
-// two profiles in both directions, and the previous release's render of each
-// profile replaced by dir's.
-func checkRefusals(r *repo, dir string, prev *previousRender) error {
-	prevDir, err := prev.wait(filepath.Base(dir))
+// two profiles in both directions, and the base's render of each profile
+// replaced by dir's.
+func checkRefusals(r *repo, dir string, base *baseRender) error {
+	baseDir, err := base.wait(filepath.Base(dir))
 	if err != nil {
 		return err
 	}
@@ -145,97 +150,70 @@ func checkRefusals(r *repo, dir string, prev *previousRender) error {
 		wg.Go(func() {
 			sem <- struct{}{}
 			defer func() { <-sem }()
-			found[i], errs[i] = componentRefusals(c, dir, prevDir, prev.version)
+			found[i], errs[i] = componentRefusals(c, dir, baseDir)
 		})
 	}
 	wg.Wait()
-	breaks, err := declaredBreaks(prev.version)
-	if err != nil {
-		return err
+	major := false
+	if base.sha != "" {
+		if major, err = addsMajorChangeFile(".", base.sha); err != nil {
+			return err
+		}
 	}
-	return errors.Join(append(errs, judgeRefusals(slices.Concat(found...), breaks)...)...)
+	return errors.Join(append(errs, judgeRefusals(slices.Concat(found...), major)...)...)
 }
 
-// declaredBreaks returns the Breaks: lines since the previous release: those
-// of the change files, and those a release pull request has already moved into
-// CHANGELOG.md but not tagged yet.
-func declaredBreaks(previous string) ([]catalog.Break, error) {
-	breaks, err := catalog.ReadBreaks(".changeset")
-	if err != nil || previous == "" {
-		return breaks, err
-	}
-	changelog, err := os.ReadFile("CHANGELOG.md")
-	if err != nil {
-		return nil, err
-	}
-	unreleased, err := catalog.UnreleasedChangelog(string(changelog), previous)
-	if err != nil {
-		return nil, err
-	}
-	released, err := catalog.ParseBreaks(unreleased)
-	if err != nil {
-		return nil, fmt.Errorf("CHANGELOG.md: %w", err)
-	}
-	return append(breaks, released...), nil
-}
-
-// judgeRefusals returns an error for each refusal that no Breaks: line
-// declares, and for each Breaks: line that no upgrade refusal matches. A
-// declared upgrade refusal is logged as intended. A profile switch is never
-// declared.
-func judgeRefusals(found []refusal, breaks []catalog.Break) []error {
+// judgeRefusals returns an error for each refusal. An upgrade refusal passes
+// when the pull request adds a major change file, which says how to migrate; a
+// profile switch never does.
+func judgeRefusals(found []refusal, major bool) []error {
 	var errs []error
-	used := make([]bool, len(breaks))
 	for _, x := range found {
+		if x.upgrade && major {
+			slog.Info("intended break", "component", x.component, "object", x.Kind+" "+x.Namespace+"/"+x.Name, "when", x.when)
+			continue
+		}
+		verb := "switch"
 		if x.upgrade {
-			i := slices.IndexFunc(breaks, func(b catalog.Break) bool {
-				return b == catalog.Break{Component: x.component, Kind: x.Kind, Namespace: x.Namespace, Name: x.Name}
-			})
-			if i >= 0 {
-				used[i] = true
-				slog.Info("intended break", "component", x.component, "object", breaks[i].String(), "when", x.when)
-				continue
-			}
+			verb = "upgrade"
 		}
-		errs = append(errs, fmt.Errorf("%s: %s, the API server refuses to update %s %s/%s (%s); "+
-			"keep these fields the same, since Kubernetes can't change them in place. "+
-			"If an upgrade has to break it, add a `Breaks: %s %s %s/%s` line and the migration steps to the change file in .changeset/",
-			x.component, x.when, x.Kind, x.Namespace, x.Name, strings.Join(x.Fields, ", "),
-			x.component, x.Kind, x.Namespace, x.Name))
-	}
-	for i, b := range breaks {
-		if !used[i] {
-			errs = append(errs, fmt.Errorf("the change file says `Breaks: %s`, but the API server refused nothing there when upgrading from the previous release; remove the line", b))
+		msg := fmt.Sprintf("%s: the API server refuses to %s %s %s/%s in place (%s) for %s. ",
+			x.component, verb, x.Kind, x.Namespace, x.Name, strings.Join(x.Fields, ", "), x.when)
+		if x.upgrade {
+			msg += "Change the component so the object updates in place, or add a `major` change file with the migration steps."
+		} else {
+			msg += "Give the field the same value in both profiles."
 		}
+		errs = append(errs, errors.New(msg))
 	}
 	return errs
 }
 
-func componentRefusals(c *catalog.Component, dir, prevDir, prevVersion string) ([]refusal, error) {
+func componentRefusals(c *catalog.Component, dir, baseDir string) ([]refusal, error) {
 	var out []refusal
 	var errs []error
-	keep := func(when string, found []catalog.Refusal, err error) {
+	keep := func(upgrade bool, when string, found []catalog.Refusal, err error) {
 		if err != nil {
 			errs = append(errs, fmt.Errorf("%s %s: %w", c.ID, when, err))
 		}
 		for _, x := range found {
-			out = append(out, refusal{c.ID, when, strings.HasPrefix(when, "upgrading"), x})
+			out = append(out, refusal{c.ID, when, upgrade, x})
 		}
 	}
 	a, b := catalog.Profiles[0], catalog.Profiles[1]
 	if c.Defaults[a] != "unsupported" && c.Defaults[b] != "unsupported" {
 		for _, p := range [][2]string{{a, b}, {b, a}} {
 			found, err := refused(c, filepath.Join(dir, p[0]), filepath.Join(dir, p[1]))
-			keep("switching "+p[0]+" to "+p[1], found, err)
+			keep(false, p[0]+" to "+p[1], found, err)
 		}
 	}
-	if prevDir != "" {
+	if baseDir != "" {
 		for _, p := range catalog.Profiles {
 			if c.Defaults[p] == "unsupported" {
 				continue
 			}
-			found, err := refused(c, filepath.Join(prevDir, p), filepath.Join(dir, p))
-			keep("upgrading "+p+" from "+prevVersion, found, err)
+			found, err := refused(c, filepath.Join(baseDir, p), filepath.Join(dir, p))
+			keep(true, p, found, err)
 		}
 	}
 	return out, errors.Join(errs...)

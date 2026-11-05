@@ -22,7 +22,7 @@ import (
 
 // Tiers. check runs on every pull request: static checks, then a server-side
 // dry run on a local API server with only the CRDs and no nodes, which also
-// fails when the API server refuses an upgrade or a profile switch. smoke runs in
+// fails when the API server refuses an upgrade from the base or a profile switch. smoke runs in
 // the merge queue: it installs and smoke tests what changed, what it needs and
 // what installs it, single-node amd64, in groups that share their
 // dependencies. full runs weekly and before a release: every profile and
@@ -274,10 +274,10 @@ func runTier(r *repo, tier string, o tierOptions, args []string) error {
 
 // runCheck validates, renders and lints everything, then sends every rendered
 // component and template to a local API server with --dry-run=server, and
-// fails when it refuses an upgrade from the previous release or a profile
+// fails when it refuses an upgrade from the pull request's base or a profile
 // switch.
 func runCheck(r *repo, cfg config, o tierOptions) error {
-	prev := startPreviousRender()
+	base := startBaseRender()
 	var ts catalog.Timings
 	step := func(name string, f func() error) error {
 		start := time.Now()
@@ -317,7 +317,7 @@ func runCheck(r *repo, cfg config, o tierOptions) error {
 	}
 	err = step("dry run", func() error { return dryRun(r, filepath.Join(out, kv)) })
 	if err == nil {
-		err = step("refusals", func() error { return checkRefusals(r, filepath.Join(out, kv), prev) })
+		err = step("refusals", func() error { return checkRefusals(r, filepath.Join(out, kv), base) })
 	}
 	if err == nil {
 		err = report("check", []row{{subject: "check", timings: ts}})
