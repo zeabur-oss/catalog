@@ -174,7 +174,7 @@ The tests then run `full` with the `single-node` settings for every component th
 
 Measurements are stored alongside the kind results, with `profile: single-node`, the distribution in `distribution` and its release in `distributionVersion`, for example `v1.36.5+k3s1`. A failed run sets `result: failed` on its environment instead. When the cluster never answered, the entry has no `kubernetesVersion`.
 
-Once a component passes on a platform at the release that `config/kubernetes.yaml` pins, `catalog index` lists the distribution with that platform in the component's `testedOn`. A failed run takes the platform out again, and the next passing run on it puts it back.
+Each measured environment carries `sourceDigest`, a digest of the component file, or of `template.yaml` and `manifests.yaml` for a template, that the run installed. Once a component passes on a platform at the release that `config/kubernetes.yaml` pins, `catalog index` lists the distribution with that platform in the component's `testedOn`, but only while the component file still has the digest of that run. Changing the file, including a release version in it, takes the component out of `testedOn` until a run of the new file passes. A failed run takes the platform out too, and the next passing run on it puts it back.
 
 ## Configure template test inputs
 

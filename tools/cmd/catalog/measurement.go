@@ -3,12 +3,15 @@ package main
 import (
 	"cmp"
 	"encoding/json"
+	"io"
 	"math"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 	"time"
+
+	"golang.org/x/mod/sumdb/dirhash"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"github.com/zeabur-oss/catalog/tools/internal/templates"
@@ -53,10 +56,13 @@ type environment struct {
 	// Result is empty in index.json, which lists passed runs only.
 	Result string `json:"result,omitempty"`
 	// Idle is what the pods use at rest, and Requests what they request.
-	Idle       *catalog.Amounts  `json:"idle,omitempty"`
-	Requests   *catalog.Amounts  `json:"requests,omitempty"`
-	Versions   []measuredVersion `json:"versions,omitempty"`
-	MeasuredAt string            `json:"measuredAt"`
+	Idle     *catalog.Amounts  `json:"idle,omitempty"`
+	Requests *catalog.Amounts  `json:"requests,omitempty"`
+	Versions []measuredVersion `json:"versions,omitempty"`
+	// SourceDigest is the Go module hash of the component file, or of the
+	// template directory, that the run installed.
+	SourceDigest string `json:"sourceDigest,omitempty"`
+	MeasuredAt   string `json:"measuredAt"`
 }
 
 // measuredVersion is the version of a component's release or of a template's image.
@@ -139,6 +145,20 @@ func templateMeasurementPath(id string) string {
 	return filepath.Join("measurements", "templates", id+".json")
 }
 
+// sourceDigest returns the Go module hash (dirhash.Hash1, "h1:...") of the
+// file at path, or of every file under it when it is a directory.
+func sourceDigest(path string) (string, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return "", err
+	}
+	if info.IsDir() {
+		return dirhash.HashDir(path, "", dirhash.Hash1)
+	}
+	open := func(string) (io.ReadCloser, error) { return os.Open(path) }
+	return dirhash.Hash1([]string{filepath.Base(path)}, open)
+}
+
 func today() string { return time.Now().UTC().Format(time.DateOnly) }
 
 func releaseVersions(c *catalog.Component) []measuredVersion {
@@ -152,12 +172,17 @@ func releaseVersions(c *catalog.Component) []measuredVersion {
 }
 
 func writeMeasurement(c *catalog.Component, env environment, res catalog.Result) error {
+	digest, err := sourceDigest(c.Path)
+	if err != nil {
+		return err
+	}
 	m := readMeasurement(measurementPath(c.ID))
 	m.Component = c.ID
 	env.Result = resultPassed
 	env.Idle = catalog.MeasuredAmounts(res.IdleMemoryMiB, res.IdleCPUm)
 	env.Requests = &catalog.Amounts{MemoryMiB: int64(math.Ceil(res.RequestMemoryMiB))}
 	env.Versions = releaseVersions(c)
+	env.SourceDigest = digest
 	env.MeasuredAt = today()
 	m.put(env)
 	return writeMeasurementFile(measurementPath(c.ID), m)
@@ -190,15 +215,21 @@ func markFailed(cfg config, profile, arch string, c *catalog.Component, env *env
 	return writeMeasurementFile(measurementPath(c.ID), m)
 }
 
-// writeTemplateMeasurement records the usage of template id in env, with the
-// images in its manifest.
-func writeTemplateMeasurement(id string, env environment, usage templates.Usage, images []string) error {
+// writeTemplateMeasurement records the usage of tmpl in env, with the
+// images in its manifest. A template's source is its directory.
+func writeTemplateMeasurement(tmpl *templates.Template, env environment, usage templates.Usage, images []string) error {
+	digest, err := sourceDigest(tmpl.Dir)
+	if err != nil {
+		return err
+	}
+	id := tmpl.ID
 	path := templateMeasurementPath(id)
 	m := readMeasurement(path)
 	m.Template = id
 	env.Result = resultPassed
 	env.Idle = catalog.MeasuredAmounts(usage.IdleMemoryMiB, usage.IdleCPUm)
 	env.Versions = imageVersions(images)
+	env.SourceDigest = digest
 	env.MeasuredAt = today()
 	m.put(env)
 	return writeMeasurementFile(path, m)

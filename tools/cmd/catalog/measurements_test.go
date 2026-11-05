@@ -18,10 +18,13 @@ func writeFile(t *testing.T, path string, v any) {
 	}
 }
 
+// testDigest is the digest of the source that the runs of env installed.
+const testDigest = "sha256:source"
+
 // env returns a passing run on kind, or on a host distribution at version.
 func env(distribution, profile, arch, kubernetes, version string, idle int64, day string) environment {
 	return environment{Distribution: distribution, Profile: profile, Platform: platform{"linux", arch},
-		KubernetesVersion: kubernetes, DistributionVersion: version, Result: resultPassed,
+		KubernetesVersion: kubernetes, DistributionVersion: version, Result: resultPassed, SourceDigest: testDigest,
 		Idle: &catalog.Amounts{MemoryMiB: idle}, MeasuredAt: day}
 }
 
@@ -158,7 +161,7 @@ func TestTestedOnCountsOnlyThePinnedDistributionVersions(t *testing.T) {
 			[]tested{{"k3s", []string{"linux/amd64", "linux/arm64"}}}},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			got := testedOn(cfg, c.envs)
+			got := testedOn(cfg, c.envs, testDigest)
 			if !reflect.DeepEqual(got, c.want) {
 				t.Errorf("testedOn = %+v, want %+v", got, c.want)
 			}
@@ -171,8 +174,8 @@ func TestTestedOnCountsOnlyThePinnedDistributionVersions(t *testing.T) {
 }
 
 // k3sPlatforms returns the platforms that testedOn lists for k3s.
-func k3sPlatforms(cfg config, envs []environment) []string {
-	for _, d := range testedOn(cfg, envs) {
+func k3sPlatforms(cfg config, envs []environment, digest string) []string {
+	for _, d := range testedOn(cfg, envs, digest) {
 		if d.Distribution == "k3s" {
 			return d.Platforms
 		}
@@ -210,7 +213,7 @@ func TestFailedRunTakesThePlatformOutOfTestedOn(t *testing.T) {
 				t.Fatal(err)
 			}
 			merged := readMeasurement("main/components/ingress/traefik.json")
-			if got := k3sPlatforms(cfg, merged.Environments); !slices.Equal(got, []string{"linux/amd64"}) {
+			if got := k3sPlatforms(cfg, merged.Environments, testDigest); !slices.Equal(got, []string{"linux/amd64"}) {
 				t.Errorf("k3s platforms = %q after a failed arm64 run, want amd64 only", got)
 			}
 			if slices.ContainsFunc(passed(merged.Environments), arm.same) {
@@ -222,7 +225,7 @@ func TestFailedRunTakesThePlatformOutOfTestedOn(t *testing.T) {
 
 			// The next passing run replaces the mark.
 			merged.put(k3sEnv("arm64", 22, day))
-			if got := k3sPlatforms(cfg, merged.Environments); !slices.Equal(got, []string{"linux/amd64", "linux/arm64"}) {
+			if got := k3sPlatforms(cfg, merged.Environments, testDigest); !slices.Equal(got, []string{"linux/amd64", "linux/arm64"}) {
 				t.Errorf("k3s platforms = %q after arm64 passed again", got)
 			}
 		})
@@ -261,7 +264,7 @@ func TestFailureSurvivesAnotherJobsStaleCopy(t *testing.T) {
 	if get(t, merged, kindEnv("single-node", "amd64", 0, "")).Idle.MemoryMiB != 25 {
 		t.Error("the new measurement was not merged")
 	}
-	if got := k3sPlatforms(cfg, merged.Environments); slices.Contains(got, "linux/arm64") {
+	if got := k3sPlatforms(cfg, merged.Environments, testDigest); slices.Contains(got, "linux/arm64") {
 		t.Error("k3s arm64 stays in testedOn after its run failed")
 	}
 }
@@ -279,13 +282,13 @@ func TestStartupFailureMarksTheExistingRun(t *testing.T) {
 		t.Fatal(err)
 	}
 	m := readMeasurement("measurements/components/ingress/traefik.json")
-	if got := testedOn(cfg, m.Environments); !reflect.DeepEqual(got, []tested{{"kubesolo", []string{"linux/amd64"}}}) {
+	if got := testedOn(cfg, m.Environments, testDigest); !reflect.DeepEqual(got, []tested{{"kubesolo", []string{"linux/amd64"}}}) {
 		t.Errorf("testedOn = %+v after arm64 failed to start, want amd64 only", got)
 	}
 
 	// A later arm64 run passes and replaces the mark.
 	m.put(env("kubesolo", "single-node", "arm64", "v1.35.7", "v1.2.3", 21, "2999-01-01"))
-	if got := testedOn(cfg, m.Environments); !reflect.DeepEqual(got, []tested{{"kubesolo", []string{"linux/amd64", "linux/arm64"}}}) {
+	if got := testedOn(cfg, m.Environments, testDigest); !reflect.DeepEqual(got, []tested{{"kubesolo", []string{"linux/amd64", "linux/arm64"}}}) {
 		t.Errorf("testedOn = %+v after arm64 passed", got)
 	}
 }
@@ -370,5 +373,67 @@ func TestRequestMemoryIsPublishedWhenMeasuredAndOmittedWhenNot(t *testing.T) {
 		if !reflect.DeepEqual(got["requests"], c.want) {
 			t.Errorf("%s: requests = %v, want %v", out, got["requests"], c.want)
 		}
+	}
+}
+
+func TestChangedSourceIsUntestedUntilARunOfItPasses(t *testing.T) {
+	t.Chdir(t.TempDir())
+	var cfg config
+	cfg.K3s.Version = "v1.36.5+k3s1"
+	const path = "components/ingress/traefik.yaml"
+	writeSource := func(content string) string {
+		t.Helper()
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		digest, err := sourceDigest(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return digest
+	}
+	tested := func() []string {
+		t.Helper()
+		digest, err := sourceDigest(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return k3sPlatforms(cfg, readMeasurement(measurementPath("ingress/traefik")).Environments, digest)
+	}
+	comp := &catalog.Component{ID: "ingress/traefik", Path: path}
+	passRun := func() {
+		t.Helper()
+		if err := writeMeasurement(comp, k3sEnv("amd64", 0, ""), catalog.Result{IdleMemoryMiB: 24}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	writeSource("releases:\n- name: traefik\n  version: 42.1.3\n")
+	passRun()
+	if got := tested(); !slices.Equal(got, []string{"linux/amd64"}) {
+		t.Fatalf("k3s platforms = %q for the source the run installed, want amd64", got)
+	}
+
+	writeSource("releases:\n- name: traefik\n  version: 42.1.4\n")
+	if got := tested(); len(got) != 0 {
+		t.Errorf("k3s platforms = %q after the source changed, want none", got)
+	}
+
+	passRun()
+	if got := tested(); !slices.Equal(got, []string{"linux/amd64"}) {
+		t.Errorf("k3s platforms = %q after a run of the changed source passed, want amd64", got)
+	}
+}
+
+func TestRunWithoutSourceDigestIsUntested(t *testing.T) {
+	var cfg config
+	cfg.K3s.Version = "v1.36.5+k3s1"
+	old := k3sEnv("amd64", 22, "2026-10-30")
+	old.SourceDigest = ""
+	if got := testedOn(cfg, []environment{old}, testDigest); len(got) != 0 {
+		t.Errorf("testedOn = %+v for a run without a source digest, want none", got)
 	}
 }
