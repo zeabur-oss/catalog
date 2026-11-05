@@ -31,7 +31,7 @@ inputs:
     secret: {name: crowdsec-lapi, key: csLapiSecret, namespace: crowdsec}
     generate: {type: random, bytes: 64, encoding: hex}
   - name: registrationToken
-    description: Agents register with the local API using this token.
+    description: The chart's LAPI reads this token. Auto-registration is off, so nothing uses it.
     secret: {name: crowdsec-lapi, key: registrationToken, namespace: crowdsec}
     generate: {type: random, bytes: 64, encoding: hex}
 
@@ -95,6 +95,16 @@ releases:
             # The chart writes an empty secretTemplate without one, which
             # fails schema validation.
             labels: {app.kubernetes.io/part-of: crowdsec}
+      config:
+        # Replaces the chart's default, which turns on token registration.
+        # Merged into the image's config.yaml, which keeps its flush max_items
+        # and max_age.
+        config.yaml.local: |
+          db_config:
+            flush:
+              agents_autodelete:
+                # Deletes the machine a restarted agent leaves behind.
+                cert: 7d
       secrets:
         externalSecret:
           # Inputs, not chart-generated, so every render is identical.
