@@ -1,5 +1,5 @@
 ---
-default: patch
+default: minor
 ---
 
 # Switching profiles keeps zot and VictoriaMetrics running
@@ -15,3 +15,5 @@ kubectl -n observability rollout restart deployment victoria-metrics-operator
 ```
 
 The first keeps zot's Pod and volume, and the upgrade creates the StatefulSet again with the new template. The second tells the operator to leave the existing claim's size alone, and the third makes it try vmsingle again, which it does not do on its own until the VMSingle changes again.
+
+Breaks: builds/zeabur-builder StatefulSet zot/zot

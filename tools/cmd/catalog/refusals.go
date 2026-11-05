@@ -123,6 +123,7 @@ func minorVersion(v string) string { return strings.Join(strings.SplitN(v, ".", 
 type refusal struct {
 	component string
 	when      string
+	upgrade   bool // an upgrade from the previous release, not a profile switch
 	catalog.Refusal
 }
 
@@ -148,14 +149,43 @@ func checkRefusals(r *repo, dir string, prev *previousRender) error {
 		})
 	}
 	wg.Wait()
-	for _, rs := range found {
-		for _, x := range rs {
-			errs = append(errs, fmt.Errorf("%s: %s, the API server refuses to update %s %s/%s (%s); "+
-				"keep these fields the same, since Kubernetes can't change them in place",
-				x.component, x.when, x.Kind, x.Namespace, x.Name, strings.Join(x.Fields, ", ")))
+	breaks, err := catalog.ReadBreaks(".changeset")
+	if err != nil {
+		return err
+	}
+	return errors.Join(append(errs, judgeRefusals(slices.Concat(found...), breaks)...)...)
+}
+
+// judgeRefusals returns an error for each refusal that no Breaks: line
+// declares, and for each Breaks: line that no upgrade refusal matches. A
+// declared upgrade refusal is logged as intended. A profile switch is never
+// declared.
+func judgeRefusals(found []refusal, breaks []catalog.Break) []error {
+	var errs []error
+	used := make([]bool, len(breaks))
+	for _, x := range found {
+		if x.upgrade {
+			i := slices.IndexFunc(breaks, func(b catalog.Break) bool {
+				return b == catalog.Break{Component: x.component, Kind: x.Kind, Namespace: x.Namespace, Name: x.Name}
+			})
+			if i >= 0 {
+				used[i] = true
+				slog.Info("intended break", "component", x.component, "object", breaks[i].String(), "when", x.when)
+				continue
+			}
+		}
+		errs = append(errs, fmt.Errorf("%s: %s, the API server refuses to update %s %s/%s (%s); "+
+			"keep these fields the same, since Kubernetes can't change them in place. "+
+			"If an upgrade has to break it, add a `Breaks: %s %s %s/%s` line and the migration steps to the change file in .changeset/",
+			x.component, x.when, x.Kind, x.Namespace, x.Name, strings.Join(x.Fields, ", "),
+			x.component, x.Kind, x.Namespace, x.Name))
+	}
+	for i, b := range breaks {
+		if !used[i] {
+			errs = append(errs, fmt.Errorf("the change file says `Breaks: %s`, but the API server refused nothing there when upgrading from the previous release; remove the line", b))
 		}
 	}
-	return errors.Join(errs...)
+	return errs
 }
 
 func componentRefusals(c *catalog.Component, dir, prevDir, prevVersion string) ([]refusal, error) {
@@ -166,7 +196,7 @@ func componentRefusals(c *catalog.Component, dir, prevDir, prevVersion string) (
 			errs = append(errs, fmt.Errorf("%s %s: %w", c.ID, when, err))
 		}
 		for _, x := range found {
-			out = append(out, refusal{c.ID, when, x})
+			out = append(out, refusal{c.ID, when, strings.HasPrefix(when, "upgrading"), x})
 		}
 	}
 	a, b := catalog.Profiles[0], catalog.Profiles[1]

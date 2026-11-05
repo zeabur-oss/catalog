@@ -57,6 +57,8 @@ source: "cfee11888f66"
 
 接着 dry-run 升级和 profile 切换。对每个组件，先把一份渲染结果应用到 API server，再用 `--dry-run=server` 发送另一份：两个 profile 的渲染结果互相替换，以及上一个版本每个 profile 的渲染结果被这个版本替换。上一个版本是最新的发布 tag，包括预发布版，并用那个版本自己的工具渲染。CRD、Namespace、webhook 配置和 Helm hook 不计入。只要 API server 拒绝更新，例如 `volumeClaimTemplates` 有变化的 StatefulSet，检查就会失败，并指出是哪个组件的哪个对象。Kubernetes 无法原地修改这类字段，所以两个 profile 要用同一个值，之后的版本也不要改。
 
+检查失败时，先找有没有能原地更新的改法，例如保持字段原来的值。没有这种改法时，才声明这个破坏：在 `.changeset/` 的变更文件里加一行 `Breaks: <组件> <Kind> <namespace>/<name>`，并把迁移步骤写在同一个文件里。检查会接受这次拒绝，并记为预期的破坏。profile 切换不能声明，对应不到任何拒绝的 `Breaks:` 行会报错。发布时会移除变更文件，这一行也随之消失。
+
 </Step>
 
 <Step>

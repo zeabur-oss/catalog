@@ -122,3 +122,58 @@ func TestRefused(t *testing.T) {
 		}
 	})
 }
+
+// A change file may declare an object it intends to break with a
+// `Breaks: <component> <Kind> <namespace>/<name>` line. An upgrade refusal
+// that matches one passes; every other refusal fails, and so does a line that
+// matches no refusal.
+func TestDeclaredBreaks(t *testing.T) {
+	zot := catalog.Refusal{Release: "zot", Namespace: "zot", Kind: "StatefulSet", Name: "zot", Fields: []string{"spec"}}
+	upgrade := refusal{component: "builds/zeabur-builder", when: "upgrading multi-node from 0.3.0", upgrade: true, Refusal: zot}
+	switched := refusal{component: "builds/zeabur-builder", when: "switching single-node to multi-node", Refusal: zot}
+	declared := []catalog.Break{{Component: "builds/zeabur-builder", Kind: "StatefulSet", Namespace: "zot", Name: "zot"}}
+
+	t.Run("a declared upgrade refusal passes", func(t *testing.T) {
+		errs := judgeRefusals([]refusal{upgrade}, declared)
+		if len(errs) != 0 {
+			t.Errorf("got %v, want none", errs)
+		}
+	})
+	t.Run("an undeclared refusal fails", func(t *testing.T) {
+		errs := judgeRefusals([]refusal{upgrade}, nil)
+		if len(errs) != 1 {
+			t.Errorf("got %v, want one error", errs)
+		}
+	})
+	t.Run("a declaration does not cover a profile switch", func(t *testing.T) {
+		errs := judgeRefusals([]refusal{switched, upgrade}, declared)
+		if len(errs) != 1 || !strings.Contains(errs[0].Error(), "switching") {
+			t.Errorf("got %v, want the switch to fail", errs)
+		}
+	})
+	t.Run("a declaration that matches nothing is an error", func(t *testing.T) {
+		errs := judgeRefusals(nil, declared)
+		if len(errs) != 1 || !strings.Contains(errs[0].Error(), "zot/zot") {
+			t.Errorf("got %v, want the stale declaration named", errs)
+		}
+	})
+}
+
+// Only Breaks: lines count; the rest of a change file is left alone.
+func TestParseBreaks(t *testing.T) {
+	text := "---\ndefault: minor\n---\n\n# Title\n\nBreaks: builds/zeabur-builder StatefulSet zot/zot\nBreaks: a/b Deployment x/y\nSome Breaks: text in a sentence.\n"
+	got, err := catalog.ParseBreaks(text)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []catalog.Break{
+		{Component: "builds/zeabur-builder", Kind: "StatefulSet", Namespace: "zot", Name: "zot"},
+		{Component: "a/b", Kind: "Deployment", Namespace: "x", Name: "y"},
+	}
+	if !slices.Equal(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+	if _, err := catalog.ParseBreaks("Breaks: only-two fields\n"); err == nil {
+		t.Error("a malformed Breaks: line should be an error")
+	}
+}
