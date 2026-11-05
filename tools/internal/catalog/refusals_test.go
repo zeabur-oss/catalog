@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"reflect"
+	"slices"
 	"testing"
 )
 
@@ -62,4 +63,39 @@ func TestParseRefusals(t *testing.T) {
 			}
 		})
 	}
+}
+
+// A release pull request moves the change files into CHANGELOG.md before the
+// tag exists, so the Breaks: lines of the sections above the previous
+// release still count.
+func TestUnreleasedChangelog(t *testing.T) {
+	changelog := "# Changelog\n\n## 0.4.0 (2026-11-07)\n\nBreaks: builds/zeabur-builder StatefulSet zot/zot\n\n## 0.3.0 (2026-11-04)\n\nBreaks: old/one Deployment a/b\n"
+	t.Run("the sections above the previous release count", func(t *testing.T) {
+		got, err := UnreleasedChangelog(changelog, "0.3.0")
+		if err != nil {
+			t.Fatal(err)
+		}
+		breaks, err := ParseBreaks(got)
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := []Break{{Component: "builds/zeabur-builder", Kind: "StatefulSet", Namespace: "zot", Name: "zot"}}
+		if !slices.Equal(breaks, want) {
+			t.Errorf("got %v, want %v", breaks, want)
+		}
+	})
+	t.Run("once the release is tagged its section no longer counts", func(t *testing.T) {
+		got, err := UnreleasedChangelog(changelog, "0.4.0")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if breaks, _ := ParseBreaks(got); len(breaks) != 0 {
+			t.Errorf("got %v, want none", breaks)
+		}
+	})
+	t.Run("a previous release missing from the changelog is an error", func(t *testing.T) {
+		if _, err := UnreleasedChangelog(changelog, "0.9.0"); err == nil {
+			t.Error("want an error")
+		}
+	})
 }

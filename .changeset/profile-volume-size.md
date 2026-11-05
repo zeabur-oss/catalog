@@ -1,5 +1,5 @@
 ---
-default: minor
+default: major
 ---
 
 # Switching profiles keeps zot and VictoriaMetrics running

@@ -122,3 +122,17 @@ func ReadBreaks(dir string) ([]Break, error) {
 	}
 	return out, nil
 }
+
+// UnreleasedChangelog returns the part of CHANGELOG.md above the section of
+// the previous release. A release pull request moves the change files there
+// before it is tagged, so their Breaks: lines still count until the tag
+// exists.
+func UnreleasedChangelog(changelog, previous string) (string, error) {
+	lines := strings.Split(changelog, "\n")
+	for i, line := range lines {
+		if strings.HasPrefix(line, "## "+previous+" ") {
+			return strings.Join(lines[:i], "\n"), nil
+		}
+	}
+	return "", fmt.Errorf("CHANGELOG.md has no section for the previous release %s", previous)
+}

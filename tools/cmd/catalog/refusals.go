@@ -149,11 +149,34 @@ func checkRefusals(r *repo, dir string, prev *previousRender) error {
 		})
 	}
 	wg.Wait()
-	breaks, err := catalog.ReadBreaks(".changeset")
+	breaks, err := declaredBreaks(prev.version)
 	if err != nil {
 		return err
 	}
 	return errors.Join(append(errs, judgeRefusals(slices.Concat(found...), breaks)...)...)
+}
+
+// declaredBreaks returns the Breaks: lines since the previous release: those
+// of the change files, and those a release pull request has already moved into
+// CHANGELOG.md but not tagged yet.
+func declaredBreaks(previous string) ([]catalog.Break, error) {
+	breaks, err := catalog.ReadBreaks(".changeset")
+	if err != nil || previous == "" {
+		return breaks, err
+	}
+	changelog, err := os.ReadFile("CHANGELOG.md")
+	if err != nil {
+		return nil, err
+	}
+	unreleased, err := catalog.UnreleasedChangelog(string(changelog), previous)
+	if err != nil {
+		return nil, err
+	}
+	released, err := catalog.ParseBreaks(unreleased)
+	if err != nil {
+		return nil, fmt.Errorf("CHANGELOG.md: %w", err)
+	}
+	return append(breaks, released...), nil
 }
 
 // judgeRefusals returns an error for each refusal that no Breaks: line
