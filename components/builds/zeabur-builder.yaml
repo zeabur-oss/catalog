@@ -178,9 +178,10 @@ releases:
       persistence: true
       pvc:
         # One size for both profiles: volumeClaimTemplates can't change, so a
-        # profile switch would stop the upgrade. local-path ignores the size
-        # and Longhorn allocates only what is written.
-        storage: 50Gi
+        # profile switch would stop the upgrade. local-path ignores the size;
+        # on Longhorn, grow the claim when about 20 builds of a few apps no
+        # longer fit.
+        storage: 20Gi
       # The restricted Pod Security level. The image has no user of its own,
       # so any UID works; fsGroup gives it the volume and the mounted Secrets.
       podSecurityContext:
