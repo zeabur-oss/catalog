@@ -19,7 +19,7 @@ defaults:
 distributions: [k3s, rke2, kubesolo]
 kubeVersion: ">=1.34.0-0"
 persistsData: true
-requires: [{component: ingress/traefik}]
+requires: [{component: ingress/traefik}, {capability: certificates}]
 
 inputs:
   - name: bouncerKey
@@ -36,6 +36,35 @@ inputs:
     generate: {type: random, bytes: 64, encoding: hex}
 
 releases:
+  # The chart's own CA has no duration setting, so the CA comes from here.
+  - name: ca
+    type: inline
+    namespace: crowdsec
+    manifests: |
+      apiVersion: cert-manager.io/v1
+      kind: Issuer
+      metadata: {name: crowdsec-selfsigned, namespace: crowdsec}
+      spec: {selfSigned: {}}
+      ---
+      apiVersion: cert-manager.io/v1
+      kind: Certificate
+      metadata: {name: crowdsec-ca, namespace: crowdsec}
+      spec:
+        isCA: true
+        commonName: crowdsec-ca
+        secretName: crowdsec-ca
+        # Ten years, like the certificates it signs.
+        duration: 87600h
+        renewBefore: 720h
+        privateKey: {algorithm: ECDSA, size: 256}
+        issuerRef: {name: crowdsec-selfsigned, kind: Issuer}
+      ---
+      apiVersion: cert-manager.io/v1
+      kind: Issuer
+      metadata: {name: crowdsec-ca, namespace: crowdsec}
+      spec:
+        ca: {secretName: crowdsec-ca}
+
   - name: crowdsec
     type: helm
     namespace: crowdsec
@@ -49,11 +78,33 @@ releases:
         tag: v1.8.1@sha256:0f2523fa61ef507f15d953045cface490cc880670c62f2755ced17524107f71a
       # The runtime on k3s and mainstream distributions.
       container_runtime: containerd
+      tls:
+        # Agents sign in with a cert-manager client certificate instead of
+        # registering a machine name, which a restarted Pod would reuse
+        # (crowdsecurity/helm-charts#252).
+        enabled: true
+        certManager:
+          # The ca release.
+          issuerRef: {name: crowdsec-ca, kind: Issuer}
+          # Ten years: CrowdSec agents load their client certificate once
+          # and never reload it (crowdsecurity/crowdsec#2810). Shorten this
+          # once they do.
+          duration: 87600h
+          renewBefore: 720h
+          secretTemplate:
+            # The chart writes an empty secretTemplate without one, which
+            # fails schema validation.
+            labels: {app.kubernetes.io/part-of: crowdsec}
       secrets:
         externalSecret:
           # Inputs, not chart-generated, so every render is identical.
           name: crowdsec-lapi
       agent:
+        wait_for_lapi:
+          image:
+            # The agent's image has nc; the chart's busybox has no digest.
+            repository: crowdsecurity/crowdsec
+            tag: v1.8.1@sha256:0f2523fa61ef507f15d953045cface490cc880670c62f2755ced17524107f71a
         acquisition:
           # Traefik's JSON access log.
           - namespace: traefik
@@ -103,120 +154,6 @@ releases:
             requests: {cpu: 50m, memory: 96Mi}
             limits: {memory: 384Mi}
 
-  # When a node restarts, its agent Pod keeps its name, and the chart's init
-  # container registers that name again. The LAPI refuses it because the
-  # machine exists (crowdsecurity/helm-charts#252). This Deployment evicts
-  # such a Pod. Its replacement has a new name and registers.
-  - name: agent-recovery
-    type: inline
-    namespace: crowdsec
-    manifests: |
-      apiVersion: v1
-      kind: ServiceAccount
-      metadata:
-        name: agent-recovery
-        namespace: crowdsec
-      ---
-      apiVersion: rbac.authorization.k8s.io/v1
-      kind: Role
-      metadata:
-        name: agent-recovery
-        namespace: crowdsec
-      rules:
-        - apiGroups: [""]
-          resources: [pods]
-          verbs: [get, list]
-        - apiGroups: [""]
-          resources: [pods/log]
-          verbs: [get]
-        - apiGroups: [""]
-          resources: [pods/eviction]
-          verbs: [create]
-      ---
-      apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: agent-recovery
-        namespace: crowdsec
-      roleRef: {apiGroup: rbac.authorization.k8s.io, kind: Role, name: agent-recovery}
-      subjects: [{kind: ServiceAccount, name: agent-recovery, namespace: crowdsec}]
-      ---
-      apiVersion: apps/v1
-      kind: Deployment
-      metadata:
-        name: agent-recovery
-        namespace: crowdsec
-        labels: {app.kubernetes.io/name: agent-recovery}
-      spec:
-        replicas: 1
-        selector:
-          matchLabels: {app.kubernetes.io/name: agent-recovery}
-        template:
-          metadata:
-            labels: {app.kubernetes.io/name: agent-recovery}
-          spec:
-            serviceAccountName: agent-recovery
-            # sh as PID 1 ignores SIGTERM, and the loop keeps no state.
-            terminationGracePeriodSeconds: 5
-            securityContext:
-              runAsNonRoot: true
-              runAsUser: 65534
-              runAsGroup: 65534
-              seccompProfile: {type: RuntimeDefault}
-            containers:
-              # The CrowdSec image has sh, wget and yq. wget talks to the API
-              # through kubectl proxy, which checks the API server's certificate.
-              - name: recover
-                image: crowdsecurity/crowdsec:v1.8.1@sha256:0f2523fa61ef507f15d953045cface490cc880670c62f2755ced17524107f71a
-                command:
-                  - sh
-                  - -c
-                  - |
-                    api=http://127.0.0.1:8001/api/v1/namespaces/crowdsec/pods
-                    init=wait-for-lapi-and-register
-                    while true; do
-                      # Pods whose registering init container failed and waits to run again.
-                      pods=$(wget -qO- "$api?labelSelector=k8s-app%3Dcrowdsec" | yq -p json -o yaml "
-                        .items[]
-                        | select(.metadata.deletionTimestamp == null)
-                        | select((.status.initContainerStatuses // []) | any_c(.name == \"$init\" and .ready == false and .restartCount > 0))
-                        | .metadata.name")
-                      for pod in $pods; do
-                        # Only the LAPI's refusal of this Pod's own name, in the last run or the one before.
-                        for previous in false true; do
-                          if wget -qO- "$api/$pod/log?container=$init&previous=$previous&tailLines=20" | grep -qF "user '$pod': user already exist"; then
-                            echo "evicting $pod: the LAPI already has a machine with its name"
-                            wget -qO /dev/null --header "Content-Type: application/json" \
-                              --post-data "{\"apiVersion\":\"policy/v1\",\"kind\":\"Eviction\",\"metadata\":{\"name\":\"$pod\"}}" \
-                              "$api/$pod/eviction" || echo "eviction of $pod failed"
-                            break
-                          fi
-                        done
-                      done
-                      sleep 30
-                    done
-                resources:
-                  requests: {cpu: 1m, memory: 4Mi}
-                  limits: {memory: 32Mi}
-                securityContext:
-                  allowPrivilegeEscalation: false
-                  readOnlyRootFilesystem: true
-                  capabilities: {drop: [ALL]}
-              - name: proxy
-                image: registry.k8s.io/kubectl:v1.36.6@sha256:0650805141538d13ccbb6bb9e0dd647bc415bc002898357970211c4d47224396
-                args:
-                  - proxy
-                  - --address=127.0.0.1
-                  - --port=8001
-                  - --accept-paths=^/api/v1/namespaces/crowdsec/pods
-                resources:
-                  requests: {cpu: 1m, memory: 16Mi}
-                  limits: {memory: 64Mi}
-                securityContext:
-                  allowPrivilegeEscalation: false
-                  readOnlyRootFilesystem: true
-                  capabilities: {drop: [ALL]}
-
   - name: bouncer-middleware
     type: inline
     namespace: crowdsec
@@ -233,8 +170,10 @@ releases:
             enabled: true
             # Local copy of decisions; requests never wait on LAPI.
             crowdsecMode: stream
-            crowdsecLapiScheme: http
+            crowdsecLapiScheme: https
             crowdsecLapiHost: crowdsec-service.crowdsec.svc.cluster.local:8080
+            # The CA from the ca release, which signs the LAPI certificate.
+            crowdsecLapiTlsCertificateAuthority: urn:k8s:secret:crowdsec-lapi-tls:ca.crt
             # Read from the Secret in the Middleware's namespace.
             crowdsecLapiKey: urn:k8s:secret:crowdsec-bouncer-key:key
             # Fail open: if LAPI is unreachable, keep serving traffic.
@@ -276,8 +215,9 @@ detection:
 
 security:
   summary: >
-    The agent reads node log files read-only. agent-recovery reads Pods and
-    their logs in crowdsec, and evicts an agent Pod the LAPI refuses.
+    The agent reads node log files read-only. Its ten-year certificate is no
+    weaker than the static registration token it replaces. Both give a
+    machine's rights to send and read alerts and to delete decisions.
   podSecurity: privileged
 
 leftovers: [persistentvolumeclaims]
