@@ -596,7 +596,7 @@ func testTemplate(r *repo, t *catalog.Tester, cfg config, id string, write bool)
 		if err != nil {
 			return "", err
 		}
-		if err := writeTemplateMeasurement(id, env, *usage, imagesOf(manifest)); err != nil {
+		if err := writeTemplateMeasurement(tmpl, env, *usage, imagesOf(manifest)); err != nil {
 			return "", err
 		}
 	}

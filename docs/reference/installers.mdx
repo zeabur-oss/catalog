@@ -37,7 +37,7 @@ The installer takes these steps in order.
    | `distributions` doesn't list the distribution | `distributions` | Always. An enabled component also gets a `left-out` warning |
    | `defaults` is `unsupported` on the profile | `unsupported` | Always. An enabled component also gets a `left-out` warning |
 
-   A chosen component that `testedOn` doesn't list with the distribution and the platform stays chosen, with an `untested` warning. This covers a component never tested there and one whose latest run there failed.
+   A chosen component that `testedOn` doesn't list with the distribution and the platform stays chosen, with an `untested` warning. This covers a component never tested there, one whose latest run there failed and one changed since its last passing run.
 5. **Order.** Go through the chosen components in id order. For each one, take its `installOrder` for the profile, which lists its dependencies and then the component. Add each id that isn't in the result yet. A component in the result that wasn't chosen is there as a dependency.
 
    A component in `installOrder` may be disabled, left out or untested:
