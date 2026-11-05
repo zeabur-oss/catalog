@@ -247,6 +247,15 @@ releases:
           disableNamespaceMatcher: false
           arbitraryFSAccessThroughSMs:
             deny: true
+      vmsingle:
+        spec:
+          # One size for both profiles: the operator won't grow a local-path
+          # claim or shrink any, and then stops updating vmsingle. local-path
+          # ignores the size; on Longhorn, grow the claim when the history no
+          # longer fits.
+          storage:
+            resources:
+              requests: {storage: 5Gi}
       vmagent:
         spec:
           # 30s cuts scrape cost by a third versus the chart's 20s.
@@ -313,11 +322,8 @@ releases:
                   regex: .+_bucket|(apiserver|etcd|kine|rest_client|workqueue|scheduler|authentication|authorization|aggregator|admission|watch_cache|storage)_.+
         vmsingle:
           spec:
-            # A week of history fits 5Gi on one node.
+            # A week of history on one node.
             retentionPeriod: 7d
-            storage:
-              resources:
-                requests: {storage: 5Gi}
             # Idles near 150Mi with 35 pods.
             resources:
               requests: {cpu: 50m, memory: 224Mi}
@@ -346,11 +352,8 @@ releases:
           enabled: true
         vmsingle:
           spec:
-            # Two weeks of history; the volume is sized for it.
+            # Two weeks of history.
             retentionPeriod: 14d
-            storage:
-              resources:
-                requests: {storage: 20Gi}
             resources:
               requests: {cpu: 100m, memory: 512Mi}
               limits: {memory: 2Gi}
