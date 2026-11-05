@@ -225,8 +225,7 @@ detection:
 
 security:
   summary: >
-    The agent reads node log files read-only. Its ten-year certificate is no
-    weaker than the static registration token it replaces. Both give a
+    The agent reads node log files read-only. Its certificate gives a
     machine's rights to send and read alerts and to delete decisions.
   podSecurity: privileged
 
