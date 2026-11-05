@@ -176,6 +176,11 @@ releases:
         scheme: HTTPS
       # StatefulSet with a volumeClaimTemplate; images survive restarts.
       persistence: true
+      pvc:
+        # One size for both profiles: volumeClaimTemplates can't change, so a
+        # profile switch would stop the upgrade. local-path ignores the size
+        # and Longhorn allocates only what is written.
+        storage: 50Gi
       # The restricted Pod Security level. The image has no user of its own,
       # so any UID works; fsGroup gives it the volume and the mounted Secrets.
       podSecurityContext:
@@ -296,9 +301,6 @@ releases:
           level: info
     profiles:
       single-node: |
-        pvc:
-          # About 20 builds of a few apps; resize the claim as they grow.
-          storage: 20Gi
         resources:
           # Idles near 50Mi without extensions, 70Mi after a push; pushes stream to disk.
           requests: {cpu: 20m, memory: 104Mi}
@@ -307,9 +309,6 @@ releases:
         # Still one replica: filesystem storage has a single writer, and the
         # ReadWriteOnce volume binds it to one node anyway.
         replicaCount: 1
-        pvc:
-          # More apps building into one registry.
-          storage: 50Gi
         resources:
           # More concurrent pushes and pulls.
           requests: {cpu: 50m, memory: 128Mi}
