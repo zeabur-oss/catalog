@@ -55,6 +55,8 @@ source: "cfee11888f66"
 
 接著，針對 [`config/kubernetes.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/kubernetes.yaml) 列出的每個 Kubernetes 版本，用 kubeconform 驗證輸出。自訂資源則依照同次渲染的 CRD 驗證。
 
+接著 dry-run 升級和 profile 切換。對每個元件，先把一份渲染結果套用到 API server，再用 `--dry-run=server` 送出另一份：兩個 profile 的渲染結果互相取代，以及上一個版本各 profile 的渲染結果被這個版本取代。上一個版本是最新的發行 tag，包含預先發行版，並用那個版本自己的工具渲染。CRD、Namespace、webhook 設定和 Helm hook 不列入。只要 API server 拒絕更新，例如 `volumeClaimTemplates` 有變的 StatefulSet，檢查就會失敗，並指出是哪個元件的哪個物件。Kubernetes 無法原地修改這類欄位，所以兩個 profile 要用同一個值，之後的版本也不要改。
+
 </Step>
 
 <Step>

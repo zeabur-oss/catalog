@@ -54,6 +54,8 @@ Render each profile twice. Both outputs must match exactly.
 
 Then validate the output with kubeconform for every Kubernetes version listed in [`config/kubernetes.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/kubernetes.yaml). Validate custom resources against the CRDs from the same rendering.
 
+Then dry-run upgrades and profile switches. For each component, apply one render to the API server and send another over it with `--dry-run=server`: each profile's render over the other's, and the previous release's render of each profile over this one's. The previous release is the newest release tag, pre-releases included, rendered with its own tools. CRDs, Namespaces, webhook configurations and Helm hooks are left out. The check fails when the API server refuses an update, such as a StatefulSet whose `volumeClaimTemplates` change, and names the component and the object. Kubernetes can't change such a field in place, so give both profiles the same value and keep it across releases.
+
 </Step>
 
 <Step>

@@ -21,7 +21,8 @@ import (
 )
 
 // Tiers. check runs on every pull request: static checks, then a server-side
-// dry run on a local API server with only the CRDs and no nodes. smoke runs in
+// dry run on a local API server with only the CRDs and no nodes, which also
+// fails when the API server refuses an upgrade or a profile switch. smoke runs in
 // the merge queue: it installs and smoke tests what changed, what it needs and
 // what installs it, single-node amd64, in groups that share their
 // dependencies. full runs weekly and before a release: every profile and
@@ -272,8 +273,11 @@ func runTier(r *repo, tier string, o tierOptions, args []string) error {
 }
 
 // runCheck validates, renders and lints everything, then sends every rendered
-// component and template to a local API server with --dry-run=server.
+// component and template to a local API server with --dry-run=server, and
+// fails when it refuses an upgrade from the previous release or a profile
+// switch.
 func runCheck(r *repo, cfg config, o tierOptions) error {
+	prev := startPreviousRender()
 	var ts catalog.Timings
 	step := func(name string, f func() error) error {
 		start := time.Now()
@@ -307,21 +311,31 @@ func runCheck(r *repo, cfg config, o tierOptions) error {
 	if !o.keep {
 		defer api.stop()
 	}
-	server, err := api.version()
+	kv, err := serverVersion(api, cfg.Versions)
 	if err != nil {
 		return err
 	}
-	minor := func(v string) string { return strings.Join(strings.SplitN(v, ".", 3)[:2], ".") }
-	i := slices.IndexFunc(cfg.Versions, func(v string) bool { return minor(v) == minor(server) })
-	if i < 0 {
-		return fmt.Errorf("the API server is Kubernetes %s; config/kubernetes.yaml renders no version with the same minor", server)
-	}
-	kv := cfg.Versions[i]
 	err = step("dry run", func() error { return dryRun(r, filepath.Join(out, kv)) })
+	if err == nil {
+		err = step("refusals", func() error { return checkRefusals(r, filepath.Join(out, kv), prev) })
+	}
 	if err == nil {
 		err = report("check", []row{{subject: "check", timings: ts}})
 	}
 	return err
+}
+
+// serverVersion returns the version in versions with the API server's minor.
+func serverVersion(api *apiServer, versions []string) (string, error) {
+	server, err := api.version()
+	if err != nil {
+		return "", err
+	}
+	i := slices.IndexFunc(versions, func(v string) bool { return minorVersion(v) == minorVersion(server) })
+	if i < 0 {
+		return "", fmt.Errorf("the API server is Kubernetes %s; config/kubernetes.yaml renders no version with the same minor", server)
+	}
+	return versions[i], nil
 }
 
 // lintTemplates runs the safety rules and kubeconform on every template,
