@@ -57,8 +57,12 @@ func index(fs *flag.FlagSet, r *repo) error {
 				ic.InstallOrder[p] = append(ic.InstallOrder[p], o.ID)
 			}
 		}
+		digest, err := sourceDigest(c.Path)
+		if err != nil {
+			return err
+		}
 		measured := readMeasurement(measurementPath(c.ID)).Environments
-		ic.TestedOn = testedOn(cfg, measured)
+		ic.TestedOn = testedOn(cfg, measured, digest)
 		ic.Measured = passed(measured)
 		comps = append(comps, ic)
 	}
@@ -81,10 +85,12 @@ type tested struct {
 }
 
 // testedOn returns the host profiles, in the order of hostProfiles, with the
-// platforms where the newest run of the pinned release passed. A failure
-// stands until a later run passes on the same platform, at any Kubernetes
-// version. A pass on the same day as a failure wins.
-func testedOn(cfg config, envs []environment) []tested {
+// platforms where the newest run of the pinned release passed. A pass counts
+// only when it installed the source with digest; a run without a digest
+// predates the field and doesn't count. A failure stands until a later run
+// passes on the same platform, at any Kubernetes version. A pass on the same
+// day as a failure wins.
+func testedOn(cfg config, envs []environment, digest string) []tested {
 	out := []tested{}
 	for _, p := range hostProfiles {
 		passAt, failAt := map[string]string{}, map[string]string{}
@@ -94,6 +100,9 @@ func testedOn(cfg config, envs []environment) []tested {
 			}
 			at := failAt
 			if e.Result == resultPassed {
+				if e.SourceDigest == "" || e.SourceDigest != digest {
+					continue
+				}
 				at = passAt
 			}
 			if pl := e.Platform.String(); e.MeasuredAt > at[pl] {
