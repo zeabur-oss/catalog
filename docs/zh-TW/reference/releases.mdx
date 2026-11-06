@@ -1,7 +1,6 @@
 ---
 title: 版本與套件包
 description: 固定 Zeabur Catalog 版本、驗證 Sigstore 簽章，再讀取 index.json，或從指定 commit 建置版本產物。
-source: "52881f40ece2"
 ---
 
 打上 `vX.Y.Z` tag 後，就會發布 `index.json`、`bundle.tar.gz`、`checksums.txt`，以及 `SHA256SUMS` 和它的 Sigstore 簽章套件。使用 Zeabur Catalog 的工具應固定使用一個版本，驗證後再讀取 `index.json`。1.0 之前，像 0.1 升到 0.2 這樣的更新也可能改變檔案格式，所以請固定使用某個確切版本。

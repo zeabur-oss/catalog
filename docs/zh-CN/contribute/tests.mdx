@@ -1,7 +1,6 @@
 ---
 title: 测试与 CI
 description: 了解各层 CI 的运行时机和检查内容，并配置模板测试输入。
-source: "cfee11888f66"
 ---
 
 `check` 在每个 pull request 中运行，`smoke` 在 merge queue 中、对即将合并的 commit 运行。`full` 每周运行一次。打发布 tag 前，要确认每周运行已通过。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以用 `catalog e2e -tier check|smoke|full` 运行与 CI 相同的测试。

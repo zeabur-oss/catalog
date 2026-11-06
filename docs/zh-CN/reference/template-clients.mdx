@@ -1,7 +1,6 @@
 ---
 title: 客户端如何渲染模板
 description: 客户端渲染模板前要做的检查、怎样判断模板需要的组件是否已安装、显示哪种语言，以及用来测试客户端的用例。
-source: "11ea4632f6b8"
 ---
 
 客户端把[模板](template-format.mdx)安装到一个命名空间时，先检查选项，再渲染 `manifests.yaml`，最后应用生成的对象。本页列出要遵守的规则。`catalog template render` 用 `tools/internal/templates/render.go` 按这些规则渲染，Zeabur 也遵守同样的规则。每条规则在 `conformance/template/` 都有一个测试用例，用法见本页最后一节。

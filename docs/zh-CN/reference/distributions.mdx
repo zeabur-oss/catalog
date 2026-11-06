@@ -1,7 +1,6 @@
 ---
 title: 各 Kubernetes 发行版的差异
 description: 比较各 Kubernetes 发行版的已知差异，确认组件与模板需要的配置。
-source: "299d79623cce"
 ---
 
 组件与模板在 kind 上测试，Kubernetes 次版本与 Zeabur Installer 固定的 RKE2 版本相同。`single-node` profile 使用 1 个节点，`multi-node` profile 使用 3 个节点。profile 是这两种部署方式的配置组合。组件也会在 runner 上安装 k3s、RKE2 和 KubeSolo 来测试，做法见[测试与 CI](../contribute/tests.mdx)。其他发行版的行为相同，但有以下已知差异。
