@@ -53,8 +53,9 @@ releases:
         # Leader election keeps one active; the webhook stays up during drains.
         replicaCount: 2
         resources:
-          # More Clusters to watch.
-          requests: {cpu: 20m, memory: 128Mi}
+          # Single-node's request; the leader uses about 45Mi on a two-node
+          # cluster with apps. The limit leaves room for more Clusters.
+          requests: {cpu: 10m, memory: 56Mi}
           limits: {memory: 512Mi}
 
   # Must share the operator's namespace; it registers itself with the operator.
@@ -78,13 +79,15 @@ releases:
     profiles:
       single-node: |
         resources:
-          # Idles near 18Mi; backups run in the instance sidecar, not here.
-          requests: {cpu: 10m, memory: 24Mi}
+          # Idles near 18Mi, about 30Mi on a cluster with apps; backups run in
+          # the instance sidecar, not here.
+          requests: {cpu: 10m, memory: 32Mi}
           limits: {memory: 128Mi}
       multi-node: |
         resources:
-          # Same work; more Clusters to serve.
-          requests: {cpu: 10m, memory: 64Mi}
+          # Uses about 30Mi on a two-node cluster with apps; the limit leaves
+          # room for more Clusters.
+          requests: {cpu: 10m, memory: 32Mi}
           limits: {memory: 256Mi}
 
 detection:

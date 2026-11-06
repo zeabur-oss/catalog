@@ -98,8 +98,9 @@ releases:
           enabled: true
           replicas: 2
         resources:
-          # More MariaDB objects to reconcile.
-          requests: {cpu: 20m, memory: 128Mi}
+          # Single-node's request; the leader uses about 54Mi on a two-node
+          # cluster with apps. The limit leaves room for more MariaDB objects.
+          requests: {cpu: 10m, memory: 64Mi}
           limits: {memory: 512Mi}
         webhook:
           ha:

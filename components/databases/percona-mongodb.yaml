@@ -57,8 +57,9 @@ releases:
         # Leader election keeps one active; survives a drain.
         replicaCount: 2
         resources:
-          # More clusters to reconcile.
-          requests: {cpu: 20m, memory: 128Mi}
+          # Single-node's request; the leader uses about 52Mi on a two-node
+          # cluster with apps. The limit leaves room for more clusters.
+          requests: {cpu: 10m, memory: 64Mi}
           limits: {memory: 512Mi}
 
 detection:

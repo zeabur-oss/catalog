@@ -49,8 +49,9 @@ releases:
         # Keeps schedules firing through node drains.
         replicaCount: 2
         resources:
-          # More schedules on bigger clusters.
-          requests: {cpu: 20m, memory: 64Mi}
+          # Single-node's request; the leader uses about 20Mi on a two-node
+          # cluster with apps. The limit leaves room for more schedules.
+          requests: {cpu: 10m, memory: 32Mi}
           limits: {memory: 512Mi}
 
 detection:

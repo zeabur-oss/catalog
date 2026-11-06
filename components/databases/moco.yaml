@@ -48,8 +48,9 @@ releases:
         # The chart's default, stated: leader election keeps one active.
         replicaCount: 2
         resources:
-          # More MySQLClusters to reconcile.
-          requests: {cpu: 20m, memory: 128Mi}
+          # Single-node's request; the leader uses about 46Mi on a two-node
+          # cluster with apps. The limit leaves room for more MySQLClusters.
+          requests: {cpu: 10m, memory: 64Mi}
           limits: {memory: 512Mi}
 
 detection:
