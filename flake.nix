@@ -23,7 +23,7 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
         # The release version: scripts/release.ts check compares the tag with it.
-        version = "0.3.0";
+        version = "0.4.0";
         catalog = pkgs.buildGoModule {
           pname = "catalog";
           inherit version;
