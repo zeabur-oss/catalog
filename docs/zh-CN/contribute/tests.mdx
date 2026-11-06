@@ -55,6 +55,10 @@ source: "cfee11888f66"
 
 接着，针对 [`config/kubernetes.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/kubernetes.yaml) 列出的每个 Kubernetes 版本，用 kubeconform 验证输出。自定义资源会按照同次渲染的 CRD 验证。
 
+接着 dry-run 升级和 profile 切换。对每个组件，先把一份渲染结果应用到 API server，再用 `--dry-run=server` 发送另一份：两个 profile 的渲染结果互相替换，以及各 profile 下，PR 基线的渲染结果被这个版本替换。基线是和 `main` 的 merge-base，并用它自己的工具渲染。CRD、Namespace、webhook 配置和 Helm hook 不计入。只要 API server 拒绝更新，例如 `volumeClaimTemplates` 有变化的 StatefulSet，检查就会失败，并指出是哪个组件的哪个对象。Kubernetes 无法原地修改这类字段。
+
+检查失败时，先找有没有能原地更新的改法，例如保持字段原来的值。如果没有，就把 `.changeset/` 里的变更文件标成 `major`，并把迁移步骤写在里面。API server 拒绝升级时，检查会接受，并记为预期的破坏；profile 切换则不接受，所以两个 profile 要用同一个值。
+
 </Step>
 
 <Step>

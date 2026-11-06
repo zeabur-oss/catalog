@@ -1,6 +1,7 @@
 # Each check job runs scripts/ci/<job>.sh in the Nix dev shell, the same as locally: Go tests and
-# lint, then validate, render, template lint and a server-side dry run on a local API server, then
-# nix build .#release. Rulesets require check / ok.
+# lint, then validate, render, template lint and a server-side dry run on a local API server, also of
+# an upgrade from the pull request's base and a profile switch, then nix build .#release. Rulesets
+# require check / ok.
 # smoke runs in the merge queue: it installs and smoke tests what changed since the queue's base,
 # what it needs and what installs it, in groups. A merge group that changes no component or
 # template has an empty matrix and skips the job, so require smoke-ok, which fails only when a
@@ -50,6 +51,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # The history of origin/main, to find the merge-base to dry-run an upgrade from.
+          fetch-depth: 0
       - uses: zeabur-oss/.github/actions/ci-setup@64a6547509a1911f03c4b1e62965ef9f2b4c39b6 # main
       - run: nix develop -c scripts/ci/check.sh
 
