@@ -139,7 +139,7 @@ func TestJudgeRefusals(t *testing.T) {
 	})
 	t.Run("a profile switch refusal fails even with a major change file", func(t *testing.T) {
 		errs := judgeRefusals([]refusal{switched}, true)
-		if len(errs) != 1 || !strings.Contains(errs[0].Error(), "switch") {
+		if len(errs) != 1 || !strings.Contains(errs[0].Error(), "from single-node to multi-node") {
 			t.Errorf("got %v, want the switch to fail", errs)
 		}
 	})

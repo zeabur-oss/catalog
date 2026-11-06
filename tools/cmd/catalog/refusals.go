@@ -145,12 +145,12 @@ func judgeRefusals(found []refusal, major bool) []error {
 			slog.Info("intended break", "component", x.component, "release", x.release, "when", x.when)
 			continue
 		}
-		verb, hint := "switch", "Give the field the same value in both profiles."
+		from, hint := "from "+x.when, "Give the field the same value in both profiles."
 		if x.upgrade {
-			verb, hint = "upgrade", "Change the component so the object updates in place, or add a `major` change file with the migration steps."
+			from, hint = "from the base in "+x.when, "Change the component so the release updates in place, or add a `major` change file with the migration steps."
 		}
-		errs = append(errs, fmt.Errorf("%s: the API server refuses to %s release %s in place for %s. %s\n%s",
-			x.component, verb, x.release, x.when, hint, strings.TrimSpace(x.output)))
+		errs = append(errs, fmt.Errorf("%s: the API server refuses to update release %s %s. %s\n%s",
+			x.component, x.release, from, hint, strings.TrimSpace(x.output)))
 	}
 	return errs
 }
