@@ -277,7 +277,6 @@ func runTier(r *repo, tier string, o tierOptions, args []string) error {
 // fails when it refuses an upgrade from the pull request's base or a profile
 // switch.
 func runCheck(r *repo, cfg config, o tierOptions) error {
-	base := startBaseRender()
 	var ts catalog.Timings
 	step := func(name string, f func() error) error {
 		start := time.Now()
@@ -317,7 +316,7 @@ func runCheck(r *repo, cfg config, o tierOptions) error {
 	}
 	err = step("dry run", func() error { return dryRun(r, filepath.Join(out, kv)) })
 	if err == nil {
-		err = step("refusals", func() error { return checkRefusals(r, filepath.Join(out, kv), base) })
+		err = step("refusals", func() error { return checkRefusals(r, filepath.Join(out, kv)) })
 	}
 	if err == nil {
 		err = report("check", []row{{subject: "check", timings: ts}})
@@ -390,32 +389,18 @@ func dryRun(r *repo, dir string) error {
 					return err
 				}
 				namespaces[rel.Namespace] = true
-				// kubectl -n refuses objects that name another namespace.
-				byNamespace := map[string]*strings.Builder{}
-				for _, doc := range strings.Split(string(data), "\n---") {
-					var o struct {
-						Kind     string
-						Metadata struct{ Name, Namespace string }
+				docs := manifestDocs(data, rel.Namespace)
+				for _, d := range docs {
+					namespaces[d.Namespace] = true
+					switch d.Kind {
+					case "CustomResourceDefinition":
+						crds[d.Name] = d.text
+					case "Namespace":
+						namespaces[d.Name] = true
 					}
-					if yaml.Unmarshal([]byte(doc), &o) != nil {
-						continue
-					}
-					switch {
-					case o.Kind == "CustomResourceDefinition":
-						crds[o.Metadata.Name] = doc
-					case o.Kind == "Namespace":
-						namespaces[o.Metadata.Name] = true
-					case o.Metadata.Namespace != "":
-						namespaces[o.Metadata.Namespace] = true
-					}
-					ns := cmp.Or(o.Metadata.Namespace, rel.Namespace)
-					if byNamespace[ns] == nil {
-						byNamespace[ns] = &strings.Builder{}
-					}
-					byNamespace[ns].WriteString(doc + "\n---\n")
 				}
-				for _, ns := range slices.Sorted(maps.Keys(byNamespace)) {
-					files = append(files, file{p + " " + c.ID + "/" + rel.Name, ns, []byte(byNamespace[ns].String()), false})
+				for _, d := range byNamespace(docs) {
+					files = append(files, file{p + " " + c.ID + "/" + rel.Name, d.namespace, []byte(d.docs), false})
 				}
 			}
 		}

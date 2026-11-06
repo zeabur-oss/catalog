@@ -4,7 +4,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"slices"
 	"strings"
 	"testing"
 
@@ -83,20 +82,17 @@ func TestRefused(t *testing.T) {
 	defer api.stop()
 	c := &catalog.Component{ID: "x/y", Releases: []catalog.Release{{Name: "db", Namespace: "db"}}}
 	installed := writeRender(t, "17", "1Gi")
-	is := func(kind string) func(catalog.Refusal) bool {
-		return func(r catalog.Refusal) bool { return r.Kind == kind && r.Release == "db" && r.Namespace == "db" }
-	}
 
 	t.Run("a StatefulSet whose volumeClaimTemplates change is refused", func(t *testing.T) {
 		found, err := refused(c, installed, writeRender(t, "18", "2Gi"))
 		if err != nil {
 			t.Fatal(err)
 		}
-		if !slices.ContainsFunc(found, is("StatefulSet")) {
-			t.Errorf("got %v, want StatefulSet db/db", found)
+		if !strings.Contains(found["db"], `StatefulSet "db" is invalid`) {
+			t.Errorf("got %v, want StatefulSet db refused", found)
 		}
 		// The Deployment's image changed in the same render; that updates in place.
-		if slices.ContainsFunc(found, is("Deployment")) {
+		if strings.Contains(found["db"], "Deployment") {
 			t.Errorf("got %v, want no Deployment", found)
 		}
 	})
@@ -107,7 +103,7 @@ func TestRefused(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if found != nil {
+		if len(found) != 0 {
 			t.Errorf("got %v, want nothing", found)
 		}
 	})
@@ -117,7 +113,7 @@ func TestRefused(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if found != nil {
+		if len(found) != 0 {
 			t.Errorf("got %v, want nothing", found)
 		}
 	})
@@ -126,14 +122,14 @@ func TestRefused(t *testing.T) {
 // An upgrade refusal passes only when the pull request adds a change file
 // whose frontmatter says `default: major`. A profile switch never passes.
 func TestJudgeRefusals(t *testing.T) {
-	zot := catalog.Refusal{Release: "zot", Namespace: "zot", Kind: "StatefulSet", Name: "zot", Fields: []string{"spec"}}
-	upgrade := refusal{component: "builds/zeabur-builder", when: "multi-node", upgrade: true, Refusal: zot}
-	switched := refusal{component: "builds/zeabur-builder", when: "single-node to multi-node", Refusal: zot}
+	output := `The StatefulSet "zot" is invalid: spec: Forbidden: updates to statefulset spec for fields other than 'replicas' are forbidden`
+	upgrade := refusal{component: "builds/zeabur-builder", release: "zot", when: "multi-node", upgrade: true, output: output}
+	switched := refusal{component: "builds/zeabur-builder", release: "zot", when: "single-node to multi-node", output: output}
 
 	t.Run("an upgrade refusal without a major change file fails", func(t *testing.T) {
 		errs := judgeRefusals([]refusal{upgrade}, false)
-		if len(errs) != 1 || !strings.Contains(errs[0].Error(), "StatefulSet zot/zot") {
-			t.Errorf("got %v, want the object named", errs)
+		if len(errs) != 1 || !strings.Contains(errs[0].Error(), `StatefulSet "zot"`) {
+			t.Errorf("got %v, want kubectl's output", errs)
 		}
 	})
 	t.Run("the same refusal with a major change file passes", func(t *testing.T) {
