@@ -68,8 +68,9 @@ releases:
           enabled: true
         manager:
           resources:
-            # More Dragonfly objects to reconcile.
-            requests: {cpu: 20m, memory: 128Mi}
+            # Single-node's request; the leader uses about 34Mi on a two-node
+            # cluster with apps. The limit leaves room for more Dragonfly objects.
+            requests: {cpu: 10m, memory: 64Mi}
             limits: {memory: 512Mi}
         rbacProxy:
           resources:

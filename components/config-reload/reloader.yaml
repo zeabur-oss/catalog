@@ -68,8 +68,9 @@ releases:
             # One leader and one standby.
             replicas: 2
             resources:
-              # More ConfigMaps and Secrets to cache.
-              requests: {cpu: 20m, memory: 128Mi}
+              # Single-node's request; the leader uses about 44Mi on a two-node
+              # cluster with apps. The limit leaves room for more ConfigMaps and Secrets.
+              requests: {cpu: 10m, memory: 64Mi}
               limits: {memory: 512Mi}
 
 detection:
