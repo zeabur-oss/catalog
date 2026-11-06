@@ -1,7 +1,6 @@
 ---
 title: 组件文件格式
 description: 按照通用结构和组件字段编写 YAML，并用 digest 固定安装内容。
-source: "b656223bc77a"
 ---
 
 把组件文件放在 `components/<capability>/<upstream>.yaml`，每个 capability（用途类别）与上游的组合各用一个文件。文件使用 YAML，包含通用结构、安装内容和配置。路径就是 ID，例如 `components/ingress/traefik.yaml` 的 ID 是 `ingress/traefik`。

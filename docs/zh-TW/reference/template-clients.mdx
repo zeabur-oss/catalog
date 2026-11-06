@@ -1,7 +1,6 @@
 ---
 title: 用戶端如何渲染範本
 description: 用戶端渲染範本前要做的檢查、怎麼判斷範本需要的元件裝好了沒，以及要顯示哪種語言，還有用來測試用戶端的案例。
-source: "11ea4632f6b8"
 ---
 
 用戶端把[範本](template-format.mdx)安裝到一個命名空間時，會先檢查選項，再渲染 `manifests.yaml`，最後套用產生的物件。這一頁列出要遵守的規則。`catalog template render` 用 `tools/internal/templates/render.go` 照這些規則渲染，Zeabur 也遵守同樣的規則。每條規則在 `conformance/template/` 都有一個測試案例，用法見本頁最後一節。
