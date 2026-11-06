@@ -24,7 +24,8 @@
           "version": "12.2.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:EvwlxZHn/5RuvBenm+kbySA6Ccmk8Zew8puVf6EnrQQ=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "k3s",
@@ -37,34 +38,35 @@
       "distributionVersion": "v1.36.5+k3s1",
       "result": "passed",
       "idle": {
+        "memoryMiB": 22,
+        "cpuMillis": 1
+      },
+      "requests": {
+        "memoryMiB": 64
+      },
+      "versions": [
+        {
+          "release": "velero",
+          "version": "12.2.1"
+        }
+      ],
+      "sourceDigest": "h1:EvwlxZHn/5RuvBenm+kbySA6Ccmk8Zew8puVf6EnrQQ=",
+      "measuredAt": "2026-11-05"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
         "memoryMiB": 23,
         "cpuMillis": 1
       },
       "requests": {
-        "memoryMiB": 64
-      },
-      "versions": [
-        {
-          "release": "velero",
-          "version": "12.2.1"
-        }
-      ],
-      "measuredAt": "2026-11-04"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "idle": {
-        "memoryMiB": 22,
-        "cpuMillis": 1
-      },
-      "requests": {
         "memoryMiB": 128
       },
       "versions": [
@@ -73,7 +75,8 @@
           "version": "12.2.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:EvwlxZHn/5RuvBenm+kbySA6Ccmk8Zew8puVf6EnrQQ=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kind",
@@ -97,7 +100,8 @@
           "version": "12.2.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:EvwlxZHn/5RuvBenm+kbySA6Ccmk8Zew8puVf6EnrQQ=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kind",
@@ -109,7 +113,7 @@
       "kubernetesVersion": "v1.36.4",
       "result": "passed",
       "idle": {
-        "memoryMiB": 24,
+        "memoryMiB": 22,
         "cpuMillis": 1
       },
       "requests": {
@@ -121,7 +125,8 @@
           "version": "12.2.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:EvwlxZHn/5RuvBenm+kbySA6Ccmk8Zew8puVf6EnrQQ=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kind",
@@ -145,7 +150,8 @@
           "version": "12.2.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:EvwlxZHn/5RuvBenm+kbySA6Ccmk8Zew8puVf6EnrQQ=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kubesolo",
@@ -170,7 +176,8 @@
           "version": "12.2.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:EvwlxZHn/5RuvBenm+kbySA6Ccmk8Zew8puVf6EnrQQ=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kubesolo",
@@ -183,8 +190,7 @@
       "distributionVersion": "v1.2.3",
       "result": "passed",
       "idle": {
-        "memoryMiB": 23,
-        "cpuMillis": 1
+        "memoryMiB": 23
       },
       "requests": {
         "memoryMiB": 64
@@ -195,7 +201,8 @@
           "version": "12.2.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:EvwlxZHn/5RuvBenm+kbySA6Ccmk8Zew8puVf6EnrQQ=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "rke2",
@@ -220,7 +227,8 @@
           "version": "12.2.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:EvwlxZHn/5RuvBenm+kbySA6Ccmk8Zew8puVf6EnrQQ=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "rke2",
@@ -245,7 +253,8 @@
           "version": "12.2.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:EvwlxZHn/5RuvBenm+kbySA6Ccmk8Zew8puVf6EnrQQ=",
+      "measuredAt": "2026-11-05"
     }
   ]
 }

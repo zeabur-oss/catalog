@@ -12,7 +12,7 @@
       "result": "passed",
       "idle": {
         "memoryMiB": 72,
-        "cpuMillis": 7
+        "cpuMillis": 3
       },
       "versions": [
         {
@@ -21,7 +21,8 @@
           "digest": "sha256:72e49f513a63104506aab98ba8cfc3a409d4fde23550a583dec07ec941f1e94e"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:V4hFf7PUQxfvV9WeplMLuWEq6bhkGLsq3vaBu2BKBws=",
+      "measuredAt": "2026-11-05"
     }
   ]
 }

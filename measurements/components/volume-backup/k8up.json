@@ -12,8 +12,7 @@
       "distributionVersion": "v1.36.5+k3s1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 11,
-        "cpuMillis": 1
+        "memoryMiB": 11
       },
       "requests": {
         "memoryMiB": 32
@@ -24,7 +23,8 @@
           "version": "4.10.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:8ifip/LcdIU8YqH+4cty5HM9cmVHVYQe76BdBRPoESs=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "k3s",
@@ -37,8 +37,7 @@
       "distributionVersion": "v1.36.5+k3s1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 11,
-        "cpuMillis": 1
+        "memoryMiB": 11
       },
       "requests": {
         "memoryMiB": 32
@@ -49,7 +48,8 @@
           "version": "4.10.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:8ifip/LcdIU8YqH+4cty5HM9cmVHVYQe76BdBRPoESs=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kind",
@@ -57,30 +57,6 @@
       "platform": {
         "os": "linux",
         "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "idle": {
-        "memoryMiB": 21,
-        "cpuMillis": 1
-      },
-      "requests": {
-        "memoryMiB": 128
-      },
-      "versions": [
-        {
-          "release": "k8up",
-          "version": "4.10.1"
-        }
-      ],
-      "measuredAt": "2026-11-04"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
       },
       "kubernetesVersion": "v1.36.4",
       "result": "passed",
@@ -97,7 +73,33 @@
           "version": "4.10.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:8ifip/LcdIU8YqH+4cty5HM9cmVHVYQe76BdBRPoESs=",
+      "measuredAt": "2026-11-05"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 23,
+        "cpuMillis": 1
+      },
+      "requests": {
+        "memoryMiB": 128
+      },
+      "versions": [
+        {
+          "release": "k8up",
+          "version": "4.10.1"
+        }
+      ],
+      "sourceDigest": "h1:8ifip/LcdIU8YqH+4cty5HM9cmVHVYQe76BdBRPoESs=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kind",
@@ -121,7 +123,8 @@
           "version": "4.10.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:8ifip/LcdIU8YqH+4cty5HM9cmVHVYQe76BdBRPoESs=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kind",
@@ -133,8 +136,7 @@
       "kubernetesVersion": "v1.36.4",
       "result": "passed",
       "idle": {
-        "memoryMiB": 10,
-        "cpuMillis": 1
+        "memoryMiB": 10
       },
       "requests": {
         "memoryMiB": 32
@@ -145,7 +147,8 @@
           "version": "4.10.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:8ifip/LcdIU8YqH+4cty5HM9cmVHVYQe76BdBRPoESs=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kubesolo",
@@ -158,8 +161,7 @@
       "distributionVersion": "v1.2.3",
       "result": "passed",
       "idle": {
-        "memoryMiB": 11,
-        "cpuMillis": 1
+        "memoryMiB": 12
       },
       "requests": {
         "memoryMiB": 32
@@ -170,7 +172,8 @@
           "version": "4.10.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:8ifip/LcdIU8YqH+4cty5HM9cmVHVYQe76BdBRPoESs=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kubesolo",
@@ -183,8 +186,7 @@
       "distributionVersion": "v1.2.3",
       "result": "passed",
       "idle": {
-        "memoryMiB": 10,
-        "cpuMillis": 1
+        "memoryMiB": 10
       },
       "requests": {
         "memoryMiB": 32
@@ -195,7 +197,8 @@
           "version": "4.10.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:8ifip/LcdIU8YqH+4cty5HM9cmVHVYQe76BdBRPoESs=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "rke2",
@@ -220,7 +223,8 @@
           "version": "4.10.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:8ifip/LcdIU8YqH+4cty5HM9cmVHVYQe76BdBRPoESs=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "rke2",
@@ -245,7 +249,8 @@
           "version": "4.10.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:8ifip/LcdIU8YqH+4cty5HM9cmVHVYQe76BdBRPoESs=",
+      "measuredAt": "2026-11-05"
     }
   ]
 }

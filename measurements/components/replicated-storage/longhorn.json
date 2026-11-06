@@ -12,8 +12,8 @@
       "distributionVersion": "v1.36.5+k3s1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 155,
-        "cpuMillis": 23
+        "memoryMiB": 156,
+        "cpuMillis": 21
       },
       "requests": {
         "memoryMiB": 128
@@ -24,7 +24,8 @@
           "version": "1.13.0"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:dIcuXm6FGMlHKTyDw6tCEbSd3pBgjecO84yF2lJvvG0=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "k3s",
@@ -35,102 +36,6 @@
       },
       "kubernetesVersion": "v1.36.5",
       "distributionVersion": "v1.36.5+k3s1",
-      "result": "passed",
-      "idle": {
-        "memoryMiB": 153,
-        "cpuMillis": 17
-      },
-      "requests": {
-        "memoryMiB": 128
-      },
-      "versions": [
-        {
-          "release": "longhorn",
-          "version": "1.13.0"
-        }
-      ],
-      "measuredAt": "2026-11-04"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "idle": {
-        "memoryMiB": 355,
-        "cpuMillis": 54
-      },
-      "requests": {
-        "memoryMiB": 256
-      },
-      "versions": [
-        {
-          "release": "longhorn",
-          "version": "1.13.0"
-        }
-      ],
-      "measuredAt": "2026-11-04"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "idle": {
-        "memoryMiB": 364,
-        "cpuMillis": 39
-      },
-      "requests": {
-        "memoryMiB": 256
-      },
-      "versions": [
-        {
-          "release": "longhorn",
-          "version": "1.13.0"
-        }
-      ],
-      "measuredAt": "2026-11-04"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "idle": {
-        "memoryMiB": 150,
-        "cpuMillis": 29
-      },
-      "requests": {
-        "memoryMiB": 128
-      },
-      "versions": [
-        {
-          "release": "longhorn",
-          "version": "1.13.0"
-        }
-      ],
-      "measuredAt": "2026-11-04"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.4",
       "result": "passed",
       "idle": {
         "memoryMiB": 154,
@@ -145,7 +50,108 @@
           "version": "1.13.0"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:dIcuXm6FGMlHKTyDw6tCEbSd3pBgjecO84yF2lJvvG0=",
+      "measuredAt": "2026-11-05"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 353,
+        "cpuMillis": 49
+      },
+      "requests": {
+        "memoryMiB": 256
+      },
+      "versions": [
+        {
+          "release": "longhorn",
+          "version": "1.13.0"
+        }
+      ],
+      "sourceDigest": "h1:dIcuXm6FGMlHKTyDw6tCEbSd3pBgjecO84yF2lJvvG0=",
+      "measuredAt": "2026-11-05"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 373,
+        "cpuMillis": 45
+      },
+      "requests": {
+        "memoryMiB": 256
+      },
+      "versions": [
+        {
+          "release": "longhorn",
+          "version": "1.13.0"
+        }
+      ],
+      "sourceDigest": "h1:dIcuXm6FGMlHKTyDw6tCEbSd3pBgjecO84yF2lJvvG0=",
+      "measuredAt": "2026-11-05"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 159,
+        "cpuMillis": 24
+      },
+      "requests": {
+        "memoryMiB": 128
+      },
+      "versions": [
+        {
+          "release": "longhorn",
+          "version": "1.13.0"
+        }
+      ],
+      "sourceDigest": "h1:dIcuXm6FGMlHKTyDw6tCEbSd3pBgjecO84yF2lJvvG0=",
+      "measuredAt": "2026-11-05"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 151,
+        "cpuMillis": 20
+      },
+      "requests": {
+        "memoryMiB": 128
+      },
+      "versions": [
+        {
+          "release": "longhorn",
+          "version": "1.13.0"
+        }
+      ],
+      "sourceDigest": "h1:dIcuXm6FGMlHKTyDw6tCEbSd3pBgjecO84yF2lJvvG0=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "rke2",
@@ -158,8 +164,8 @@
       "distributionVersion": "v1.36.5+rke2r1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 157,
-        "cpuMillis": 19
+        "memoryMiB": 156,
+        "cpuMillis": 21
       },
       "requests": {
         "memoryMiB": 128
@@ -170,7 +176,8 @@
           "version": "1.13.0"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:dIcuXm6FGMlHKTyDw6tCEbSd3pBgjecO84yF2lJvvG0=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "rke2",
@@ -183,7 +190,7 @@
       "distributionVersion": "v1.36.5+rke2r1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 159,
+        "memoryMiB": 156,
         "cpuMillis": 18
       },
       "requests": {
@@ -195,7 +202,8 @@
           "version": "1.13.0"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:dIcuXm6FGMlHKTyDw6tCEbSd3pBgjecO84yF2lJvvG0=",
+      "measuredAt": "2026-11-05"
     }
   ]
 }

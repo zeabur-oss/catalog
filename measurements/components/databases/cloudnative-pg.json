@@ -13,7 +13,7 @@
       "result": "passed",
       "idle": {
         "memoryMiB": 31,
-        "cpuMillis": 2
+        "cpuMillis": 3
       },
       "requests": {
         "memoryMiB": 80
@@ -28,7 +28,8 @@
           "version": "0.8.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:FZR3DOzlT8fndIMGVQyVXMdD2HLG6CGHORPl3fbBrgI=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "k3s",
@@ -57,7 +58,8 @@
           "version": "0.8.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:FZR3DOzlT8fndIMGVQyVXMdD2HLG6CGHORPl3fbBrgI=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kind",
@@ -69,7 +71,7 @@
       "kubernetesVersion": "v1.36.4",
       "result": "passed",
       "idle": {
-        "memoryMiB": 46,
+        "memoryMiB": 47,
         "cpuMillis": 4
       },
       "requests": {
@@ -85,7 +87,8 @@
           "version": "0.8.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:FZR3DOzlT8fndIMGVQyVXMdD2HLG6CGHORPl3fbBrgI=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kind",
@@ -97,8 +100,8 @@
       "kubernetesVersion": "v1.36.4",
       "result": "passed",
       "idle": {
-        "memoryMiB": 46,
-        "cpuMillis": 3
+        "memoryMiB": 45,
+        "cpuMillis": 4
       },
       "requests": {
         "memoryMiB": 320
@@ -113,7 +116,8 @@
           "version": "0.8.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:FZR3DOzlT8fndIMGVQyVXMdD2HLG6CGHORPl3fbBrgI=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kind",
@@ -141,7 +145,8 @@
           "version": "0.8.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:FZR3DOzlT8fndIMGVQyVXMdD2HLG6CGHORPl3fbBrgI=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kind",
@@ -169,7 +174,8 @@
           "version": "0.8.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:FZR3DOzlT8fndIMGVQyVXMdD2HLG6CGHORPl3fbBrgI=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kubesolo",
@@ -182,7 +188,7 @@
       "distributionVersion": "v1.2.3",
       "result": "passed",
       "idle": {
-        "memoryMiB": 30,
+        "memoryMiB": 31,
         "cpuMillis": 3
       },
       "requests": {
@@ -198,7 +204,8 @@
           "version": "0.8.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:FZR3DOzlT8fndIMGVQyVXMdD2HLG6CGHORPl3fbBrgI=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "kubesolo",
@@ -211,8 +218,8 @@
       "distributionVersion": "v1.2.3",
       "result": "passed",
       "idle": {
-        "memoryMiB": 32,
-        "cpuMillis": 2
+        "memoryMiB": 31,
+        "cpuMillis": 3
       },
       "requests": {
         "memoryMiB": 80
@@ -227,7 +234,8 @@
           "version": "0.8.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:FZR3DOzlT8fndIMGVQyVXMdD2HLG6CGHORPl3fbBrgI=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "rke2",
@@ -240,7 +248,7 @@
       "distributionVersion": "v1.36.5+rke2r1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 33,
+        "memoryMiB": 35,
         "cpuMillis": 3
       },
       "requests": {
@@ -256,7 +264,8 @@
           "version": "0.8.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:FZR3DOzlT8fndIMGVQyVXMdD2HLG6CGHORPl3fbBrgI=",
+      "measuredAt": "2026-11-05"
     },
     {
       "distribution": "rke2",
@@ -269,7 +278,7 @@
       "distributionVersion": "v1.36.5+rke2r1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 33,
+        "memoryMiB": 34,
         "cpuMillis": 3
       },
       "requests": {
@@ -285,7 +294,8 @@
           "version": "0.8.1"
         }
       ],
-      "measuredAt": "2026-11-04"
+      "sourceDigest": "h1:FZR3DOzlT8fndIMGVQyVXMdD2HLG6CGHORPl3fbBrgI=",
+      "measuredAt": "2026-11-05"
     }
   ]
 }
