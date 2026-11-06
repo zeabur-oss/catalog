@@ -11,17 +11,17 @@
       "kubernetesVersion": "v1.36.4",
       "result": "passed",
       "idle": {
-        "memoryMiB": 23
+        "memoryMiB": 15
       },
       "versions": [
         {
           "image": "docker.io/ollama/ollama",
-          "version": "0.40.12",
-          "digest": "sha256:20d1bbfbabe1c97ba4b16301f08a20d8484bcf77047742a3cb71c613d8e12d0b"
+          "version": "0.40.13",
+          "digest": "sha256:b2f0122c476bc9fe7ce679d8bb4bd555351e25e2554eefb156f61cb0a89cf429"
         }
       ],
-      "sourceDigest": "h1:fPaMgOiXRv8tqfnwoI4LzvL09mQKVMOYndp5U3vGUyI=",
-      "measuredAt": "2026-11-05"
+      "sourceDigest": "h1:aMhHCAPO5TrESkOClYUQgNMDGuLePzzu8kN6vQjgoKo=",
+      "measuredAt": "2026-11-06"
     }
   ]
 }
