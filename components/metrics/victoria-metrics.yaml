@@ -47,6 +47,49 @@ releases:
         # The chart compares this version, not the tag above, with semver; any
         # release from 1.4.0 on renders the same.
         version: 1.12.1
+        # Node disk use (node_filesystem_*) has no other source; Zeabur reads it.
+        enabled: true
+        extraArgs:
+          # Only the collectors the default node-exporter, node and kubernetes rules query.
+          - --collector.disable-defaults
+          - --collector.filesystem
+          - --collector.cpu
+          - --collector.meminfo
+          - --collector.loadavg
+          - --collector.vmstat
+          - --collector.diskstats
+          - --collector.netdev
+          - --collector.netclass
+          - --collector.filefd
+          - --collector.conntrack
+          - --collector.timex
+          - --collector.mdadm
+          - --collector.bonding
+          - --collector.textfile
+          # The chart's excludes plus containerd's per-pod shm mounts (k3s keeps them under /run/k3s).
+          # /var/lib/kubelet itself stays visible; only mounts below it are dropped.
+          - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|run/containerd/.+|run/k3s/.+|var/lib/docker/.+|var/lib/kubelet/.+)($|/)
+          - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tracefs)$
+        resources:
+          # One small exporter per node, idles near 16Mi.
+          requests: {cpu: 10m, memory: 16Mi}
+          limits: {memory: 64Mi}
+      kubeApiServer:
+        # Its histograms are ~half of all series; its alert rules go with it.
+        enabled: false
+      kubelet:
+        vmScrape:
+          spec:
+            metricRelabelConfigs:
+              # Chart defaults: UIDs and cgroup ids only multiply series.
+              - action: labeldrop
+                regex: (uid)
+              - action: labeldrop
+                regex: (id|name)
+              # The kubelet also exports API server and storage histograms (~45% of series on k3s).
+              - action: drop
+                source_labels: [__name__]
+                regex: .+_bucket|(apiserver|etcd|kine|rest_client|workqueue|scheduler|authentication|authorization|aggregator|admission|watch_cache|storage)_.+
       syncJob:
         # Pinned by digest; a tag alone can move.
         image:
@@ -64,6 +107,10 @@ releases:
       kube-state-metrics:
         # Maps pods to workloads and exposes requests, limits and object state.
         enabled: true
+        # Only the objects needed to map pods to workloads. Idles near 40Mi.
+        resources:
+          requests: {cpu: 10m, memory: 64Mi}
+        collectors: [pods, replicasets, deployments, statefulsets, daemonsets, jobs, cronjobs, nodes, persistentvolumeclaims, namespaces]
         # Pinned by digest; a tag alone can move. The chart joins registry and
         # repository. registry comes second, so Renovate reads both.
         image:
@@ -247,6 +294,16 @@ releases:
           disableNamespaceMatcher: false
           arbitraryFSAccessThroughSMs:
             deny: true
+          # Routes alerts to configured receivers. Idles near 24Mi.
+          resources:
+            requests: {cpu: 10m, memory: 32Mi}
+            limits: {memory: 128Mi}
+      vmalert:
+        spec:
+          # Evaluates the default alert rules. Idles near 40Mi.
+          resources:
+            requests: {cpu: 10m, memory: 64Mi}
+            limits: {memory: 128Mi}
       vmsingle:
         spec:
           # One size for both profiles: the operator won't grow a local-path
@@ -262,39 +319,6 @@ releases:
           scrapeInterval: 30s
     profiles:
       single-node: |
-        prometheus-node-exporter:
-          # Node disk use (node_filesystem_*) has no other source; Zeabur reads it.
-          enabled: true
-          extraArgs:
-            # Only the collectors the default node-exporter, node and kubernetes rules query.
-            - --collector.disable-defaults
-            - --collector.filesystem
-            - --collector.cpu
-            - --collector.meminfo
-            - --collector.loadavg
-            - --collector.vmstat
-            - --collector.diskstats
-            - --collector.netdev
-            - --collector.netclass
-            - --collector.filefd
-            - --collector.conntrack
-            - --collector.timex
-            - --collector.mdadm
-            - --collector.bonding
-            - --collector.textfile
-            # The chart's excludes plus containerd's per-pod shm mounts (k3s keeps them under /run/k3s).
-            # /var/lib/kubelet itself stays visible; only mounts below it are dropped.
-            - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|run/containerd/.+|run/k3s/.+|var/lib/docker/.+|var/lib/kubelet/.+)($|/)
-            - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tracefs)$
-          resources:
-            # One small exporter per node, idles near 16Mi.
-            requests: {cpu: 10m, memory: 16Mi}
-            limits: {memory: 64Mi}
-        kube-state-metrics:
-          # Only the objects needed to map pods to workloads. Idles near 40Mi.
-          resources:
-            requests: {cpu: 10m, memory: 64Mi}
-          collectors: [pods, replicasets, deployments, statefulsets, daemonsets, jobs, cronjobs, nodes, persistentvolumeclaims, namespaces]
         kubeControllerManager:
           # Embedded in k3s; nothing to scrape.
           enabled: false
@@ -304,22 +328,6 @@ releases:
         kubeEtcd:
           # k3s single-node uses SQLite (kine), not etcd.
           enabled: false
-        kubeApiServer:
-          # Its histograms are ~half of all series; its alert rules go with it.
-          enabled: false
-        kubelet:
-          vmScrape:
-            spec:
-              metricRelabelConfigs:
-                # Chart defaults: UIDs and cgroup ids only multiply series.
-                - action: labeldrop
-                  regex: (uid)
-                - action: labeldrop
-                  regex: (id|name)
-                # k3s kubelet also exports API server and kine histograms (~45% of series).
-                - action: drop
-                  source_labels: [__name__]
-                  regex: .+_bucket|(apiserver|etcd|kine|rest_client|workqueue|scheduler|authentication|authorization|aggregator|admission|watch_cache|storage)_.+
         vmsingle:
           spec:
             # A week of history on one node.
@@ -334,35 +342,22 @@ releases:
             resources:
               requests: {cpu: 20m, memory: 128Mi}
               limits: {memory: 256Mi}
-        vmalert:
-          spec:
-            # Evaluates the default alert rules. Idles near 40Mi.
-            resources:
-              requests: {cpu: 10m, memory: 64Mi}
-              limits: {memory: 128Mi}
-        alertmanager:
-          spec:
-            # Routes alerts to configured receivers. Idles near 24Mi.
-            resources:
-              requests: {cpu: 10m, memory: 32Mi}
-              limits: {memory: 128Mi}
       multi-node: |
-        prometheus-node-exporter:
-          # Node disk and network metrics for capacity planning.
-          enabled: true
         vmsingle:
           spec:
             # Two weeks of history.
             retentionPeriod: 14d
+            # Scrapes the same series per pod as single-node; the higher limit
+            # leaves room for more nodes and pods.
             resources:
-              requests: {cpu: 100m, memory: 512Mi}
-              limits: {memory: 2Gi}
+              requests: {cpu: 50m, memory: 224Mi}
+              limits: {memory: 1Gi}
         vmagent:
           spec:
             # More targets across nodes.
             resources:
-              requests: {cpu: 50m, memory: 128Mi}
-              limits: {memory: 1Gi}
+              requests: {cpu: 20m, memory: 128Mi}
+              limits: {memory: 512Mi}
 
   # Rules for the events people choose in Zeabur's notification settings. Each
   # alert has a zeabur_event label that names the event, and a zeabur_kind
