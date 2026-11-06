@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: CLIProxyAPI
   # renovate: depName=eceasy/cli-proxy-api
-  version: "v8.0.46"
+  version: "v8.0.48"
   summary: An OpenAI- and Gemini-compatible API proxy, with keys and a management page.
   locales:
     zh-TW:
