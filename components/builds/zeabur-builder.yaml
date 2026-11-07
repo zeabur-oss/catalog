@@ -28,7 +28,7 @@ resources:
   work:
     - name: build
       # The build pod, which the controller creates and no render shows. A copy
-      # of buildkitd.resources in chart 0.1.2-beta.1. Change it with the chart.
+      # of buildkitd.resources in chart 0.2.1. Change it with the chart.
       requests: {cpu: 100m, memory: 256Mi}
       limits: {cpu: "1", memory: 1Gi}
       # buildkitd running one small Railpack build, pushing to zot.
@@ -319,8 +319,8 @@ releases:
     type: helm
     namespace: builder-system
     chart: oci://ghcr.io/zeabur-oss/charts/zeabur-builder
-    version: 0.1.2-beta.1
-    chartDigest: sha256:fa221b419f1986bd53833f06426924d36fc25f11bdda69954e0fd81d4a03b016
+    version: 0.2.1
+    chartDigest: sha256:a150863f8e90034c30b6934fd1ff78eab0a68534021ecb9805549ec8e5f00759
     values: |
       registry:
         # zot above: images go to zot.zot.svc:5000/<namespace>/<build>.
