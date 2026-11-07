@@ -80,7 +80,7 @@ kubectl wait --for=condition=Ready nodes.longhorn.io --all -n longhorn-system --
 
 ## 測試案例
 
-上面每條規則在 `conformance/select/` 都有一個案例。這個目錄在儲存庫裡，也包含在 `bundle.tar.gz` 中，所以固定某個 catalog commit 或版本的安裝工具，讀到的就是那個版本的案例。格式定義在 [`schema/v1/select-case.schema.json`](https://github.com/zeabur-oss/catalog/blob/main/schema/v1/select-case.schema.json)。
+上面每條規則在 `conformance/select/` 都有一個案例。這個目錄在儲存庫裡，也包含在 `bundle.tar.gz` 中，所以固定某個 catalog commit 或版本的安裝工具，讀到的就是那個版本的案例。格式定義在 [`schema/v1/select-case.schema.json`](../../../schema/v1/select-case.schema.json)。
 
 ```yaml
 description: A default not tested on the distribution is installed with a warning.

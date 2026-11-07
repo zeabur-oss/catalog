@@ -41,7 +41,7 @@ Validate all files against their schemas, and confirm that each template's `requ
 
 Reject component licenses that aren't OSI-approved. Exceptions must meet both conditions:
 
-- The license appears in `optInOnly` in [`config/licenses.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/licenses.yaml).
+- The license appears in `optInOnly` in [`config/licenses.yaml`](../../config/licenses.yaml).
 - No profile enables the component by default (recommended).
 
 </Step>
@@ -52,7 +52,7 @@ Reject component licenses that aren't OSI-approved. Exceptions must meet both co
 
 Render each profile twice. Both outputs must match exactly.
 
-Then validate the output with kubeconform for every Kubernetes version listed in [`config/kubernetes.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/kubernetes.yaml). Validate custom resources against the CRDs from the same rendering.
+Then validate the output with kubeconform for every Kubernetes version listed in [`config/kubernetes.yaml`](../../config/kubernetes.yaml). Validate custom resources against the CRDs from the same rendering.
 
 Then dry-run upgrades and profile switches. For each component, apply one render to the API server and send another over it with `--dry-run=server`: each profile's render over the other's, and, for each profile, the render of the pull request's base over this one's. The base is the merge-base with `main`, rendered with its own tools. CRDs, Namespaces, webhook configurations and Helm hooks are left out. The check fails when the API server refuses an update, and names the component and the object. A StatefulSet whose `volumeClaimTemplates` change is one such case, because Kubernetes can't change that field in place.
 
@@ -72,7 +72,7 @@ Render each template with test inputs, then check security rules, upstream Pod S
 
 ### Validate with the API server
 
-Start etcd and kube-apiserver from [`flake.nix`](https://github.com/zeabur-oss/catalog/blob/main/flake.nix), use the Kubernetes version pinned by Zeabur Installer, and load only the rendered CRDs.
+Start etcd and kube-apiserver from [`flake.nix`](../../flake.nix), use the Kubernetes version pinned by Zeabur Installer, and load only the rendered CRDs.
 
 Then use `kubectl apply --dry-run=server` to send the rendered output for all components in both profiles and all templates to the API server. The API server checks fields, defaults, CEL rules, and Pod Security without running workloads.
 
@@ -94,7 +94,7 @@ A queued pull request tests what differs from the queue's base commit. A pull re
 
 Tests that share dependencies share a cluster. Each dependency is installed only once per cluster. After a component passes its smoke check, the test uninstalls it unless a later test in the same cluster still needs it.
 
-If a change affects `config/kubernetes.yaml`, `smoke` tests everything. If it affects `tools/`, `go.mod`, `go.sum`, the flake, another file in `config/`, or a workflow, `smoke` tests the `smokeRepresentative` list in [`config/e2e.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/e2e.yaml) instead. The weekly run still tests everything.
+If a change affects `config/kubernetes.yaml`, `smoke` tests everything. If it affects `tools/`, `go.mod`, `go.sum`, the flake, another file in `config/`, or a workflow, `smoke` tests the `smokeRepresentative` list in [`config/e2e.yaml`](../../config/e2e.yaml) instead. The weekly run still tests everything.
 
 ## `full`: Test resource usage and cleanup
 
@@ -132,7 +132,7 @@ Run the component's health checks and smoke checks, then uninstall the component
 
 ### Components that require additional credentials
 
-The `unready` list in [`config/e2e.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/e2e.yaml) identifies components that require credentials CI doesn't have.
+The `unready` list in [`config/e2e.yaml`](../../config/e2e.yaml) identifies components that require credentials CI doesn't have.
 
 `full` installs these components without waiting for readiness, then runs smoke checks and uninstalls them.
 
@@ -162,13 +162,13 @@ Component measurements are stored in `measurements/components/<capability>/<upst
 }
 ```
 
-`full` also checks the total usage of components enabled by default in the `single-node` profile on amd64 against the budget in [`config/budget.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/budget.yaml).
+`full` also checks the total usage of components enabled by default in the `single-node` profile on amd64 against the budget in [`config/budget.yaml`](../../config/budget.yaml).
 
 `weekly.yml` opens a pull request to update `measurements/`. You can also run this workflow manually to get measurements immediately. Renovate opens a pull request for each new upstream version and image digest.
 
 ### Tests on k3s, RKE2 and KubeSolo
 
-With `-profile k3s`, `-profile rke2` or `-profile kubesolo`, the tests install that distribution on the Linux host, at the version pinned in [`config/kubernetes.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/kubernetes.yaml), and verify the checksum of every download. They change these defaults:
+With `-profile k3s`, `-profile rke2` or `-profile kubesolo`, the tests install that distribution on the Linux host, at the version pinned in [`config/kubernetes.yaml`](../../config/kubernetes.yaml), and verify the checksum of every download. They change these defaults:
 
 - k3s runs without its own Traefik and metrics-server.
 - RKE2 runs without its ingress controller and metrics-server, and gets local-path-provisioner as its default StorageClass.
@@ -182,7 +182,7 @@ Each measured environment carries `sourceDigest`, a digest of the component file
 
 ## Configure template test inputs
 
-Template tests get their input values from [`config/e2e.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/e2e.yaml) and don't require repository secrets, so pull requests also run the full template tests.
+Template tests get their input values from [`config/e2e.yaml`](../../config/e2e.yaml) and don't require repository secrets, so pull requests also run the full template tests.
 
 <Steps>
 
