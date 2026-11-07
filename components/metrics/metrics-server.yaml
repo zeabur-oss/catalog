@@ -52,6 +52,21 @@ releases:
           requests: {cpu: 50m, memory: 96Mi}
           limits: {memory: 256Mi}
 
+# kube-apiserver calls metrics-server from the node's address, so with kube-system
+# closed to other namespaces a replica on another node gets no requests (#200).
+networkPolicies: |
+  apiVersion: networking.k8s.io/v1
+  kind: NetworkPolicy
+  metadata:
+    name: metrics-server-apiserver
+    namespace: kube-system
+  spec:
+    podSelector:
+      matchLabels: {app.kubernetes.io/name: metrics-server}
+    policyTypes: [Ingress]
+    ingress:
+      - ports: [{protocol: TCP, port: 10250}]
+
 detection:
   apiServices: [v1beta1.metrics.k8s.io]
   helmCharts: [metrics-server]
