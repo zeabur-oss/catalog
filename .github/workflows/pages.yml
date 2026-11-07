@@ -1,6 +1,6 @@
 # A published release that is not a pre-release copies its signed files, unchanged, to GitHub
 # Pages under /v1/ (https://oss-catalog.zeabur.com/v1/), where Zeabur fetches templates.
-# Manual run: publish an earlier release again, such as to roll back.
+# Manual run: publish an earlier published release again, such as to roll back.
 name: pages
 
 on:
@@ -36,8 +36,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag || github.event.release.tag_name }}
         run: |
-          if [ "$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isPrerelease --jq .isPrerelease)" != false ]; then
-            echo "::error::$TAG is a pre-release"
+          if [ "$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft,isPrerelease \
+            --jq '.isDraft or .isPrerelease')" != false ]; then
+            echo "::error::$TAG is a draft or a pre-release; publish only a published release"
             exit 1
           fi
           mkdir -p site/v1
