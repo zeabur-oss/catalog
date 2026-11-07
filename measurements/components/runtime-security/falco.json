@@ -12,7 +12,7 @@
       "distributionVersion": "v1.36.5+k3s1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 67,
+        "memoryMiB": 66,
         "cpuMillis": 3
       },
       "requests": {
@@ -29,7 +29,7 @@
         }
       ],
       "sourceDigest": "h1:xOgBUYLqXrzV5bl6q1rW+pS8B6NLJPUefTxH9kTgW4I=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "k3s",
@@ -42,7 +42,7 @@
       "distributionVersion": "v1.36.5+k3s1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 69,
+        "memoryMiB": 72,
         "cpuMillis": 3
       },
       "requests": {
@@ -59,7 +59,7 @@
         }
       ],
       "sourceDigest": "h1:xOgBUYLqXrzV5bl6q1rW+pS8B6NLJPUefTxH9kTgW4I=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -71,8 +71,8 @@
       "kubernetesVersion": "v1.36.4",
       "result": "passed",
       "idle": {
-        "memoryMiB": 167,
-        "cpuMillis": 25
+        "memoryMiB": 168,
+        "cpuMillis": 39
       },
       "requests": {
         "memoryMiB": 800
@@ -88,7 +88,7 @@
         }
       ],
       "sourceDigest": "h1:xOgBUYLqXrzV5bl6q1rW+pS8B6NLJPUefTxH9kTgW4I=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -100,8 +100,8 @@
       "kubernetesVersion": "v1.36.4",
       "result": "passed",
       "idle": {
-        "memoryMiB": 193,
-        "cpuMillis": 22
+        "memoryMiB": 174,
+        "cpuMillis": 24
       },
       "requests": {
         "memoryMiB": 800
@@ -117,7 +117,7 @@
         }
       ],
       "sourceDigest": "h1:xOgBUYLqXrzV5bl6q1rW+pS8B6NLJPUefTxH9kTgW4I=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -129,8 +129,8 @@
       "kubernetesVersion": "v1.36.4",
       "result": "passed",
       "idle": {
-        "memoryMiB": 66,
-        "cpuMillis": 5
+        "memoryMiB": 68,
+        "cpuMillis": 6
       },
       "requests": {
         "memoryMiB": 160
@@ -146,7 +146,7 @@
         }
       ],
       "sourceDigest": "h1:xOgBUYLqXrzV5bl6q1rW+pS8B6NLJPUefTxH9kTgW4I=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -175,7 +175,7 @@
         }
       ],
       "sourceDigest": "h1:xOgBUYLqXrzV5bl6q1rW+pS8B6NLJPUefTxH9kTgW4I=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kubesolo",
@@ -189,7 +189,7 @@
       "result": "passed",
       "idle": {
         "memoryMiB": 63,
-        "cpuMillis": 5
+        "cpuMillis": 2
       },
       "requests": {
         "memoryMiB": 160
@@ -205,7 +205,7 @@
         }
       ],
       "sourceDigest": "h1:xOgBUYLqXrzV5bl6q1rW+pS8B6NLJPUefTxH9kTgW4I=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kubesolo",
@@ -235,7 +235,7 @@
         }
       ],
       "sourceDigest": "h1:xOgBUYLqXrzV5bl6q1rW+pS8B6NLJPUefTxH9kTgW4I=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "rke2",
@@ -248,8 +248,8 @@
       "distributionVersion": "v1.36.5+rke2r1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 70,
-        "cpuMillis": 9
+        "memoryMiB": 71,
+        "cpuMillis": 8
       },
       "requests": {
         "memoryMiB": 160
@@ -265,7 +265,7 @@
         }
       ],
       "sourceDigest": "h1:xOgBUYLqXrzV5bl6q1rW+pS8B6NLJPUefTxH9kTgW4I=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "rke2",
@@ -278,7 +278,7 @@
       "distributionVersion": "v1.36.5+rke2r1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 73,
+        "memoryMiB": 74,
         "cpuMillis": 7
       },
       "requests": {
@@ -295,7 +295,7 @@
         }
       ],
       "sourceDigest": "h1:xOgBUYLqXrzV5bl6q1rW+pS8B6NLJPUefTxH9kTgW4I=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     }
   ]
 }

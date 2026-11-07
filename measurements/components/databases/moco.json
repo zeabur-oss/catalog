@@ -12,7 +12,7 @@
       "distributionVersion": "v1.36.5+k3s1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 19,
+        "memoryMiB": 21,
         "cpuMillis": 1
       },
       "requests": {
@@ -25,7 +25,7 @@
         }
       ],
       "sourceDigest": "h1:U6dcFLRKzVF5ggvzyAiZ4Sit78CM4rypVD2+BfMm/uE=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "k3s",
@@ -38,7 +38,7 @@
       "distributionVersion": "v1.36.5+k3s1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 19,
+        "memoryMiB": 20,
         "cpuMillis": 1
       },
       "requests": {
@@ -51,7 +51,7 @@
         }
       ],
       "sourceDigest": "h1:U6dcFLRKzVF5ggvzyAiZ4Sit78CM4rypVD2+BfMm/uE=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -64,7 +64,7 @@
       "result": "passed",
       "idle": {
         "memoryMiB": 30,
-        "cpuMillis": 1
+        "cpuMillis": 2
       },
       "requests": {
         "memoryMiB": 128
@@ -76,7 +76,7 @@
         }
       ],
       "sourceDigest": "h1:U6dcFLRKzVF5ggvzyAiZ4Sit78CM4rypVD2+BfMm/uE=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -101,7 +101,7 @@
         }
       ],
       "sourceDigest": "h1:U6dcFLRKzVF5ggvzyAiZ4Sit78CM4rypVD2+BfMm/uE=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -126,7 +126,7 @@
         }
       ],
       "sourceDigest": "h1:U6dcFLRKzVF5ggvzyAiZ4Sit78CM4rypVD2+BfMm/uE=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -151,7 +151,7 @@
         }
       ],
       "sourceDigest": "h1:U6dcFLRKzVF5ggvzyAiZ4Sit78CM4rypVD2+BfMm/uE=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kubesolo",
@@ -177,7 +177,7 @@
         }
       ],
       "sourceDigest": "h1:U6dcFLRKzVF5ggvzyAiZ4Sit78CM4rypVD2+BfMm/uE=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kubesolo",
@@ -190,7 +190,7 @@
       "distributionVersion": "v1.2.3",
       "result": "passed",
       "idle": {
-        "memoryMiB": 19,
+        "memoryMiB": 20,
         "cpuMillis": 1
       },
       "requests": {
@@ -203,7 +203,7 @@
         }
       ],
       "sourceDigest": "h1:U6dcFLRKzVF5ggvzyAiZ4Sit78CM4rypVD2+BfMm/uE=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "rke2",
@@ -229,7 +229,7 @@
         }
       ],
       "sourceDigest": "h1:U6dcFLRKzVF5ggvzyAiZ4Sit78CM4rypVD2+BfMm/uE=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "rke2",
@@ -255,7 +255,7 @@
         }
       ],
       "sourceDigest": "h1:U6dcFLRKzVF5ggvzyAiZ4Sit78CM4rypVD2+BfMm/uE=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     }
   ]
 }
