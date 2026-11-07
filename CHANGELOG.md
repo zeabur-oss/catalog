@@ -2,6 +2,18 @@
 
 All notable changes to this catalog are documented in this file; each section comes from the change files in `.changeset/` (CONTRIBUTING.md, "Releases").
 
+## 0.4.1 (2026-11-07)
+
+### Fixes
+
+#### Operators on `multi-node` request what they use
+
+On `multi-node`, each replica of the CloudNativePG, Dragonfly, MariaDB, MOCO, Percona MongoDB and SeaweedFS operators, Reloader and k8up now requests what it does on `single-node`, half or less of before. On a two-node cluster with apps, each leader uses 20–54 MiB, under its request. Their limits stay as they were, so they still have room as the objects they manage grow. The CloudNativePG Barman Cloud plugin requests 32 MiB on both profiles instead of 24 and 64, because it uses about 30 MiB on a cluster with apps.
+
+#### VictoriaMetrics on `multi-node` requests as much memory as on `single-node`
+
+`multi-node` now keeps the same metrics as `single-node`: node-exporter runs only the collectors the rules query, kube-state-metrics watches only the objects that map pods to workloads, and the API server's metrics and the kubelet's histograms are no longer collected. vmsingle requests 224 MiB instead of 512 MiB with a 1 GiB limit, and vmagent requests 128 MiB with a 512 MiB limit. vmalert and Alertmanager get the `single-node` requests too. The alert rules that read the API server's metrics go with them, as they already did on `single-node`. `multi-node` still keeps two weeks of history.
+
 ## 0.4.0 (2026-11-06)
 
 ### Breaking Changes
