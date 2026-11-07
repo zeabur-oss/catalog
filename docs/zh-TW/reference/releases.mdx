@@ -17,6 +17,10 @@ description: 固定 Zeabur Catalog 版本、驗證 Sigstore 簽章，再讀取 i
 
 所有 zeabur-oss 版本都由 [zeabur-oss/.github](https://github.com/zeabur-oss/.github) 的共用發布工作流程簽署。簽章會記錄該工作流程、儲存庫 `zeabur-oss/catalog` 與 tag。
 
+## 網路上的最新版本
+
+每個不是預發布的版本，也會把 `index.json`、`bundle.tar.gz`、`SHA256SUMS` 和 `SHA256SUMS.sigstore.json` 原封不動複製到 `https://oss-catalog.zeabur.com/v1/`，Zeabur 會從這裡抓範本。`v1` 指的是範本的 `apiVersion`，也就是 `catalog.zeabur.com/v1`。這個網址永遠是最新版本，所以一樣要照上面的方式驗證。每次發版 `SHA256SUMS` 都會變，只看它就能知道有沒有新版本。
+
 ## 驗證並讀取版本
 
 <Steps>

@@ -1,0 +1,53 @@
+# A published release that is not a pre-release copies its signed files, unchanged, to GitHub
+# Pages under /v1/ (https://oss-catalog.zeabur.com/v1/), where Zeabur fetches templates.
+# Manual run: publish an earlier release again, such as to roll back.
+name: pages
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release to publish (v0.4.0)"
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  pages:
+    if: ${{ github.event_name == 'workflow_dispatch' || !github.event.release.prerelease }}
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}v1/
+    steps:
+      - name: Download the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag || github.event.release.tag_name }}
+        run: |
+          if [ "$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isPrerelease --jq .isPrerelease)" != false ]; then
+            echo "::error::$TAG is a pre-release"
+            exit 1
+          fi
+          mkdir -p site/v1
+          cd site/v1
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern index.json --pattern bundle.tar.gz \
+            --pattern SHA256SUMS --pattern SHA256SUMS.sigstore.json
+          sha256sum --check --ignore-missing SHA256SUMS
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
