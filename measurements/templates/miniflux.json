@@ -12,7 +12,7 @@
       "result": "passed",
       "idle": {
         "memoryMiB": 72,
-        "cpuMillis": 3
+        "cpuMillis": 5
       },
       "versions": [
         {
@@ -22,7 +22,7 @@
         }
       ],
       "sourceDigest": "h1:V4hFf7PUQxfvV9WeplMLuWEq6bhkGLsq3vaBu2BKBws=",
-      "measuredAt": "2026-11-05"
+      "measuredAt": "2026-11-06"
     }
   ]
 }
