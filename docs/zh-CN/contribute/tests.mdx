@@ -41,7 +41,7 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 
 拒绝未经 OSI 批准的组件许可证。例外必须同时满足以下条件：
 
-- 许可证列在 [`config/licenses.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/licenses.yaml) 的 `optInOnly` 中。
+- 许可证列在 [`config/licenses.yaml`](../../../config/licenses.yaml) 的 `optInOnly` 中。
 - 没有任何 profile 将该组件列为默认启用（recommended）。
 
 </Step>
@@ -52,7 +52,7 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 
 每种 profile 各渲染两次，两次输出必须完全一致。
 
-接着，针对 [`config/kubernetes.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/kubernetes.yaml) 列出的每个 Kubernetes 版本，用 kubeconform 验证输出。自定义资源会按照同次渲染的 CRD 验证。
+接着，针对 [`config/kubernetes.yaml`](../../../config/kubernetes.yaml) 列出的每个 Kubernetes 版本，用 kubeconform 验证输出。自定义资源会按照同次渲染的 CRD 验证。
 
 接着 dry-run 升级和 profile 切换。对每个组件，先把一份渲染结果应用到 API server，再用 `--dry-run=server` 发送另一份：两个 profile 的渲染结果互相替换，以及各 profile 下，PR 基线的渲染结果被这个版本替换。基线是和 `main` 的 merge-base，并用它自己的工具渲染。CRD、Namespace、webhook 配置和 Helm hook 不计入。只要 API server 拒绝更新，例如 `volumeClaimTemplates` 有变化的 StatefulSet，检查就会失败，并指出是哪个组件的哪个对象。Kubernetes 无法原地修改这类字段。
 
@@ -72,7 +72,7 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 
 ### 交给 API server 验证
 
-从 [`flake.nix`](https://github.com/zeabur-oss/catalog/blob/main/flake.nix) 启动 etcd 和 kube-apiserver，使用 Zeabur Installer 固定的 Kubernetes 版本，并且只加载渲染出的 CRD。
+从 [`flake.nix`](../../../flake.nix) 启动 etcd 和 kube-apiserver，使用 Zeabur Installer 固定的 Kubernetes 版本，并且只加载渲染出的 CRD。
 
 接着，用 `kubectl apply --dry-run=server` 将两种 profile 的所有组件和所有模板渲染结果发送到 API server。API server 会检查字段、默认值、CEL 规则和 Pod Security，不会运行工作负载。
 
@@ -94,7 +94,7 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 
 共用依赖组件的测试会共用集群，依赖组件在每个集群中只安装一次。组件完成冒烟测试后就会卸载，除非同一集群后续的测试仍需要它。
 
-变更 `config/kubernetes.yaml` 时，`smoke` 会测试所有项目。变更 `tools/`、`go.mod`、`go.sum`、flake、`config/` 的其他文件或工作流时，`smoke` 改测 [`config/e2e.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/e2e.yaml) 中 `smokeRepresentative` 列出的项目。每周的运行仍会测试所有项目。
+变更 `config/kubernetes.yaml` 时，`smoke` 会测试所有项目。变更 `tools/`、`go.mod`、`go.sum`、flake、`config/` 的其他文件或工作流时，`smoke` 改测 [`config/e2e.yaml`](../../../config/e2e.yaml) 中 `smokeRepresentative` 列出的项目。每周的运行仍会测试所有项目。
 
 ## `full`：测试资源用量和清理
 
@@ -132,7 +132,7 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 
 ### 需要额外凭据的组件
 
-[`config/e2e.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/e2e.yaml) 的 `unready` 列出需要 CI 未持有凭据的组件。
+[`config/e2e.yaml`](../../../config/e2e.yaml) 的 `unready` 列出需要 CI 未持有凭据的组件。
 
 `full` 安装这些组件时不等待就绪，接着运行冒烟测试并卸载。
 
@@ -162,13 +162,13 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 }
 ```
 
-`full` 也会检查 amd64 上 `single-node` profile 的默认启用组件总用量，确认符合 [`config/budget.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/budget.yaml) 的预算。
+`full` 也会检查 amd64 上 `single-node` profile 的默认启用组件总用量，确认符合 [`config/budget.yaml`](../../../config/budget.yaml) 的预算。
 
 `weekly.yml` 会创建 pull request，更新 `measurements/`。你也可以手动运行这个工作流，立即获取测量结果。Renovate 则会针对每个新的上游版本和镜像 digest 创建 pull request。
 
 ### 在 k3s、RKE2 和 KubeSolo 上测试
 
-使用 `-profile k3s`、`-profile rke2` 或 `-profile kubesolo` 时，测试会在 Linux 主机上安装 [`config/kubernetes.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/kubernetes.yaml) 固定版本的发行版，并核对每个下载文件的校验和。各发行版和默认安装有这些不同：
+使用 `-profile k3s`、`-profile rke2` 或 `-profile kubesolo` 时，测试会在 Linux 主机上安装 [`config/kubernetes.yaml`](../../../config/kubernetes.yaml) 固定版本的发行版，并核对每个下载文件的校验和。各发行版和默认安装有这些不同：
 
 - k3s 不启用自带的 Traefik 和 metrics-server。
 - RKE2 不启用自带的 ingress controller 和 metrics-server，并加装 local-path-provisioner 作为默认 StorageClass。
@@ -182,7 +182,7 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 
 ## 配置模板测试输入
 
-模板测试从 [`config/e2e.yaml`](https://github.com/zeabur-oss/catalog/blob/main/config/e2e.yaml) 获取输入值，不需要仓库 secrets，因此 pull request 也会完整运行模板测试。
+模板测试从 [`config/e2e.yaml`](../../../config/e2e.yaml) 获取输入值，不需要仓库 secrets，因此 pull request 也会完整运行模板测试。
 
 <Steps>
 
