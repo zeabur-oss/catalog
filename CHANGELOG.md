@@ -2,6 +2,22 @@
 
 All notable changes to this catalog are documented in this file; each section comes from the change files in `.changeset/` (CONTRIBUTING.md, "Releases").
 
+## 0.4.2 (2026-11-08)
+
+### Fixes
+
+#### Zeabur Builder moves to chart 0.2.1
+
+buildkitd now always runs in a user namespace, and a build starts again after the buildkitd cache size or storage class changes. The component's `kubeVersion` (1.34 or newer) already covers the user namespaces this needs.
+
+#### metrics-server answers from every node
+
+On a `multi-node` cluster whose `kube-system` lets in only its own pods, as K3s's CIS hardening does, kube-apiserver could not reach the metrics-server replica on another node. Half of the `metrics.k8s.io` reads waited about a minute and then failed, so `kubectl top` and Zeabur's Nodes page hung. The component now has a NetworkPolicy that lets requests into metrics-server's port, as K3s's hardening guide does for its own metrics-server.
+
+#### Each release is also at `https://oss-catalog.zeabur.com/v1/`
+
+Each release that is not a pre-release copies its signed `index.json`, `bundle.tar.gz`, `SHA256SUMS` and `SHA256SUMS.sigstore.json` to `https://oss-catalog.zeabur.com/v1/`, so Zeabur can fetch new and fixed templates without a new Zeabur release.
+
 ## 0.4.1 (2026-11-07)
 
 ### Fixes
