@@ -12,7 +12,7 @@
       "distributionVersion": "v1.36.5+k3s1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 9
+        "memoryMiB": 10
       },
       "requests": {
         "memoryMiB": 64
@@ -24,7 +24,7 @@
         }
       ],
       "sourceDigest": "h1:0gRWls4LVXpdSuvI2PZQnNQwx7YARti+qmRGyZ8uS8c=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "k3s",
@@ -49,7 +49,7 @@
         }
       ],
       "sourceDigest": "h1:0gRWls4LVXpdSuvI2PZQnNQwx7YARti+qmRGyZ8uS8c=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -61,7 +61,7 @@
       "kubernetesVersion": "v1.36.4",
       "result": "passed",
       "idle": {
-        "memoryMiB": 18,
+        "memoryMiB": 17,
         "cpuMillis": 1
       },
       "requests": {
@@ -74,7 +74,7 @@
         }
       ],
       "sourceDigest": "h1:0gRWls4LVXpdSuvI2PZQnNQwx7YARti+qmRGyZ8uS8c=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -99,7 +99,7 @@
         }
       ],
       "sourceDigest": "h1:0gRWls4LVXpdSuvI2PZQnNQwx7YARti+qmRGyZ8uS8c=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -123,7 +123,7 @@
         }
       ],
       "sourceDigest": "h1:0gRWls4LVXpdSuvI2PZQnNQwx7YARti+qmRGyZ8uS8c=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -135,7 +135,7 @@
       "kubernetesVersion": "v1.36.4",
       "result": "passed",
       "idle": {
-        "memoryMiB": 8
+        "memoryMiB": 9
       },
       "requests": {
         "memoryMiB": 64
@@ -147,7 +147,7 @@
         }
       ],
       "sourceDigest": "h1:0gRWls4LVXpdSuvI2PZQnNQwx7YARti+qmRGyZ8uS8c=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kubesolo",
@@ -172,7 +172,7 @@
         }
       ],
       "sourceDigest": "h1:0gRWls4LVXpdSuvI2PZQnNQwx7YARti+qmRGyZ8uS8c=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kubesolo",
@@ -197,7 +197,7 @@
         }
       ],
       "sourceDigest": "h1:0gRWls4LVXpdSuvI2PZQnNQwx7YARti+qmRGyZ8uS8c=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "rke2",
@@ -222,7 +222,7 @@
         }
       ],
       "sourceDigest": "h1:0gRWls4LVXpdSuvI2PZQnNQwx7YARti+qmRGyZ8uS8c=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "rke2",
@@ -247,7 +247,7 @@
         }
       ],
       "sourceDigest": "h1:0gRWls4LVXpdSuvI2PZQnNQwx7YARti+qmRGyZ8uS8c=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     }
   ]
 }

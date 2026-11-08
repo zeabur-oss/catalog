@@ -11,8 +11,8 @@
       "kubernetesVersion": "v1.36.4",
       "result": "passed",
       "idle": {
-        "memoryMiB": 1714,
-        "cpuMillis": 25
+        "memoryMiB": 1652,
+        "cpuMillis": 27
       },
       "versions": [
         {
@@ -27,8 +27,8 @@
         },
         {
           "image": "docker.io/langgenius/dify-plugin-daemon",
-          "version": "0.6.12-local",
-          "digest": "sha256:cf5a7f61f157736e64c5990a35c3dbe63ace6e2e2231ecca562462c74b1f7554"
+          "version": "0.6.13-local",
+          "digest": "sha256:b5680c99419f0b040687a3d232f10b5bde353fefcfa942aebbf15d366cae21ae"
         },
         {
           "image": "docker.io/langgenius/dify-sandbox",
@@ -51,8 +51,8 @@
           "digest": "sha256:6a097f68bae708cedbabd6188d68c7e2e7a38cedd05a176e1cc0ba29e3bbe029"
         }
       ],
-      "sourceDigest": "h1:8ZAGnYn5FOgBSjqf5Gm6StWbUnDMnBmVtZM1NdxLyVA=",
-      "measuredAt": "2026-11-06"
+      "sourceDigest": "h1:ZhtDi/2bXhOFjnGSF+F9c/xd9guN2Sz2NV7gFizTads=",
+      "measuredAt": "2026-11-07"
     }
   ]
 }

@@ -11,7 +11,7 @@
       "kubernetesVersion": "v1.36.4",
       "result": "passed",
       "idle": {
-        "memoryMiB": 377,
+        "memoryMiB": 382,
         "cpuMillis": 11
       },
       "versions": [
@@ -27,7 +27,7 @@
         }
       ],
       "sourceDigest": "h1:W1TW632VQym7YJlrDegsXzvmLDPkHrIA26f3oFfdoP4=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     }
   ]
 }

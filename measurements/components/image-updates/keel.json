@@ -12,7 +12,7 @@
       "distributionVersion": "v1.36.5+k3s1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 15
+        "memoryMiB": 16
       },
       "requests": {
         "memoryMiB": 32
@@ -24,7 +24,7 @@
         }
       ],
       "sourceDigest": "h1:shLaTEUEQiV4yS9dVz0PffXB/uV6LNNHjqVjn1uAsTM=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "k3s",
@@ -49,7 +49,7 @@
         }
       ],
       "sourceDigest": "h1:shLaTEUEQiV4yS9dVz0PffXB/uV6LNNHjqVjn1uAsTM=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -73,7 +73,7 @@
         }
       ],
       "sourceDigest": "h1:shLaTEUEQiV4yS9dVz0PffXB/uV6LNNHjqVjn1uAsTM=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -97,7 +97,7 @@
         }
       ],
       "sourceDigest": "h1:shLaTEUEQiV4yS9dVz0PffXB/uV6LNNHjqVjn1uAsTM=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -121,7 +121,7 @@
         }
       ],
       "sourceDigest": "h1:shLaTEUEQiV4yS9dVz0PffXB/uV6LNNHjqVjn1uAsTM=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -145,7 +145,7 @@
         }
       ],
       "sourceDigest": "h1:shLaTEUEQiV4yS9dVz0PffXB/uV6LNNHjqVjn1uAsTM=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kubesolo",
@@ -170,7 +170,7 @@
         }
       ],
       "sourceDigest": "h1:shLaTEUEQiV4yS9dVz0PffXB/uV6LNNHjqVjn1uAsTM=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kubesolo",
@@ -195,7 +195,7 @@
         }
       ],
       "sourceDigest": "h1:shLaTEUEQiV4yS9dVz0PffXB/uV6LNNHjqVjn1uAsTM=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "rke2",
@@ -220,7 +220,7 @@
         }
       ],
       "sourceDigest": "h1:shLaTEUEQiV4yS9dVz0PffXB/uV6LNNHjqVjn1uAsTM=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "rke2",
@@ -245,7 +245,7 @@
         }
       ],
       "sourceDigest": "h1:shLaTEUEQiV4yS9dVz0PffXB/uV6LNNHjqVjn1uAsTM=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     }
   ]
 }

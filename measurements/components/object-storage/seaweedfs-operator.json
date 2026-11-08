@@ -12,7 +12,7 @@
       "distributionVersion": "v1.36.5+k3s1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 28,
+        "memoryMiB": 26,
         "cpuMillis": 1
       },
       "requests": {
@@ -25,7 +25,7 @@
         }
       ],
       "sourceDigest": "h1:Fda7eZpSvzDZ0WraWCbUjayI3HhzZ0q8AGujw4nCDAA=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "k3s",
@@ -51,7 +51,7 @@
         }
       ],
       "sourceDigest": "h1:Fda7eZpSvzDZ0WraWCbUjayI3HhzZ0q8AGujw4nCDAA=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -63,7 +63,7 @@
       "kubernetesVersion": "v1.36.4",
       "result": "passed",
       "idle": {
-        "memoryMiB": 41,
+        "memoryMiB": 40,
         "cpuMillis": 2
       },
       "requests": {
@@ -76,7 +76,7 @@
         }
       ],
       "sourceDigest": "h1:Fda7eZpSvzDZ0WraWCbUjayI3HhzZ0q8AGujw4nCDAA=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -88,7 +88,7 @@
       "kubernetesVersion": "v1.36.4",
       "result": "passed",
       "idle": {
-        "memoryMiB": 39,
+        "memoryMiB": 41,
         "cpuMillis": 1
       },
       "requests": {
@@ -101,7 +101,7 @@
         }
       ],
       "sourceDigest": "h1:Fda7eZpSvzDZ0WraWCbUjayI3HhzZ0q8AGujw4nCDAA=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -126,7 +126,7 @@
         }
       ],
       "sourceDigest": "h1:Fda7eZpSvzDZ0WraWCbUjayI3HhzZ0q8AGujw4nCDAA=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -138,7 +138,7 @@
       "kubernetesVersion": "v1.36.4",
       "result": "passed",
       "idle": {
-        "memoryMiB": 27,
+        "memoryMiB": 26,
         "cpuMillis": 1
       },
       "requests": {
@@ -151,7 +151,7 @@
         }
       ],
       "sourceDigest": "h1:Fda7eZpSvzDZ0WraWCbUjayI3HhzZ0q8AGujw4nCDAA=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kubesolo",
@@ -159,6 +159,32 @@
       "platform": {
         "os": "linux",
         "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 23,
+        "cpuMillis": 1
+      },
+      "requests": {
+        "memoryMiB": 64
+      },
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.45"
+        }
+      ],
+      "sourceDigest": "h1:Fda7eZpSvzDZ0WraWCbUjayI3HhzZ0q8AGujw4nCDAA=",
+      "measuredAt": "2026-11-07"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
       },
       "kubernetesVersion": "v1.35.7",
       "distributionVersion": "v1.2.3",
@@ -177,33 +203,7 @@
         }
       ],
       "sourceDigest": "h1:Fda7eZpSvzDZ0WraWCbUjayI3HhzZ0q8AGujw4nCDAA=",
-      "measuredAt": "2026-11-06"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.35.7",
-      "distributionVersion": "v1.2.3",
-      "result": "passed",
-      "idle": {
-        "memoryMiB": 25,
-        "cpuMillis": 1
-      },
-      "requests": {
-        "memoryMiB": 64
-      },
-      "versions": [
-        {
-          "release": "seaweedfs-operator",
-          "version": "0.1.45"
-        }
-      ],
-      "sourceDigest": "h1:Fda7eZpSvzDZ0WraWCbUjayI3HhzZ0q8AGujw4nCDAA=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "rke2",
@@ -229,7 +229,7 @@
         }
       ],
       "sourceDigest": "h1:Fda7eZpSvzDZ0WraWCbUjayI3HhzZ0q8AGujw4nCDAA=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "rke2",
@@ -255,7 +255,7 @@
         }
       ],
       "sourceDigest": "h1:Fda7eZpSvzDZ0WraWCbUjayI3HhzZ0q8AGujw4nCDAA=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     }
   ]
 }

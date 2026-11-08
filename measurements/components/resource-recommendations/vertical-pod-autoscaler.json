@@ -12,7 +12,7 @@
       "distributionVersion": "v1.36.5+k3s1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 18,
+        "memoryMiB": 19,
         "cpuMillis": 1
       },
       "requests": {},
@@ -23,7 +23,7 @@
         }
       ],
       "sourceDigest": "h1:ELwHSKlii0xyU6z4RwGOsRqFCQmF8WkllcRbMzW/dVw=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "k3s",
@@ -36,7 +36,7 @@
       "distributionVersion": "v1.36.5+k3s1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 18,
+        "memoryMiB": 19,
         "cpuMillis": 1
       },
       "requests": {},
@@ -47,7 +47,7 @@
         }
       ],
       "sourceDigest": "h1:ELwHSKlii0xyU6z4RwGOsRqFCQmF8WkllcRbMzW/dVw=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -59,7 +59,7 @@
       "kubernetesVersion": "v1.36.4",
       "result": "passed",
       "idle": {
-        "memoryMiB": 17,
+        "memoryMiB": 16,
         "cpuMillis": 1
       },
       "requests": {},
@@ -70,7 +70,7 @@
         }
       ],
       "sourceDigest": "h1:ELwHSKlii0xyU6z4RwGOsRqFCQmF8WkllcRbMzW/dVw=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -93,7 +93,7 @@
         }
       ],
       "sourceDigest": "h1:ELwHSKlii0xyU6z4RwGOsRqFCQmF8WkllcRbMzW/dVw=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -116,7 +116,7 @@
         }
       ],
       "sourceDigest": "h1:ELwHSKlii0xyU6z4RwGOsRqFCQmF8WkllcRbMzW/dVw=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kind",
@@ -128,7 +128,7 @@
       "kubernetesVersion": "v1.36.4",
       "result": "passed",
       "idle": {
-        "memoryMiB": 18,
+        "memoryMiB": 17,
         "cpuMillis": 1
       },
       "requests": {},
@@ -139,7 +139,7 @@
         }
       ],
       "sourceDigest": "h1:ELwHSKlii0xyU6z4RwGOsRqFCQmF8WkllcRbMzW/dVw=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kubesolo",
@@ -163,7 +163,7 @@
         }
       ],
       "sourceDigest": "h1:ELwHSKlii0xyU6z4RwGOsRqFCQmF8WkllcRbMzW/dVw=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "kubesolo",
@@ -187,7 +187,7 @@
         }
       ],
       "sourceDigest": "h1:ELwHSKlii0xyU6z4RwGOsRqFCQmF8WkllcRbMzW/dVw=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "rke2",
@@ -200,7 +200,7 @@
       "distributionVersion": "v1.36.5+rke2r1",
       "result": "passed",
       "idle": {
-        "memoryMiB": 18,
+        "memoryMiB": 19,
         "cpuMillis": 1
       },
       "requests": {},
@@ -211,7 +211,7 @@
         }
       ],
       "sourceDigest": "h1:ELwHSKlii0xyU6z4RwGOsRqFCQmF8WkllcRbMzW/dVw=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     },
     {
       "distribution": "rke2",
@@ -235,7 +235,7 @@
         }
       ],
       "sourceDigest": "h1:ELwHSKlii0xyU6z4RwGOsRqFCQmF8WkllcRbMzW/dVw=",
-      "measuredAt": "2026-11-06"
+      "measuredAt": "2026-11-07"
     }
   ]
 }
