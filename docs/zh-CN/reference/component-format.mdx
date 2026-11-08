@@ -156,6 +156,10 @@ health:
 
 `distributions` 和 `testedOn` 是两份不同的列表。组件文件里的 `distributions` 列出这个组件支持的发行版，e2e 会在每个发行版上测试它。`index.json` 里的 `testedOn` 列出测试通过的发行版和通过的平台，例如 `{"distribution": "k3s", "platforms": ["linux/amd64", "linux/arm64"]}`，版本以 `config/kubernetes.yaml` 固定的为准，且组件文件要和那次测试时一致。安装工具会读取 `testedOn`，组件要装在未列出的发行版和平台上时，提示用户它没测试过。`testedOn` 由 `catalog index` 从 `measurements/` 生成，无需手写。每个组件都有这个字段，可以是空列表。
 
+`index.json` 里的 `images` 和 `unpinnedImages` 列出组件各个 release 渲染出来的容器镜像，每个组件支持的 profile 各有一份。每条引用和 chart 渲染的结果完全一样，例如 `docker.io/rancher/local-path-provisioner:v0.0.37@sha256:…`，因为 containerd 以这个字符串命名导入的镜像。`images` 是有 digest 的引用，`unpinnedImages` 是其他的引用，也就是 release 用 `unpinnedImages` 允许的那些，让使用者知道它们无法用 digest 获取。每份列表都已排序、不重复，并且是 `config/kubernetes.yaml` 里所有 Kubernetes 版本的并集。Helm test hook 的镜像不列入，Operator 在运行时才启动的镜像也不列入，因为渲染结果看不到它们。
+
+`catalog images` 把列表写到 `images/<capability>/<upstream>.yaml`，`catalog index` 再读取，因为发行版构建 `index.json` 时没有网络，无法渲染 chart。不用手动编辑这些文件。修改 release（例如 chart 版本、values 或 contributions）后，运行 `catalog images` 并一起提交；文件过期时，CI 的 `catalog images -check` 会失败。每个组件都有一个文件。
+
 `kubeVersion` 是组件支持的 Kubernetes 版本范围，写法与 Helm chart 的 `kubeVersion` 相同。填写各 chart 中最严格的范围，chart 都没写时填 `">=1.34.0-0"`。范围没有覆盖 catalog 测试的某个 Kubernetes 版本时，`catalog validate` 会失败。集群版本不在范围内时，安装工具不会提供这个组件。
 
 `contributes` 会把配置值加到另一个组件的 release。`target` 写明组件和它的 release，`values` 放配置值。

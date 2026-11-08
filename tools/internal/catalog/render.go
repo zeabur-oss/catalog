@@ -269,11 +269,19 @@ func strict(node any) {
 // PinnedImage is an image reference with a sha256 digest.
 var PinnedImage = regexp.MustCompile(`^[^\s]+@sha256:[a-f0-9]{64}$`)
 
-// UnpinnedImages returns each container in manifest whose image has no digest,
-// as <kind>/<name> <container>: <image>. It skips images named in allowed, and
-// Helm test hooks, because only helm test creates them.
-func UnpinnedImages(manifest []byte, allowed []string) []string {
-	var out []string
+// ContainerImage is an image used by a container of an object in a manifest.
+type ContainerImage struct {
+	// Where is <kind>/<name> <container>.
+	Where string
+	// Image is the reference as the manifest writes it.
+	Image string
+}
+
+// ContainerImages returns the image of every init, regular and ephemeral
+// container in manifest, in document order. It skips Helm test hooks, because
+// only helm test creates them.
+func ContainerImages(manifest []byte) []ContainerImage {
+	var out []ContainerImage
 	for _, doc := range strings.Split(string(manifest), "\n---") {
 		var obj struct {
 			Kind     string
@@ -301,17 +309,48 @@ func UnpinnedImages(manifest []byte, allowed []string) []string {
 			for _, v := range list {
 				c, _ := v.(map[string]any)
 				image, _ := c["image"].(string)
-				name := image
-				if i := strings.LastIndex(image, ":"); i > strings.LastIndex(image, "/") {
-					name = image[:i]
-				}
-				if !PinnedImage.MatchString(image) && !slices.Contains(allowed, name) {
-					out = append(out, fmt.Sprintf("%s/%s %v: %s", obj.Kind, obj.Metadata.Name, c["name"], image))
-				}
+				out = append(out, ContainerImage{Where: fmt.Sprintf("%s/%s %v", obj.Kind, obj.Metadata.Name, c["name"]), Image: image})
 			}
 		}
 	}
 	return out
+}
+
+// allowedImage reports whether image, without its tag and digest, is in allowed.
+func allowedImage(image string, allowed []string) bool {
+	name := image
+	if i := strings.LastIndex(image, ":"); i > strings.LastIndex(image, "/") {
+		name = image[:i]
+	}
+	return slices.Contains(allowed, name)
+}
+
+// UnpinnedImages returns each container in manifest whose image has no digest,
+// as <kind>/<name> <container>: <image>. It skips images named in allowed, and
+// Helm test hooks, because only helm test creates them.
+func UnpinnedImages(manifest []byte, allowed []string) []string {
+	var out []string
+	for _, ci := range ContainerImages(manifest) {
+		if !PinnedImage.MatchString(ci.Image) && !allowedImage(ci.Image, allowed) {
+			out = append(out, ci.Where+": "+ci.Image)
+		}
+	}
+	return out
+}
+
+// SplitImages sorts the images of manifest into those pinned by digest and
+// the others, each without duplicates.
+func SplitImages(manifest []byte) (pinned, unpinned []string) {
+	for _, ci := range ContainerImages(manifest) {
+		if PinnedImage.MatchString(ci.Image) {
+			pinned = append(pinned, ci.Image)
+		} else if ci.Image != "" {
+			unpinned = append(unpinned, ci.Image)
+		}
+	}
+	slices.Sort(pinned)
+	slices.Sort(unpinned)
+	return slices.Compact(pinned), slices.Compact(unpinned)
 }
 
 func dig(m map[string]any, path ...string) any {

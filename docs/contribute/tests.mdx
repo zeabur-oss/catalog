@@ -52,6 +52,8 @@ Reject component licenses that aren't OSI-approved. Exceptions must meet both co
 
 Render each profile twice. Both outputs must match exactly.
 
+Then run `catalog images -check`: it renders again and fails when a file in `images/` no longer lists the images the components render. Run `catalog images` and commit the result to fix it.
+
 Then validate the output with kubeconform for every Kubernetes version listed in [`config/kubernetes.yaml`](../../config/kubernetes.yaml). Validate custom resources against the CRDs from the same rendering.
 
 Then dry-run upgrades and profile switches. For each component, apply one render to the API server and send another over it with `--dry-run=server`: each profile's render over the other's, and, for each profile, the render of the pull request's base over this one's. The base is the merge-base with `main`, rendered with its own tools. CRDs, Namespaces, webhook configurations and Helm hooks are left out. The check fails when the API server refuses an update, and names the component and the object. A StatefulSet whose `volumeClaimTemplates` change is one such case, because Kubernetes can't change that field in place.

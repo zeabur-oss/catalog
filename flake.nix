@@ -72,7 +72,7 @@
             catalog index -version ${version} -out index.json
             catalog crosscheck -out crosscheck.json
             tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner --mode=u+w,go-w,a+rX \
-              -c index.json crosscheck.json components templates schema config conformance measurements LICENSE README.md |
+              -c index.json crosscheck.json components images templates schema config conformance measurements LICENSE README.md |
               gzip -9n > bundle.tar.gz
             sha256sum bundle.tar.gz index.json > checksums.txt
             mkdir $out

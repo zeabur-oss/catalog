@@ -28,6 +28,9 @@ existing branch: `git rebase --signoff main`, then force-push.
 - Never copy secrets, account IDs, domains, IP addresses or cloud-specific
   settings into values.
 - Do not edit `measurements/`; CI writes it.
+- After you change a release (a chart bump, values or a contribution), run
+  `go run ./tools/cmd/catalog images` and commit `images/`; CI runs it with `-check`
+  and fails on a stale list. It needs network and Helm.
 - Run `go run ./tools/cmd/catalog validate` and `go run ./tools/cmd/catalog render`
   before pushing, and `go run ./tools/cmd/catalog template lint <id>` for a
   template (inside `nix develop`).

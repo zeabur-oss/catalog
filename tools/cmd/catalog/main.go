@@ -2,6 +2,7 @@
 //
 //	catalog validate                    schema, licenses, references, value comments
 //	catalog render [ids]                helm template every profile and Kubernetes version, then kubeconform
+//	catalog images [-check] [ids]       write images/, the images each component renders; -check fails on a stale file
 //	catalog list -tier smoke|full [-since <ref>]  e2e CI matrix as JSON
 //	catalog e2e -tier check|smoke|full [-cluster current] [ids]  run a test tier (see tier.go)
 //	catalog budget                      single-node memory budget
@@ -37,6 +38,7 @@ type repo struct {
 var commands = map[string]func(*flag.FlagSet, *repo) error{
 	"validate":   validate,
 	"render":     render,
+	"images":     images,
 	"list":       list,
 	"e2e":        e2e,
 	"budget":     budget,
@@ -48,7 +50,7 @@ var commands = map[string]func(*flag.FlagSet, *repo) error{
 
 func main() {
 	if len(os.Args) < 2 || commands[os.Args[1]] == nil {
-		fmt.Fprintln(os.Stderr, "usage: catalog validate|render|list|e2e|budget|index|crosscheck|merge|template [flags] [ids]")
+		fmt.Fprintln(os.Stderr, "usage: catalog validate|render|images|list|e2e|budget|index|crosscheck|merge|template [flags] [ids]")
 		os.Exit(2)
 	}
 	if dir, err := os.UserCacheDir(); err == nil {

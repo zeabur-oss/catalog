@@ -297,6 +297,9 @@ func runCheck(r *repo, cfg config, o tierOptions) error {
 	if err := step("render", func() error { return renderComponents(r.cat, r.cat.Components, out, cfg.Versions) }); err != nil {
 		return err
 	}
+	if err := step("images", func() error { return listImages(r.cat, r.cat.Components, cfg.Versions, true, true) }); err != nil {
+		return err
+	}
 	if err := step("template lint", func() error { return lintTemplates(r, out+"-schemas", cfg.Versions) }); err != nil {
 		return err
 	}

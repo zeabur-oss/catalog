@@ -37,6 +37,9 @@ func index(fs *flag.FlagSet, r *repo) error {
 		InstallOrder map[string][]string     `json:"installOrder"`
 		TestedOn     []tested                `json:"testedOn"`
 		Measured     []environment           `json:"measured,omitempty"`
+		// Images and UnpinnedImages are what the component renders per profile.
+		Images         map[string][]string `json:"images"`
+		UnpinnedImages map[string][]string `json:"unpinnedImages"`
 	}
 	var comps []component
 	for _, c := range cat.Components {
@@ -44,7 +47,18 @@ func index(fs *flag.FlagSet, r *repo) error {
 		if err != nil {
 			return err
 		}
-		ic := component{Component: c, Resources: res, InstallOrder: map[string][]string{}}
+		ic := component{Component: c, Resources: res, InstallOrder: map[string][]string{},
+			Images: map[string][]string{}, UnpinnedImages: map[string][]string{}}
+		sets, err := readImages(c)
+		if err != nil {
+			return err
+		}
+		for _, p := range catalog.Profiles {
+			if c.Defaults[p] != "unsupported" {
+				ic.Images[p] = append([]string{}, sets[p].Images...)
+				ic.UnpinnedImages[p] = append([]string{}, sets[p].UnpinnedImages...)
+			}
+		}
 		for _, p := range catalog.Profiles {
 			if c.Defaults[p] == "unsupported" {
 				continue

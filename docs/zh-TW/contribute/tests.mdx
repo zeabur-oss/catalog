@@ -52,6 +52,8 @@ description: 了解各層 CI 的執行時機與檢查內容，並設定範本測
 
 每種 profile 各渲染兩次，兩次輸出必須完全一致。
 
+接著執行 `catalog images -check`：它會再渲染一次，`images/` 裡的檔案和元件渲染出的映像檔不一致時就會失敗。執行 `catalog images` 並提交結果即可修正。
+
 接著，針對 [`config/kubernetes.yaml`](../../../config/kubernetes.yaml) 列出的每個 Kubernetes 版本，用 kubeconform 驗證輸出。自訂資源則依照同次渲染的 CRD 驗證。
 
 接著 dry-run 升級和 profile 切換。對每個元件，先把一份渲染結果套用到 API server，再用 `--dry-run=server` 送出另一份：兩個 profile 的渲染結果互相取代，以及各 profile 下，PR 基底的渲染結果被這個版本取代。基底是和 `main` 的 merge-base，並用它自己的工具渲染。CRD、Namespace、webhook 設定和 Helm hook 不列入。只要 API server 拒絕更新，例如 `volumeClaimTemplates` 有變的 StatefulSet，檢查就會失敗，並指出是哪個元件的哪個物件。Kubernetes 無法原地修改這類欄位。
