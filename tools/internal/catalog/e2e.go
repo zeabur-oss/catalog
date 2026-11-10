@@ -576,10 +576,14 @@ func IdleUsage(match func(ns, name string) bool) ([]PodUsage, error) {
 		}
 		time.Sleep(10 * time.Second)
 	}
+	// A pod replaced during the window is gone from the cluster list below,
+	// so only the pods of the last sample count.
 	memories, cpuUse := map[string][]float64{}, map[string][]float64{}
 	for _, s := range samples[len(samples)-min(window, len(samples)):] {
 		for key, p := range s {
-			memories[key], cpuUse[key] = append(memories[key], p.mem), append(cpuUse[key], p.cpu)
+			if _, alive := samples[len(samples)-1][key]; alive {
+				memories[key], cpuUse[key] = append(memories[key], p.mem), append(cpuUse[key], p.cpu)
+			}
 		}
 	}
 	perPod := map[string]podSample{}

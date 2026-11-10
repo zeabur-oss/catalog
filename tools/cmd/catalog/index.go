@@ -14,7 +14,7 @@ import (
 )
 
 // indexVersion changes only on incompatible changes to index.json.
-const indexVersion = 3
+const indexVersion = 4
 
 type budgetConfig struct {
 	SingleNode struct {
