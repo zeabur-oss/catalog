@@ -5,7 +5,9 @@
 
 # Zeabur Catalog
 
-A tested catalog for Kubernetes clusters, in two parts:
+A tested catalog for Kubernetes clusters. A component is installed once for
+the whole cluster and used by every project; a template is installed per
+project and can be installed many times.
 
 - **Components** are what a cluster administrator installs once per cluster:
   ingress, certificates, metrics, database operators. For each capability the
