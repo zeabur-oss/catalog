@@ -87,7 +87,7 @@ func kubectl(args ...string) (string, error) { return Run(nil, "kubectl", args..
 // uninstalls everything and fails on anything left behind.
 func (t *Tester) Test(id string) (res Result) {
 	res.ID = id
-	order, err := t.Catalog.InstallOrder([]string{id}, t.Profile)
+	order, err := t.Catalog.InstallOrder(ByID(id), t.Profile)
 	if err != nil {
 		res.Err = err
 		return
@@ -189,7 +189,7 @@ func (t *Tester) Share() { t.shared = newRun() }
 // residue.
 func (t *Tester) Quick(id string, keep bool) error {
 	r := t.shared
-	order, err := t.Catalog.InstallOrder([]string{id}, t.Profile)
+	order, err := t.Catalog.InstallOrder(ByID(id), t.Profile)
 	if err != nil {
 		return err
 	}
@@ -239,7 +239,7 @@ func (t *Tester) Quick(id string, keep bool) error {
 
 // Install installs refs and their dependencies, and returns a function that
 // uninstalls them. Templates use it to install what they require.
-func (t *Tester) Install(refs []string) (uninstall func() error, err error) {
+func (t *Tester) Install(refs []Ref) (uninstall func() error, err error) {
 	start := time.Now()
 	defer t.Timings.Since("dependencies", start)
 	r := newRun()

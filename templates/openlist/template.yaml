@@ -13,7 +13,7 @@ metadata:
   license: AGPL-3.0-only
   homepage: https://github.com/OpenListTeam/OpenList
 
-requires: [{component: ingress/traefik}, {component: certificates/cert-manager}]
+requires: [{component: traefik}, {component: cert-manager}]
 
 services:
   - name: openlist

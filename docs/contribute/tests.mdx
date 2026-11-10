@@ -140,11 +140,11 @@ The `unready` list in [`config/e2e.yaml`](../../config/e2e.yaml) identifies comp
 
 `full` installs each template and its required components in a single-node amd64 cluster, runs smoke checks, then uses the same sampling method to measure idle memory and CPU usage for Pods in the template's Namespace.
 
-Component measurements are stored in `measurements/components/<capability>/<upstream>.json`, and template measurements in `measurements/templates/<id>.json`. `environments` has one entry for each environment. `distribution`, `profile`, `platform`, `kubernetesVersion` and `distributionVersion` name the environment. `distribution` is `kind`, `k3s`, `rke2` or `kubesolo`, and `distributionVersion` is the release of a distribution on the host. kind has none. `result` is `passed` or `failed`, and a reader treats any other value as not passed. `versions` lists the version of each release for a component, and the tag and digest of each image for a template.
+Component measurements are stored in `measurements/components/<id>.json`, and template measurements in `measurements/templates/<id>.json`. `environments` has one entry for each environment. `distribution`, `profile`, `platform`, `kubernetesVersion` and `distributionVersion` name the environment. `distribution` is `kind`, `k3s`, `rke2` or `kubesolo`, and `distributionVersion` is the release of a distribution on the host. kind has none. `result` is `passed` or `failed`, and a reader treats any other value as not passed. `versions` lists the version of each release for a component, and the tag and digest of each image for a template.
 
 ```json
 {
-  "component": "ingress/traefik",
+  "component": "traefik",
   "environments": [
     {
       "distribution": "k3s",
@@ -203,7 +203,7 @@ All values are disposable test data.
 
 ### Configure object storage test data
 
-Whenever an input value uses `.S3`, the tests start SeaweedFS (`object-storage/seaweedfs-operator`) in `templates-e2e-s3` with a test CA and HTTPS on TCP 443. Backups and object storage data go to this service.
+Whenever an input value uses `.S3`, the tests start SeaweedFS (`seaweedfs-operator`) in `templates-e2e-s3` with a test CA and HTTPS on TCP 443. Backups and object storage data go to this service.
 
 The `e2e-s3` Secret in the template's Namespace stores access credentials and a CA certificate named `ca.crt`.
 

@@ -19,10 +19,10 @@ metadata:
   homepage: https://github.com/danny-avila/LibreChat
 
 requires:
-  - {component: databases/percona-mongodb}
-  - {component: databases/cloudnative-pg}
-  - {component: ingress/traefik}
-  - {component: certificates/cert-manager}
+  - {component: percona-mongodb}
+  - {component: cloudnative-pg}
+  - {component: traefik}
+  - {component: cert-manager}
 
 services:
   - name: librechat

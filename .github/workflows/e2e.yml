@@ -82,7 +82,7 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup
       - name: iSCSI module for Longhorn
-        if: matrix.component == 'replicated-storage/longhorn'
+        if: matrix.component == 'longhorn'
         run: sudo modprobe iscsi_tcp
       # A distribution on the host runs without Docker, as on a server the
       # Zeabur installer sets up; KubeSolo requires it. Stopping Docker leaves

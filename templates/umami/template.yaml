@@ -15,9 +15,9 @@ metadata:
   homepage: https://umami.is/
 
 requires:
-  - {component: ingress/traefik}
-  - {component: certificates/cert-manager}
-  - {component: databases/cloudnative-pg}
+  - {component: traefik}
+  - {component: cert-manager}
+  - {component: cloudnative-pg}
 
 services:
   - name: umami
@@ -81,15 +81,15 @@ security:
         The database pods (CloudNativePG) call the Kubernetes API with an
         identity that the operator creates.
       mitigation: >-
-        The databases/cloudnative-pg component creates the permissions (RBAC)
+        The cloudnative-pg component creates the permissions (RBAC)
         for each cluster. The Umami pod itself has no token.
       locales:
         zh-TW:
           risk: "資料庫 Pod（CloudNativePG）會用運算子建立的身分去呼叫 Kubernetes API。"
-          mitigation: "databases/cloudnative-pg 元件會替每個叢集建立對應的權限（RBAC）。Umami 的 Pod 本身沒有權杖。"
+          mitigation: "cloudnative-pg 元件會替每個叢集建立對應的權限（RBAC）。Umami 的 Pod 本身沒有權杖。"
         zh-CN:
           risk: "数据库 Pod（CloudNativePG）会用运算符创建的身份去调用 Kubernetes API。"
-          mitigation: "databases/cloudnative-pg 组件会为每个集群创建对应的权限（RBAC）。Umami 的 Pod 本身没有令牌。"
+          mitigation: "cloudnative-pg 组件会为每个集群创建对应的权限（RBAC）。Umami 的 Pod 本身没有令牌。"
 
 smoke:
   - name: postgresql-ready

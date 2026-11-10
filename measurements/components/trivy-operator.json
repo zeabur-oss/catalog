@@ -1,0 +1,261 @@
+{
+  "component": "trivy-operator",
+  "environments": [
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 107,
+        "cpuMillis": 2
+      },
+      "requests": {
+        "memoryMiB": 64
+      },
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.37.0"
+        }
+      ],
+      "sourceDigest": "h1:XAYwwS7u23Bx3jnu1ALIyAeTmQ0kR05VVfz6K6yqD7o=",
+      "measuredAt": "2026-11-07"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 108,
+        "cpuMillis": 2
+      },
+      "requests": {
+        "memoryMiB": 64
+      },
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.37.0"
+        }
+      ],
+      "sourceDigest": "h1:XAYwwS7u23Bx3jnu1ALIyAeTmQ0kR05VVfz6K6yqD7o=",
+      "measuredAt": "2026-11-07"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 138,
+        "cpuMillis": 2
+      },
+      "requests": {
+        "memoryMiB": 128
+      },
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.37.0"
+        }
+      ],
+      "sourceDigest": "h1:XAYwwS7u23Bx3jnu1ALIyAeTmQ0kR05VVfz6K6yqD7o=",
+      "measuredAt": "2026-11-07"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 128,
+        "cpuMillis": 2
+      },
+      "requests": {
+        "memoryMiB": 128
+      },
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.37.0"
+        }
+      ],
+      "sourceDigest": "h1:XAYwwS7u23Bx3jnu1ALIyAeTmQ0kR05VVfz6K6yqD7o=",
+      "measuredAt": "2026-11-07"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 124,
+        "cpuMillis": 2
+      },
+      "requests": {
+        "memoryMiB": 64
+      },
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.37.0"
+        }
+      ],
+      "sourceDigest": "h1:XAYwwS7u23Bx3jnu1ALIyAeTmQ0kR05VVfz6K6yqD7o=",
+      "measuredAt": "2026-11-07"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 129,
+        "cpuMillis": 2
+      },
+      "requests": {
+        "memoryMiB": 64
+      },
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.37.0"
+        }
+      ],
+      "sourceDigest": "h1:XAYwwS7u23Bx3jnu1ALIyAeTmQ0kR05VVfz6K6yqD7o=",
+      "measuredAt": "2026-11-07"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 119,
+        "cpuMillis": 2
+      },
+      "requests": {
+        "memoryMiB": 64
+      },
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.37.0"
+        }
+      ],
+      "sourceDigest": "h1:XAYwwS7u23Bx3jnu1ALIyAeTmQ0kR05VVfz6K6yqD7o=",
+      "measuredAt": "2026-11-07"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 114,
+        "cpuMillis": 2
+      },
+      "requests": {
+        "memoryMiB": 64
+      },
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.37.0"
+        }
+      ],
+      "sourceDigest": "h1:XAYwwS7u23Bx3jnu1ALIyAeTmQ0kR05VVfz6K6yqD7o=",
+      "measuredAt": "2026-11-07"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 136,
+        "cpuMillis": 3
+      },
+      "requests": {
+        "memoryMiB": 64
+      },
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.37.0"
+        }
+      ],
+      "sourceDigest": "h1:XAYwwS7u23Bx3jnu1ALIyAeTmQ0kR05VVfz6K6yqD7o=",
+      "measuredAt": "2026-11-07"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "idle": {
+        "memoryMiB": 127,
+        "cpuMillis": 3
+      },
+      "requests": {
+        "memoryMiB": 64
+      },
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.37.0"
+        }
+      ],
+      "sourceDigest": "h1:XAYwwS7u23Bx3jnu1ALIyAeTmQ0kR05VVfz6K6yqD7o=",
+      "measuredAt": "2026-11-07"
+    }
+  ]
+}

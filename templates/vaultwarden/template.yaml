@@ -16,7 +16,7 @@ metadata:
   license: AGPL-3.0-only AND GPL-3.0-only
   homepage: https://github.com/dani-garcia/vaultwarden
 
-requires: [{component: ingress/traefik}, {component: certificates/cert-manager}]
+requires: [{component: traefik}, {component: cert-manager}]
 
 services:
   - name: vaultwarden

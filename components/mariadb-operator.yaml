@@ -1,0 +1,155 @@
+# Runs MariaDB from a MariaDB object in the tenant's namespace, standalone or
+# replicated, with users, grants and databases as objects and backups to S3. A
+# MySQL-compatible database under an OSI licence.
+apiVersion: catalog.zeabur.com/v1
+kind: Component
+metadata:
+  name: MariaDB Operator
+  # The operator is MIT; the MariaDB Server images it runs are GPL-2.0.
+  summary: Runs MariaDB databases, a MySQL-compatible choice, with backups to S3.
+  locales:
+    zh-TW:
+      summary: "執行與 MySQL 相容的 MariaDB 資料庫，並備份到 S3。"
+    zh-CN:
+      summary: "运行与 MySQL 兼容的 MariaDB 数据库，并备份到 S3。"
+  license: MIT AND GPL-2.0-only
+  homepage: https://github.com/mariadb-operator/mariadb-operator
+provides: {capability: databases}
+defaults:
+  single-node: optional
+  multi-node: optional
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.26.0-0"
+# The webhook's serving certificate comes from cert-manager.
+requires: [{capability: certificates}]
+persistsData: true
+
+releases:
+  # Its own chart so CRDs upgrade before the operator, as upstream installs it.
+  - name: mariadb-operator-crds
+    type: helm
+    namespace: mariadb-operator
+    repo: https://helm.mariadb.com/mariadb-operator
+    chart: mariadb-operator-crds
+    version: 26.10.1
+    chartDigest: sha256:2a0c8ae8ec848e18144eb2606d7860f01d08c783a512066d2cf8b784d13a64d4
+
+  - name: mariadb-operator
+    type: helm
+    namespace: mariadb-operator
+    repo: https://helm.mariadb.com/mariadb-operator
+    chart: mariadb-operator
+    version: 26.10.1
+    chartDigest: sha256:c569d8ae12fcd62c21c5b9c5e0acf33a5895d60ac040eb68ce7f5c55c8b8b81a
+    values: |
+      # Pinned by digest; a tag alone can move.
+      image:
+        repository: ghcr.io/mariadb-operator/mariadb-operator
+        tag: 26.10.1@sha256:37714fb240a53b2a496fd77d784879961b098bdbe0ef344ac7ba703ee3632017
+      crds:
+        # From the mariadb-operator-crds release.
+        enabled: false
+      extraEnv:
+        # With client-go's streaming list, the controllers start 90 s or more late
+        # on a new KubeSolo cluster, often past their cache-sync limit, and the
+        # manager exits.
+        - {name: KUBE_FEATURE_WatchListClient, value: "false"}
+      webhook:
+        # The operator image, pinned by digest.
+        image:
+          repository: ghcr.io/mariadb-operator/mariadb-operator
+          tag: 26.10.1@sha256:37714fb240a53b2a496fd77d784879961b098bdbe0ef344ac7ba703ee3632017
+        cert:
+          certManager:
+            # cert-manager issues the webhook certificate, so the chart's
+            # cert-controller Deployment is not installed.
+            enabled: true
+        # Restricted Pod Security; the chart sets none.
+        podSecurityContext:
+          runAsNonRoot: true
+          seccompProfile: {type: RuntimeDefault}
+        # Restricted Pod Security; the chart sets none.
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities: {drop: [ALL]}
+      # Restricted Pod Security; the chart sets none.
+      podSecurityContext:
+        runAsNonRoot: true
+        seccompProfile: {type: RuntimeDefault}
+      # Restricted Pod Security; the chart sets none.
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities: {drop: [ALL]}
+    profiles:
+      single-node: |
+        resources:
+          # The chart sets none; grows with MariaDB objects.
+          requests: {cpu: 10m, memory: 64Mi}
+          limits: {memory: 256Mi}
+        webhook:
+          resources:
+            # Only admits MariaDB objects.
+            requests: {cpu: 10m, memory: 32Mi}
+            limits: {memory: 128Mi}
+      multi-node: |
+        ha:
+          # Leader election keeps one active; survives a drain.
+          enabled: true
+          replicas: 2
+        resources:
+          # Single-node's request; the leader uses about 54Mi on a two-node
+          # cluster with apps. The limit leaves room for more MariaDB objects.
+          requests: {cpu: 10m, memory: 64Mi}
+          limits: {memory: 512Mi}
+        webhook:
+          ha:
+            # Admission keeps working during a drain.
+            enabled: true
+            replicas: 2
+          resources:
+            # Only admits MariaDB objects.
+            requests: {cpu: 10m, memory: 32Mi}
+            limits: {memory: 128Mi}
+
+detection:
+  crds: [mariadbs.k8s.mariadb.com]
+  helmCharts: [mariadb-operator]
+  workloads:
+    - kind: Deployment
+      labels: {app.kubernetes.io/name: mariadb-operator}
+
+security:
+  summary: Manages pods, Services, Secrets, PVCs, Jobs and RBAC for MariaDB objects in every namespace.
+  podSecurity: restricted
+
+leftovers: [persistentvolumeclaims]
+
+smoke:
+  - name: standalone
+    manifest: |
+      # Proves MariaDB runs under restricted Pod Security.
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: catalog-smoke
+        labels: {pod-security.kubernetes.io/enforce: restricted}
+      ---
+      apiVersion: k8s.mariadb.com/v1alpha1
+      kind: MariaDB
+      metadata: {name: smoke, namespace: catalog-smoke}
+      spec:
+        storage: {size: 1Gi}
+        podSecurityContext:
+          runAsNonRoot: true
+          runAsUser: 999
+          runAsGroup: 999
+          fsGroup: 999
+          seccompProfile: {type: RuntimeDefault}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {drop: [ALL]}
+    wait: ["-n catalog-smoke mariadb/smoke --for=condition=Ready"]
+    # Pulls the MariaDB image first.
+    timeout: 600s

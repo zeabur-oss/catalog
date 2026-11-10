@@ -35,15 +35,18 @@ list: [{name: first}]`,
 
 func TestInstallOrder(t *testing.T) {
 	cat := &Catalog{Components: []*Component{
-		{ID: "a/x", Capability: "a", Defaults: map[string]string{"single-node": "recommended"}, Requires: []Ref{{Capability: "b"}}},
-		{ID: "b/y", Capability: "b", Defaults: map[string]string{"single-node": "optional"}},
+		{ID: "x", Provides: &Provides{Capability: "a"}, Defaults: map[string]string{"single-node": "recommended"}, Requires: []Ref{{Capability: "b"}}},
+		{ID: "y", Provides: &Provides{Capability: "b"}, Defaults: map[string]string{"single-node": "optional"}},
 	}}
-	order, err := cat.InstallOrder([]string{"a/x"}, "single-node")
-	if err != nil || len(order) != 2 || order[0].ID != "b/y" {
+	order, err := cat.InstallOrder(ByID("x"), "single-node")
+	if err != nil || len(order) != 2 || order[0].ID != "y" {
 		t.Fatalf("got %v, %v", order, err)
 	}
-	cat.Components[1].Requires = []Ref{{Component: "a/x"}}
-	if _, err := cat.InstallOrder([]string{"a/x"}, "single-node"); err == nil {
+	if _, err := cat.InstallOrder([]Ref{{Component: "b"}}, "single-node"); err == nil {
+		t.Error("a component ref resolved a capability")
+	}
+	cat.Components[1].Requires = []Ref{{Component: "x"}}
+	if _, err := cat.InstallOrder(ByID("x"), "single-node"); err == nil {
 		t.Error("cycle not detected")
 	}
 }

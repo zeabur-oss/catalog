@@ -13,13 +13,13 @@ func logsManifests(t *testing.T) string {
 		t.Fatal(err)
 	}
 	for _, c := range cat.Components {
-		if c.ID == "logs/victoria-logs" {
+		if c.ID == "victoria-logs" {
 			if r, ok := c.Release("logs"); ok {
 				return r.Manifests
 			}
 		}
 	}
-	t.Fatal("logs/victoria-logs has no logs release")
+	t.Fatal("victoria-logs has no logs release")
 	return ""
 }
 
@@ -28,7 +28,7 @@ func logsManifests(t *testing.T) string {
 func TestLogCollectionLeavesOutOnlyInfrastructure(t *testing.T) {
 	m := regexp.MustCompile(`kubernetes\.pod_namespace:in\(([^)]*)\)`).FindStringSubmatch(logsManifests(t))
 	if m == nil {
-		t.Fatal("logs/victoria-logs has no namespace excludeFilter")
+		t.Fatal("victoria-logs has no namespace excludeFilter")
 	}
 	excluded := map[string]bool{}
 	for _, ns := range strings.Split(m[1], ",") {
@@ -55,7 +55,7 @@ func TestLogCollectionReadsTheAuditLog(t *testing.T) {
 		"fileCollector.timeField: stageTimestamp",
 	} {
 		if !strings.Contains(manifests, want) {
-			t.Errorf("logs/victoria-logs does not set %s", want)
+			t.Errorf("victoria-logs does not set %s", want)
 		}
 	}
 }

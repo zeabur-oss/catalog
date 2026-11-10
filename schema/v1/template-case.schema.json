@@ -136,13 +136,14 @@
         "description": { "$ref": "#/$defs/description" },
         "components": {
           "type": "array",
-          "description": "index.json components, with only the fields matching reads. The capability is the part of the id before the slash.",
+          "description": "index.json components, with only the fields matching reads.",
           "items": {
             "type": "object",
             "additionalProperties": false,
             "required": ["id"],
             "properties": {
-              "id": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+$" },
+              "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+              "provides": { "type": "object", "additionalProperties": false, "properties": { "capability": { "type": "string", "pattern": "^[a-z0-9-]+$" } } },
               "detection": {
                 "type": "object",
                 "additionalProperties": false,
@@ -167,7 +168,7 @@
           "type": "array",
           "items": {
             "oneOf": [
-              { "type": "object", "additionalProperties": false, "required": ["component"], "properties": { "component": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+$" } } },
+              { "type": "object", "additionalProperties": false, "required": ["component"], "properties": { "component": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" } } },
               { "type": "object", "additionalProperties": false, "required": ["capability"], "properties": { "capability": { "type": "string", "pattern": "^[a-z0-9-]+$" } } }
             ]
           }
@@ -249,7 +250,7 @@
     },
     "description": { "type": "string", "description": "The rule the case checks, in one or two sentences." },
     "inputName": { "type": "string", "pattern": "^[a-z][A-Za-z0-9]*$" },
-    "name": { "type": "string", "pattern": "^[a-z0-9-]+(/[a-z0-9-]+)?$" },
+    "name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
     "locales": {
       "type": "object",
       "description": "The same text in zh-TW and zh-CN.",

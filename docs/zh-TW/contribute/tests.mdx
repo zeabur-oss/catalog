@@ -140,11 +140,11 @@ description: 了解各層 CI 的執行時機與檢查內容，並設定範本測
 
 `full` 會在單節點 amd64 叢集安裝每個範本及其所需元件，再執行煙霧測試。接著，`full` 會量測範本 Namespace 內各 Pod 閒置時的記憶體與 CPU 用量，取樣方式與前述相同。
 
-元件的量測結果存放在 `measurements/components/<capability>/<upstream>.json`，範本的存放在 `measurements/templates/<id>.json`。`environments` 裡每個環境各有一筆，由 `distribution`、`profile`、`platform`、`kubernetesVersion` 和 `distributionVersion` 指出是哪個環境。`distribution` 是 `kind`、`k3s`、`rke2` 或 `kubesolo`。`distributionVersion` 是裝在主機上的發行版的版本，kind 沒有這個欄位。`result` 是 `passed` 或 `failed`，讀取端遇到其他值一律當作沒有通過。`versions` 列出元件每個 release 的版本，或範本每個映像檔的 tag 與 digest。
+元件的量測結果存放在 `measurements/components/<id>.json`，範本的存放在 `measurements/templates/<id>.json`。`environments` 裡每個環境各有一筆，由 `distribution`、`profile`、`platform`、`kubernetesVersion` 和 `distributionVersion` 指出是哪個環境。`distribution` 是 `kind`、`k3s`、`rke2` 或 `kubesolo`。`distributionVersion` 是裝在主機上的發行版的版本，kind 沒有這個欄位。`result` 是 `passed` 或 `failed`，讀取端遇到其他值一律當作沒有通過。`versions` 列出元件每個 release 的版本，或範本每個映像檔的 tag 與 digest。
 
 ```json
 {
-  "component": "ingress/traefik",
+  "component": "traefik",
   "environments": [
     {
       "distribution": "k3s",
@@ -203,7 +203,7 @@ description: 了解各層 CI 的執行時機與檢查內容，並設定範本測
 
 ### 設定物件儲存測試資料
 
-只要輸入值使用 `.S3`，測試就會在 `templates-e2e-s3` 啟動 SeaweedFS（`object-storage/seaweedfs-operator`）。SeaweedFS 使用測試 CA，並在 TCP 443 提供 HTTPS。備份與物件儲存資料都會送到這裡。
+只要輸入值使用 `.S3`，測試就會在 `templates-e2e-s3` 啟動 SeaweedFS（`seaweedfs-operator`）。SeaweedFS 使用測試 CA，並在 TCP 443 提供 HTTPS。備份與物件儲存資料都會送到這裡。
 
 範本 Namespace 內的 `e2e-s3` Secret 會儲存存取認證資訊，以及名為 `ca.crt` 的 CA 憑證。
 

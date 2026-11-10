@@ -26,7 +26,7 @@ description: 创建组件文件、通过本地检查，并提交包含 signed-of
 
 ### 创建组件文件
 
-参考类似的组件文件，创建 `components/<capability>/<upstream>.yaml`。
+参考类似的组件文件，创建 `components/<id>.yaml`。ID 是上游的名称，例如 `traefik`。在 `provides` 写明 capability，例如 `provides: {capability: ingress}`。
 
 为 `single-node` 和 `multi-node` 这两个 profile（配置组合）分别指定配置值，并各加一条注释说明原因。
 

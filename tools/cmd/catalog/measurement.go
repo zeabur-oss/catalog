@@ -17,7 +17,7 @@ import (
 	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
 
-// measurement is measurements/components/<capability>/<upstream>.json for a
+// measurement is measurements/components/<id>.json for a
 // component and measurements/templates/<id>.json for a template.
 type measurement struct {
 	Component    string        `json:"component,omitempty"`

@@ -149,7 +149,7 @@ func list(fs *flag.FlagSet, r *repo) error {
 				if ids != nil && !ids[s.id] {
 					continue
 				}
-				if !strings.Contains(s.id, "/") {
+				if !r.isComponent(s.id) {
 					jobs = append(jobs, job{Profile: p, Arch: "amd64", Template: s.id})
 					continue
 				}

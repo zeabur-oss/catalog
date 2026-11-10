@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
-	"strings"
 	"text/template"
 	"text/template/parse"
 
@@ -182,6 +181,9 @@ func Check(root string, cat *catalog.Catalog, all []*Template) error {
 		if !idPattern.MatchString(t.ID) || len(t.ID) > 49 {
 			fail("directory name must be a DNS label of at most 49 characters")
 		}
+		if _, ok := cat.Get(t.ID); ok {
+			fail("components/%s.yaml has the same ID", t.ID)
+		}
 		names := map[string]bool{}
 		for _, s := range t.Services {
 			if names[s.Name] {
@@ -202,7 +204,7 @@ func Check(root string, cat *catalog.Catalog, all []*Template) error {
 			fail("%v", err)
 		}
 		for _, p := range catalog.Profiles {
-			if _, err := cat.InstallOrder(catalog.RefNames(t.Requires), p); err != nil {
+			if _, err := cat.InstallOrder(t.Requires, p); err != nil {
 				fail("requires on %s: %v", p, err)
 			}
 		}
@@ -228,10 +230,14 @@ func CheckVersion(templateYAML, manifests []byte, version string) error {
 	return nil
 }
 
-// RequiresCertificates reports whether the template installs certificates.
-func (t *Template) RequiresCertificates() bool {
+// RequiresCertificates reports whether the template requires a component
+// that provides certificates.
+func (t *Template) RequiresCertificates(cat *catalog.Catalog) bool {
 	for _, r := range t.Requires {
-		if r.Capability == "certificates" || strings.HasPrefix(r.Component, "certificates/") {
+		if r.Capability == "certificates" {
+			return true
+		}
+		if c, ok := cat.Get(r.Component); ok && c.Capability() == "certificates" {
 			return true
 		}
 	}

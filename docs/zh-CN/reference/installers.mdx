@@ -11,11 +11,11 @@ description: 安装工具从 index.json 选择组件、排定顺序、装好后�
 - profile，即 `single-node` 或 `multi-node`。
 - 发行版，即 `k3s`、`rke2` 或 `kubesolo`。
 - 集群节点的平台，例如 `linux/amd64`。
-- 用户写的 `enable` 和 `disable` 列表。每一项可以是组件 ID（例如 `logs/victoria-logs`），也可以是 capability（例如 `logs`）。
+- 用户写的 `enable` 和 `disable` 列表。每一项可以是组件 ID（例如 `victoria-logs`），也可以是 capability（例如 `logs`）。
 
 ## 名称
 
-组件 ID 指的就是那个组件。写 capability 时，安装工具从这个 capability 下、在当前 profile 不是 `unsupported` 的组件里选一个。选法是按下列顺序排好，取第一个。
+名称是某个组件的 ID 时，指的就是那个组件。其他名称都当作 capability，对应组件的 `provides.capability`。安装工具从提供这个 capability、在当前 profile 不是 `unsupported` 的组件里选一个。选法是按下列顺序排好，取第一个。
 
 1. `testedOn` 在当前发行版下列有当前平台的组件排前面。
 2. 然后是当前 profile `recommended` 的组件。
@@ -85,13 +85,15 @@ kubectl wait --for=condition=Ready nodes.longhorn.io --all -n longhorn-system --
 ```yaml
 description: A default not tested on the distribution is installed with a warning.
 components:            # index.json components, with only the fields selection reads
-  - id: ingress/traefik
+  - id: traefik
+    provides: {capability: ingress}
     defaults: {single-node: recommended, multi-node: recommended}
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
       - {distribution: rke2, platforms: [linux/amd64]}
       - {distribution: kubesolo, platforms: [linux/amd64]}
-  - id: logs/victoria-logs
+  - id: victoria-logs
+    provides: {capability: logs}
     defaults: {single-node: recommended, multi-node: recommended}
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
@@ -104,16 +106,16 @@ config:
   # enable, disable: the person's lists
 want:
   components:          # in install order
-    - {id: ingress/traefik, why: default}
-    - {id: logs/victoria-logs, why: default}
+    - {id: traefik, why: default}
+    - {id: victoria-logs, why: default}
   warnings:            # in any order
-    - {kind: untested, component: logs/victoria-logs, distribution: rke2}
+    - {kind: untested, component: victoria-logs, distribution: rke2}
   # leftOut: {<id>: {reason: …, …}}
   # error: {kind: unknown, name: …}, in place of the rest
 ```
 
 运行用例的步骤如下。
 
-1. 用 `components` 建立索引。每个组件的 capability 是 ID 斜杠前的部分。某个 profile 没有 `installOrder` 时，只装组件本身。
+1. 用 `components` 建立索引。每个组件的 capability 是它的 `provides.capability`。某个 profile 没有 `installOrder` 时，只装组件本身。
 2. 按 `config` 选择组件。
 3. 和 `want` 比对。`want` 没写的列表或映射就是空的。原因、警告和错误都比对代码和字段，不比对安装工具显示的文字。

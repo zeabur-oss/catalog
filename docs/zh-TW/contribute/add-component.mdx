@@ -26,7 +26,7 @@ description: 建立元件檔案、完成本機檢查，再提交包含 signed-of
 
 ### 建立元件檔案
 
-參考相似的元件檔案，建立 `components/<capability>/<upstream>.yaml`。
+參考相似的元件檔案，建立 `components/<id>.yaml`。ID 是上游的名稱，例如 `traefik`。在 `provides` 寫出 capability，例如 `provides: {capability: ingress}`。
 
 分別指定 `single-node` 和 `multi-node` 這兩個 profile（設定組合）的設定值，並各加一則註解，說明設定原因。
 

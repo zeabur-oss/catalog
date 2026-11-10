@@ -31,8 +31,8 @@ func safeOperandContext(p, c map[string]any, w string, fail func(string, Rule, .
 	checkPodSecurity(nil, pod, "restricted", w, fail)
 }
 func checkPercona(r *Template, d map[string]any, docs []map[string]any, w string, fail func(string, Rule, ...string)) {
-	if !hasProvider(r, "databases/percona-mongodb") {
-		fail(w, "Percona operand requires exact databases/percona-mongodb")
+	if !hasProvider(r, "percona-mongodb") {
+		fail(w, "Percona operand requires exact percona-mongodb")
 	}
 	if len(r.Security.Risks) == 0 {
 		fail(w, "security.risks must describe the operator-generated pods, service account and probes")
@@ -102,7 +102,7 @@ func checkPercona(r *Template, d map[string]any, docs []map[string]any, w string
 }
 
 func checkPerconaBackup(r *Template, d map[string]any, docs []map[string]any, w string, fail func(string, Rule, ...string)) {
-	if !hasProvider(r, "databases/percona-mongodb") {
+	if !hasProvider(r, "percona-mongodb") {
 		fail(w, ErrPerconaBackupProvider)
 	}
 	spec := object(d["spec"])
@@ -139,8 +139,8 @@ func perconaStorageSafe(storage map[string]any) bool {
 	return text(storage["type"]) == "s3" && text(s3["credentialsSecret"]) != "" && strings.HasPrefix(text(s3["endpointUrl"]), "https://") && !truth(s3["insecureSkipTLSVerify"])
 }
 func checkMiddleware(r *Template, d map[string]any, w string, fail func(string, Rule, ...string)) {
-	if !hasProvider(r, "ingress/traefik") {
-		fail(w, "Middleware requires ingress/traefik")
+	if !hasProvider(r, "traefik") {
+		fail(w, "Middleware requires traefik")
 	}
 	spec := object(d["spec"])
 	if len(spec) != 1 || spec["ipAllowList"] == nil {
@@ -190,7 +190,7 @@ func declaredServiceAccount(docs []map[string]any, name string) bool {
 }
 
 func checkDragonfly(r *Template, d map[string]any, docs []map[string]any, w string, fail func(string, Rule, ...string)) {
-	if !hasProvider(r, "databases/dragonfly-operator") {
+	if !hasProvider(r, "dragonfly-operator") {
 		fail(w, ErrDragonflyProvider)
 	}
 	if len(r.Security.Risks) == 0 {
@@ -238,7 +238,7 @@ func checkMariaDBRef(spec map[string]any, docs []map[string]any, namespace, w st
 }
 
 func checkMariaDB(r *Template, d map[string]any, docs []map[string]any, namespace, w string, fail func(string, Rule, ...string)) {
-	if !hasProvider(r, "databases/mariadb-operator") {
+	if !hasProvider(r, "mariadb-operator") {
 		fail(w, ErrMariaDBProvider)
 	}
 	spec := object(d["spec"])

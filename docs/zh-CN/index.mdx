@@ -29,7 +29,7 @@ Zeabur Catalog 是一份在 CI 中实际安装并测试过的数据，分为组�
 ## 文件怎么放
 
 ```text
-components/<capability>/<upstream>.yaml   一个用途搭配一个上游，一个文件
+components/<id>.yaml                      一个上游一个文件，用途写在 provides
 templates/<id>/template.yaml              一个应用：输入、服务、安全、冒烟测试
 templates/<id>/manifests.yaml             它的 Kubernetes 对象
 schema/v1/                                两种文件的 JSON Schema
@@ -42,4 +42,4 @@ tools/                                    `catalog` 命令（Go）
 docs/                                     这份文档
 ```
 
-路径就是 ID：`components/ingress/traefik.yaml` 的 ID 是 `ingress/traefik`，`templates/n8n/` 的 ID 是 `n8n`。
+路径就是 ID：`components/traefik.yaml` 的 ID 是 `traefik`，`templates/n8n/` 的 ID 是 `n8n`。组件在 `provides` 写明自己提供的 capability，例如 `provides: {capability: ingress}`。组件和模板不会用同一个 ID。

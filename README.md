@@ -27,7 +27,7 @@ a cluster is missing; it never installs anything itself.
 ## Layout
 
 ```text
-components/<capability>/<upstream>.yaml   one file per capability × upstream
+components/<id>.yaml                      one file per upstream; provides names its capability
 templates/<id>/template.yaml              one application: inputs, services, security, smoke checks
 templates/<id>/manifests.yaml             its Kubernetes objects
 schema/v1/                                JSON Schemas for both
@@ -49,11 +49,12 @@ metadata:
   name: Traefik Proxy
   license: MIT                    # SPDX
   homepage: https://traefik.io/traefik/
-requires: [{capability: certificates}]   # or {component: <capability>/<upstream>}
+requires: [{capability: certificates}]   # or {component: <id>}
 ```
 
-The path is the ID: `components/ingress/traefik.yaml` is `ingress/traefik`,
-`templates/n8n/` is `n8n`.
+The path is the ID: `components/traefik.yaml` is `traefik`, `templates/n8n/` is
+`n8n`. A component names the capability it offers in `provides`, such as
+`provides: {capability: ingress}`. No component ID is also a template ID.
 
 ## Documentation
 

@@ -3,7 +3,8 @@ description: >
   with each component once. A component only another one needs is installed as
   a dependency.
 components:
-  - id: builds/zeabur-builder
+  - id: zeabur-builder
+    provides: {capability: builds}
     defaults: {single-node: optional, multi-node: optional}
     distributions: [k3s, rke2, kubesolo]
     testedOn:
@@ -11,26 +12,18 @@ components:
       - {distribution: rke2, platforms: [linux/amd64]}
       - {distribution: kubesolo, platforms: [linux/amd64]}
     installOrder:
-      single-node: [certificates/cert-manager, builds/zeabur-builder]
-      multi-node: [certificates/cert-manager, builds/zeabur-builder]
-  - id: certificates/cert-manager
+      single-node: [cert-manager, zeabur-builder]
+      multi-node: [cert-manager, zeabur-builder]
+  - id: cert-manager
+    provides: {capability: certificates}
     defaults: {single-node: recommended, multi-node: recommended}
     distributions: [k3s, rke2, kubesolo]
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
       - {distribution: rke2, platforms: [linux/amd64]}
       - {distribution: kubesolo, platforms: [linux/amd64]}
-  - id: ingress/traefik
-    defaults: {single-node: recommended, multi-node: recommended}
-    distributions: [k3s, rke2, kubesolo]
-    testedOn:
-      - {distribution: k3s, platforms: [linux/amd64]}
-      - {distribution: rke2, platforms: [linux/amd64]}
-      - {distribution: kubesolo, platforms: [linux/amd64]}
-    installOrder:
-      single-node: [certificates/cert-manager, ingress/traefik]
-      multi-node: [certificates/cert-manager, ingress/traefik]
-  - id: logs/victoria-logs
+  - id: traefik
+    provides: {capability: ingress}
     defaults: {single-node: recommended, multi-node: recommended}
     distributions: [k3s, rke2, kubesolo]
     testedOn:
@@ -38,9 +31,21 @@ components:
       - {distribution: rke2, platforms: [linux/amd64]}
       - {distribution: kubesolo, platforms: [linux/amd64]}
     installOrder:
-      single-node: [observability-operator/victoria-metrics-operator, logs/victoria-logs]
-      multi-node: [observability-operator/victoria-metrics-operator, logs/victoria-logs]
-  - id: observability-operator/victoria-metrics-operator
+      single-node: [cert-manager, traefik]
+      multi-node: [cert-manager, traefik]
+  - id: victoria-logs
+    provides: {capability: logs}
+    defaults: {single-node: recommended, multi-node: recommended}
+    distributions: [k3s, rke2, kubesolo]
+    testedOn:
+      - {distribution: k3s, platforms: [linux/amd64]}
+      - {distribution: rke2, platforms: [linux/amd64]}
+      - {distribution: kubesolo, platforms: [linux/amd64]}
+    installOrder:
+      single-node: [victoria-metrics-operator, victoria-logs]
+      multi-node: [victoria-metrics-operator, victoria-logs]
+  - id: victoria-metrics-operator
+    provides: {capability: observability-operator}
     defaults: {single-node: optional, multi-node: optional}
     distributions: [k3s, rke2, kubesolo]
     testedOn:
@@ -51,11 +56,11 @@ config:
   profile: multi-node
   distribution: rke2
   platform: linux/amd64
-  enable: [builds/zeabur-builder]
+  enable: [zeabur-builder]
 want:
   components:
-    - {id: certificates/cert-manager, why: default}
-    - {id: builds/zeabur-builder, why: enabled}
-    - {id: ingress/traefik, why: default}
-    - {id: observability-operator/victoria-metrics-operator, why: dependency}
-    - {id: logs/victoria-logs, why: default}
+    - {id: cert-manager, why: default}
+    - {id: traefik, why: default}
+    - {id: victoria-metrics-operator, why: dependency}
+    - {id: victoria-logs, why: default}
+    - {id: zeabur-builder, why: enabled}

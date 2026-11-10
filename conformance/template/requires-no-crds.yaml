@@ -1,9 +1,10 @@
 description: A component without detection.crds can't be told apart, so it is unknown.
 components:
-  - id: ingress/traefik
+  - id: traefik
+    provides: {capability: ingress}
 served:
   - {group: traefik.io, resource: ingressroutes}
-requires: [{component: ingress/traefik}, {capability: ingress}]
+requires: [{component: traefik}, {capability: ingress}]
 want:
-  ingress/traefik: unknown
+  traefik: unknown
   ingress: unknown

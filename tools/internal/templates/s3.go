@@ -32,7 +32,7 @@ const (
 var s3Manifest string
 
 // S3Component is the component that runs SeaweedFS. It requires cert-manager.
-const S3Component = "object-storage/seaweedfs-operator"
+const S3Component = "seaweedfs-operator"
 
 // startS3 runs SeaweedFS in s3Namespace and returns a function that deletes it.
 func startS3() (_ *S3, stop func() error, err error) {

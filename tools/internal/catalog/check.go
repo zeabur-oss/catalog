@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -55,6 +56,14 @@ func Check(root string, cat *Catalog) error {
 	}
 
 	for _, c := range cat.Components {
+		if !idPattern.MatchString(c.ID) {
+			fail(c.Path, "the file name must be lowercase letters, digits and single hyphens")
+		}
+		// An installer reads a name in enable or disable as a component ID
+		// first, so that ID must not hide another component's capability.
+		if o, ok := cat.Get(c.Capability()); ok && o.Capability() != c.Capability() {
+			fail(c.Path, "provides.capability: %s is the ID of another component", c.Capability())
+		}
 		for _, p := range licenses.problems(c) {
 			fail(c.Path, "%s", p)
 		}
@@ -123,12 +132,14 @@ func Check(root string, cat *Catalog) error {
 				ids = append(ids, c.ID)
 			}
 		}
-		if _, err := cat.InstallOrder(ids, p); err != nil {
+		if _, err := cat.InstallOrder(ByID(ids...), p); err != nil {
 			fail("components", "%s: %v", p, err)
 		}
 	}
 	return errors.Join(errs...)
 }
+
+var idPattern = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
 
 // testedKubeVersions returns the Kubernetes versions that
 // config/kubernetes.yaml renders and tests on.

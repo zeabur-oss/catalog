@@ -14,7 +14,7 @@ metadata:
   license: AGPL-3.0-or-later
   homepage: https://github.com/searxng/searxng
 
-requires: [{component: ingress/traefik}, {component: certificates/cert-manager}]
+requires: [{component: traefik}, {component: cert-manager}]
 
 services:
   - name: searxng

@@ -10,21 +10,21 @@ import (
 	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
 
-// scopeRepo is a catalog where metrics/server needs ingress/traefik, three
+// scopeRepo is a catalog where metrics-server needs traefik, three
 // templates need different parts of it, and the representative list is
-// traefik, storage/local and beta.
+// traefik, local-storage and beta.
 func scopeRepo(t *testing.T) *repo {
 	t.Helper()
 	dir := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(dir, "config"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, "config", "e2e.yaml"), []byte("templates: {}\nsmokeRepresentative: [ingress/traefik, storage/local, beta]\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "config", "e2e.yaml"), []byte("templates: {}\nsmokeRepresentative: [traefik, local-storage, beta]\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	t.Chdir(dir)
 	comp := func(id, capability, def string, requires ...string) *catalog.Component {
-		c := &catalog.Component{ID: id, Capability: capability, Path: "components/" + id + ".yaml",
+		c := &catalog.Component{ID: id, Provides: &catalog.Provides{Capability: capability}, Path: "components/" + id + ".yaml",
 			Defaults: map[string]string{"single-node": def}}
 		for _, r := range requires {
 			c.Requires = append(c.Requires, catalog.Ref{Component: r})
@@ -40,15 +40,15 @@ func scopeRepo(t *testing.T) *repo {
 	}
 	return &repo{
 		cat: &catalog.Catalog{Components: []*catalog.Component{
-			comp("ingress/traefik", "ingress", "recommended"),
-			comp("storage/local", "storage", "recommended"),
-			comp("metrics/server", "metrics", "optional", "ingress/traefik"),
-			comp("db/postgres", "db", "optional"),
+			comp("traefik", "ingress", "recommended"),
+			comp("local-storage", "storage", "recommended"),
+			comp("metrics-server", "metrics", "optional", "traefik"),
+			comp("postgres", "db", "optional"),
 		}},
 		templates: []*templates.Template{
-			tmpl("alpha", "db/postgres"),
-			tmpl("beta", "ingress/traefik", "storage/local"),
-			tmpl("gamma", "ingress/traefik", "storage/local"),
+			tmpl("alpha", "postgres"),
+			tmpl("beta", "traefik", "local-storage"),
+			tmpl("gamma", "traefik", "local-storage"),
 		},
 	}
 }
@@ -69,7 +69,7 @@ func selected(t *testing.T, r *repo, s scope) []string {
 
 func TestSmokeScopeSharedChange(t *testing.T) {
 	r := scopeRepo(t)
-	want := []string{"beta", "ingress/traefik", "storage/local"}
+	want := []string{"beta", "local-storage", "traefik"}
 	for _, c := range []struct {
 		name  string
 		files []string
@@ -101,7 +101,7 @@ func TestSmokeScopeKubernetesVersions(t *testing.T) {
 		t.Fatal(err)
 	}
 	got := selected(t, r, s)
-	for _, id := range []string{"alpha", "db/postgres", "metrics/server", "gamma"} {
+	for _, id := range []string{"alpha", "postgres", "metrics-server", "gamma"} {
 		if !slices.Contains(got, id) {
 			t.Errorf("%s is not selected in %v", id, got)
 		}
@@ -110,11 +110,11 @@ func TestSmokeScopeKubernetesVersions(t *testing.T) {
 
 func TestSmokeScopeComponentChange(t *testing.T) {
 	r := scopeRepo(t)
-	s, err := smokeScope(r, []string{"components/ingress/traefik.yaml"})
+	s, err := smokeScope(r, []string{"components/traefik.yaml"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"beta", "gamma", "ingress/traefik", "metrics/server"}
+	want := []string{"beta", "gamma", "metrics-server", "traefik"}
 	if got := selected(t, r, s); !slices.Equal(got, want) {
 		t.Errorf("selected %v, want the component and what installs it: %v", got, want)
 	}
@@ -122,12 +122,12 @@ func TestSmokeScopeComponentChange(t *testing.T) {
 
 func TestSharedChangeKeepsOwnChange(t *testing.T) {
 	r := scopeRepo(t)
-	s, err := smokeScope(r, []string{"config/e2e.yaml", "components/db/postgres.yaml"})
+	s, err := smokeScope(r, []string{"config/e2e.yaml", "components/postgres.yaml"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	got := selected(t, r, s)
-	for _, id := range []string{"beta", "db/postgres", "alpha"} {
+	for _, id := range []string{"beta", "postgres", "alpha"} {
 		if !slices.Contains(got, id) {
 			t.Errorf("%s is not selected in %v", id, got)
 		}

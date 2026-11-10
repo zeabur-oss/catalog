@@ -22,10 +22,10 @@ metadata:
   homepage: https://github.com/langgenius/dify
 
 requires:
-  - {component: databases/cloudnative-pg}
-  - {component: databases/dragonfly-operator}
-  - {component: ingress/traefik}
-  - {component: certificates/cert-manager}
+  - {component: cloudnative-pg}
+  - {component: dragonfly-operator}
+  - {component: traefik}
+  - {component: cert-manager}
 
 services:
   - name: dify

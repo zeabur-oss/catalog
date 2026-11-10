@@ -1,18 +1,18 @@
 # Test-only values merged after the profile values in e2e runs. They make a
 # component installable on kind and are never part of a recommendation.
 overrides:
-  metrics/metrics-server:
+  metrics-server:
     metrics-server: |
       args:
         # kind's kubelets serve self-signed certificates.
         - --metric-resolution=15s
         - --kubelet-insecure-tls
-  ingress/traefik:
+  traefik:
     traefik: |
       service:
         # kind has no load balancer; helm --wait would wait for an external IP forever.
         type: NodePort
-  replicated-storage/longhorn:
+  longhorn:
     longhorn: |
       defaultSettings:
         # e2e uninstalls after every test; the chart refuses to without it.
@@ -24,22 +24,22 @@ overrides:
 # measure them.
 unready:
   # The operator exits when it cannot mint an auth key with its OAuth client.
-  - remote-access/tailscale-operator
+  - tailscale-operator
 
 # What the smoke tier tests when a shared file changes: tools/, go.*, flake.*,
 # another config/ file or a workflow. Component and template IDs.
 smokeRepresentative:
-  - certificates/cert-manager
-  - ingress/traefik
-  - logs/victoria-logs
-  - metrics/metrics-server
-  - metrics/victoria-metrics
+  - cert-manager
+  - traefik
+  - victoria-logs
+  - metrics-server
+  - victoria-metrics
   - browserless
 
 # Smoke checks to skip, per component, with the reason. A check that does not
 # exist fails the run.
 skipSmoke:
-  certificates/cert-manager:
+  cert-manager:
     # The ACME issuers need Let's Encrypt, and e2e does not depend on outside
     # services. They never become Ready in CI, and nothing else waits for them.
     acme-issuers: needs Let's Encrypt

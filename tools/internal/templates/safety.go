@@ -36,9 +36,9 @@ func (r Rule) Error() string { return string(r) }
 const (
 	ErrNamespaceEscape       Rule = "resource escapes target namespace"
 	ErrClusterScoped         Rule = "cluster-scoped resources and RBAC are forbidden"
-	ErrTraefikProvider       Rule = "Traefik Ingress requires exact ingress/traefik provider"
-	ErrClusterIssuerProvider Rule = "ClusterIssuer annotation requires exact certificates/cert-manager provider"
-	ErrCNPGProvider          Rule = "CNPG workload requires exact databases/cloudnative-pg provider"
+	ErrTraefikProvider       Rule = "Traefik Ingress requires exact traefik provider"
+	ErrClusterIssuerProvider Rule = "ClusterIssuer annotation requires exact cert-manager provider"
+	ErrCNPGProvider          Rule = "CNPG workload requires exact cloudnative-pg provider"
 	ErrIngressPolicy         Rule = "a service listed in security.unauthenticated needs an ingress NetworkPolicy whose podSelector names it"
 	ErrUnknownService        Rule = "security.unauthenticated names a service the template does not declare"
 	ErrTemplateLabel         Rule = "pods must have the label " + TemplateLabel + " set to the template ID"
@@ -52,16 +52,16 @@ const (
 	ErrIPAllowListOnly       Rule = "only explicit ipAllowList Middleware supported"
 	ErrIPAllowListCIDR       Rule = "ipAllowList requires non-public, valid explicit CIDR"
 	ErrUnsupportedOverride   Rule = "unsupported override forbidden"
-	ErrDragonflyProvider     Rule = "Dragonfly requires exact databases/dragonfly-operator"
+	ErrDragonflyProvider     Rule = "Dragonfly requires exact dragonfly-operator"
 	ErrDragonflyDigest       Rule = "Dragonfly image must use sha256 digest"
 	ErrDragonflyPassword     Rule = "Dragonfly authentication.passwordFromSecret required"
 	ErrDragonflyFlag         Rule = "unauthenticated Dragonfly flag forbidden"
 	ErrMariaDBRefNamespace   Rule = "mariaDbRef escapes target namespace"
 	ErrMariaDBRefUndeclared  Rule = "mariaDbRef must name a MariaDB declared in this template"
-	ErrMariaDBProvider       Rule = "MariaDB Operator resources require exact databases/mariadb-operator"
+	ErrMariaDBProvider       Rule = "MariaDB Operator resources require exact mariadb-operator"
 	ErrMariaDBBackupS3       Rule = "backup must use S3 with explicit credentials and TLS verification"
 	ErrGlobalGrant           Rule = "Grant must name one database; global privileges forbidden"
-	ErrPerconaBackupProvider Rule = "Percona backup requires exact databases/percona-mongodb"
+	ErrPerconaBackupProvider Rule = "Percona backup requires exact percona-mongodb"
 	ErrPerconaBackupOverride Rule = "unsupported backup override forbidden"
 	ErrPerconaBackupMode     Rule = "only gzip-compressed logical Percona backups supported"
 	ErrPerconaBackupStorage  Rule = "backup must use the declared cluster's enabled S3 storage with explicit credentials and TLS verification"
@@ -142,10 +142,10 @@ func Safety(r *Template, b []byte, namespace string) error {
 		}
 		spec := object(d["spec"])
 		if k == "Ingress" {
-			if text(spec["ingressClassName"]) == "traefik" && !hasProvider(r, "ingress/traefik") {
+			if text(spec["ingressClassName"]) == "traefik" && !hasProvider(r, "traefik") {
 				fail(where, ErrTraefikProvider)
 			}
-			if text(object(meta["annotations"])["cert-manager.io/cluster-issuer"]) != "" && !hasProvider(r, "certificates/cert-manager") {
+			if text(object(meta["annotations"])["cert-manager.io/cluster-issuer"]) != "" && !hasProvider(r, "cert-manager") {
 				fail(where, ErrClusterIssuerProvider)
 			}
 		}
@@ -184,7 +184,7 @@ func Safety(r *Template, b []byte, namespace string) error {
 			if text(object(object(spec["inheritedMetadata"])["labels"])[TemplateLabel]) != r.ID {
 				fail(where+"/inheritedMetadata", ErrTemplateLabel)
 			}
-			if !hasProvider(r, "databases/cloudnative-pg") {
+			if !hasProvider(r, "cloudnative-pg") {
 				fail(where, ErrCNPGProvider)
 			}
 			if len(r.Security.Risks) == 0 {
@@ -192,8 +192,8 @@ func Safety(r *Template, b []byte, namespace string) error {
 			}
 		}
 		if strings.HasPrefix(api, "postgresql.cnpg.io/") || strings.HasPrefix(api, "barmancloud.cnpg.io/") {
-			if !hasProvider(r, "databases/cloudnative-pg") {
-				fail(where, "CNPG/Barman custom resources require databases/cloudnative-pg")
+			if !hasProvider(r, "cloudnative-pg") {
+				fail(where, "CNPG/Barman custom resources require cloudnative-pg")
 			}
 		}
 		if k == "Cluster" && api == "postgresql.cnpg.io/v1" {

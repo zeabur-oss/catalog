@@ -3,11 +3,11 @@ title: Component file format
 description: Write YAML with the shared envelope and component fields, and pin installation content with digests.
 ---
 
-Place component files in `components/<capability>/<upstream>.yaml`, with one file for each combination of capability (purpose category) and upstream. Each YAML file contains the shared envelope, installation content, and configuration. The path determines the ID. For example, `components/ingress/traefik.yaml` has the ID `ingress/traefik`.
+Place component files in `components/<id>.yaml`, with one file for each upstream. Each YAML file contains the shared envelope, installation content, and configuration. The file name is the ID. For example, `components/traefik.yaml` has the ID `traefik`. An ID is lowercase letters, digits and single hyphens, and no template has the same ID.
 
 ## Shared envelope
 
-Components and templates share an envelope of `apiVersion`, `kind`, `metadata`, and `requires`. `kind` distinguishes components from templates. Each entry of `requires` is `{capability: <capability>}` or `{component: <capability>/<upstream>}`.
+Components and templates share an envelope of `apiVersion`, `kind`, `metadata`, and `requires`. `kind` distinguishes components from templates. Each entry of `requires` is `{capability: <capability>}` or `{component: <id>}`.
 
 ```yaml
 apiVersion: catalog.zeabur.com/v1
@@ -16,7 +16,7 @@ metadata:
   name: Traefik Proxy
   license: MIT                    # SPDX
   homepage: https://traefik.io/traefik/
-requires: [{capability: certificates}]   # or {component: <capability>/<upstream>}
+requires: [{capability: certificates}]   # or {component: <id>}
 ```
 
 A component's `metadata` also has a `summary`: what it gives the cluster, in one plain sentence for people choosing components, with its translations in `locales`. A comment at the top of the file says why the catalog recommends the component.
@@ -42,6 +42,7 @@ metadata:
   name: Traefik Proxy
   license: MIT                    # SPDX; OSI-approved, or opt-in only (see below)
   homepage: https://traefik.io/traefik/
+provides: {capability: ingress}         # the capability it offers; see below for registry
 defaults: {single-node: recommended, multi-node: recommended}
 requires: [{capability: certificates}]  # installed first
 distributions: [k3s, rke2, kubesolo]    # distributions it supports and e2e tests it on
@@ -75,7 +76,6 @@ releases:                         # installed in order
   # or type: inline with manifests: |  objects applied as written
 
 inputs: []        # values to ask for or generate; Secrets are created from them
-provides: {...}   # an in-cluster registry other software uses
 resources: {...}  # memory it needs while working, on top of idle
 internalCRDs: []  # CRDs of detection.crds whose objects it writes itself
 networkPolicies: |  # traffic it needs where an installer isolates namespaces
@@ -91,6 +91,8 @@ leftovers: []     # what the upstream keeps on uninstall (e.g. CRDs)
 
 These fields tell an installer what a component offers, so the installer never needs to know a component by its ID.
 
+`provides.capability` is the capability the component offers, such as `ingress` or `logs`. A `requires` entry `{capability: <capability>}` installs one of the components that offer it. A component that offers no capability leaves it out, and `requires` names it with `{component: <id>}`. A capability isn't the ID of a component that offers another capability, because an installer reads a name in `enable` and `disable` as a component ID first.
+
 `provides.registry` is an OCI registry in the cluster: `host` is the `host:port` images name, and `ca` is the Secret key with the CA that signs its certificate. Removing the component waits until no Pod outside its namespaces runs an image from the host.
 
 An input with `generate: {type: clusterIP}` takes a fixed ClusterIP for a Service of the component. A node's container runtime cannot resolve the registry host, so an installer fills the input with a free address in the Service CIDR and points a registry mirror on each node there. Left empty, as in CI, Kubernetes assigns an address and only Pods reach the registry.
@@ -102,6 +104,7 @@ inputs:
     path: service.clusterIP
     generate: {type: clusterIP}
 provides:
+  capability: builds
   registry:
     host: zot.zot.svc:5000
     ca: {name: zot-tls, key: ca.crt, namespace: zot}
@@ -162,7 +165,7 @@ health:
 
 ```yaml
 contributes:
-  - target: {component: ingress/traefik, release: traefik}
+  - target: {component: traefik, release: traefik}
     values: |
       ...
 ```

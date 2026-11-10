@@ -29,7 +29,7 @@ Start with [adding a component](contribute/add-component.mdx) or [adding a templ
 ## File layout
 
 ```text
-components/<capability>/<upstream>.yaml   One file per capability and upstream pair
+components/<id>.yaml                      One file per upstream; provides names its capability
 templates/<id>/template.yaml              One application: inputs, services, security, smoke tests
 templates/<id>/manifests.yaml             Its Kubernetes objects
 schema/v1/                                JSON Schema for both file types
@@ -42,4 +42,4 @@ tools/                                    The `catalog` command (Go)
 docs/                                     This documentation
 ```
 
-The path is the ID: `components/ingress/traefik.yaml` has the ID `ingress/traefik`, and `templates/n8n/` has the ID `n8n`.
+The path is the ID: `components/traefik.yaml` has the ID `traefik`, and `templates/n8n/` has the ID `n8n`. A component names the capability it offers in `provides`, such as `provides: {capability: ingress}`. No component ID is also a template ID.

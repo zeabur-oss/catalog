@@ -1,0 +1,66 @@
+# Recommender only: nothing changes pods unless you apply a suggestion.
+apiVersion: catalog.zeabur.com/v1
+kind: Component
+metadata:
+  name: Vertical Pod Autoscaler (recommender only)
+  summary: Suggests CPU and memory requests from actual use.
+  locales:
+    zh-TW:
+      summary: "依實際用量建議 CPU 與記憶體的保留量。"
+    zh-CN:
+      summary: "根据实际用量建议 CPU 和内存的预留量。"
+  license: Apache-2.0
+  homepage: https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler
+provides: {capability: resource-recommendations}
+defaults:
+  single-node: optional
+  multi-node: optional
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.34.0-0"
+requires: [{component: metrics-server}]
+
+releases:
+  - name: vpa
+    type: helm
+    namespace: vpa-system
+    repo: https://kubernetes.github.io/autoscaler
+    chart: vertical-pod-autoscaler
+    version: 0.15.0
+    chartDigest: sha256:dc9682d3d41a92b535e01d0fc2726e9d595eacd22f676ccc3f5333b4c6425624
+    values: |
+      # The chart sets no container context and no seccomp profile; the namespace enforces Pod Security restricted.
+      podSecurityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile: {type: RuntimeDefault}
+      # Pod Security restricted requires both settings.
+      containerSecurityContext:
+        allowPrivilegeEscalation: false
+        capabilities: {drop: [ALL]}
+      recommender:
+        # Produces suggestions from metrics.k8s.io.
+        enabled: true
+        # Pinned by digest; a tag alone can move.
+        image:
+          repository: registry.k8s.io/autoscaling/vpa-recommender
+          tag: 1.8.1@sha256:edf874b830984d1df9d60f839874eba42de3465051922b929754edc42ea0f69b
+      updater:
+        # Evicts pods to apply suggestions; keep changes manual.
+        enabled: false
+      admissionController:
+        # Rewrites pod resources at admission; same reason.
+        enabled: false
+
+detection:
+  crds: [verticalpodautoscalers.autoscaling.k8s.io]
+  helmCharts: [vertical-pod-autoscaler]
+  workloads:
+    - kind: Deployment
+      labels: {app.kubernetes.io/component: recommender}
+
+security:
+  summary: Reads pods, workloads and metrics in all namespaces; writes VPA status.
+  podSecurity: restricted
+
+# The chart annotates its CRDs helm.sh/resource-policy: keep.
+leftovers: [customresourcedefinitions]

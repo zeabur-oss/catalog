@@ -16,9 +16,9 @@ metadata:
   homepage: https://wordpress.org/
 
 requires:
-  - {component: ingress/traefik}
-  - {component: certificates/cert-manager}
-  - {component: databases/mariadb-operator}
+  - {component: traefik}
+  - {component: cert-manager}
+  - {component: mariadb-operator}
 
 services:
   - name: wordpress

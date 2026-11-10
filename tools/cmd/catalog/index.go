@@ -12,7 +12,7 @@ import (
 )
 
 // indexVersion changes only on incompatible changes to index.json.
-const indexVersion = 3
+const indexVersion = 4
 
 type budgetConfig struct {
 	SingleNode struct {
@@ -49,7 +49,7 @@ func index(fs *flag.FlagSet, r *repo) error {
 			if c.Defaults[p] == "unsupported" {
 				continue
 			}
-			order, err := cat.InstallOrder([]string{c.ID}, p)
+			order, err := cat.InstallOrder(catalog.ByID(c.ID), p)
 			if err != nil {
 				return err
 			}
