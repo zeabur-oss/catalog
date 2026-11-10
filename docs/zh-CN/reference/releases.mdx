@@ -76,14 +76,14 @@ sha256sum --check --ignore-missing SHA256SUMS
     "profile": "single-node",
     "platform": {"os": "linux", "architecture": "amd64"},
     "kubernetesVersion": "v1.36.4",
-    "pods": [{"workload": "traefik", "kind": "Deployment", "memoryMiB": 22, "cpum": 3}],
+    "pods": [{"workload": "traefik", "kind": "Deployment", "memory": "22Mi", "cpu": "3m"}],
     "versions": [{"release": "traefik", "version": "41.7.1"}],
     "measuredAt": "2026-11-03"
   }
 ]
 ```
 
-每个环境都有 `pods`，每个工作负载一行，内容是 `workload` 名称、`kind`，以及其中一个 Pod 的空闲用量 `memoryMiB` 和 `cpum`，分别取整到整数 MiB 和 millicore。工作负载指 Deployment、StatefulSet、DaemonSet 或 Pod，Job 则记在它的控制器名下。这些行计入组件自己的命名空间里集群实际跑起来的 Pod，包括由 operator 创建的 Pod。索引不存总量：安装工具把每一行乘以该工作负载的副本数再求和。副本数和资源请求不测量，要从组件在该 profile 下渲染出的对象读取；DaemonSet 在每个节点上各跑一个 Pod。调度器按请求量放置 Pod，所以安装工具会把请求量求和，再和节点可分配的内存比较。
+每个环境都有 `pods`，每个工作负载一行，内容是 `workload` 名称、`kind`，以及其中一个 Pod 的空闲用量 `memory` 和 `cpu`。两者都是 Kubernetes 的数量写法，例如 `22Mi`、`3m`，内存取整到 MiB，CPU 取整到 millicore。工作负载指 Deployment、StatefulSet、DaemonSet 或单独的 Pod，Job 则记在它的控制器名下。这些行涵盖组件自己的 Namespace 里实际运行的 Pod，包括 operator 创建的 Pod。索引不存总量。要算总量，就把每一行的用量乘以该工作负载的副本数，再求和。副本数和资源请求不测量，要从组件在该 profile 下渲染出的对象读取；DaemonSet 在每个节点上各运行一个 Pod。调度器按请求量放置 Pod，所以安装工具会把内存请求量求和，再和节点可分配的内存比较。
 
 安装组件时，工具执行 `detection`，根据集群的 profile 提供默认启用（recommended）的组件，并向用户获取各组件的 `inputs`。接着按 `installOrder` 生成安装内容，将 `contributes` 合并到对应目标。选择组件的规则见[安装工具如何选择和安装组件](installers.mdx)。
 

@@ -76,14 +76,14 @@ A newer release can add a value to a field without a new `indexVersion`. A reade
     "profile": "single-node",
     "platform": {"os": "linux", "architecture": "amd64"},
     "kubernetesVersion": "v1.36.4",
-    "pods": [{"workload": "traefik", "kind": "Deployment", "memoryMiB": 22, "cpum": 3}],
+    "pods": [{"workload": "traefik", "kind": "Deployment", "memory": "22Mi", "cpu": "3m"}],
     "versions": [{"release": "traefik", "version": "41.7.1"}],
     "measuredAt": "2026-11-03"
   }
 ]
 ```
 
-Each environment has `pods`, one row for each workload with its `workload` name, `kind` and `memoryMiB` and `cpum`, the idle usage of one pod of it, in whole MiB and millicores. A workload is a Deployment, StatefulSet, DaemonSet or Pod, or the controller of a Job. The rows count the pods in the component's own namespaces as the cluster ran them, including pods that an operator creates. The index stores no total: an installer multiplies each row by the workload's replicas and sums them. Replicas and requests are not measured. Read them from the objects the component renders for the profile; a DaemonSet runs one pod on each node. The scheduler places pods by requests, so an installer compares the sum of the requests with a node's allocatable memory.
+Each environment has `pods`, one row for each workload: its `workload` name, its `kind`, and the idle `memory` and `cpu` of one pod of it. Both are Kubernetes quantities such as `22Mi` and `3m`, rounded to whole MiB and millicores. A workload is a Deployment, StatefulSet, DaemonSet, or bare Pod, or the controller of a Job. The rows cover the pods in the component's own namespaces as the cluster ran them, including pods that an operator creates. The index stores no total. To get one, multiply each row by the workload's replicas and add them up. Replicas and requests are not measured. Read them from the objects the component renders for the profile; a DaemonSet runs one pod on each node. The scheduler places pods by requests, so an installer compares the sum of the memory requests with a node's allocatable memory.
 
 When installing components, the tool runs `detection`, offers the components enabled by default (recommended) for the cluster's profile, and collects each component's `inputs` from the user. It then generates installation content according to `installOrder` and merges `contributes` into the corresponding targets. [How installers choose and install components](installers.mdx) gives the rules for choosing them.
 

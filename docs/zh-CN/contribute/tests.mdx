@@ -116,7 +116,7 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 
 ### 测量空闲资源用量
 
-每隔 10 秒采样各 Pod 的空闲内存和 CPU 用量，连续五个样本的总量一致就停止，最多测量 3 分钟。每个工作负载（Deployment、StatefulSet、DaemonSet、Job 的控制器，或单独的 Pod）只记一条，数值是其中一个 Pod 用量的中位数。总量、副本数和资源请求都不保存，读取的一方从渲染出的对象取得副本数和请求量。
+每隔 10 秒采样各 Pod 的空闲内存和 CPU 用量，连续五个样本的总量稳定就停止，最多测量 3 分钟。每个工作负载（Deployment、StatefulSet、DaemonSet、Job 的控制器，或单独的 Pod）只记一条，数值是其中一个 Pod 用量的中位数。总量、副本数和资源请求都不保存，读取的一方从渲染出的对象取得副本数和请求量。
 
 </Step>
 
@@ -153,7 +153,7 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
       "kubernetesVersion": "v1.36.5",
       "distributionVersion": "v1.36.5+k3s1",
       "result": "passed",
-      "pods": [{"workload": "traefik", "kind": "Deployment", "memoryMiB": 22, "cpum": 3}],
+      "pods": [{"workload": "traefik", "kind": "Deployment", "memory": "22Mi", "cpu": "3m"}],
       "versions": [{"release": "traefik", "version": "41.7.1"}],
       "measuredAt": "2026-11-03"
     }

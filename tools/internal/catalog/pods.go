@@ -9,16 +9,26 @@ import (
 	"strings"
 
 	"go.yaml.in/yaml/v3"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 // PodUsage is the idle usage of one pod of a workload: the median over the
 // workload's pods at the measurement time. Replicas and requests are not
 // measured; they come from the rendered objects.
 type PodUsage struct {
-	Workload  string  `json:"workload"`
-	Kind      string  `json:"kind"`
-	MemoryMiB float64 `json:"memoryMiB"`
-	CPUm      float64 `json:"cpum"`
+	Workload string `json:"workload"`
+	Kind     string `json:"kind"`
+	// Memory and CPU are Kubernetes quantities in JSON, such as "22Mi" and "3m".
+	Memory resource.Quantity `json:"memory"`
+	CPU    resource.Quantity `json:"cpu"`
+}
+
+// NewPodUsage is the usage of a pod of workload, with memory in MiB and CPU
+// in millicores rounded to whole numbers.
+func NewPodUsage(workload, kind string, memoryMiB, cpuMillis float64) PodUsage {
+	return PodUsage{Workload: workload, Kind: kind,
+		Memory: *resource.NewQuantity(int64(math.Round(memoryMiB))<<20, resource.BinarySI),
+		CPU:    *resource.NewMilliQuantity(int64(math.Round(cpuMillis)), resource.DecimalSI)}
 }
 
 // Workload names the controller that a pod belongs to.
@@ -98,7 +108,7 @@ func foldPods(usage map[string]podSample, workloads map[string]Workload) []PodUs
 	for w, g := range groups {
 		mem, _ := medianSpread(g.mem)
 		cpu, _ := medianSpread(g.cpu)
-		out = append(out, PodUsage{Workload: w.Name, Kind: w.Kind, MemoryMiB: math.Round(mem), CPUm: math.Round(cpu)})
+		out = append(out, NewPodUsage(w.Name, w.Kind, mem, cpu))
 	}
 	slices.SortFunc(out, func(a, b PodUsage) int {
 		return strings.Compare(a.Kind+"/"+a.Workload, b.Kind+"/"+b.Workload)
@@ -137,16 +147,18 @@ func Replicas(manifest []byte, nodes int) (map[string]int, error) {
 	}
 }
 
-// Total is the idle memory (MiB) and CPU (millicores) of all pods: each row
-// times its replicas. A workload without an entry in replicas runs one pod.
-func Total(pods []PodUsage, replicas map[string]int) (mem, cpu float64) {
+// Total is the idle memory and CPU of all pods: each row times its
+// replicas. A workload without an entry in replicas runs one pod.
+func Total(pods []PodUsage, replicas map[string]int) (mem, cpu resource.Quantity) {
 	for _, p := range pods {
 		n, ok := replicas[p.Kind+"/"+p.Workload]
 		if !ok {
 			n = 1
 		}
-		mem += p.MemoryMiB * float64(n)
-		cpu += p.CPUm * float64(n)
+		for range n {
+			mem.Add(p.Memory)
+			cpu.Add(p.CPU)
+		}
 	}
 	return mem, cpu
 }

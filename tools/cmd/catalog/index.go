@@ -9,6 +9,7 @@ import (
 	"slices"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/version"
 )
 
@@ -151,7 +152,7 @@ func budget(fs *flag.FlagSet, r *repo) error {
 	if err != nil {
 		return err
 	}
-	var total float64
+	var total resource.Quantity
 	var errs []error
 	for _, id := range recommended(cat, "single-node") {
 		pods, ok := latest(readMeasurement(measurementPath(id)))
@@ -166,12 +167,13 @@ func budget(fs *flag.FlagSet, r *repo) error {
 			continue
 		}
 		mem, _ := catalog.Total(pods, replicas)
-		total += mem
-		fmt.Printf("%-48s %5.0f MiB\n", id, mem)
+		total.Add(mem)
+		fmt.Printf("%-48s %8s\n", id, mem.String())
 	}
-	fmt.Printf("%-48s %5.0f MiB of %.0f\n", "total", total, cfg.SingleNode.BudgetMiB)
-	if total > cfg.SingleNode.BudgetMiB {
-		errs = append(errs, fmt.Errorf("%.0f MiB exceeds the %.0f MiB budget", total, cfg.SingleNode.BudgetMiB))
+	limit := resource.MustParse(fmt.Sprintf("%.0fMi", cfg.SingleNode.BudgetMiB))
+	fmt.Printf("%-48s %8s of %s\n", "total", total.String(), limit.String())
+	if total.Cmp(limit) > 0 {
+		errs = append(errs, fmt.Errorf("%s exceeds the %s budget", total.String(), limit.String()))
 	}
 	return errors.Join(errs...)
 }

@@ -1,7 +1,7 @@
 package catalog
 
 import (
-	"slices"
+	"encoding/json"
 	"testing"
 )
 
@@ -29,10 +29,10 @@ func TestPodsOfOneWorkloadFoldToTheMedian(t *testing.T) {
 		"x/db-0":      {mem: 200, cpu: 9},
 	}, workloads)
 	want := []PodUsage{
-		{Workload: "web", Kind: "Deployment", MemoryMiB: 60, CPUm: 3},
-		{Workload: "db", Kind: "StatefulSet", MemoryMiB: 200, CPUm: 9},
+		NewPodUsage("web", "Deployment", 60, 3),
+		NewPodUsage("db", "StatefulSet", 200, 9),
 	}
-	if !slices.Equal(got, want) {
+	if !equalPods(got, want) {
 		t.Errorf("got %+v, want %+v", got, want)
 	}
 }
@@ -78,19 +78,26 @@ metadata: {name: web}
 
 func TestTotalIsPodsTimesRenderedReplicas(t *testing.T) {
 	pods := []PodUsage{
-		{Workload: "web", Kind: "Deployment", MemoryMiB: 20, CPUm: 1},
-		{Workload: "db", Kind: "StatefulSet", MemoryMiB: 100, CPUm: 10},
-		{Workload: "agent", Kind: "DaemonSet", MemoryMiB: 5, CPUm: 1},
+		NewPodUsage("web", "Deployment", 20, 1),
+		NewPodUsage("db", "StatefulSet", 100, 10),
+		NewPodUsage("agent", "DaemonSet", 5, 1),
 		// Created by an operator, not in the rendered objects.
-		{Workload: "vmsingle", Kind: "Deployment", MemoryMiB: 50, CPUm: 4},
+		NewPodUsage("vmsingle", "Deployment", 50, 4),
 	}
-	for nodes, wantMem := range map[int]float64{1: 3*20 + 100 + 5 + 50, 3: 3*20 + 100 + 3*5 + 50} {
+	wantCPU := map[int]int64{1: 3*1 + 10 + 1 + 4, 3: 3*1 + 10 + 3*1 + 4}
+	for nodes, wantMem := range map[int]int64{1: 3*20 + 100 + 5 + 50, 3: 3*20 + 100 + 3*5 + 50} {
 		replicas, err := Replicas([]byte(rendered), nodes)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if mem, _ := Total(pods, replicas); mem != wantMem {
-			t.Errorf("%d nodes: total = %v MiB, want %v", nodes, mem, wantMem)
+		if mem, cpu := Total(pods, replicas); mem.Value() != wantMem<<20 || cpu.MilliValue() != wantCPU[nodes] {
+			t.Errorf("%d nodes: total = %v and %v, want %d MiB and %dm", nodes, mem.String(), cpu.String(), wantMem, wantCPU[nodes])
 		}
 	}
+}
+
+func equalPods(a, b []PodUsage) bool {
+	x, _ := json.Marshal(a)
+	y, _ := json.Marshal(b)
+	return string(x) == string(y)
 }
