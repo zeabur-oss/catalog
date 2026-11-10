@@ -81,16 +81,16 @@ func E2E(t *catalog.Tester, r *Template, values E2EValues, measure bool) (usage 
 		return nil, err
 	}
 
-	refs := catalog.RefNames(r.Requires)
+	refs := slices.Clone(r.Requires)
 	if useS3 {
-		refs = append(refs, S3Component)
+		refs = append(refs, catalog.Ref{Component: S3Component})
 	}
 	uninstall, err := t.Install(refs)
 	defer func() { err = errors.Join(err, uninstall()) }()
 	if err != nil {
 		return nil, err
 	}
-	if r.RequiresCertificates() {
+	if r.RequiresCertificates(t.Catalog) {
 		issuer := []byte(`{"apiVersion": "cert-manager.io/v1", "kind": "ClusterIssuer", "metadata": {"name": "` + selfSignedIssuer + `"}, "spec": {"selfSigned": {}}}`)
 		if _, err := kubectl(issuer, "apply", "-f", "-"); err != nil {
 			return nil, err

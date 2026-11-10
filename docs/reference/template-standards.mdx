@@ -12,7 +12,7 @@ Every template in Zeabur Catalog must follow these rules. When you add or update
 - Every service must specify a security profile (`restricted` or `baseline`), resource requests and limits, and ports. The service name must match the corresponding Deployment, StatefulSet, or database object name. The service's CPU and memory values must equal the totals across all containers in that object, and its ports must match the containers' named ports. `catalog template lint` checks resource totals and ports.
 - `security` must cover the risks administrators need to know before deployment, each with its mitigation.
 - `smoke` must include smoke checks that prove the application works, including resource status conditions and HTTP or SQL checks against the running service.
-- `requires` must list the components the template needs as `{capability: <capability>}` or `{component: <capability>/<upstream>}`. A capability identifies a component's functional category.
+- `requires` must list the components the template needs as `{capability: <capability>}` or `{component: <id>}`. A capability is what a component offers, which it declares in `provides.capability`.
 
 ## Licenses and images
 

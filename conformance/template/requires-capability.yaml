@@ -1,10 +1,13 @@
-description: <capability> is installed when discovery serves a CRD of any component of the capability.
+description: "{capability: <name>} is installed when discovery serves a CRD of any component of the capability."
 components:
-  - id: databases/cloudnative-pg
+  - id: cloudnative-pg
+    provides: {capability: databases}
     detection: {crds: [clusters.postgresql.cnpg.io]}
-  - id: databases/percona-mongodb
+  - id: percona-mongodb
+    provides: {capability: databases}
     detection: {crds: [perconaservermongodbs.psmdb.percona.com]}
-  - id: certificates/cert-manager
+  - id: cert-manager
+    provides: {capability: certificates}
     detection: {crds: [certificates.cert-manager.io]}
 served:
   - {group: psmdb.percona.com, resource: perconaservermongodbs}

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/zeabur-oss/catalog/schema/v1/component.schema.json",
   "title": "Component",
-  "description": "One upstream for one capability, at components/<capability>/<upstream>.yaml. A cluster administrator installs it.",
+  "description": "One upstream, at components/<id>.yaml. A cluster administrator installs it.",
   "type": "object",
   "additionalProperties": false,
   "required": ["apiVersion", "kind", "metadata", "defaults", "distributions", "kubeVersion", "releases", "detection", "security"],
@@ -94,10 +94,11 @@
     },
     "provides": {
       "type": "object",
-      "description": "What it offers other software in the cluster, beyond its capability.",
+      "description": "What it offers other software in the cluster.",
       "additionalProperties": false,
       "minProperties": 1,
       "properties": {
+        "capability": { "type": "string", "pattern": "^[a-z0-9-]+$", "description": "The capability it offers, such as logs. A requires entry {capability: <name>} installs one component that offers it." },
         "registry": {
           "type": "object",
           "description": "An OCI registry in the cluster that nodes pull from.",
@@ -281,12 +282,12 @@
     },
     "mode": { "enum": ["recommended", "optional", "unsupported"] },
     "podSecurity": { "enum": ["restricted", "baseline", "privileged"] },
-    "id": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+$" },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "description": "The file name without .yaml." },
     "componentRef": {
       "type": "object",
       "additionalProperties": false,
       "required": ["component"],
-      "properties": { "component": { "$ref": "#/$defs/id", "description": "<capability>/<upstream>." } }
+      "properties": { "component": { "$ref": "#/$defs/id" } }
     },
     "ref": {
       "description": "A component by id, or a capability: its recommended upstream on the profile, else an optional one.",

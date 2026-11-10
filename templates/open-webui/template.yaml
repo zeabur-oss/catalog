@@ -17,7 +17,7 @@ metadata:
   # Also: https://github.com/open-webui/pipelines
   homepage: https://github.com/open-webui/open-webui
 
-requires: [{component: ingress/traefik}, {component: certificates/cert-manager}]
+requires: [{component: traefik}, {component: cert-manager}]
 
 services:
   - name: open-webui

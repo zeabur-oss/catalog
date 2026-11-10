@@ -59,10 +59,10 @@ pattern 使用 [RE2 語法](https://github.com/google/re2/wiki/Syntax)。要比�
 
 ## 範本需要的元件
 
-`requires` 的每一項是 `{component: <capability>/<name>}` 或 `{capability: <capability>}`，項目唯一欄位的值就是它的名稱。`catalog validate` 會檢查每一項都對得到這個版本裡的元件。
+`requires` 的每一項是 `{component: <id>}` 或 `{capability: <capability>}`，項目唯一欄位的值就是它的名稱。`catalog validate` 會檢查每一項都對得到這個版本裡的元件。
 
-- `{component: <capability>/<name>}` 對到 ID 相同的那個元件。
-- `{capability: <capability>}` 對到這個 capability 底下所有的元件。
+- `{component: <id>}` 對到 ID 相同的那個元件。
+- `{capability: <capability>}` 對到 `provides.capability` 是這個 capability 的所有元件。
 
 用戶端依 kube-apiserver 提供的資源判斷元件裝好了沒，也就是 discovery（`kubectl api-resources`）列出的資源。每個名稱會是下列三種狀態之一：
 
@@ -114,18 +114,20 @@ want:
 元件案例有 `components`：
 
 ```yaml
-description: <capability>/<name> is installed when discovery serves a CRD of that component, …
+description: "{component: <id>} is installed when discovery serves a CRD of that component, …"
 components:          # index.json components, with only the fields matching reads
-  - id: databases/cloudnative-pg
+  - id: cloudnative-pg
+    provides: {capability: databases}
     detection: {crds: [clusters.postgresql.cnpg.io, poolers.postgresql.cnpg.io]}
-  - id: databases/percona-mongodb
+  - id: percona-mongodb
+    provides: {capability: databases}
     detection: {crds: [perconaservermongodbs.psmdb.percona.com]}
 served:              # what discovery lists; left out when discovery fails
   - {group: postgresql.cnpg.io, resource: clusters}
-requires: [{component: databases/cloudnative-pg}, {component: databases/percona-mongodb}]
+requires: [{component: cloudnative-pg}, {component: percona-mongodb}]
 want:
-  databases/cloudnative-pg: installed
-  databases/percona-mongodb: missing
+  cloudnative-pg: installed
+  percona-mongodb: missing
 ```
 
 文字案例有 `language`、範本的文字欄位，以及讀者應該看到的文字。
@@ -135,7 +137,7 @@ want:
 {/* vale ZeaburZhTW.Terms = NO */}
 
 1. 渲染案例：用 `options` 渲染 `template` 和 `manifests`，再把渲染出的物件和 `want` 比對。檢查沒過時，改比對那項檢查的代碼和 `input`。比對代碼和欄位，不比對用戶端顯示的文字。
-2. 元件案例：每個元件的 capability 是 ID 斜線前的部分。找出 `requires` 裡每一項的狀態，再和以名稱為鍵的 `want` 比對。
+2. 元件案例：每個元件的 capability 是它的 `provides.capability`。找出 `requires` 裡每一項的狀態，再和以名稱為鍵的 `want` 比對。
 3. 文字案例：依 `language` 挑出要顯示的文字，再和 `want` 比對。`want` 沒寫的清單或對照表就是空的。
 
 {/* vale ZeaburZhTW.Terms = YES */}

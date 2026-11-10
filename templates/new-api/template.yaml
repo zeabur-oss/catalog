@@ -15,9 +15,9 @@ metadata:
   homepage: https://github.com/QuantumNous/new-api
 
 requires:
-  - {component: ingress/traefik}
-  - {component: certificates/cert-manager}
-  - {component: databases/cloudnative-pg}
+  - {component: traefik}
+  - {component: cert-manager}
+  - {component: cloudnative-pg}
 
 services:
   - name: new-api

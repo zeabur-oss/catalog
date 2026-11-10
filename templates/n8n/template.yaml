@@ -18,9 +18,9 @@ metadata:
   homepage: https://github.com/n8n-io/n8n
 
 requires:
-  - {component: ingress/traefik}
-  - {component: certificates/cert-manager}
-  - {component: databases/cloudnative-pg}
+  - {component: traefik}
+  - {component: cert-manager}
+  - {component: cloudnative-pg}
 
 services:
   - name: n8n
@@ -129,16 +129,16 @@ security:
         The database pods (CloudNativePG) must call the Kubernetes API with an
         identity that the database operator creates.
       mitigation: >-
-        The databases/cloudnative-pg component creates separate permissions
+        The cloudnative-pg component creates separate permissions
         for each database cluster. This exception never applies to the n8n and
         task-runner Pods.
       locales:
         zh-TW:
           risk: "資料庫 Pod（CloudNativePG）必須用資料庫 operator 建立的身分去呼叫 Kubernetes API。"
-          mitigation: "databases/cloudnative-pg 元件會為每個資料庫叢集各建一組權限。這個例外絕不會套用到 n8n 和任務執行器的 Pod。"
+          mitigation: "cloudnative-pg 元件會為每個資料庫叢集各建一組權限。這個例外絕不會套用到 n8n 和任務執行器的 Pod。"
         zh-CN:
           risk: "数据库 Pod（CloudNativePG）必须用数据库 operator 创建的身份去调用 Kubernetes API。"
-          mitigation: "databases/cloudnative-pg 组件会为每个数据库集群各建一组权限。这个例外绝不会用在 n8n 和任务执行器的 Pod 上。"
+          mitigation: "cloudnative-pg 组件会为每个数据库集群各建一组权限。这个例外绝不会用在 n8n 和任务执行器的 Pod 上。"
     - risk: No SMTP server is configured.
       mitigation: >-
         Email invitations and password-reset mail do not work until you

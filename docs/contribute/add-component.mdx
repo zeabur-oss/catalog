@@ -26,7 +26,7 @@ If the license is `optInOnly` (`SSPL-1.0`), every profile must mark the componen
 
 ### Create a component file
 
-Use a similar component file as a reference to create `components/<capability>/<upstream>.yaml`.
+Use a similar component file as a reference to create `components/<id>.yaml`. The ID is the upstream's name, such as `traefik`. Name the capability in `provides`, such as `provides: {capability: ingress}`.
 
 Specify configuration values for each of the two profiles (configuration sets), `single-node` and `multi-node`, and add a comment for each profile explaining the choice.
 

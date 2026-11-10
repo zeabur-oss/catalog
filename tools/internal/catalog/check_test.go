@@ -1,6 +1,8 @@
 package catalog
 
 import (
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 )
@@ -69,7 +71,7 @@ func TestProvisionProblems(t *testing.T) {
 
 func TestHealthChecksStayReadOnlyKubectlWaits(t *testing.T) {
 	const root = "../../.."
-	const path = "components/ingress/traefik.yaml"
+	const path = "components/traefik.yaml"
 	cat, err := Load(root)
 	if err != nil {
 		t.Fatal(err)
@@ -124,5 +126,32 @@ func TestKubeVersionMustCoverTheTestedVersions(t *testing.T) {
 				t.Errorf("checkKubeVersion(%q, %q) = %v, want ok %v", c.kubeVersion, c.version, err, c.ok)
 			}
 		})
+	}
+}
+
+func TestCapabilityMustNotBeAnotherComponentsID(t *testing.T) {
+	const root = "../../.."
+	cat, err := Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	traefik, _ := cat.Get("traefik")
+	traefik.Provides.Capability = "cert-manager"
+	if err := Check(root, cat); err == nil {
+		t.Error("Check accepted a capability that is the ID of another component")
+	}
+}
+
+func TestLoadRefusesCapabilityFolders(t *testing.T) {
+	root := t.TempDir()
+	dir := filepath.Join(root, "components", "ingress")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "traefik.yaml"), []byte("kind: Component\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Load(root); err == nil {
+		t.Error("Load accepted components/ingress/traefik.yaml")
 	}
 }

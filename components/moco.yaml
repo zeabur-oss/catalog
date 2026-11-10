@@ -1,0 +1,122 @@
+# Runs MySQL from a MySQLCluster object in the tenant's namespace, one instance
+# or a semi-synchronous primary with replicas, with backups and point-in-time
+# recovery from S3. For applications that need MySQL itself.
+apiVersion: catalog.zeabur.com/v1
+kind: Component
+metadata:
+  name: MOCO
+  # The operator is Apache-2.0; the MySQL images it runs are GPL-2.0.
+  summary: Runs MySQL 8 databases with replicas and backups to S3.
+  locales:
+    zh-TW:
+      summary: "執行 MySQL 8 資料庫，支援副本，並能備份到 S3。"
+    zh-CN:
+      summary: "运行 MySQL 8 数据库，支持副本，并能备份到 S3。"
+  license: Apache-2.0 AND GPL-2.0-only
+  homepage: https://cybozu-go.github.io/moco/
+provides: {capability: databases}
+defaults:
+  single-node: optional
+  multi-node: optional
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.22.0-0"
+# The webhook and the controller-agent mTLS certificates come from cert-manager.
+requires: [{capability: certificates}]
+persistsData: true
+
+releases:
+  - name: moco
+    type: helm
+    namespace: moco-system
+    repo: https://cybozu-go.github.io/moco/
+    chart: moco
+    version: 0.27.0
+    chartDigest: sha256:c0d02d0c8081bcb8b640bb69c88506002d6374b14644a6ab15f89f16054cce0a
+    values: |
+      # Pinned by digest; a tag alone can move.
+      image:
+        repository: ghcr.io/cybozu-go/moco
+        tag: 0.37.0@sha256:32e7cab1bdd8ea302e570685696287a9524017f26eaf4ed63d5929e8053d6fce
+    profiles:
+      single-node: |
+        # One node: a second replica gains nothing.
+        replicaCount: 1
+        resources:
+          # The chart asks for 100m and 20Mi; grows with MySQLClusters.
+          requests: {cpu: 10m, memory: 64Mi}
+          limits: {memory: 256Mi}
+      multi-node: |
+        # The chart's default, stated: leader election keeps one active.
+        replicaCount: 2
+        resources:
+          # Single-node's request; the leader uses about 46Mi on a two-node
+          # cluster with apps. The limit leaves room for more MySQLClusters.
+          requests: {cpu: 10m, memory: 64Mi}
+          limits: {memory: 512Mi}
+
+detection:
+  crds: [mysqlclusters.moco.cybozu.com]
+  helmCharts: [moco]
+  workloads:
+    - kind: Deployment
+      labels: {app.kubernetes.io/name: moco}
+
+security:
+  summary: >
+    Manages pods, StatefulSets, Services, Secrets, PVCs, CronJobs, Jobs and
+    Roles for MySQLClusters in every namespace, and copies certificates into them.
+  podSecurity: baseline
+
+# The CRDs carry helm.sh/resource-policy: keep.
+# The chart annotates its CRDs helm.sh/resource-policy: keep.
+leftovers: [customresourcedefinitions, persistentvolumeclaims]
+
+smoke:
+  - name: one-instance
+    manifest: |
+      # Proves MySQL runs under restricted Pod Security.
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: catalog-smoke
+        labels: {pod-security.kubernetes.io/enforce: restricted}
+      ---
+      apiVersion: moco.cybozu.com/v1beta2
+      kind: MySQLCluster
+      metadata: {name: smoke, namespace: catalog-smoke}
+      spec:
+        replicas: 1
+        podTemplate:
+          spec:
+            securityContext:
+              runAsNonRoot: true
+              seccompProfile: {type: RuntimeDefault}
+            containers:
+              - name: mysqld
+                image: ghcr.io/cybozu-go/moco/mysql:8.4.10.1
+                securityContext:
+                  runAsUser: 10000
+                  runAsGroup: 10000
+                  allowPrivilegeEscalation: false
+                  capabilities: {drop: [ALL]}
+          overwriteContainers:
+            - name: agent
+              securityContext: &system
+                runAsUser: 10000
+                runAsGroup: 10000
+                allowPrivilegeEscalation: false
+                capabilities: {drop: [ALL]}
+            - name: moco-init
+              securityContext: *system
+            - name: copy-moco-init
+              securityContext: *system
+            - name: slow-log
+              securityContext: *system
+        volumeClaimTemplates:
+          - metadata: {name: mysql-data}
+            spec:
+              accessModes: [ReadWriteOnce]
+              resources: {requests: {storage: 1Gi}}
+    wait: ["-n catalog-smoke mysqlcluster/smoke --for=condition=Healthy"]
+    # Pulls the MySQL image and initialises the data directory first.
+    timeout: 600s

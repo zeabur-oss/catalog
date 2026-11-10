@@ -54,10 +54,10 @@ pattern 使用 [RE2 语法](https://github.com/google/re2/wiki/Syntax)。要匹�
 
 ## 模板需要的组件
 
-`requires` 的每一项是 `{component: <capability>/<name>}` 或 `{capability: <capability>}`，项目唯一字段的值就是它的名称。`catalog validate` 会检查每一项都能对应到这个版本里的组件。
+`requires` 的每一项是 `{component: <id>}` 或 `{capability: <capability>}`，项目唯一字段的值就是它的名称。`catalog validate` 会检查每一项都能对应到这个版本里的组件。
 
-- `{component: <capability>/<name>}` 对应 ID 相同的那个组件。
-- `{capability: <capability>}` 对应这个 capability 下的所有组件。
+- `{component: <id>}` 对应 ID 相同的那个组件。
+- `{capability: <capability>}` 对应 `provides.capability` 是这个 capability 的所有组件。
 
 客户端根据 kube-apiserver 提供的资源判断组件是否已安装，也就是 discovery（`kubectl api-resources`）列出的资源。每个名称处于下面三种状态之一：
 
@@ -109,18 +109,20 @@ want:
 组件用例有 `components`：
 
 ```yaml
-description: <capability>/<name> is installed when discovery serves a CRD of that component, …
+description: "{component: <id>} is installed when discovery serves a CRD of that component, …"
 components:          # index.json components, with only the fields matching reads
-  - id: databases/cloudnative-pg
+  - id: cloudnative-pg
+    provides: {capability: databases}
     detection: {crds: [clusters.postgresql.cnpg.io, poolers.postgresql.cnpg.io]}
-  - id: databases/percona-mongodb
+  - id: percona-mongodb
+    provides: {capability: databases}
     detection: {crds: [perconaservermongodbs.psmdb.percona.com]}
 served:              # what discovery lists; left out when discovery fails
   - {group: postgresql.cnpg.io, resource: clusters}
-requires: [{component: databases/cloudnative-pg}, {component: databases/percona-mongodb}]
+requires: [{component: cloudnative-pg}, {component: percona-mongodb}]
 want:
-  databases/cloudnative-pg: installed
-  databases/percona-mongodb: missing
+  cloudnative-pg: installed
+  percona-mongodb: missing
 ```
 
 文字用例有 `language`、模板的文字字段，以及读者应该看到的文字。
@@ -128,5 +130,5 @@ want:
 运行用例的步骤如下。
 
 1. 渲染用例：用 `options` 渲染 `template` 和 `manifests`，再把渲染出的对象与 `want` 比较。检查没通过时，改为比较那项检查的代码和 `input`。比较代码和字段，不比较客户端显示的文字。
-2. 组件用例：每个组件的 capability 是 ID 斜杠前的部分。找出 `requires` 里每一项的状态，再与以名称为键的 `want` 比较。
+2. 组件用例：每个组件的 capability 是它的 `provides.capability`。找出 `requires` 里每一项的状态，再与以名称为键的 `want` 比较。
 3. 文字用例：按 `language` 选出要显示的文字，再与 `want` 比较。`want` 没写的列表或映射就是空的。

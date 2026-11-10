@@ -53,15 +53,15 @@ func get(t *testing.T, m measurement, e environment) environment {
 
 func TestMergeKeepsEnvironmentsNoJobMeasured(t *testing.T) {
 	t.Chdir(t.TempDir())
-	writeFile(t, "measurements/components/ingress/traefik.json", measurement{
-		Component: "ingress/traefik",
+	writeFile(t, "measurements/components/traefik.json", measurement{
+		Component: "traefik",
 		Environments: []environment{
 			kindEnv("multi-node", "arm64", 56, "2026-10-11"),
 			kindEnv("single-node", "amd64", 23, "2026-10-11"),
 		},
 	})
-	writeFile(t, "downloaded/measurements-single-node-amd64-ingress-traefik/components/ingress/traefik.json", measurement{
-		Component:    "ingress/traefik",
+	writeFile(t, "downloaded/measurements-single-node-amd64-traefik/components/traefik.json", measurement{
+		Component:    "traefik",
 		Environments: []environment{kindEnv("single-node", "amd64", 25, "2026-10-25")},
 	})
 	writeFile(t, "downloaded/measurements-single-node-amd64-template-ghost/templates/ghost.json", measurement{
@@ -73,7 +73,7 @@ func TestMergeKeepsEnvironmentsNoJobMeasured(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	traefik := readMeasurement("measurements/components/ingress/traefik.json")
+	traefik := readMeasurement("measurements/components/traefik.json")
 	if got := get(t, traefik, kindEnv("single-node", "amd64", 0, "")); got.Pods[0].Memory.Value() != 25<<20 || got.MeasuredAt != "2026-10-25" {
 		t.Errorf("single-node amd64 = %+v, want the new measurement", got)
 	}
@@ -192,7 +192,7 @@ func k3sPlatforms(cfg config, envs []environment, digest string) []string {
 func TestFailedRunTakesThePlatformOutOfTestedOn(t *testing.T) {
 	var cfg config
 	cfg.K3s.Version = "v1.36.5+k3s1"
-	comp := &catalog.Component{ID: "ingress/traefik"}
+	comp := &catalog.Component{ID: "traefik"}
 	day := "2026-10-30"
 	main := measurement{Component: comp.ID, Environments: []environment{
 		k3sEnv("amd64", 22, day), k3sEnv("arm64", 22, day), kindEnv("single-node", "amd64", 22, day),
@@ -208,17 +208,17 @@ func TestFailedRunTakesThePlatformOutOfTestedOn(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Chdir(t.TempDir())
 			// The weekly job checks out main, fails on k3s arm64 and uploads its file.
-			writeFile(t, "measurements/components/ingress/traefik.json", main)
+			writeFile(t, "measurements/components/traefik.json", main)
 			if err := markFailed(cfg, "k3s", "arm64", comp, c.env); err != nil {
 				t.Fatal(err)
 			}
-			uploaded := readMeasurement("measurements/components/ingress/traefik.json")
-			writeFile(t, "downloaded/job/components/ingress/traefik.json", uploaded)
-			writeFile(t, "main/components/ingress/traefik.json", main)
+			uploaded := readMeasurement("measurements/components/traefik.json")
+			writeFile(t, "downloaded/job/components/traefik.json", uploaded)
+			writeFile(t, "main/components/traefik.json", main)
 			if err := mergeMeasurements("downloaded", "main"); err != nil {
 				t.Fatal(err)
 			}
-			merged := readMeasurement("main/components/ingress/traefik.json")
+			merged := readMeasurement("main/components/traefik.json")
 			if got := k3sPlatforms(cfg, merged.Environments, testDigest); !slices.Equal(got, []string{"linux/amd64"}) {
 				t.Errorf("k3s platforms = %q after a failed arm64 run, want amd64 only", got)
 			}
@@ -242,28 +242,28 @@ func TestFailureSurvivesAnotherJobsStaleCopy(t *testing.T) {
 	t.Chdir(t.TempDir())
 	var cfg config
 	cfg.K3s.Version = "v1.36.5+k3s1"
-	comp := &catalog.Component{ID: "ingress/traefik"}
+	comp := &catalog.Component{ID: "traefik"}
 	day := "2026-10-30"
 	main := measurement{Component: comp.ID, Environments: []environment{
 		k3sEnv("amd64", 22, day), k3sEnv("arm64", 22, day), kindEnv("single-node", "amd64", 22, day),
 	}}
 	// The k3s arm64 job fails. The single-node job, merged after it, uploads
 	// its checkout of main with the old passing k3s measurements.
-	writeFile(t, "measurements/components/ingress/traefik.json", main)
+	writeFile(t, "measurements/components/traefik.json", main)
 	arm := k3sEnv("arm64", 0, "")
 	if err := markFailed(cfg, "k3s", "arm64", comp, &arm); err != nil {
 		t.Fatal(err)
 	}
-	writeFile(t, "downloaded/measurements-k3s-arm64-ingress-traefik/components/ingress/traefik.json", readMeasurement("measurements/components/ingress/traefik.json"))
+	writeFile(t, "downloaded/measurements-k3s-arm64-traefik/components/traefik.json", readMeasurement("measurements/components/traefik.json"))
 	fresh := measurement{Component: comp.ID, Environments: slices.Clone(main.Environments)}
 	fresh.put(kindEnv("single-node", "amd64", 25, "2026-10-31"))
-	writeFile(t, "downloaded/measurements-single-node-amd64-ingress-traefik/components/ingress/traefik.json", fresh)
-	writeFile(t, "main/components/ingress/traefik.json", main)
+	writeFile(t, "downloaded/measurements-single-node-amd64-traefik/components/traefik.json", fresh)
+	writeFile(t, "main/components/traefik.json", main)
 
 	if err := mergeMeasurements("downloaded", "main"); err != nil {
 		t.Fatal(err)
 	}
-	merged := readMeasurement("main/components/ingress/traefik.json")
+	merged := readMeasurement("main/components/traefik.json")
 	if get(t, merged, arm).Result != resultFailed {
 		t.Error("a stale passing copy undid the failure marker")
 	}
@@ -279,15 +279,15 @@ func TestStartupFailureMarksTheExistingRun(t *testing.T) {
 	t.Chdir(t.TempDir())
 	var cfg config
 	cfg.Kubesolo.Version = "v1.2.3"
-	comp := &catalog.Component{ID: "ingress/traefik"}
-	writeFile(t, "measurements/components/ingress/traefik.json", measurement{Component: comp.ID, Environments: []environment{
+	comp := &catalog.Component{ID: "traefik"}
+	writeFile(t, "measurements/components/traefik.json", measurement{Component: comp.ID, Environments: []environment{
 		env("kubesolo", "single-node", "amd64", "v1.35.7", "v1.2.3", 20, "2026-10-30"),
 		env("kubesolo", "single-node", "arm64", "v1.35.7", "v1.2.3", 20, "2026-10-30"),
 	}})
 	if err := markFailed(cfg, kubesoloProfile, "arm64", comp, nil); err != nil {
 		t.Fatal(err)
 	}
-	m := readMeasurement("measurements/components/ingress/traefik.json")
+	m := readMeasurement("measurements/components/traefik.json")
 	if got := testedOn(cfg, m.Environments, testDigest); !reflect.DeepEqual(got, []tested{{"kubesolo", []string{"linux/amd64"}}}) {
 		t.Errorf("testedOn = %+v after arm64 failed to start, want amd64 only", got)
 	}
@@ -303,11 +303,11 @@ func TestStartupFailureWithoutRunRecordsNothing(t *testing.T) {
 	t.Chdir(t.TempDir())
 	var cfg config
 	cfg.Kubesolo.Version = "v1.2.3"
-	comp := &catalog.Component{ID: "ingress/traefik"}
+	comp := &catalog.Component{ID: "traefik"}
 	if err := markFailed(cfg, kubesoloProfile, "arm64", comp, nil); err != nil {
 		t.Fatal(err)
 	}
-	m := readMeasurement("measurements/components/ingress/traefik.json")
+	m := readMeasurement("measurements/components/traefik.json")
 	if slices.ContainsFunc(m.Environments, func(e environment) bool { return e.KubernetesVersion == "" }) {
 		t.Errorf("a failure before the cluster answered wrote an environment without a Kubernetes version: %+v", m.Environments)
 	}
@@ -324,17 +324,17 @@ func TestSameDayRerunReplacesWhatMainHeld(t *testing.T) {
 	}
 	rke2Failed := rke2Env(0)
 	rke2Failed.Result, rke2Failed.Pods = resultFailed, nil
-	main := measurement{Component: "ingress/traefik", Environments: []environment{k3sEnv("amd64", 22, day), rke2Failed}}
-	writeFile(t, "main/components/ingress/traefik.json", main)
+	main := measurement{Component: "traefik", Environments: []environment{k3sEnv("amd64", 22, day), rke2Failed}}
+	writeFile(t, "main/components/traefik.json", main)
 	k3s := measurement{Component: main.Component, Environments: []environment{k3sEnv("amd64", 30, day), rke2Failed}}
 	rke2 := measurement{Component: main.Component, Environments: []environment{k3sEnv("amd64", 22, day), rke2Env(40)}}
-	writeFile(t, "downloaded/measurements-k3s-amd64-ingress-traefik/components/ingress/traefik.json", k3s)
-	writeFile(t, "downloaded/measurements-rke2-amd64-ingress-traefik/components/ingress/traefik.json", rke2)
+	writeFile(t, "downloaded/measurements-k3s-amd64-traefik/components/traefik.json", k3s)
+	writeFile(t, "downloaded/measurements-rke2-amd64-traefik/components/traefik.json", rke2)
 
 	if err := mergeMeasurements("downloaded", "main"); err != nil {
 		t.Fatal(err)
 	}
-	merged := readMeasurement("main/components/ingress/traefik.json")
+	merged := readMeasurement("main/components/traefik.json")
 	if got := get(t, merged, k3sEnv("amd64", 0, "")); got.Pods[0].Memory.Value() != 30<<20 {
 		t.Errorf("k3s amd64 = %+v, want the rerun's pass, not main's copy from the rke2 job", got)
 	}
@@ -362,7 +362,7 @@ func TestMeasuredPodsRoundTripWithoutTotals(t *testing.T) {
 		catalog.NewPodUsage("traefik", "Deployment", 31, 4),
 		catalog.NewPodUsage("agent", "DaemonSet", 12, 1),
 	}
-	comp := &catalog.Component{ID: "ingress/traefik", Path: "traefik.yaml"}
+	comp := &catalog.Component{ID: "traefik", Path: "traefik.yaml"}
 	if err := os.WriteFile(comp.Path, []byte("releases: []\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -390,7 +390,7 @@ func TestChangedSourceIsUntestedUntilARunOfItPasses(t *testing.T) {
 	t.Chdir(t.TempDir())
 	var cfg config
 	cfg.K3s.Version = "v1.36.5+k3s1"
-	const path = "components/ingress/traefik.yaml"
+	const path = "components/traefik.yaml"
 	writeSource := func(content string) string {
 		t.Helper()
 		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
@@ -411,9 +411,9 @@ func TestChangedSourceIsUntestedUntilARunOfItPasses(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		return k3sPlatforms(cfg, readMeasurement(measurementPath("ingress/traefik")).Environments, digest)
+		return k3sPlatforms(cfg, readMeasurement(measurementPath("traefik")).Environments, digest)
 	}
-	comp := &catalog.Component{ID: "ingress/traefik", Path: path}
+	comp := &catalog.Component{ID: "traefik", Path: path}
 	passRun := func() {
 		t.Helper()
 		if err := writeMeasurement(comp, k3sEnv("amd64", 0, ""), catalog.Result{Pods: pods(24)}); err != nil {

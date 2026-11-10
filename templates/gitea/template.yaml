@@ -15,9 +15,9 @@ metadata:
   homepage: https://about.gitea.com/
 
 requires:
-  - {component: ingress/traefik}
-  - {component: certificates/cert-manager}
-  - {component: databases/cloudnative-pg}
+  - {component: traefik}
+  - {component: cert-manager}
+  - {component: cloudnative-pg}
 
 services:
   - name: gitea
@@ -104,14 +104,14 @@ security:
           risk: "Webhook、镜像和仓库迁移，都会让服务器去访问用户指定的地址。"
           mitigation: "Gitea 默认会拦截指向私有地址的 webhook。模板没有限制对外连接，需要限制时，请添加 egress NetworkPolicy。模板没有配置 SMTP 服务器，所以 Gitea 不会发邮件。"
     - risk: "The CloudNativePG database instances call the Kubernetes API with an identity that the operator creates."
-      mitigation: "The databases/cloudnative-pg component creates the RBAC permissions for each cluster. The Gitea Pod has no token."
+      mitigation: "The cloudnative-pg component creates the RBAC permissions for each cluster. The Gitea Pod has no token."
       locales:
         zh-TW:
           risk: "CloudNativePG 的資料庫實例會用 operator 建立的身分呼叫 Kubernetes API。"
-          mitigation: "databases/cloudnative-pg 元件會為每個叢集建立對應的 RBAC 權限。Gitea 的 Pod 沒有權杖。"
+          mitigation: "cloudnative-pg 元件會為每個叢集建立對應的 RBAC 權限。Gitea 的 Pod 沒有權杖。"
         zh-CN:
           risk: "CloudNativePG 的数据库实例会用 operator 创建的身份调用 Kubernetes API。"
-          mitigation: "databases/cloudnative-pg 组件会为每个集群创建对应的 RBAC 权限。Gitea 的 Pod 没有令牌。"
+          mitigation: "cloudnative-pg 组件会为每个集群创建对应的 RBAC 权限。Gitea 的 Pod 没有令牌。"
     - risk: "Repositories and LFS objects live on the volume, so the database backup does not include them."
       mitigation: "Back up the gitea-data volume separately, for example with gitea dump. Try a restore before you go to production."
       locales:

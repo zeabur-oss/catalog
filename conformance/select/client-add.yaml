@@ -3,14 +3,16 @@ description: >
   defaults. A capability name with no recommended component resolves to the
   first optional one in id order.
 components:
-  - id: databases/cloudnative-pg
+  - id: cloudnative-pg
+    provides: {capability: databases}
     defaults: {single-node: optional, multi-node: optional}
     distributions: [k3s, rke2, kubesolo]
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
       - {distribution: rke2, platforms: [linux/amd64]}
       - {distribution: kubesolo, platforms: [linux/amd64]}
-  - id: databases/percona
+  - id: percona
+    provides: {capability: databases}
     defaults: {single-node: optional, multi-node: optional}
     distributions: [k3s, rke2, kubesolo]
     testedOn:
@@ -24,4 +26,4 @@ config:
   add: [databases]
 want:
   components:
-    - {id: databases/cloudnative-pg, why: default}
+    - {id: cloudnative-pg, why: default}

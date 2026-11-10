@@ -22,7 +22,6 @@ var Profiles = []string{"single-node", "multi-node"}
 
 type Component struct {
 	ID              string            `yaml:"-" json:"id"`
-	Capability      string            `yaml:"-" json:"capability"`
 	APIVersion      string            `yaml:"apiVersion" json:"apiVersion"`
 	Kind            string            `yaml:"kind" json:"kind"`
 	Metadata        Metadata          `yaml:"metadata" json:"metadata"`
@@ -72,14 +71,11 @@ type Ref struct {
 	Capability string `yaml:"capability" json:"capability,omitempty"`
 }
 
-// Name is the component ID or the capability.
-func (r Ref) Name() string { return cmp.Or(r.Component, r.Capability) }
-
-// RefNames returns the name of each ref.
-func RefNames(refs []Ref) []string {
-	var out []string
-	for _, r := range refs {
-		out = append(out, r.Name())
+// ByID returns a ref to each component ID.
+func ByID(ids ...string) []Ref {
+	var out []Ref
+	for _, id := range ids {
+		out = append(out, Ref{Component: id})
 	}
 	return out
 }
@@ -92,7 +88,16 @@ type ReleaseRef struct {
 
 // Provides is what a component offers other software in the cluster.
 type Provides struct {
-	Registry *Registry `yaml:"registry" json:"registry,omitempty"`
+	Capability string    `yaml:"capability" json:"capability,omitempty"`
+	Registry   *Registry `yaml:"registry" json:"registry,omitempty"`
+}
+
+// Capability is the capability the component provides, or "".
+func (c *Component) Capability() string {
+	if c.Provides == nil {
+		return ""
+	}
+	return c.Provides.Capability
 }
 
 // Registry is an OCI registry in the cluster that nodes pull from.
@@ -194,9 +199,16 @@ type Catalog struct {
 	Raw map[string]any
 }
 
-// Load reads components/<capability>/<upstream>.yaml under root.
+// Load reads components/<id>.yaml under root.
 func Load(root string) (*Catalog, error) {
-	files, err := filepath.Glob(filepath.Join(root, "components", "*", "*.yaml"))
+	nested, err := filepath.Glob(filepath.Join(root, "components", "*", "*.yaml"))
+	if err != nil {
+		return nil, err
+	}
+	if len(nested) > 0 {
+		return nil, fmt.Errorf("%s: a component is components/<id>.yaml, with its capability in provides", nested[0])
+	}
+	files, err := filepath.Glob(filepath.Join(root, "components", "*.yaml"))
 	if err != nil {
 		return nil, err
 	}
@@ -216,8 +228,7 @@ func Load(root string) (*Catalog, error) {
 		if err := yaml.Unmarshal(data, c); err != nil {
 			return nil, fmt.Errorf("%s: %w", rel, err)
 		}
-		c.Capability = filepath.Base(filepath.Dir(f))
-		c.ID = c.Capability + "/" + strings.TrimSuffix(filepath.Base(f), ".yaml")
+		c.ID = strings.TrimSuffix(filepath.Base(f), ".yaml")
 		c.addDefaultAccounts()
 		cat.Components = append(cat.Components, c)
 	}
@@ -261,18 +272,18 @@ func (cat *Catalog) Get(id string) (*Component, bool) {
 	return cat.Components[i], true
 }
 
-// provider resolves a reference for a profile: <capability>/<upstream> as is,
-// <capability> to its recommended upstream, else an optional one.
-func (cat *Catalog) provider(ref, profile string) (*Component, error) {
-	if strings.Contains(ref, "/") {
-		if c, ok := cat.Get(ref); ok {
+// provider resolves a reference for a profile: a component as is, a
+// capability to its recommended provider, else an optional one.
+func (cat *Catalog) provider(ref Ref, profile string) (*Component, error) {
+	if ref.Component != "" {
+		if c, ok := cat.Get(ref.Component); ok {
 			return c, nil
 		}
-		return nil, fmt.Errorf("unknown component %q", ref)
+		return nil, fmt.Errorf("unknown component %q", ref.Component)
 	}
 	var optional *Component
 	for _, c := range cat.Components {
-		if c.Capability != ref {
+		if c.Capability() != ref.Capability {
 			continue
 		}
 		switch c.Defaults[profile] {
@@ -283,13 +294,13 @@ func (cat *Catalog) provider(ref, profile string) (*Component, error) {
 		}
 	}
 	if optional == nil {
-		return nil, fmt.Errorf("nothing provides %q on %s", ref, profile)
+		return nil, fmt.Errorf("nothing provides %q on %s", ref.Capability, profile)
 	}
 	return optional, nil
 }
 
-// InstallOrder returns ids and their dependencies, dependencies first.
-func (cat *Catalog) InstallOrder(ids []string, profile string) ([]*Component, error) {
+// InstallOrder returns what refs name and their dependencies, dependencies first.
+func (cat *Catalog) InstallOrder(refs []Ref, profile string) ([]*Component, error) {
 	var order []*Component
 	state := map[*Component]int{} // 1 visiting, 2 done
 	var visit func(c *Component) error
@@ -302,7 +313,7 @@ func (cat *Catalog) InstallOrder(ids []string, profile string) ([]*Component, er
 		}
 		state[c] = 1
 		for _, ref := range c.Requires {
-			dep, err := cat.provider(ref.Name(), profile)
+			dep, err := cat.provider(ref, profile)
 			if err != nil {
 				return fmt.Errorf("%s: %w", c.ID, err)
 			}
@@ -314,8 +325,8 @@ func (cat *Catalog) InstallOrder(ids []string, profile string) ([]*Component, er
 		order = append(order, c)
 		return nil
 	}
-	for _, id := range ids {
-		c, err := cat.provider(id, profile)
+	for _, ref := range refs {
+		c, err := cat.provider(ref, profile)
 		if err != nil {
 			return nil, err
 		}

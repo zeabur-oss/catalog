@@ -179,7 +179,7 @@
     {
       "description": "Keel's smoke test starts on pause 3.9 so that Keel can update it to 3.10",
       "matchFileNames": [
-        "components/image-updates/keel.yaml"
+        "components/keel.yaml"
       ],
       "matchPackageNames": [
         "registry.k8s.io/pause"

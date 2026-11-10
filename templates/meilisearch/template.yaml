@@ -16,7 +16,7 @@ metadata:
   license: MIT
   homepage: https://www.meilisearch.com/
 
-requires: [{component: ingress/traefik}, {component: certificates/cert-manager}]
+requires: [{component: traefik}, {component: cert-manager}]
 
 services:
   - name: meilisearch

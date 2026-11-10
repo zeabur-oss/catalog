@@ -15,9 +15,9 @@ metadata:
   homepage: https://github.com/halo-dev/halo
 
 requires:
-  - {component: databases/cloudnative-pg}
-  - {component: ingress/traefik}
-  - {component: certificates/cert-manager}
+  - {component: cloudnative-pg}
+  - {component: traefik}
+  - {component: cert-manager}
 
 services:
   - name: halo

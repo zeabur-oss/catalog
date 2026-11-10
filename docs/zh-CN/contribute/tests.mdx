@@ -140,11 +140,11 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 
 `full` 会在单节点 amd64 集群中安装每个模板及其需要的组件，运行冒烟测试，再用相同的采样方式测量模板 Namespace 内 Pod 的空闲内存和 CPU 用量。
 
-组件的测量结果存放在 `measurements/components/<capability>/<upstream>.json`，模板的存放在 `measurements/templates/<id>.json`。`environments` 里每个环境各有一条，由 `distribution`、`profile`、`platform`、`kubernetesVersion` 和 `distributionVersion` 指明是哪个环境。`distribution` 是 `kind`、`k3s`、`rke2` 或 `kubesolo`。`distributionVersion` 是装在主机上的发行版的版本，kind 没有这个字段。`result` 是 `passed` 或 `failed`，读取方遇到其他值一律当作没有通过。`versions` 列出组件每个 release 的版本，或模板每个镜像的 tag 和 digest。
+组件的测量结果存放在 `measurements/components/<id>.json`，模板的存放在 `measurements/templates/<id>.json`。`environments` 里每个环境各有一条，由 `distribution`、`profile`、`platform`、`kubernetesVersion` 和 `distributionVersion` 指明是哪个环境。`distribution` 是 `kind`、`k3s`、`rke2` 或 `kubesolo`。`distributionVersion` 是装在主机上的发行版的版本，kind 没有这个字段。`result` 是 `passed` 或 `failed`，读取方遇到其他值一律当作没有通过。`versions` 列出组件每个 release 的版本，或模板每个镜像的 tag 和 digest。
 
 ```json
 {
-  "component": "ingress/traefik",
+  "component": "traefik",
   "environments": [
     {
       "distribution": "k3s",
@@ -202,7 +202,7 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 
 ### 配置对象存储测试数据
 
-只要输入值使用 `.S3`，测试就会在 `templates-e2e-s3` 启动 SeaweedFS（`object-storage/seaweedfs-operator`），使用测试 CA，并在 TCP 443 提供 HTTPS。备份和对象存储数据都会发送到这里。
+只要输入值使用 `.S3`，测试就会在 `templates-e2e-s3` 启动 SeaweedFS（`seaweedfs-operator`），使用测试 CA，并在 TCP 443 提供 HTTPS。备份和对象存储数据都会发送到这里。
 
 模板 Namespace 内的 `e2e-s3` Secret 会保存访问凭据，以及名为 `ca.crt` 的 CA 证书。
 

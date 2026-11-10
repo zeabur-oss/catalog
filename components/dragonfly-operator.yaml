@@ -1,0 +1,126 @@
+# Runs Dragonfly, a Redis-compatible in-memory store, from a Dragonfly object in
+# the tenant's namespace: a primary with replicas, failover, and snapshots to a
+# volume or S3. Dragonfly is source-available, so it is never on by default.
+apiVersion: catalog.zeabur.com/v1
+kind: Component
+metadata:
+  name: Dragonfly Operator
+  # The operator is Apache-2.0; the Dragonfly images it runs are BUSL-1.1, which
+  # is not OSI-approved.
+  summary: Runs Dragonfly, a Redis-compatible store, with replicas and snapshots, under a licence that is not open source.
+  locales:
+    zh-TW:
+      summary: "執行與 Redis 相容的 Dragonfly，支援副本和快照，但不是開放原始碼授權。"
+    zh-CN:
+      summary: "运行与 Redis 兼容的 Dragonfly，支持副本和快照，但不是开源许可。"
+  license: Apache-2.0 AND BUSL-1.1
+  homepage: https://www.dragonflydb.io/docs/managing-dragonfly/operator/installation
+provides: {capability: databases}
+defaults:
+  single-node: optional
+  multi-node: optional
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.34.0-0"
+persistsData: true
+
+releases:
+  - name: dragonfly-operator
+    type: helm
+    namespace: dragonfly-operator-system
+    chart: oci://ghcr.io/dragonflydb/dragonfly-operator/helm/dragonfly-operator
+    version: v1.7.1
+    chartDigest: sha256:334cdd6cd58e08e77289b87ec8756b9f65fd085929ac8bb31e8b847981023376
+    values: |
+      manager:
+        # Pinned by digest; a tag alone can move.
+        image:
+          repository: docker.dragonflydb.io/dragonflydb/operator
+          tag: v1.7.1@sha256:bc0067369a456810d00715d7292da32b82f6df491fd51d6c57f2b2b3193ab490
+      rbacProxy:
+        # Pinned by digest; a tag alone can move.
+        image:
+          repository: quay.io/brancz/kube-rbac-proxy
+          tag: v0.20.2@sha256:ad0fa9f0adc928b557663297bd22c610533960d77acdec289ce8a636f0ea2114
+      crds:
+        # The chart's default, stated: CRDs outlive the release, and with them
+        # every Dragonfly object.
+        keep: true
+      # Restricted Pod Security; the chart sets only runAsNonRoot.
+      podSecurityContext:
+        runAsNonRoot: true
+        seccompProfile: {type: RuntimeDefault}
+    profiles:
+      single-node: |
+        manager:
+          resources:
+            # The chart sets none; grows with Dragonfly objects.
+            requests: {cpu: 10m, memory: 64Mi}
+            limits: {memory: 256Mi}
+        rbacProxy:
+          resources:
+            # Guards the metrics port; the chart asks for 64Mi.
+            requests: {cpu: 5m, memory: 32Mi}
+            limits: {memory: 128Mi}
+      multi-node: |
+        # Leader election keeps one active; survives a drain.
+        replicaCount: 2
+        podDisruptionBudget:
+          # Keeps one replica through voluntary evictions.
+          enabled: true
+        manager:
+          resources:
+            # Single-node's request; the leader uses about 34Mi on a two-node
+            # cluster with apps. The limit leaves room for more Dragonfly objects.
+            requests: {cpu: 10m, memory: 64Mi}
+            limits: {memory: 512Mi}
+        rbacProxy:
+          resources:
+            # Guards the metrics port; the chart asks for 64Mi.
+            requests: {cpu: 5m, memory: 32Mi}
+            limits: {memory: 128Mi}
+
+detection:
+  crds: [dragonflies.dragonflydb.io]
+  helmCharts: [dragonfly-operator]
+  workloads:
+    - kind: Deployment
+      labels: {app.kubernetes.io/name: dragonfly-operator}
+
+security:
+  summary: Manages pods, StatefulSets, Services and PDBs for Dragonfly objects in every namespace.
+  podSecurity: restricted
+
+# crds.keep annotates the CRDs helm.sh/resource-policy: keep.
+leftovers: [customresourcedefinitions]
+
+smoke:
+  - name: one-instance
+    manifest: |
+      # Proves Dragonfly runs under restricted Pod Security.
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: catalog-smoke
+        labels: {pod-security.kubernetes.io/enforce: restricted}
+      ---
+      apiVersion: dragonflydb.io/v1alpha1
+      kind: Dragonfly
+      metadata: {name: smoke, namespace: catalog-smoke}
+      spec:
+        replicas: 1
+        args: ["--proactor_threads=1"]
+        resources:
+          requests: {cpu: 50m, memory: 256Mi}
+          limits: {memory: 512Mi}
+        podSecurityContext:
+          runAsNonRoot: true
+          runAsUser: 999
+          runAsGroup: 999
+          fsGroup: 999
+          seccompProfile: {type: RuntimeDefault}
+        containerSecurityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {drop: [ALL]}
+    wait: ["-n catalog-smoke dragonfly/smoke --for=jsonpath={.status.phase}=Ready"]
+    # Pulls the Dragonfly image first.
+    timeout: 600s

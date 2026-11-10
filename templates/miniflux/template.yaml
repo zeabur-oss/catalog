@@ -15,9 +15,9 @@ metadata:
   homepage: https://miniflux.app/
 
 requires:
-  - {component: ingress/traefik}
-  - {component: certificates/cert-manager}
-  - {component: databases/cloudnative-pg}
+  - {component: traefik}
+  - {component: cert-manager}
+  - {component: cloudnative-pg}
 
 services:
   - name: miniflux
@@ -66,15 +66,15 @@ security:
         The database pods (CloudNativePG) call the Kubernetes API with an
         identity that the database operator creates.
       mitigation: >-
-        The databases/cloudnative-pg component creates separate permissions
+        The cloudnative-pg component creates separate permissions
         for each database cluster. The Miniflux Pod has no token.
       locales:
         zh-TW:
           risk: "資料庫 Pod（CloudNativePG）會用資料庫 operator 建立的身分去呼叫 Kubernetes API。"
-          mitigation: "databases/cloudnative-pg 元件會為每個資料庫叢集各建一組權限。Miniflux 的 Pod 沒有權杖。"
+          mitigation: "cloudnative-pg 元件會為每個資料庫叢集各建一組權限。Miniflux 的 Pod 沒有權杖。"
         zh-CN:
           risk: "数据库 Pod（CloudNativePG）会用数据库 operator 创建的身份去调用 Kubernetes API。"
-          mitigation: "databases/cloudnative-pg 组件会为每个数据库集群各建一组权限。Miniflux 的 Pod 没有令牌。"
+          mitigation: "cloudnative-pg 组件会为每个数据库集群各建一组权限。Miniflux 的 Pod 没有令牌。"
 
 smoke:
   - name: postgresql-ready
