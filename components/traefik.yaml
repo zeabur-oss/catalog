@@ -153,10 +153,12 @@ leftovers: [customresourcedefinitions]
 health:
   - name: controller
     # Pods, not deployment/traefik: multi-node runs a DaemonSet.
-    wait: ["--for=condition=Ready", "pod", "-l", "app.kubernetes.io/name=traefik", "-n", "traefik"]
+    resource: {kind: Pod, selector: {app.kubernetes.io/name: traefik}, namespace: traefik}
+    condition: Ready
     timeout: 60s
     advice: No route is served until Traefik runs. Check its pods with kubectl -n traefik get pods.
   - name: gateway-class-accepted
-    wait: ["--for=condition=Accepted", "gatewayclass/traefik"]
+    resource: {kind: GatewayClass, name: traefik}
+    condition: Accepted
     timeout: 60s
     advice: Traefik hasn't accepted its GatewayClass. Read the reason with kubectl describe gatewayclass traefik.

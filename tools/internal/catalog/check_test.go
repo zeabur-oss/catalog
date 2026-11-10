@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -69,7 +70,7 @@ func TestProvisionProblems(t *testing.T) {
 	}
 }
 
-func TestHealthChecksStayReadOnlyKubectlWaits(t *testing.T) {
+func TestHealthChecksNameTheirObjectsOneWay(t *testing.T) {
 	const root = "../../.."
 	const path = "components/traefik.yaml"
 	cat, err := Load(root)
@@ -80,18 +81,41 @@ func TestHealthChecksStayReadOnlyKubectlWaits(t *testing.T) {
 		t.Fatalf("the catalog does not validate: %v", err)
 	}
 	valid := func() map[string]any {
-		return map[string]any{"name": "controller", "wait": []any{"--for=condition=Available", "deployment/traefik", "-n", "traefik"},
-			"timeout": "60s", "advice": "Check the pods."}
+		return map[string]any{"name": "controller",
+			"resource":  map[string]any{"kind": "Deployment", "name": "traefik", "namespace": "traefik"},
+			"condition": "Available", "timeout": "60s", "advice": "Check the pods."}
 	}
+	resource := func(h map[string]any) map[string]any { return h["resource"].(map[string]any) }
 	for _, c := range []struct {
 		name string
+		ok   bool
 		edit func(map[string]any)
 	}{
-		{"valid", func(map[string]any) {}},
-		{"manifest", func(h map[string]any) { h["manifest"] = "kind: ConfigMap" }},
-		{"own timeout", func(h map[string]any) { h["wait"] = append(h["wait"].([]any), "--timeout=10m") }},
-		{"no condition", func(h map[string]any) { h["wait"] = []any{"deployment/traefik", "-n", "traefik"} }},
-		{"no advice", func(h map[string]any) { delete(h, "advice") }},
+		{"by name", true, func(map[string]any) {}},
+		{"by selector", true, func(h map[string]any) {
+			delete(resource(h), "name")
+			resource(h)["selector"] = map[string]any{"app.kubernetes.io/name": "traefik"}
+		}},
+		{"all", true, func(h map[string]any) { delete(resource(h), "name"); resource(h)["all"] = true }},
+		{"cluster-scoped kind", true, func(h map[string]any) {
+			h["resource"] = map[string]any{"kind": "GatewayClass", "name": "traefik"}
+		}},
+		{"unknown kind", false, func(h map[string]any) { resource(h)["kind"] = "ConfigMap" }},
+		{"no condition", false, func(h map[string]any) { delete(h, "condition") }},
+		{"no advice", false, func(h map[string]any) { delete(h, "advice") }},
+		{"no timeout", false, func(h map[string]any) { delete(h, "timeout") }},
+		{"no object", false, func(h map[string]any) { delete(resource(h), "name") }},
+		{"name and all", false, func(h map[string]any) { resource(h)["all"] = true }},
+		{"all false", false, func(h map[string]any) { delete(resource(h), "name"); resource(h)["all"] = false }},
+		{"empty selector", false, func(h map[string]any) {
+			delete(resource(h), "name")
+			resource(h)["selector"] = map[string]any{}
+		}},
+		{"namespaced kind without namespace", false, func(h map[string]any) { delete(resource(h), "namespace") }},
+		{"cluster-scoped kind with namespace", false, func(h map[string]any) {
+			h["resource"] = map[string]any{"kind": "GatewayClass", "name": "traefik", "namespace": "traefik"}
+		}},
+		{"kubectl arguments", false, func(h map[string]any) { h["wait"] = []any{"--for=condition=Ready", "pod"} }},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			h := valid()
@@ -101,13 +125,37 @@ func TestHealthChecksStayReadOnlyKubectlWaits(t *testing.T) {
 			raw["health"] = []any{h}
 			defer func() { raw["health"] = old }()
 			err := Check(root, cat)
-			if c.name == "valid" && err != nil {
+			if c.ok && err != nil {
 				t.Errorf("Check rejected a valid health check: %v", err)
 			}
-			if c.name != "valid" && err == nil {
+			if !c.ok && err == nil {
 				t.Error("Check accepted the health check")
 			}
 		})
+	}
+}
+
+func TestHealthCheckRunsAsOneKubectlWait(t *testing.T) {
+	check := func(r HealthResource) Health {
+		return Health{Resource: r, Condition: "Ready", Timeout: "60s"}
+	}
+	for _, c := range []struct {
+		name  string
+		check Health
+		want  string
+	}{
+		{"by name", check(HealthResource{Kind: "Deployment", Name: "web", Namespace: "web"}),
+			"wait --for=condition=Ready deployments.apps/web -n web --timeout=60s"},
+		{"by selector", check(HealthResource{Kind: "Pod", Selector: map[string]string{"b": "2", "a": "1"}, Namespace: "web"}),
+			"wait --for=condition=Ready pods -l a=1,b=2 -n web --timeout=60s"},
+		{"all", check(HealthResource{Kind: "Node.longhorn.io", All: true, Namespace: "longhorn-system"}),
+			"wait --for=condition=Ready nodes.longhorn.io --all -n longhorn-system --timeout=60s"},
+		{"cluster-scoped", check(HealthResource{Kind: "APIService", Name: "v1beta1.metrics.k8s.io"}),
+			"wait --for=condition=Ready apiservices.apiregistration.k8s.io/v1beta1.metrics.k8s.io --timeout=60s"},
+	} {
+		if got := strings.Join(c.check.WaitArgs(), " "); got != c.want {
+			t.Errorf("%s: kubectl %s, want kubectl %s", c.name, got, c.want)
+		}
 	}
 }
 

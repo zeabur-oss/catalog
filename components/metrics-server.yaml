@@ -86,6 +86,7 @@ security:
 
 health:
   - name: metrics-api
-    wait: ["--for=condition=Available", "apiservice/v1beta1.metrics.k8s.io"]
+    resource: {kind: APIService, name: v1beta1.metrics.k8s.io}
+    condition: Available
     timeout: 60s
     advice: The metrics API doesn't answer, so kubectl top and autoscaling have no data. Check the metrics-server pod with kubectl -n kube-system get pods.
