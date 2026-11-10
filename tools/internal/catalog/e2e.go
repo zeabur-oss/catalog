@@ -60,13 +60,10 @@ func (ts Timings) String() string {
 
 // Result is the outcome for one component.
 type Result struct {
-	ID            string
-	IdleMemoryMiB float64
-	IdleCPUm      float64
-	// RequestMemoryMiB is the memory the same pods request.
-	RequestMemoryMiB float64
-	Unmeasured       bool // installed without waiting; nothing ran long enough to measure
-	Err              error
+	ID         string
+	Pods       []PodUsage
+	Unmeasured bool // installed without waiting; nothing ran long enough to measure
+	Err        error
 }
 
 // run tracks one test so it can be undone in reverse order.
@@ -160,17 +157,13 @@ func (t *Tester) Test(id string) (res Result) {
 			namespaces[rel.Namespace] = true
 		}
 		mine := func(ns, name string) bool { return namespaces[ns] && !existing[ns+"/"+name] }
-		res.IdleMemoryMiB, res.IdleCPUm, err = IdleUsage(mine)
+		res.Pods, err = IdleUsage(mine)
 		if err != nil {
 			res.Err = err
 			return
 		}
-		if res.RequestMemoryMiB, err = podRequests(mine); err != nil {
-			res.Err = err
-			return
-		}
 		t.Timings.Since("settle", start)
-		slog.Info("measured", "component", id, "memoryMiB", int(res.IdleMemoryMiB), "cpuM", int(res.IdleCPUm))
+		slog.Info("measured", "component", id, "workloads", len(res.Pods))
 		if err := t.smoke(c); err != nil {
 			res.Err = fmt.Errorf("smoke: %w", err)
 			return
@@ -555,28 +548,55 @@ func retry(timeout time.Duration, f func() error) error {
 }
 
 // IdleUsage samples the working set (MiB) and CPU (millicores) of matching
-// pods every 10s from the kubelet summary API. It returns the medians of the
-// last five samples when they are stable, or after 3 minutes. Memory is stable
-// within 5% and CPU within 10m or 25%.
-func IdleUsage(match func(ns, name string) bool) (mem, cpu float64, err error) {
+// pods every 10s from the kubelet summary API. When the total of the last five
+// samples is stable, or after 3 minutes, it returns one row per workload: the
+// median over the workload's pods of each pod's median over those samples.
+// The total is stable when memory is within 5% and CPU within 10m or 25%.
+func IdleUsage(match func(ns, name string) bool) ([]PodUsage, error) {
 	const window = 5
+	var samples []map[string]podSample
 	var mems, cpus []float64
 	deadline := time.Now().Add(3 * time.Minute)
 	for {
-		m, c, err := podUsage(match)
+		s, err := podUsage(match)
 		if err != nil {
-			return 0, 0, err
+			return nil, err
 		}
-		mems, cpus = append(mems, m), append(cpus, c)
+		var m, c float64
+		for _, p := range s {
+			m, c = m+p.mem, c+p.cpu
+		}
+		samples, mems, cpus = append(samples, s), append(mems, m), append(cpus, c)
 		if len(mems) >= window {
 			mem, memSpread := medianSpread(mems[len(mems)-window:])
 			cpu, cpuSpread := medianSpread(cpus[len(cpus)-window:])
 			if memSpread <= 0.05*mem && cpuSpread <= max(10, 0.25*cpu) || time.Now().After(deadline) {
-				return mem, cpu, nil
+				break
 			}
 		}
 		time.Sleep(10 * time.Second)
 	}
+	memories, cpuUse := map[string][]float64{}, map[string][]float64{}
+	for _, s := range samples[len(samples)-min(window, len(samples)):] {
+		for key, p := range s {
+			memories[key], cpuUse[key] = append(memories[key], p.mem), append(cpuUse[key], p.cpu)
+		}
+	}
+	perPod := map[string]podSample{}
+	for key := range memories {
+		mem, _ := medianSpread(memories[key])
+		cpu, _ := medianSpread(cpuUse[key])
+		perPod[key] = podSample{mem, cpu}
+	}
+	list, err := kubectl("get", "pods,replicasets,jobs", "-A", "-o", "json")
+	if err != nil {
+		return nil, err
+	}
+	workloads, err := Workloads([]byte(list))
+	if err != nil {
+		return nil, err
+	}
+	return foldPods(perPod, workloads), nil
 }
 
 func medianSpread(samples []float64) (median, spread float64) {
@@ -584,15 +604,17 @@ func medianSpread(samples []float64) (median, spread float64) {
 	return s[len(s)/2], s[len(s)-1] - s[0]
 }
 
-func podUsage(match func(ns, name string) bool) (mem, cpu float64, err error) {
+// podUsage returns the usage of each matching pod, keyed "namespace/name".
+func podUsage(match func(ns, name string) bool) (map[string]podSample, error) {
 	nodes, err := kubectl("get", "nodes", "-o", "jsonpath={.items[*].metadata.name}")
 	if err != nil {
-		return 0, 0, err
+		return nil, err
 	}
+	out := map[string]podSample{}
 	for _, node := range strings.Fields(nodes) {
 		raw, err := kubectl("get", "--raw", "/api/v1/nodes/"+node+"/proxy/stats/summary")
 		if err != nil {
-			return 0, 0, err
+			return nil, err
 		}
 		var s struct {
 			Pods []struct {
@@ -602,25 +624,15 @@ func podUsage(match func(ns, name string) bool) (mem, cpu float64, err error) {
 			}
 		}
 		if err := json.Unmarshal([]byte(raw), &s); err != nil {
-			return 0, 0, err
+			return nil, err
 		}
 		for _, p := range s.Pods {
 			if match(p.PodRef.Namespace, p.PodRef.Name) {
-				mem += p.Memory.WorkingSetBytes / (1 << 20)
-				cpu += p.CPU.UsageNanoCores / 1e6
+				out[p.PodRef.Namespace+"/"+p.PodRef.Name] = podSample{p.Memory.WorkingSetBytes / (1 << 20), p.CPU.UsageNanoCores / 1e6}
 			}
 		}
 	}
-	return mem, cpu, nil
-}
-
-// podRequests returns the MiB of memory that matching pods request.
-func podRequests(match func(ns, name string) bool) (float64, error) {
-	out, err := kubectl("get", "pods", "-A", "-o", "json")
-	if err != nil {
-		return 0, err
-	}
-	return RequestedMemory([]byte(out), match)
+	return out, nil
 }
 
 // podNames returns "namespace/name" for every pod. Names, not UIDs: the

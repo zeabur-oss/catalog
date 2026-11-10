@@ -116,7 +116,7 @@ Install dependencies first, then the component under test.
 
 ### Measure idle resource usage
 
-Sample idle memory and CPU usage every 10 seconds until five consecutive samples match, for up to 3 minutes.
+Sample the idle memory and CPU usage of each pod every 10 seconds until the total of five consecutive samples matches, for up to 3 minutes. Each workload (a Deployment, StatefulSet or DaemonSet, the controller of a Job, or a bare Pod) is recorded once, as the median usage of one of its pods. Totals, replica counts and requests are not stored. A reader takes replicas and requests from the rendered objects.
 
 </Step>
 
@@ -153,8 +153,7 @@ Component measurements are stored in `measurements/components/<capability>/<upst
       "kubernetesVersion": "v1.36.5",
       "distributionVersion": "v1.36.5+k3s1",
       "result": "passed",
-      "idle": {"memoryMiB": 22, "cpuMillis": 3},
-      "requests": {"memoryMiB": 50},
+      "pods": [{"workload": "traefik", "kind": "Deployment", "memoryMiB": 22, "cpum": 3}],
       "versions": [{"release": "traefik", "version": "41.7.1"}],
       "measuredAt": "2026-11-03"
     }

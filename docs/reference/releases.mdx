@@ -76,15 +76,14 @@ A newer release can add a value to a field without a new `indexVersion`. A reade
     "profile": "single-node",
     "platform": {"os": "linux", "architecture": "amd64"},
     "kubernetesVersion": "v1.36.4",
-    "idle": {"memoryMiB": 22, "cpuMillis": 3},
-    "requests": {"memoryMiB": 50},
+    "pods": [{"workload": "traefik", "kind": "Deployment", "memoryMiB": 22, "cpum": 3}],
     "versions": [{"release": "traefik", "version": "41.7.1"}],
     "measuredAt": "2026-11-03"
   }
 ]
 ```
 
-Each environment has `idle`, what the component uses, and `requests`, what its pods request. Each has `memoryMiB` and `cpuMillis`, rounded to whole numbers, and leaves out a resource it doesn't give. `requests` has only `memoryMiB` for now. The scheduler places pods by requests, so an installer compares the sum of `requests.memoryMiB` with a node's allocatable memory. Both come from the same full tier run and count the pods in the component's own namespaces as the cluster runs them, including pods that an operator creates.
+Each environment has `pods`, one row for each workload with its `workload` name, `kind` and `memoryMiB` and `cpum`, the idle usage of one pod of it, in whole MiB and millicores. A workload is a Deployment, StatefulSet, DaemonSet or Pod, or the controller of a Job. The rows count the pods in the component's own namespaces as the cluster ran them, including pods that an operator creates. The index stores no total: an installer multiplies each row by the workload's replicas and sums them. Replicas and requests are not measured. Read them from the objects the component renders for the profile; a DaemonSet runs one pod on each node. The scheduler places pods by requests, so an installer compares the sum of the requests with a node's allocatable memory.
 
 When installing components, the tool runs `detection`, offers the components enabled by default (recommended) for the cluster's profile, and collects each component's `inputs` from the user. It then generates installation content according to `installOrder` and merges `contributes` into the corresponding targets. [How installers choose and install components](installers.mdx) gives the rules for choosing them.
 

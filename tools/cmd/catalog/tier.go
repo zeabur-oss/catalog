@@ -554,7 +554,7 @@ func smokeGroup(r *repo, cfg config, o tierOptions, g *group) []row {
 // runTemplate runs a template's e2e and records the time after its
 // dependencies as the template phase. If measure is set, it returns the idle
 // usage of the template.
-func runTemplate(r *repo, t *catalog.Tester, id string, measure bool) (*templates.Usage, error) {
+func runTemplate(r *repo, t *catalog.Tester, id string, measure bool) ([]catalog.PodUsage, error) {
 	slog.Info("testing", "template", id)
 	tmpl, err := templates.Get(r.templates, id)
 	if err != nil {
@@ -595,11 +595,11 @@ func testTemplate(r *repo, t *catalog.Tester, cfg config, id string, write bool)
 		if err != nil {
 			return "", err
 		}
-		if err := writeTemplateMeasurement(tmpl, env, *usage, imagesOf(manifest)); err != nil {
+		if err := writeTemplateMeasurement(tmpl, env, usage, imagesOf(manifest)); err != nil {
 			return "", err
 		}
 	}
-	return fmt.Sprintf("PASS %4.0f MiB %3.0fm CPU", usage.IdleMemoryMiB, usage.IdleCPUm), nil
+	return podSummary(usage), nil
 }
 
 // runFull tests each component and template in a fresh cluster with the full
@@ -685,7 +685,7 @@ func testComponent(t *catalog.Tester, cfg config, profile, id string, write bool
 		}
 		return "", res.Err
 	}
-	status = fmt.Sprintf("PASS %4.0f MiB %3.0fm CPU", res.IdleMemoryMiB, res.IdleCPUm)
+	status = podSummary(res.Pods)
 	if res.Unmeasured {
 		status = "PASS (installed without credentials; not measured)"
 	} else if write {
@@ -703,4 +703,9 @@ func currentEnvironment(cfg config, profile string) (environment, error) {
 		return environment{}, err
 	}
 	return environmentOf(cfg, profile, out)
+}
+
+// podSummary is the status of a measured test: the workloads it measured.
+func podSummary(pods []catalog.PodUsage) string {
+	return fmt.Sprintf("PASS %d workloads measured", len(pods))
 }

@@ -142,7 +142,7 @@ resources:
 }
 ```
 
-排程器看的是請求量，所以安裝工具要把 `requests.memoryMiB` 加進元件量測到的 `requests.memoryMiB`。寫了 `cpu` 和 `memory` 以外的資源，或數量不大於零時，`validate` 會失敗。設定檔（profile）和輸入不會改變結果。
+排程器看的是請求量，所以安裝工具要把 `requests.memoryMiB` 加進元件算繪出的物件裡 Pod 的請求量。寫了 `cpu` 和 `memory` 以外的資源，或數量不大於零時，`validate` 會失敗。設定檔（profile）和輸入不會改變結果。
 
 `health` 列出唯讀檢查，讓安裝工具（例如 `zeabur-installer doctor`）檢查已安裝的叢集。每項檢查執行一次 `kubectl wait`，參數寫在 `wait`，等待時間寫在 `timeout`。`wait` 裡要有 `--for` 條件，不要放 `--timeout`。檢查失敗時，安裝工具會顯示 `advice`，用英文告訴使用者該怎麼處理。健康檢查沒有 manifest，也不會套用任何物件。要建立物件的檢查放在 `smoke`，只有 e2e 會執行。e2e 在安裝完成後、執行 `smoke` 之前，先執行 `health`。
 
