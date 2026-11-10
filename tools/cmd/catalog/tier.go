@@ -700,10 +700,10 @@ func testComponent(t *catalog.Tester, cfg config, profile, id string, write bool
 }
 
 // currentEnvironment returns the environment of the current cluster.
-func currentEnvironment(cfg config, profile string) (environment, error) {
+func currentEnvironment(cfg config, profile string) (Environment, error) {
 	out, err := catalog.Run(nil, "kubectl", "version", "-o", "json")
 	if err != nil {
-		return environment{}, err
+		return Environment{}, err
 	}
 	return environmentOf(cfg, profile, out)
 }

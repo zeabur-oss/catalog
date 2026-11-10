@@ -23,8 +23,8 @@ func writeFile(t *testing.T, path string, v any) {
 const testDigest = "sha256:source"
 
 // env returns a passing run on kind, or on a host distribution at version.
-func env(distribution, profile, arch, kubernetes, version string, idle int64, day string) environment {
-	return environment{Distribution: distribution, Profile: profile, Platform: platform{"linux", arch},
+func env(distribution, profile, arch, kubernetes, version string, idle int64, day string) Environment {
+	return Environment{Distribution: distribution, Profile: profile, Platform: Platform{"linux", arch},
 		KubernetesVersion: kubernetes, DistributionVersion: version, Result: resultPassed, SourceDigest: testDigest,
 		Pods: pods(idle), MeasuredAt: day}
 }
@@ -34,15 +34,15 @@ func pods(idle int64) []catalog.PodUsage {
 	return []catalog.PodUsage{catalog.NewPodUsage("web", "Deployment", float64(idle), 0)}
 }
 
-func kindEnv(profile, arch string, idle int64, day string) environment {
+func kindEnv(profile, arch string, idle int64, day string) Environment {
 	return env(kindDistribution, profile, arch, "v1.36.4", "", idle, day)
 }
 
-func k3sEnv(arch string, idle int64, day string) environment {
+func k3sEnv(arch string, idle int64, day string) Environment {
 	return env("k3s", "single-node", arch, "v1.36.5", "v1.36.5+k3s1", idle, day)
 }
 
-func get(t *testing.T, m measurement, e environment) environment {
+func get(t *testing.T, m measurement, e Environment) Environment {
 	t.Helper()
 	got, ok := m.find(e)
 	if !ok {
@@ -55,18 +55,18 @@ func TestMergeKeepsEnvironmentsNoJobMeasured(t *testing.T) {
 	t.Chdir(t.TempDir())
 	writeFile(t, "measurements/components/traefik.json", measurement{
 		Component: "traefik",
-		Environments: []environment{
+		Environments: []Environment{
 			kindEnv("multi-node", "arm64", 56, "2026-10-11"),
 			kindEnv("single-node", "amd64", 23, "2026-10-11"),
 		},
 	})
 	writeFile(t, "downloaded/measurements-single-node-amd64-traefik/components/traefik.json", measurement{
 		Component:    "traefik",
-		Environments: []environment{kindEnv("single-node", "amd64", 25, "2026-10-25")},
+		Environments: []Environment{kindEnv("single-node", "amd64", 25, "2026-10-25")},
 	})
 	writeFile(t, "downloaded/measurements-single-node-amd64-template-ghost/templates/ghost.json", measurement{
 		Template:     "ghost",
-		Environments: []environment{kindEnv("single-node", "amd64", 310, "2026-10-25")},
+		Environments: []Environment{kindEnv("single-node", "amd64", 310, "2026-10-25")},
 	})
 
 	if err := mergeMeasurements("downloaded", "measurements"); err != nil {
@@ -103,12 +103,12 @@ func TestMergeRejectsBrokenFile(t *testing.T) {
 func TestImageVersions(t *testing.T) {
 	for _, c := range []struct {
 		name, ref string
-		want      measuredVersion
+		want      MeasuredVersion
 	}{
-		{"tag", "ghost:6.5.1", measuredVersion{Image: "ghost", Version: "6.5.1"}},
-		{"tag and digest", "docker.io/library/ghost:6.5.1@sha256:abc", measuredVersion{Image: "docker.io/library/ghost", Version: "6.5.1", Digest: "sha256:abc"}},
-		{"digest only", "ghcr.io/org/app@sha256:abc", measuredVersion{Image: "ghcr.io/org/app", Digest: "sha256:abc"}},
-		{"registry port", "registry:5000/app:1.2", measuredVersion{Image: "registry:5000/app", Version: "1.2"}},
+		{"tag", "ghost:6.5.1", MeasuredVersion{Image: "ghost", Version: "6.5.1"}},
+		{"tag and digest", "docker.io/library/ghost:6.5.1@sha256:abc", MeasuredVersion{Image: "docker.io/library/ghost", Version: "6.5.1", Digest: "sha256:abc"}},
+		{"digest only", "ghcr.io/org/app@sha256:abc", MeasuredVersion{Image: "ghcr.io/org/app", Digest: "sha256:abc"}},
+		{"registry port", "registry:5000/app:1.2", MeasuredVersion{Image: "registry:5000/app", Version: "1.2"}},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			if got := imageVersions([]string{c.ref}); len(got) != 1 || got[0] != c.want {
@@ -124,14 +124,14 @@ func TestEnvironmentOfNamesTheDistributionApartFromTheProfile(t *testing.T) {
 	cfg.K3s.Version = "v1.36.5+k3s1"
 	for _, c := range []struct {
 		name, profile, kubectl string
-		want                   environment
+		want                   Environment
 	}{
 		{"kind", "multi-node", `{"serverVersion": {"gitVersion": "v1.36.4", "platform": "linux/arm64"}}`,
-			environment{Distribution: "kind", Profile: "multi-node", Platform: platform{"linux", "arm64"}, KubernetesVersion: "v1.36.4"}},
+			Environment{Distribution: "kind", Profile: "multi-node", Platform: Platform{"linux", "arm64"}, KubernetesVersion: "v1.36.4"}},
 		{"host", kubesoloProfile, `{"serverVersion": {"gitVersion": "v1.35.7+kubesolo-v1.2.3", "platform": "linux/amd64"}}`,
-			environment{Distribution: "kubesolo", Profile: "single-node", Platform: platform{"linux", "amd64"}, KubernetesVersion: "v1.35.7", DistributionVersion: "v1.2.3"}},
+			Environment{Distribution: "kubesolo", Profile: "single-node", Platform: Platform{"linux", "amd64"}, KubernetesVersion: "v1.35.7", DistributionVersion: "v1.2.3"}},
 		{"host release other than the pin", "k3s", `{"serverVersion": {"gitVersion": "v1.36.4+k3s1", "platform": "linux/amd64"}}`,
-			environment{Distribution: "k3s", Profile: "single-node", Platform: platform{"linux", "amd64"}, KubernetesVersion: "v1.36.4", DistributionVersion: "v1.36.4+k3s1"}},
+			Environment{Distribution: "k3s", Profile: "single-node", Platform: Platform{"linux", "amd64"}, KubernetesVersion: "v1.36.4", DistributionVersion: "v1.36.4+k3s1"}},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			got, err := environmentOf(cfg, c.profile, c.kubectl)
@@ -142,65 +142,18 @@ func TestEnvironmentOfNamesTheDistributionApartFromTheProfile(t *testing.T) {
 	}
 }
 
-func TestTestedOnCountsOnlyThePinnedDistributionVersions(t *testing.T) {
-	var cfg config
-	cfg.K3s.Version = "v1.36.5+k3s1"
-	cfg.RKE2.Version = "v1.36.5+rke2r1"
-	cfg.Kubesolo.Version = "v1.2.3"
-	day := "2026-10-30"
-	for _, c := range []struct {
-		name string
-		envs []environment
-		want []tested
-	}{
-		{"kind only", []environment{kindEnv("single-node", "amd64", 1, day), kindEnv("multi-node", "arm64", 1, day)}, []tested{}},
-		{"pinned versions", []environment{
-			env("kubesolo", "single-node", "arm64", "v1.35.7", "v1.2.3", 1, day),
-			k3sEnv("amd64", 1, day),
-			env("rke2", "single-node", "arm64", "v1.36.5", "v1.36.5+rke2r1", 1, day),
-		}, []tested{{"k3s", []string{"linux/amd64"}}, {"rke2", []string{"linux/arm64"}}, {"kubesolo", []string{"linux/arm64"}}}},
-		{"older releases", []environment{
-			env("kubesolo", "single-node", "amd64", "v1.35.7", "v1.2.2", 1, day),
-			env("k3s", "single-node", "amd64", "v1.36.4", "v1.36.4+k3s1", 1, day),
-		}, []tested{}},
-		{"each platform that passed", []environment{k3sEnv("amd64", 1, day), k3sEnv("arm64", 1, day)},
-			[]tested{{"k3s", []string{"linux/amd64", "linux/arm64"}}}},
-	} {
-		t.Run(c.name, func(t *testing.T) {
-			got := testedOn(cfg, c.envs, testDigest)
-			if !reflect.DeepEqual(got, c.want) {
-				t.Errorf("testedOn = %+v, want %+v", got, c.want)
-			}
-			// Consumers read testedOn as always present.
-			if data, _ := json.Marshal(got); len(c.want) == 0 && string(data) != "[]" {
-				t.Errorf("testedOn without distributions encodes as %s, want []", data)
-			}
-		})
-	}
-}
-
-// k3sPlatforms returns the platforms that testedOn lists for k3s.
-func k3sPlatforms(cfg config, envs []environment, digest string) []string {
-	for _, d := range testedOn(cfg, envs, digest) {
-		if d.Distribution == "k3s" {
-			return d.Platforms
-		}
-	}
-	return nil
-}
-
-func TestFailedRunTakesThePlatformOutOfTestedOn(t *testing.T) {
+func TestFailedRunMarksOnlyItsEnvironment(t *testing.T) {
 	var cfg config
 	cfg.K3s.Version = "v1.36.5+k3s1"
 	comp := &catalog.Component{ID: "traefik"}
 	day := "2026-10-30"
-	main := measurement{Component: comp.ID, Environments: []environment{
+	main := measurement{Component: comp.ID, Environments: []Environment{
 		k3sEnv("amd64", 22, day), k3sEnv("arm64", 22, day), kindEnv("single-node", "amd64", 22, day),
 	}}
 	arm := k3sEnv("arm64", 0, "")
 	for _, c := range []struct {
 		name string
-		env  *environment
+		env  *Environment
 	}{
 		{"test failed", &arm},
 		{"cluster never answered", nil},
@@ -219,11 +172,8 @@ func TestFailedRunTakesThePlatformOutOfTestedOn(t *testing.T) {
 				t.Fatal(err)
 			}
 			merged := readMeasurement("main/components/traefik.json")
-			if got := k3sPlatforms(cfg, merged.Environments, testDigest); !slices.Equal(got, []string{"linux/amd64"}) {
-				t.Errorf("k3s platforms = %q after a failed arm64 run, want amd64 only", got)
-			}
-			if slices.ContainsFunc(passed(merged.Environments), arm.same) {
-				t.Error("the index publishes the failed environment as measured")
+			if got := get(t, merged, arm); got.Result != resultFailed || len(got.Pods) != 0 {
+				t.Errorf("k3s arm64 = %+v after a failed run, want failed without pods", got)
 			}
 			if get(t, merged, kindEnv("single-node", "amd64", 0, "")).Result != resultPassed || get(t, merged, k3sEnv("amd64", 0, "")).Result != resultPassed {
 				t.Error("the failure changed environments of other architectures or profiles")
@@ -231,8 +181,8 @@ func TestFailedRunTakesThePlatformOutOfTestedOn(t *testing.T) {
 
 			// The next passing run replaces the mark.
 			merged.put(k3sEnv("arm64", 22, day))
-			if got := k3sPlatforms(cfg, merged.Environments, testDigest); !slices.Equal(got, []string{"linux/amd64", "linux/arm64"}) {
-				t.Errorf("k3s platforms = %q after arm64 passed again", got)
+			if get(t, merged, arm).Result != resultPassed {
+				t.Error("a passing run did not replace the failure")
 			}
 		})
 	}
@@ -244,7 +194,7 @@ func TestFailureSurvivesAnotherJobsStaleCopy(t *testing.T) {
 	cfg.K3s.Version = "v1.36.5+k3s1"
 	comp := &catalog.Component{ID: "traefik"}
 	day := "2026-10-30"
-	main := measurement{Component: comp.ID, Environments: []environment{
+	main := measurement{Component: comp.ID, Environments: []Environment{
 		k3sEnv("amd64", 22, day), k3sEnv("arm64", 22, day), kindEnv("single-node", "amd64", 22, day),
 	}}
 	// The k3s arm64 job fails. The single-node job, merged after it, uploads
@@ -270,9 +220,6 @@ func TestFailureSurvivesAnotherJobsStaleCopy(t *testing.T) {
 	if get(t, merged, kindEnv("single-node", "amd64", 0, "")).Pods[0].Memory.Value() != 25<<20 {
 		t.Error("the new measurement was not merged")
 	}
-	if got := k3sPlatforms(cfg, merged.Environments, testDigest); slices.Contains(got, "linux/arm64") {
-		t.Error("k3s arm64 stays in testedOn after its run failed")
-	}
 }
 
 func TestStartupFailureMarksTheExistingRun(t *testing.T) {
@@ -280,7 +227,7 @@ func TestStartupFailureMarksTheExistingRun(t *testing.T) {
 	var cfg config
 	cfg.Kubesolo.Version = "v1.2.3"
 	comp := &catalog.Component{ID: "traefik"}
-	writeFile(t, "measurements/components/traefik.json", measurement{Component: comp.ID, Environments: []environment{
+	writeFile(t, "measurements/components/traefik.json", measurement{Component: comp.ID, Environments: []Environment{
 		env("kubesolo", "single-node", "amd64", "v1.35.7", "v1.2.3", 20, "2026-10-30"),
 		env("kubesolo", "single-node", "arm64", "v1.35.7", "v1.2.3", 20, "2026-10-30"),
 	}})
@@ -288,14 +235,10 @@ func TestStartupFailureMarksTheExistingRun(t *testing.T) {
 		t.Fatal(err)
 	}
 	m := readMeasurement("measurements/components/traefik.json")
-	if got := testedOn(cfg, m.Environments, testDigest); !reflect.DeepEqual(got, []tested{{"kubesolo", []string{"linux/amd64"}}}) {
-		t.Errorf("testedOn = %+v after arm64 failed to start, want amd64 only", got)
-	}
-
-	// A later arm64 run passes and replaces the mark.
-	m.put(env("kubesolo", "single-node", "arm64", "v1.35.7", "v1.2.3", 21, "2999-01-01"))
-	if got := testedOn(cfg, m.Environments, testDigest); !reflect.DeepEqual(got, []tested{{"kubesolo", []string{"linux/amd64", "linux/arm64"}}}) {
-		t.Errorf("testedOn = %+v after arm64 passed", got)
+	arm := env("kubesolo", "single-node", "arm64", "v1.35.7", "v1.2.3", 0, "")
+	amd := env("kubesolo", "single-node", "amd64", "v1.35.7", "v1.2.3", 0, "")
+	if get(t, m, arm).Result != resultFailed || get(t, m, amd).Result != resultPassed {
+		t.Errorf("environments = %+v after arm64 failed to start, want arm64 failed and amd64 passed", m.Environments)
 	}
 }
 
@@ -308,7 +251,7 @@ func TestStartupFailureWithoutRunRecordsNothing(t *testing.T) {
 		t.Fatal(err)
 	}
 	m := readMeasurement("measurements/components/traefik.json")
-	if slices.ContainsFunc(m.Environments, func(e environment) bool { return e.KubernetesVersion == "" }) {
+	if slices.ContainsFunc(m.Environments, func(e Environment) bool { return e.KubernetesVersion == "" }) {
 		t.Errorf("a failure before the cluster answered wrote an environment without a Kubernetes version: %+v", m.Environments)
 	}
 }
@@ -319,15 +262,15 @@ func TestSameDayRerunReplacesWhatMainHeld(t *testing.T) {
 	// dates its work the same as main's, and uploads main's copy of the
 	// environments it didn't measure.
 	day := "2026-10-31"
-	rke2Env := func(idle int64) environment {
+	rke2Env := func(idle int64) Environment {
 		return env("rke2", "single-node", "amd64", "v1.36.5", "v1.36.5+rke2r1", idle, day)
 	}
 	rke2Failed := rke2Env(0)
 	rke2Failed.Result, rke2Failed.Pods = resultFailed, nil
-	main := measurement{Component: "traefik", Environments: []environment{k3sEnv("amd64", 22, day), rke2Failed}}
+	main := measurement{Component: "traefik", Environments: []Environment{k3sEnv("amd64", 22, day), rke2Failed}}
 	writeFile(t, "main/components/traefik.json", main)
-	k3s := measurement{Component: main.Component, Environments: []environment{k3sEnv("amd64", 30, day), rke2Failed}}
-	rke2 := measurement{Component: main.Component, Environments: []environment{k3sEnv("amd64", 22, day), rke2Env(40)}}
+	k3s := measurement{Component: main.Component, Environments: []Environment{k3sEnv("amd64", 30, day), rke2Failed}}
+	rke2 := measurement{Component: main.Component, Environments: []Environment{k3sEnv("amd64", 22, day), rke2Env(40)}}
 	writeFile(t, "downloaded/measurements-k3s-amd64-traefik/components/traefik.json", k3s)
 	writeFile(t, "downloaded/measurements-rke2-amd64-traefik/components/traefik.json", rke2)
 
@@ -344,7 +287,7 @@ func TestSameDayRerunReplacesWhatMainHeld(t *testing.T) {
 }
 
 func TestBudgetReadsTheNewestKubernetesVersionOnSingleNodeKind(t *testing.T) {
-	m := measurement{Environments: []environment{
+	m := measurement{Environments: []Environment{
 		env(kindDistribution, "single-node", "amd64", "v1.9.0", "", 10, "2026-10-30"),
 		env(kindDistribution, "single-node", "amd64", "v1.36.4", "", 30, "2026-10-01"),
 		env(kindDistribution, "single-node", "arm64", "v1.37.0", "", 90, "2026-10-30"),
@@ -386,12 +329,11 @@ func TestMeasuredPodsRoundTripWithoutTotals(t *testing.T) {
 	}
 }
 
-func TestChangedSourceIsUntestedUntilARunOfItPasses(t *testing.T) {
+func TestRunRecordsTheDigestOfTheSourceItInstalled(t *testing.T) {
 	t.Chdir(t.TempDir())
-	var cfg config
-	cfg.K3s.Version = "v1.36.5+k3s1"
 	const path = "components/traefik.yaml"
-	writeSource := func(content string) string {
+	comp := &catalog.Component{ID: "traefik", Path: path}
+	run := func(content string) (recorded, want string) {
 		t.Helper()
 		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 			t.Fatal(err)
@@ -399,51 +341,21 @@ func TestChangedSourceIsUntestedUntilARunOfItPasses(t *testing.T) {
 		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
 			t.Fatal(err)
 		}
-		digest, err := sourceDigest(path)
-		if err != nil {
-			t.Fatal(err)
-		}
-		return digest
-	}
-	tested := func() []string {
-		t.Helper()
-		digest, err := sourceDigest(path)
-		if err != nil {
-			t.Fatal(err)
-		}
-		return k3sPlatforms(cfg, readMeasurement(measurementPath("traefik")).Environments, digest)
-	}
-	comp := &catalog.Component{ID: "traefik", Path: path}
-	passRun := func() {
-		t.Helper()
 		if err := writeMeasurement(comp, k3sEnv("amd64", 0, ""), catalog.Result{Pods: pods(24)}); err != nil {
 			t.Fatal(err)
 		}
+		want, err := sourceDigest(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return get(t, readMeasurement(measurementPath("traefik")), k3sEnv("amd64", 0, "")).SourceDigest, want
 	}
-
-	writeSource("releases:\n- name: traefik\n  version: 42.1.3\n")
-	passRun()
-	if got := tested(); !slices.Equal(got, []string{"linux/amd64"}) {
-		t.Fatalf("k3s platforms = %q for the source the run installed, want amd64", got)
+	first, want := run("releases:\n- name: traefik\n  version: 42.1.3\n")
+	if first != want {
+		t.Errorf("sourceDigest = %q, want %q", first, want)
 	}
-
-	writeSource("releases:\n- name: traefik\n  version: 42.1.4\n")
-	if got := tested(); len(got) != 0 {
-		t.Errorf("k3s platforms = %q after the source changed, want none", got)
-	}
-
-	passRun()
-	if got := tested(); !slices.Equal(got, []string{"linux/amd64"}) {
-		t.Errorf("k3s platforms = %q after a run of the changed source passed, want amd64", got)
-	}
-}
-
-func TestRunWithoutSourceDigestIsUntested(t *testing.T) {
-	var cfg config
-	cfg.K3s.Version = "v1.36.5+k3s1"
-	old := k3sEnv("amd64", 22, "2026-10-30")
-	old.SourceDigest = ""
-	if got := testedOn(cfg, []environment{old}, testDigest); len(got) != 0 {
-		t.Errorf("testedOn = %+v for a run without a source digest, want none", got)
+	second, want := run("releases:\n- name: traefik\n  version: 42.1.4\n")
+	if second != want || second == first {
+		t.Errorf("sourceDigest = %q after the source changed, want %q", second, want)
 	}
 }

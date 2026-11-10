@@ -10,7 +10,7 @@
     "description": { "type": "string", "description": "The rule the case checks, in one or two sentences." },
     "components": {
       "type": "array",
-      "description": "The catalog: index.json components with only the fields selection reads.",
+      "description": "The catalog: each component with only the fields selection reads, and the testedOn and installOrder that an installer works out.",
       "minItems": 1,
       "items": {
         "type": "object",

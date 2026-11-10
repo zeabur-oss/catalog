@@ -205,3 +205,10 @@ func TestOptionalInputRendersOnlyWhenGiven(t *testing.T) {
 		})
 	}
 }
+
+func TestTemplateGeneratesRandomValuesOnly(t *testing.T) {
+	r := inputRecord(t, `[{"name":"address","generate":{"type":"clusterIP"},"secret":{"name":"app","key":"address"},"validation":{"pattern":".*"}}]`)
+	if b, err := templates.GenerateInputs(r, "test"); err == nil || len(b) != 0 {
+		t.Fatal("a template generated a clusterIP input")
+	}
+}

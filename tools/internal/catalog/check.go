@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/santhosh-tekuri/jsonschema/v6"
 	"go.yaml.in/yaml/v3"
 )
 
@@ -23,13 +22,7 @@ func Check(root string, cat *Catalog) error {
 		errs = append(errs, fmt.Errorf("%s: %s", path, fmt.Sprintf(format, a...)))
 	}
 
-	compiler := jsonschema.NewCompiler()
-	compiler.AssertFormat()
-	schemaPath, err := filepath.Abs(filepath.Join(root, "schema", "v1", "component.schema.json"))
-	if err != nil {
-		return err
-	}
-	schema, err := compiler.Compile(schemaPath)
+	schema, err := CompileSchema(filepath.Join(root, "schema", "v1"), "component.schema.json")
 	if err != nil {
 		return err
 	}
@@ -103,7 +96,7 @@ func Check(root string, cat *Catalog) error {
 				}
 				seen[w.Name] = true
 			}
-			if _, err := c.IndexResources(); err != nil {
+			if err := c.checkResources(); err != nil {
 				fail(c.Path, "%v", err)
 			}
 		}
@@ -183,7 +176,7 @@ func (c *Component) provisionProblems() []string {
 	if r := c.Provides.registry(); r != nil && !owns(r.CA.Namespace) {
 		out = append(out, fmt.Sprintf("provides.registry.ca: %s is none of its namespaces", r.CA.Namespace))
 	}
-	crds := c.detectionCRDs()
+	crds := c.Detection.CRDs
 	for _, crd := range c.InternalCRDs {
 		if !slices.Contains(crds, crd) {
 			out = append(out, fmt.Sprintf("internalCRDs: %s is not in detection.crds", crd))
@@ -208,17 +201,6 @@ func (c *Component) provisionProblems() []string {
 		}
 		if o.Kind != "NetworkPolicy" || !owns(o.Metadata.Namespace) {
 			out = append(out, fmt.Sprintf("networkPolicies: %s %s must be a NetworkPolicy in one of its namespaces", o.Kind, o.Metadata.Name))
-		}
-	}
-	return out
-}
-
-func (c *Component) detectionCRDs() []string {
-	list, _ := c.Detection["crds"].([]any)
-	out := make([]string, 0, len(list))
-	for _, v := range list {
-		if s, ok := v.(string); ok {
-			out = append(out, s)
 		}
 	}
 	return out

@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oss-catalog.zeabur.com/v1/schema/catalog.schema.json",
+  "$defs": {
+    "catalogRelease": {
+      "properties": {
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The catalog version, such as 0.5.0."
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$",
+          "description": "The Git commit of the catalog."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "version",
+        "commit"
+      ],
+      "description": "CatalogRelease is the catalog release that the API was built from."
+    },
+    "componentEntry": {
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "description": "The file name of the component without .yaml."
+        },
+        "sourceDigest": {
+          "type": "string",
+          "description": "The Go module hash (h1:) of components/\u003cid\u003e.yaml. A measurement with another sourceDigest\ntested an older file."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "id",
+        "sourceDigest"
+      ],
+      "description": "ComponentEntry names a component. components/\u003cid\u003e.json holds the rest."
+    },
+    "pinnedDistribution": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "k3s, rke2 or kubesolo. A reader ignores a value it does not know."
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "version"
+      ],
+      "description": "PinnedDistribution is the release of a distribution that e2e installs on the host."
+    }
+  },
+  "properties": {
+    "catalog": {
+      "$ref": "#/$defs/catalogRelease"
+    },
+    "profiles": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array",
+      "description": "The profiles that every component describes."
+    },
+    "kubernetes": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array",
+      "description": "The Kubernetes versions that every profile is rendered and schema-checked against."
+    },
+    "distributions": {
+      "items": {
+        "$ref": "#/$defs/pinnedDistribution"
+      },
+      "type": "array",
+      "description": "The release of each host distribution that e2e installs. A measurement at another\ndistributionVersion tested another release."
+    },
+    "components": {
+      "items": {
+        "$ref": "#/$defs/componentEntry"
+      },
+      "type": "array"
+    }
+  },
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "catalog",
+    "profiles",
+    "kubernetes",
+    "distributions",
+    "components"
+  ],
+  "title": "catalog.json",
+  "description": "CatalogFile is catalog.json: the catalog release, its test environments and its components."
+}

@@ -119,7 +119,7 @@ provides:
 `resources.work` 列出组件会做的每一种工作，例如构建。每一项有 `name`（在列表里不能重复），再加上下列至少一个字段，都用 Kubernetes 数量写 `cpu` 和 `memory`：
 
 - `requests` 和 `limits` 是做一份这种工作的每个 Pod 的资源请求量和上限。工作用的 Pod 由控制器创建、渲染结果里看不到时（例如构建用的 Pod），就写这两个字段。数值从 chart 的 values 抄过来，升级 chart 时如果 values 改了，就跟着改。
-- `use` 是组件做一份这种工作时，在空闲用量之外还要多用的资源。空闲用量由 e2e 测量，放在 `index.json`。
+- `use` 是组件做一份这种工作时，在空闲用量之外还要多用的资源。空闲用量由 e2e 测量，发布在 [API](releases.mdx)。
 
 ```yaml
 resources:
@@ -130,22 +130,7 @@ resources:
       use: {memory: 500Mi}
 ```
 
-`catalog index` 把每一项发布到 `index.json` 的 `resources.work`。内存以 MiB、CPU 以毫核（millicore）为单位，都向上取整到整数。该项没写的资源不会出现：
-
-```json
-"resources": {
-  "work": [
-    {
-      "name": "build",
-      "requests": {"memoryMiB": 256, "cpuMillis": 100},
-      "limits": {"memoryMiB": 1024, "cpuMillis": 1000},
-      "use": {"memoryMiB": 500}
-    }
-  ]
-}
-```
-
-调度器看的是请求量，所以安装工具要把 `requests.memoryMiB` 加进组件渲染出的对象里 Pod 的请求量。写了 `cpu` 和 `memory` 以外的资源，或数量不大于零时，`validate` 会失败。配置档（profile）和输入不会改变结果。
+API 原样发布 `resources.work`。调度器看的是请求量，所以安装工具要把 `requests` 的内存用量加进组件渲染出的对象里 Pod 的请求量。写了 `cpu` 和 `memory` 以外的资源，或数量不大于零时，`validate` 会失败。profile 和输入不会改变结果。
 
 `health` 列出只读检查，供安装工具（例如 `zeabur-installer doctor`）检查已安装的集群。每项检查运行一次 `kubectl wait`，参数写在 `wait`，等待时间写在 `timeout`。`wait` 里要有 `--for` 条件，不要放 `--timeout`。检查失败时，安装工具会显示 `advice`，用英文告诉用户该怎么处理。健康检查没有 manifest，也不会应用任何对象。需要创建对象的检查放在 `smoke`，只有 e2e 会运行。e2e 在安装完成后、运行 `smoke` 之前，先运行 `health`。
 
@@ -157,7 +142,7 @@ health:
     advice: "A node that joined without Longhorn needs longhorn: true under join in its configuration. Add it, then run zeabur-installer apply on that node."
 ```
 
-`distributions` 和 `testedOn` 是两份不同的列表。组件文件里的 `distributions` 列出这个组件支持的发行版，e2e 会在每个发行版上测试它。`index.json` 里的 `testedOn` 列出测试通过的发行版和通过的平台，例如 `{"distribution": "k3s", "platforms": ["linux/amd64", "linux/arm64"]}`，版本以 `config/kubernetes.yaml` 固定的为准，且组件文件要和那次测试时一致。安装工具会读取 `testedOn`，组件要装在未列出的发行版和平台上时，提示用户它没测试过。`testedOn` 由 `catalog index` 从 `measurements/` 生成，无需手写。每个组件都有这个字段，可以是空列表。
+`distributions` 列出组件支持的发行版，e2e 会在每个发行版上测试它。通过测试的环境是另一个列表，由安装工具根据 API 的测量数据算出，做法见[安装工具如何选择和安装组件](installers.mdx)。组件在某个发行版和平台上没有通过测试时，安装工具会提示用户。
 
 `kubeVersion` 是组件支持的 Kubernetes 版本范围，写法与 Helm chart 的 `kubeVersion` 相同。填写各 chart 中最严格的范围，chart 都没写时填 `">=1.34.0-0"`。范围没有覆盖 catalog 测试的某个 Kubernetes 版本时，`catalog validate` 会失败。集群版本不在范围内时，安装工具不会提供这个组件。
 

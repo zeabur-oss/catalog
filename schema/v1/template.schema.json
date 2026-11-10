@@ -1,253 +1,638 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/zeabur-oss/catalog/schema/v1/template.schema.json",
-  "title": "Template",
-  "description": "One application, at templates/<slug>/template.yaml with its objects in manifests.yaml next to it. A project member installs it into one namespace.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": ["apiVersion", "kind", "metadata", "services", "security", "smoke"],
-  "properties": {
-    "apiVersion": { "const": "catalog.zeabur.com/v1" },
-    "kind": { "const": "Template" },
-    "metadata": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["name", "summary", "locales", "version", "license", "homepage"],
-      "properties": {
-        "name": { "$ref": "#/$defs/text", "description": "Name for people." },
-        "summary": { "type": "string", "pattern": "^[^\\n]+$", "description": "What the application is, in one plain sentence for people choosing a template." },
-        "locales": {
-          "type": "object",
-          "description": "The summary in other languages, by BCP 47 tag. config/locales.yaml lists the tags each needs.",
-          "propertyNames": { "$ref": "#/$defs/locale" },
-          "additionalProperties": { "$ref": "#/$defs/summaryLocale" }
-        },
-        "license": { "$ref": "#/$defs/text", "description": "SPDX expression for the application, its images and charts." },
-        "homepage": { "type": "string", "format": "uri", "pattern": "^https?://" },
-        "version": { "type": "string", "description": "The application version: the tag of its main image. Objects get it as the label app.kubernetes.io/version." }
-      }
-    },
-    "requires": {
-      "type": "array",
-      "description": "Components the cluster must have.",
-      "uniqueItems": true,
-      "items": { "$ref": "#/$defs/ref" }
-    },
-    "services": {
-      "type": "array",
-      "description": "The workloads in manifests.yaml, for people and for the Pod Security profile of each.",
-      "minItems": 1,
-      "items": { "$ref": "#/$defs/service" }
-    },
-    "inputs": { "type": "array", "items": { "$ref": "#/$defs/input" } },
-    "security": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["summary", "risks"],
-      "properties": {
-        "summary": { "$ref": "#/$defs/text" },
-        "locales": {
-          "type": "object",
-          "description": "The summary in other languages, by BCP 47 tag. config/locales.yaml lists the tags each needs.",
-          "propertyNames": { "$ref": "#/$defs/locale" },
-          "additionalProperties": { "$ref": "#/$defs/summaryLocale" }
-        },
-        "unauthenticated": {
-          "type": "array",
-          "description": "Services with no sign-in or key of their own. Each needs an ingress NetworkPolicy; the risks say why.",
-          "uniqueItems": true,
-          "items": { "type": "string" }
-        },
-        "risks": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["risk", "mitigation", "locales"],
-            "properties": {
-              "risk": { "$ref": "#/$defs/text" },
-              "mitigation": { "$ref": "#/$defs/text" },
-              "locales": {
-                "type": "object",
-                "description": "The risk and mitigation in other languages, by BCP 47 tag. config/locales.yaml lists the tags each needs.",
-                "propertyNames": { "$ref": "#/$defs/locale" },
-                "additionalProperties": { "$ref": "#/$defs/riskLocale" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "smoke": {
-      "type": "array",
-      "description": "e2e checks after install, in the template's namespace.",
-      "minItems": 1,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["name", "resource", "condition", "timeout"],
-        "properties": {
-          "name": { "$ref": "#/$defs/text" },
-          "resource": { "type": "string", "pattern": "^[a-zA-Z0-9.-]+/[a-z0-9][a-z0-9.-]*$" },
-          "condition": { "type": "string", "pattern": "^(condition=[A-Za-z][A-Za-z0-9]*(=(True|False|Unknown))?|jsonpath=.+)$" },
-          "timeout": { "type": "string", "pattern": "^[1-9][0-9]*(s|m)$" },
-          "http": {
-            "type": "object",
-            "description": "GET through a port-forward to the Service.",
-            "additionalProperties": false,
-            "required": ["service", "port", "path", "status"],
-            "properties": {
-              "service": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-              "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
-              "path": { "type": "string", "pattern": "^/" },
-              "status": { "type": "integer", "minimum": 100, "maximum": 599 },
-              "contains": { "type": "string" }
+  "$id": "https://oss-catalog.zeabur.com/v1/schema/template.schema.json",
+  "$defs": {
+    "generate": {
+      "oneOf": [
+        {
+          "properties": {
+            "type": {
+              "const": "random"
             }
           },
-          "sql": {
-            "type": "object",
-            "description": "One read-only SELECT on the CloudNativePG primary.",
-            "additionalProperties": false,
-            "required": ["cluster", "database", "query", "expect"],
-            "properties": {
-              "cluster": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
-              "database": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
-              "query": { "type": "string", "pattern": "^[Ss][Ee][Ll][Ee][Cc][Tt] " },
-              "expect": { "type": "string" }
+          "required": [
+            "bytes",
+            "encoding"
+          ]
+        },
+        {
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "bytes"
+                ]
+              },
+              {
+                "required": [
+                  "encoding"
+                ]
+              }
+            ]
+          },
+          "properties": {
+            "type": {
+              "const": "clusterIP"
             }
           }
         }
-      }
-    }
-  },
-  "$defs": {
-    "locale": { "type": "string", "pattern": "^([a-z]{2,3}(-[a-z]{3}){0,3}|[a-z]{4,8})(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?(-([a-z0-9]{5,8}|[0-9][a-z0-9]{3}))*(-[a-wyz0-9](-[a-z0-9]{2,8})+)*(-x(-[a-z0-9]{1,8})+)?$", "description": "A BCP 47 tag (RFC 5646 langtag, in its recommended case): language, then optional script, region, variants, extensions and private use, such as zh-TW, zh-Hant-TW or ca-ES-valencia." },
-    "generate": {
-      "type": "object",
-      "description": "How the installer makes the value instead of asking.",
-      "additionalProperties": false,
-      "required": ["type", "bytes", "encoding"],
+      ],
       "properties": {
-        "type": { "const": "random", "description": "bytes random bytes in encoding." },
-        "bytes": { "type": "integer", "minimum": 12, "maximum": 64, "description": "Random bytes to generate." },
-        "encoding": { "enum": ["hex", "base64url"], "description": "hex, or base64url without padding." }
-      }
-    },
-    "text": { "type": "string", "minLength": 1 },
-    "ref": {
-      "description": "A component by id, or a capability: its recommended upstream on the profile, else an optional one.",
-      "oneOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["component"],
-          "properties": { "component": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" } }
+        "type": {
+          "type": "string",
+          "description": "random: bytes random bytes in encoding. clusterIP: a free address in the cluster's Service\nCIDR, for a Service's fixed ClusterIP. A template generates random values only."
         },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["capability"],
-          "properties": { "capability": { "type": "string", "pattern": "^[a-z0-9-]+$" } }
-        }
-      ]
-    },
-    "resourceValues": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["cpu", "memory"],
-      "properties": {
-        "cpu": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?m?$" },
-        "memory": { "type": "string", "pattern": "^[1-9][0-9]*(Ki|Mi|Gi|Ti|K|M|G|T)?$" }
-      }
-    },
-    "service": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["name", "podSecurity", "resources"],
-      "properties": {
-        "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$", "maxLength": 53 },
-        "podSecurity": { "enum": ["restricted", "baseline"], "description": "The Pod Security Standard level its pods meet." },
-        "ports": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["name", "port"],
-            "properties": { "name": { "$ref": "#/$defs/text" }, "port": { "type": "integer", "minimum": 1, "maximum": 65535 } }
-          }
+        "bytes": {
+          "type": "integer",
+          "maximum": 64,
+          "minimum": 12,
+          "description": "Random bytes to generate."
         },
-        "resources": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["requests", "limits"],
-          "properties": { "requests": { "$ref": "#/$defs/resourceValues" }, "limits": { "$ref": "#/$defs/resourceValues" } }
-        },
-        "domains": { "type": "array", "description": "Public hostnames; rendering then needs a domain and a ClusterIssuer.", "items": { "$ref": "#/$defs/text" } }
-      }
-    },
-    "input": {
-      "type": "object",
-      "description": "A value the person installing gives (required) or the installer generates into a Secret (generate).",
-      "additionalProperties": false,
-      "required": ["name", "description", "validation"],
-      "properties": {
-        "name": { "type": "string", "pattern": "^[a-z][A-Za-z0-9]*$", "description": "camelCase." },
-        "description": { "$ref": "#/$defs/text" },
-        "label": { "type": "string", "maxLength": 40, "description": "A short name for the field, in English." },
-        "locales": {
-          "type": "object",
-          "description": "The label and description in other languages, by BCP 47 tag. config/locales.yaml lists the tags each needs.",
-          "propertyNames": { "$ref": "#/$defs/locale" },
-          "additionalProperties": { "$ref": "#/$defs/inputLocale" }
-        },
-        "required": { "type": "boolean" },
-        "default": { "type": "string", "description": "The value when a deploy does not give the input." },
-        "generate": { "$ref": "#/$defs/generate" },
-        "secret": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["name", "key"],
-          "properties": {
-            "name": { "type": "string", "pattern": "^[a-z0-9][a-z0-9.-]*$" },
-            "key": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+$" }
-          }
-        },
-        "validation": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["pattern"],
-          "properties": { "pattern": { "$ref": "#/$defs/text", "description": "Regular expression the whole value matches." } }
+        "encoding": {
+          "type": "string",
+          "enum": [
+            "hex",
+            "base64url"
+          ],
+          "description": "hex, or base64url without padding."
         }
       },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "description": "Generate is how the installer makes the value instead of asking. A reader does not fill in an\ninput whose type it does not know."
+    },
+    "input": {
       "oneOf": [
         {
-          "required": ["generate", "secret"],
-          "not": { "anyOf": [{ "required": ["required"] }, { "required": ["default"] }] }
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "required"
+                ]
+              },
+              {
+                "required": [
+                  "default"
+                ]
+              }
+            ]
+          },
+          "required": [
+            "generate",
+            "secret"
+          ]
         },
         {
-          "description": "A person gives the value, so the field has a label in every language.",
-          "required": ["required", "label", "locales"],
-          "not": { "anyOf": [{ "required": ["generate"] }, { "required": ["secret"] }] }
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "generate"
+                ]
+              },
+              {
+                "required": [
+                  "secret"
+                ]
+              }
+            ]
+          },
+          "required": [
+            "required",
+            "label",
+            "locales"
+          ],
+          "description": "A person gives the value, so the field has a label in every language."
         }
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][A-Za-z0-9]*$",
+          "description": "camelCase."
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 40,
+          "description": "A short name for the field, in English."
+        },
+        "locales": {
+          "$ref": "#/$defs/inputLocales"
+        },
+        "generate": {
+          "$ref": "#/$defs/generate"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "default": {
+          "type": "string",
+          "description": "The value when a deploy does not give the input."
+        },
+        "secret": {
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9.-]*$"
+            },
+            "key": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_.-]+$"
+            }
+          },
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "name",
+            "key"
+          ]
+        },
+        "validation": {
+          "properties": {
+            "pattern": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "pattern"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "description",
+        "validation"
+      ],
+      "description": "Input is a value the person installing gives (required) or the installer generates into a\nSecret (generate)."
+    },
+    "inputLocales": {
+      "additionalProperties": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "label",
+          "description"
+        ]
+      },
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^([a-z]{2,3}(-[a-z]{3}){0,3}|[a-z]{4,8})(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?(-([a-z0-9]{5,8}|[0-9][a-z0-9]{3}))*(-[a-wyz0-9](-[a-z0-9]{2,8})+)*(-x(-[a-z0-9]{1,8})+)?$"
+      },
+      "type": "object",
+      "description": "InputLocales is the label and description in other languages, by BCP 47 tag.\nconfig/locales.yaml lists the tags each needs."
+    },
+    "metadata": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Name for people."
+        },
+        "summary": {
+          "type": "string",
+          "pattern": "^[^\\n]+$",
+          "description": "What the application is, in one plain sentence for people choosing a template."
+        },
+        "locales": {
+          "$ref": "#/$defs/summaryLocales"
+        },
+        "license": {
+          "type": "string",
+          "minLength": 1,
+          "description": "SPDX expression for the application, its images and charts."
+        },
+        "homepage": {
+          "type": "string",
+          "pattern": "^https?://",
+          "format": "uri"
+        },
+        "version": {
+          "type": "string",
+          "description": "The application version: the tag of its main image. Objects get it as the label\napp.kubernetes.io/version."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "summary",
+        "locales",
+        "license",
+        "homepage",
+        "version"
+      ],
+      "description": "Metadata is a template's name, summary and version."
+    },
+    "port": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "port": {
+          "type": "integer",
+          "maximum": 65535,
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "port"
+      ],
+      "description": "Port is a named port of a service."
+    },
+    "ref": {
+      "oneOf": [
+        {
+          "required": [
+            "component"
+          ]
+        },
+        {
+          "required": [
+            "capability"
+          ]
+        }
+      ],
+      "properties": {
+        "component": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "capability": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "description": "Ref is a component by id, or a capability: its recommended upstream on the profile, else an\noptional one."
+    },
+    "risk": {
+      "properties": {
+        "risk": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mitigation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "locales": {
+          "$ref": "#/$defs/riskLocales"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "risk",
+        "mitigation",
+        "locales"
+      ],
+      "description": "Risk is a risk of a template and its mitigation."
+    },
+    "riskLocales": {
+      "additionalProperties": {
+        "properties": {
+          "risk": {
+            "type": "string",
+            "minLength": 1
+          },
+          "mitigation": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "risk",
+          "mitigation"
+        ]
+      },
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^([a-z]{2,3}(-[a-z]{3}){0,3}|[a-z]{4,8})(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?(-([a-z0-9]{5,8}|[0-9][a-z0-9]{3}))*(-[a-wyz0-9](-[a-z0-9]{2,8})+)*(-x(-[a-z0-9]{1,8})+)?$"
+      },
+      "type": "object",
+      "description": "RiskLocales is the risk and mitigation in other languages, by BCP 47 tag. config/locales.yaml\nlists the tags each needs."
+    },
+    "security": {
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "locales": {
+          "$ref": "#/$defs/summaryLocales"
+        },
+        "risks": {
+          "items": {
+            "$ref": "#/$defs/risk"
+          },
+          "type": "array"
+        },
+        "unauthenticated": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true,
+          "description": "Services with no sign-in or key of their own. Each needs an ingress NetworkPolicy; the risks\nsay why."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "summary",
+        "risks"
+      ],
+      "description": "Security is what a template exposes and how its risks are mitigated."
+    },
+    "service": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 53,
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "podSecurity": {
+          "type": "string",
+          "enum": [
+            "restricted",
+            "baseline"
+          ],
+          "description": "The Pod Security Standard level its pods meet."
+        },
+        "ports": {
+          "items": {
+            "$ref": "#/$defs/port"
+          },
+          "type": "array"
+        },
+        "resources": {
+          "$ref": "#/$defs/serviceResources"
+        },
+        "domains": {
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": "array",
+          "description": "Public hostnames; rendering then needs a domain and a ClusterIssuer."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "podSecurity",
+        "resources"
+      ],
+      "description": "Service is a workload in manifests.yaml."
+    },
+    "serviceResources": {
+      "properties": {
+        "requests": {
+          "properties": {
+            "cpu": {
+              "type": "string",
+              "pattern": "^[0-9]+(\\.[0-9]+)?m?$"
+            },
+            "memory": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*(Ki|Mi|Gi|Ti|K|M|G|T)?$"
+            }
+          },
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "cpu",
+            "memory"
+          ]
+        },
+        "limits": {
+          "properties": {
+            "cpu": {
+              "type": "string",
+              "pattern": "^[0-9]+(\\.[0-9]+)?m?$"
+            },
+            "memory": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*(Ki|Mi|Gi|Ti|K|M|G|T)?$"
+            }
+          },
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "cpu",
+            "memory"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "requests",
+        "limits"
       ]
     },
+    "smoke": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resource": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9.-]+/[a-z0-9][a-z0-9.-]*$"
+        },
+        "condition": {
+          "type": "string",
+          "pattern": "^(condition=[A-Za-z][A-Za-z0-9]*(=(True|False|Unknown))?|jsonpath=.+)$"
+        },
+        "timeout": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*(s|m)$"
+        },
+        "http": {
+          "properties": {
+            "service": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]*$"
+            },
+            "port": {
+              "type": "integer",
+              "maximum": 65535,
+              "minimum": 1
+            },
+            "path": {
+              "type": "string",
+              "pattern": "^/"
+            },
+            "status": {
+              "type": "integer",
+              "maximum": 599,
+              "minimum": 100
+            },
+            "contains": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "service",
+            "port",
+            "path",
+            "status"
+          ],
+          "description": "GET through a port-forward to the Service."
+        },
+        "sql": {
+          "properties": {
+            "cluster": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*$"
+            },
+            "database": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+            },
+            "query": {
+              "type": "string",
+              "pattern": "^[Ss][Ee][Ll][Ee][Cc][Tt] "
+            },
+            "expect": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "cluster",
+            "database",
+            "query",
+            "expect"
+          ],
+          "description": "One read-only SELECT on the CloudNativePG primary."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "resource",
+        "condition",
+        "timeout"
+      ],
+      "description": "Smoke is an e2e check after install."
+    },
     "summaryLocale": {
-      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "string",
+          "pattern": "^[^\\n]+$"
+        }
+      },
       "additionalProperties": false,
-      "required": ["summary"],
-      "properties": { "summary": { "$ref": "#/$defs/text" } }
+      "type": "object",
+      "required": [
+        "summary"
+      ],
+      "description": "SummaryLocale is a summary in one language."
     },
-    "riskLocale": {
+    "summaryLocales": {
+      "additionalProperties": {
+        "$ref": "#/$defs/summaryLocale"
+      },
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^([a-z]{2,3}(-[a-z]{3}){0,3}|[a-z]{4,8})(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?(-([a-z0-9]{5,8}|[0-9][a-z0-9]{3}))*(-[a-wyz0-9](-[a-z0-9]{2,8})+)*(-x(-[a-z0-9]{1,8})+)?$"
+      },
       "type": "object",
-      "additionalProperties": false,
-      "required": ["risk", "mitigation"],
-      "properties": { "risk": { "$ref": "#/$defs/text" }, "mitigation": { "$ref": "#/$defs/text" } }
-    },
-    "inputLocale": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["label", "description"],
-      "properties": { "label": { "type": "string", "maxLength": 40 }, "description": { "$ref": "#/$defs/text" } }
+      "description": "SummaryLocales is the summary in other languages, by BCP 47 tag.\nconfig/locales.yaml lists the tags each needs."
     }
-  }
+  },
+  "properties": {
+    "apiVersion": {
+      "const": "catalog.zeabur.com/v1"
+    },
+    "kind": {
+      "const": "Template"
+    },
+    "metadata": {
+      "$ref": "#/$defs/metadata"
+    },
+    "requires": {
+      "items": {
+        "$ref": "#/$defs/ref"
+      },
+      "type": "array",
+      "uniqueItems": true,
+      "description": "Components the cluster must have."
+    },
+    "services": {
+      "items": {
+        "$ref": "#/$defs/service"
+      },
+      "type": "array",
+      "minItems": 1,
+      "description": "The workloads in manifests.yaml, for people and for the Pod Security profile of each."
+    },
+    "inputs": {
+      "items": {
+        "$ref": "#/$defs/input"
+      },
+      "type": "array"
+    },
+    "security": {
+      "$ref": "#/$defs/security"
+    },
+    "smoke": {
+      "items": {
+        "$ref": "#/$defs/smoke"
+      },
+      "type": "array",
+      "minItems": 1,
+      "description": "e2e checks after install, in the template's namespace."
+    }
+  },
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "services",
+    "security",
+    "smoke"
+  ],
+  "title": "Template",
+  "description": "Template is one application, at templates/\u003cslug\u003e/template.yaml with its objects in\nmanifests.yaml next to it. A project member installs it into one namespace."
 }
