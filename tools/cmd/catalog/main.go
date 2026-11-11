@@ -87,8 +87,9 @@ func validate(fs *flag.FlagSet, r *repo) error {
 	return nil
 }
 
-// list prints the e2e CI matrix of a tier. For smoke: one job per group, with
-// the IDs it tests. For full: every profile × architecture × component it
+// list prints the e2e CI matrix of a tier. For smoke: one amd64 job per group,
+// with the IDs it tests, and one arm64 job per group of the selected components
+// in the smokeRepresentative list. For full: every profile × architecture × component it
 // supports, and every template on single-node amd64. Both carry the kind node
 // version.
 func list(fs *flag.FlagSet, r *repo) error {
@@ -137,7 +138,18 @@ func list(fs *flag.FlagSet, r *repo) error {
 			return err
 		}
 		for _, g := range groups {
-			jobs = append(jobs, job{IDs: strings.Join(g.IDs, " ")})
+			jobs = append(jobs, job{Arch: "amd64", IDs: strings.Join(g.IDs, " ")})
+		}
+		arm, err := armSelector(r, selected)
+		if err != nil {
+			return err
+		}
+		groups, err = smokeGroups(r, arm)
+		if err != nil {
+			return err
+		}
+		for _, g := range groups {
+			jobs = append(jobs, job{Arch: "arm64", IDs: strings.Join(g.IDs, " ")})
 		}
 	case "full":
 		for _, p := range profiles {

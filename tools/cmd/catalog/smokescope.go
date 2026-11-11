@@ -67,6 +67,19 @@ func representative(r *repo) ([]string, error) {
 	return cfg.IDs, nil
 }
 
+// armSelector narrows sel to the components in the smokeRepresentative list.
+// The merge queue repeats those on arm64; templates run on amd64 only, as in
+// the full tier.
+func armSelector(r *repo, sel func(string, []*catalog.Component) bool) (func(string, []*catalog.Component) bool, error) {
+	ids, err := representative(r)
+	if err != nil {
+		return nil, err
+	}
+	return func(id string, order []*catalog.Component) bool {
+		return strings.Contains(id, "/") && slices.Contains(ids, id) && sel(id, order)
+	}, nil
+}
+
 // smokeSelector is selector for the smoke tier: a change to a shared file
 // selects the representative list instead of everything.
 func smokeSelector(r *repo, since string) (func(string, []*catalog.Component) bool, error) {

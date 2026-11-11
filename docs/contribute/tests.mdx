@@ -94,6 +94,8 @@ A queued pull request tests what differs from the queue's base commit. A pull re
 
 Tests that share dependencies share a cluster. Each dependency is installed only once per cluster. After a component passes its smoke check, the test uninstalls it unless a later test in the same cluster still needs it.
 
+The components in the `smokeRepresentative` list that this selects also run on an arm64 kind cluster, as one more job in the same `ci.yml` run. Templates run on amd64 only.
+
 If a change affects `config/kubernetes.yaml`, `smoke` tests everything. If it affects `tools/`, `go.mod`, `go.sum`, the flake, another file in `config/`, or a workflow, `smoke` tests the `smokeRepresentative` list in [`config/e2e.yaml`](../../config/e2e.yaml) instead. The weekly run still tests everything.
 
 ## `full`: Test resource usage and cleanup

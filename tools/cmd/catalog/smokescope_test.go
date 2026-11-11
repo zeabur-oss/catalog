@@ -143,3 +143,40 @@ func TestRepresentativeUnknownID(t *testing.T) {
 		t.Error("representative accepted an unknown ID")
 	}
 }
+
+func TestArmSelector(t *testing.T) {
+	r := scopeRepo(t)
+	for _, c := range []struct {
+		name  string
+		files []string
+		want  []string
+	}{
+		{"shared file", []string{"tools/cmd/catalog/tier.go"}, []string{"ingress/traefik", "storage/local"}},
+		{"representative component", []string{"components/ingress/traefik.yaml"}, []string{"ingress/traefik"}},
+		{"other component", []string{"components/db/postgres.yaml"}, nil},
+		{"template", []string{"templates/beta/template.yaml"}, nil},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			s, err := smokeScope(r, c.files)
+			if err != nil {
+				t.Fatal(err)
+			}
+			arm, err := armSelector(r, s.selects)
+			if err != nil {
+				t.Fatal(err)
+			}
+			groups, err := smokeGroups(r, arm)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var got []string
+			for _, g := range groups {
+				got = append(got, g.IDs...)
+			}
+			slices.Sort(got)
+			if !slices.Equal(got, c.want) {
+				t.Errorf("arm64 tests %v, want %v", got, c.want)
+			}
+		})
+	}
+}

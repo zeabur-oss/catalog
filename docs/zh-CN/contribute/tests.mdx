@@ -94,6 +94,8 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 
 共用依赖组件的测试会共用集群，依赖组件在每个集群中只安装一次。组件完成冒烟测试后就会卸载，除非同一集群后续的测试仍需要它。
 
+被选中的项目里，列在 `smokeRepresentative` 中的组件还会在 arm64 kind 集群上再运行一次，是同一次 `ci.yml` 运行中多出来的一个 job。模板只在 amd64 上测试。
+
 变更 `config/kubernetes.yaml` 时，`smoke` 会测试所有项目。变更 `tools/`、`go.mod`、`go.sum`、flake、`config/` 的其他文件或工作流时，`smoke` 改测 [`config/e2e.yaml`](../../../config/e2e.yaml) 中 `smokeRepresentative` 列出的项目。每周的运行仍会测试所有项目。
 
 ## `full`：测试资源用量和清理

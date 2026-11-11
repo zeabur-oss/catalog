@@ -40,7 +40,7 @@ existing branch: `git rebase --signoff main`, then force-push.
 - **The merge queue (`smoke`, about 15 to 20 minutes):**
   what you changed, what it needs and what installs it is installed on one node and
   smoke tested. A change to a shared file such as `config/` or `tools/` tests the
-  `smokeRepresentative` list in `config/e2e.yaml` instead of everything. A queued change that touches no component or template skips it.
+  `smokeRepresentative` list in `config/e2e.yaml` instead of everything. The selected components of that list also run on arm64. A queued change that touches no component or template skips it.
 - **Every week and before a release (`full`):** everything on one and three
   nodes, amd64 and arm64, with idle memory and CPU, uninstall and leftover checks.
 

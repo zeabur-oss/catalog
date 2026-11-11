@@ -35,3 +35,5 @@ that commit and `HEAD`, as the merge queue does (`tools/cmd/catalog/smokescope.g
 edits do not count): a changed component or template, with what installs it; a change under
 `tools/`, `go.*`, `flake.*`, `config/` or `.github/workflows/`, the `smokeRepresentative` list in
 `config/e2e.yaml`; a change to `config/kubernetes.yaml`, everything.
+`catalog list -tier smoke` adds an arm64 job for the selected components of the `smokeRepresentative`
+list; templates run on amd64 only.
