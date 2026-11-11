@@ -94,7 +94,7 @@ description: 了解各層 CI 的執行時機與檢查內容，並設定範本測
 
 如果多個測試需要相同的相依元件，就會共用叢集。相依元件在每個叢集只安裝一次。元件完成煙霧測試後就會解除安裝，除非同一叢集後續的測試仍需要它。
 
-被選到的項目中，列在 `smokeRepresentative` 裡的元件還會在 arm64 kind 叢集上再跑一次，是同一次 `ci.yml` 執行裡多出來的一個 job。範本只在 amd64 上測試。
+這裡選出的元件如果也列在 `smokeRepresentative` 裡，就會在同一次 `ci.yml` 執行中，多跑一個 job，在 arm64 kind 叢集上測試。範本只在 amd64 上測試。
 
 變更 `config/kubernetes.yaml` 時，`smoke` 會測試所有項目。變更 `tools/`、`go.mod`、`go.sum`、flake、`config/` 的其他檔案或工作流程時，`smoke` 改測 [`config/e2e.yaml`](../../../config/e2e.yaml) 裡 `smokeRepresentative` 列出的項目。每週的執行仍會測試所有項目。
 
