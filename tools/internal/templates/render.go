@@ -14,7 +14,7 @@ import (
 	"slices"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
-	"go.yaml.in/yaml/v3"
+	"go.yaml.in/yaml/v4"
 )
 
 type RenderOptions struct {

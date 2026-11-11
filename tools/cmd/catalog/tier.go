@@ -17,7 +17,7 @@ import (
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"github.com/zeabur-oss/catalog/tools/internal/templates"
-	"go.yaml.in/yaml/v3"
+	"go.yaml.in/yaml/v4"
 )
 
 // Tiers. check runs on every pull request: static checks, then a server-side

@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"slices"
 
-	"go.yaml.in/yaml/v3"
+	"go.yaml.in/yaml/v4"
 )
 
 // Labels of every top-level object of an install, and of the Secrets that

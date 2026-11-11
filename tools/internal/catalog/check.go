@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver/v3"
-	"go.yaml.in/yaml/v3"
+	"go.yaml.in/yaml/v4"
 )
 
 // Check validates every component without a cluster: schema, licenses,

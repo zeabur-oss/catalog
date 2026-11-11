@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"go.yaml.in/yaml/v3"
+	"go.yaml.in/yaml/v4"
 )
 
 const smokeNamespace = "catalog-smoke"
