@@ -158,8 +158,8 @@ releases:
     namespace: zot
     repo: https://zotregistry.dev/helm-charts
     chart: zot
-    version: 0.1.128
-    chartDigest: sha256:0bc91fa8585454c2fc1dbcc51e51cb33b2f4533b5ae45cdaa529c09e4e75337f
+    version: 0.1.130
+    chartDigest: sha256:9bf53fb5172894a580e5d9b0b25576feac12de9e0d7b90789e6f57e2266f9e68
     values: |
       # Pinned by digest; a tag alone can move.
       image:

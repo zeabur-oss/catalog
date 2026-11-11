@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: Uptime Kuma
   # renovate: depName=louislam/uptime-kuma
-  version: "2.5.8-rootless"
+  version: "2.5.9-rootless"
   summary: Uptime monitoring, with its data on a volume.
   locales:
     zh-TW:

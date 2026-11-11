@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: Miniflux
   # renovate: depName=miniflux/miniflux
-  version: "2.3.4"
+  version: "2.3.5"
   summary: A feed reader, with PostgreSQL.
   locales:
     zh-TW:

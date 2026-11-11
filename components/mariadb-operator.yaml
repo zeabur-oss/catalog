@@ -31,16 +31,16 @@ releases:
     namespace: mariadb-operator
     repo: https://helm.mariadb.com/mariadb-operator
     chart: mariadb-operator-crds
-    version: 26.10.1
-    chartDigest: sha256:2a0c8ae8ec848e18144eb2606d7860f01d08c783a512066d2cf8b784d13a64d4
+    version: 26.10.2
+    chartDigest: sha256:08c3540473c3e78a130eec47817257c866eab87549d4e6c1a8f7396827e971b0
 
   - name: mariadb-operator
     type: helm
     namespace: mariadb-operator
     repo: https://helm.mariadb.com/mariadb-operator
     chart: mariadb-operator
-    version: 26.10.1
-    chartDigest: sha256:c569d8ae12fcd62c21c5b9c5e0acf33a5895d60ac040eb68ce7f5c55c8b8b81a
+    version: 26.10.2
+    chartDigest: sha256:db364a229041e55bcd58e79dbdc723a8ff33e2a512c47551d1502cd7b0c75e07
     values: |
       # Pinned by digest; a tag alone can move.
       image:

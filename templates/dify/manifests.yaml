@@ -1288,7 +1288,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: dify-plugin
-        image: docker.io/langgenius/dify-plugin-daemon:0.6.13-local@sha256:b5680c99419f0b040687a3d232f10b5bde353fefcfa942aebbf15d366cae21ae
+        image: docker.io/langgenius/dify-plugin-daemon:0.6.14-local@sha256:17ee86306a35c2c7e5910016f72e441c0252f0416bb9a845862088e9f8efa873
         ports:
         - name: http
           containerPort: 5002

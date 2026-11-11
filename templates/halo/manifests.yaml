@@ -38,7 +38,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: halo
-        image: halohub/halo:2.27.1@sha256:cc28f8bab142b79bf1bc5bdb07c2e0746821af5c814705e72b5beda6e9cabbc9
+        image: halohub/halo:2.27.2@sha256:a804c41779c9ee8b19465dda57081d58ae0bc4d3e49bece7f50cf42cf0366958
         ports:
         - name: http
           containerPort: 8090
