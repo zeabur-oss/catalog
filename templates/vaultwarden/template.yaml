@@ -4,7 +4,7 @@ kind: Template
 metadata:
   name: Vaultwarden
   # renovate: depName=vaultwarden/server
-  version: "1.37.4"
+  version: "1.37.5"
   summary: A Bitwarden-compatible password manager; sign-up is closed and the admin invites people.
   locales:
     zh-TW:
