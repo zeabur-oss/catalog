@@ -12,9 +12,9 @@ e2e:
 
 # The k3s, rke2 and kubesolo profiles install that distribution on the runner
 # and test every component that single-node supports and whose distributions
-# allow it, with the single-node values. Templates run on kind only. The
-# index's testedOn lists the distributions whose pinned version below has a
-# passing measurement. sha256 is the checksum of each release asset; change it
+# allow it, with the single-node values. Templates run on kind only. The API
+# publishes these pinned versions with the measurements, so a reader can tell
+# which distributions a component passed on. sha256 is the checksum of each release asset; change it
 # with the version. k3s and RKE2 keep the release that the Zeabur installer
 # pins (crates/zeabur-installer-plan/src/pins.rs).
 k3s:

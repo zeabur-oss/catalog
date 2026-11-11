@@ -1,5 +1,6 @@
-# A published release that is not a pre-release copies its signed files, unchanged, to GitHub
-# Pages under /v1/ (https://oss-catalog.zeabur.com/v1/), where Zeabur fetches templates.
+# A published release that is not a pre-release publishes its static API, api-v<N>.tar.gz, to
+# GitHub Pages under /v<N>/ (https://oss-catalog.zeabur.com/v1/). The gh-pages branch keeps every
+# major: a release replaces only its own v<N>/, so the last release of an older major stays there.
 # Manual run: publish an earlier published release again, such as to roll back.
 name: pages
 
@@ -9,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release to publish (v0.4.0)"
+        description: "Release to publish (v0.5.0)"
         required: true
 
 permissions:
@@ -24,14 +25,18 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || !github.event.release.prerelease }}
     runs-on: ubuntu-26.04
     permissions:
-      contents: read
+      contents: write
       pages: write
       id-token: write
     environment:
       name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}v1/
+      url: ${{ steps.deploy.outputs.page_url }}
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Download the release
+        id: release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag || github.event.release.tag_name }}
@@ -41,14 +46,66 @@ jobs:
             echo "::error::$TAG is a draft or a pre-release; publish only a published release"
             exit 1
           fi
-          mkdir -p site/v1
-          cd site/v1
-          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" \
-            --pattern index.json --pattern bundle.tar.gz \
-            --pattern SHA256SUMS --pattern SHA256SUMS.sigstore.json
-          sha256sum --check --ignore-missing SHA256SUMS
+          dir="$RUNNER_TEMP/release"
+          mkdir "$dir"
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir "$dir" \
+            --pattern 'api-v*.tar.gz' --pattern SHA256SUMS
+          shopt -s nullglob
+          archives=("$dir"/api-v*.tar.gz)
+          if [ "${#archives[@]}" -ne 1 ]; then
+            echo "::error::$TAG has no single api-v<N>.tar.gz"
+            exit 1
+          fi
+          name=$(basename "${archives[0]}")
+          major=${name#api-}
+          major=${major%.tar.gz}
+          if ! [[ $major =~ ^v[0-9]+$ ]]; then
+            echo "::error::$name does not name a major"
+            exit 1
+          fi
+          (cd "$dir" && grep -E "^[0-9a-f]{64}  $name\$" SHA256SUMS | sha256sum --check)
+          # Only regular files and directories under <major>/, so the archive cannot write elsewhere.
+          if tar -tvzf "${archives[0]}" | grep -v '^[-d]'; then
+            echo "::error::$name holds an entry that is not a file or a directory"
+            exit 1
+          fi
+          if tar -tzf "${archives[0]}" | grep -Ev "^$major/([A-Za-z0-9_-][A-Za-z0-9._-]*/?)*\$"; then
+            echo "::error::$name holds a path outside $major/"
+            exit 1
+          fi
+          {
+            echo "archive=${archives[0]}"
+            echo "major=$major"
+          } >> "$GITHUB_OUTPUT"
+      - name: Replace the major on gh-pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag || github.event.release.tag_name }}
+          ARCHIVE: ${{ steps.release.outputs.archive }}
+          MAJOR: ${{ steps.release.outputs.major }}
+        run: |
+          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          git() { command git -c "http.https://github.com/.extraheader=$auth" "$@"; }
+          if git ls-remote --exit-code origin refs/heads/gh-pages > /dev/null; then
+            git fetch --depth=1 origin gh-pages
+            git switch --discard-changes -C gh-pages FETCH_HEAD
+          else
+            git switch --orphan gh-pages
+          fi
+          git rm -rq --ignore-unmatch "$MAJOR"
+          rm -rf "$MAJOR"
+          tar -xzf "$ARCHIVE" --no-same-owner --no-same-permissions
+          git add "$MAJOR"
+          if git diff --cached --quiet; then
+            echo "gh-pages already holds $MAJOR of $TAG"
+          else
+            git -c user.name='github-actions[bot]' \
+              -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit -q -m "$MAJOR: $TAG"
+            git push origin gh-pages
+          fi
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
-          path: site
+          path: .
       - id: deploy
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

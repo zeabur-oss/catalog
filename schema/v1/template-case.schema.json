@@ -136,7 +136,7 @@
         "description": { "$ref": "#/$defs/description" },
         "components": {
           "type": "array",
-          "description": "index.json components, with only the fields matching reads.",
+          "description": "Component declarations, with only the fields matching reads.",
           "items": {
             "type": "object",
             "additionalProperties": false,

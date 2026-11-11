@@ -1,25 +1,68 @@
 ---
-title: Releases and bundles
-description: Pin a Zeabur Catalog version, verify Sigstore signatures, and read index.json, or build release artifacts from a specific commit.
+title: Releases and the API
+description: Read the catalog from its static API, pin a Zeabur Catalog version and verify its Sigstore signature, or build the release files from a specific commit.
 ---
 
-Pushing a `vX.Y.Z` tag publishes `index.json`, `bundle.tar.gz`, `checksums.txt`, and `SHA256SUMS` with its Sigstore signature bundle. Tools that use Zeabur Catalog should pin a version and verify it before reading `index.json`. Before 1.0, a minor release can change the file format, so pin an exact release.
+Pushing a `vX.Y.Z` tag publishes `bundle.tar.gz`, `api-v1.tar.gz`, `checksums.txt`, and `SHA256SUMS` with its Sigstore signature bundle. Each release that isn't a pre-release also publishes its API at `https://oss-catalog.zeabur.com/v1/`. Before 1.0, a minor release can change the file format, so pin an exact release when you need one.
 
-## Release artifacts
+## Release files
 
 | File | Contents |
 | --- | --- |
-| `index.json` | All components, with their installation order and measurements for each profile, and the Kubernetes versions. A profile is a configuration for `single-node` or `multi-node`. |
-| `bundle.tar.gz` | A bundle containing the index, cross-check data, components, templates, and related files. |
-| `checksums.txt` | File checksums. |
+| `api-v1.tar.gz` | The [API](#the-api) of this release, under `v1/`. |
+| `bundle.tar.gz` | A bundle containing cross-check data, components, templates, schemas, conformance cases and related files. |
+| `checksums.txt` | Checksums of the two archives. |
 
 `SHA256SUMS` lists the checksum of every other file and has a cosign keyless Sigstore signature bundle, `SHA256SUMS.sigstore.json`. Every file also has a GitHub build provenance attestation.
 
 The shared release workflow of [zeabur-oss/.github](https://github.com/zeabur-oss/.github) signs every zeabur-oss release. A signature names that workflow, the repository `zeabur-oss/catalog`, and the tag.
 
-## The latest release on the web
+## The API
 
-Each release that is not a pre-release also copies `index.json`, `bundle.tar.gz`, `SHA256SUMS` and `SHA256SUMS.sigstore.json`, unchanged, to `https://oss-catalog.zeabur.com/v1/`. Zeabur fetches its templates from there. `v1` is the template `apiVersion`, `catalog.zeabur.com/v1`. The address always has the latest release, so verify it as above. `SHA256SUMS` changes with every release, so you can tell from it alone whether there is a new one.
+The API is static JSON files. It holds facts: what each component declares, what it renders, and what e2e measured. It doesn't hold values worked out from them, such as totals or the distributions a component passed on. A reader works those out, as [How installers choose and install components](installers.mdx#what-the-installer-works-out) describes.
+
+| Path | Contents | Schema |
+| --- | --- | --- |
+| `v1/catalog.json` | The release's `version` and `commit`, the profiles, the Kubernetes versions, the pinned `distributions` and each component's `id` and `sourceDigest`. | [`catalog.schema.json`](../../schema/v1/catalog.schema.json) |
+| `v1/components/<id>.json` | One component: its `id` and `sourceDigest`, its `declaration`, its `render` and its `measurements`. | [`component-file.schema.json`](../../schema/v1/component-file.schema.json) |
+| `v1/schema/` | The schemas above, and `component.schema.json`, the schema of a declaration. | |
+
+The schemas are the contract, and the Go types of the catalog's tools generate them. Each file of a release passes its schema.
+
+- `declaration` is the [component file](component-format.mdx) as written, as JSON.
+- `sourceDigest` is the digest of the component file. A measurement with the same `sourceDigest` measured this file.
+- `render` is what `helm template` renders for each profile the component supports, at `kubernetesVersion`, the newest Kubernetes version the catalog tests. For each profile, `workloads` lists each Deployment, StatefulSet and DaemonSet with its `release`, `namespace`, `name`, `kind`, `replicas`, and the `requests` and `limits` of its `containers` and `initContainers`. A StatefulSet also has the `storage` of its `volumeClaimTemplates`. A DaemonSet has no `replicas`; it runs one pod on each node. `persistentVolumeClaims` lists the claims the component renders with their `storage`.
+- `measurements` lists each environment where e2e ran the component.
+
+`https://oss-catalog.zeabur.com/v1/` always holds the latest release of API major version 1. A change that would break a reader of `v1` comes with `v2`, at its own path, and `v1` then keeps the last release that had it. A newer release can add a field or a value without a new major version. A reader ignores a field it doesn't know, and handles a value it doesn't know as follows:
+
+| Field | A value the reader doesn't know |
+| --- | --- |
+| `defaults.<profile>` | Treat it as `unsupported`. |
+| `releases[].type`, `security.podSecurity` | Don't offer the component. |
+| `inputs[].generate.type` | Don't fill in the input. A component or template that needs the input can't be installed. |
+| `distributions`, `detection.addons[].distribution`, a measurement's `distribution` | Ignore the entry. |
+| A measurement's `result` | The run didn't pass. |
+
+Each measurement names its environment with `distribution` (`kind`, `k3s`, `rke2` or `kubesolo`), `profile`, `platform`, `kubernetesVersion` and `distributionVersion`, the release of a distribution on the host. `result` is `passed` or `failed`, and `sourceDigest` is the digest of the component file that the run installed. `versions` gives the version of each release that the run installed.
+
+```json
+"measurements": [
+  {
+    "distribution": "kind",
+    "profile": "single-node",
+    "platform": {"os": "linux", "architecture": "amd64"},
+    "kubernetesVersion": "v1.36.4",
+    "result": "passed",
+    "sourceDigest": "h1:4RtmKjCcpt+eWwv4Imw1vsdJNJMTxzw/PJ1fBh0+Fzg=",
+    "pods": [{"workload": "traefik", "kind": "Deployment", "memory": "22Mi", "cpu": "3m"}],
+    "versions": [{"release": "traefik", "version": "41.7.1"}],
+    "measuredAt": "2026-11-03"
+  }
+]
+```
+
+A passing run has `pods`, one row for each workload: its `workload` name, its `kind`, and the idle `memory` and `cpu` of one pod of it. Both are Kubernetes quantities such as `22Mi` and `3m`, rounded to whole MiB and millicores. A workload is a Deployment, StatefulSet, DaemonSet, or bare Pod, or the controller of a Job. The rows cover the pods in the component's own namespaces as the cluster ran them, including pods that an operator creates. To get a total, multiply each row by the workload's `replicas` in `render` and add them up. The scheduler places pods by requests, so an installer compares the sum of the memory requests in `render` with a node's allocatable memory.
 
 ## Verify and read a release
 
@@ -41,51 +84,17 @@ cosign verify-blob SHA256SUMS --bundle SHA256SUMS.sigstore.json \
 sha256sum --check --ignore-missing SHA256SUMS
 ```
 
-To check the attestation instead, run `gh attestation verify index.json --repo zeabur-oss/catalog --signer-workflow zeabur-oss/.github/.github/workflows/release.yml`.
+To check the attestation instead, run `gh attestation verify api-v1.tar.gz --repo zeabur-oss/catalog --signer-workflow zeabur-oss/.github/.github/workflows/release.yml`.
 
 </Step>
 
 <Step>
 
-### Read the index and generate installation content
+### Read the release and generate installation content
 
-After verification, the tool reads `index.json`. Only incompatible changes affect `indexVersion`.
+After verification, the tool unpacks `api-v1.tar.gz` and reads it as [the API](#the-api).
 
-`catalog` names the release that built the index: `version` is the catalog version, such as `0.3.0`. An index that `catalog index` writes without `-version`, such as in CI, has no `catalog`.
-
-```json
-"catalog": {"version": "0.3.0"}
-```
-
-A newer release can add a value to a field without a new `indexVersion`. A reader handles a value it doesn't know as follows, and ignores a field it doesn't know:
-
-| Field | A value the reader doesn't know |
-| --- | --- |
-| `defaults.<profile>` | Treat it as `unsupported`. |
-| `releases[].type`, `security.podSecurity` | Don't offer the component. |
-| `inputs[].generate.type` | Don't fill in the input. A component or template that needs the input can't be installed. |
-| `distributions`, `testedOn[].distribution`, `detection.addons[].distribution` | Ignore the entry. |
-| `result` in a measurement file | The run didn't pass. |
-
-`measured` lists each environment where the component's test passed. `distribution` (`kind`, `k3s`, `rke2` or `kubesolo`), `profile`, `platform`, `kubernetesVersion` and `distributionVersion`, the release of a distribution on the host, name the environment. `versions` gives the version of each release that the run installed.
-
-```json
-"measured": [
-  {
-    "distribution": "kind",
-    "profile": "single-node",
-    "platform": {"os": "linux", "architecture": "amd64"},
-    "kubernetesVersion": "v1.36.4",
-    "pods": [{"workload": "traefik", "kind": "Deployment", "memory": "22Mi", "cpu": "3m"}],
-    "versions": [{"release": "traefik", "version": "41.7.1"}],
-    "measuredAt": "2026-11-03"
-  }
-]
-```
-
-Each environment has `pods`, one row for each workload: its `workload` name, its `kind`, and the idle `memory` and `cpu` of one pod of it. Both are Kubernetes quantities such as `22Mi` and `3m`, rounded to whole MiB and millicores. A workload is a Deployment, StatefulSet, DaemonSet, or bare Pod, or the controller of a Job. The rows cover the pods in the component's own namespaces as the cluster ran them, including pods that an operator creates. The index stores no total. To get one, multiply each row by the workload's replicas and add them up. Replicas and requests are not measured. Read them from the objects the component renders for the profile; a DaemonSet runs one pod on each node. The scheduler places pods by requests, so an installer compares the sum of the memory requests with a node's allocatable memory.
-
-When installing components, the tool runs `detection`, offers the components enabled by default (recommended) for the cluster's profile, and collects each component's `inputs` from the user. It then generates installation content according to `installOrder` and merges `contributes` into the corresponding targets. [How installers choose and install components](installers.mdx) gives the rules for choosing them.
+When installing components, the tool runs `detection`, offers the components enabled by default (recommended) for the cluster's profile, and collects each component's `inputs` from the user. It then generates installation content according to the [install order](installers.mdx#install-order) and merges `contributes` into the corresponding targets. [How installers choose and install components](installers.mdx) gives the rules for choosing them.
 
 When deploying a template, the tool checks that the cluster meets all requirements listed in `requires`, collects template inputs from the user, and writes the remaining automatically generated values to a Secret. It then renders and applies `manifests.yaml` for the project's Namespace.
 
@@ -95,24 +104,17 @@ For deployment instructions, see [Deploy a template](../get-started/deploy-a-tem
 
 </Steps>
 
-## Build release artifacts from a commit
+## Build the release files from a commit
 
-Run this command at any commit:
+Run these commands at any commit:
 
 ```sh
 nix build .#release
+go run ./tools/cmd/catalog api -version X.Y.Z -out out/api
 ```
 
-As defined in `flake.nix`, the `release` output includes:
+`nix build .#release` builds `bundle.tar.gz`, which contains:
 
-- `index.json`
-- `crosscheck.json`
-- `bundle.tar.gz`
-- `checksums.txt`
-
-The `bundle.tar.gz` file contains:
-
-- `index.json`
 - `crosscheck.json`
 - `components/`
 - `templates/`
@@ -123,4 +125,6 @@ The `bundle.tar.gz` file contains:
 - `LICENSE`
 - `README.md`
 
-This command builds artifacts that are byte-for-byte identical to the release artifacts. Tools can build from an unreleased commit, then compare the artifacts with the signed release after that commit is released.
+`catalog api` writes the API to `out/api/v1/` and checks each file against its schema. It renders the charts, so it needs helm and the network. `bun scripts/release.ts build` packs it into `api-v1.tar.gz` the same way a release does.
+
+These commands build files that are byte-for-byte identical to the release files. Tools can build from an unreleased commit, then compare the files with the signed release after that commit is released.

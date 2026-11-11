@@ -1,17 +1,29 @@
 ---
 title: 安裝工具如何選擇和安裝元件
-description: 安裝工具從 index.json 挑選元件、排定順序、裝好後檢查時要遵守的規則，以及用來測試安裝工具的案例。
+description: 安裝工具從 catalog API 挑選元件、排定順序、裝好後檢查時要遵守的規則，以及用來測試安裝工具的案例。
 ---
 
-安裝工具從某個[版本](releases.mdx)讀取 `index.json`，再決定要安裝哪些元件。這一頁列出挑選的規則。Zeabur Installer 照這些規則挑選。其他安裝工具只要遵守同樣的規則，同一份設定就會挑出同樣的元件。每條規則在 `conformance/select/` 都有一個測試案例，用法見本頁最後一節。
+安裝工具讀取某個 catalog 版本的 [API](releases.mdx)，再決定要安裝哪些元件。這一頁列出挑選的規則。Zeabur Installer 照這些規則挑選。其他安裝工具只要遵守同樣的規則，同一份設定就會挑出同樣的元件。每條規則在 `conformance/select/` 都有一個測試案例，用法見本頁最後一節。
 
 ## 安裝工具需要的資料
 
-- 一個 catalog 版本的 `index.json`。
+- 一個 catalog 版本的 API：`catalog.json` 和各元件的檔案。
 - profile，也就是 `single-node` 或 `multi-node`。
 - 發行版，也就是 `k3s`、`rke2` 或 `kubesolo`。
 - 叢集節點的平台，例如 `linux/amd64`。
 - 使用者寫的 `enable` 和 `disable` 清單。每一項可以是元件 ID（例如 `victoria-logs`），也可以是 capability（例如 `logs`）。
+
+## 安裝工具要算出的清單
+
+API 存放的是原始資料。安裝工具根據這些資料，替每個元件算出兩份清單，下面的規則都會用到。
+
+### 通過測試的環境
+
+`testedOn` 列出元件通過測試的發行版，以及在各發行版上通過測試的平台。對 `catalog.json` 的 `distributions` 裡的每個發行版，取出元件量測資料中 `distribution` 相同、`distributionVersion` 符合固定版本的紀錄。某個平台上最新一次通過測試的紀錄，若 `sourceDigest` 與元件目前的值相同，且日期不早於最新一次失敗的紀錄，就把這個平台列入 `testedOn`。同一天有通過和失敗的紀錄時，以通過為準。沒有任何平台符合條件的發行版不列入，所以 `testedOn` 可以是空清單。
+
+### 安裝順序
+
+`installOrder` 列出在某個 profile 下安裝元件時會安裝的所有元件：先列出需要的元件，最後是元件本身。依序處理 `requires` 的每一項。`{component: <id>}` 指定該元件。`{capability: <capability>}` 則從 `provides.capability` 相符的元件中，依 ID 順序取第一個在這個 profile 是 `recommended` 的元件；沒有時，取第一個 `optional` 的元件。先放入各指定元件的安裝順序，略過重複的元件，最後加上元件本身。元件在某個 profile 是 `unsupported` 時，該 profile 沒有 `installOrder`。
 
 ## 名稱
 
@@ -84,7 +96,8 @@ kubectl wait --for=condition=Ready nodes.longhorn.io --all -n longhorn-system --
 
 ```yaml
 description: A default not tested on the distribution is installed with a warning.
-components:            # index.json components, with only the fields selection reads
+components:            # each component with only the fields selection reads, and the testedOn
+                       # and installOrder that the installer works out
   - id: traefik
     provides: {capability: ingress}
     defaults: {single-node: recommended, multi-node: recommended}
@@ -116,6 +129,6 @@ want:
 
 執行案例的步驟如下。
 
-1. 用 `components` 建立索引。每個元件的 capability 是它的 `provides.capability`。某個 profile 沒有 `installOrder` 時，只裝元件本身。
+1. 把 `components` 當作 catalog，直接使用其中的 `testedOn` 和 `installOrder`。每個元件的 capability 是它的 `provides.capability`。某個 profile 沒有 `installOrder` 時，只裝元件本身。
 2. 依 `config` 挑選元件。
 3. 和 `want` 比對。`want` 沒寫的清單或對照表就是空的。原因、警告和錯誤都比對代碼和欄位，不比對安裝工具顯示的文字。

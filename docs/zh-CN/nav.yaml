@@ -11,7 +11,7 @@
     component-format: 组件文件格式
     template-format: 模板文件格式
     template-standards: 模板标准
-    releases: 版本与软件包
+    releases: 版本与 API
     installers: 安装工具如何选择和安装组件
     template-clients: 客户端如何渲染模板
     licenses: 许可证

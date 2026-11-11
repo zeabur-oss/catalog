@@ -24,7 +24,7 @@ func merge(fs *flag.FlagSet, _ *repo) error {
 // env. Every job uploads the whole file it checked out, so an artifact can
 // carry stale copies of environments that another job measured; those must
 // not undo a newer result or a failure of the same day.
-func supersedes(env, old environment) bool {
+func supersedes(env, old Environment) bool {
 	if old.MeasuredAt != env.MeasuredAt {
 		return old.MeasuredAt > env.MeasuredAt
 	}

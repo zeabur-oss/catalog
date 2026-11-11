@@ -1,25 +1,68 @@
 ---
-title: 版本與套件包
-description: 固定 Zeabur Catalog 版本、驗證 Sigstore 簽章，再讀取 index.json，或從指定 commit 建置版本產物。
+title: 版本與 API
+description: 從靜態 API 讀取 catalog、固定 Zeabur Catalog 版本並驗證 Sigstore 簽章，或從指定 commit 建置版本檔案。
 ---
 
-打上 `vX.Y.Z` tag 後，就會發布 `index.json`、`bundle.tar.gz`、`checksums.txt`，以及 `SHA256SUMS` 和它的 Sigstore 簽章套件。使用 Zeabur Catalog 的工具應固定使用一個版本，驗證後再讀取 `index.json`。1.0 之前，像 0.1 升到 0.2 這樣的更新也可能改變檔案格式，所以請固定使用某個確切版本。
+打上 `vX.Y.Z` tag 後，就會發布 `bundle.tar.gz`、`api-v1.tar.gz`、`checksums.txt`，以及 `SHA256SUMS` 和它的 Sigstore 簽章套件。非預發布版本也會將 API 發布到 `https://oss-catalog.zeabur.com/v1/`。1.0 之前，像 0.1 升到 0.2 這樣的更新也可能改變檔案格式，需要固定版本時，請指定某個確切版本。
 
-## 版本產物
+## 版本檔案
 
 | 檔案 | 內容 |
 | --- | --- |
-| `index.json` | 包含所有元件在各個 profile 下的安裝順序與量測資料，以及 Kubernetes 版本。profile 是 `single-node` 或 `multi-node` 的設定組合。 |
-| `bundle.tar.gz` | 套件包（bundle），包含索引、交叉檢查資料、元件、範本及相關檔案。 |
-| `checksums.txt` | 檔案的檢查碼。 |
+| `api-v1.tar.gz` | 這個版本的 [API](#api)，放在 `v1/` 下。 |
+| `bundle.tar.gz` | 套件包（bundle），包含交叉檢查資料、元件、範本、schema、一致性測試案例及相關檔案。 |
+| `checksums.txt` | 兩個壓縮檔的檢查碼。 |
 
 `SHA256SUMS` 列出其他每個檔案的雜湊值，並附有 cosign 無金鑰 Sigstore 簽章套件 `SHA256SUMS.sigstore.json`。每個檔案也都有 GitHub 建置來源證明（build provenance attestation）。
 
 所有 zeabur-oss 版本都由 [zeabur-oss/.github](https://github.com/zeabur-oss/.github) 的共用發布工作流程簽署。簽章會記錄該工作流程、儲存庫 `zeabur-oss/catalog` 與 tag。
 
-## 網路上的最新版本
+## API
 
-每個不是預發布的版本，也會把 `index.json`、`bundle.tar.gz`、`SHA256SUMS` 和 `SHA256SUMS.sigstore.json` 原封不動複製到 `https://oss-catalog.zeabur.com/v1/`，Zeabur 會從這裡抓範本。`v1` 指的是範本的 `apiVersion`，也就是 `catalog.zeabur.com/v1`。這個網址永遠是最新版本，所以一樣要照上面的方式驗證。每次發版 `SHA256SUMS` 都會變，只看它就能知道有沒有新版本。
+API 是一組靜態 JSON 檔案，存放各元件的宣告、算繪結果和 e2e 量測資料，不存總量或元件通過測試的發行版等計算結果。這些結果由讀取工具自行算出，做法見[安裝工具如何選擇和安裝元件](installers.mdx)。
+
+| 路徑 | 內容 | Schema |
+| --- | --- | --- |
+| `v1/catalog.json` | 版本的 `version` 和 `commit`、profile、Kubernetes 版本、固定版本的 `distributions`，以及各元件的 `id` 和 `sourceDigest`。 | [`catalog.schema.json`](../../../schema/v1/catalog.schema.json) |
+| `v1/components/<id>.json` | 一個元件的 `id`、`sourceDigest`、`declaration`、`render` 和 `measurements`。 | [`component-file.schema.json`](../../../schema/v1/component-file.schema.json) |
+| `v1/schema/` | 上面的 schema，以及宣告的 schema `component.schema.json`。 | |
+
+Schema 定義資料格式，由 catalog 工具的 Go 型別產生。每個版本的所有檔案都通過對應 schema 的檢查。
+
+- `declaration` 是[元件檔案](component-format.mdx)原有的內容，改用 JSON 表示。
+- `sourceDigest` 是元件檔案的雜湊值。量測紀錄的 `sourceDigest` 相同，就表示量測的是這個檔案。
+- `render` 是 `helm template` 在元件支援的各個 profile 下算繪出的內容，使用的 `kubernetesVersion` 是 catalog 測試的最新 Kubernetes 版本。每個 profile 的 `workloads` 列出各 Deployment、StatefulSet 和 DaemonSet 的 `release`、`namespace`、`name`、`kind`、`replicas`，以及 `containers` 和 `initContainers` 的 `requests` 與 `limits`。StatefulSet 另有 `volumeClaimTemplates` 的 `storage`。DaemonSet 沒有 `replicas`，在每個節點上各執行一個 Pod。`persistentVolumeClaims` 列出元件算繪出的 PVC 及其 `storage`。
+- `measurements` 列出 e2e 執行這個元件的每個環境。
+
+`https://oss-catalog.zeabur.com/v1/` 永遠提供 API 主版本 1 的最新版本。如果變更會讓讀取 `v1` 的工具無法繼續使用，就會在另一個路徑發布 `v2`，`v1` 則保留最後一個提供它的版本。新版本可以新增欄位或值，不必更換主版本。讀取工具略過不認得的欄位，遇到不認得的值則照下表處理：
+
+| 欄位 | 遇到不認得的值 |
+| --- | --- |
+| `defaults.<profile>` | 當成 `unsupported`。 |
+| `releases[].type`、`security.podSecurity` | 不提供這個元件。 |
+| `inputs[].generate.type` | 不替這個輸入填值。需要這個輸入的元件或範本無法安裝。 |
+| `distributions`、`detection.addons[].distribution`、量測紀錄的 `distribution` | 略過這一項。 |
+| 量測紀錄的 `result` | 視為沒通過。 |
+
+每筆量測紀錄用 `distribution`（`kind`、`k3s`、`rke2` 或 `kubesolo`）、`profile`、`platform`、`kubernetesVersion` 和 `distributionVersion` 指出是哪個環境，其中 `distributionVersion` 是裝在主機上的發行版版本。`result` 是 `passed` 或 `failed`，`sourceDigest` 是該次執行安裝的元件檔案雜湊值。`versions` 列出該次執行安裝的每個 release 的版本。
+
+```json
+"measurements": [
+  {
+    "distribution": "kind",
+    "profile": "single-node",
+    "platform": {"os": "linux", "architecture": "amd64"},
+    "kubernetesVersion": "v1.36.4",
+    "result": "passed",
+    "sourceDigest": "h1:4RtmKjCcpt+eWwv4Imw1vsdJNJMTxzw/PJ1fBh0+Fzg=",
+    "pods": [{"workload": "traefik", "kind": "Deployment", "memory": "22Mi", "cpu": "3m"}],
+    "versions": [{"release": "traefik", "version": "41.7.1"}],
+    "measuredAt": "2026-11-03"
+  }
+]
+```
+
+通過測試的紀錄有 `pods`，每個工作負載一列，內容是 `workload` 名稱、`kind`，以及其中一個 Pod 的閒置用量 `memory` 和 `cpu`。兩者都是 Kubernetes 的數量寫法，例如 `22Mi`、`3m`，記憶體取整到 MiB，CPU 取整到 millicore。工作負載指 Deployment、StatefulSet、DaemonSet 或單獨的 Pod，Job 則記在它的控制器底下。這些列涵蓋元件自己的 Namespace 裡實際執行的 Pod，包含 operator 建立的 Pod。要算總量，就把每一列的用量乘上 `render` 裡該工作負載的 `replicas`，再加總。排程器依請求量放置 Pod，所以安裝工具會把 `render` 裡的記憶體請求量加總，和節點可分配的記憶體比較。
 
 ## 驗證並讀取版本
 
@@ -41,51 +84,17 @@ cosign verify-blob SHA256SUMS --bundle SHA256SUMS.sigstore.json \
 sha256sum --check --ignore-missing SHA256SUMS
 ```
 
-若要改為檢查來源證明，請執行 `gh attestation verify index.json --repo zeabur-oss/catalog --signer-workflow zeabur-oss/.github/.github/workflows/release.yml`。
+若要改為檢查來源證明，請執行 `gh attestation verify api-v1.tar.gz --repo zeabur-oss/catalog --signer-workflow zeabur-oss/.github/.github/workflows/release.yml`。
 
 </Step>
 
 <Step>
 
-### 讀取索引並產生安裝內容
+### 讀取版本並產生安裝內容
 
-驗證後，工具讀取 `index.json`。只有不相容的變更才會改動 `indexVersion`。
+驗證後，工具解壓縮 `api-v1.tar.gz`，按 [API](#api) 的格式讀取。
 
-`catalog` 指出建置這份索引的版本：`version` 是 catalog 的版本，例如 `0.3.0`。`catalog index` 沒帶 `-version` 時（例如在 CI），索引裡沒有 `catalog`。
-
-```json
-"catalog": {"version": "0.3.0"}
-```
-
-新版本可以替欄位加上新值，不改 `indexVersion`。讀取方遇到不認得的值時照下表處理，遇到不認得的欄位則略過：
-
-| 欄位 | 遇到不認得的值 |
-| --- | --- |
-| `defaults.<profile>` | 當成 `unsupported`。 |
-| `releases[].type`、`security.podSecurity` | 不提供這個元件。 |
-| `inputs[].generate.type` | 不替這個輸入填值。需要這個輸入的元件或範本無法安裝。 |
-| `distributions`、`testedOn[].distribution`、`detection.addons[].distribution` | 略過這一項。 |
-| 測量檔案裡的 `result` | 視為沒通過。 |
-
-`measured` 列出元件測試通過的每個環境。`distribution`（`kind`、`k3s`、`rke2` 或 `kubesolo`）、`profile`、`platform`、`kubernetesVersion` 和 `distributionVersion`（裝在主機上的發行版的版本）指出是哪個環境。`versions` 列出這次執行安裝的每個 release 的版本。
-
-```json
-"measured": [
-  {
-    "distribution": "kind",
-    "profile": "single-node",
-    "platform": {"os": "linux", "architecture": "amd64"},
-    "kubernetesVersion": "v1.36.4",
-    "pods": [{"workload": "traefik", "kind": "Deployment", "memory": "22Mi", "cpu": "3m"}],
-    "versions": [{"release": "traefik", "version": "41.7.1"}],
-    "measuredAt": "2026-11-03"
-  }
-]
-```
-
-每個環境都有 `pods`，每個工作負載一列，內容是 `workload` 名稱、`kind`，以及其中一個 Pod 的閒置用量 `memory` 和 `cpu`。兩者都是 Kubernetes 的數量寫法，例如 `22Mi`、`3m`，記憶體取整到 MiB，CPU 取整到 millicore。工作負載指 Deployment、StatefulSet、DaemonSet 或單獨的 Pod，Job 則記在它的控制器底下。這些列涵蓋元件自己的 Namespace 裡實際執行的 Pod，包含 operator 建立的 Pod。索引不存總量。要算總量，就把每一列的用量乘上該工作負載的副本數，再加總。副本數與資源請求不量測，要從元件在該 profile 下算繪出的物件讀取；DaemonSet 在每個節點上各執行一個 Pod。排程器依請求量放置 Pod，所以安裝工具會把記憶體請求量加總，和節點可分配的記憶體比較。
-
-安裝元件時，工具先執行 `detection`，再根據叢集使用的 profile，提供預設啟用（recommended）的元件。接著，工具向使用者取得各元件的 `inputs`，依 `installOrder` 產生安裝內容，再將 `contributes` 合併到對應目標。挑選元件的規則見[安裝工具如何選擇和安裝元件](installers.mdx)。
+安裝元件時，工具先執行 `detection`，再根據叢集使用的 profile，提供預設啟用（recommended）的元件。接著，工具向使用者取得各元件的 `inputs`，依[安裝順序](installers.mdx)產生安裝內容，再將 `contributes` 合併到對應目標。挑選元件的規則見[安裝工具如何選擇和安裝元件](installers.mdx)。
 
 部署範本時，工具先檢查叢集是否符合 `requires` 列出的所有需求，再向使用者取得範本輸入值。工具會將其餘自動產生的值寫入 Secret，接著依專案的 Namespace 渲染並套用 `manifests.yaml`。
 
@@ -95,24 +104,17 @@ sha256sum --check --ignore-missing SHA256SUMS
 
 </Steps>
 
-## 從 commit 建置版本產物
+## 從 commit 建置版本檔案
 
-在任意 commit 執行：
+在任意 commit 執行以下指令：
 
 ```sh
 nix build .#release
+go run ./tools/cmd/catalog api -version X.Y.Z -out out/api
 ```
 
-依照 `flake.nix` 的設定，`release` 會輸出：
+`nix build .#release` 建置的 `bundle.tar.gz` 包含：
 
-- `index.json`
-- `crosscheck.json`
-- `bundle.tar.gz`
-- `checksums.txt`
-
-其中，`bundle.tar.gz` 包含：
-
-- `index.json`
 - `crosscheck.json`
 - `components/`
 - `templates/`
@@ -123,4 +125,6 @@ nix build .#release
 - `LICENSE`
 - `README.md`
 
-這個指令建置的產物會與發布版本逐位元組相同。工具可以先從尚未發布的 commit 建置產物，等該 commit 發布後，再與已簽章的版本比對。
+`catalog api` 將 API 寫入 `out/api/v1/`，並用對應的 schema 檢查每個檔案。這個指令會算繪 chart，需要 helm 和網路連線。`bun scripts/release.ts build` 會按發布版本的方式，將 API 打包成 `api-v1.tar.gz`。
+
+這些指令建置的檔案會與發布版本逐位元組相同。工具可以先從尚未發布的 commit 建置檔案，等該 commit 發布後，再與已簽章的版本比對。

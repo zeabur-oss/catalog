@@ -8,5 +8,5 @@ description: 比较各 Kubernetes 发行版的已知差异，确认组件与模�
 - **k3s**：启动时加上 `--disable=traefik,metrics-server`，让 Traefik 与 metrics-server 都由各自的 chart 安装。k3s 会安装自己的 Gateway API CRD。在 NAT 后运行时，不要配置 `node-external-ip`，否则 Traefik 会丢失客户端地址。
 - **KubeSolo**：默认 StorageClass 会在 PersistentVolumeClaim 删除后保留卷及其数据。在 Ubuntu 上，将 `/etc/hosts` 中的主机名映射到节点 IP。如果映射到 127.0.1.1，API server 会拒绝代理连接到 kubelet。KubeSolo 的节点没有 control-plane 标签。
 - **Longhorn**：每个节点都需要安装 open-iscsi、启动 `iscsid`，并具备 `iscsi_tcp` 模块与 NFSv4 客户端。不要让 multipathd 管理 Longhorn 使用的磁盘。详细要求见 Longhorn 组件文件中的注释。Longhorn 无法在 KubeSolo 上运行，所以不在 KubeSolo 上测试。
-- **要测试的发行版**：组件的 `distributions` 字段列出这个组件支持的发行版，e2e 会在每个发行版上测试它。例如 system-upgrade-controller 会替换 k3s 或 RKE2 的可执行文件，所以只列出 k3s 和 RKE2。测试通过的发行版是另一份列表，记录在 `index.json` 的 `testedOn` 中。
+- **要测试的发行版**：组件的 `distributions` 字段列出这个组件支持的发行版，e2e 会在每个发行版上测试它。例如 system-upgrade-controller 会替换 k3s 或 RKE2 的可执行文件，所以只列出 k3s 和 RKE2。测试通过的发行版是另一个列表，由安装工具根据[测量数据](installers.mdx)算出。
 - **模板存储空间**：模板不指定 StorageClass，因此卷会使用集群的默认 StorageClass。如果集群没有默认 StorageClass，PersistentVolumeClaim 会停留在 `Pending`。

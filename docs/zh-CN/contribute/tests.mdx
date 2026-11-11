@@ -177,7 +177,7 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 
 测量结果与 kind 的结果放在一起，`profile` 为 `single-node`，`distribution` 是发行版，`distributionVersion` 是它的版本，例如 `v1.36.5+k3s1`。测试失败时，该环境会改为 `result: failed`。如果集群一直没有响应，这一条就没有 `kubernetesVersion`。
 
-每个测量环境都有 `sourceDigest`，记录那次运行安装的组件文件（模板则是 `template.yaml` 和 `manifests.yaml`）的哈希值。组件在 `config/kubernetes.yaml` 固定的版本、某个平台上通过测试后，只要组件文件还是那次运行的内容，`catalog index` 就会把这个发行版连同该平台列进组件的 `testedOn`。组件文件一改（包括里面的 release 版本），在新内容通过测试之前就不再列出。之后只要在这个平台上测试失败，这个平台就会移出列表，等下一次在这个平台上通过再列回来。
+每个测量环境都有 `sourceDigest`，记录那次运行安装的组件文件（模板则是 `template.yaml` 和 `manifests.yaml`）的哈希值。API 在各组件的测量数据旁发布该组件的 `sourceDigest`。只有在某个发行版和平台上通过测试的记录，其哈希值与组件当前的值相同时，安装工具才算这个组件[通过该环境的测试](../reference/installers.mdx)。组件文件一改（包括里面的 release 版本），在新文件通过测试之前，都算未通过测试。在某个平台上测试失败后，该平台也算未通过测试，等下一次在该平台上通过才恢复。
 
 ## 配置模板测试输入
 
