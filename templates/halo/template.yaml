@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: Halo
   # renovate: depName=halohub/halo
-  version: "2.27.1"
+  version: "2.27.2"
   summary: Halo for websites and blogs, with PostgreSQL.
   locales:
     zh-TW:
