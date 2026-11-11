@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: Memos
   # renovate: depName=neosmemo/memos
-  version: "0.31.0"
+  version: "26.11.0"
   summary: A note-taking app with SQLite on a volume and an admin account ready.
   locales:
     zh-TW:
