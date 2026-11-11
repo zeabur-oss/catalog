@@ -121,7 +121,7 @@ provides:
 `resources.work` 列出元件會做的每一種工作，例如建置。每一項有 `name`（在清單裡不可重複），再加上下列至少一個欄位，都用 Kubernetes 數量寫 `cpu` 和 `memory`：
 
 - `requests` 和 `limits` 是做一份這種工作的每個 Pod 的資源請求量和上限。工作用的 Pod 由控制器建立、算繪結果裡看不到時（例如建置用的 Pod），就寫這兩個欄位。數值從 chart 的 values 抄過來，升級 chart 時若 values 改了，就跟著改。
-- `use` 是元件做一份這種工作時，在閒置用量之外還要多用的資源。閒置用量由 e2e 量測，放在 `index.json`。
+- `use` 是元件做一份這種工作時，在閒置用量之外還要多用的資源。閒置用量由 e2e 量測，發布在 [API](releases.mdx)。
 
 ```yaml
 resources:
@@ -132,22 +132,7 @@ resources:
       use: {memory: 500Mi}
 ```
 
-`catalog index` 把每一項發布到 `index.json` 的 `resources.work`。記憶體以 MiB、CPU 以毫核（millicore）為單位，都無條件進位到整數。該項沒寫的資源不會出現：
-
-```json
-"resources": {
-  "work": [
-    {
-      "name": "build",
-      "requests": {"memoryMiB": 256, "cpuMillis": 100},
-      "limits": {"memoryMiB": 1024, "cpuMillis": 1000},
-      "use": {"memoryMiB": 500}
-    }
-  ]
-}
-```
-
-排程器看的是請求量，所以安裝工具要把 `requests.memoryMiB` 加進元件算繪出的物件裡 Pod 的請求量。寫了 `cpu` 和 `memory` 以外的資源，或數量不大於零時，`validate` 會失敗。設定檔（profile）和輸入不會改變結果。
+API 原樣發布 `resources.work`。排程器看的是請求量，所以安裝工具要把 `requests` 的記憶體用量加進元件算繪出的物件裡 Pod 的請求量。寫了 `cpu` 和 `memory` 以外的資源，或數量不大於零時，`validate` 會失敗。設定檔（profile）和輸入不會改變結果。
 
 `health` 列出唯讀檢查，讓安裝工具（例如 `zeabur-installer doctor`）檢查已安裝的叢集。每項檢查執行一次 `kubectl wait`，參數寫在 `wait`，等待時間寫在 `timeout`。`wait` 裡要有 `--for` 條件，不要放 `--timeout`。檢查失敗時，安裝工具會顯示 `advice`，用英文告訴使用者該怎麼處理。健康檢查沒有 manifest，也不會套用任何物件。要建立物件的檢查放在 `smoke`，只有 e2e 會執行。e2e 在安裝完成後、執行 `smoke` 之前，先執行 `health`。
 
@@ -159,7 +144,7 @@ health:
     advice: "A node that joined without Longhorn needs longhorn: true under join in its configuration. Add it, then run zeabur-installer apply on that node."
 ```
 
-`distributions` 和 `testedOn` 是兩份不同的清單。元件檔案裡的 `distributions` 列出這個元件支援的發行版，e2e 會在每個發行版上測試它。`index.json` 裡的 `testedOn` 列出測試通過的發行版和通過的平台，例如 `{"distribution": "k3s", "platforms": ["linux/amd64", "linux/arm64"]}`，版本以 `config/kubernetes.yaml` 固定的為準，且元件檔案要和那次測試時一致。安裝工具會讀取 `testedOn`，元件要裝在沒列出的發行版和平台上時，提醒使用者它沒測過。`testedOn` 由 `catalog index` 從 `measurements/` 產生，不用手寫。每個元件都有這個欄位，可能是空清單。
+`distributions` 列出元件支援的發行版，e2e 會在每個發行版上測試它。通過測試的環境是另一份清單，由安裝工具根據 API 的量測資料算出，做法見[安裝工具如何選擇和安裝元件](installers.mdx)。元件在某個發行版和平台上沒有通過測試時，安裝工具會提醒使用者。
 
 `kubeVersion` 是元件支援的 Kubernetes 版本範圍，寫法和 Helm chart 的 `kubeVersion` 相同。填入各 chart 裡最嚴格的範圍，chart 都沒寫時填 `">=1.34.0-0"`。範圍沒有涵蓋 catalog 測試的某個 Kubernetes 版本時，`catalog validate` 會失敗。叢集版本不在範圍內時，安裝工具不會提供這個元件。
 

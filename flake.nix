@@ -31,7 +31,7 @@
           subPackages = [ "tools/cmd/catalog" ];
           # Change it when go.sum changes: nix build prints the new value. On Renovate's pull
           # requests the vendorhash workflow commits it.
-          vendorHash = "sha256-ieSJzhNS668iEW3xZtQWSMJMI55wirV5ezZf6M5HgLQ=";
+          vendorHash = "sha256-46PZIRSj6Hz+vYToTv3PDtxiygNUNiBVPealuOFgLKg=";
           doCheck = false;
         };
         # The check tier runs this API server with etcd and no nodes. Keep the version equal to the RKE2
@@ -61,22 +61,21 @@
       {
         packages = {
           inherit catalog kube-apiserver;
-          # The files that scripts/release.ts publishes. Zeabur builds this output at its
-          # pinned commit, so it embeds the same bytes as the release.
+          # The bundle that scripts/release.ts publishes. Zeabur builds this output at its
+          # pinned commit, so it embeds the same bytes as the release. The static API needs helm
+          # to fetch charts, so release.ts builds it outside this sandbox.
           release = pkgs.runCommand "catalog-release" { nativeBuildInputs = [ catalog ]; } ''
             cp -r ${self} src
             chmod -R u+w src
             cd src
             # Git keeps no empty directory, and the tar below needs measurements/.
             mkdir -p measurements
-            catalog index -version ${version} -out index.json
             catalog crosscheck -out crosscheck.json
             tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner --mode=u+w,go-w,a+rX \
-              -c index.json crosscheck.json components templates schema config conformance measurements LICENSE README.md |
+              -c crosscheck.json components templates schema config conformance measurements LICENSE README.md |
               gzip -9n > bundle.tar.gz
-            sha256sum bundle.tar.gz index.json > checksums.txt
             mkdir $out
-            cp bundle.tar.gz index.json checksums.txt $out/
+            cp bundle.tar.gz $out/
           '';
         };
 

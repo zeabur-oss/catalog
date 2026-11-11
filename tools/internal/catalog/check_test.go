@@ -38,7 +38,7 @@ func TestProvisionProblems(t *testing.T) {
 			Releases:  []Release{{Name: "zot", Namespace: "zot"}},
 			Inputs:    []Input{{Name: "clusterIp", Path: "service.clusterIP", Generate: &Generate{Type: GenerateClusterIP}}},
 			Provides:  &Provides{Registry: &Registry{Host: "zot.zot.svc:5000", CA: SecretRef{Name: "zot-tls", Key: "ca.crt", Namespace: "zot"}}},
-			Detection: map[string]any{"crds": []any{"reports.example.com", "jobs.example.com"}},
+			Detection: Detection{CRDs: []string{"reports.example.com", "jobs.example.com"}},
 		}
 		edit(c)
 		return c

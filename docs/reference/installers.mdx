@@ -1,17 +1,29 @@
 ---
 title: How installers choose and install components
-description: The rules an installer follows to choose components from index.json, order them and check them once installed, with cases to test an installer against.
+description: The rules an installer follows to choose components from the catalog API, order them and check them once installed, with cases to test an installer against.
 ---
 
-An installer reads `index.json` from a [release](releases.mdx) and decides which components to install. This page gives the rules. Zeabur Installer follows them, and another installer that follows them chooses the same components for the same configuration. Each rule has a case in [`conformance/select/`](#test-cases) to test against.
+An installer reads the [API](releases.mdx#the-api) of a catalog release and decides which components to install. This page gives the rules. Zeabur Installer follows them, and another installer that follows them chooses the same components for the same configuration. Each rule has a case in [`conformance/select/`](#test-cases) to test against.
 
 ## What an installer starts from
 
-- `index.json` of one catalog release.
+- The API of one catalog release: `catalog.json` and each component's file.
 - The profile, `single-node` or `multi-node`.
 - The distribution, `k3s`, `rke2` or `kubesolo`.
 - The platform of the cluster's nodes, such as `linux/amd64`.
 - The `enable` and `disable` lists that the person writes. Each item is a component id, such as `victoria-logs`, or a capability, such as `logs`.
+
+## What the installer works out
+
+The API holds facts. An installer works out two lists for each component from them, and the rules below use both.
+
+### Tested on
+
+`testedOn` is where a component passed its test, as distributions, each with the platforms it passed on. For each distribution in the `distributions` of `catalog.json`, take the component's measurements with that `distribution` and its pinned `distributionVersion`. A platform is in `testedOn` when the newest passing run on it has the component's `sourceDigest` and is no older than the newest failed run on it. A pass on the same day as a failure wins. A distribution without such a platform isn't in `testedOn`, so `testedOn` can be empty.
+
+### Install order
+
+`installOrder` is what installing the component installs on a profile: the components it needs, then the component. Go through its `requires` in order. A `{component: <id>}` entry names that component. A `{capability: <capability>}` entry names the first component in id order whose `provides.capability` matches and is `recommended` on the profile, or else the first that is `optional`. Put the order of each named component first, without repeats, then the component. A profile where the component is `unsupported` has no `installOrder`.
 
 ## Names
 
@@ -78,7 +90,8 @@ An installer may use its own time limit in place of `timeout`. For example, `zea
 
 ```yaml
 description: A default not tested on the distribution is installed with a warning.
-components:            # index.json components, with only the fields selection reads
+components:            # each component with only the fields selection reads, and the testedOn
+                       # and installOrder that the installer works out
   - id: traefik
     provides: {capability: ingress}
     defaults: {single-node: recommended, multi-node: recommended}
@@ -110,6 +123,6 @@ want:
 
 To run a case:
 
-1. Build an index from `components`. The capability of each component is its `provides.capability`. A profile without `installOrder` means the component alone.
+1. Take `components` as the catalog, with `testedOn` and `installOrder` as given. The capability of each component is its `provides.capability`. A profile without `installOrder` means the component alone.
 2. Choose with `config`.
 3. Compare the result with `want`. A list or map that `want` leaves out is empty. Compare each reason, warning and error by its code and fields, not by the words an installer shows.

@@ -1,5 +1,5 @@
 description: "{component: <id>} is installed when discovery serves a CRD of that component, and missing when it serves none, even when another component of the capability is installed."
-components:          # index.json components, with only the fields matching reads
+components:          # component declarations, with only the fields matching reads
   - id: cloudnative-pg
     provides: {capability: databases}
     detection: {crds: [clusters.postgresql.cnpg.io, poolers.postgresql.cnpg.io]}
