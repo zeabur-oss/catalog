@@ -10,7 +10,7 @@ kind: Template
 metadata:
   name: Dify
   # renovate: depName=docker.io/langgenius/dify-api
-  version: "1.18.0"
+  version: "1.19.0"
   summary: A platform for building LLM apps, with PostgreSQL, a queue, a code sandbox and S3 storage.
   locales:
     zh-TW:
