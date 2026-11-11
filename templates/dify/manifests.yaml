@@ -440,7 +440,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: dify-api
-        image: docker.io/langgenius/dify-api:1.18.0@sha256:0120970fb4ea59aa328d63b7dda635cccc071efb8aae470cd07115a026dbffd3
+        image: docker.io/langgenius/dify-api:1.19.0@sha256:0d67842aedcb9b5884f75b88c4a5dd812e637916bff1ca892831f7ace2f3204f
         ports:
         - name: http
           containerPort: 5001
@@ -688,7 +688,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: dify-worker
-        image: docker.io/langgenius/dify-api:1.18.0@sha256:0120970fb4ea59aa328d63b7dda635cccc071efb8aae470cd07115a026dbffd3
+        image: docker.io/langgenius/dify-api:1.19.0@sha256:0d67842aedcb9b5884f75b88c4a5dd812e637916bff1ca892831f7ace2f3204f
         env:
         - name: DB_TYPE
           value: postgresql
@@ -937,7 +937,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: dify-beat
-        image: docker.io/langgenius/dify-api:1.18.0@sha256:0120970fb4ea59aa328d63b7dda635cccc071efb8aae470cd07115a026dbffd3
+        image: docker.io/langgenius/dify-api:1.19.0@sha256:0d67842aedcb9b5884f75b88c4a5dd812e637916bff1ca892831f7ace2f3204f
         env:
         - name: DB_TYPE
           value: postgresql
@@ -1190,7 +1190,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: dify-web
-        image: docker.io/langgenius/dify-web:1.18.0@sha256:e55a6bf1addf109c3655567663f906624f0980061efed864e0f07d23c71fa385
+        image: docker.io/langgenius/dify-web:1.19.0@sha256:f5f1ad000d6a268ae6b29b84c5095069fbd5994cbe43f937a3d32caa00038b4c
         ports:
         - name: http
           containerPort: 3000
