@@ -300,7 +300,7 @@ func runCheck(r *repo, cfg config, o tierOptions) error {
 	if err := step("render", func() error { return renderComponents(r.cat, r.cat.Components, out, cfg.Versions) }); err != nil {
 		return err
 	}
-	if err := step("template lint", func() error { return lintTemplates(r, out+"-schemas", cfg.Versions) }); err != nil {
+	if err := step("template lint", func() error { return lintTemplates(r, out, cfg.Versions) }); err != nil {
 		return err
 	}
 	var api *apiServer
@@ -340,9 +340,11 @@ func serverVersion(api *apiServer, versions []string) (string, error) {
 	return versions[i], nil
 }
 
-// lintTemplates runs the safety rules and kubeconform on every template,
-// rendered with its e2e values. schemas holds the CRD schemas that render wrote.
-func lintTemplates(r *repo, schemas string, versions []string) error {
+// lintTemplates runs what `catalog template lint` runs on every template,
+// rendered with its e2e values: the safety rules, then kubeconform with only
+// the CRDs of the components that its e2e installs. render holds the render of
+// every component.
+func lintTemplates(r *repo, render string, versions []string) error {
 	errs := make([]error, len(r.templates))
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, 4)
@@ -350,22 +352,50 @@ func lintTemplates(r *repo, schemas string, versions []string) error {
 		wg.Go(func() {
 			sem <- struct{}{}
 			defer func() { <-sem }()
-			v, err := e2eValues(r.templates, t)
-			if err != nil {
-				errs[i] = err
-				return
-			}
-			manifest, err := templates.E2EManifest(t, v)
-			if err == nil {
-				err = templates.Lint(t, manifest, templates.Namespace(t), schemas, versions)
-			}
-			if err != nil {
-				errs[i] = fmt.Errorf("templates/%s: %w", t.ID, err)
+			errs[i] = lintTemplate(r, t, render, versions)
+			if errs[i] != nil {
+				errs[i] = fmt.Errorf("templates/%s: %w", t.ID, errs[i])
 			}
 		})
 	}
 	wg.Wait()
 	return errors.Join(errs...)
+}
+
+func lintTemplate(r *repo, t *templates.Template, render string, versions []string) error {
+	v, err := e2eValues(r.templates, t)
+	if err != nil {
+		return err
+	}
+	manifest, err := templates.E2EManifest(t, v)
+	if err != nil {
+		return err
+	}
+	order, err := installOrder(r, t.ID, templateProfile)
+	if err != nil {
+		return err
+	}
+	schemas, err := orderSchemas(filepath.Join(render, versions[len(versions)-1], templateProfile), order)
+	defer os.RemoveAll(schemas)
+	if err != nil {
+		return err
+	}
+	return templates.Lint(t, manifest, templates.Namespace(t), schemas, versions)
+}
+
+// orderSchemas writes the schemas of the CRDs that the components of order
+// render under dir to a new directory.
+func orderSchemas(dir string, order []*catalog.Component) (string, error) {
+	schemas, err := os.MkdirTemp("", "catalog-schemas-")
+	if err != nil {
+		return "", err
+	}
+	for _, c := range order {
+		if err := catalog.CRDSchemas(filepath.Join(dir, c.ID), schemas); err != nil {
+			return schemas, err
+		}
+	}
+	return schemas, nil
 }
 
 // dryRun applies every CRD under dir, creates the namespaces, then applies
