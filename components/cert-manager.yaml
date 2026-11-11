@@ -165,11 +165,21 @@ leftovers:
   - secrets/letsencrypt-account-key
 
 health:
-  - name: controllers
-    wait: ["--for=condition=Available", "deployment/cert-manager", "deployment/cert-manager-webhook",
-      "deployment/cert-manager-cainjector", "-n", "cert-manager"]
+  - name: controller
+    resource: {kind: Deployment, name: cert-manager, namespace: cert-manager}
+    condition: Available
     timeout: 60s
     advice: No certificate is issued or renewed until cert-manager runs. Check its pods with kubectl -n cert-manager get pods.
+  - name: webhook
+    resource: {kind: Deployment, name: cert-manager-webhook, namespace: cert-manager}
+    condition: Available
+    timeout: 60s
+    advice: Certificates and issuers can't be created or changed until the cert-manager webhook runs. Check its pods with kubectl -n cert-manager get pods.
+  - name: cainjector
+    resource: {kind: Deployment, name: cert-manager-cainjector, namespace: cert-manager}
+    condition: Available
+    timeout: 60s
+    advice: The CA bundles of webhooks, cert-manager's own included, aren't kept up to date until the cainjector runs. Check its pods with kubectl -n cert-manager get pods.
 
 smoke:
   - name: self-signed-certificate

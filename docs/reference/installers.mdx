@@ -76,7 +76,19 @@ The installer stops and installs nothing on these errors. The `kind` names the e
 
 Install the components in the order of the result, and remove the installed components that the result doesn't have. [Component file format](component-format.mdx) describes the releases of each one, the digests that pin them and the other fields an installer reads.
 
-Once a component is installed, run each of its `health` checks as one `kubectl wait`. Each item of `wait` is one argument, and `--timeout=<timeout>` comes last.
+Once a component is installed, run each of its `health` checks as one `kubectl wait`: `--for=condition=<condition>`, then the objects of `resource`, then `-n <namespace>` when it has one, and `--timeout=<timeout>`. Give the objects as `<resource>/<name>`, as `<resource> -l <key>=<value>,…` for a `selector`, or as `<resource> --all` for `all: true`. `<resource>` comes from the kind:
+
+| `kind` | `<resource>` |
+| --- | --- |
+| `APIService` | `apiservices.apiregistration.k8s.io` |
+| `DaemonSet` | `daemonsets.apps` |
+| `Deployment` | `deployments.apps` |
+| `GatewayClass` | `gatewayclasses.gateway.networking.k8s.io` |
+| `Node.longhorn.io` | `nodes.longhorn.io` |
+| `Pod` | `pods` |
+| `StatefulSet` | `statefulsets.apps` |
+
+For example, Longhorn's `nodes-ready` check runs:
 
 ```sh
 kubectl wait --for=condition=Ready nodes.longhorn.io --all -n longhorn-system --timeout=60s

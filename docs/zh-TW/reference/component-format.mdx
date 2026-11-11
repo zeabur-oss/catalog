@@ -134,12 +134,13 @@ resources:
 
 API 原樣發布 `resources.work`。排程器看的是請求量，所以安裝工具要把 `requests` 的記憶體用量加進元件算繪出的物件裡 Pod 的請求量。寫了 `cpu` 和 `memory` 以外的資源，或數量不大於零時，`validate` 會失敗。設定檔（profile）和輸入不會改變結果。
 
-`health` 列出唯讀檢查，讓安裝工具（例如 `zeabur-installer doctor`）檢查已安裝的叢集。每項檢查執行一次 `kubectl wait`，參數寫在 `wait`，等待時間寫在 `timeout`。`wait` 裡要有 `--for` 條件，不要放 `--timeout`。檢查失敗時，安裝工具會顯示 `advice`，用英文告訴使用者該怎麼處理。健康檢查沒有 manifest，也不會套用任何物件。要建立物件的檢查放在 `smoke`，只有 e2e 會執行。e2e 在安裝完成後、執行 `smoke` 之前，先執行 `health`。
+`health` 列出唯讀檢查，讓安裝工具（例如 `zeabur-installer doctor`）檢查已安裝的叢集。每項檢查會在 `timeout` 指定的時間內，等待 `resource` 指定的物件符合 `condition` 條件。`resource` 要填 `kind`，該種類有命名空間時也要填 `namespace`，並且只能從下列三種方式選一種：用 `name` 指定單一物件、用 `selector` 指定符合標籤的物件，或用 `all: true` 指定該種類的所有物件。`kind` 不在 [schema](../../../schema/v1/component.schema.json) 列出的種類中，或缺少必填欄位時，`validate` 會失敗。檢查失敗時，安裝工具會顯示 `advice`，用英文告訴使用者該怎麼處理。健康檢查沒有 manifest，也不會套用任何物件。要建立物件的檢查放在 `smoke`，只有 e2e 會執行。e2e 在安裝完成後、執行 `smoke` 之前，先執行 `health`。
 
 ```yaml
 health:
   - name: nodes-ready
-    wait: ["--for=condition=Ready", "nodes.longhorn.io", "--all", "-n", "longhorn-system"]
+    resource: {kind: Node.longhorn.io, all: true, namespace: longhorn-system}
+    condition: Ready
     timeout: 60s
     advice: "A node that joined without Longhorn needs longhorn: true under join in its configuration. Add it, then run zeabur-installer apply on that node."
 ```

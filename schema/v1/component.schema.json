@@ -189,22 +189,14 @@
           "type": "string",
           "pattern": "^[a-z0-9-]+$"
         },
-        "wait": {
-          "not": {
-            "contains": {
-              "pattern": "^--timeout"
-            }
-          },
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "contains": {
-            "pattern": "^--for="
-          },
-          "type": "array",
-          "minItems": 2,
-          "description": "`kubectl wait` arguments, one per item, with a --for condition and without --timeout."
+        "resource": {
+          "$ref": "#/$defs/healthResource",
+          "description": "The objects to wait for."
+        },
+        "condition": {
+          "type": "string",
+          "pattern": "^[A-Za-z]+$",
+          "description": "The condition the objects reach, such as Ready or Available."
         },
         "timeout": {
           "type": "string",
@@ -220,11 +212,100 @@
       "type": "object",
       "required": [
         "name",
-        "wait",
+        "resource",
+        "condition",
         "timeout",
         "advice"
       ],
       "description": "Health is a read-only check of an installed component: one kubectl wait\nthat applies nothing, so it can run on a production cluster."
+    },
+    "healthResource": {
+      "oneOf": [
+        {
+          "required": [
+            "name"
+          ]
+        },
+        {
+          "required": [
+            "selector"
+          ]
+        },
+        {
+          "required": [
+            "all"
+          ]
+        }
+      ],
+      "if": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "DaemonSet",
+              "Deployment",
+              "Node.longhorn.io",
+              "Pod",
+              "StatefulSet"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "namespace"
+        ]
+      },
+      "else": {
+        "not": {
+          "required": [
+            "namespace"
+          ]
+        }
+      },
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "APIService",
+            "DaemonSet",
+            "Deployment",
+            "GatewayClass",
+            "Node.longhorn.io",
+            "Pod",
+            "StatefulSet"
+          ],
+          "description": "The kind of the objects. A kind outside the core and apps groups that shares a name with\nanother has its group after a dot, such as Node.longhorn.io."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The name of one object."
+        },
+        "selector": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object",
+          "minProperties": 1,
+          "description": "The labels of the objects, each a key with its value."
+        },
+        "all": {
+          "type": "boolean",
+          "const": true,
+          "description": "Every object of the kind."
+        },
+        "namespace": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The namespace of the objects. A kind that has namespaces needs it, and any other kind can't have it."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "description": "HealthResource names the objects of one kind by name, by labels, or all of them."
     },
     "input": {
       "oneOf": [
