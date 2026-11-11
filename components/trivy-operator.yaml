@@ -25,8 +25,8 @@ releases:
     namespace: trivy-system
     repo: https://aquasecurity.github.io/helm-charts
     chart: trivy-operator
-    version: 0.37.0
-    chartDigest: sha256:6d23f16d950496d17253258ca2e52bd068959041298e66c0652bf0841ccedf69
+    version: 0.38.1
+    chartDigest: sha256:9c1de16f159bb9e1fca820b43cd7c5b1475fa869c2ce90541db0e747e8a4c674
     values: |
       # Pinned by digest; a tag alone can move. The chart joins registry and
       # repository. registry comes second, so Renovate reads both.
