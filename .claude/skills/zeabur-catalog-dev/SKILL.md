@@ -8,8 +8,7 @@ description: Development loop for the Zeabur Catalog repository — the checks C
 Data format and how to add a component or template: `docs/contribute/add-component.mdx`, `docs/contribute/add-template.mdx`. Template rules:
 `docs/reference/template-standards.mdx`. Pull request rules: `CONTRIBUTING.md`.
 
-Follow the shared skills (install: `npx skills add zeabur-oss/skills --skill <name>`;
-`skills-lock.json` pins them): `zeabur-oss-standards` (with [`STANDARDS.md`](STANDARDS.md)
+Follow the shared skills (copied from zeabur-oss/skills by the update workflow): `zeabur-oss-standards` (with [`STANDARDS.md`](STANDARDS.md)
 here), `zeabur-oss-workflow`, `zeabur-oss-cluster-tests`.
 
 ## Checks (what CI runs)

@@ -80,6 +80,6 @@ security:
 leftovers:
   # The chart annotates its CRDs helm.sh/resource-policy: keep.
   - customresourcedefinitions
-  # The cleanup hook's RBAC outlives uninstall. TODO: report upstream.
+  # The cleanup hook's RBAC outlives uninstall.
   - clusterroles/victoria-metrics-operator-cleanup-hook
   - clusterrolebindings/victoria-metrics-operator-cleanup-hook

@@ -3,7 +3,7 @@ title: Get started with Zeabur Catalog
 description: Tested Kubernetes components and application templates, with versions, configuration, and installation instructions.
 ---
 
-Zeabur Catalog contains data that CI has installed and tested. It has two parts: components and templates. Each release publishes a signed bundle that any tool can read to generate `helm install` commands, Flux or Argo CD manifests, k3s `HelmChart` objects, or template installations.
+Zeabur Catalog contains data that CI has installed and tested. It has two parts: components and templates. Each release publishes a signed bundle and a static API that any tool can read to generate `helm install` commands, Flux or Argo CD manifests, k3s `HelmChart` objects, or template installations.
 
 - **Components** are installed once per cluster by cluster administrators. Examples include Ingress, certificates, metrics, and database operators. Each capability specifies the upstream chart, version, configuration, and reasons for those choices.
 - **Templates** are installed into a single Namespace by project members. Examples include n8n, Dify, WordPress, and PostgreSQL. Templates pin images, set resource requests and limits, and run under the Restricted Pod Security Standard where possible. Templates name their required components in `requires`.
@@ -37,6 +37,7 @@ config/licenses.yaml                      OSI-approved SPDX identifiers and opt-
 config/kubernetes.yaml                    Kubernetes versions and kind node versions for e2e
 config/budget.yaml                        Single-node memory budget (MiB)
 config/e2e.yaml                           Test-only values
+conformance/                              Test cases for installers and template clients
 measurements/                             Idle memory and CPU per workload pod, written by CI
 tools/                                    The `catalog` command (Go)
 docs/                                     This documentation

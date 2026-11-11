@@ -114,6 +114,8 @@ provides:
 
 输入的 `name` 使用 camelCase。设为 `generate: {type: random, bytes: 64, encoding: hex}` 的输入，会生成 `bytes` 个随机字节（12 到 64），再用 `encoding` 编码：小写 `hex`，或不含填充字符的 `base64url`。这两个字段都必填，安装工具无需猜测长度。遇到不认识的 `generate.type`，安装工具不会为这个输入填值。
 
+输入的值会写到某个 release 配置值里的 `path`，或写进 `secret` 指定的 Secret 的某个 key，这个 Secret 由安装工具在安装前创建。`testValue` 是 CI 安装时用的值。
+
 `detection.csiDrivers` 列出组件提供的卷所用的 CSI driver。移除组件前，会等到没有 PersistentVolume 使用其中任何一个。要找对应的 StorageClass，看它的 `provisioner`。
 
 移除组件前，也会等到其命名空间以外没有 `detection.crds` 的对象，但 `internalCRDs` 列出的除外：这些 CRD 的对象是组件自己写的，例如扫描报告。`internalCRDs` 的每一项都必须在 `detection.crds` 里。
@@ -121,7 +123,7 @@ provides:
 `resources.work` 列出组件会做的每一种工作，例如构建。每一项有 `name`（在列表里不能重复），再加上下列至少一个字段，都用 Kubernetes 数量写 `cpu` 和 `memory`：
 
 - `requests` 和 `limits` 是做一份这种工作的每个 Pod 的资源请求量和上限。工作用的 Pod 由控制器创建、渲染结果里看不到时（例如构建用的 Pod），就写这两个字段。数值从 chart 的 values 抄过来，升级 chart 时如果 values 改了，就跟着改。
-- `use` 是组件做一份这种工作时，在空闲用量之外还要多用的资源。空闲用量由 e2e 测量，发布在 [API](releases.mdx)。
+- `use` 是组件做一份这种工作时，在空闲用量之外还要多用的资源。空闲用量由 e2e 测量，发布在 [API](releases.mdx#api)。
 
 ```yaml
 resources:
@@ -145,9 +147,13 @@ health:
     advice: "A node that joined without Longhorn needs longhorn: true under join in its configuration. Add it, then run zeabur-installer apply on that node."
 ```
 
-`distributions` 列出组件支持的发行版，e2e 会在每个发行版上测试它。通过测试的环境是另一个列表，由安装工具根据 API 的测量数据算出，做法见[安装工具如何选择和安装组件](installers.mdx)。组件在某个发行版和平台上没有通过测试时，安装工具会提示用户。
+`distributions` 列出组件支持的发行版，e2e 会在每个发行版上测试它。通过测试的环境是另一个列表，由安装工具根据 API 的测量数据算出，做法见[安装工具如何选择和安装组件](installers.mdx#通过测试的环境)。组件在某个发行版和平台上没有通过测试时，安装工具会提示用户。
 
 `kubeVersion` 是组件支持的 Kubernetes 版本范围，写法与 Helm chart 的 `kubeVersion` 相同。填写各 chart 中最严格的范围，chart 都没写时填 `">=1.34.0-0"`。范围没有覆盖 catalog 测试的某个 Kubernetes 版本时，`catalog validate` 会失败。集群版本不在范围内时，安装工具不会提供这个组件。
+
+`persistsData: true` 表示组件把状态存在卷里，移除它会丢失这些数据。
+
+带 `skipIfPresent` 的 release，在列出的 CRD 全都已经存在时会跳过，例如集群上已有其他安装装好的 Gateway API CRD。`releaseName` 用在 Helm release 名称与 `name` 不同的时候。
 
 `contributes` 会把配置值加到另一个组件的 release。`target` 写明组件和它的 release，`values` 放配置值。
 
@@ -157,6 +163,8 @@ contributes:
     values: |
       ...
 ```
+
+`detection` 的其他列表用来找出集群上已经装好的同一个上游，让安装工具直接沿用：`crds` 和 `apiServices` 按名称匹配，`ingressControllers` 和 `gatewayControllers` 按 IngressClass 或 GatewayClass 的 controller 匹配，`helmCharts` 按 Helm release 的 chart 匹配，`workloads` 按 Deployment、StatefulSet 或 DaemonSet 的 `kind` 和 `labels` 匹配。
 
 `detection.addons` 列出发行版自带、安装同一个上游的附加组件，例如 k3s 内置的 Traefik 写成 `{distribution: k3s, name: traefik}`，RKE2 的写成 `{distribution: rke2, name: rke2-traefik}`。名称是该附加组件在 `kube-system` 里的 HelmChart。读取方遇到不认识的发行版时，跳过那一项。
 

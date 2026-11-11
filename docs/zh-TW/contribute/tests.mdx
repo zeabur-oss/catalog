@@ -177,7 +177,7 @@ description: 了解各層 CI 的執行時機與檢查內容，並設定範本測
 
 量測結果與 kind 的結果放在一起，`profile` 為 `single-node`，`distribution` 是發行版，`distributionVersion` 是它的版本，例如 `v1.36.5+k3s1`。測試失敗時，該環境會改成 `result: failed`。如果叢集一直沒有回應，這筆就沒有 `kubernetesVersion`。
 
-每個測量環境都有 `sourceDigest`，記錄那次執行裝的元件檔案（範本則是 `template.yaml` 和 `manifests.yaml`）的雜湊值。API 在各元件的量測資料旁發布該元件的 `sourceDigest`。只有在某個發行版和平台上通過測試的紀錄，其雜湊值與元件目前的值相同時，安裝工具才算這個元件[通過該環境的測試](../reference/installers.mdx)。元件檔案一改（包括裡面的 release 版本），在新檔案通過測試之前，都算未通過測試。在某個平台上測試失敗後，該平台也算未通過測試，等下一次在該平台上通過才恢復。
+每個測量環境都有 `sourceDigest`，記錄那次執行裝的元件檔案（範本則是 `template.yaml` 和 `manifests.yaml`）的雜湊值。API 在各元件的量測資料旁發布該元件的 `sourceDigest`。只有在某個發行版和平台上通過測試的紀錄，其雜湊值與元件目前的值相同時，安裝工具才算這個元件[通過該環境的測試](../reference/installers.mdx#通過測試的環境)。元件檔案一改（包括裡面的 release 版本），在新檔案通過測試之前，都算未通過測試。在某個平台上測試失敗後，該平台也算未通過測試，等下一次在該平台上通過才恢復。
 
 ## 設定範本測試輸入
 

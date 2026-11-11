@@ -19,7 +19,7 @@ project and can be installed many times.
   it needs in `requires`.
 
 The catalog is data. CI installs and tests every component and template, and
-each release publishes one signed bundle that any tool can read to generate
+each release publishes one signed bundle and a static API that any tool can read to generate
 `helm install` commands, Flux or Argo CD manifests, k3s `HelmChart` objects or
 template installs.
 
@@ -37,6 +37,7 @@ config/licenses.yaml                      OSI-approved SPDX identifiers; opt-in-
 config/kubernetes.yaml                    Kubernetes versions; kind node version for e2e
 config/budget.yaml                        single-node memory budget (MiB)
 config/e2e.yaml                           test-only values
+conformance/                              test cases for installers and template clients
 measurements/                             idle memory and CPU, written by CI
 tools/                                    the `catalog` command (Go)
 docs/                                     the documentation
@@ -64,7 +65,7 @@ The path is the ID: `components/traefik.yaml` is `traefik`, `templates/n8n/` is
 - [Components](docs/reference/components.mdx), [templates](docs/reference/templates.mdx) and [distributions](docs/reference/distributions.mdx)
 - [Component format](docs/reference/component-format.mdx) and [template format](docs/reference/template-format.mdx)
 - [Template standards](docs/reference/template-standards.mdx)
-- [Releases and the bundle](docs/reference/releases.mdx)
+- [Releases and the API](docs/reference/releases.mdx)
 - [Add a component](docs/contribute/add-component.mdx), [add a template](docs/contribute/add-template.mdx) and [tests and CI](docs/contribute/tests.mdx)
 
 ## License
