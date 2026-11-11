@@ -1,0 +1,38 @@
+{
+  "template": "new-api",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "newapi-db",
+          "kind": "Cluster",
+          "memory": "60Mi",
+          "cpu": "5m"
+        },
+        {
+          "workload": "new-api",
+          "kind": "Deployment",
+          "memory": "44Mi",
+          "cpu": "7m"
+        }
+      ],
+      "versions": [
+        {
+          "image": "docker.io/calciumion/new-api",
+          "version": "v1.0.0-rc.46",
+          "digest": "sha256:abf1f675efa1847b90c049c03766e2daaf62a78998aae3625cf34b6a045b1b97"
+        }
+      ],
+      "sourceDigest": "h1:gCNp7dz/hQHKJZfY8WJP/V1WlTwjke3mHSHU+awbC8A=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

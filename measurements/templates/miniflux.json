@@ -1,0 +1,38 @@
+{
+  "template": "miniflux",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "miniflux-db",
+          "kind": "Cluster",
+          "memory": "59Mi",
+          "cpu": "4m"
+        },
+        {
+          "workload": "miniflux",
+          "kind": "Deployment",
+          "memory": "13Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "image": "miniflux/miniflux",
+          "version": "2.3.5",
+          "digest": "sha256:8fd6c3c434ecc3d4083306f83e03c0bb74c632e0f8378da5ead7e1773b0b89c9"
+        }
+      ],
+      "sourceDigest": "h1:q3v6Nm7KFobn+blakE/PBfDyhV7zdcDOH6f3yLjL27Q=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

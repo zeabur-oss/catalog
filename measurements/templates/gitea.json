@@ -1,0 +1,38 @@
+{
+  "template": "gitea",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "gitea-db",
+          "kind": "Cluster",
+          "memory": "62Mi",
+          "cpu": "5m"
+        },
+        {
+          "workload": "gitea",
+          "kind": "Deployment",
+          "memory": "91Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "image": "docker.gitea.com/gitea",
+          "version": "28.2.0-rootless",
+          "digest": "sha256:94807314454f6525994a3b76286ba12bc7e7f8cd14f61d9e67431767f8103306"
+        }
+      ],
+      "sourceDigest": "h1:ppceRqgquyR17BH4DE2b2vfgVnqDS3Gd6vZoIuoU81g=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

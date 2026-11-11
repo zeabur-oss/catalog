@@ -1,0 +1,32 @@
+{
+  "template": "ollama",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "ollama",
+          "kind": "Deployment",
+          "memory": "15Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "image": "docker.io/ollama/ollama",
+          "version": "0.40.14",
+          "digest": "sha256:ebaef4f4c5d93660e1f25f8ad085a112f51ccfb0e8458073e71793959dba91c9"
+        }
+      ],
+      "sourceDigest": "h1:/UdgbWYlf4hkxosOC5zurSHy4b4lzoUh3n8DJhYdv1Q=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

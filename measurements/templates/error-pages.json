@@ -1,0 +1,32 @@
+{
+  "template": "error-pages",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "error-pages",
+          "kind": "Deployment",
+          "memory": "2Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "image": "docker.io/nginxinc/nginx-unprivileged",
+          "version": "1.31.7-alpine-slim",
+          "digest": "sha256:a8cb0f33d51fa107c96fd2bd3a71aaf564ec131e9d2bdf8700944f0ed8b170d7"
+        }
+      ],
+      "sourceDigest": "h1:HwFBcyt6Elx5r5PWvPIyLr0IjTcqNQIN4a8LLwnU03o=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "template": "dify",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "dify-db",
+          "kind": "Cluster",
+          "memory": "85Mi",
+          "cpu": "5m"
+        },
+        {
+          "workload": "dify",
+          "kind": "Deployment",
+          "memory": "5Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "dify-api",
+          "kind": "Deployment",
+          "memory": "518Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "dify-beat",
+          "kind": "Deployment",
+          "memory": "487Mi",
+          "cpu": "5m"
+        },
+        {
+          "workload": "dify-plugin",
+          "kind": "Deployment",
+          "memory": "14Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "dify-proxy",
+          "kind": "Deployment",
+          "memory": "20Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "dify-sandbox",
+          "kind": "Deployment",
+          "memory": "47Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "dify-web",
+          "kind": "Deployment",
+          "memory": "67Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "dify-worker",
+          "kind": "Deployment",
+          "memory": "506Mi",
+          "cpu": "7m"
+        },
+        {
+          "workload": "dify-dragonfly",
+          "kind": "StatefulSet",
+          "memory": "14Mi",
+          "cpu": "9m"
+        }
+      ],
+      "versions": [
+        {
+          "image": "docker.dragonflydb.io/dragonflydb/dragonfly",
+          "version": "v2.0.2",
+          "digest": "sha256:061f00b201b58e12f974e4e96c761a881ee1c05e9d8ee967466a604b7299753b"
+        },
+        {
+          "image": "docker.io/langgenius/dify-api",
+          "version": "1.19.0",
+          "digest": "sha256:0d67842aedcb9b5884f75b88c4a5dd812e637916bff1ca892831f7ace2f3204f"
+        },
+        {
+          "image": "docker.io/langgenius/dify-plugin-daemon",
+          "version": "0.6.14-local",
+          "digest": "sha256:17ee86306a35c2c7e5910016f72e441c0252f0416bb9a845862088e9f8efa873"
+        },
+        {
+          "image": "docker.io/langgenius/dify-sandbox",
+          "version": "0.2.15",
+          "digest": "sha256:750e1111426ef31a9217b81c98cccfb750f17b182af3221102e420afa9f0928e"
+        },
+        {
+          "image": "docker.io/langgenius/dify-web",
+          "version": "1.19.0",
+          "digest": "sha256:f5f1ad000d6a268ae6b29b84c5095069fbd5994cbe43f937a3d32caa00038b4c"
+        },
+        {
+          "image": "docker.io/nginxinc/nginx-unprivileged",
+          "version": "1.31.7-alpine",
+          "digest": "sha256:b5047b9b76845eac124358373c6852377c52e4b05834a47647e955dd91cb8f1e"
+        },
+        {
+          "image": "docker.io/ubuntu/squid",
+          "version": "6.6-24.04_beta",
+          "digest": "sha256:6a097f68bae708cedbabd6188d68c7e2e7a38cedd05a176e1cc0ba29e3bbe029"
+        }
+      ],
+      "sourceDigest": "h1:fLhQdmbBrX2nagiOD48hN3OlpJ1iV5L53Sz/iECOkPI=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

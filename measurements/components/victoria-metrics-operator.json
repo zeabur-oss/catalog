@@ -1,0 +1,271 @@
+{
+  "component": "victoria-metrics-operator",
+  "environments": [
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "victoria-metrics-operator",
+          "kind": "Deployment",
+          "memory": "19Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "operator",
+          "version": "0.68.1"
+        }
+      ],
+      "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "victoria-metrics-operator",
+          "kind": "Deployment",
+          "memory": "21Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "operator",
+          "version": "0.68.1"
+        }
+      ],
+      "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "victoria-metrics-operator",
+          "kind": "Deployment",
+          "memory": "19Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "operator",
+          "version": "0.68.1"
+        }
+      ],
+      "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "victoria-metrics-operator",
+          "kind": "Deployment",
+          "memory": "19Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "operator",
+          "version": "0.68.1"
+        }
+      ],
+      "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "victoria-metrics-operator",
+          "kind": "Deployment",
+          "memory": "21Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "operator",
+          "version": "0.68.1"
+        }
+      ],
+      "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "victoria-metrics-operator",
+          "kind": "Deployment",
+          "memory": "19Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "operator",
+          "version": "0.68.1"
+        }
+      ],
+      "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "victoria-metrics-operator",
+          "kind": "Deployment",
+          "memory": "22Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "operator",
+          "version": "0.68.1"
+        }
+      ],
+      "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "victoria-metrics-operator",
+          "kind": "Deployment",
+          "memory": "22Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "operator",
+          "version": "0.68.1"
+        }
+      ],
+      "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "victoria-metrics-operator",
+          "kind": "Deployment",
+          "memory": "19Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "operator",
+          "version": "0.68.1"
+        }
+      ],
+      "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "victoria-metrics-operator",
+          "kind": "Deployment",
+          "memory": "20Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "operator",
+          "version": "0.68.1"
+        }
+      ],
+      "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

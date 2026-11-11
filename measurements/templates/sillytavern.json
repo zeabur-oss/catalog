@@ -1,0 +1,32 @@
+{
+  "template": "sillytavern",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "sillytavern",
+          "kind": "Deployment",
+          "memory": "137Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "image": "ghcr.io/sillytavern/sillytavern",
+          "version": "1.19.0",
+          "digest": "sha256:eef27ff0c7961f1a2f488400f581f48ff38f8b910c5d3b8d389138d71791bb14"
+        }
+      ],
+      "sourceDigest": "h1:EUdS+TvH7ULnuqVriwI13+i6OjXqtKT1EWxraQoyRsQ=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

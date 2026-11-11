@@ -1,0 +1,32 @@
+{
+  "template": "meilisearch",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "meilisearch",
+          "kind": "StatefulSet",
+          "memory": "9Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "image": "getmeili/meilisearch",
+          "version": "v1.56.1",
+          "digest": "sha256:b7ba431bf6f9b26cc86132798f3640964147a699cf23f026b74c6c05dbb1d60d"
+        }
+      ],
+      "sourceDigest": "h1:jcfNKTBoS7QYSG37wLH62UkzJV6Kr4R1rYHPxfY8Ar4=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

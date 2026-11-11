@@ -1,0 +1,32 @@
+{
+  "template": "ntfy",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "ntfy",
+          "kind": "StatefulSet",
+          "memory": "15Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "image": "binwiederhier/ntfy",
+          "version": "v2.37.2",
+          "digest": "sha256:1875ddcf815c8a3c981d6d78c67a93452d0abba79b1ab9520b1f5f5238902bd7"
+        }
+      ],
+      "sourceDigest": "h1:UlBTExBoffgyPtESG07SlzePnA9T/Ll2UzLKNq8uj6E=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

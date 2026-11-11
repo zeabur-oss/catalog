@@ -1,0 +1,32 @@
+{
+  "template": "cliproxyapi",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "cliproxyapi",
+          "kind": "Deployment",
+          "memory": "18Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "image": "eceasy/cli-proxy-api",
+          "version": "v8.0.54",
+          "digest": "sha256:66e51ccba4786099f85f40439ba17f975dc5e9468def96ba914d3da39041d03a"
+        }
+      ],
+      "sourceDigest": "h1:lDRWlS+3ChbrAiECKNsPupYTWrrfeohMizaJrIMmVpU=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "template": "openclaw-browser-sandbox",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "openclaw-sandbox-browser",
+          "kind": "Deployment",
+          "memory": "178Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "image": "ghcr.io/canyugs/openclaw-sandbox-browser",
+          "version": "edcc8e5",
+          "digest": "sha256:e6fcd2cb4272498709d16ad6a12526363559ed5846eb2ff0f775f15d62365ef7"
+        }
+      ],
+      "sourceDigest": "h1:dDcFgFeuPhE4hjR4nkZQfylKCCPV229YeKX10m9lIns=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

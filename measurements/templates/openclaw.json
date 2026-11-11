@@ -1,0 +1,32 @@
+{
+  "template": "openclaw",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "openclaw",
+          "kind": "Deployment",
+          "memory": "831Mi",
+          "cpu": "12m"
+        }
+      ],
+      "versions": [
+        {
+          "image": "ghcr.io/openclaw/openclaw",
+          "version": "2026.10.7",
+          "digest": "sha256:fb26f0841659dc757f23feec9adeab51f11d76779a409db5d22e191b43841afa"
+        }
+      ],
+      "sourceDigest": "h1:FewoXYJlO0kaEIR1ZZpC1pBZjAqibDwtohFo5F/ec2w=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}
