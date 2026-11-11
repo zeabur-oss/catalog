@@ -51,16 +51,10 @@ type E2EValues struct {
 	SkipSmoke map[string]string `yaml:"skipSmoke"`
 }
 
-// Usage is the idle memory and CPU of a template's pods.
-type Usage struct {
-	IdleMemoryMiB float64
-	IdleCPUm      float64
-}
-
 // E2E installs a template and what it requires with t, runs its smoke checks
 // and uninstalls everything. If measure is set, E2E also returns the idle
 // usage of the pods in the template's namespace after the smoke checks.
-func E2E(t *catalog.Tester, r *Template, values E2EValues, measure bool) (usage *Usage, err error) {
+func E2E(t *catalog.Tester, r *Template, values E2EValues, measure bool) (usage []catalog.PodUsage, err error) {
 	ns := Namespace(r)
 	for name := range values.SkipSmoke {
 		if !slices.ContainsFunc(r.Smoke, func(s Smoke) bool { return s.Name == name }) {
@@ -184,13 +178,13 @@ func E2E(t *catalog.Tester, r *Template, values E2EValues, measure bool) (usage 
 	slog.Info("smoke passed; waiting for idle usage to settle", "template", r.ID)
 	start := time.Now()
 	// The namespace is new, so every pod in it belongs to the template.
-	mem, cpu, err := catalog.IdleUsage(func(podNS, _ string) bool { return podNS == ns })
+	pods, err := catalog.IdleUsage(func(podNS, _ string) bool { return podNS == ns })
 	if err != nil {
 		return nil, err
 	}
 	t.Timings.Since("settle", start)
-	slog.Info("measured", "template", r.ID, "memoryMiB", int(mem), "cpuM", int(cpu))
-	return &Usage{IdleMemoryMiB: mem, IdleCPUm: cpu}, nil
+	slog.Info("measured", "template", r.ID, "workloads", len(pods))
+	return pods, nil
 }
 
 // Namespace is the namespace E2E installs r in.

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
@@ -25,7 +26,12 @@ const testDigest = "sha256:source"
 func env(distribution, profile, arch, kubernetes, version string, idle int64, day string) environment {
 	return environment{Distribution: distribution, Profile: profile, Platform: platform{"linux", arch},
 		KubernetesVersion: kubernetes, DistributionVersion: version, Result: resultPassed, SourceDigest: testDigest,
-		Idle: &catalog.Amounts{MemoryMiB: idle}, MeasuredAt: day}
+		Pods: pods(idle), MeasuredAt: day}
+}
+
+// pods is one workload whose pod uses idle MiB.
+func pods(idle int64) []catalog.PodUsage {
+	return []catalog.PodUsage{catalog.NewPodUsage("web", "Deployment", float64(idle), 0)}
 }
 
 func kindEnv(profile, arch string, idle int64, day string) environment {
@@ -68,14 +74,14 @@ func TestMergeKeepsEnvironmentsNoJobMeasured(t *testing.T) {
 	}
 
 	traefik := readMeasurement("measurements/components/ingress/traefik.json")
-	if got := get(t, traefik, kindEnv("single-node", "amd64", 0, "")); got.Idle.MemoryMiB != 25 || got.MeasuredAt != "2026-10-25" {
+	if got := get(t, traefik, kindEnv("single-node", "amd64", 0, "")); got.Pods[0].Memory.Value() != 25<<20 || got.MeasuredAt != "2026-10-25" {
 		t.Errorf("single-node amd64 = %+v, want the new measurement", got)
 	}
-	if got := get(t, traefik, kindEnv("multi-node", "arm64", 0, "")); got.Idle.MemoryMiB != 56 {
+	if got := get(t, traefik, kindEnv("multi-node", "arm64", 0, "")); got.Pods[0].Memory.Value() != 56<<20 {
 		t.Errorf("multi-node arm64 = %+v, want it kept", got)
 	}
 	ghost := readMeasurement("measurements/templates/ghost.json")
-	if ghost.Template != "ghost" || get(t, ghost, kindEnv("single-node", "amd64", 0, "")).Idle.MemoryMiB != 310 {
+	if ghost.Template != "ghost" || get(t, ghost, kindEnv("single-node", "amd64", 0, "")).Pods[0].Memory.Value() != 310<<20 {
 		t.Errorf("templates/ghost.json = %+v, want the uploaded template measurement", ghost)
 	}
 }
@@ -261,7 +267,7 @@ func TestFailureSurvivesAnotherJobsStaleCopy(t *testing.T) {
 	if get(t, merged, arm).Result != resultFailed {
 		t.Error("a stale passing copy undid the failure marker")
 	}
-	if get(t, merged, kindEnv("single-node", "amd64", 0, "")).Idle.MemoryMiB != 25 {
+	if get(t, merged, kindEnv("single-node", "amd64", 0, "")).Pods[0].Memory.Value() != 25<<20 {
 		t.Error("the new measurement was not merged")
 	}
 	if got := k3sPlatforms(cfg, merged.Environments, testDigest); slices.Contains(got, "linux/arm64") {
@@ -317,7 +323,7 @@ func TestSameDayRerunReplacesWhatMainHeld(t *testing.T) {
 		return env("rke2", "single-node", "amd64", "v1.36.5", "v1.36.5+rke2r1", idle, day)
 	}
 	rke2Failed := rke2Env(0)
-	rke2Failed.Result, rke2Failed.Idle = resultFailed, nil
+	rke2Failed.Result, rke2Failed.Pods = resultFailed, nil
 	main := measurement{Component: "ingress/traefik", Environments: []environment{k3sEnv("amd64", 22, day), rke2Failed}}
 	writeFile(t, "main/components/ingress/traefik.json", main)
 	k3s := measurement{Component: main.Component, Environments: []environment{k3sEnv("amd64", 30, day), rke2Failed}}
@@ -329,10 +335,10 @@ func TestSameDayRerunReplacesWhatMainHeld(t *testing.T) {
 		t.Fatal(err)
 	}
 	merged := readMeasurement("main/components/ingress/traefik.json")
-	if got := get(t, merged, k3sEnv("amd64", 0, "")); got.Idle.MemoryMiB != 30 {
+	if got := get(t, merged, k3sEnv("amd64", 0, "")); got.Pods[0].Memory.Value() != 30<<20 {
 		t.Errorf("k3s amd64 = %+v, want the rerun's pass, not main's copy from the rke2 job", got)
 	}
-	if got := get(t, merged, rke2Env(0)); got.Result != resultPassed || got.Idle.MemoryMiB != 40 {
+	if got := get(t, merged, rke2Env(0)); got.Result != resultPassed || got.Pods[0].Memory.Value() != 40<<20 {
 		t.Errorf("rke2 amd64 = %+v, want the rerun's pass over main's failure", got)
 	}
 }
@@ -345,33 +351,37 @@ func TestBudgetReadsTheNewestKubernetesVersionOnSingleNodeKind(t *testing.T) {
 		env("k3s", "single-node", "amd64", "v1.37.0", "v1.37.0+k3s1", 90, "2026-10-30"),
 		env(kindDistribution, "multi-node", "amd64", "v1.37.0", "", 90, "2026-10-30"),
 	}}
-	if got, ok := latest(m); !ok || got != 30 {
-		t.Errorf("latest = %d, %v; want 30 from v1.36.4", got, ok)
+	if got, ok := latest(m); !ok || got[0].Memory.Value() != 30<<20 {
+		t.Errorf("latest = %v, %v; want 30 from v1.36.4", got, ok)
 	}
 }
 
-func TestRequestMemoryIsPublishedWhenMeasuredAndOmittedWhenNot(t *testing.T) {
-	idle := &catalog.Amounts{MemoryMiB: 50}
-	for _, c := range []struct {
-		env  environment
-		want any
-	}{
-		{environment{Idle: idle, Requests: &catalog.Amounts{MemoryMiB: 96}}, map[string]any{"memoryMiB": float64(96)}},
-		// No pod asks for memory.
-		{environment{Idle: idle, Requests: &catalog.Amounts{}}, map[string]any{}},
-		// Measured before requests were recorded.
-		{environment{Idle: idle}, nil},
-	} {
-		out, err := json.Marshal(c.env)
-		if err != nil {
-			t.Fatal(err)
-		}
-		var got map[string]any
-		if err := json.Unmarshal(out, &got); err != nil {
-			t.Fatal(err)
-		}
-		if !reflect.DeepEqual(got["requests"], c.want) {
-			t.Errorf("%s: requests = %v, want %v", out, got["requests"], c.want)
+func TestMeasuredPodsRoundTripWithoutTotals(t *testing.T) {
+	t.Chdir(t.TempDir())
+	pods := []catalog.PodUsage{
+		catalog.NewPodUsage("traefik", "Deployment", 31, 4),
+		catalog.NewPodUsage("agent", "DaemonSet", 12, 1),
+	}
+	comp := &catalog.Component{ID: "ingress/traefik", Path: "traefik.yaml"}
+	if err := os.WriteFile(comp.Path, []byte("releases: []\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeMeasurement(comp, k3sEnv("amd64", 0, ""), catalog.Result{Pods: pods}); err != nil {
+		t.Fatal(err)
+	}
+	m := readMeasurement(measurementPath(comp.ID))
+	want := `[{"workload":"traefik","kind":"Deployment","memory":"31Mi","cpu":"4m"},{"workload":"agent","kind":"DaemonSet","memory":"12Mi","cpu":"1m"}]`
+	got, err := json.Marshal(get(t, m, k3sEnv("amd64", 0, "")).Pods)
+	if err != nil || string(got) != want {
+		t.Errorf("pods = %s, %v; want %s", got, err, want)
+	}
+	data, err := os.ReadFile(measurementPath(comp.ID))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, total := range []string{`"idle"`, `"requests"`} {
+		if strings.Contains(string(data), total) {
+			t.Errorf("the file stores %s, which a reader computes", total)
 		}
 	}
 }
@@ -406,7 +416,7 @@ func TestChangedSourceIsUntestedUntilARunOfItPasses(t *testing.T) {
 	comp := &catalog.Component{ID: "ingress/traefik", Path: path}
 	passRun := func() {
 		t.Helper()
-		if err := writeMeasurement(comp, k3sEnv("amd64", 0, ""), catalog.Result{IdleMemoryMiB: 24}); err != nil {
+		if err := writeMeasurement(comp, k3sEnv("amd64", 0, ""), catalog.Result{Pods: pods(24)}); err != nil {
 			t.Fatal(err)
 		}
 	}

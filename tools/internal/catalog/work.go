@@ -3,7 +3,6 @@ package catalog
 import (
 	"fmt"
 	"maps"
-	"math"
 	"slices"
 	"strings"
 
@@ -13,16 +12,11 @@ import (
 const mib = 1 << 20
 
 // Amounts is how index.json publishes an amount of resources: memory in whole
-// MiB and CPU in whole millicores. A missing field is not set, or zero in a
-// measurement. A resource added later is a field added here.
+// MiB and CPU in whole millicores. A missing field is not set. A resource
+// added later is a field added here.
 type Amounts struct {
 	MemoryMiB int64 `json:"memoryMiB,omitempty"`
 	CPUMillis int64 `json:"cpuMillis,omitempty"`
-}
-
-// MeasuredAmounts rounds measured memory in MiB and CPU in millicores.
-func MeasuredAmounts(memoryMiB, cpuMillis float64) *Amounts {
-	return &Amounts{MemoryMiB: int64(math.Round(memoryMiB)), CPUMillis: int64(math.Round(cpuMillis))}
 }
 
 // Quantities is a component's own amount of resources: Kubernetes quantities
