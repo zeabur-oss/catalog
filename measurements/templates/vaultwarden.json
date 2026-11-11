@@ -1,0 +1,32 @@
+{
+  "template": "vaultwarden",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vaultwarden",
+          "kind": "StatefulSet",
+          "memory": "7Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "image": "vaultwarden/server",
+          "version": "1.37.5",
+          "digest": "sha256:4fe17f415f90087377d37c755e0ea3cf189dcc6794e49cdd2a9adbb4937d9e1f"
+        }
+      ],
+      "sourceDigest": "h1:ey1+aG8LRNcO96EQxRJ6SnFPk9kGGnWx2KhrDcQF/dw=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

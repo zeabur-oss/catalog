@@ -1,0 +1,53 @@
+{
+  "template": "wordpress",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "wordpress",
+          "kind": "Deployment",
+          "memory": "61Mi",
+          "cpu": "2m"
+        },
+        {
+          "workload": "mariadb",
+          "kind": "StatefulSet",
+          "memory": "98Mi",
+          "cpu": "10m"
+        }
+      ],
+      "versions": [
+        {
+          "image": "docker.io/mariadb",
+          "version": "12.3.3",
+          "digest": "sha256:d46e102fa8b9b72bfcdeb56f9dd538742092119dc8b11f31fe662605cd234cd9"
+        },
+        {
+          "image": "docker.io/nginxinc/nginx-unprivileged",
+          "version": "stable-alpine",
+          "digest": "sha256:f5116ed4606f3eb015dd4a8e28cb9b351476dc0ad4bc6e9f93b19cec130cdf03"
+        },
+        {
+          "image": "docker.io/wordpress",
+          "version": "cli-php8.3",
+          "digest": "sha256:661db880e953da051abcac6c0a769767b995a82cd52101c003ca7438dd427d7d"
+        },
+        {
+          "image": "docker.io/wordpress",
+          "version": "php8.3-fpm-alpine",
+          "digest": "sha256:82d93a279778e5307902813c402b9118521e8104459a0e350ed719f6d6c4d1ab"
+        }
+      ],
+      "sourceDigest": "h1:zySgBQQAn1xxEhh+1s0COEx85yarCBQnfdqWCZaac+8=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

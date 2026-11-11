@@ -1,0 +1,38 @@
+{
+  "template": "litellm",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "litellm-db",
+          "kind": "Cluster",
+          "memory": "67Mi",
+          "cpu": "5m"
+        },
+        {
+          "workload": "litellm",
+          "kind": "Deployment",
+          "memory": "572Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "image": "ghcr.io/berriai/litellm-non_root",
+          "version": "v1.106.3",
+          "digest": "sha256:4fe2270c8b66d25654514744ee6629445c255c0303c292fcbd2d973117a04207"
+        }
+      ],
+      "sourceDigest": "h1:na8IJpVmi3wzd/mfWGh9sLozjljx6QTbp+3nm7TG64w=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

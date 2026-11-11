@@ -1,0 +1,38 @@
+{
+  "template": "halo",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "halo-db",
+          "kind": "Cluster",
+          "memory": "64Mi",
+          "cpu": "5m"
+        },
+        {
+          "workload": "halo",
+          "kind": "StatefulSet",
+          "memory": "359Mi",
+          "cpu": "8m"
+        }
+      ],
+      "versions": [
+        {
+          "image": "halohub/halo",
+          "version": "2.27.2",
+          "digest": "sha256:a804c41779c9ee8b19465dda57081d58ae0bc4d3e49bece7f50cf42cf0366958"
+        }
+      ],
+      "sourceDigest": "h1:+TFzWFjN56MrY9/uwNmuYuXBbYNw2N5B/Hdh4AemUM8=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

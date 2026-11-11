@@ -1,0 +1,271 @@
+{
+  "component": "blackbox-exporter",
+  "environments": [
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "blackbox-exporter-prometheus-blackbox-exporter",
+          "kind": "Deployment",
+          "memory": "4Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "blackbox-exporter",
+          "version": "11.20.2"
+        }
+      ],
+      "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "blackbox-exporter-prometheus-blackbox-exporter",
+          "kind": "Deployment",
+          "memory": "4Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "blackbox-exporter",
+          "version": "11.20.2"
+        }
+      ],
+      "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "blackbox-exporter-prometheus-blackbox-exporter",
+          "kind": "Deployment",
+          "memory": "4Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "blackbox-exporter",
+          "version": "11.20.2"
+        }
+      ],
+      "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "blackbox-exporter-prometheus-blackbox-exporter",
+          "kind": "Deployment",
+          "memory": "4Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "blackbox-exporter",
+          "version": "11.20.2"
+        }
+      ],
+      "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "blackbox-exporter-prometheus-blackbox-exporter",
+          "kind": "Deployment",
+          "memory": "4Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "blackbox-exporter",
+          "version": "11.20.2"
+        }
+      ],
+      "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "blackbox-exporter-prometheus-blackbox-exporter",
+          "kind": "Deployment",
+          "memory": "4Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "blackbox-exporter",
+          "version": "11.20.2"
+        }
+      ],
+      "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "blackbox-exporter-prometheus-blackbox-exporter",
+          "kind": "Deployment",
+          "memory": "4Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "blackbox-exporter",
+          "version": "11.20.2"
+        }
+      ],
+      "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "blackbox-exporter-prometheus-blackbox-exporter",
+          "kind": "Deployment",
+          "memory": "4Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "blackbox-exporter",
+          "version": "11.20.2"
+        }
+      ],
+      "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "blackbox-exporter-prometheus-blackbox-exporter",
+          "kind": "Deployment",
+          "memory": "4Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "blackbox-exporter",
+          "version": "11.20.2"
+        }
+      ],
+      "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "blackbox-exporter-prometheus-blackbox-exporter",
+          "kind": "Deployment",
+          "memory": "4Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "blackbox-exporter",
+          "version": "11.20.2"
+        }
+      ],
+      "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

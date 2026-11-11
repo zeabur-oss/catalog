@@ -1,0 +1,32 @@
+{
+  "template": "browserless",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "browserless",
+          "kind": "Deployment",
+          "memory": "303Mi",
+          "cpu": "11m"
+        }
+      ],
+      "versions": [
+        {
+          "image": "ghcr.io/browserless/chromium",
+          "version": "latest",
+          "digest": "sha256:3231c6747363e1214b7d674e2945606bb68b629a10ae59a489dc44d99572a022"
+        }
+      ],
+      "sourceDigest": "h1:zQMAApDw/2VLL+JXNmfVqbO9rqEzSAwmna5s2OABrmw=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

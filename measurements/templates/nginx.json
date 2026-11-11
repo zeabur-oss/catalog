@@ -1,0 +1,32 @@
+{
+  "template": "nginx",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "nginx",
+          "kind": "Deployment",
+          "memory": "5Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "image": "nginxinc/nginx-unprivileged",
+          "version": "1.31-alpine",
+          "digest": "sha256:b5047b9b76845eac124358373c6852377c52e4b05834a47647e955dd91cb8f1e"
+        }
+      ],
+      "sourceDigest": "h1:hBka5vJqt4I3fzrpURbfeENlDoJaHDIPF/X4CYp4vuo=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

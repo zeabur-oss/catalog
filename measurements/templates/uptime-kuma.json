@@ -1,0 +1,32 @@
+{
+  "template": "uptime-kuma",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "uptime-kuma",
+          "kind": "StatefulSet",
+          "memory": "118Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "image": "louislam/uptime-kuma",
+          "version": "2.5.9-rootless",
+          "digest": "sha256:ea1b2ceb6ef710a3d0d994debcc8cded062e534fb901f6e895f59caad68e0a9e"
+        }
+      ],
+      "sourceDigest": "h1:JaiYSU6OVWfqAC902A7/mLUWaC/wfqKbcBgTqyvNpso=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

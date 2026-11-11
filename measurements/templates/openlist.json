@@ -1,0 +1,32 @@
+{
+  "template": "openlist",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "openlist",
+          "kind": "StatefulSet",
+          "memory": "17Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "image": "openlistteam/openlist",
+          "version": "latest-aio",
+          "digest": "sha256:8b9f6f2e11ff8ceb682b9107ccb3424290d81738d6c1f79a3f95006588b27477"
+        }
+      ],
+      "sourceDigest": "h1:MCDfwHjf5onDLHkCG2x64/H2zYQqNRZ344nxMYgkm7c=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

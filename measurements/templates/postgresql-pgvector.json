@@ -1,0 +1,25 @@
+{
+  "template": "postgresql-pgvector",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "postgresql",
+          "kind": "Cluster",
+          "memory": "51Mi",
+          "cpu": "5m"
+        }
+      ],
+      "sourceDigest": "h1:vS4WSJf/6SPbGwa0g+gCm+mdsufnap22jFxd9ADBiSQ=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

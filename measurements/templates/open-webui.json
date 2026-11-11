@@ -1,0 +1,43 @@
+{
+  "template": "open-webui",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "open-webui",
+          "kind": "Deployment",
+          "memory": "752Mi",
+          "cpu": "3m"
+        },
+        {
+          "workload": "pipeline",
+          "kind": "Deployment",
+          "memory": "57Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "image": "ghcr.io/open-webui/open-webui",
+          "version": "main",
+          "digest": "sha256:4860ba005ae8f19f08d1e12b0868855b7b339ea0dad9927f196820fc0de04575"
+        },
+        {
+          "image": "ghcr.io/open-webui/pipelines",
+          "version": "main",
+          "digest": "sha256:b48e9bc338ce2be0acfbeff01810db72408a12f07739f9e3879c1f2b00952d6e"
+        }
+      ],
+      "sourceDigest": "h1:qEcH4M7Wic8FapF2sfKymipckGZ7iol3ND3uGMZw6P4=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

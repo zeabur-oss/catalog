@@ -1,0 +1,32 @@
+{
+  "template": "lobechat",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "lobechat",
+          "kind": "Deployment",
+          "memory": "175Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "image": "docker.io/lobehub/lobe-chat",
+          "version": "1.143.3",
+          "digest": "sha256:b2d2454525523d9f0a19c79661f83ec45f13363dbadd5c1180887e77af35d872"
+        }
+      ],
+      "sourceDigest": "h1:FINp6qJvqzij5SlUidPC/TTnrVQFvG7sxg3BT/TJfag=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

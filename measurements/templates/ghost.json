@@ -1,0 +1,43 @@
+{
+  "template": "ghost",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "ghost",
+          "kind": "StatefulSet",
+          "memory": "164Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "ghost-mysql",
+          "kind": "StatefulSet",
+          "memory": "236Mi",
+          "cpu": "7m"
+        }
+      ],
+      "versions": [
+        {
+          "image": "ghost",
+          "version": "6-alpine",
+          "digest": "sha256:4195f6c405e40230cd10c0770425cf500c1f542a96e9f6584c11649c150e5a89"
+        },
+        {
+          "image": "mysql",
+          "version": "8.4",
+          "digest": "sha256:a81d043930e51745522bd5c430961cf8286f0a23f0a9a2a6e0108f7ea71b0902"
+        }
+      ],
+      "sourceDigest": "h1:5ge9dj+2MplYinmLF0LNViIXD1kljQUHoyfhy+sTYGw=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

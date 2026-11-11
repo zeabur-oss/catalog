@@ -1,0 +1,71 @@
+{
+  "template": "librechat",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "rag-db",
+          "kind": "Cluster",
+          "memory": "110Mi",
+          "cpu": "6m"
+        },
+        {
+          "workload": "librechat",
+          "kind": "Deployment",
+          "memory": "268Mi",
+          "cpu": "2m"
+        },
+        {
+          "workload": "rag-api",
+          "kind": "Deployment",
+          "memory": "225Mi",
+          "cpu": "2m"
+        },
+        {
+          "workload": "meilisearch",
+          "kind": "StatefulSet",
+          "memory": "9Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "mongodb-rs0",
+          "kind": "StatefulSet",
+          "memory": "206Mi",
+          "cpu": "45m"
+        }
+      ],
+      "versions": [
+        {
+          "image": "docker.io/getmeili/meilisearch",
+          "version": "v1.56.1",
+          "digest": "sha256:b7ba431bf6f9b26cc86132798f3640964147a699cf23f026b74c6c05dbb1d60d"
+        },
+        {
+          "image": "docker.io/percona/percona-server-mongodb",
+          "version": "8.0.32-14",
+          "digest": "sha256:5ba5f240d2dc98bc6236ab1d79c0862c4b62dba9d98cd0ffdf716c30473d2d11"
+        },
+        {
+          "image": "ghcr.io/danny-avila/librechat-dev",
+          "version": "latest",
+          "digest": "sha256:b278c620834c5653801030091072cad1974b47d0fc15a5009ed1a7d6e4c4f0d7"
+        },
+        {
+          "image": "ghcr.io/danny-avila/librechat-rag-api-dev-lite",
+          "version": "latest",
+          "digest": "sha256:a62ce2221b43a9bb57fa6cb733e7047c80132960272c33d5704028f3071a1251"
+        }
+      ],
+      "sourceDigest": "h1:BxPKyrTwNW3m5XnvZUqmKT5SoLXg+9+ZmGQaO1hQjew=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

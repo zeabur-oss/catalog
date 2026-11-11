@@ -1,0 +1,49 @@
+{
+  "template": "n8n",
+  "environments": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "n8n-db",
+          "kind": "Cluster",
+          "memory": "81Mi",
+          "cpu": "6m"
+        },
+        {
+          "workload": "n8n",
+          "kind": "Deployment",
+          "memory": "306Mi",
+          "cpu": "3m"
+        },
+        {
+          "workload": "task-runner",
+          "kind": "Deployment",
+          "memory": "3Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "image": "docker.io/n8nio/n8n",
+          "version": "3.1.0",
+          "digest": "sha256:6e9f220e9cf0d2f17d3c2371c8d8a6fe6720f99b82a9672afb96bf068cfd04a5"
+        },
+        {
+          "image": "docker.io/n8nio/runners",
+          "version": "3.1.0",
+          "digest": "sha256:730c78a31b9d5711319fff053a18e98ba5265f11769c88d1917506e9b33d2616"
+        }
+      ],
+      "sourceDigest": "h1:rb+d142CX/kKh6+Y6f7toE48l8RG+D/yGR1xsH1Z0Eo=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}
