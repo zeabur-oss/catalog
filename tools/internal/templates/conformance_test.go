@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
-	"go.yaml.in/yaml/v3"
+	"go.yaml.in/yaml/v4"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	templates "github.com/zeabur-oss/catalog/tools/internal/templates"

@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"go.yaml.in/yaml/v3"
+	"go.yaml.in/yaml/v4"
 
 	templates "github.com/zeabur-oss/catalog/tools/internal/templates"
 )

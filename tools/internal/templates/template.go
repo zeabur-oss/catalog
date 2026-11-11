@@ -14,7 +14,7 @@ import (
 
 	gen "github.com/invopop/jsonschema"
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
-	"go.yaml.in/yaml/v3"
+	"go.yaml.in/yaml/v4"
 )
 
 // Template is one application, at templates/<slug>/template.yaml with its objects in

@@ -14,7 +14,7 @@ import (
 	"slices"
 	"strings"
 
-	"go.yaml.in/yaml/v3"
+	"go.yaml.in/yaml/v4"
 )
 
 // CacheDir holds pulled charts and downloaded manifests.
