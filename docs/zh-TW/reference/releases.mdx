@@ -76,15 +76,14 @@ sha256sum --check --ignore-missing SHA256SUMS
     "profile": "single-node",
     "platform": {"os": "linux", "architecture": "amd64"},
     "kubernetesVersion": "v1.36.4",
-    "idle": {"memoryMiB": 22, "cpuMillis": 3},
-    "requests": {"memoryMiB": 50},
+    "pods": [{"workload": "traefik", "kind": "Deployment", "memory": "22Mi", "cpu": "3m"}],
     "versions": [{"release": "traefik", "version": "41.7.1"}],
     "measuredAt": "2026-11-03"
   }
 ]
 ```
 
-每個環境都有 `idle`（元件實際用掉的資源）和 `requests`（它的 Pod 請求的資源）。兩者都有 `memoryMiB` 和 `cpuMillis`，取到整數，沒量到的資源不會出現。目前 `requests` 只有 `memoryMiB`。排程器依請求量放置 Pod，所以安裝工具會把 `requests.memoryMiB` 加總，和節點可分配的記憶體比較。兩組數字來自同一次 `full` 執行，計入元件自己的 namespace 裡實際在叢集上跑的 Pod，包含 Operator 建立的 Pod。
+每個環境都有 `pods`，每個工作負載一列，內容是 `workload` 名稱、`kind`，以及其中一個 Pod 的閒置用量 `memory` 和 `cpu`。兩者都是 Kubernetes 的數量寫法，例如 `22Mi`、`3m`，記憶體取整到 MiB，CPU 取整到 millicore。工作負載指 Deployment、StatefulSet、DaemonSet 或單獨的 Pod，Job 則記在它的控制器底下。這些列涵蓋元件自己的 Namespace 裡實際執行的 Pod，包含 operator 建立的 Pod。索引不存總量。要算總量，就把每一列的用量乘上該工作負載的副本數，再加總。副本數與資源請求不量測，要從元件在該 profile 下算繪出的物件讀取；DaemonSet 在每個節點上各執行一個 Pod。排程器依請求量放置 Pod，所以安裝工具會把記憶體請求量加總，和節點可分配的記憶體比較。
 
 安裝元件時，工具先執行 `detection`，再根據叢集使用的 profile，提供預設啟用（recommended）的元件。接著，工具向使用者取得各元件的 `inputs`，依 `installOrder` 產生安裝內容，再將 `contributes` 合併到對應目標。挑選元件的規則見[安裝工具如何選擇和安裝元件](installers.mdx)。
 

@@ -3,6 +3,8 @@ title: 组件文件格式
 description: 按照通用结构和组件字段编写 YAML，并用 digest 固定安装内容。
 ---
 
+组件在整个集群只安装一次，所有项目共用。模板则是每个项目各自安装，同一个模板可以装很多次。
+
 把组件文件放在 `components/<id>.yaml`，每个上游各用一个文件。文件使用 YAML，包含通用结构、安装内容和配置。文件名就是 ID，例如 `components/traefik.yaml` 的 ID 是 `traefik`。ID 只用小写英文字母、数字和单个连字符，也不会和任何模板的 ID 相同。
 
 ## 通用结构
@@ -145,7 +147,7 @@ resources:
 }
 ```
 
-调度器看的是请求量，所以安装工具要把 `requests.memoryMiB` 加进组件测量到的 `requests.memoryMiB`。写了 `cpu` 和 `memory` 以外的资源，或数量不大于零时，`validate` 会失败。配置档（profile）和输入不会改变结果。
+调度器看的是请求量，所以安装工具要把 `requests.memoryMiB` 加进组件渲染出的对象里 Pod 的请求量。写了 `cpu` 和 `memory` 以外的资源，或数量不大于零时，`validate` 会失败。配置档（profile）和输入不会改变结果。
 
 `health` 列出只读检查，供安装工具（例如 `zeabur-installer doctor`）检查已安装的集群。每项检查运行一次 `kubectl wait`，参数写在 `wait`，等待时间写在 `timeout`。`wait` 里要有 `--for` 条件，不要放 `--timeout`。检查失败时，安装工具会显示 `advice`，用英文告诉用户该怎么处理。健康检查没有 manifest，也不会应用任何对象。需要创建对象的检查放在 `smoke`，只有 e2e 会运行。e2e 在安装完成后、运行 `smoke` 之前，先运行 `health`。
 

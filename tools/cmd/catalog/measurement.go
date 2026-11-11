@@ -4,7 +4,6 @@ import (
 	"cmp"
 	"encoding/json"
 	"io"
-	"math"
 	"os"
 	"path/filepath"
 	"slices"
@@ -55,10 +54,11 @@ type environment struct {
 	DistributionVersion string `json:"distributionVersion,omitempty"`
 	// Result is empty in index.json, which lists passed runs only.
 	Result string `json:"result,omitempty"`
-	// Idle is what the pods use at rest, and Requests what they request.
-	Idle     *catalog.Amounts  `json:"idle,omitempty"`
-	Requests *catalog.Amounts  `json:"requests,omitempty"`
-	Versions []measuredVersion `json:"versions,omitempty"`
+	// Pods is the idle usage of one pod of each workload the run started.
+	// Totals are not stored: a reader multiplies by the replicas of the
+	// rendered objects.
+	Pods     []catalog.PodUsage `json:"pods,omitempty"`
+	Versions []measuredVersion  `json:"versions,omitempty"`
 	// SourceDigest is the Go module hash of the component file, or of the
 	// template directory, that the run installed.
 	SourceDigest string `json:"sourceDigest,omitempty"`
@@ -179,8 +179,7 @@ func writeMeasurement(c *catalog.Component, env environment, res catalog.Result)
 	m := readMeasurement(measurementPath(c.ID))
 	m.Component = c.ID
 	env.Result = resultPassed
-	env.Idle = catalog.MeasuredAmounts(res.IdleMemoryMiB, res.IdleCPUm)
-	env.Requests = &catalog.Amounts{MemoryMiB: int64(math.Ceil(res.RequestMemoryMiB))}
+	env.Pods = res.Pods
 	env.Versions = releaseVersions(c)
 	env.SourceDigest = digest
 	env.MeasuredAt = today()
@@ -217,7 +216,7 @@ func markFailed(cfg config, profile, arch string, c *catalog.Component, env *env
 
 // writeTemplateMeasurement records the usage of tmpl in env, with the
 // images in its manifest. A template's source is its directory.
-func writeTemplateMeasurement(tmpl *templates.Template, env environment, usage templates.Usage, images []string) error {
+func writeTemplateMeasurement(tmpl *templates.Template, env environment, pods []catalog.PodUsage, images []string) error {
 	digest, err := sourceDigest(tmpl.Dir)
 	if err != nil {
 		return err
@@ -227,7 +226,7 @@ func writeTemplateMeasurement(tmpl *templates.Template, env environment, usage t
 	m := readMeasurement(path)
 	m.Template = id
 	env.Result = resultPassed
-	env.Idle = catalog.MeasuredAmounts(usage.IdleMemoryMiB, usage.IdleCPUm)
+	env.Pods = pods
 	env.Versions = imageVersions(images)
 	env.SourceDigest = digest
 	env.MeasuredAt = today()

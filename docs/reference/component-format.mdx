@@ -3,6 +3,8 @@ title: Component file format
 description: Write YAML with the shared envelope and component fields, and pin installation content with digests.
 ---
 
+A component is installed once for the whole cluster and used by every project. A template, in contrast, is installed per project and can be installed many times.
+
 Place component files in `components/<id>.yaml`, with one file for each upstream. Each YAML file contains the shared envelope, installation content, and configuration. The file name is the ID. For example, `components/traefik.yaml` has the ID `traefik`. An ID is lowercase letters, digits and single hyphens, and no template has the same ID.
 
 ## Shared envelope
@@ -145,7 +147,7 @@ resources:
 }
 ```
 
-An installer adds `requests.memoryMiB` to the component's measured `requests.memoryMiB`, because the scheduler counts requests. `validate` fails on a resource other than `cpu` and `memory`, or on an amount that is not above zero. Profiles and inputs don't change the result.
+An installer adds `requests.memoryMiB` to the requests of the pods in the component's rendered objects, because the scheduler counts requests. `validate` fails on a resource other than `cpu` and `memory`, or on an amount that is not above zero. Profiles and inputs don't change the result.
 
 `health` lists read-only checks that an installer such as `zeabur-installer doctor` runs on an installed cluster. Each check runs `kubectl wait` once, with the arguments in `wait` and the time limit in `timeout`. Put a `--for` condition in `wait`, and leave out `--timeout`. When a check fails, the installer shows its `advice`, which tells the reader in English what to do. A health check has no manifest and applies nothing. Put checks that create objects in `smoke`, which only e2e runs. e2e runs `health` after install and before `smoke`.
 
