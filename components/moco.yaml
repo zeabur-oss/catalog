@@ -30,8 +30,8 @@ releases:
     namespace: moco-system
     repo: https://cybozu-go.github.io/moco/
     chart: moco
-    version: 0.27.0
-    chartDigest: sha256:c0d02d0c8081bcb8b640bb69c88506002d6374b14644a6ab15f89f16054cce0a
+    version: 0.28.0
+    chartDigest: sha256:98c147a7915f233c0b539824bec7d6748a177ceed25fdfbdbdf41e46d42f9fbb
     values: |
       # Pinned by digest; a tag alone can move.
       image:
