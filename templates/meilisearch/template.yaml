@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: Meilisearch
   # renovate: depName=getmeili/meilisearch
-  version: "v1.56.0"
+  version: "v1.56.1"
   summary: A fast search engine with a master key and indexes on a volume.
   locales:
     zh-TW:
