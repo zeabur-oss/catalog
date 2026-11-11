@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: Ollama
   # renovate: depName=docker.io/ollama/ollama
-  version: "0.40.13"
+  version: "0.40.14"
   summary: Runs local models on the CPU; its API is reachable only inside the cluster.
   locales:
     zh-TW:
