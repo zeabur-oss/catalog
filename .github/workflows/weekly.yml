@@ -66,5 +66,13 @@ jobs:
             chore: update measured resource usage
 
             Signed-off-by: zeabur-oss-bot[bot] <349476329+zeabur-oss-bot[bot]@users.noreply.github.com>
-          body: Idle memory and CPU of components and templates, measured by the e2e workflow on kind, k3s, RKE2 and KubeSolo.
+          body: |
+            Idle memory and CPU of components and templates, measured by the e2e workflow on kind, k3s, RKE2 and KubeSolo.
+
+            | Job | Result |
+            | --- | --- |
+            | kind (single-node, multi-node) | ${{ needs.e2e-kind.result }} |
+            | k3s, RKE2, KubeSolo | ${{ needs.e2e-hosts.result }} |
+
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           add-paths: measurements/
