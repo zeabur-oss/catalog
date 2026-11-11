@@ -19,7 +19,7 @@ description: 从静态 API 读取 catalog、固定 Zeabur Catalog 版本并验�
 
 ## API
 
-API 是一组静态 JSON 文件，保存各组件的声明、渲染结果和 e2e 测量数据，不保存总量或组件通过测试的发行版等计算结果。这些结果由读取工具自行算出，做法见[安装工具如何选择和安装组件](installers.mdx)。
+API 是一组静态 JSON 文件，保存各组件的声明、渲染结果和 e2e 测量数据，不保存总量或组件通过测试的发行版等计算结果。这些结果由读取工具自行算出，做法见[安装工具如何选择和安装组件](installers.mdx#安装工具要算出的列表)。
 
 | 路径 | 内容 | Schema |
 | --- | --- | --- |
@@ -94,7 +94,7 @@ sha256sum --check --ignore-missing SHA256SUMS
 
 验证后，工具解压 `api-v1.tar.gz`，按 [API](#api) 的格式读取。
 
-安装组件时，工具执行 `detection`，根据集群的 profile 提供默认启用（recommended）的组件，并向用户获取各组件的 `inputs`。接着按[安装顺序](installers.mdx)生成安装内容，将 `contributes` 合并到对应目标。选择组件的规则见[安装工具如何选择和安装组件](installers.mdx)。
+安装组件时，工具执行 `detection`，根据集群的 profile 提供默认启用（recommended）的组件，并向用户获取各组件的 `inputs`。接着按[安装顺序](installers.mdx#安装顺序)生成安装内容，将 `contributes` 合并到对应目标。选择组件的规则见[安装工具如何选择和安装组件](installers.mdx)。
 
 部署模板时，工具检查集群是否满足 `requires` 列出的所有要求，再向用户获取模板输入值，并将其余自动生成的值写入 Secret。接着按项目的 Namespace 渲染并应用 `manifests.yaml`。
 

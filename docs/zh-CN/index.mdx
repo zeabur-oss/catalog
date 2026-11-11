@@ -3,7 +3,7 @@ title: 开始使用 Zeabur Catalog
 description: 经过测试的 Kubernetes 组件与应用模板，附版本、配置与安装方式。
 ---
 
-Zeabur Catalog 是一份在 CI 中实际安装并测试过的数据，分为组件和模板两部分。每次发布都会提供一个签名的包，任何工具都能读取它，生成 `helm install` 命令、Flux 或 Argo CD 清单、k3s 的 `HelmChart` 对象，或安装模板。
+Zeabur Catalog 是一份在 CI 中实际安装并测试过的数据，分为组件和模板两部分。每次发布都会提供一个签名的包和一份静态 API，任何工具都能读取它们，生成 `helm install` 命令、Flux 或 Argo CD 清单、k3s 的 `HelmChart` 对象，或安装模板。
 
 - **组件**由集群管理员在每个集群安装一次，例如 Ingress、证书、指标和数据库 operator。每种用途都写明采用哪个上游 chart、哪个版本、哪些配置，以及原因。
 - **模板**由项目成员安装到单个 Namespace，例如 n8n、Dify、WordPress 和 PostgreSQL。模板固定镜像，设置资源请求与限制，在可行时遵循 Restricted Pod Security Standard 运行。模板用 `requires` 指定需要的组件。
@@ -20,7 +20,7 @@ Zeabur Catalog 是一份在 CI 中实际安装并测试过的数据，分为组�
 
 ## 我想在自己的工具中读取 catalog
 
-读取 `https://oss-catalog.zeabur.com/v1/` 的[静态 API](reference/releases.mdx)，或固定一个版本并验证签名。详情见[版本与 API](reference/releases.mdx)，文件格式见[组件文件格式](reference/component-format.mdx)与[模板文件格式](reference/template-format.mdx)。
+读取 `https://oss-catalog.zeabur.com/v1/` 的[静态 API](reference/releases.mdx#api)，或固定一个版本并验证签名。详情见[版本与 API](reference/releases.mdx)，文件格式见[组件文件格式](reference/component-format.mdx)与[模板文件格式](reference/template-format.mdx)。
 
 ## 我想新增组件或模板
 
@@ -37,6 +37,7 @@ config/licenses.yaml                      OSI 批准的 SPDX 标识符，以及�
 config/kubernetes.yaml                    Kubernetes 版本，以及 e2e 用的 kind 节点版本
 config/budget.yaml                        单节点的内存预算（MiB）
 config/e2e.yaml                           只给测试用的值
+conformance/                              给安装工具和模板客户端测试的用例
 measurements/                             各工作负载 Pod 的空闲内存与 CPU，由 CI 写入
 tools/                                    `catalog` 命令（Go）
 docs/                                     这份文档
