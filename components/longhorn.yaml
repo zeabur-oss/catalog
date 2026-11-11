@@ -156,7 +156,8 @@ leftovers: [storageclasses/longhorn-static]
 health:
   # Longhorn's own checks of each node: packages, modules, disk space.
   - name: nodes-ready
-    wait: ["--for=condition=Ready", "nodes.longhorn.io", "--all", "-n", "longhorn-system"]
+    resource: {kind: Node.longhorn.io, all: true, namespace: longhorn-system}
+    condition: Ready
     timeout: 60s
     advice: "A node that joined without Longhorn needs longhorn: true under join in its configuration. Add it, then run zeabur-installer apply on that node."
 

@@ -496,7 +496,7 @@ func (t *Tester) smoke(c *Component) error {
 		// install, the objects it waits for may not exist yet, and kubectl
 		// wait fails at once on no objects; poll until the timeout instead.
 		if err := retry(timeout, func() error {
-			_, err := kubectl(append(append([]string{"wait"}, h.Wait...), "--timeout="+h.Timeout)...)
+			_, err := kubectl(h.WaitArgs()...)
 			return err
 		}); err != nil {
 			return fmt.Errorf("health %s: %w", h.Name, err)

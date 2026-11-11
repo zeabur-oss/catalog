@@ -310,17 +310,90 @@ type DetectedWorkload struct {
 // that applies nothing, so it can run on a production cluster.
 type Health struct {
 	Name string `yaml:"name" jsonschema:"required,pattern=^[a-z0-9-]+$"`
-	// `kubectl wait` arguments, one per item, with a --for condition and without --timeout.
-	Wait    []string `yaml:"wait" jsonschema:"required,minItems=2,minLength=1"`
-	Timeout string   `yaml:"timeout" jsonschema:"required,pattern=^[0-9]+(s|m)$"`
+	// The objects to wait for.
+	Resource HealthResource `yaml:"resource" jsonschema:"required"`
+	// The condition the objects reach, such as Ready or Available.
+	Condition string `yaml:"condition" jsonschema:"required,pattern=^[A-Za-z]+$"`
+	Timeout   string `yaml:"timeout" jsonschema:"required,pattern=^[0-9]+(s|m)$"`
 	// What to do when the check fails, in English. An installer shows it to the reader.
 	Advice string `yaml:"advice" jsonschema:"required,minLength=1"`
 }
 
-func (Health) JSONSchemaExtend(s *gen.Schema) {
-	wait, _ := s.Properties.Get("wait")
-	wait.Contains = &gen.Schema{Pattern: "^--for="}
-	wait.Not = &gen.Schema{Contains: &gen.Schema{Pattern: "^--timeout"}}
+// HealthResource names the objects of one kind by name, by labels, or all of them.
+type HealthResource struct {
+	// The kind of the objects. A kind outside the core and apps groups that shares a name with
+	// another has its group after a dot, such as Node.longhorn.io.
+	Kind string `yaml:"kind" jsonschema:"required"`
+	// The name of one object.
+	Name string `yaml:"name" jsonschema:"minLength=1"`
+	// The labels of the objects, each a key with its value.
+	Selector map[string]string `yaml:"selector"`
+	// Every object of the kind.
+	All bool `yaml:"all"`
+	// The namespace of the objects. A kind that has namespaces needs it, and any other kind can't have it.
+	Namespace string `yaml:"namespace" jsonschema:"minLength=1"`
+}
+
+// healthKind is a kind that a health check can wait for.
+type healthKind struct {
+	resource   string // the resource that kubectl names
+	namespaced bool
+}
+
+// healthKinds are the kinds that a health check can wait for.
+var healthKinds = map[string]healthKind{
+	"APIService":       {"apiservices.apiregistration.k8s.io", false},
+	"DaemonSet":        {"daemonsets.apps", true},
+	"Deployment":       {"deployments.apps", true},
+	"GatewayClass":     {"gatewayclasses.gateway.networking.k8s.io", false},
+	"Node.longhorn.io": {"nodes.longhorn.io", true},
+	"Pod":              {"pods", true},
+	"StatefulSet":      {"statefulsets.apps", true},
+}
+
+func (HealthResource) JSONSchemaExtend(s *gen.Schema) {
+	selector, _ := s.Properties.Get("selector")
+	selector.MinProperties = new(uint64(1))
+	all, _ := s.Properties.Get("all")
+	all.Const = true
+	kind, _ := s.Properties.Get("kind")
+	var namespaced []any
+	for _, k := range slices.Sorted(maps.Keys(healthKinds)) {
+		kind.Enum = append(kind.Enum, k)
+		if healthKinds[k].namespaced {
+			namespaced = append(namespaced, k)
+		}
+	}
+	for _, f := range []string{"name", "selector", "all"} {
+		s.OneOf = append(s.OneOf, &gen.Schema{Required: []string{f}})
+	}
+	p := gen.NewProperties()
+	p.Set("kind", &gen.Schema{Enum: namespaced})
+	s.If = &gen.Schema{Properties: p}
+	s.Then = &gen.Schema{Required: []string{"namespace"}}
+	s.Else = &gen.Schema{Not: &gen.Schema{Required: []string{"namespace"}}}
+}
+
+// WaitArgs returns the arguments of the kubectl wait that runs h.
+func (h Health) WaitArgs() []string {
+	r := h.Resource
+	args := []string{"wait", "--for=condition=" + h.Condition}
+	switch {
+	case r.Name != "":
+		args = append(args, healthKinds[r.Kind].resource+"/"+r.Name)
+	case len(r.Selector) > 0:
+		var labels []string
+		for _, k := range slices.Sorted(maps.Keys(r.Selector)) {
+			labels = append(labels, k+"="+r.Selector[k])
+		}
+		args = append(args, healthKinds[r.Kind].resource, "-l", strings.Join(labels, ","))
+	default:
+		args = append(args, healthKinds[r.Kind].resource, "--all")
+	}
+	if r.Namespace != "" {
+		args = append(args, "-n", r.Namespace)
+	}
+	return append(args, "--timeout="+h.Timeout)
 }
 
 // Smoke is an e2e check after install.
