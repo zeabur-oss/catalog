@@ -80,10 +80,6 @@ func requiredSchemas(cat *catalog.Catalog, t *templates.Template, versions []str
 	if err != nil {
 		return "", err
 	}
-	// A template without requires renders no components. CRDSchemas needs the directory.
-	if err := os.Mkdir(filepath.Join(dir, "components"), 0o755); err != nil {
-		return "", err
-	}
 	for _, c := range order {
 		for _, rel := range c.Releases {
 			out, err := catalog.Template(c, rel, templateProfile, versions[len(versions)-1])
@@ -99,11 +95,8 @@ func requiredSchemas(cat *catalog.Catalog, t *templates.Template, versions []str
 			}
 		}
 	}
-	schemas, err := os.MkdirTemp("", "catalog-schemas-")
+	schemas, err := orderSchemas(filepath.Join(dir, "components"), order)
 	if err != nil {
-		return "", err
-	}
-	if err := catalog.CRDSchemas(filepath.Join(dir, "components"), schemas); err != nil {
 		os.RemoveAll(schemas)
 		return "", err
 	}

@@ -3,6 +3,8 @@ title: Component file format
 description: Write YAML with the shared envelope and component fields, and pin installation content with digests.
 ---
 
+A component is installed once for the whole cluster and used by every project. A template, in contrast, is installed per project and can be installed many times.
+
 Place component files in `components/<capability>/<upstream>.yaml`, with one file for each combination of capability (purpose category) and upstream. Each YAML file contains the shared envelope, installation content, and configuration. The path determines the ID. For example, `components/ingress/traefik.yaml` has the ID `ingress/traefik`.
 
 ## Shared envelope
