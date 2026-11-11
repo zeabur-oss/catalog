@@ -82,7 +82,19 @@ API 存放的是原始資料。安裝工具根據這些資料，替每個元件�
 
 依結果的順序安裝元件，並移除結果裡沒有的已裝元件。每個元件的 releases、固定內容的 digest，以及安裝工具會讀取的其他欄位，見[元件檔案格式](component-format.mdx)。
 
-元件裝好後，每項 `health` 檢查各執行一次 `kubectl wait`。`wait` 的每一項各是一個引數，最後再加上 `--timeout=<timeout>`，例如：
+元件裝好後，每項 `health` 檢查各執行一次 `kubectl wait`，引數依序是 `--for=condition=<condition>`、`resource` 指定的物件、`-n <namespace>`（有命名空間時才加上），最後是 `--timeout=<timeout>`。單一物件寫成 `<resource>/<name>`，用 `selector` 選取的物件寫成 `<resource> -l <key>=<value>,…`，`all: true` 則寫成 `<resource> --all`。`<resource>` 依 `kind` 查下表：
+
+| `kind` | `<resource>` |
+| --- | --- |
+| `APIService` | `apiservices.apiregistration.k8s.io` |
+| `DaemonSet` | `daemonsets.apps` |
+| `Deployment` | `deployments.apps` |
+| `GatewayClass` | `gatewayclasses.gateway.networking.k8s.io` |
+| `Node.longhorn.io` | `nodes.longhorn.io` |
+| `Pod` | `pods` |
+| `StatefulSet` | `statefulsets.apps` |
+
+例如 Longhorn 的 `nodes-ready` 檢查會執行：
 
 ```sh
 kubectl wait --for=condition=Ready nodes.longhorn.io --all -n longhorn-system --timeout=60s
