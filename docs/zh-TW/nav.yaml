@@ -11,7 +11,7 @@
     component-format: 元件檔案格式
     template-format: 範本檔案格式
     template-standards: 範本標準
-    releases: 版本與套件包
+    releases: 版本與 API
     installers: 安裝工具如何選擇和安裝元件
     template-clients: 用戶端如何渲染範本
     licenses: 授權

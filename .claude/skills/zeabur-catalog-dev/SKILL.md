@@ -18,7 +18,8 @@ The release stages are `bun scripts/release.ts <stage>`. Underneath:
 ```sh
 nix develop -c go test ./...
 nix develop -c go run ./tools/cmd/catalog validate   # schema, licences, references, value comments
-nix develop -c go run ./tools/cmd/catalog index
+nix develop -c go run ./tools/cmd/catalog schema     # writes schema/v1 from the Go types; edit those, not the JSON
+nix develop -c go run ./tools/cmd/catalog api -version 0.0.0   # the static API into out/api, checked against the schemas
 nix develop -c go run ./tools/cmd/catalog render     # helm template every profile, kubeconform
 nix develop -c go run ./tools/cmd/catalog template lint -values values.json <id>   # safety rules, kubeconform
 ```

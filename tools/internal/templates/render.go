@@ -192,6 +192,9 @@ func validateInputs(inputs []Input) ([]*regexp.Regexp, error) {
 			return nil, fmt.Errorf("duplicate input %s", in.Name)
 		}
 		byName[in.Name] = in
+		if in.Generate != nil && in.Generate.Type != catalog.GenerateRandom {
+			return nil, fmt.Errorf("input %s: a template generates random values only", in.Name)
+		}
 		p, err := regexp.Compile(`\A(?:` + in.Validation.Pattern + `)\z`)
 		if err != nil {
 			return nil, fmt.Errorf("input %s: %w", in.Name, err)
