@@ -3,6 +3,8 @@ title: 元件檔案格式
 description: 按照共用外框與元件欄位撰寫 YAML，並用 digest 固定安裝內容。
 ---
 
+元件在整個叢集只安裝一次，所有專案共用。範本則是每個專案各自安裝，同一個範本可以裝很多次。
+
 把元件檔案放在 `components/<id>.yaml`，每個上游各用一個檔案。檔案使用 YAML，包含共用外框、安裝內容與設定。檔名就是 ID，例如 `components/traefik.yaml` 的 ID 是 `traefik`。ID 只用小寫英文字母、數字和單一連字號，也不會和任何範本的 ID 相同。
 
 ## 共用外框
