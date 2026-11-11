@@ -68,3 +68,31 @@ jobs:
             Signed-off-by: zeabur-oss-bot[bot] <349476329+zeabur-oss-bot[bot]@users.noreply.github.com>
           body: Idle memory and CPU of components and templates, measured by the e2e workflow on kind, k3s, RKE2 and KubeSolo.
           add-paths: measurements/
+
+  # A scheduled run that fails opens one issue, or comments on the open one; the next scheduled run
+  # that passes closes it. A manual run does neither.
+  report:
+    needs: [e2e-kind, e2e-hosts, pull-request]
+    if: ${{ !cancelled() && github.event_name == 'schedule' }}
+    runs-on: ubuntu-slim
+    permissions:
+      issues: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          FAILED: ${{ contains(needs.*.result, 'failure') }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Weekly run failing"
+          issue=$(gh issue list --state open --search "\"$title\" in:title" --json number,title \
+            --jq "map(select(.title == \"$title\"))[0].number // empty")
+          if [ "$FAILED" = true ]; then
+            if [ -n "$issue" ]; then
+              gh issue comment "$issue" --body "Failed again: $RUN"
+            else
+              gh issue create --title "$title" --body "The scheduled weekly run failed: $RUN"
+            fi
+          elif [ -n "$issue" ]; then
+            gh issue close "$issue" --comment "The scheduled weekly run passed: $RUN"
+          fi
