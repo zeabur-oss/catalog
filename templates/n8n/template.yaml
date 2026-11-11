@@ -6,7 +6,7 @@ kind: Template
 metadata:
   name: n8n PostgreSQL
   # renovate: depName=docker.io/n8nio/n8n
-  version: "3.0.1"
+  version: "3.1.0"
   summary: Workflow automation with PostgreSQL and separate code runners.
   locales:
     zh-TW:
