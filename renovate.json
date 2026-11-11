@@ -161,6 +161,23 @@
       "automerge": false
     },
     {
+      "description": "Manifests and Traefik plugins from GitHub releases carry a version; urlDigests holds the digest of a manifest",
+      "matchFileNames": [
+        "components/**"
+      ],
+      "matchDatasources": [
+        "github-releases"
+      ],
+      "pinDigests": false
+    },
+    {
+      "description": "The Gateway API CRDs follow the gateway-api version in the go.mod of the Traefik release that the chart runs; move them by hand with Traefik",
+      "matchPackageNames": [
+        "kubernetes-sigs/gateway-api"
+      ],
+      "enabled": false
+    },
+    {
       "description": "Each template gets its own pull request, with its images and metadata.version together, and a person reviews every image change",
       "matchFileNames": [
         "templates/**"
@@ -194,8 +211,7 @@
       "matchPackageNames": [
         "/^(docker\\.io/)?(library/)?(mariadb|mysql)$/",
         "ghcr.io/cloudnative-pg/postgresql",
-        "ghcr.io/cybozu-go/moco/mysql",
-        "/^(docker\\.io/)?percona/percona-server-mongodb$/"
+        "ghcr.io/cybozu-go/moco/mysql"
       ],
       "matchUpdateTypes": [
         "major"
@@ -203,32 +219,7 @@
       "dependencyDashboardApproval": true
     },
     {
-      "description": "A MariaDB or MongoDB minor is a new release series with its own upgrade steps. Propose its patches separately",
-      "matchDatasources": [
-        "docker"
-      ],
-      "matchPackageNames": [
-        "/^(docker\\.io/)?(library/)?mariadb$/",
-        "/^(docker\\.io/)?percona/percona-server-mongodb$/"
-      ],
-      "separateMinorPatch": true
-    },
-    {
-      "description": "MariaDB and MongoDB minor releases wait for approval",
-      "matchDatasources": [
-        "docker"
-      ],
-      "matchPackageNames": [
-        "/^(docker\\.io/)?(library/)?mariadb$/",
-        "/^(docker\\.io/)?percona/percona-server-mongodb$/"
-      ],
-      "matchUpdateTypes": [
-        "minor"
-      ],
-      "dependencyDashboardApproval": true
-    },
-    {
-      "description": "The Percona operator supports only the MongoDB and PBM versions in its version service (check.percona.com); a person checks each update against it",
+      "description": "The Percona operator supports only the MongoDB and PBM versions in its version service (check.percona.com/versions/v1/psmdb-operator/<operator version>); move them by hand when the operator moves",
       "matchDatasources": [
         "docker"
       ],
@@ -236,7 +227,7 @@
         "/^(docker\\.io/)?percona/percona-server-mongodb$/",
         "/^(docker\\.io/)?percona/percona-backup-mongodb$/"
       ],
-      "dependencyDashboardApproval": true
+      "enabled": false
     },
     {
       "description": "Ghost supports MySQL 8 only; later MySQL tags such as 26.10 are innovation releases",
@@ -252,16 +243,6 @@
       "allowedVersions": "/^8\\./"
     },
     {
-      "description": "Percona Server for MongoDB tags are <version>-<build>",
-      "matchDatasources": [
-        "docker"
-      ],
-      "matchPackageNames": [
-        "/^(docker\\.io/)?percona/percona-server-mongodb$/"
-      ],
-      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-(?<build>\\d+)$"
-    },
-    {
       "description": "SearXNG tags are <year>.<month>.<day>-<commit>",
       "matchDatasources": [
         "docker"
@@ -270,6 +251,16 @@
         "/^(docker\\.io/)?searxng/searxng$/"
       ],
       "versioning": "regex:^(?<major>\\d{4})\\.(?<minor>\\d{1,2})\\.(?<patch>\\d{1,2})-[0-9a-f]+$"
+    },
+    {
+      "description": "MariaDB LTS series only (12.3 today); other series such as 13 are rolling releases with a short support window. Move to the next LTS by hand",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "/^(docker\\.io/)?(library/)?mariadb$/"
+      ],
+      "allowedVersions": "/^12\\.3\\./"
     }
   ]
 }
