@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: ntfy
   # renovate: depName=binwiederhier/ntfy
-  version: "v2.37.1"
+  version: "v2.37.2"
   summary: A push notification server where topics need an account and messages stay on a volume.
   locales:
     zh-TW:
