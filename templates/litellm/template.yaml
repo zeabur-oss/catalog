@@ -20,9 +20,9 @@ metadata:
   homepage: https://www.litellm.ai/
 
 requires:
-  - {component: ingress/traefik}
-  - {component: certificates/cert-manager}
-  - {component: databases/cloudnative-pg}
+  - {component: traefik}
+  - {component: cert-manager}
+  - {component: cloudnative-pg}
 
 services:
   - name: litellm
@@ -78,14 +78,14 @@ security:
           risk: "企业版功能需要 BerriAI 的许可。"
           mitigation: "模板没有设置 LITELLM_LICENSE，所以企业版功能是关闭的。因为企业版代码包含在镜像里，安装模板的人必须接受企业版许可。"
     - risk: "The CloudNativePG database instances call the Kubernetes API with an identity that the operator creates."
-      mitigation: "The databases/cloudnative-pg component creates the RBAC permissions for each cluster. The LiteLLM Pod has no token."
+      mitigation: "The cloudnative-pg component creates the RBAC permissions for each cluster. The LiteLLM Pod has no token."
       locales:
         zh-TW:
           risk: "CloudNativePG 的資料庫實例會用 operator 建立的身分呼叫 Kubernetes API。"
-          mitigation: "databases/cloudnative-pg 元件會為每個叢集建立對應的 RBAC 權限。LiteLLM 的 Pod 沒有權杖。"
+          mitigation: "cloudnative-pg 元件會為每個叢集建立對應的 RBAC 權限。LiteLLM 的 Pod 沒有權杖。"
         zh-CN:
           risk: "CloudNativePG 的数据库实例会用 operator 创建的身份调用 Kubernetes API。"
-          mitigation: "databases/cloudnative-pg 组件会为每个集群创建对应的 RBAC 权限。LiteLLM 的 Pod 没有令牌。"
+          mitigation: "cloudnative-pg 组件会为每个集群创建对应的 RBAC 权限。LiteLLM 的 Pod 没有令牌。"
 
 smoke:
   - name: postgresql-ready

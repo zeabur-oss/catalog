@@ -12,7 +12,7 @@ Zeabur Catalog 的每個範本都必須符合以下規則。新增或修改範�
 - 每個服務都必須指定安全性 profile（`restricted` 或 `baseline`）、資源請求與上限，以及連接埠。服務名稱必須與對應的 Deployment、StatefulSet 或資料庫物件名稱相同。服務的 CPU 與記憶體數值必須是該物件所有容器的總和，連接埠則必須對應容器的具名連接埠。`catalog template lint` 會檢查資源總和與連接埠。
 - `security` 必須列出管理者在部署前需要知道的風險，每個風險都附上降低風險的措施。
 - `smoke` 必須包含能證明應用程式正常運作的煙霧測試（smoke check），包括資源狀態條件，以及對執行中服務的 HTTP 或 SQL 檢查。
-- `requires` 必須以 `{capability: <capability>}` 或 `{component: <capability>/<upstream>}` 列出範本需要的元件。capability 指元件的用途類別。
+- `requires` 必須以 `{capability: <capability>}` 或 `{component: <id>}` 列出範本需要的元件。capability 是元件提供的用途類別，寫在元件的 `provides.capability`。
 
 ## 授權與映像檔
 

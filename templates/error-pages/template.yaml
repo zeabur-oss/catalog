@@ -16,7 +16,7 @@ metadata:
   # Also: https://github.com/nginx/docker-nginx-unprivileged
   homepage: https://nginx.org/
 
-requires: [{component: ingress/traefik}]
+requires: [{component: traefik}]
 
 services:
   - name: error-pages

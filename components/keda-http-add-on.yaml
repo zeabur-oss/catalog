@@ -1,0 +1,75 @@
+# Scales HTTP services on request rate, including to zero; the interceptor holds
+# the first request while the workload wakes.
+apiVersion: catalog.zeabur.com/v1
+kind: Component
+metadata:
+  name: KEDA HTTP Add-on
+  summary: Scales web services with their traffic, down to zero when idle.
+  locales:
+    zh-TW:
+      summary: "依流量調整網頁服務的副本數，閒置時可降到零。"
+    zh-CN:
+      summary: "按流量调整 Web 服务的副本数，空闲时可缩到零。"
+  license: Apache-2.0
+  homepage: https://github.com/kedacore/http-add-on
+provides: {capability: event-autoscaling}
+defaults:
+  single-node: optional
+  multi-node: optional
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.23.0-0"
+requires: [{component: keda}]
+
+releases:
+  - name: http-add-on
+    type: helm
+    namespace: keda
+    releaseName: keda-add-ons-http
+    repo: https://kedacore.github.io/charts
+    chart: keda-add-ons-http
+    version: 0.16.0
+    chartDigest: sha256:363f7250851f948661f7301c7e3bcb33c2cf19f4e26e2247f71ae61d339abe82
+    # The chart writes each image as <name>:<images.tag> and also puts
+    # images.tag in labels, so no value can add a digest.
+    unpinnedImages:
+      - ghcr.io/kedacore/http-add-on-operator
+      - ghcr.io/kedacore/http-add-on-scaler
+      - ghcr.io/kedacore/http-add-on-interceptor
+    values: |
+      # The chart's pod context lacks runAsNonRoot and seccomp, which Pod Security restricted requires.
+      podSecurityContext:
+        runAsNonRoot: true
+        seccompProfile: {type: RuntimeDefault}
+    profiles:
+      single-node: |
+        interceptor:
+          replicas:
+            # Three interceptors add nothing on one node.
+            min: 1
+            max: 3
+          # On one node a PDB only blocks maintenance.
+          pdb:
+            enabled: false
+        scaler:
+          # One scaler is enough on one node.
+          replicas: 1
+      multi-node: |
+        interceptor:
+          replicas:
+            # All scaled traffic passes the interceptor; keep the chart's floor.
+            min: 3
+            max: 50
+        scaler:
+          # Keeps scaling during node drains.
+          replicas: 2
+
+detection:
+  crds: [httpscaledobjects.http.keda.sh]
+  helmCharts: [keda-add-ons-http]
+  workloads:
+    - kind: Deployment
+      labels: {app.kubernetes.io/component: interceptor, app.kubernetes.io/part-of: keda-add-ons-http}
+
+security:
+  summary: Reads HTTPScaledObjects, Services and EndpointSlices cluster-wide; creates ScaledObjects.
+  podSecurity: restricted

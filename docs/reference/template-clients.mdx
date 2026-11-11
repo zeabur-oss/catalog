@@ -54,10 +54,10 @@ The objects keep the order of `manifests.yaml`. An empty YAML document isn't an 
 
 ## What a template requires
 
-Each entry in `requires` is `{component: <capability>/<name>}` or `{capability: <capability>}`. The name of an entry is the value of its one field. `catalog validate` checks that each entry matches a component of the release.
+Each entry in `requires` is `{component: <id>}` or `{capability: <capability>}`. The name of an entry is the value of its one field. `catalog validate` checks that each entry matches a component of the release.
 
-- `{component: <capability>/<name>}` matches the component with that id.
-- `{capability: <capability>}` matches every component of the capability.
+- `{component: <id>}` matches the component with that id.
+- `{capability: <capability>}` matches every component whose `provides.capability` is that capability.
 
 A client tells whether a name is installed from the resources that kube-apiserver serves, as discovery (`kubectl api-resources`) lists them. Each name is in one of three states:
 
@@ -109,18 +109,20 @@ want:
 A requires case has `components`:
 
 ```yaml
-description: <capability>/<name> is installed when discovery serves a CRD of that component, …
+description: "{component: <id>} is installed when discovery serves a CRD of that component, …"
 components:          # index.json components, with only the fields matching reads
-  - id: databases/cloudnative-pg
+  - id: cloudnative-pg
+    provides: {capability: databases}
     detection: {crds: [clusters.postgresql.cnpg.io, poolers.postgresql.cnpg.io]}
-  - id: databases/percona-mongodb
+  - id: percona-mongodb
+    provides: {capability: databases}
     detection: {crds: [perconaservermongodbs.psmdb.percona.com]}
 served:              # what discovery lists; left out when discovery fails
   - {group: postgresql.cnpg.io, resource: clusters}
-requires: [{component: databases/cloudnative-pg}, {component: databases/percona-mongodb}]
+requires: [{component: cloudnative-pg}, {component: percona-mongodb}]
 want:
-  databases/cloudnative-pg: installed
-  databases/percona-mongodb: missing
+  cloudnative-pg: installed
+  percona-mongodb: missing
 ```
 
 A words case has `language`, the text fields of a template and the text the reader sees.
@@ -128,5 +130,5 @@ A words case has `language`, the text fields of a template and the text the read
 To run a case:
 
 1. Render case: render `template` and `manifests` with `options`, and compare the objects with `want`. When a check fails, compare its code and `input` instead. Compare codes and fields, not the words a client shows.
-2. Requires case: the capability of each component is the part of its id before the slash. Find the state of each entry in `requires`, and compare with `want`, which is keyed by the name of the entry.
+2. Requires case: the capability of each component is its `provides.capability`. Find the state of each entry in `requires`, and compare with `want`, which is keyed by the name of the entry.
 3. Words case: pick the text for `language`, and compare with `want`. A list or map that `want` leaves out is empty.

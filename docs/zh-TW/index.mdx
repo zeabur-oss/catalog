@@ -29,7 +29,7 @@ Zeabur Catalog 收錄了在 CI 中實際安裝並測試過的元件和範本。�
 ## 檔案怎麼放
 
 ```text
-components/<capability>/<upstream>.yaml   一個用途搭配一個上游，一個檔案
+components/<id>.yaml                      一個上游一個檔案，用途寫在 provides
 templates/<id>/template.yaml              一個應用程式：輸入、服務、安全性、煙霧測試
 templates/<id>/manifests.yaml             它的 Kubernetes 物件
 schema/v1/                                兩種檔案的 JSON Schema
@@ -42,4 +42,4 @@ tools/                                    `catalog` 指令（Go）
 docs/                                     這份文件
 ```
 
-路徑就是 ID：`components/ingress/traefik.yaml` 的 ID 是 `ingress/traefik`，`templates/n8n/` 的 ID 是 `n8n`。
+路徑就是 ID：`components/traefik.yaml` 的 ID 是 `traefik`，`templates/n8n/` 的 ID 是 `n8n`。元件在 `provides` 寫出自己提供的 capability，例如 `provides: {capability: ingress}`。元件和範本不會用同一個 ID。

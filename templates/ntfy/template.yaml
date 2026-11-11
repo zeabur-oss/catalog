@@ -13,7 +13,7 @@ metadata:
   license: Apache-2.0 OR GPL-2.0-only
   homepage: https://ntfy.sh/
 
-requires: [{component: ingress/traefik}, {component: certificates/cert-manager}]
+requires: [{component: traefik}, {component: cert-manager}]
 
 services:
   - name: ntfy

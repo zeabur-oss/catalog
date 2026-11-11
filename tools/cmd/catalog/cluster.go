@@ -33,7 +33,7 @@ type cluster struct {
 var nodeSetup = map[string]string{
 	// Longhorn attaches volumes over iSCSI from each node. kind's nodes ship
 	// without an initiator. The iscsi_tcp module comes from the host kernel.
-	"replicated-storage/longhorn": "apt-get update -qq && apt-get install -y -qq open-iscsi nfs-common && systemctl enable --now iscsid",
+	"longhorn": "apt-get update -qq && apt-get install -y -qq open-iscsi nfs-common && systemctl enable --now iscsid",
 }
 
 // createCluster creates a kind cluster for profile and points KUBECONFIG at

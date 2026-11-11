@@ -2,16 +2,18 @@ description: >
   A default installs the components it needs, with a warning for each one not
   tested on the distribution.
 components:
-  - id: logs/victoria-logs
+  - id: victoria-logs
+    provides: {capability: logs}
     defaults: {single-node: recommended, multi-node: recommended}
     distributions: [k3s, rke2, kubesolo]
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
       - {distribution: rke2, platforms: [linux/amd64]}
     installOrder:
-      single-node: [observability-operator/victoria-metrics-operator, logs/victoria-logs]
-      multi-node: [observability-operator/victoria-metrics-operator, logs/victoria-logs]
-  - id: observability-operator/victoria-metrics-operator
+      single-node: [victoria-metrics-operator, victoria-logs]
+      multi-node: [victoria-metrics-operator, victoria-logs]
+  - id: victoria-metrics-operator
+    provides: {capability: observability-operator}
     defaults: {single-node: optional, multi-node: optional}
     distributions: [k3s, rke2, kubesolo]
     testedOn:
@@ -22,7 +24,7 @@ config:
   platform: linux/amd64
 want:
   components:
-    - {id: observability-operator/victoria-metrics-operator, why: dependency}
-    - {id: logs/victoria-logs, why: default}
+    - {id: victoria-metrics-operator, why: dependency}
+    - {id: victoria-logs, why: default}
   warnings:
-    - {kind: untested, component: observability-operator/victoria-metrics-operator, distribution: rke2}
+    - {kind: untested, component: victoria-metrics-operator, distribution: rke2}

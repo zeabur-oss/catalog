@@ -1,0 +1,85 @@
+# One operator runs both the metrics and the logs stack from CRDs, and accepts
+# Prometheus operator objects so existing app manifests keep working.
+apiVersion: catalog.zeabur.com/v1
+kind: Component
+metadata:
+  name: VictoriaMetrics operator
+  summary: Runs the metrics and log stores.
+  locales:
+    zh-TW:
+      summary: "執行指標與日誌的儲存服務。"
+    zh-CN:
+      summary: "运行指标和日志的存储服务。"
+  license: Apache-2.0
+  homepage: https://docs.victoriametrics.com/operator/
+provides: {capability: observability-operator}
+defaults:
+  # VictoriaMetrics and VictoriaLogs bring it in when a single node has the memory for them.
+  single-node: optional
+  multi-node: recommended
+distributions: [k3s, rke2, kubesolo]
+kubeVersion: ">=1.25.0-0"
+# cert-manager issues the admission webhook certificate.
+requires: [{capability: certificates}]
+
+releases:
+  - name: operator
+    type: helm
+    namespace: observability
+    releaseName: victoria-metrics-operator
+    chart: oci://ghcr.io/victoriametrics/helm-charts/victoria-metrics-operator
+    version: 0.68.1
+    chartDigest: sha256:1817be5446c975a306e404d6b605eafc45dbe6512a64d25b80d72f458fa4664a
+    values: |
+      # Pinned by digest; a tag alone can move.
+      image:
+        repository: victoriametrics/operator
+        tag: v0.75.2@sha256:237fac68b608c7ed7bc4c47ad25ebcb1cbe973c9a789661d2b6cfaa83093f87a
+      # The operator and the cleanup Job share this container context, which lacks a seccomp profile and runAsNonRoot; Pod Security restricted requires both.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile: {type: RuntimeDefault}
+      admissionWebhooks:
+        certManager:
+          # cert-manager issues the webhook certificate, so every render is identical.
+          enabled: true
+      crds:
+        # Delete VM objects before uninstall so finalizers don't block the namespace.
+        cleanup:
+          enabled: true
+          # Pinned by digest; a tag alone can move. The chart's default tag
+          # follows the cluster's Kubernetes version.
+          image:
+            repository: registry.k8s.io/kubectl
+            tag: v1.36.0@sha256:63e5e76b746bb8b891a94968d380736c035e768dab0d56ddad1f50c750a4be39
+    profiles:
+      single-node: |
+        resources:
+          # The operator idles near 54Mi.
+          requests: {cpu: 10m, memory: 72Mi}
+          limits: {memory: 256Mi}
+        env:
+          # The config reloaders it adds to vmagent, vmalert and Alertmanager idle near 12Mi; its default asks 25Mi each.
+          - {name: VM_CONFIG_RELOADER_REQUEST_MEMORY, value: 16Mi}
+
+detection:
+  crds: [vmsingles.operator.victoriametrics.com, vlsingles.operator.victoriametrics.com]
+  helmCharts: [victoria-metrics-operator]
+  workloads:
+    - kind: Deployment
+      labels: {app.kubernetes.io/name: victoria-metrics-operator}
+
+security:
+  summary: >
+    Manages VictoriaMetrics and VictoriaLogs objects and their workloads in all
+    namespaces. It can read every Secret, create pods in any namespace, and
+    create ClusterRoles and bindings, so its token equals cluster-admin.
+  podSecurity: restricted
+
+leftovers:
+  # The chart annotates its CRDs helm.sh/resource-policy: keep.
+  - customresourcedefinitions
+  # The cleanup hook's RBAC outlives uninstall. TODO: report upstream.
+  - clusterroles/victoria-metrics-operator-cleanup-hook
+  - clusterrolebindings/victoria-metrics-operator-cleanup-hook

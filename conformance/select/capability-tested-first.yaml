@@ -2,12 +2,14 @@ description: >
   A capability name resolves to a component tested on the distribution before
   one that is recommended.
 components:
-  - id: logs/loki
+  - id: loki
+    provides: {capability: logs}
     defaults: {single-node: recommended, multi-node: recommended}
     distributions: [k3s, rke2, kubesolo]
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
-  - id: logs/victoria-logs
+  - id: victoria-logs
+    provides: {capability: logs}
     defaults: {single-node: optional, multi-node: optional}
     distributions: [k3s, rke2, kubesolo]
     testedOn:
@@ -20,7 +22,7 @@ config:
   enable: [logs]
 want:
   components:
-    - {id: logs/loki, why: default}
-    - {id: logs/victoria-logs, why: enabled}
+    - {id: loki, why: default}
+    - {id: victoria-logs, why: enabled}
   warnings:
-    - {kind: untested, component: logs/loki, distribution: rke2}
+    - {kind: untested, component: loki, distribution: rke2}

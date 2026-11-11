@@ -1,6 +1,7 @@
 description: A component that enable names and that was not tested on the distribution is installed with a warning.
 components:
-  - id: logs/victoria-logs
+  - id: victoria-logs
+    provides: {capability: logs}
     defaults: {single-node: optional, multi-node: optional}
     distributions: [k3s, rke2, kubesolo]
     testedOn:
@@ -10,9 +11,9 @@ config:
   profile: single-node
   distribution: kubesolo
   platform: linux/amd64
-  enable: [logs/victoria-logs]
+  enable: [victoria-logs]
 want:
   components:
-    - {id: logs/victoria-logs, why: enabled}
+    - {id: victoria-logs, why: enabled}
   warnings:
-    - {kind: untested, component: logs/victoria-logs, distribution: kubesolo}
+    - {kind: untested, component: victoria-logs, distribution: kubesolo}

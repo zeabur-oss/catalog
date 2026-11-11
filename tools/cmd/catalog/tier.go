@@ -139,14 +139,14 @@ func ids(cs []*catalog.Component) []string {
 
 // templateRefs returns what a template's e2e installs: its requires, and the
 // SeaweedFS component when its test values use the S3 gateway.
-func templateRefs(r *repo, t *templates.Template) ([]string, error) {
+func templateRefs(r *repo, t *templates.Template) ([]catalog.Ref, error) {
 	values, err := e2eValues(r.templates, t)
 	if err != nil {
 		return nil, err
 	}
-	refs := catalog.RefNames(t.Requires)
+	refs := slices.Clone(t.Requires)
 	if slices.ContainsFunc(slices.Collect(maps.Values(values.Inputs)), func(v string) bool { return strings.Contains(v, ".S3") }) {
-		refs = append(refs, templates.S3Component)
+		refs = append(refs, catalog.Ref{Component: templates.S3Component})
 	}
 	return refs, nil
 }
@@ -167,7 +167,7 @@ func subjects(r *repo, profile string, sel func(string, []*catalog.Component) bo
 		if c.Defaults[profile] == "unsupported" {
 			continue
 		}
-		order, err := r.cat.InstallOrder([]string{c.ID}, profile)
+		order, err := r.cat.InstallOrder(catalog.ByID(c.ID), profile)
 		if err != nil {
 			return nil, err
 		}
@@ -230,18 +230,21 @@ func selection(r *repo, tier, since string, args []string) (func(string, []*cata
 	return func(id string, _ []*catalog.Component) bool { return slices.Contains(args, id) }, nil
 }
 
-// installOrder returns what testing id installs. Component IDs contain a
-// slash and template IDs do not.
+// isComponent reports whether id is a component's. Every other ID is a
+// template's; templates.Check keeps the two apart.
+func (r *repo) isComponent(id string) bool {
+	_, ok := r.cat.Get(id)
+	return ok
+}
+
+// installOrder returns what testing id installs.
 func installOrder(r *repo, id, profile string) ([]*catalog.Component, error) {
-	if strings.Contains(id, "/") {
-		if _, ok := r.cat.Get(id); !ok {
-			return nil, fmt.Errorf("unknown component %q", id)
-		}
-		return r.cat.InstallOrder([]string{id}, profile)
+	if r.isComponent(id) {
+		return r.cat.InstallOrder(catalog.ByID(id), profile)
 	}
 	t, err := templates.Get(r.templates, id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unknown component or template %q", id)
 	}
 	refs, err := templateRefs(r, t)
 	if err != nil {
@@ -570,7 +573,7 @@ func smokeGroup(r *repo, cfg config, o tierOptions, g *group) []row {
 	for _, id := range g.IDs {
 		t.Timings = nil
 		var err error
-		if strings.Contains(id, "/") {
+		if r.isComponent(id) {
 			slog.Info("testing", "component", id)
 			err = t.Quick(id, g.deps[id])
 		} else {
@@ -672,7 +675,7 @@ func runFull(r *repo, cfg config, o tierOptions, args []string) error {
 			}
 			t.Timings.Since("cluster", start)
 			if err != nil {
-				if o.write && strings.Contains(s.id, "/") {
+				if o.write && r.isComponent(s.id) {
 					c, _ := r.cat.Get(s.id)
 					err = errors.Join(err, markFailed(cfg, o.profile, runtime.GOARCH, c, nil))
 				}
@@ -681,7 +684,7 @@ func runFull(r *repo, cfg config, o tierOptions, args []string) error {
 			}
 		}
 		rw := row{subject: s.id}
-		if strings.Contains(s.id, "/") {
+		if r.isComponent(s.id) {
 			rw.status, rw.err = testComponent(t, cfg, o.profile, s.id, o.write)
 		} else {
 			rw.status, rw.err = testTemplate(r, t, cfg, s.id, o.write)

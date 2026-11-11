@@ -14,15 +14,15 @@ func TestPerconaBackupStaysWithinDeclaredClusterAndStorage(t *testing.T) {
 		insecure, plainHTTP, override                       bool
 		rule                                                Rule
 	}{
-		{name: "declared-logical", provider: "databases/percona-mongodb", cluster: "database", storage: "s3", mode: "logical", credentials: "backup-credentials"},
-		{name: "foreign-cluster", provider: "databases/percona-mongodb", cluster: "other", storage: "s3", mode: "logical", credentials: "backup-credentials", rule: ErrPerconaBackupCluster},
-		{name: "undeclared-storage", provider: "databases/percona-mongodb", cluster: "database", storage: "other", mode: "logical", credentials: "backup-credentials", rule: ErrPerconaBackupStorage},
-		{name: "ambient-identity", provider: "databases/percona-mongodb", cluster: "database", storage: "s3", mode: "logical", rule: ErrPerconaBackupStorage},
-		{name: "wrong-provider", provider: "databases/cloudnative-pg", cluster: "database", storage: "s3", mode: "logical", credentials: "backup-credentials", rule: ErrPerconaBackupProvider},
-		{name: "preview-mode", provider: "databases/percona-mongodb", cluster: "database", storage: "s3", mode: "incremental", credentials: "backup-credentials", rule: ErrPerconaBackupMode},
-		{name: "unverified-tls", provider: "databases/percona-mongodb", cluster: "database", storage: "s3", mode: "logical", credentials: "backup-credentials", insecure: true, rule: ErrPerconaBackupStorage},
-		{name: "unencrypted-endpoint", provider: "databases/percona-mongodb", cluster: "database", storage: "s3", mode: "logical", credentials: "backup-credentials", plainHTTP: true, rule: ErrPerconaBackupStorage},
-		{name: "unsupported-options", provider: "databases/percona-mongodb", cluster: "database", storage: "s3", mode: "logical", credentials: "backup-credentials", override: true, rule: ErrPerconaBackupOverride},
+		{name: "declared-logical", provider: "percona-mongodb", cluster: "database", storage: "s3", mode: "logical", credentials: "backup-credentials"},
+		{name: "foreign-cluster", provider: "percona-mongodb", cluster: "other", storage: "s3", mode: "logical", credentials: "backup-credentials", rule: ErrPerconaBackupCluster},
+		{name: "undeclared-storage", provider: "percona-mongodb", cluster: "database", storage: "other", mode: "logical", credentials: "backup-credentials", rule: ErrPerconaBackupStorage},
+		{name: "ambient-identity", provider: "percona-mongodb", cluster: "database", storage: "s3", mode: "logical", rule: ErrPerconaBackupStorage},
+		{name: "wrong-provider", provider: "cloudnative-pg", cluster: "database", storage: "s3", mode: "logical", credentials: "backup-credentials", rule: ErrPerconaBackupProvider},
+		{name: "preview-mode", provider: "percona-mongodb", cluster: "database", storage: "s3", mode: "incremental", credentials: "backup-credentials", rule: ErrPerconaBackupMode},
+		{name: "unverified-tls", provider: "percona-mongodb", cluster: "database", storage: "s3", mode: "logical", credentials: "backup-credentials", insecure: true, rule: ErrPerconaBackupStorage},
+		{name: "unencrypted-endpoint", provider: "percona-mongodb", cluster: "database", storage: "s3", mode: "logical", credentials: "backup-credentials", plainHTTP: true, rule: ErrPerconaBackupStorage},
+		{name: "unsupported-options", provider: "percona-mongodb", cluster: "database", storage: "s3", mode: "logical", credentials: "backup-credentials", override: true, rule: ErrPerconaBackupOverride},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -58,7 +58,7 @@ func TestPerconaClusterChecksBackupsOnlyWhenEnabled(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			r := &Template{ID: "app", Requires: []catalog.Ref{{Component: "databases/percona-mongodb"}}}
+			r := &Template{ID: "app", Requires: []catalog.Ref{{Component: "percona-mongodb"}}}
 			spec := map[string]any{"image": "example.test/mongod@sha256:" + strings.Repeat("a", 64), "initImage": "example.test/init@sha256:" + strings.Repeat("a", 64)}
 			if tc.backup != nil {
 				spec["backup"] = tc.backup

@@ -123,7 +123,7 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup
       - name: iSCSI module for Longhorn
-        if: contains(matrix.ids, 'replicated-storage/longhorn')
+        if: contains(matrix.ids, 'longhorn')
         run: sudo modprobe iscsi_tcp
       - name: e2e
         env:

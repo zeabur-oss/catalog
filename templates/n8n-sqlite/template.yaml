@@ -17,7 +17,7 @@ metadata:
   # Also: https://docs.n8n.io/hosting/, https://docs.n8n.io/sustainable-use-license/
   homepage: https://github.com/n8n-io/n8n
 
-requires: [{component: ingress/traefik}, {component: certificates/cert-manager}]
+requires: [{component: traefik}, {component: cert-manager}]
 
 services:
   - name: n8n

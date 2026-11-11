@@ -11,11 +11,11 @@ description: 安裝工具從 index.json 挑選元件、排定順序、裝好後�
 - profile，也就是 `single-node` 或 `multi-node`。
 - 發行版，也就是 `k3s`、`rke2` 或 `kubesolo`。
 - 叢集節點的平台，例如 `linux/amd64`。
-- 使用者寫的 `enable` 和 `disable` 清單。每一項可以是元件 ID（例如 `logs/victoria-logs`），也可以是 capability（例如 `logs`）。
+- 使用者寫的 `enable` 和 `disable` 清單。每一項可以是元件 ID（例如 `victoria-logs`），也可以是 capability（例如 `logs`）。
 
 ## 名稱
 
-元件 ID 指的就是那個元件。寫 capability 時，安裝工具從這個 capability 底下、在這個 profile 不是 `unsupported` 的元件裡挑一個。挑法是依下列順序排好，取第一個。
+名稱是某個元件的 ID 時，指的就是那個元件。其他名稱都當作 capability，對到元件的 `provides.capability`。安裝工具從提供這個 capability、在這個 profile 不是 `unsupported` 的元件裡挑一個。挑法是依下列順序排好，取第一個。
 
 1. `testedOn` 在這個發行版底下列有這個平台的元件排前面。
 2. 接著是這個 profile `recommended` 的元件。
@@ -85,13 +85,15 @@ kubectl wait --for=condition=Ready nodes.longhorn.io --all -n longhorn-system --
 ```yaml
 description: A default not tested on the distribution is installed with a warning.
 components:            # index.json components, with only the fields selection reads
-  - id: ingress/traefik
+  - id: traefik
+    provides: {capability: ingress}
     defaults: {single-node: recommended, multi-node: recommended}
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
       - {distribution: rke2, platforms: [linux/amd64]}
       - {distribution: kubesolo, platforms: [linux/amd64]}
-  - id: logs/victoria-logs
+  - id: victoria-logs
+    provides: {capability: logs}
     defaults: {single-node: recommended, multi-node: recommended}
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
@@ -104,16 +106,16 @@ config:
   # enable, disable: the person's lists
 want:
   components:          # in install order
-    - {id: ingress/traefik, why: default}
-    - {id: logs/victoria-logs, why: default}
+    - {id: traefik, why: default}
+    - {id: victoria-logs, why: default}
   warnings:            # in any order
-    - {kind: untested, component: logs/victoria-logs, distribution: rke2}
+    - {kind: untested, component: victoria-logs, distribution: rke2}
   # leftOut: {<id>: {reason: …, …}}
   # error: {kind: unknown, name: …}, in place of the rest
 ```
 
 執行案例的步驟如下。
 
-1. 用 `components` 建立索引。每個元件的 capability 是 ID 斜線前的部分。某個 profile 沒有 `installOrder` 時，只裝元件本身。
+1. 用 `components` 建立索引。每個元件的 capability 是它的 `provides.capability`。某個 profile 沒有 `installOrder` 時，只裝元件本身。
 2. 依 `config` 挑選元件。
 3. 和 `want` 比對。`want` 沒寫的清單或對照表就是空的。原因、警告和錯誤都比對代碼和欄位，不比對安裝工具顯示的文字。

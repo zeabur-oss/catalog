@@ -10,13 +10,13 @@ import (
 )
 
 func TestCNPGCannotBorrowUnrelatedProviderTrust(t *testing.T) {
-	r := &templates.Template{ID: "app", Requires: []catalog.Ref{{Component: "ingress/traefik"}}}
+	r := &templates.Template{ID: "app", Requires: []catalog.Ref{{Component: "traefik"}}}
 	r.Security.Risks = []templates.Risk{{Risk: "Operator generated pods and SA", Mitigation: "Pinned catalog review"}}
 	b := safeManifest + "---\napiVersion: postgresql.cnpg.io/v1\nkind: Cluster\nmetadata: {name: database}\nspec:\n  inheritedMetadata: {labels: {templates.zeabur.com/template: app}}\n  imageName: ghcr.io/example/postgres@sha256:" + strings.Repeat("a", 64) + "\n  seccompProfile: {type: RuntimeDefault}\n  resources:\n    requests: {cpu: 10m, memory: 16Mi}\n    limits: {cpu: 100m, memory: 32Mi}\n"
 	if err := templates.Safety(r, []byte(b), "test"); !errors.Is(err, templates.ErrCNPGProvider) {
 		t.Fatalf("CNPG without its exact catalog provider: got %v", err)
 	}
-	r.Requires = []catalog.Ref{{Component: "databases/cloudnative-pg"}}
+	r.Requires = []catalog.Ref{{Component: "cloudnative-pg"}}
 	if err := templates.Safety(r, []byte(b), "test"); err != nil {
 		t.Fatal(err)
 	}
@@ -26,7 +26,7 @@ func TestCNPGCannotBorrowUnrelatedProviderTrust(t *testing.T) {
 	}
 }
 func TestMiddlewareAdapterOnlyAllowsExplicitIPAllowList(t *testing.T) {
-	r := &templates.Template{ID: "app", Requires: []catalog.Ref{{Component: "ingress/traefik"}}}
+	r := &templates.Template{ID: "app", Requires: []catalog.Ref{{Component: "traefik"}}}
 	prefix := safeManifest + "---\napiVersion: traefik.io/v1alpha1\nkind: Middleware\nmetadata: {name: admin}\nspec:\n"
 	if err := templates.Safety(r, []byte(prefix+"  ipAllowList: {sourceRange: [192.0.2.0/24]}\n"), "test"); err != nil {
 		t.Fatal(err)
@@ -57,9 +57,9 @@ spec:
 		providers []catalog.Ref
 		rule      templates.Rule
 	}{
-		{name: "complete", providers: []catalog.Ref{{Component: "ingress/traefik"}, {Component: "certificates/cert-manager"}}},
-		{name: "missing-certificates", providers: []catalog.Ref{{Component: "ingress/traefik"}}, rule: templates.ErrClusterIssuerProvider},
-		{name: "missing-ingress", providers: []catalog.Ref{{Component: "certificates/cert-manager"}}, rule: templates.ErrTraefikProvider},
+		{name: "complete", providers: []catalog.Ref{{Component: "traefik"}, {Component: "cert-manager"}}},
+		{name: "missing-certificates", providers: []catalog.Ref{{Component: "traefik"}}, rule: templates.ErrClusterIssuerProvider},
+		{name: "missing-ingress", providers: []catalog.Ref{{Component: "cert-manager"}}, rule: templates.ErrTraefikProvider},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			r := &templates.Template{ID: "app", Requires: tc.providers}
@@ -134,21 +134,21 @@ spec:
 		name, manifest, provider string
 		rule                     templates.Rule
 	}{
-		{name: "dragonfly", manifest: dragonfly, provider: "databases/dragonfly-operator"},
-		{name: "dragonfly-provider", manifest: dragonfly, provider: "databases/mariadb-operator", rule: templates.ErrDragonflyProvider},
-		{name: "dragonfly-tag", manifest: strings.Replace(dragonfly, "dragonfly"+digest, "dragonfly:v1", 1), provider: "databases/dragonfly-operator", rule: templates.ErrDragonflyDigest},
-		{name: "dragonfly-no-password", manifest: strings.Replace(dragonfly, "  authentication: {passwordFromSecret: {name: app, key: password}}\n", "", 1), provider: "databases/dragonfly-operator", rule: templates.ErrDragonflyPassword},
-		{name: "dragonfly-memcached", manifest: strings.Replace(dragonfly, "--cache_mode=false", "--memcached_port=11211", 1), provider: "databases/dragonfly-operator", rule: templates.ErrDragonflyFlag},
-		{name: "dragonfly-label", manifest: strings.Replace(dragonfly, "  podMetadata: {labels: {templates.zeabur.com/template: app}}\n", "", 1), provider: "databases/dragonfly-operator", rule: templates.ErrTemplateLabel},
-		{name: "dragonfly-sidecar", manifest: dragonfly + "  additionalContainers: [{name: x, image: x}]\n", provider: "databases/dragonfly-operator", rule: templates.ErrUnsupportedOverride},
-		{name: "mariadb", manifest: mariadb, provider: "databases/mariadb-operator"},
-		{name: "mariadb-provider", manifest: mariadb, provider: "databases/dragonfly-operator", rule: templates.ErrMariaDBProvider},
-		{name: "mariadb-root", manifest: strings.Replace(mariadb, "runAsUser: 999", "runAsUser: 0", 1), provider: "databases/mariadb-operator", rule: templates.ErrPodSecurity},
-		{name: "mariadb-config", manifest: strings.Replace(mariadb, "kind: MariaDB\nmetadata: {name: mariadb}\nspec:\n", "kind: MariaDB\nmetadata: {name: mariadb}\nspec:\n  myCnf: skip-grant-tables\n", 1), provider: "databases/mariadb-operator", rule: templates.ErrUnsupportedOverride},
-		{name: "mariadb-other-namespace", manifest: strings.Replace(mariadb, "mariaDbRef: {name: mariadb}", "mariaDbRef: {name: mariadb, namespace: other}", 1), provider: "databases/mariadb-operator", rule: templates.ErrMariaDBRefNamespace},
-		{name: "mariadb-undeclared", manifest: strings.Replace(mariadb, "mariaDbRef: {name: mariadb}", "mariaDbRef: {name: shared}", 1), provider: "databases/mariadb-operator", rule: templates.ErrMariaDBRefUndeclared},
-		{name: "mariadb-global-grant", manifest: strings.Replace(mariadb, "database: app", "database: '*'", 1), provider: "databases/mariadb-operator", rule: templates.ErrGlobalGrant},
-		{name: "mariadb-backup-plain", manifest: strings.Replace(mariadb, "tls: {enabled: true}", "tls: {enabled: false}", 1), provider: "databases/mariadb-operator", rule: templates.ErrMariaDBBackupS3},
+		{name: "dragonfly", manifest: dragonfly, provider: "dragonfly-operator"},
+		{name: "dragonfly-provider", manifest: dragonfly, provider: "mariadb-operator", rule: templates.ErrDragonflyProvider},
+		{name: "dragonfly-tag", manifest: strings.Replace(dragonfly, "dragonfly"+digest, "dragonfly:v1", 1), provider: "dragonfly-operator", rule: templates.ErrDragonflyDigest},
+		{name: "dragonfly-no-password", manifest: strings.Replace(dragonfly, "  authentication: {passwordFromSecret: {name: app, key: password}}\n", "", 1), provider: "dragonfly-operator", rule: templates.ErrDragonflyPassword},
+		{name: "dragonfly-memcached", manifest: strings.Replace(dragonfly, "--cache_mode=false", "--memcached_port=11211", 1), provider: "dragonfly-operator", rule: templates.ErrDragonflyFlag},
+		{name: "dragonfly-label", manifest: strings.Replace(dragonfly, "  podMetadata: {labels: {templates.zeabur.com/template: app}}\n", "", 1), provider: "dragonfly-operator", rule: templates.ErrTemplateLabel},
+		{name: "dragonfly-sidecar", manifest: dragonfly + "  additionalContainers: [{name: x, image: x}]\n", provider: "dragonfly-operator", rule: templates.ErrUnsupportedOverride},
+		{name: "mariadb", manifest: mariadb, provider: "mariadb-operator"},
+		{name: "mariadb-provider", manifest: mariadb, provider: "dragonfly-operator", rule: templates.ErrMariaDBProvider},
+		{name: "mariadb-root", manifest: strings.Replace(mariadb, "runAsUser: 999", "runAsUser: 0", 1), provider: "mariadb-operator", rule: templates.ErrPodSecurity},
+		{name: "mariadb-config", manifest: strings.Replace(mariadb, "kind: MariaDB\nmetadata: {name: mariadb}\nspec:\n", "kind: MariaDB\nmetadata: {name: mariadb}\nspec:\n  myCnf: skip-grant-tables\n", 1), provider: "mariadb-operator", rule: templates.ErrUnsupportedOverride},
+		{name: "mariadb-other-namespace", manifest: strings.Replace(mariadb, "mariaDbRef: {name: mariadb}", "mariaDbRef: {name: mariadb, namespace: other}", 1), provider: "mariadb-operator", rule: templates.ErrMariaDBRefNamespace},
+		{name: "mariadb-undeclared", manifest: strings.Replace(mariadb, "mariaDbRef: {name: mariadb}", "mariaDbRef: {name: shared}", 1), provider: "mariadb-operator", rule: templates.ErrMariaDBRefUndeclared},
+		{name: "mariadb-global-grant", manifest: strings.Replace(mariadb, "database: app", "database: '*'", 1), provider: "mariadb-operator", rule: templates.ErrGlobalGrant},
+		{name: "mariadb-backup-plain", manifest: strings.Replace(mariadb, "tls: {enabled: true}", "tls: {enabled: false}", 1), provider: "mariadb-operator", rule: templates.ErrMariaDBBackupS3},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			r := &templates.Template{ID: "app", Requires: []catalog.Ref{{Component: tc.provider}}}

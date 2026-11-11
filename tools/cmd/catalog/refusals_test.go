@@ -123,8 +123,8 @@ func TestRefused(t *testing.T) {
 // whose frontmatter says `default: major`. A profile switch never passes.
 func TestJudgeRefusals(t *testing.T) {
 	output := `The StatefulSet "zot" is invalid: spec: Forbidden: updates to statefulset spec for fields other than 'replicas' are forbidden`
-	upgrade := refusal{component: "builds/zeabur-builder", release: "zot", when: "multi-node", upgrade: true, output: output}
-	switched := refusal{component: "builds/zeabur-builder", release: "zot", when: "single-node to multi-node", output: output}
+	upgrade := refusal{component: "zeabur-builder", release: "zot", when: "multi-node", upgrade: true, output: output}
+	switched := refusal{component: "zeabur-builder", release: "zot", when: "single-node to multi-node", output: output}
 
 	t.Run("an upgrade refusal without a major change file fails", func(t *testing.T) {
 		errs := judgeRefusals([]refusal{upgrade}, false)

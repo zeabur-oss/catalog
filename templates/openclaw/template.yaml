@@ -16,7 +16,7 @@ metadata:
   # Also: https://docs.openclaw.ai/gateway/security
   homepage: https://github.com/openclaw/openclaw
 
-requires: [{component: ingress/traefik}, {component: certificates/cert-manager}]
+requires: [{component: traefik}, {component: cert-manager}]
 
 services:
   - name: openclaw

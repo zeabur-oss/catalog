@@ -2,28 +2,32 @@ description: >
   disable takes out a default by its capability or its id. Naming a known
   component that is not chosen is not an error.
 components:
-  - id: ingress/traefik
+  - id: traefik
+    provides: {capability: ingress}
     defaults: {single-node: recommended, multi-node: recommended}
     distributions: [k3s, rke2, kubesolo]
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
       - {distribution: rke2, platforms: [linux/amd64]}
       - {distribution: kubesolo, platforms: [linux/amd64]}
-  - id: logs/victoria-logs
+  - id: victoria-logs
+    provides: {capability: logs}
     defaults: {single-node: recommended, multi-node: recommended}
     distributions: [k3s, rke2, kubesolo]
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
       - {distribution: rke2, platforms: [linux/amd64]}
       - {distribution: kubesolo, platforms: [linux/amd64]}
-  - id: metrics/metrics-server
+  - id: metrics-server
+    provides: {capability: metrics}
     defaults: {single-node: recommended, multi-node: recommended}
     distributions: [k3s, rke2, kubesolo]
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
       - {distribution: rke2, platforms: [linux/amd64]}
       - {distribution: kubesolo, platforms: [linux/amd64]}
-  - id: uptime-probes/gatus
+  - id: gatus
+    provides: {capability: uptime-probes}
     defaults: {single-node: optional, multi-node: optional}
     distributions: [k3s, rke2, kubesolo]
     testedOn:
@@ -34,7 +38,7 @@ config:
   profile: multi-node
   distribution: k3s
   platform: linux/amd64
-  disable: [logs, metrics/metrics-server, uptime-probes]
+  disable: [logs, metrics-server, uptime-probes]
 want:
   components:
-    - {id: ingress/traefik, why: default}
+    - {id: traefik, why: default}
