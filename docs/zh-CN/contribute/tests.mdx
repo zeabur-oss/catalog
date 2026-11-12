@@ -3,7 +3,7 @@ title: 测试与 CI
 description: 了解各层 CI 的运行时机和检查内容，并配置模板测试输入。
 ---
 
-`check` 在每个 pull request 中运行，`smoke` 在 merge queue 中、对即将合并的 commit 运行。`full` 每周运行一次。打发布 tag 前，要确认每周运行已通过。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以用 `catalog e2e -tier check|smoke|full` 运行与 CI 相同的测试。
+`check` 在每个 pull request 中运行，`smoke` 在 merge queue 中、对即将合并的 commit 运行。`full` 每周六运行，`main` 收到变更组件或模板的 push 后也会运行。打发布 tag 前，要确认最近一次测试所有项目的运行已通过。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以用 `catalog e2e -tier check|smoke|full` 运行与 CI 相同的测试。
 
 ## 开始前
 
@@ -94,11 +94,13 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 
 共用依赖组件的测试会共用集群，依赖组件在每个集群中只安装一次。组件完成冒烟测试后就会卸载，除非同一集群后续的测试仍需要它。
 
-变更 `config/kubernetes.yaml` 时，`smoke` 会测试所有项目。变更 `tools/`、`go.mod`、`go.sum`、flake、`config/` 的其他文件或工作流时，`smoke` 改测 [`config/e2e.yaml`](../../../config/e2e.yaml) 中 `smokeRepresentative` 列出的项目。每周的运行仍会测试所有项目。
+变更 `config/kubernetes.yaml` 时，`smoke` 会测试所有项目。变更 `tools/`、`go.mod`、`go.sum`、flake、`config/` 的其他文件或工作流时，`smoke` 改测 [`config/e2e.yaml`](../../../config/e2e.yaml) 中 `smokeRepresentative` 列出的项目。每周六的运行仍会测试所有项目。
 
 ## `full`：测试资源用量和清理
 
-`weekly.yml` 会调用 `e2e.yml`，每周六运行 `full`。打发布 tag 前，确认 `weekly.yml` 在 `main` 上最后一次运行已通过。运行的可以是这个 commit，也可以是更早的 commit，只要之后的 commit 都只更新 `measurements/`，或者是发布 pull request（`CHANGELOG.md`、`flake.nix` 中的版本号、`.changeset/`）。其他情况要先在 `main` 上手动运行一次，通过后再打 tag。
+`weekly.yml` 会调用 `e2e.yml` 运行 `full`。`main` 收到变更 `components/` 或 `templates/` 的 push 时，只测过期的项目，以及会安装它的项目。组件或模板在某个 profile 和架构上，如果还没测过、上次测试失败，或上次测的是旧版文件（见下方的 `sourceDigest`），就算过期。每周六和手动运行 `weekly.yml` 时会测试所有项目，因为 Kubernetes 和发行版推出新版本时，文件没变，结果也可能不同。手动运行时也可以只测过期的项目（`mode: stale`），或只测指定的 ID（`components`）。`catalog list -tier full -stale` 会列出 push 后要测的项目。
+
+打发布 tag 前，确认 `weekly.yml` 在 `main` 上最近一次测试所有项目的运行已通过。运行的可以是这个 commit，也可以是更早的 commit，只要之后的 commit 都只更新 `measurements/`，或者是发布 pull request（`CHANGELOG.md`、`flake.nix` 中的版本号、`.changeset/`）。其他情况要先在 `main` 上手动运行一次，通过后再打 tag。
 
 `full` 会在 amd64 和 arm64 上，为每个组件、每种 profile 创建新的 kind 集群。`single-node` 使用单节点，`multi-node` 使用三节点。
 
@@ -163,7 +165,7 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 
 `full` 也会检查 amd64 上 `single-node` profile 的默认启用组件总用量，确认符合 [`config/budget.yaml`](../../../config/budget.yaml) 的预算。
 
-`weekly.yml` 会创建 pull request，更新 `measurements/`。你也可以手动运行这个工作流，立即获取测量结果。Renovate 则会针对每个新的上游版本和镜像 digest 创建 pull request。
+`weekly.yml` 会创建或更新同一个 pull request，更新 `measurements/`。每次运行都会保留这个 pull request 里已有的结果，没测任何项目时则不会改动它。你也可以手动运行这个工作流，立即获取测量结果。Renovate 则会针对每个新的上游版本和镜像 digest 创建 pull request。
 
 ### 在 k3s、RKE2 和 KubeSolo 上测试
 
