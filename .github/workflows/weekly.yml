@@ -27,10 +27,10 @@ on:
 permissions:
   contents: read
 
-# One run at a time, so two runs never update the pull request at once. A push waits for the
-# running one; a newer push replaces a waiting one, which it covers.
+# A newer push replaces a waiting push run, which it covers. A scheduled or manual run has its own
+# group, so a push never replaces a waiting full run, which tests more than a stale run does.
 concurrency:
-  group: weekly
+  group: weekly-${{ github.event_name == 'push' && 'push' || github.run_id }}
   cancel-in-progress: false
 
 jobs:
@@ -53,6 +53,10 @@ jobs:
     # Nothing to record when both matrices were empty; an open pull request stays as it is.
     if: ${{ !cancelled() && (needs.e2e-kind.outputs.ran == 'true' || needs.e2e-hosts.outputs.ran == 'true') }}
     runs-on: ubuntu-slim
+    # One at a time, so two runs never update the pull request at once.
+    concurrency:
+      group: weekly-pull-request
+      cancel-in-progress: false
     # Holds zeabur-oss-bot's key (see vendorhash.yml).
     environment: vendorhash
     permissions:
