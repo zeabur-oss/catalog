@@ -100,7 +100,7 @@ description: 了解各層 CI 的執行時機與檢查內容，並設定範本測
 
 `weekly.yml` 會呼叫 `e2e.yml`，對過期的項目和會安裝它的項目執行 `full`。`main` 收到變更 `components/` 或 `templates/` 的 push 後、每週六，以及手動執行時都會跑。手動執行時也能改成只測指定的 ID（`components`）。
 
-每次執行都會記下它的輸入：元件或範本的 `sourceDigest`、先裝的每個元件的 `sourceDigest`（`dependencies`），以及 [`config/kubernetes.yaml`](../../../config/kubernetes.yaml) 固定的版本，也就是 kind 節點的 `kubernetesVersion` 或主機發行版的 `distributionVersion`。元件或範本在某個 profile 和架構上，如果還沒測過、上次測試失敗，或那次執行的輸入和現在不同，就算過期。`catalog list -tier full` 會列出執行時要測的項目，不帶 ID 的 `catalog e2e -tier full` 則會測這些項目。
+每次執行都會記下它的輸入：元件或範本的 `sourceDigest`、先裝的每個元件的 `sourceDigest`（`dependencies`）、主機 profile 裝的每個附加元件的版本（`addOns`），以及 [`config/kubernetes.yaml`](../../../config/kubernetes.yaml) 固定的版本，也就是 kind 節點的 `kubernetesVersion` 或主機發行版的 `distributionVersion`。元件或範本在某個 profile 和架構上，如果還沒測過、上次測試失敗，或那次執行的輸入和現在不同，就算過期。`catalog list -tier full` 會列出執行時要測的項目，不帶 ID 的 `catalog e2e -tier full` 則會測這些項目。
 
 輸入沒辦法涵蓋所有會影響結果的變更。遇到下面這些情況，要手動執行 `weekly.yml`，並在 `components` 填入受影響的 ID：
 
