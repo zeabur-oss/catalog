@@ -16,13 +16,14 @@ func e2e(fs *flag.FlagSet, r *repo) error {
 	cluster := fs.String("cluster", "kind", "smoke, full: kind creates a cluster for each group or test; current uses the cluster that KUBECONFIG names")
 	profile := fs.String("profile", templateProfile, "full: single-node, multi-node (kind), or k3s, rke2 or kubesolo (installed on this host)")
 	write := fs.Bool("write", false, "full: update measurements/ for passing tests")
-	since := fs.String("since", "", "smoke, full: without ids, only what changed since this git commit")
+	since := fs.String("since", "", "smoke: only what changed since this git commit")
+	stale := fs.Bool("stale", false, "full: only what has no passing run of its current files on this profile and architecture")
 	keep := fs.Bool("keep", false, "keep the clusters and the check tier's API server")
 	fs.Parse(os.Args[2:])
 	if *cluster != "kind" && *cluster != "current" {
 		return fmt.Errorf("unknown -cluster %q; use kind or current", *cluster)
 	}
-	return runTier(r, *tier, tierOptions{profile: *profile, why: reason{ids: fs.Args(), since: *since},
+	return runTier(r, *tier, tierOptions{profile: *profile, why: reason{ids: fs.Args(), since: *since, stale: *stale},
 		write: *write, keep: *keep, current: *cluster == "current"})
 }
 

@@ -15,6 +15,9 @@ import (
 // Template e2e runs on the smaller profile; templates fit on one node.
 const templateProfile = "single-node"
 
+// templateArch is the only architecture a template's full test runs on.
+const templateArch = "amd64"
+
 func template(fs *flag.FlagSet, r *repo) error {
 	if len(os.Args) < 3 {
 		return errors.New("usage: catalog template render|inputs|lint [flags] <id>")
