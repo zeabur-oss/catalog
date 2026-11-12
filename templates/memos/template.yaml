@@ -44,29 +44,30 @@ security:
   risks:
     - risk: On an empty instance, the first account created becomes the administrator.
       mitigation: >-
-        A postStart hook creates the account admin with the generated password
-        before the Pod becomes ready. If the hook fails, Kubernetes restarts
-        the container and the Pod receives no traffic.
+        The memos-config ConfigMap declares the account admin with the
+        generated password, and Memos creates it at startup before it serves
+        any request. If the configuration cannot be applied, Memos exits and
+        the Pod receives no traffic.
       locales:
         zh-TW:
           risk: "全新的實例上，第一個建立的帳號會變成管理員。"
-          mitigation: "Pod 準備好之前，postStart hook 會先用自動產生的密碼建立 admin 帳號。如果 hook 失敗，Kubernetes 會重新啟動容器，Pod 也不會收到任何流量。"
+          mitigation: "ConfigMap memos-config 宣告了 admin 帳號和自動產生的密碼，Memos 在啟動時、開始處理請求之前就會建好帳號。如果設定套用失敗，Memos 會結束，Pod 也不會收到任何流量。"
         zh-CN:
           risk: "全新的实例上，第一个创建的账号会变成管理员。"
-          mitigation: "Pod 就绪之前，postStart hook 会先用自动生成的密码创建 admin 账号。如果 hook 失败，Kubernetes 会重启容器，Pod 也不会收到任何流量。"
+          mitigation: "ConfigMap memos-config 声明了 admin 账号和自动生成的密码，Memos 在启动时、开始处理请求之前就会建好账号。如果配置应用失败，Memos 会退出，Pod 也不会收到任何流量。"
     - risk: Anyone could register an account.
       mitigation: >-
-        The memos-settings ConfigMap turns on disallowUserRegistration. The
+        The memos-config ConfigMap turns on disallowUserRegistration. The
         administrator creates accounts in Settings. This ConfigMap controls
         the general settings, so to change them, edit the ConfigMap and
         restart the Pod.
       locales:
         zh-TW:
           risk: "任何人都可能自己註冊帳號。"
-          mitigation: "ConfigMap memos-settings 已開啟 disallowUserRegistration。帳號由管理員在設定裡建立。一般設定由這個 ConfigMap 管理，要修改就編輯這個 ConfigMap，再重新啟動 Pod。"
+          mitigation: "ConfigMap memos-config 已開啟 disallowUserRegistration。帳號由管理員在設定裡建立。一般設定由這個 ConfigMap 管理，要修改就編輯這個 ConfigMap，再重新啟動 Pod。"
         zh-CN:
           risk: "任何人都可能自己注册账号。"
-          mitigation: "ConfigMap memos-settings 已开启 disallowUserRegistration。账号由管理员在设置里创建。常规设置由这个 ConfigMap 管理，要修改就编辑这个 ConfigMap，再重启 Pod。"
+          mitigation: "ConfigMap memos-config 已开启 disallowUserRegistration。账号由管理员在设置里创建。常规设置由这个 ConfigMap 管理，要修改就编辑这个 ConfigMap，再重启 Pod。"
     - risk: >-
         Webhooks and link previews make the server request addresses that
         users choose.
@@ -92,4 +93,4 @@ smoke:
     resource: statefulset/memos
     condition: jsonpath={.status.readyReplicas}=1
     timeout: 120s
-    http: {service: memos, port: 5230, path: /api/v1/instance/profile, status: 200, contains: users/admin}
+    http: {service: memos, port: 5230, path: /api/instance/profile, status: 200, contains: '"needsSetup":false'}
