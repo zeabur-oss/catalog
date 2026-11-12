@@ -44,7 +44,7 @@ Schema 定义数据格式，由 catalog 工具的 Go 类型生成。每个版本
 | `distributions`、`detection.addons[].distribution`、测量记录的 `distribution` | 跳过这一项。 |
 | 测量记录的 `result` | 视为未通过。 |
 
-每条测量记录用 `distribution`（`kind`、`k3s`、`rke2` 或 `kubesolo`）、`profile`、`platform`、`kubernetesVersion` 和 `distributionVersion` 指明是哪个环境，其中 `distributionVersion` 是装在主机上的发行版版本。`result` 是 `passed` 或 `failed`，`sourceDigest` 是该次运行安装的组件文件哈希值，`dependencies` 则按 ID 列出该次运行先安装的每个组件的 `sourceDigest`。`versions` 列出该次运行安装的每个 release 的版本。
+每条测量记录用 `distribution`（`kind`、`k3s`、`rke2` 或 `kubesolo`）、`profile`、`platform`、`kubernetesVersion` 和 `distributionVersion` 指明是哪个环境，其中 `distributionVersion` 是装在主机上的发行版版本。`result` 是 `passed` 或 `failed`，`sourceDigest` 是该次运行安装的组件文件哈希值，`dependencies` 则按 ID 列出该次运行先安装的每个组件的 `sourceDigest`。`addOns` 按名称列出该次运行在主机上安装的每个附加组件的固定版本。`versions` 列出该次运行安装的每个 release 的版本。
 
 ```json
 "measurements": [
