@@ -217,30 +217,32 @@ func staleRepo(t *testing.T) *repo {
 			t.Fatal(err)
 		}
 	}
+	pin(t, "v1.36.4", "v1.36.5+k3s1")
 	return r
 }
 
-// record adds a run of id in env, of its current files unless digest is set.
-func record(t *testing.T, r *repo, id string, env Environment, digest string) {
+// record adds a passing run of id on profile and arch with the current
+// inputs, after change if it is set.
+func record(t *testing.T, r *repo, id, profile, arch string, change func(*Environment)) {
 	t.Helper()
-	path, src := measurementPath(id), ""
-	if c, ok := r.cat.Get(id); ok {
-		src = c.Path
-	} else {
-		path, src = templateMeasurementPath(id), filepath.Join("templates", id)
+	cfg, err := loadConfig()
+	if err != nil {
+		t.Fatal(err)
 	}
-	if digest == "" {
-		var err error
-		if digest, err = sourceDigest(src); err != nil {
-			t.Fatal(err)
-		}
+	env, err := inputs(r, cfg, id, profile, arch)
+	if err != nil {
+		t.Fatal(err)
 	}
-	env.SourceDigest = digest
-	if env.Result == "" {
-		env.Result = resultPassed
+	if env.KubernetesVersion == "" {
+		env.KubernetesVersion = "v1.36.5"
 	}
-	if env.MeasuredAt == "" {
-		env.MeasuredAt = "2026-11-07"
+	env.Result, env.MeasuredAt = resultPassed, "2026-11-07"
+	if change != nil {
+		change(&env)
+	}
+	path := measurementPath(id)
+	if !r.isComponent(id) {
+		path = templateMeasurementPath(id)
 	}
 	m := readMeasurement(path)
 	m.put(env)
@@ -249,14 +251,23 @@ func record(t *testing.T, r *repo, id string, env Environment, digest string) {
 	}
 }
 
-// recordAll records a passing run of the current files of every component and
-// template on single-node, amd64 and arm64.
+// recordAll records a passing run of the current inputs of every component
+// and template on single-node, amd64 and arm64.
 func recordAll(t *testing.T, r *repo) {
 	t.Helper()
 	for _, id := range everything {
 		for _, arch := range []string{"amd64", "arm64"} {
-			record(t, r, id, runEnvironment(templateProfile, arch), "")
+			record(t, r, id, templateProfile, arch, nil)
 		}
+	}
+}
+
+// pin writes config/kubernetes.yaml with the kind node and k3s releases.
+func pin(t *testing.T, kind, k3s string) {
+	t.Helper()
+	data := "e2e:\n  version: " + kind + "\nk3s:\n  version: " + k3s + "\n"
+	if err := os.WriteFile(filepath.Join("config", "kubernetes.yaml"), []byte(data), 0o644); err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -282,7 +293,7 @@ func TestFreshSelectsNothing(t *testing.T) {
 	r := staleRepo(t)
 	recordAll(t, r)
 	if got := staleOn(t, r, templateProfile, "amd64"); len(got) > 0 {
-		t.Errorf("stale %v, want nothing after a passing run of every current file", got)
+		t.Errorf("stale %v, want nothing after a passing run of every current input", got)
 	}
 }
 
@@ -309,19 +320,148 @@ func TestChangedFileIsStale(t *testing.T) {
 	}
 }
 
+func TestChangedDependencyIsStale(t *testing.T) {
+	r := staleRepo(t)
+	recordAll(t, r)
+	if err := os.WriteFile(filepath.Join("components", "traefik.yaml"), []byte("id: traefik\nport: 80\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	record(t, r, "traefik", templateProfile, "amd64", nil)
+	want := []string{"beta", "gamma", "metrics-server"}
+	if got := staleOn(t, r, templateProfile, "amd64"); !slices.Equal(got, want) {
+		t.Errorf("stale %v, want what ran with the old traefik: %v", got, want)
+	}
+}
+
+func TestRunWithoutDependencyDigestsIsStale(t *testing.T) {
+	r := staleRepo(t)
+	recordAll(t, r)
+	record(t, r, "metrics-server", templateProfile, "amd64", func(e *Environment) { e.Dependencies = nil })
+	if got := staleOn(t, r, templateProfile, "amd64"); !slices.Equal(got, []string{"metrics-server"}) {
+		t.Errorf("stale %v, want metrics-server, whose run has no digest of traefik", got)
+	}
+}
+
+func TestPinnedReleaseChangeIsStale(t *testing.T) {
+	notUnready := []string{"alpha", "beta", "gamma", "local-storage", "metrics-server", "traefik"}
+	hostTested := []string{"local-storage", "metrics-server", "traefik"}
+	for _, c := range []struct {
+		name, kind, k3s string
+		kindStale       []string
+		k3sStale        []string
+	}{
+		{"same", "v1.36.4", "v1.36.5+k3s1", nil, nil},
+		{"kind node", "v1.37.0", "v1.36.5+k3s1", notUnready, nil},
+		{"k3s", "v1.36.4", "v1.37.2+k3s1", nil, hostTested},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			r := staleRepo(t)
+			for _, comp := range r.cat.Components {
+				comp.Distributions = []string{"k3s"}
+			}
+			recordAll(t, r)
+			for _, id := range hostTested {
+				record(t, r, id, "k3s", "amd64", nil)
+			}
+			pin(t, c.kind, c.k3s)
+			if got := staleOn(t, r, templateProfile, "amd64"); !slices.Equal(got, c.kindStale) {
+				t.Errorf("stale on kind %v, want %v", got, c.kindStale)
+			}
+			if got := staleOn(t, r, "k3s", "amd64"); !slices.Equal(got, c.k3sStale) {
+				t.Errorf("stale on k3s %v, want %v", got, c.k3sStale)
+			}
+		})
+	}
+}
+
+func TestPinnedAddOnChangeIsStale(t *testing.T) {
+	hostTested := []string{"local-storage", "metrics-server", "traefik"}
+	pinAddOns := func(t *testing.T, localPath, helmController string) {
+		t.Helper()
+		data := "e2e:\n  version: v1.36.4\nrke2:\n  version: v1.36.5+rke2r1\n  localPath:\n    version: " + localPath +
+			"\nkubesolo:\n  version: v1.2.3\n  helmController:\n    version: " + helmController + "\n"
+		if err := os.WriteFile(filepath.Join("config", "kubernetes.yaml"), []byte(data), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, c := range []struct {
+		name, localPath, helmController string
+		rke2Stale, kubesoloStale        []string
+	}{
+		{"same", "v0.0.31", "v0.3.0", nil, nil},
+		{"local-path-provisioner", "v0.0.32", "v0.3.0", hostTested, nil},
+		{"helm-controller", "v0.0.31", "v0.3.1", nil, hostTested},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			r := staleRepo(t)
+			for _, comp := range r.cat.Components {
+				comp.Distributions = []string{"rke2", kubesoloProfile}
+			}
+			pinAddOns(t, "v0.0.31", "v0.3.0")
+			recordAll(t, r)
+			for _, id := range hostTested {
+				record(t, r, id, "rke2", "amd64", nil)
+				record(t, r, id, kubesoloProfile, "amd64", nil)
+			}
+			pinAddOns(t, c.localPath, c.helmController)
+			if got := staleOn(t, r, "rke2", "amd64"); !slices.Equal(got, c.rke2Stale) {
+				t.Errorf("stale on rke2 %v, want %v", got, c.rke2Stale)
+			}
+			if got := staleOn(t, r, kubesoloProfile, "amd64"); !slices.Equal(got, c.kubesoloStale) {
+				t.Errorf("stale on kubesolo %v, want %v", got, c.kubesoloStale)
+			}
+		})
+	}
+}
+
+func TestMergeDropsRunsOfOtherInputs(t *testing.T) {
+	r := staleRepo(t)
+	recordAll(t, r)
+	if err := os.WriteFile(filepath.Join("components", "traefik.yaml"), []byte("id: traefik\nport: 80\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// A result of the new traefik, from a run older than the one that
+	// recorded the rest.
+	record(t, r, "traefik", templateProfile, "amd64", func(e *Environment) { e.MeasuredAt = "2026-11-01" })
+	cfg, err := loadConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := dropOutdated(r, cfg, "measurements"); err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []struct {
+		id    string
+		archs []string
+	}{
+		{"traefik", []string{"amd64"}},
+		{"metrics-server", nil},
+		{"beta", nil},
+		{"local-storage", []string{"amd64", "arm64"}},
+	} {
+		path := measurementPath(c.id)
+		if !r.isComponent(c.id) {
+			path = templateMeasurementPath(c.id)
+		}
+		var archs []string
+		for _, e := range readMeasurement(path).Environments {
+			archs = append(archs, e.Platform.Architecture)
+		}
+		if !slices.Equal(archs, c.archs) {
+			t.Errorf("%s keeps runs on %v, want %v", c.id, archs, c.archs)
+		}
+	}
+}
+
 func TestFailedLastRunIsStale(t *testing.T) {
 	r := staleRepo(t)
 	recordAll(t, r)
-	failed := runEnvironment(templateProfile, "amd64")
-	failed.Result, failed.MeasuredAt, failed.KubernetesVersion = resultFailed, "2026-11-08", "v1.36.5"
-	record(t, r, "local-storage", failed, "")
+	record(t, r, "local-storage", templateProfile, "amd64", func(e *Environment) { e.Result = resultFailed })
 	want := []string{"beta", "gamma", "local-storage"}
 	if got := staleOn(t, r, templateProfile, "amd64"); !slices.Equal(got, want) {
 		t.Errorf("stale %v, want %v", got, want)
 	}
-	passed := runEnvironment(templateProfile, "amd64")
-	passed.MeasuredAt, passed.KubernetesVersion = "2026-11-09", "v1.36.6"
-	record(t, r, "local-storage", passed, "")
+	record(t, r, "local-storage", templateProfile, "amd64", nil)
 	if got := staleOn(t, r, templateProfile, "amd64"); len(got) > 0 {
 		t.Errorf("stale %v, want nothing once a later run passed", got)
 	}
@@ -330,7 +470,7 @@ func TestFailedLastRunIsStale(t *testing.T) {
 func TestStaleIsPerArchitecture(t *testing.T) {
 	r := staleRepo(t)
 	recordAll(t, r)
-	record(t, r, "traefik", runEnvironment(templateProfile, "arm64"), "h1:older")
+	record(t, r, "traefik", templateProfile, "arm64", func(e *Environment) { e.SourceDigest = "h1:older" })
 	if got := staleOn(t, r, templateProfile, "amd64"); len(got) > 0 {
 		t.Errorf("stale on amd64 %v, want nothing", got)
 	}
@@ -349,7 +489,7 @@ func TestStaleIsPerDistribution(t *testing.T) {
 		t.Errorf("stale on k3s %v, want traefik, which has run on kind only", got)
 	}
 	for _, id := range []string{"traefik", "local-storage", "metrics-server"} {
-		record(t, r, id, runEnvironment("k3s", "amd64"), "")
+		record(t, r, id, "k3s", "amd64", nil)
 	}
 	if got := staleOn(t, r, "k3s", "amd64"); len(got) > 0 {
 		t.Errorf("stale on k3s %v, want nothing", got)

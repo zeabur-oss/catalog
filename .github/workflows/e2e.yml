@@ -1,8 +1,9 @@
-# full: installs every component in a fresh cluster each, on amd64 and arm64:
+# full: installs each component in a fresh cluster, on amd64 and arm64:
 # dependencies first, idle memory and CPU once they are stable, health and
-# smoke checks, uninstall and residue check. profiles picks the profiles of one call; a
-# matrix holds at most 256 jobs, so weekly.yml calls it once for kind and once
-# for the host distributions.
+# smoke checks, uninstall and residue check. It tests components, or what is
+# stale when that is empty (catalog list -stale). profiles picks the profiles of
+# one call; a matrix holds at most 256 jobs, so weekly.yml calls it once for kind
+# and once for the host distributions.
 # - single-node and multi-node run on kind, one node and three. single-node
 #   amd64 also installs every template with the components it requires, runs
 #   its smoke checks, then measures its idle memory and CPU.
@@ -19,13 +20,17 @@ on:
         type: string
         required: true
       components:
-        description: Component or template IDs, separated by commas, empty runs all
+        description: Component or template IDs, separated by commas; empty tests what is stale
         type: string
         required: false
       measure:
         description: Write measurements and check the budget
         type: boolean
         default: true
+    outputs:
+      ran:
+        description: Whether the matrix had a job
+        value: ${{ jobs.matrix.outputs.ran }}
   # A manual run, such as one distribution and a few components. Only
   # weekly.yml opens the measurements pull request.
   workflow_dispatch:
@@ -35,7 +40,7 @@ on:
         type: string
         required: true
       components:
-        description: Component or template IDs, separated by commas, empty runs all
+        description: Component or template IDs, separated by commas; empty tests what is stale
         type: string
         required: false
       measure:
@@ -51,6 +56,7 @@ jobs:
     runs-on: ubuntu-slim
     outputs:
       matrix: ${{ steps.list.outputs.matrix }}
+      ran: ${{ fromJSON(steps.list.outputs.matrix).include[0] != null }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -63,10 +69,14 @@ jobs:
         env:
           PROFILES: ${{ inputs.profiles }}
           IDS: ${{ inputs.components }}
-        run: echo "matrix=$(go run ./tools/cmd/catalog list -tier full -profiles "$PROFILES" -ids "$IDS")" >> "$GITHUB_OUTPUT"
+        run: |
+          flags=(-stale)
+          if [ -n "$IDS" ]; then flags=(-ids "$IDS"); fi
+          echo "matrix=$(go run ./tools/cmd/catalog list -tier full -profiles "$PROFILES" "${flags[@]}")" >> "$GITHUB_OUTPUT"
 
   e2e:
     needs: matrix
+    if: fromJSON(needs.matrix.outputs.matrix).include[0]
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
     strategy:
       fail-fast: false

@@ -14,7 +14,7 @@ import (
 type reason struct {
 	ids   []string // only these
 	since string   // smoke: what changed since this git commit
-	stale bool     // full: what has no passing run of its current files
+	stale bool     // full: what has no passing run of its current inputs
 }
 
 // pick is what a run tests.
@@ -74,14 +74,18 @@ func choose(r *repo, tier string, why reason, profile, arch string) (pick, error
 }
 
 // stalePick is what a full run on profile and arch tests with -stale: each
-// component and template that has no run there, whose last run there failed
-// or tested other files, and what installs it. A component in the unready
-// list of config/e2e.yaml is never measured, so it is not stale on its own.
+// component and template whose inputs there have no passing run, and what
+// installs it. A component in the unready list of config/e2e.yaml is never
+// measured, so it is not stale on its own.
 func stalePick(r *repo, profile, arch string) (pick, error) {
-	var cfg struct {
+	var e2e struct {
 		Unready []string `yaml:"unready"`
 	}
-	if err := catalog.ReadYAML("config/e2e.yaml", &cfg); err != nil {
+	if err := catalog.ReadYAML("config/e2e.yaml", &e2e); err != nil {
+		return pick{}, err
+	}
+	cfg, err := loadConfig()
+	if err != nil {
 		return pick{}, err
 	}
 	subs, err := profileSubjects(r, profile, pick{all: true})
@@ -90,50 +94,75 @@ func stalePick(r *repo, profile, arch string) (pick, error) {
 	}
 	p := pick{deps: map[string]bool{}}
 	for _, s := range subs {
-		path, src := measurementPath(s.id), ""
-		if c, ok := r.cat.Get(s.id); ok {
-			if slices.Contains(cfg.Unready, s.id) {
+		path := measurementPath(s.id)
+		if r.isComponent(s.id) {
+			if slices.Contains(e2e.Unready, s.id) {
 				continue
 			}
-			src = c.Path
 		} else {
 			if arch != templateArch {
 				continue
 			}
-			t, err := templates.Get(r.templates, s.id)
-			if err != nil {
-				return pick{}, err
-			}
-			path, src = templateMeasurementPath(s.id), t.Dir
+			path = templateMeasurementPath(s.id)
 		}
-		digest, err := sourceDigest(src)
+		want, err := inputs(r, cfg, s.id, profile, arch)
 		if err != nil {
 			return pick{}, err
 		}
-		if !passed(readMeasurement(path), runEnvironment(profile, arch), digest) {
+		if !slices.ContainsFunc(readMeasurement(path).Environments, func(e Environment) bool {
+			return e.Result == resultPassed && e.sameInputs(want)
+		}) {
 			p.deps[s.id] = true
 		}
 	}
 	return p, nil
 }
 
-// passed reports whether the runs of m in the distribution, profile and
-// platform of env on their latest day all passed with digest.
-func passed(m measurement, env Environment, digest string) bool {
-	latest, ok := "", false
-	for _, e := range m.Environments {
-		if e.Distribution != env.Distribution || e.Profile != env.Profile || e.Platform != env.Platform {
+// inputs returns what the repository decides about a run of id on profile
+// and linux/arch: the source digest of id and of each component installed
+// before it, and the releases that config/kubernetes.yaml pins, the
+// Kubernetes release of kind, or the release of a host distribution and of
+// its add-ons.
+func inputs(r *repo, cfg config, id, profile, arch string) (Environment, error) {
+	values, src := profile, ""
+	if slices.Contains(hostProfiles, profile) {
+		values = templateProfile
+	}
+	if c, ok := r.cat.Get(id); ok {
+		src = c.Path
+	} else {
+		t, err := templates.Get(r.templates, id)
+		if err != nil {
+			return Environment{}, err
+		}
+		src = t.Dir
+	}
+	order, err := installOrder(r, id, values)
+	if err != nil {
+		return Environment{}, err
+	}
+	e := hostEnvironment(cfg, profile, arch)
+	e.AddOns = cfg.pinnedAddOns(profile)
+	if e.Distribution == kindDistribution {
+		e.KubernetesVersion = cfg.E2E.Version
+	}
+	if e.SourceDigest, err = sourceDigest(src); err != nil {
+		return Environment{}, err
+	}
+	for _, c := range order {
+		if c.ID == id {
 			continue
 		}
-		good := e.Result == resultPassed && e.SourceDigest == digest
-		switch {
-		case e.MeasuredAt > latest:
-			latest, ok = e.MeasuredAt, good
-		case e.MeasuredAt == latest:
-			ok = ok && good
+		digest, err := sourceDigest(c.Path)
+		if err != nil {
+			return Environment{}, err
 		}
+		if e.Dependencies == nil {
+			e.Dependencies = map[string]string{}
+		}
+		e.Dependencies[c.ID] = digest
 	}
-	return ok
+	return e, nil
 }
 
 // filesPick is what a smoke run tests after files changed. A changed

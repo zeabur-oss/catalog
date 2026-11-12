@@ -8,7 +8,7 @@
 //	catalog api -version <v> [-out out/api]  write the static API: catalog.json, components/<id>.json, schema/
 //	catalog schema                      write schema/v1/ from the Go types
 //	catalog crosscheck                  write crosscheck.json, the render of every template with its e2e values
-//	catalog merge <dir>                 merge measurements uploaded by CI jobs into measurements/
+//	catalog merge [-keep <dir>] <dir>   merge measurements uploaded by CI jobs into measurements/
 //	catalog template render <id>        expand manifests.yaml
 //	catalog template inputs <id>        print the Secrets of generated inputs
 //	catalog template lint <id>          render, then safety rules and kubeconform
@@ -95,7 +95,7 @@ func validate(fs *flag.FlagSet, r *repo) error {
 // version.
 func list(fs *flag.FlagSet, r *repo) error {
 	since := fs.String("since", "", "smoke: only what changed since this git commit")
-	stale := fs.Bool("stale", false, "full: only what has no passing run of its current files")
+	stale := fs.Bool("stale", false, "full: only what has no passing run of its current inputs")
 	tier := fs.String("tier", "full", "smoke or full")
 	only := fs.String("profiles", "", "full: only these profiles, separated by commas")
 	idList := fs.String("ids", "", "only these component or template IDs, separated by commas")

@@ -227,6 +227,18 @@ func (cfg config) pinnedVersion(p string) string {
 	return ""
 }
 
+// pinnedAddOns returns the release of each add-on that createHost installs
+// for host profile p, by name.
+func (cfg config) pinnedAddOns(p string) map[string]string {
+	switch p {
+	case "rke2":
+		return map[string]string{"local-path-provisioner": cfg.RKE2.LocalPath.Version}
+	case kubesoloProfile:
+		return map[string]string{"helm-controller": cfg.Kubesolo.HelmController.Version}
+	}
+	return nil
+}
+
 // k3sConfig is the k3s block of config/kubernetes.yaml.
 type k3sConfig struct {
 	Version       string            `yaml:"version"`

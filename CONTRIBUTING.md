@@ -41,8 +41,14 @@ existing branch: `git rebase --signoff main`, then force-push.
   what you changed, what it needs and what installs it is installed on one node and
   smoke tested. A change to a shared file such as `config/` or `tools/` tests the
   `smokeRepresentative` list in `config/e2e.yaml` instead of everything. A queued change that touches no component or template skips it.
-- **Every week and before a release (`full`):** everything on one and three
-  nodes, amd64 and arm64, with idle memory and CPU, uninstall and leftover checks.
+- **After a push to `main` that changes a component or template, and every Saturday (`full`):**
+  what is stale, on one and three nodes, amd64 and arm64, with idle memory and CPU,
+  uninstall and leftover checks. A component or template is stale when it has no
+  passing run of its current inputs on a profile and architecture: its file, the
+  files of what it installs first, and the Kubernetes or distribution release in
+  `config/kubernetes.yaml`. What installs it runs too.
+  `go run ./tools/cmd/catalog list -tier full -stale` prints that list, and a release
+  needs it empty.
 
 Run the same tiers with `go run ./tools/cmd/catalog e2e -tier check`,
 `-tier smoke <ids>` or `-tier full <id>`. `check` needs no Docker. `smoke` and `full`

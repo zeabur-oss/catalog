@@ -17,7 +17,7 @@ func e2e(fs *flag.FlagSet, r *repo) error {
 	profile := fs.String("profile", templateProfile, "full: single-node, multi-node (kind), or k3s, rke2 or kubesolo (installed on this host)")
 	write := fs.Bool("write", false, "full: update measurements/ for passing tests")
 	since := fs.String("since", "", "smoke: only what changed since this git commit")
-	stale := fs.Bool("stale", false, "full: only what has no passing run of its current files on this profile and architecture")
+	stale := fs.Bool("stale", false, "full: only what has no passing run of its current inputs on this profile and architecture")
 	keep := fs.Bool("keep", false, "keep the clusters and the check tier's API server")
 	fs.Parse(os.Args[2:])
 	if *cluster != "kind" && *cluster != "current" {

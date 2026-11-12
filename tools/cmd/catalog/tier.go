@@ -25,9 +25,9 @@ import (
 // fails when the API server refuses an upgrade from the base or a profile switch. smoke runs in
 // the merge queue: it installs and smoke tests what changed, what it needs and
 // what installs it, single-node amd64, in groups that share their
-// dependencies. full runs weekly and before a release: every profile and
-// architecture in a fresh cluster each, with idle usage, uninstall, and residue
-// checks. With -cluster current, smoke and full use the current cluster
+// dependencies. full runs what is stale after a push to main and weekly: every
+// profile and architecture in a fresh cluster each, with
+// idle usage, uninstall, and residue checks. With -cluster current, smoke and full use the current cluster
 // instead of kind.
 var tiers = []string{"check", "smoke", "full"}
 
@@ -573,8 +573,8 @@ func runTemplate(r *repo, t *catalog.Tester, id string, measure bool) ([]catalog
 }
 
 // testTemplate runs the full template test on the current cluster and writes
-// the measurement if write is set.
-func testTemplate(r *repo, t *catalog.Tester, cfg config, id string, write bool) (status string, err error) {
+// the measurement, with the source digests of in, if write is set.
+func testTemplate(r *repo, t *catalog.Tester, cfg config, id string, in Environment, write bool) (status string, err error) {
 	env, err := currentEnvironment(cfg, t.Profile)
 	if err != nil {
 		return "", err
@@ -593,7 +593,7 @@ func testTemplate(r *repo, t *catalog.Tester, cfg config, id string, write bool)
 		if err != nil {
 			return "", err
 		}
-		if err := writeTemplateMeasurement(tmpl, env, usage, imagesOf(manifest)); err != nil {
+		if err := writeTemplateMeasurement(tmpl, env, in, usage, imagesOf(manifest)); err != nil {
 			return "", err
 		}
 	}
@@ -630,6 +630,10 @@ func runFull(r *repo, cfg config, o tierOptions) error {
 	var rows []row
 	for _, s := range subs {
 		t.Timings = nil
+		in, err := inputs(r, cfg, s.id, o.profile, runtime.GOARCH)
+		if err != nil {
+			return err
+		}
 		var c *cluster
 		if !o.current {
 			start := time.Now()
@@ -642,7 +646,7 @@ func runFull(r *repo, cfg config, o tierOptions) error {
 			if err != nil {
 				if o.write && r.isComponent(s.id) {
 					c, _ := r.cat.Get(s.id)
-					err = errors.Join(err, markFailed(cfg, o.profile, runtime.GOARCH, c, nil))
+					err = errors.Join(err, markFailed(cfg, o.profile, runtime.GOARCH, c, nil, in))
 				}
 				rows = append(rows, row{subject: s.id, timings: t.Timings, err: err})
 				continue
@@ -650,9 +654,9 @@ func runFull(r *repo, cfg config, o tierOptions) error {
 		}
 		rw := row{subject: s.id}
 		if r.isComponent(s.id) {
-			rw.status, rw.err = testComponent(t, cfg, o.profile, s.id, o.write)
+			rw.status, rw.err = testComponent(t, cfg, o.profile, s.id, in, o.write)
 		} else {
-			rw.status, rw.err = testTemplate(r, t, cfg, s.id, o.write)
+			rw.status, rw.err = testTemplate(r, t, cfg, s.id, in, o.write)
 		}
 		rw.timings = t.Timings
 		rows = append(rows, rw)
@@ -664,14 +668,14 @@ func runFull(r *repo, cfg config, o tierOptions) error {
 }
 
 // testComponent runs the full component test on the current cluster. If
-// write is set, it writes the measurement under profile, or marks the
-// environment failed.
-func testComponent(t *catalog.Tester, cfg config, profile, id string, write bool) (status string, err error) {
+// write is set, it writes the measurement under profile with the source
+// digests of in, or marks the environment failed.
+func testComponent(t *catalog.Tester, cfg config, profile, id string, in Environment, write bool) (status string, err error) {
 	c, _ := t.Catalog.Get(id)
 	env, err := currentEnvironment(cfg, profile)
 	if err != nil {
 		if write {
-			err = errors.Join(err, markFailed(cfg, profile, runtime.GOARCH, c, nil))
+			err = errors.Join(err, markFailed(cfg, profile, runtime.GOARCH, c, nil, in))
 		}
 		return "", err
 	}
@@ -679,7 +683,7 @@ func testComponent(t *catalog.Tester, cfg config, profile, id string, write bool
 	res := t.Test(id)
 	if res.Err != nil {
 		if write {
-			return "", errors.Join(res.Err, markFailed(cfg, profile, runtime.GOARCH, c, &env))
+			return "", errors.Join(res.Err, markFailed(cfg, profile, runtime.GOARCH, c, &env, in))
 		}
 		return "", res.Err
 	}
@@ -687,7 +691,7 @@ func testComponent(t *catalog.Tester, cfg config, profile, id string, write bool
 	if res.Unmeasured {
 		status = "PASS (installed without credentials; not measured)"
 	} else if write {
-		if err := writeMeasurement(c, env, res); err != nil {
+		if err := writeMeasurement(c, env, in, res); err != nil {
 			return "", err
 		}
 	}

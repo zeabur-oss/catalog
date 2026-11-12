@@ -69,7 +69,7 @@ func TestMergeKeepsEnvironmentsNoJobMeasured(t *testing.T) {
 		Environments: []Environment{kindEnv("single-node", "amd64", 310, "2026-10-25")},
 	})
 
-	if err := mergeMeasurements("downloaded", "measurements"); err != nil {
+	if err := mergeMeasurements("downloaded", "", "measurements"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -95,7 +95,7 @@ func TestMergeRejectsBrokenFile(t *testing.T) {
 	if err := os.WriteFile(path, []byte("{"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := mergeMeasurements("downloaded", "measurements"); err == nil {
+	if err := mergeMeasurements("downloaded", "", "measurements"); err == nil {
 		t.Fatal("merged a file that is not JSON")
 	}
 }
@@ -162,13 +162,13 @@ func TestFailedRunMarksOnlyItsEnvironment(t *testing.T) {
 			t.Chdir(t.TempDir())
 			// The weekly job checks out main, fails on k3s arm64 and uploads its file.
 			writeFile(t, "measurements/components/traefik.json", main)
-			if err := markFailed(cfg, "k3s", "arm64", comp, c.env); err != nil {
+			if err := markFailed(cfg, "k3s", "arm64", comp, c.env, Environment{}); err != nil {
 				t.Fatal(err)
 			}
 			uploaded := readMeasurement("measurements/components/traefik.json")
 			writeFile(t, "downloaded/job/components/traefik.json", uploaded)
 			writeFile(t, "main/components/traefik.json", main)
-			if err := mergeMeasurements("downloaded", "main"); err != nil {
+			if err := mergeMeasurements("downloaded", "", "main"); err != nil {
 				t.Fatal(err)
 			}
 			merged := readMeasurement("main/components/traefik.json")
@@ -201,7 +201,7 @@ func TestFailureSurvivesAnotherJobsStaleCopy(t *testing.T) {
 	// its checkout of main with the old passing k3s measurements.
 	writeFile(t, "measurements/components/traefik.json", main)
 	arm := k3sEnv("arm64", 0, "")
-	if err := markFailed(cfg, "k3s", "arm64", comp, &arm); err != nil {
+	if err := markFailed(cfg, "k3s", "arm64", comp, &arm, Environment{}); err != nil {
 		t.Fatal(err)
 	}
 	writeFile(t, "downloaded/measurements-k3s-arm64-traefik/components/traefik.json", readMeasurement("measurements/components/traefik.json"))
@@ -210,7 +210,7 @@ func TestFailureSurvivesAnotherJobsStaleCopy(t *testing.T) {
 	writeFile(t, "downloaded/measurements-single-node-amd64-traefik/components/traefik.json", fresh)
 	writeFile(t, "main/components/traefik.json", main)
 
-	if err := mergeMeasurements("downloaded", "main"); err != nil {
+	if err := mergeMeasurements("downloaded", "", "main"); err != nil {
 		t.Fatal(err)
 	}
 	merged := readMeasurement("main/components/traefik.json")
@@ -231,7 +231,7 @@ func TestStartupFailureMarksTheExistingRun(t *testing.T) {
 		env("kubesolo", "single-node", "amd64", "v1.35.7", "v1.2.3", 20, "2026-10-30"),
 		env("kubesolo", "single-node", "arm64", "v1.35.7", "v1.2.3", 20, "2026-10-30"),
 	}})
-	if err := markFailed(cfg, kubesoloProfile, "arm64", comp, nil); err != nil {
+	if err := markFailed(cfg, kubesoloProfile, "arm64", comp, nil, Environment{}); err != nil {
 		t.Fatal(err)
 	}
 	m := readMeasurement("measurements/components/traefik.json")
@@ -247,7 +247,7 @@ func TestStartupFailureWithoutRunRecordsNothing(t *testing.T) {
 	var cfg config
 	cfg.Kubesolo.Version = "v1.2.3"
 	comp := &catalog.Component{ID: "traefik"}
-	if err := markFailed(cfg, kubesoloProfile, "arm64", comp, nil); err != nil {
+	if err := markFailed(cfg, kubesoloProfile, "arm64", comp, nil, Environment{}); err != nil {
 		t.Fatal(err)
 	}
 	m := readMeasurement("measurements/components/traefik.json")
@@ -274,7 +274,7 @@ func TestSameDayRerunReplacesWhatMainHeld(t *testing.T) {
 	writeFile(t, "downloaded/measurements-k3s-amd64-traefik/components/traefik.json", k3s)
 	writeFile(t, "downloaded/measurements-rke2-amd64-traefik/components/traefik.json", rke2)
 
-	if err := mergeMeasurements("downloaded", "main"); err != nil {
+	if err := mergeMeasurements("downloaded", "", "main"); err != nil {
 		t.Fatal(err)
 	}
 	merged := readMeasurement("main/components/traefik.json")
@@ -309,7 +309,7 @@ func TestMeasuredPodsRoundTripWithoutTotals(t *testing.T) {
 	if err := os.WriteFile(comp.Path, []byte("releases: []\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := writeMeasurement(comp, k3sEnv("amd64", 0, ""), catalog.Result{Pods: pods}); err != nil {
+	if err := writeMeasurement(comp, k3sEnv("amd64", 0, ""), Environment{}, catalog.Result{Pods: pods}); err != nil {
 		t.Fatal(err)
 	}
 	m := readMeasurement(measurementPath(comp.ID))
@@ -329,33 +329,34 @@ func TestMeasuredPodsRoundTripWithoutTotals(t *testing.T) {
 	}
 }
 
-func TestRunRecordsTheDigestOfTheSourceItInstalled(t *testing.T) {
+func TestKeptResultsFillWhatNoJobMeasured(t *testing.T) {
 	t.Chdir(t.TempDir())
-	const path = "components/traefik.yaml"
-	comp := &catalog.Component{ID: "traefik", Path: path}
-	run := func(content string) (recorded, want string) {
-		t.Helper()
-		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-			t.Fatal(err)
-		}
-		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
-			t.Fatal(err)
-		}
-		if err := writeMeasurement(comp, k3sEnv("amd64", 0, ""), catalog.Result{Pods: pods(24)}); err != nil {
-			t.Fatal(err)
-		}
-		want, err := sourceDigest(path)
-		if err != nil {
-			t.Fatal(err)
-		}
-		return get(t, readMeasurement(measurementPath("traefik")), k3sEnv("amd64", 0, "")).SourceDigest, want
+	day := "2026-11-07"
+	main := measurement{Component: "traefik", Environments: []Environment{
+		kindEnv("single-node", "amd64", 22, "2026-10-31"), k3sEnv("amd64", 22, "2026-10-31"),
+	}}
+	// The open pull request holds Saturday's results: a failure on single-node
+	// and a new k3s measurement.
+	kept := measurement{Component: "traefik", Environments: slices.Clone(main.Environments)}
+	failed := kindEnv("single-node", "amd64", 0, day)
+	failed.Result = resultFailed
+	kept.put(failed)
+	kept.put(k3sEnv("amd64", 30, day))
+	// A run later that day passes on single-node only.
+	job := measurement{Component: "traefik", Environments: slices.Clone(main.Environments)}
+	job.put(kindEnv("single-node", "amd64", 25, day))
+	writeFile(t, "main/components/traefik.json", main)
+	writeFile(t, "kept/components/traefik.json", kept)
+	writeFile(t, "downloaded/job/components/traefik.json", job)
+
+	if err := mergeMeasurements("downloaded", "kept", "main"); err != nil {
+		t.Fatal(err)
 	}
-	first, want := run("releases:\n- name: traefik\n  version: 42.1.3\n")
-	if first != want {
-		t.Errorf("sourceDigest = %q, want %q", first, want)
+	merged := readMeasurement("main/components/traefik.json")
+	if got := get(t, merged, kindEnv("single-node", "amd64", 0, "")); got.Result != resultPassed {
+		t.Errorf("single-node = %+v, want the later passing run over the kept failure", got)
 	}
-	second, want := run("releases:\n- name: traefik\n  version: 42.1.4\n")
-	if second != want || second == first {
-		t.Errorf("sourceDigest = %q after the source changed, want %q", second, want)
+	if got := get(t, merged, k3sEnv("amd64", 0, "")); got.MeasuredAt != day {
+		t.Errorf("k3s = %+v, want the kept result, which no job replaced", got)
 	}
 }

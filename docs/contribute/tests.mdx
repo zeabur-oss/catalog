@@ -3,7 +3,7 @@ title: Tests and CI
 description: Learn when each CI tier runs, what it checks, and how to configure template test inputs.
 ---
 
-`check` runs on every pull request, and `smoke` runs in the merge queue, on the commit about to land. `full` runs weekly. Check that the weekly run passed before tagging a commit. Each tier covers different checks, and later tiers run checks that earlier tiers don't cover. You can also run the same tests as CI with `catalog e2e -tier check|smoke|full`.
+`check` runs on every pull request, and `smoke` runs in the merge queue, on the commit about to land. `full` runs on what is stale, after a push to `main` that changes a component or template and every Saturday. Check that nothing is stale before tagging a commit. Each tier covers different checks, and later tiers run checks that earlier tiers don't cover. You can also run the same tests as CI with `catalog e2e -tier check|smoke|full`.
 
 ## Before you start
 
@@ -94,11 +94,21 @@ A queued pull request tests what differs from the queue's base commit. A pull re
 
 Tests that share dependencies share a cluster. Each dependency is installed only once per cluster. After a component passes its smoke check, the test uninstalls it unless a later test in the same cluster still needs it.
 
-If a change affects `config/kubernetes.yaml`, `smoke` tests everything. If it affects `tools/`, `go.mod`, `go.sum`, the flake, another file in `config/`, or a workflow, `smoke` tests the `smokeRepresentative` list in [`config/e2e.yaml`](../../config/e2e.yaml) instead. The weekly run still tests everything.
+If a change affects `config/kubernetes.yaml`, `smoke` tests everything. If it affects `tools/`, `go.mod`, `go.sum`, the flake, another file in `config/`, or a workflow, `smoke` tests the `smokeRepresentative` list in [`config/e2e.yaml`](../../config/e2e.yaml) instead.
 
 ## `full`: Test resource usage and cleanup
 
-`weekly.yml` calls `e2e.yml` to run `full` every Saturday. Before tagging a release, check that the last `weekly.yml` run on `main` passed on that commit, or on an earlier one when every commit since only updates `measurements/` or is the release pull request (`CHANGELOG.md`, the version in `flake.nix`, `.changeset/`). Otherwise run `weekly.yml` on `main` and tag only once it passed.
+`weekly.yml` calls `e2e.yml` to run `full` on what is stale, and on what installs it. It runs after a push to `main` that changes `components/` or `templates/`, every Saturday, and when you run it by hand. A manual run can test only some IDs instead (`components`).
+
+Each run records its inputs: the `sourceDigest` of the component or template, the `sourceDigest` of each component installed before it (`dependencies`), the release of each add-on that a host profile installs (`addOns`), and the release that [`config/kubernetes.yaml`](../../config/kubernetes.yaml) pins, the kind node's `kubernetesVersion` or the host distribution's `distributionVersion`. A component or template is stale on a profile and architecture when it has no run there, its run there failed, or the inputs of that run differ from the current ones. `catalog list -tier full -stale` prints what a run would test.
+
+The inputs don't cover everything that can change a result. After one of these changes, run `weekly.yml` by hand with the IDs it affects in `components`:
+
+- An image tag or chart version that upstream points to new content.
+- The test itself, in `tools/`.
+- The GitHub runner image.
+
+Before tagging a release, merge the open measurements pull request, then check that `catalog list -tier full -stale` on the commit to tag prints an empty `include`. Otherwise run `weekly.yml` on `main`, merge its pull request and check again.
 
 `full` creates a fresh kind cluster for each component and profile on amd64 and arm64. `single-node` uses one node, and `multi-node` uses three nodes.
 
@@ -163,7 +173,7 @@ Component measurements are stored in `measurements/components/<id>.json`, and te
 
 `full` also checks the total usage of components enabled by default in the `single-node` profile on amd64 against the budget in [`config/budget.yaml`](../../config/budget.yaml).
 
-`weekly.yml` opens a pull request to update `measurements/`. You can also run this workflow manually to get measurements immediately. Renovate opens a pull request for each new upstream version and image digest.
+`weekly.yml` opens or updates one pull request to update `measurements/`. A run keeps the results already in that pull request, then drops each run whose inputs differ from those of the commit it tested, so a result of older files never stays. A run that tests nothing leaves the pull request as it is. One run goes at a time. A newer run replaces a waiting one and loses nothing, because it finds what is stale again. You can also run this workflow manually to get measurements immediately. Renovate opens a pull request for each new upstream version and image digest.
 
 ### Tests on k3s, RKE2 and KubeSolo
 
@@ -177,7 +187,7 @@ The tests then run `full` with the `single-node` settings for every component th
 
 Measurements are stored alongside the kind results, with `profile: single-node`, the distribution in `distribution` and its release in `distributionVersion`, for example `v1.36.5+k3s1`. A failed run sets `result: failed` on its environment instead. When the cluster never answered, the entry has no `kubernetesVersion`.
 
-Each measured environment carries `sourceDigest`, a digest of the component file, or of `template.yaml` and `manifests.yaml` for a template, that the run installed. The API publishes each component's `sourceDigest` next to its measurements. An installer counts a component as [tested on](../reference/installers.mdx#tested-on) a distribution and platform only while a passing run there has the component's current digest. Changing the file, including a release version in it, makes the component untested until a run of the new file passes. A failed run makes the platform untested too, and the next passing run on it makes it tested again.
+Each measured environment carries `sourceDigest`, a digest of the component file, or of `template.yaml` and `manifests.yaml` for a template, that the run installed, and `dependencies`, the `sourceDigest` of each component that the run installed before it. The API publishes each component's `sourceDigest` next to its measurements. An installer counts a component as [tested on](../reference/installers.mdx#tested-on) a distribution and platform only while a passing run there has the component's current digest. Changing the file, including a release version in it, makes the component untested until a run of the new file passes. A failed run makes the platform untested too, and the next passing run on it makes it tested again.
 
 ## Configure template test inputs
 

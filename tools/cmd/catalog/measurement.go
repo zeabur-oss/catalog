@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"encoding/json"
 	"io"
+	"maps"
 	"os"
 	"path/filepath"
 	"slices"
@@ -62,6 +63,10 @@ type Environment struct {
 	// The Go module hash (h1:) of the component file, or of the template directory, that the run
 	// installed.
 	SourceDigest string `json:"sourceDigest,omitempty"`
+	// The sourceDigest of each component that the run installed first, by ID.
+	Dependencies map[string]string `json:"dependencies,omitempty"`
+	// The pinned release of each add-on that the run installed on the host, by name.
+	AddOns map[string]string `json:"addOns,omitempty"`
 	// The day of the run, in UTC.
 	MeasuredAt string `json:"measuredAt" jsonschema:"format=date"`
 }
@@ -72,6 +77,15 @@ type MeasuredVersion struct {
 	Image   string `json:"image,omitempty"`
 	Version string `json:"version,omitempty"`
 	Digest  string `json:"digest,omitempty"`
+}
+
+// sameInputs reports whether e ran with the inputs of want, the result of inputs. A run on a host
+// distribution reports the Kubernetes release of its distributionVersion, which want leaves empty.
+func (e Environment) sameInputs(want Environment) bool {
+	return e.Distribution == want.Distribution && e.Profile == want.Profile && e.Platform == want.Platform &&
+		(want.KubernetesVersion == "" || e.KubernetesVersion == want.KubernetesVersion) &&
+		e.DistributionVersion == want.DistributionVersion && e.SourceDigest == want.SourceDigest &&
+		maps.Equal(e.Dependencies, want.Dependencies) && maps.Equal(e.AddOns, want.AddOns)
 }
 
 // same reports whether e and o are runs in the same environment.
@@ -180,17 +194,15 @@ func releaseVersions(c *catalog.Component) []MeasuredVersion {
 	return out
 }
 
-func writeMeasurement(c *catalog.Component, env Environment, res catalog.Result) error {
-	digest, err := sourceDigest(c.Path)
-	if err != nil {
-		return err
-	}
+// writeMeasurement records the usage of c in env, a run with the source
+// digests of in, the result of inputs.
+func writeMeasurement(c *catalog.Component, env, in Environment, res catalog.Result) error {
 	m := readMeasurement(measurementPath(c.ID))
 	m.Component = c.ID
 	env.Result = resultPassed
 	env.Pods = res.Pods
 	env.Versions = releaseVersions(c)
-	env.SourceDigest = digest
+	env.SourceDigest, env.Dependencies, env.AddOns = in.SourceDigest, in.Dependencies, in.AddOns
 	env.MeasuredAt = today()
 	m.put(env)
 	return writeMeasurementFile(measurementPath(c.ID), m)
@@ -200,14 +212,15 @@ func writeMeasurement(c *catalog.Component, env Environment, res catalog.Result)
 // answered when env is nil. On a host profile it also marks every run of the
 // pinned release on linux/arch, so a failure before the cluster answered
 // counts too. With no such run, it records nothing, because a component with
-// no run already shows as untested.
-func markFailed(cfg config, profile, arch string, c *catalog.Component, env *Environment) error {
+// no run already shows as untested. in holds the source digests of the run.
+func markFailed(cfg config, profile, arch string, c *catalog.Component, env *Environment, in Environment) error {
 	m := readMeasurement(measurementPath(c.ID))
 	m.Component = c.ID
 	failed := func(e Environment) Environment {
 		return Environment{Distribution: e.Distribution, Profile: e.Profile, Platform: e.Platform,
 			KubernetesVersion: e.KubernetesVersion, DistributionVersion: e.DistributionVersion,
-			Result: resultFailed, Versions: releaseVersions(c), MeasuredAt: today()}
+			Result: resultFailed, Versions: releaseVersions(c), SourceDigest: in.SourceDigest,
+			Dependencies: in.Dependencies, AddOns: in.AddOns, MeasuredAt: today()}
 	}
 	if env != nil {
 		m.put(failed(*env))
@@ -224,12 +237,8 @@ func markFailed(cfg config, profile, arch string, c *catalog.Component, env *Env
 }
 
 // writeTemplateMeasurement records the usage of tmpl in env, with the
-// images in its manifest. A template's source is its directory.
-func writeTemplateMeasurement(tmpl *templates.Template, env Environment, pods []catalog.PodUsage, images []string) error {
-	digest, err := sourceDigest(tmpl.Dir)
-	if err != nil {
-		return err
-	}
+// images in its manifest, and the source digests of in.
+func writeTemplateMeasurement(tmpl *templates.Template, env, in Environment, pods []catalog.PodUsage, images []string) error {
 	id := tmpl.ID
 	path := templateMeasurementPath(id)
 	m := readMeasurement(path)
@@ -237,7 +246,7 @@ func writeTemplateMeasurement(tmpl *templates.Template, env Environment, pods []
 	env.Result = resultPassed
 	env.Pods = pods
 	env.Versions = imageVersions(images)
-	env.SourceDigest = digest
+	env.SourceDigest, env.Dependencies, env.AddOns = in.SourceDigest, in.Dependencies, in.AddOns
 	env.MeasuredAt = today()
 	m.put(env)
 	return writeMeasurementFile(path, m)
