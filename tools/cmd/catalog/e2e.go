@@ -22,8 +22,8 @@ func e2e(fs *flag.FlagSet, r *repo) error {
 	if *cluster != "kind" && *cluster != "current" {
 		return fmt.Errorf("unknown -cluster %q; use kind or current", *cluster)
 	}
-	return runTier(r, *tier, tierOptions{profile: *profile, since: *since, write: *write, keep: *keep,
-		current: *cluster == "current"}, fs.Args())
+	return runTier(r, *tier, tierOptions{profile: *profile, why: reason{ids: fs.Args(), since: *since},
+		write: *write, keep: *keep, current: *cluster == "current"})
 }
 
 // newTester reads the test-only settings in config/e2e.yaml.
