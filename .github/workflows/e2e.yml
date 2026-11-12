@@ -1,8 +1,9 @@
 # full: installs each component in a fresh cluster, on amd64 and arm64:
 # dependencies first, idle memory and CPU once they are stable, health and
-# smoke checks, uninstall and residue check. components, or else stale, narrows what
-# runs. profiles picks the profiles of one call; a matrix holds at most 256 jobs, so
-# weekly.yml calls it once for kind and once for the host distributions.
+# smoke checks, uninstall and residue check. It tests components, or what is
+# stale when that is empty (catalog list -stale). profiles picks the profiles of
+# one call; a matrix holds at most 256 jobs, so weekly.yml calls it once for kind
+# and once for the host distributions.
 # - single-node and multi-node run on kind, one node and three. single-node
 #   amd64 also installs every template with the components it requires, runs
 #   its smoke checks, then measures its idle memory and CPU.
@@ -19,13 +20,9 @@ on:
         type: string
         required: true
       components:
-        description: Component or template IDs, separated by commas, empty runs all
+        description: Component or template IDs, separated by commas; empty tests what is stale
         type: string
         required: false
-      stale:
-        description: Without components, only what has no passing run of its current inputs
-        type: boolean
-        default: false
       measure:
         description: Write measurements and check the budget
         type: boolean
@@ -43,13 +40,9 @@ on:
         type: string
         required: true
       components:
-        description: Component or template IDs, separated by commas, empty runs all
+        description: Component or template IDs, separated by commas; empty tests what is stale
         type: string
         required: false
-      stale:
-        description: Without components, only what has no passing run of its current inputs
-        type: boolean
-        default: false
       measure:
         description: Write measurements and check the budget
         type: boolean
@@ -76,10 +69,9 @@ jobs:
         env:
           PROFILES: ${{ inputs.profiles }}
           IDS: ${{ inputs.components }}
-          STALE: ${{ inputs.stale }}
         run: |
-          flags=()
-          if [ -n "$IDS" ]; then flags+=(-ids "$IDS"); elif [ "$STALE" = true ]; then flags+=(-stale); fi
+          flags=(-stale)
+          if [ -n "$IDS" ]; then flags=(-ids "$IDS"); fi
           echo "matrix=$(go run ./tools/cmd/catalog list -tier full -profiles "$PROFILES" "${flags[@]}")" >> "$GITHUB_OUTPUT"
 
   e2e:

@@ -33,14 +33,12 @@ jobs:
     with:
       profiles: single-node,multi-node
       components: ${{ inputs.components }}
-      stale: true
 
   e2e-hosts:
     uses: ./.github/workflows/e2e.yml
     with:
       profiles: k3s,rke2,kubesolo
       components: ${{ inputs.components }}
-      stale: true
 
   pull-request:
     needs: [e2e-kind, e2e-hosts]
