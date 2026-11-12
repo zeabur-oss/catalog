@@ -3,32 +3,33 @@
 versions: ["1.34.0", "1.35.0", "1.36.0", "1.37.0"]
 
 # smoke and full clusters are kind: one node for single-node, three for multi-node.
-# Keep the minor equal to the RKE2 release that the Zeabur installer pins
-# (crates/zeabur-installer-plan/src/pins.rs); kube-apiserver in flake.nix, which
-# the check tier runs, follows the same release. Distributions differ little for these
+# Keep the minor equal to the RKE2 release below; kube-apiserver in flake.nix,
+# which the check tier runs, follows that release. The Zeabur installer's pins
+# (crates/zeabur-installer-plan/src/pins.rs in zeabur) follow these before a
+# release. Distributions differ little for these
 # components; see docs/reference/distributions.mdx.
 e2e:
-  version: v1.36.4 # renovate: docker kindest/node
+  version: v1.37.0 # renovate: docker kindest/node
 
 # The k3s, rke2 and kubesolo profiles install that distribution on the runner
 # and test every component that single-node supports and whose distributions
 # allow it, with the single-node values. Templates run on kind only. The API
 # publishes these pinned versions with the measurements, so a reader can tell
 # which distributions a component passed on. sha256 is the checksum of each release asset; change it
-# with the version. k3s and RKE2 keep the release that the Zeabur installer
-# pins (crates/zeabur-installer-plan/src/pins.rs).
+# with the version. The Zeabur installer pins the same k3s and RKE2 releases
+# before a release.
 k3s:
-  version: v1.36.5+k3s1 # renovate: github-releases k3s-io/k3s
+  version: v1.37.2+k3s1 # renovate: github-releases k3s-io/k3s
   sha256:
-    amd64: d73847bcd3c5fccef0115b372e2f9a91f3032dc84bbf71518a4617565294d313 # k3s
-    arm64: 135e34cb9e8a1cfae3cb55577789e93501efe7edc080a8b2630458a85b07721e # k3s-arm64
-  installScript: 46177d4c99440b4c0311b67233823a8e8a2fc09693f6c89af1a7161e152fbfad # install.sh at the tag
+    amd64: 265b3ee6a3198ef14033c63ef46cbb32370d83795199fb6d1b01f21575eddbda # k3s
+    arm64: a779ccf1e5e2e33a62f5a29c2f1c0bbf99431e100579d4c10f0aa0742a6aa84b # k3s-arm64
+  installScript: ed01f89fd977bf20ac1516bbebf8370bf3ddbaa55dac8aba610956a4c78cc00b # install.sh at the tag
 
 rke2:
-  version: v1.36.5+rke2r1 # renovate: github-releases rancher/rke2
+  version: v1.37.2+rke2r1 # renovate: github-releases rancher/rke2
   sha256:
-    amd64: 4fdbe8a8a32517fbcb6e80c71ca393b96828fbb87685102d9058b51527f9278d # rke2.linux-amd64.tar.gz
-    arm64: 244454bed11d9525452e10a2e5055da5d5fc6b61928ca3fae778bc4254ce467f # rke2.linux-arm64.tar.gz
+    amd64: 0568f48d772c7feff7056062225d5ba82fb3f73ea7acaea63862fe601dae6d92 # rke2.linux-amd64.tar.gz
+    arm64: 849bf989b079e330f73d142259b1be4d2fd487927431555e7544cf1687627822 # rke2.linux-arm64.tar.gz
   # RKE2 ships no storage class. The Zeabur installer adds this one.
   localPath:
     version: v0.0.37 # renovate: github-releases rancher/local-path-provisioner

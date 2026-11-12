@@ -79,8 +79,9 @@ func (s *apiServer) start() error {
 		return err
 	}
 	certs := filepath.Join(s.dir, "certs")
+	// Since 1.37 the endpoint reconciler refuses a loopback advertise address.
 	if err := s.run("kube-apiserver", "--etcd-servers", etcd,
-		"--bind-address", "127.0.0.1", "--advertise-address", "127.0.0.1",
+		"--bind-address", "127.0.0.1", "--advertise-address", "127.0.0.1", "--endpoint-reconciler-type", "none",
 		"--secure-port", fmt.Sprint(ports[2]), "--cert-dir", certs,
 		"--token-auth-file", filepath.Join(s.dir, "tokens.csv"), "--authorization-mode", "RBAC",
 		"--service-account-issuer", "https://kubernetes.default.svc",
