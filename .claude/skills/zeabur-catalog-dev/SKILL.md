@@ -28,10 +28,10 @@ needs no Docker. `smoke` and `full` create their own kind clusters, where and ho
 ```sh
 nix develop -c go run ./tools/cmd/catalog e2e -tier check            # every pull request
 nix develop -c go run ./tools/cmd/catalog e2e -tier smoke <ids>      # merge queue: install, smoke
-nix develop -c go run ./tools/cmd/catalog e2e -tier full <id>        # weekly
+nix develop -c go run ./tools/cmd/catalog e2e -tier full <id>        # after a push to main; without IDs, what is stale
 ```
 Without IDs, smoke tests everything. With `-since <commit>` it picks from the files changed between
-that commit and `HEAD`, as the merge queue does (`tools/cmd/catalog/smokescope.go`; uncommitted
+that commit and `HEAD`, as the merge queue does (`tools/cmd/catalog/selection.go`; uncommitted
 edits do not count): a changed component or template, with what installs it; a change under
 `tools/`, `go.*`, `flake.*`, `config/` or `.github/workflows/`, the `smokeRepresentative` list in
 `config/e2e.yaml`; a change to `config/kubernetes.yaml`, everything.

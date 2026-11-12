@@ -10,11 +10,10 @@ import (
 	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
 
-// reason is why a run tests what it tests. The zero reason tests everything.
+// reason is what a run was asked to test.
 type reason struct {
 	ids   []string // only these
 	since string   // smoke: what changed since this git commit
-	stale bool     // full: what has no passing run of its current inputs
 }
 
 // pick is what a run tests.
@@ -36,23 +35,15 @@ func (p pick) has(id string, order []*catalog.Component) bool {
 	return false
 }
 
-// choose returns what a run of tier on profile and arch tests for why.
+// choose returns what a run of tier on profile and arch tests for why. Named
+// IDs are tested alone. Otherwise smoke tests what changed since why.since, or
+// everything without it, and full tests what is stale.
 func choose(r *repo, tier string, why reason, profile, arch string) (pick, error) {
-	reasons := 0
-	for _, set := range []bool{len(why.ids) > 0, why.since != "", why.stale} {
-		if set {
-			reasons++
-		}
-	}
 	switch {
-	case reasons > 1:
-		return pick{}, errors.New("name IDs, or use -since or -stale, only one of them")
+	case len(why.ids) > 0 && why.since != "":
+		return pick{}, errors.New("name IDs or use -since, not both")
 	case why.since != "" && tier != "smoke":
 		return pick{}, errors.New("-since is for the smoke tier")
-	case why.stale && tier != "full":
-		return pick{}, errors.New("-stale is for the full tier")
-	case why.stale:
-		return stalePick(r, profile, arch)
 	case len(why.ids) > 0:
 		p := pick{exact: map[string]bool{}}
 		for _, id := range why.ids {
@@ -62,6 +53,8 @@ func choose(r *repo, tier string, why reason, profile, arch string) (pick, error
 			p.exact[id] = true
 		}
 		return p, nil
+	case tier == "full":
+		return stalePick(r, profile, arch)
 	}
 	if why.since == "" || strings.Trim(why.since, "0") == "" {
 		return pick{all: true}, nil
@@ -73,7 +66,7 @@ func choose(r *repo, tier string, why reason, profile, arch string) (pick, error
 	return filesPick(r, strings.Fields(out))
 }
 
-// stalePick is what a full run on profile and arch tests with -stale: each
+// stalePick is what a full run on profile and arch tests without IDs: each
 // component and template whose inputs there have no passing run, and what
 // installs it. A component in the unready list of config/e2e.yaml is never
 // measured, so it is not stale on its own.

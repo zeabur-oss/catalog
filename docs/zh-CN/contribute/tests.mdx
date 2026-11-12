@@ -100,7 +100,7 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 
 `weekly.yml` 会调用 `e2e.yml`，对过期的项目和会安装它的项目运行 `full`。`main` 收到变更 `components/` 或 `templates/` 的 push 后、每周六，以及手动运行时都会跑。手动运行时也可以改为只测指定的 ID（`components`）。
 
-每次运行都会记下它的输入：组件或模板的 `sourceDigest`、先安装的每个组件的 `sourceDigest`（`dependencies`），以及 [`config/kubernetes.yaml`](../../../config/kubernetes.yaml) 固定的版本，也就是 kind 节点的 `kubernetesVersion` 或主机发行版的 `distributionVersion`。组件或模板在某个 profile 和架构上，如果还没测过、上次测试失败，或那次运行的输入和现在不同，就算过期。`catalog list -tier full -stale` 会列出运行时要测的项目。
+每次运行都会记下它的输入：组件或模板的 `sourceDigest`、先安装的每个组件的 `sourceDigest`（`dependencies`），以及 [`config/kubernetes.yaml`](../../../config/kubernetes.yaml) 固定的版本，也就是 kind 节点的 `kubernetesVersion` 或主机发行版的 `distributionVersion`。组件或模板在某个 profile 和架构上，如果还没测过、上次测试失败，或那次运行的输入和现在不同，就算过期。`catalog list -tier full` 会列出运行时要测的项目，不带 ID 的 `catalog e2e -tier full` 则会测这些项目。
 
 输入无法覆盖所有会影响结果的变更。遇到下面这些情况，要手动运行 `weekly.yml`，并在 `components` 中填入受影响的 ID：
 
@@ -108,7 +108,7 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 - `tools/` 中的测试本身有变。
 - GitHub runner 镜像更新。
 
-打发布 tag 前，先合并打开着的测量 pull request，再确认对要打 tag 的 commit 运行 `catalog list -tier full -stale` 时，`include` 为空。不为空的话，就在 `main` 上运行 `weekly.yml`，合并它创建的 pull request，再确认一次。
+打发布 tag 前，先合并打开着的测量 pull request，再确认对要打 tag 的 commit 运行 `catalog list -tier full` 时，`include` 为空。不为空的话，就在 `main` 上运行 `weekly.yml`，合并它创建的 pull request，再确认一次。
 
 `full` 会在 amd64 和 arm64 上，为每个组件、每种 profile 创建新的 kind 集群。`single-node` 使用单节点，`multi-node` 使用三节点。
 
@@ -173,7 +173,7 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 
 `full` 也会检查 amd64 上 `single-node` profile 的默认启用组件总用量，确认符合 [`config/budget.yaml`](../../../config/budget.yaml) 的预算。
 
-`weekly.yml` 会创建或更新同一个 pull request，更新 `measurements/`。每次运行都会保留这个 pull request 里已有的结果，再去掉输入与这次测试的 commit 不同的记录，所以旧文件的结果不会留下来。没测任何项目时则不会改动它。同一时间只会有一个运行。新的运行会取代还在排队的运行，但不会漏掉什么，因为它会重新找出过期的项目。你也可以手动运行这个工作流，立即获取测量结果。Renovate 则会针对每个新的上游版本和镜像 digest 创建 pull request。
+`weekly.yml` 会创建或更新同一个 pull request，更新 `measurements/`。每次运行都会保留这个 pull request 里已有的结果，再去掉输入与这次测试的 commit 不同的记录，所以旧文件的结果不会留下来。没测任何项目时则不会改动它。同一时间只会有一个运行。新的运行会取代还在排队的运行，但不会漏掉什么，因为它会重新找出过期的项目。Renovate 则会针对每个新的上游版本和镜像 digest 创建 pull request。
 
 ### 在 k3s、RKE2 和 KubeSolo 上测试
 
@@ -191,7 +191,7 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 
 ## 配置模板测试输入
 
-模板测试从 [`config/e2e.yaml`](../../../config/e2e.yaml) 获取输入值，不需要仓库 secrets，因此 pull request 也会完整运行模板测试。
+模板测试从 [`config/e2e.yaml`](../../../config/e2e.yaml) 获取输入值，不需要仓库 secrets。
 
 <Steps>
 

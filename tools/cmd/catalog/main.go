@@ -2,8 +2,8 @@
 //
 //	catalog validate                    schema, licenses, references, value comments
 //	catalog render [ids]                helm template every profile and Kubernetes version, then kubeconform
-//	catalog list -tier smoke|full [-ids <ids>|-since <ref>|-stale]  e2e CI matrix as JSON
-//	catalog e2e -tier check|smoke|full [-cluster current] [-since <ref>|-stale|ids]  run a test tier (see tier.go)
+//	catalog list -tier smoke|full [-ids <ids>|-since <ref>]  e2e CI matrix as JSON; full without IDs lists what is stale
+//	catalog e2e -tier check|smoke|full [-cluster current] [-since <ref>|ids]  run a test tier (see tier.go)
 //	catalog budget                      single-node memory budget
 //	catalog api -version <v> [-out out/api]  write the static API: catalog.json, components/<id>.json, schema/
 //	catalog schema                      write schema/v1/ from the Go types
@@ -81,21 +81,24 @@ func main() {
 
 func validate(fs *flag.FlagSet, r *repo) error {
 	fs.Parse(os.Args[2:])
-	_, repErr := representative(r)
-	if err := errors.Join(catalog.Check(".", r.cat), templates.Check(".", r.cat, r.templates), repErr); err != nil {
+	if err := check(r); err != nil {
 		return err
 	}
 	fmt.Println("ok")
 	return nil
 }
 
+// check checks the components, the templates and config/e2e.yaml's representative list.
+func check(r *repo) error {
+	_, repErr := representative(r)
+	return errors.Join(catalog.Check(".", r.cat), templates.Check(".", r.cat, r.templates), repErr)
+}
+
 // list prints the e2e CI matrix of a tier. For smoke: one job per group, with
-// the IDs it tests. For full: every profile × architecture × component it
-// supports, and every template on single-node amd64. Both carry the kind node
-// version.
+// the IDs it tests. For full: each profile × architecture × component it
+// supports, and each template on single-node amd64, that is stale or named.
 func list(fs *flag.FlagSet, r *repo) error {
 	since := fs.String("since", "", "smoke: only what changed since this git commit")
-	stale := fs.Bool("stale", false, "full: only what has no passing run of its current inputs")
 	tier := fs.String("tier", "full", "smoke or full")
 	only := fs.String("profiles", "", "full: only these profiles, separated by commas")
 	idList := fs.String("ids", "", "only these component or template IDs, separated by commas")
@@ -109,11 +112,7 @@ func list(fs *flag.FlagSet, r *repo) error {
 			}
 		}
 	}
-	cfg, err := loadConfig()
-	if err != nil {
-		return err
-	}
-	why := reason{ids: splitIDs(*idList), since: *since, stale: *stale}
+	why := reason{ids: splitIDs(*idList), since: *since}
 	type job struct {
 		Profile   string `json:"profile,omitempty"`
 		Arch      string `json:"arch,omitempty"`
@@ -159,9 +158,7 @@ func list(fs *flag.FlagSet, r *repo) error {
 	default:
 		return fmt.Errorf("unknown -tier %q; use smoke or full", *tier)
 	}
-	return json.NewEncoder(os.Stdout).Encode(map[string]any{
-		"include": jobs, "version": cfg.E2E.Version,
-	})
+	return json.NewEncoder(os.Stdout).Encode(map[string]any{"include": jobs})
 }
 
 func recommended(cat *catalog.Catalog, profile string) []string {
