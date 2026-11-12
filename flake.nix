@@ -89,6 +89,7 @@
             kind
             kube-apiserver
             etcd
+            victoriametrics
             yq-go
           ];
         };
