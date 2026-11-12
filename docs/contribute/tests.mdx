@@ -100,7 +100,7 @@ If a change affects `config/kubernetes.yaml`, `smoke` tests everything. If it af
 
 `weekly.yml` calls `e2e.yml` to run `full` on what is stale, and on what installs it. It runs after a push to `main` that changes `components/` or `templates/`, every Saturday, and when you run it by hand. A manual run can test only some IDs instead (`components`).
 
-Each run records its inputs: the `sourceDigest` of the component or template, the `sourceDigest` of each component installed before it (`dependencies`), and the release that [`config/kubernetes.yaml`](../../config/kubernetes.yaml) pins, the kind node's `kubernetesVersion` or the host distribution's `distributionVersion`. A component or template is stale on a profile and architecture when it has no run there, its run there failed, or the inputs of that run differ from the current ones. `catalog list -tier full` prints what a run would test, and `catalog e2e -tier full` without IDs tests it.
+Each run records its inputs: the `sourceDigest` of the component or template, the `sourceDigest` of each component installed before it (`dependencies`), the release of each add-on that a host profile installs (`addOns`), and the release that [`config/kubernetes.yaml`](../../config/kubernetes.yaml) pins, the kind node's `kubernetesVersion` or the host distribution's `distributionVersion`. A component or template is stale on a profile and architecture when it has no run there, its run there failed, or the inputs of that run differ from the current ones. `catalog list -tier full` prints what a run would test, and `catalog e2e -tier full` without IDs tests it.
 
 The inputs don't cover everything that can change a result. After one of these changes, run `weekly.yml` by hand with the IDs it affects in `components`:
 

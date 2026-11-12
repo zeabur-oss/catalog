@@ -113,8 +113,9 @@ func stalePick(r *repo, profile, arch string) (pick, error) {
 
 // inputs returns what the repository decides about a run of id on profile
 // and linux/arch: the source digest of id and of each component installed
-// before it, and the release that config/kubernetes.yaml pins, the
-// Kubernetes release of kind or the release of a host distribution.
+// before it, and the releases that config/kubernetes.yaml pins, the
+// Kubernetes release of kind, or the release of a host distribution and of
+// its add-ons.
 func inputs(r *repo, cfg config, id, profile, arch string) (Environment, error) {
 	values, src := profile, ""
 	if slices.Contains(hostProfiles, profile) {
@@ -134,6 +135,7 @@ func inputs(r *repo, cfg config, id, profile, arch string) (Environment, error) 
 		return Environment{}, err
 	}
 	e := hostEnvironment(cfg, profile, arch)
+	e.AddOns = cfg.pinnedAddOns(profile)
 	if e.Distribution == kindDistribution {
 		e.KubernetesVersion = cfg.E2E.Version
 	}

@@ -65,6 +65,8 @@ type Environment struct {
 	SourceDigest string `json:"sourceDigest,omitempty"`
 	// The sourceDigest of each component that the run installed first, by ID.
 	Dependencies map[string]string `json:"dependencies,omitempty"`
+	// The pinned release of each add-on that the run installed on the host, by name.
+	AddOns map[string]string `json:"addOns,omitempty"`
 	// The day of the run, in UTC.
 	MeasuredAt string `json:"measuredAt" jsonschema:"format=date"`
 }
@@ -83,7 +85,7 @@ func (e Environment) sameInputs(want Environment) bool {
 	return e.Distribution == want.Distribution && e.Profile == want.Profile && e.Platform == want.Platform &&
 		(want.KubernetesVersion == "" || e.KubernetesVersion == want.KubernetesVersion) &&
 		e.DistributionVersion == want.DistributionVersion && e.SourceDigest == want.SourceDigest &&
-		maps.Equal(e.Dependencies, want.Dependencies)
+		maps.Equal(e.Dependencies, want.Dependencies) && maps.Equal(e.AddOns, want.AddOns)
 }
 
 // same reports whether e and o are runs in the same environment.
@@ -200,7 +202,7 @@ func writeMeasurement(c *catalog.Component, env, in Environment, res catalog.Res
 	env.Result = resultPassed
 	env.Pods = res.Pods
 	env.Versions = releaseVersions(c)
-	env.SourceDigest, env.Dependencies = in.SourceDigest, in.Dependencies
+	env.SourceDigest, env.Dependencies, env.AddOns = in.SourceDigest, in.Dependencies, in.AddOns
 	env.MeasuredAt = today()
 	m.put(env)
 	return writeMeasurementFile(measurementPath(c.ID), m)
@@ -218,7 +220,7 @@ func markFailed(cfg config, profile, arch string, c *catalog.Component, env *Env
 		return Environment{Distribution: e.Distribution, Profile: e.Profile, Platform: e.Platform,
 			KubernetesVersion: e.KubernetesVersion, DistributionVersion: e.DistributionVersion,
 			Result: resultFailed, Versions: releaseVersions(c), SourceDigest: in.SourceDigest,
-			Dependencies: in.Dependencies, MeasuredAt: today()}
+			Dependencies: in.Dependencies, AddOns: in.AddOns, MeasuredAt: today()}
 	}
 	if env != nil {
 		m.put(failed(*env))
@@ -244,7 +246,7 @@ func writeTemplateMeasurement(tmpl *templates.Template, env, in Environment, pod
 	env.Result = resultPassed
 	env.Pods = pods
 	env.Versions = imageVersions(images)
-	env.SourceDigest, env.Dependencies = in.SourceDigest, in.Dependencies
+	env.SourceDigest, env.Dependencies, env.AddOns = in.SourceDigest, in.Dependencies, in.AddOns
 	env.MeasuredAt = today()
 	m.put(env)
 	return writeMeasurementFile(path, m)

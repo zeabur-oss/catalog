@@ -366,6 +366,46 @@ func TestPinnedReleaseChangeIsStale(t *testing.T) {
 	}
 }
 
+func TestPinnedAddOnChangeIsStale(t *testing.T) {
+	hostTested := []string{"local-storage", "metrics-server", "traefik"}
+	pinAddOns := func(t *testing.T, localPath, helmController string) {
+		t.Helper()
+		data := "e2e:\n  version: v1.36.4\nrke2:\n  version: v1.36.5+rke2r1\n  localPath:\n    version: " + localPath +
+			"\nkubesolo:\n  version: v1.2.3\n  helmController:\n    version: " + helmController + "\n"
+		if err := os.WriteFile(filepath.Join("config", "kubernetes.yaml"), []byte(data), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, c := range []struct {
+		name, localPath, helmController string
+		rke2Stale, kubesoloStale        []string
+	}{
+		{"same", "v0.0.31", "v0.3.0", nil, nil},
+		{"local-path-provisioner", "v0.0.32", "v0.3.0", hostTested, nil},
+		{"helm-controller", "v0.0.31", "v0.3.1", nil, hostTested},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			r := staleRepo(t)
+			for _, comp := range r.cat.Components {
+				comp.Distributions = []string{"rke2", kubesoloProfile}
+			}
+			pinAddOns(t, "v0.0.31", "v0.3.0")
+			recordAll(t, r)
+			for _, id := range hostTested {
+				record(t, r, id, "rke2", "amd64", nil)
+				record(t, r, id, kubesoloProfile, "amd64", nil)
+			}
+			pinAddOns(t, c.localPath, c.helmController)
+			if got := staleOn(t, r, "rke2", "amd64"); !slices.Equal(got, c.rke2Stale) {
+				t.Errorf("stale on rke2 %v, want %v", got, c.rke2Stale)
+			}
+			if got := staleOn(t, r, kubesoloProfile, "amd64"); !slices.Equal(got, c.kubesoloStale) {
+				t.Errorf("stale on kubesolo %v, want %v", got, c.kubesoloStale)
+			}
+		})
+	}
+}
+
 func TestMergeDropsRunsOfOtherInputs(t *testing.T) {
 	r := staleRepo(t)
 	recordAll(t, r)
