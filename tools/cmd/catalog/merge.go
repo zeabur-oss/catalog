@@ -13,11 +13,61 @@ import (
 
 // merge merges the measurements that CI jobs uploaded into measurements/.
 func merge(fs *flag.FlagSet, _ *repo) error {
+	keep := fs.String("keep", "", "measurements of an earlier run to keep where no job measured, in the layout of measurements/")
 	fs.Parse(os.Args[2:])
 	if fs.NArg() != 1 {
-		return errors.New("usage: catalog merge <dir>")
+		return errors.New("usage: catalog merge [-keep <dir>] <dir>")
 	}
-	return mergeMeasurements(fs.Arg(0), "measurements")
+	return mergeWithKept(fs.Arg(0), *keep, "measurements")
+}
+
+// mergeWithKept is mergeMeasurements, then each environment in keep that
+// differs from dst before the merge and that no job measured.
+func mergeWithKept(src, keep, dst string) error {
+	if keep == "" {
+		return mergeMeasurements(src, dst)
+	}
+	kept := map[string]measurement{}
+	before := map[string]measurement{}
+	err := filepath.WalkDir(keep, func(path string, d os.DirEntry, err error) error {
+		if err != nil || d.IsDir() || filepath.Ext(path) != ".json" {
+			return err
+		}
+		rel, err := filepath.Rel(keep, path)
+		if err != nil {
+			return err
+		}
+		kept[rel] = readMeasurement(path)
+		before[rel] = readMeasurement(filepath.Join(dst, rel))
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	if err := mergeMeasurements(src, dst); err != nil {
+		return err
+	}
+	for rel, k := range kept {
+		target := filepath.Join(dst, rel)
+		out := readMeasurement(target)
+		out.Component = cmp.Or(out.Component, k.Component)
+		out.Template = cmp.Or(out.Template, k.Template)
+		prior := before[rel]
+		for _, env := range k.Environments {
+			was, wasOK := prior.find(env)
+			if wasOK && reflect.DeepEqual(env, was) {
+				continue
+			}
+			cur, curOK := out.find(env)
+			if !curOK || (wasOK && reflect.DeepEqual(cur, was)) {
+				out.put(env)
+			}
+		}
+		if err := writeMeasurementFile(target, out); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // supersedes reports whether old, an environment already merged, wins over
