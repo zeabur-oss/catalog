@@ -77,15 +77,14 @@ jobs:
         with:
           pattern: measurements-*
           path: downloaded/
-      # The open pull request's results merge first, so a run that tests less keeps them.
-      - name: Keep the open pull request's measurements
-        run: |
-          mkdir -p downloaded/0-open-pull-request
-          if git fetch --depth=1 origin ci/measurements; then
-            git archive FETCH_HEAD measurements | tar -x --strip-components=1 -C downloaded/0-open-pull-request
-          fi
+      # A run that tests less keeps the open pull request's results where no job measured.
       - name: Merge measurements from every job
-        run: go run ./tools/cmd/catalog merge downloaded
+        run: |
+          mkdir -p downloaded kept
+          if git fetch --depth=1 origin ci/measurements; then
+            git archive FETCH_HEAD measurements | tar -x --strip-components=1 -C kept
+          fi
+          go run ./tools/cmd/catalog merge -keep kept downloaded
       - uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ steps.token.outputs.token }}

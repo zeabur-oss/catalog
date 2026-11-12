@@ -359,3 +359,35 @@ func TestRunRecordsTheDigestOfTheSourceItInstalled(t *testing.T) {
 		t.Errorf("sourceDigest = %q after the source changed, want %q", second, want)
 	}
 }
+
+func TestKeptResultsFillWhatNoJobMeasured(t *testing.T) {
+	t.Chdir(t.TempDir())
+	day := "2026-11-07"
+	main := measurement{Component: "traefik", Environments: []Environment{
+		kindEnv("single-node", "amd64", 22, "2026-10-31"), k3sEnv("amd64", 22, "2026-10-31"),
+	}}
+	// The open pull request holds Saturday's results: a failure on single-node
+	// and a new k3s measurement.
+	kept := measurement{Component: "traefik", Environments: slices.Clone(main.Environments)}
+	failed := kindEnv("single-node", "amd64", 0, day)
+	failed.Result = resultFailed
+	kept.put(failed)
+	kept.put(k3sEnv("amd64", 30, day))
+	// A run later that day passes on single-node only.
+	job := measurement{Component: "traefik", Environments: slices.Clone(main.Environments)}
+	job.put(kindEnv("single-node", "amd64", 25, day))
+	writeFile(t, "main/components/traefik.json", main)
+	writeFile(t, "kept/components/traefik.json", kept)
+	writeFile(t, "downloaded/job/components/traefik.json", job)
+
+	if err := mergeWithKept("downloaded", "kept", "main"); err != nil {
+		t.Fatal(err)
+	}
+	merged := readMeasurement("main/components/traefik.json")
+	if got := get(t, merged, kindEnv("single-node", "amd64", 0, "")); got.Result != resultPassed {
+		t.Errorf("single-node = %+v, want the later passing run over the kept failure", got)
+	}
+	if got := get(t, merged, k3sEnv("amd64", 0, "")); got.MeasuredAt != day {
+		t.Errorf("k3s = %+v, want the kept result, which no job replaced", got)
+	}
+}
