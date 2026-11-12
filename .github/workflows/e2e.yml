@@ -1,9 +1,9 @@
 # full: installs each component in a fresh cluster, on amd64 and arm64:
 # dependencies first, idle memory and CPU once they are stable, health and
 # smoke checks, uninstall and residue check. It tests components, or what is
-# stale when that is empty (catalog list -stale). profiles picks the profiles of
-# one call; a matrix holds at most 256 jobs, so weekly.yml calls it once for kind
-# and once for the host distributions.
+# stale when that is empty (catalog list -tier full). profiles picks the
+# profiles of one call; a matrix holds at most 256 jobs, so weekly.yml calls it
+# once for kind and once for the host distributions.
 # - single-node and multi-node run on kind, one node and three. single-node
 #   amd64 also installs every template with the components it requires, runs
 #   its smoke checks, then measures its idle memory and CPU.
@@ -23,30 +23,10 @@ on:
         description: Component or template IDs, separated by commas; empty tests what is stale
         type: string
         required: false
-      measure:
-        description: Write measurements and check the budget
-        type: boolean
-        default: true
     outputs:
       ran:
         description: Whether the matrix had a job
         value: ${{ jobs.matrix.outputs.ran }}
-  # A manual run, such as one distribution and a few components. Only
-  # weekly.yml opens the measurements pull request.
-  workflow_dispatch:
-    inputs:
-      profiles:
-        description: Full tier profiles, separated by commas
-        type: string
-        required: true
-      components:
-        description: Component or template IDs, separated by commas; empty tests what is stale
-        type: string
-        required: false
-      measure:
-        description: Write measurements and check the budget
-        type: boolean
-        default: true
 
 permissions:
   contents: read
@@ -69,10 +49,7 @@ jobs:
         env:
           PROFILES: ${{ inputs.profiles }}
           IDS: ${{ inputs.components }}
-        run: |
-          flags=(-stale)
-          if [ -n "$IDS" ]; then flags=(-ids "$IDS"); fi
-          echo "matrix=$(go run ./tools/cmd/catalog list -tier full -profiles "$PROFILES" "${flags[@]}")" >> "$GITHUB_OUTPUT"
+        run: echo "matrix=$(go run ./tools/cmd/catalog list -tier full -profiles "$PROFILES" -ids "$IDS")" >> "$GITHUB_OUTPUT"
 
   e2e:
     needs: matrix
@@ -116,23 +93,19 @@ jobs:
         env:
           PROFILE: ${{ matrix.profile }}
           ID: ${{ matrix.component || matrix.template }}
-          MEASURE: ${{ inputs.measure }}
-        run: |
-          flags=()
-          [ "$MEASURE" = true ] && flags+=(-write)
-          nix develop -c go run ./tools/cmd/catalog e2e -tier full -profile "$PROFILE" "${flags[@]}" "$ID"
+        run: nix develop -c go run ./tools/cmd/catalog e2e -tier full -profile "$PROFILE" -write "$ID"
       - name: Keep only this job's measurement
-        if: always() && inputs.measure
+        if: always()
         env:
           FILE: measurements/${{ matrix.component && format('components/{0}', matrix.component) || format('templates/{0}', matrix.template) }}.json
         run: mkdir -p measurements && find measurements -type f ! -path "$FILE" -delete
       - id: name
-        if: always() && inputs.measure
+        if: always()
         env:
           NAME: ${{ matrix.profile }}-${{ matrix.arch }}-${{ matrix.component || format('template-{0}', matrix.template) }}
         run: echo "name=${NAME//\//-}" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: always() && inputs.measure
+        if: always()
         with:
           name: measurements-${{ steps.name.outputs.name }}
           path: measurements/
@@ -140,7 +113,7 @@ jobs:
 
   budget:
     needs: e2e
-    if: inputs.measure && contains(inputs.profiles, 'single-node')
+    if: contains(inputs.profiles, 'single-node')
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

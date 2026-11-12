@@ -140,9 +140,6 @@ func TestFullTierHasNoSince(t *testing.T) {
 	if _, err := choose(r, "full", reason{since: "HEAD"}, templateProfile, "amd64"); err == nil {
 		t.Error("the full tier accepts -since")
 	}
-	if _, err := choose(r, "smoke", reason{stale: true}, templateProfile, "amd64"); err == nil {
-		t.Error("the smoke tier accepts -stale")
-	}
 }
 
 func TestIDsSelectOnlyThem(t *testing.T) {
@@ -156,16 +153,14 @@ func TestIDsSelectOnlyThem(t *testing.T) {
 	}
 }
 
-func TestNoReasonSelectsEverything(t *testing.T) {
+func TestSmokeWithoutReasonSelectsEverything(t *testing.T) {
 	r := scopeRepo(t)
-	for _, tier := range []string{"smoke", "full"} {
-		p, err := choose(r, tier, reason{}, templateProfile, "amd64")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if got := selected(t, r, p); !slices.Equal(got, everything) {
-			t.Errorf("%s selects %v, want everything", tier, got)
-		}
+	p, err := choose(r, "smoke", reason{}, templateProfile, "amd64")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := selected(t, r, p); !slices.Equal(got, everything) {
+		t.Errorf("smoke selects %v, want everything", got)
 	}
 }
 
@@ -180,9 +175,6 @@ func TestOneReasonAtATime(t *testing.T) {
 	r := scopeRepo(t)
 	if _, err := choose(r, "smoke", reason{ids: []string{"traefik"}, since: "HEAD"}, templateProfile, "amd64"); err == nil {
 		t.Error("IDs and -since together are accepted")
-	}
-	if _, err := choose(r, "full", reason{ids: []string{"traefik"}, stale: true}, templateProfile, "amd64"); err == nil {
-		t.Error("IDs and -stale together are accepted")
 	}
 }
 
@@ -273,7 +265,7 @@ func pin(t *testing.T, kind, k3s string) {
 
 func staleOn(t *testing.T, r *repo, profile, arch string) []string {
 	t.Helper()
-	p, err := choose(r, "full", reason{stale: true}, profile, arch)
+	p, err := choose(r, "full", reason{}, profile, arch)
 	if err != nil {
 		t.Fatal(err)
 	}

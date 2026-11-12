@@ -100,15 +100,15 @@ If a change affects `config/kubernetes.yaml`, `smoke` tests everything. If it af
 
 `weekly.yml` calls `e2e.yml` to run `full` on what is stale, and on what installs it. It runs after a push to `main` that changes `components/` or `templates/`, every Saturday, and when you run it by hand. A manual run can test only some IDs instead (`components`).
 
-Each run records its inputs: the `sourceDigest` of the component or template, the `sourceDigest` of each component installed before it (`dependencies`), the release of each add-on that a host profile installs (`addOns`), and the release that [`config/kubernetes.yaml`](../../config/kubernetes.yaml) pins, the kind node's `kubernetesVersion` or the host distribution's `distributionVersion`. A component or template is stale on a profile and architecture when it has no run there, its run there failed, or the inputs of that run differ from the current ones. `catalog list -tier full -stale` prints what a run would test.
+Each run records its inputs: the `sourceDigest` of the component or template, the `sourceDigest` of each component installed before it (`dependencies`), the release of each add-on that a host profile installs (`addOns`), and the release that [`config/kubernetes.yaml`](../../config/kubernetes.yaml) pins, the kind node's `kubernetesVersion` or the host distribution's `distributionVersion`. A component or template is stale on a profile and architecture when it has no run there, its run there failed, or the inputs of that run differ from the current ones. `catalog list -tier full` prints what a run would test, and `catalog e2e -tier full` without IDs tests it.
 
 The inputs don't cover everything that can change a result. After one of these changes, run `weekly.yml` by hand with the IDs it affects in `components`:
 
 - An image tag or chart version that upstream points to new content.
-- The test itself, in `tools/`.
+- The test itself, in `tools/`, or its settings in `config/e2e.yaml`.
 - The GitHub runner image.
 
-Before tagging a release, merge the open measurements pull request, then check that `catalog list -tier full -stale` on the commit to tag prints an empty `include`. Otherwise run `weekly.yml` on `main`, merge its pull request and check again.
+Before tagging a release, merge the open measurements pull request, then check that `catalog list -tier full` on the commit to tag prints an empty `include`. Otherwise run `weekly.yml` on `main`, merge its pull request and check again.
 
 `full` creates a fresh kind cluster for each component and profile on amd64 and arm64. `single-node` uses one node, and `multi-node` uses three nodes.
 
@@ -173,7 +173,7 @@ Component measurements are stored in `measurements/components/<id>.json`, and te
 
 `full` also checks the total usage of components enabled by default in the `single-node` profile on amd64 against the budget in [`config/budget.yaml`](../../config/budget.yaml).
 
-`weekly.yml` opens or updates one pull request to update `measurements/`. A run keeps the results already in that pull request, then drops each run whose inputs differ from those of the commit it tested, so a result of older files never stays. A run that tests nothing leaves the pull request as it is. One run goes at a time. A newer run replaces a waiting one and loses nothing, because it finds what is stale again. You can also run this workflow manually to get measurements immediately. Renovate opens a pull request for each new upstream version and image digest.
+`weekly.yml` opens or updates one pull request to update `measurements/`. A run keeps the results already in that pull request, then drops each run whose inputs differ from those of the commit it tested, so a result of older files never stays. A run that tests nothing leaves the pull request as it is. One run goes at a time. A newer run replaces a waiting one and loses nothing, because it finds what is stale again. Renovate opens a pull request for each new upstream version and image digest.
 
 ### Tests on k3s, RKE2 and KubeSolo
 
@@ -191,7 +191,7 @@ Each measured environment carries `sourceDigest`, a digest of the component file
 
 ## Configure template test inputs
 
-Template tests get their input values from [`config/e2e.yaml`](../../config/e2e.yaml) and don't require repository secrets, so pull requests also run the full template tests.
+Template tests get their input values from [`config/e2e.yaml`](../../config/e2e.yaml) and don't require repository secrets.
 
 <Steps>
 

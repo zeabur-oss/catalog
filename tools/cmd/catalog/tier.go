@@ -256,10 +256,7 @@ func runCheck(r *repo, cfg config, o tierOptions) error {
 		}
 		return err
 	}
-	if err := step("validate", func() error {
-		_, repErr := representative(r)
-		return errors.Join(catalog.Check(".", r.cat), templates.Check(".", r.cat, r.templates), repErr)
-	}); err != nil {
+	if err := step("validate", func() error { return check(r) }); err != nil {
 		return err
 	}
 	out := "out/render"

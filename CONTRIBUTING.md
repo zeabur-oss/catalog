@@ -47,7 +47,7 @@ existing branch: `git rebase --signoff main`, then force-push.
   passing run of its current inputs on a profile and architecture: its file, the
   files of what it installs first, and the Kubernetes or distribution release in
   `config/kubernetes.yaml`. What installs it runs too.
-  `go run ./tools/cmd/catalog list -tier full -stale` prints that list, and a release
+  `go run ./tools/cmd/catalog list -tier full` prints that list, and a release
   needs it empty.
 
 Run the same tiers with `go run ./tools/cmd/catalog e2e -tier check`,
