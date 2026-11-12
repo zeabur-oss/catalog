@@ -160,8 +160,8 @@ Component measurements are stored in `measurements/components/<id>.json`, and te
       "distribution": "k3s",
       "profile": "single-node",
       "platform": {"os": "linux", "architecture": "arm64"},
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+k3s1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+k3s1",
       "result": "passed",
       "pods": [{"workload": "traefik", "kind": "Deployment", "memory": "22Mi", "cpu": "3m"}],
       "versions": [{"release": "traefik", "version": "41.7.1"}],
@@ -181,11 +181,11 @@ With `-profile k3s`, `-profile rke2` or `-profile kubesolo`, the tests install t
 
 - k3s runs without its own Traefik and metrics-server.
 - RKE2 runs without its ingress controller and metrics-server, and gets local-path-provisioner as its default StorageClass.
-- KubeSolo gets the standalone helm-controller.
+- KubeSolo gets the standalone helm-controller. KubeSolo has no release for the newest Kubernetes minor yet, so it runs one minor below the others.
 
 The tests then run `full` with the `single-node` settings for every component that `single-node` supports. A component whose `distributions` leaves out the distribution isn't tested on it. Templates aren't tested on these distributions.
 
-Measurements are stored alongside the kind results, with `profile: single-node`, the distribution in `distribution` and its release in `distributionVersion`, for example `v1.36.5+k3s1`. A failed run sets `result: failed` on its environment instead. When the cluster never answered, the entry has no `kubernetesVersion`.
+Measurements are stored alongside the kind results, with `profile: single-node`, the distribution in `distribution` and its release in `distributionVersion`, for example `v1.37.2+k3s1`. A failed run sets `result: failed` on its environment instead. When the cluster never answered, the entry has no `kubernetesVersion`.
 
 Each measured environment carries `sourceDigest`, a digest of the component file, or of `template.yaml` and `manifests.yaml` for a template, that the run installed, and `dependencies`, the `sourceDigest` of each component that the run installed before it. The API publishes each component's `sourceDigest` next to its measurements. An installer counts a component as [tested on](../reference/installers.mdx#tested-on) a distribution and platform only while a passing run there has the component's current digest. Changing the file, including a release version in it, makes the component untested until a run of the new file passes. A failed run makes the platform untested too, and the next passing run on it makes it tested again.
 

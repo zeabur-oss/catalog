@@ -35,15 +35,15 @@
           doCheck = false;
         };
         # The check tier runs this API server with etcd and no nodes. Keep the version equal to the RKE2
-        # release that the Zeabur installer pins.
+        # release in config/kubernetes.yaml.
         kube-apiserver = pkgs.buildGoModule rec {
           pname = "kube-apiserver";
-          version = "1.36.5";
+          version = "1.37.2";
           src = pkgs.fetchFromGitHub {
             owner = "kubernetes";
             repo = "kubernetes";
             rev = "v${version}";
-            hash = "sha256-M5wVu5678Eow6xMLNZXcfPLlS9z11RpwwzvmYd8NEeE=";
+            hash = "sha256-Bbyu5hMQTSrvr/kDFHlRnfz5RIR7ecBfTFOGTCffn5c=";
           };
           vendorHash = null;
           subPackages = [ "cmd/kube-apiserver" ];
@@ -52,7 +52,7 @@
             "-w"
             "-X k8s.io/component-base/version.gitVersion=v${version}"
             "-X k8s.io/component-base/version.gitMajor=1"
-            "-X k8s.io/component-base/version.gitMinor=36"
+            "-X k8s.io/component-base/version.gitMinor=37"
             "-X k8s.io/client-go/pkg/version.gitVersion=v${version}"
           ];
           doCheck = false;

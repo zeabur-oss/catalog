@@ -79,8 +79,11 @@ func (s *apiServer) start() error {
 		return err
 	}
 	certs := filepath.Join(s.dir, "certs")
+	// This server has no node and no second API server, so it does not reconcile the endpoints
+	// of the kubernetes Service. The lease reconciler refuses a loopback address since 1.37;
+	// cmd/kube-apiserver/app/testing/testserver.go disables it in the same way.
 	if err := s.run("kube-apiserver", "--etcd-servers", etcd,
-		"--bind-address", "127.0.0.1", "--advertise-address", "127.0.0.1",
+		"--bind-address", "127.0.0.1", "--advertise-address", "127.0.0.1", "--endpoint-reconciler-type", "none",
 		"--secure-port", fmt.Sprint(ports[2]), "--cert-dir", certs,
 		"--token-auth-file", filepath.Join(s.dir, "tokens.csv"), "--authorization-mode", "RBAC",
 		"--service-account-issuer", "https://kubernetes.default.svc",

@@ -160,8 +160,8 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
       "distribution": "k3s",
       "profile": "single-node",
       "platform": {"os": "linux", "architecture": "arm64"},
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+k3s1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+k3s1",
       "result": "passed",
       "pods": [{"workload": "traefik", "kind": "Deployment", "memory": "22Mi", "cpu": "3m"}],
       "versions": [{"release": "traefik", "version": "41.7.1"}],
@@ -181,11 +181,11 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 
 - k3s 不启用自带的 Traefik 和 metrics-server。
 - RKE2 不启用自带的 ingress controller 和 metrics-server，并加装 local-path-provisioner 作为默认 StorageClass。
-- KubeSolo 会另外安装独立的 helm-controller。
+- KubeSolo 会另外安装独立的 helm-controller。KubeSolo 还没有支持最新 Kubernetes 次版本的版本，所以会比其他发行版低一个次版本。
 
 接着，测试会使用 `single-node` 的配置值，对 `single-node` 支持的每个组件运行 `full`。组件的 `distributions` 没有列出这个发行版时，就不会在上面测试。模板不在这些发行版上测试。
 
-测量结果与 kind 的结果放在一起，`profile` 为 `single-node`，`distribution` 是发行版，`distributionVersion` 是它的版本，例如 `v1.36.5+k3s1`。测试失败时，该环境会改为 `result: failed`。如果集群一直没有响应，这一条就没有 `kubernetesVersion`。
+测量结果与 kind 的结果放在一起，`profile` 为 `single-node`，`distribution` 是发行版，`distributionVersion` 是它的版本，例如 `v1.37.2+k3s1`。测试失败时，该环境会改为 `result: failed`。如果集群一直没有响应，这一条就没有 `kubernetesVersion`。
 
 每个测量环境都有 `sourceDigest`，记录那次运行安装的组件文件（模板则是 `template.yaml` 和 `manifests.yaml`）的哈希值，`dependencies` 则记录先安装的每个组件的 `sourceDigest`。API 在各组件的测量数据旁发布该组件的 `sourceDigest`。只有在某个发行版和平台上通过测试的记录，其哈希值与组件当前的值相同时，安装工具才算这个组件[通过该环境的测试](../reference/installers.mdx#通过测试的环境)。组件文件一改（包括里面的 release 版本），在新文件通过测试之前，都算未通过测试。在某个平台上测试失败后，该平台也算未通过测试，等下一次在该平台上通过才恢复。
 
