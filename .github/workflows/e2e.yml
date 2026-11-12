@@ -23,7 +23,7 @@ on:
         type: string
         required: false
       stale:
-        description: Without components, only what has no passing run of its current files
+        description: Without components, only what has no passing run of its current inputs
         type: boolean
         default: false
       measure:
@@ -47,7 +47,7 @@ on:
         type: string
         required: false
       stale:
-        description: Without components, only what has no passing run of its current files
+        description: Without components, only what has no passing run of its current inputs
         type: boolean
         default: false
       measure:

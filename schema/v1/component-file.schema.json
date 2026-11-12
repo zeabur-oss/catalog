@@ -48,6 +48,13 @@
           "type": "string",
           "description": "The Go module hash (h1:) of the component file, or of the template directory, that the run\ninstalled."
         },
+        "dependencies": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object",
+          "description": "The sourceDigest of each component that the run installed first, by ID."
+        },
         "measuredAt": {
           "type": "string",
           "format": "date",

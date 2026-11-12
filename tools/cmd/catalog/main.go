@@ -95,7 +95,7 @@ func validate(fs *flag.FlagSet, r *repo) error {
 // version.
 func list(fs *flag.FlagSet, r *repo) error {
 	since := fs.String("since", "", "smoke: only what changed since this git commit")
-	stale := fs.Bool("stale", false, "full: only what has no passing run of its current files")
+	stale := fs.Bool("stale", false, "full: only what has no passing run of its current inputs")
 	tier := fs.String("tier", "full", "smoke or full")
 	only := fs.String("profiles", "", "full: only these profiles, separated by commas")
 	idList := fs.String("ids", "", "only these component or template IDs, separated by commas")

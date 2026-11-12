@@ -44,7 +44,7 @@ The schemas are the contract, and the Go types of the catalog's tools generate t
 | `distributions`, `detection.addons[].distribution`, a measurement's `distribution` | Ignore the entry. |
 | A measurement's `result` | The run didn't pass. |
 
-Each measurement names its environment with `distribution` (`kind`, `k3s`, `rke2` or `kubesolo`), `profile`, `platform`, `kubernetesVersion` and `distributionVersion`, the release of a distribution on the host. `result` is `passed` or `failed`, and `sourceDigest` is the digest of the component file that the run installed. `versions` gives the version of each release that the run installed.
+Each measurement names its environment with `distribution` (`kind`, `k3s`, `rke2` or `kubesolo`), `profile`, `platform`, `kubernetesVersion` and `distributionVersion`, the release of a distribution on the host. `result` is `passed` or `failed`, and `sourceDigest` is the digest of the component file that the run installed, and `dependencies` the `sourceDigest` of each component that the run installed before it, by ID. `versions` gives the version of each release that the run installed.
 
 ```json
 "measurements": [

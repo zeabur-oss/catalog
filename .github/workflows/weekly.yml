@@ -1,9 +1,8 @@
-# The full tier, the e2e matrix. A push to main that changes components/ or templates/ tests what
-# is stale; every Saturday at 13:00 UTC and a manual run test everything, as Kubernetes and
-# distribution releases change what the source digest cannot see. Opens or updates a pull request
-# with the idle memory and CPU it measured, so measurements/ is only ever written by CI. The pull
-# request is zeabur-oss-bot's: GitHub signs its commit, and CI runs on it, which it would not for
-# GITHUB_TOKEN.
+# The full tier, the e2e matrix. A push to main that changes components/ or templates/, every
+# Saturday at 13:00 UTC and a manual run test what is stale: what has no passing run of its current
+# inputs (see catalog list -stale). Opens or updates a pull request with the idle memory and CPU it
+# measured, so measurements/ is only ever written by CI. The pull request is zeabur-oss-bot's:
+# GitHub signs its commit, and CI runs on it, which it would not for GITHUB_TOKEN.
 name: weekly
 
 on:
@@ -14,23 +13,18 @@ on:
     - cron: "0 13 * * 6"
   workflow_dispatch:
     inputs:
-      mode:
-        description: "all: everything; stale: only what has no passing run of its current files"
-        type: choice
-        options: [all, stale]
-        default: all
       components:
-        description: Component or template IDs, separated by commas; overrides mode
+        description: Component or template IDs, separated by commas, to test instead of what is stale
         type: string
         required: false
 
 permissions:
   contents: read
 
-# A newer push replaces a waiting push run, which it covers. A scheduled or manual run has its own
-# group, so a push never replaces a waiting full run, which tests more than a stale run does.
+# One run at a time. A newer run replaces a waiting one and loses nothing, as it computes what is
+# stale again.
 concurrency:
-  group: weekly-${{ github.event_name == 'push' && 'push' || github.run_id }}
+  group: weekly
   cancel-in-progress: false
 
 jobs:
@@ -39,24 +33,20 @@ jobs:
     with:
       profiles: single-node,multi-node
       components: ${{ inputs.components }}
-      stale: ${{ github.event_name == 'push' || inputs.mode == 'stale' }}
+      stale: true
 
   e2e-hosts:
     uses: ./.github/workflows/e2e.yml
     with:
       profiles: k3s,rke2,kubesolo
       components: ${{ inputs.components }}
-      stale: ${{ github.event_name == 'push' || inputs.mode == 'stale' }}
+      stale: true
 
   pull-request:
     needs: [e2e-kind, e2e-hosts]
     # Nothing to record when both matrices were empty; an open pull request stays as it is.
     if: ${{ !cancelled() && (needs.e2e-kind.outputs.ran == 'true' || needs.e2e-hosts.outputs.ran == 'true') }}
     runs-on: ubuntu-slim
-    # One at a time, so two runs never update the pull request at once.
-    concurrency:
-      group: weekly-pull-request
-      cancel-in-progress: false
     # Holds zeabur-oss-bot's key (see vendorhash.yml).
     environment: vendorhash
     permissions:
@@ -81,7 +71,8 @@ jobs:
         with:
           pattern: measurements-*
           path: downloaded/
-      # A run that tests less keeps the open pull request's results where no job measured.
+      # Keeps the open pull request's results where no job measured, then drops each run whose
+      # inputs differ from those of this commit.
       - name: Merge measurements from every job
         run: |
           mkdir -p downloaded kept
@@ -101,7 +92,7 @@ jobs:
 
             Signed-off-by: zeabur-oss-bot[bot] <349476329+zeabur-oss-bot[bot]@users.noreply.github.com>
           body: |
-            Idle memory and CPU of components and templates, measured by the e2e workflow on kind, k3s, RKE2 and KubeSolo. The last run tested ${{ inputs.components || ((github.event_name == 'push' || inputs.mode == 'stale') && 'what was stale' || 'everything') }}.
+            Idle memory and CPU of components and templates, measured by the e2e workflow on kind, k3s, RKE2 and KubeSolo. The last run tested ${{ inputs.components || 'what was stale' }}.
 
             | Job | Result |
             | --- | --- |
