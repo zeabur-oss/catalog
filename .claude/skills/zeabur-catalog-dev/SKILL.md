@@ -8,8 +8,9 @@ description: Development loop for the Zeabur Catalog repository — the checks C
 Data format and how to add a component or template: `docs/contribute/add-component.mdx`, `docs/contribute/add-template.mdx`. Template rules:
 `docs/reference/template-standards.mdx`. Pull request rules: `CONTRIBUTING.md`.
 
-Follow the shared skills (copied from zeabur-oss/skills by the update workflow): `zeabur-oss-standards` (with [`STANDARDS.md`](STANDARDS.md)
-here), `zeabur-oss-workflow`, `zeabur-oss-cluster-tests`.
+Follow the shared skills (copied from zeabur-oss/.github by the Update workflow):
+`zeabur-oss-standards` (with [`STANDARDS.md`](STANDARDS.md) here), `zeabur-oss-workflow`,
+`zeabur-oss-cluster-tests`.
 
 ## Checks (what CI runs)
 Each pull request job is `nix develop -c scripts/ci/<job>.sh` (the jobs of `.github/workflows/ci.yml`).
