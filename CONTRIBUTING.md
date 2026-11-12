@@ -41,8 +41,12 @@ existing branch: `git rebase --signoff main`, then force-push.
   what you changed, what it needs and what installs it is installed on one node and
   smoke tested. A change to a shared file such as `config/` or `tools/` tests the
   `smokeRepresentative` list in `config/e2e.yaml` instead of everything. A queued change that touches no component or template skips it.
-- **Every week and before a release (`full`):** everything on one and three
+- **Every Saturday and before a release (`full`):** everything on one and three
   nodes, amd64 and arm64, with idle memory and CPU, uninstall and leftover checks.
+  A push to `main` that changes a component or template runs `full` for what is
+  stale only: what has no passing run of its current file on a profile and
+  architecture, and what installs it. `go run ./tools/cmd/catalog list -tier full -stale`
+  prints that list.
 
 Run the same tiers with `go run ./tools/cmd/catalog e2e -tier check`,
 `-tier smoke <ids>` or `-tier full <id>`. `check` needs no Docker. `smoke` and `full`

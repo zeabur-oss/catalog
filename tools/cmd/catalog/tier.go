@@ -25,9 +25,9 @@ import (
 // fails when the API server refuses an upgrade from the base or a profile switch. smoke runs in
 // the merge queue: it installs and smoke tests what changed, what it needs and
 // what installs it, single-node amd64, in groups that share their
-// dependencies. full runs weekly and before a release: every profile and
-// architecture in a fresh cluster each, with idle usage, uninstall, and residue
-// checks. With -cluster current, smoke and full use the current cluster
+// dependencies. full runs weekly, before a release and, for what is stale, after
+// a push to main: every profile and architecture in a fresh cluster each, with
+// idle usage, uninstall, and residue checks. With -cluster current, smoke and full use the current cluster
 // instead of kind.
 var tiers = []string{"check", "smoke", "full"}
 

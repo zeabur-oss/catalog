@@ -1,31 +1,57 @@
-# Every Saturday at 13:00 UTC and on demand: the full tier, the e2e matrix. Opens a pull request
-# with the idle memory and CPU it measured for components and templates, so
-# measurements/ is only ever written by CI. The pull request is zeabur-oss-bot's:
-# GitHub signs its commit, and CI runs on it, which it would not for GITHUB_TOKEN.
+# The full tier, the e2e matrix. A push to main that changes components/ or templates/ tests what
+# is stale; every Saturday at 13:00 UTC and a manual run test everything, as Kubernetes and
+# distribution releases change what the source digest cannot see. Opens or updates a pull request
+# with the idle memory and CPU it measured, so measurements/ is only ever written by CI. The pull
+# request is zeabur-oss-bot's: GitHub signs its commit, and CI runs on it, which it would not for
+# GITHUB_TOKEN.
 name: weekly
 
 on:
+  push:
+    branches: [main]
+    paths: ["components/**", "templates/**"]
   schedule:
     - cron: "0 13 * * 6"
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "all: everything; stale: only what has no passing run of its current files"
+        type: choice
+        options: [all, stale]
+        default: all
+      components:
+        description: Component or template IDs, separated by commas; overrides mode
+        type: string
+        required: false
 
 permissions:
   contents: read
+
+# One run at a time, so two runs never update the pull request at once. A push waits for the
+# running one; a newer push replaces a waiting one, which it covers.
+concurrency:
+  group: weekly
+  cancel-in-progress: false
 
 jobs:
   e2e-kind:
     uses: ./.github/workflows/e2e.yml
     with:
       profiles: single-node,multi-node
+      components: ${{ inputs.components }}
+      stale: ${{ github.event_name == 'push' || inputs.mode == 'stale' }}
 
   e2e-hosts:
     uses: ./.github/workflows/e2e.yml
     with:
       profiles: k3s,rke2,kubesolo
+      components: ${{ inputs.components }}
+      stale: ${{ github.event_name == 'push' || inputs.mode == 'stale' }}
 
   pull-request:
     needs: [e2e-kind, e2e-hosts]
-    if: ${{ !cancelled() }}
+    # Nothing to record when both matrices were empty; an open pull request stays as it is.
+    if: ${{ !cancelled() && (needs.e2e-kind.outputs.ran == 'true' || needs.e2e-hosts.outputs.ran == 'true') }}
     runs-on: ubuntu-slim
     # Holds zeabur-oss-bot's key (see vendorhash.yml).
     environment: vendorhash
@@ -51,10 +77,15 @@ jobs:
         with:
           pattern: measurements-*
           path: downloaded/
-      - name: Merge measurements from every job
+      # The open pull request's results merge first, so a run that tests less keeps them.
+      - name: Keep the open pull request's measurements
         run: |
-          mkdir -p downloaded
-          go run ./tools/cmd/catalog merge downloaded
+          mkdir -p downloaded/0-open-pull-request
+          if git fetch --depth=1 origin ci/measurements; then
+            git archive FETCH_HEAD measurements | tar -x --strip-components=1 -C downloaded/0-open-pull-request
+          fi
+      - name: Merge measurements from every job
+        run: go run ./tools/cmd/catalog merge downloaded
       - uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ steps.token.outputs.token }}
@@ -67,7 +98,7 @@ jobs:
 
             Signed-off-by: zeabur-oss-bot[bot] <349476329+zeabur-oss-bot[bot]@users.noreply.github.com>
           body: |
-            Idle memory and CPU of components and templates, measured by the e2e workflow on kind, k3s, RKE2 and KubeSolo.
+            Idle memory and CPU of components and templates, measured by the e2e workflow on kind, k3s, RKE2 and KubeSolo. The last run tested ${{ inputs.components || ((github.event_name == 'push' || inputs.mode == 'stale') && 'what was stale' || 'everything') }}.
 
             | Job | Result |
             | --- | --- |

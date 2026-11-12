@@ -3,7 +3,7 @@ title: Tests and CI
 description: Learn when each CI tier runs, what it checks, and how to configure template test inputs.
 ---
 
-`check` runs on every pull request, and `smoke` runs in the merge queue, on the commit about to land. `full` runs weekly. Check that the weekly run passed before tagging a commit. Each tier covers different checks, and later tiers run checks that earlier tiers don't cover. You can also run the same tests as CI with `catalog e2e -tier check|smoke|full`.
+`check` runs on every pull request, and `smoke` runs in the merge queue, on the commit about to land. `full` runs every Saturday, and after a push to `main` that changes a component or template. Check that the last run that tested everything passed before tagging a commit. Each tier covers different checks, and later tiers run checks that earlier tiers don't cover. You can also run the same tests as CI with `catalog e2e -tier check|smoke|full`.
 
 ## Before you start
 
@@ -94,11 +94,13 @@ A queued pull request tests what differs from the queue's base commit. A pull re
 
 Tests that share dependencies share a cluster. Each dependency is installed only once per cluster. After a component passes its smoke check, the test uninstalls it unless a later test in the same cluster still needs it.
 
-If a change affects `config/kubernetes.yaml`, `smoke` tests everything. If it affects `tools/`, `go.mod`, `go.sum`, the flake, another file in `config/`, or a workflow, `smoke` tests the `smokeRepresentative` list in [`config/e2e.yaml`](../../config/e2e.yaml) instead. The weekly run still tests everything.
+If a change affects `config/kubernetes.yaml`, `smoke` tests everything. If it affects `tools/`, `go.mod`, `go.sum`, the flake, another file in `config/`, or a workflow, `smoke` tests the `smokeRepresentative` list in [`config/e2e.yaml`](../../config/e2e.yaml) instead. The Saturday run still tests everything.
 
 ## `full`: Test resource usage and cleanup
 
-`weekly.yml` calls `e2e.yml` to run `full` every Saturday. Before tagging a release, check that the last `weekly.yml` run on `main` passed on that commit, or on an earlier one when every commit since only updates `measurements/` or is the release pull request (`CHANGELOG.md`, the version in `flake.nix`, `.changeset/`). Otherwise run `weekly.yml` on `main` and tag only once it passed.
+`weekly.yml` calls `e2e.yml` to run `full`. A push to `main` that changes `components/` or `templates/` tests only what is stale, and what installs it. A component or template is stale on a profile and architecture when it has no run there, its last run there failed, or that run tested an older version of its file (see `sourceDigest` below). Every Saturday, and when you run `weekly.yml` by hand, it tests everything, because new Kubernetes and distribution releases can change a result without changing a file. A manual run can also test only what is stale (`mode: stale`) or only some IDs (`components`). `catalog list -tier full -stale` prints what a push would test.
+
+Before tagging a release, check that the last `weekly.yml` run on `main` that tested everything passed on that commit, or on an earlier one when every commit since only updates `measurements/` or is the release pull request (`CHANGELOG.md`, the version in `flake.nix`, `.changeset/`). Otherwise run `weekly.yml` on `main` and tag only once it passed.
 
 `full` creates a fresh kind cluster for each component and profile on amd64 and arm64. `single-node` uses one node, and `multi-node` uses three nodes.
 
@@ -163,7 +165,7 @@ Component measurements are stored in `measurements/components/<id>.json`, and te
 
 `full` also checks the total usage of components enabled by default in the `single-node` profile on amd64 against the budget in [`config/budget.yaml`](../../config/budget.yaml).
 
-`weekly.yml` opens a pull request to update `measurements/`. You can also run this workflow manually to get measurements immediately. Renovate opens a pull request for each new upstream version and image digest.
+`weekly.yml` opens or updates one pull request to update `measurements/`. A run keeps the results already in that pull request, and a run that tests nothing leaves it as it is. You can also run this workflow manually to get measurements immediately. Renovate opens a pull request for each new upstream version and image digest.
 
 ### Tests on k3s, RKE2 and KubeSolo
 
