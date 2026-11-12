@@ -171,7 +171,7 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 
 - k3s 不启用自带的 Traefik 和 metrics-server。
 - RKE2 不启用自带的 ingress controller 和 metrics-server，并加装 local-path-provisioner 作为默认 StorageClass。
-- KubeSolo 会另外安装独立的 helm-controller。
+- KubeSolo 会另外安装独立的 helm-controller。KubeSolo 还没有支持最新 Kubernetes 次版本的版本，所以会比其他发行版低一个次版本。
 
 接着，测试会使用 `single-node` 的配置值，对 `single-node` 支持的每个组件运行 `full`。组件的 `distributions` 没有列出这个发行版时，就不会在上面测试。模板不在这些发行版上测试。
 

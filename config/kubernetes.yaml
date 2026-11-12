@@ -36,12 +36,13 @@ rke2:
     sha256: 9781b39c24f3f651bd6d6e41b561e04e4904bbdb6d4f8c7a6009df3a702dcd65 # deploy/local-path-storage.yaml
 
 # KubeSolo enforces no NetworkPolicy and has one node. The helm controller is
-# the standalone k3s-io one that the Zeabur installer deploys.
+# the standalone k3s-io one that the Zeabur installer deploys. v1.3.0 runs
+# Kubernetes 1.36.6: KubeSolo has no 1.37 release yet.
 kubesolo:
-  version: v1.2.3 # renovate: github-releases portainer/kubesolo
+  version: v1.3.0 # renovate: github-releases portainer/kubesolo
   sha256:
-    amd64: 177e1832bac16b92968c2a8ff6a40448d98d1a195bc71f04870c8e7fa7905331
-    arm64: fa63b4c7cc3ffe620564272dd26f235244008c6c8eaf876d6538ee4802e7cb2a
+    amd64: 4c7b36d5553a9f5706ab8bdb7da3d7d2105591feddaf487c12fa2101985455f1 # kubesolo-<version>-linux-amd64.tar.gz
+    arm64: 3535679e7ad04b0455829ceb578ae12f2f7821d372cfc0bd0f1a825bcb40db2b # kubesolo-<version>-linux-arm64.tar.gz
   helmController:
     version: v0.17.9 # renovate: github-releases k3s-io/helm-controller
     sha256: 53da110ca271b6d6415e84bfc5ffe47d726fa35d1fb3acda47e6649ee05d4791 # deploy-cluster-scoped.yaml

@@ -171,7 +171,7 @@ With `-profile k3s`, `-profile rke2` or `-profile kubesolo`, the tests install t
 
 - k3s runs without its own Traefik and metrics-server.
 - RKE2 runs without its ingress controller and metrics-server, and gets local-path-provisioner as its default StorageClass.
-- KubeSolo gets the standalone helm-controller.
+- KubeSolo gets the standalone helm-controller. KubeSolo has no release for the newest Kubernetes minor yet, so it runs one minor below the others.
 
 The tests then run `full` with the `single-node` settings for every component that `single-node` supports. A component whose `distributions` leaves out the distribution isn't tested on it. Templates aren't tested on these distributions.
 
