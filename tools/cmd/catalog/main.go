@@ -2,8 +2,8 @@
 //
 //	catalog validate                    schema, licenses, references, value comments
 //	catalog render [ids]                helm template every profile and Kubernetes version, then kubeconform
-//	catalog list -tier smoke|full [-since <ref>]  e2e CI matrix as JSON
-//	catalog e2e -tier check|smoke|full [-cluster current] [ids]  run a test tier (see tier.go)
+//	catalog list -tier smoke|full [-ids <ids>|-since <ref>|-stale]  e2e CI matrix as JSON
+//	catalog e2e -tier check|smoke|full [-cluster current] [-since <ref>|-stale|ids]  run a test tier (see tier.go)
 //	catalog budget                      single-node memory budget
 //	catalog api -version <v> [-out out/api]  write the static API: catalog.json, components/<id>.json, schema/
 //	catalog schema                      write schema/v1/ from the Go types
@@ -94,7 +94,8 @@ func validate(fs *flag.FlagSet, r *repo) error {
 // supports, and every template on single-node amd64. Both carry the kind node
 // version.
 func list(fs *flag.FlagSet, r *repo) error {
-	since := fs.String("since", "", "only what changed since this git commit")
+	since := fs.String("since", "", "smoke: only what changed since this git commit")
+	stale := fs.Bool("stale", false, "full: only what has no passing run of its current files")
 	tier := fs.String("tier", "full", "smoke or full")
 	only := fs.String("profiles", "", "full: only these profiles, separated by commas")
 	idList := fs.String("ids", "", "only these component or template IDs, separated by commas")
@@ -112,10 +113,7 @@ func list(fs *flag.FlagSet, r *repo) error {
 	if err != nil {
 		return err
 	}
-	selected, err := choose(r, *tier, reason{ids: splitIDs(*idList), since: *since})
-	if err != nil {
-		return err
-	}
+	why := reason{ids: splitIDs(*idList), since: *since, stale: *stale}
 	type job struct {
 		Profile   string `json:"profile,omitempty"`
 		Arch      string `json:"arch,omitempty"`
@@ -126,6 +124,10 @@ func list(fs *flag.FlagSet, r *repo) error {
 	jobs := []job{}
 	switch *tier {
 	case "smoke":
+		selected, err := choose(r, *tier, why, templateProfile, templateArch)
+		if err != nil {
+			return err
+		}
 		groups, err := smokeGroups(r, selected)
 		if err != nil {
 			return err
@@ -135,17 +137,22 @@ func list(fs *flag.FlagSet, r *repo) error {
 		}
 	case "full":
 		for _, p := range profiles {
-			subs, err := profileSubjects(r, p, selected)
-			if err != nil {
-				return err
-			}
-			for _, s := range subs {
-				if !r.isComponent(s.id) {
-					jobs = append(jobs, job{Profile: p, Arch: "amd64", Template: s.id})
-					continue
+			for _, arch := range []string{"amd64", "arm64"} {
+				selected, err := choose(r, *tier, why, p, arch)
+				if err != nil {
+					return err
 				}
-				for _, arch := range []string{"amd64", "arm64"} {
-					jobs = append(jobs, job{Profile: p, Arch: arch, Component: s.id})
+				subs, err := profileSubjects(r, p, selected)
+				if err != nil {
+					return err
+				}
+				for _, s := range subs {
+					switch {
+					case r.isComponent(s.id):
+						jobs = append(jobs, job{Profile: p, Arch: arch, Component: s.id})
+					case arch == templateArch:
+						jobs = append(jobs, job{Profile: p, Arch: arch, Template: s.id})
+					}
 				}
 			}
 		}

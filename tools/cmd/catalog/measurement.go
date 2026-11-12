@@ -128,13 +128,21 @@ func environmentOf(cfg config, profile, kubectlVersion string) (Environment, err
 	return e, nil
 }
 
-// hostEnvironment returns the environment of profile on linux/arch, without
-// a Kubernetes version. A host profile runs the single-node values.
-func hostEnvironment(cfg config, profile, arch string) Environment {
+// runEnvironment returns the distribution, profile and platform of a run of
+// profile on linux/arch. A host profile runs the single-node values.
+func runEnvironment(profile, arch string) Environment {
 	e := Environment{Distribution: kindDistribution, Profile: profile, Platform: Platform{"linux", arch}}
 	if slices.Contains(hostProfiles, profile) {
-		e.Distribution, e.Profile, e.DistributionVersion = profile, templateProfile, cfg.pinnedVersion(profile)
+		e.Distribution, e.Profile = profile, templateProfile
 	}
+	return e
+}
+
+// hostEnvironment is runEnvironment with the pinned release of a host
+// profile's distribution.
+func hostEnvironment(cfg config, profile, arch string) Environment {
+	e := runEnvironment(profile, arch)
+	e.DistributionVersion = cfg.pinnedVersion(profile)
 	return e
 }
 

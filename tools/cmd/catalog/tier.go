@@ -494,7 +494,7 @@ func dryRun(r *repo, dir string) error {
 
 // runSmoke installs and smoke tests each group in its own single-node cluster.
 func runSmoke(r *repo, cfg config, o tierOptions) error {
-	p, err := choose(r, "smoke", o.why)
+	p, err := choose(r, "smoke", o.why, templateProfile, templateArch)
 	if err != nil {
 		return err
 	}
@@ -606,7 +606,7 @@ func runFull(r *repo, cfg config, o tierOptions) error {
 	if !slices.Contains(fullProfiles(), o.profile) {
 		return fmt.Errorf("unknown -profile %q; use %s", o.profile, strings.Join(fullProfiles(), ", "))
 	}
-	p, err := choose(r, "full", o.why)
+	p, err := choose(r, "full", o.why, o.profile, runtime.GOARCH)
 	if err != nil {
 		return err
 	}
