@@ -60,23 +60,6 @@ func report(title string, rows []row) error {
 	return errors.Join(errs...)
 }
 
-// selector returns a function that reports whether a test runs: its subject
-// or a component it installs changed since ref. An empty ref, or a change to
-// a shared file, selects everything.
-func selector(r *repo, since string) (func(id string, order []*catalog.Component) bool, error) {
-	var want map[string]bool // nil selects everything
-	if since != "" && strings.Trim(since, "0") != "" {
-		out, err := catalog.Run(nil, "git", "diff", "--name-only", since, "HEAD")
-		if err != nil {
-			return nil, err
-		}
-		want = changed(r, strings.Fields(out))
-	}
-	return func(id string, order []*catalog.Component) bool {
-		return want == nil || want[id] || slices.ContainsFunc(order, func(o *catalog.Component) bool { return want[o.ID] })
-	}, nil
-}
-
 // group is what one smoke cluster tests, in order. Its members share dependencies.
 type group struct {
 	IDs  []string
@@ -89,10 +72,10 @@ type group struct {
 // about 40 seconds.
 const groupCost = 20
 
-// smokeGroups returns the single-node subjects that sel selects, in groups that
+// smokeGroups returns the single-node subjects that p selects, in groups that
 // share dependencies. The grouping is deterministic.
-func smokeGroups(r *repo, sel func(string, []*catalog.Component) bool) ([]*group, error) {
-	items, err := subjects(r, templateProfile, sel)
+func smokeGroups(r *repo, p pick) ([]*group, error) {
+	items, err := subjects(r, templateProfile, p)
 	if err != nil {
 		return nil, err
 	}
@@ -160,8 +143,8 @@ type subject struct {
 }
 
 // subjects returns every component that profile supports and, on
-// single-node, every template, that sel selects.
-func subjects(r *repo, profile string, sel func(string, []*catalog.Component) bool) ([]subject, error) {
+// single-node, every template, that p selects.
+func subjects(r *repo, profile string, p pick) ([]subject, error) {
 	var out []subject
 	for _, c := range r.cat.Components {
 		if c.Defaults[profile] == "unsupported" {
@@ -171,7 +154,7 @@ func subjects(r *repo, profile string, sel func(string, []*catalog.Component) bo
 		if err != nil {
 			return nil, err
 		}
-		if sel(c.ID, order) {
+		if p.has(c.ID, order) {
 			out = append(out, subject{c.ID, order, ids(order[:len(order)-1]), 1})
 		}
 	}
@@ -183,7 +166,7 @@ func subjects(r *repo, profile string, sel func(string, []*catalog.Component) bo
 		if err != nil {
 			return nil, err
 		}
-		if sel(t.ID, order) {
+		if p.has(t.ID, order) {
 			out = append(out, subject{t.ID, order, ids(order), len(t.Services) + len(t.Requires)})
 		}
 	}
@@ -198,11 +181,11 @@ func fullProfiles() []string { return append(slices.Clone(catalog.Profiles), hos
 
 // profileSubjects is subjects for a catalog profile or a host profile. A host
 // profile tests components only.
-func profileSubjects(r *repo, profile string, sel func(string, []*catalog.Component) bool) ([]subject, error) {
+func profileSubjects(r *repo, profile string, p pick) ([]subject, error) {
 	if !slices.Contains(hostProfiles, profile) {
-		return subjects(r, profile, sel)
+		return subjects(r, profile, p)
 	}
-	subs, err := subjects(r, templateProfile, sel)
+	subs, err := subjects(r, templateProfile, p)
 	if err != nil {
 		return nil, err
 	}
@@ -210,24 +193,6 @@ func profileSubjects(r *repo, profile string, sel func(string, []*catalog.Compon
 		c, ok := r.cat.Get(s.id)
 		return !ok || !hostRuns(profile, c)
 	}), nil
-}
-
-// selection returns a function that reports whether a test runs: one that
-// args names or, without args, one that changed since ref (see selector and
-// smokeSelector).
-func selection(r *repo, tier, since string, args []string) (func(string, []*catalog.Component) bool, error) {
-	if len(args) == 0 {
-		if tier == "smoke" {
-			return smokeSelector(r, since)
-		}
-		return selector(r, since)
-	}
-	for _, id := range args {
-		if _, err := installOrder(r, id, templateProfile); err != nil {
-			return nil, err
-		}
-	}
-	return func(id string, _ []*catalog.Component) bool { return slices.Contains(args, id) }, nil
 }
 
 // isComponent reports whether id is a component's. Every other ID is a
@@ -254,12 +219,13 @@ func installOrder(r *repo, id, profile string) ([]*catalog.Component, error) {
 }
 
 type tierOptions struct {
-	profile, since string
-	write, keep    bool
-	current        bool // test on the cluster that KUBECONFIG names instead of kind
+	profile     string
+	why         reason
+	write, keep bool
+	current     bool // test on the cluster that KUBECONFIG names instead of kind
 }
 
-func runTier(r *repo, tier string, o tierOptions, args []string) error {
+func runTier(r *repo, tier string, o tierOptions) error {
 	cfg, err := loadConfig()
 	if err != nil {
 		return err
@@ -268,9 +234,9 @@ func runTier(r *repo, tier string, o tierOptions, args []string) error {
 	case "check":
 		return runCheck(r, cfg, o)
 	case "smoke":
-		return runSmoke(r, cfg, o, args)
+		return runSmoke(r, cfg, o)
 	case "full":
-		return runFull(r, cfg, o, args)
+		return runFull(r, cfg, o)
 	}
 	return fmt.Errorf("unknown -tier %q; use %s", tier, strings.Join(tiers, ", "))
 }
@@ -527,13 +493,12 @@ func dryRun(r *repo, dir string) error {
 }
 
 // runSmoke installs and smoke tests each group in its own single-node cluster.
-// Without ids it tests what changed since o.since.
-func runSmoke(r *repo, cfg config, o tierOptions, args []string) error {
-	sel, err := selection(r, "smoke", o.since, args)
+func runSmoke(r *repo, cfg config, o tierOptions) error {
+	p, err := choose(r, "smoke", o.why)
 	if err != nil {
 		return err
 	}
-	groups, err := smokeGroups(r, sel)
+	groups, err := smokeGroups(r, p)
 	if err != nil {
 		return err
 	}
@@ -637,19 +602,19 @@ func testTemplate(r *repo, t *catalog.Tester, cfg config, id string, write bool)
 
 // runFull tests each component and template in a fresh cluster with the full
 // checks.
-func runFull(r *repo, cfg config, o tierOptions, args []string) error {
+func runFull(r *repo, cfg config, o tierOptions) error {
 	if !slices.Contains(fullProfiles(), o.profile) {
 		return fmt.Errorf("unknown -profile %q; use %s", o.profile, strings.Join(fullProfiles(), ", "))
 	}
-	sel, err := selection(r, "full", o.since, args)
+	p, err := choose(r, "full", o.why)
 	if err != nil {
 		return err
 	}
-	subs, err := profileSubjects(r, o.profile, sel)
+	subs, err := profileSubjects(r, o.profile, p)
 	if err != nil {
 		return err
 	}
-	for _, id := range args {
+	for _, id := range o.why.ids {
 		if !slices.ContainsFunc(subs, func(s subject) bool { return s.id == id }) {
 			return fmt.Errorf("%s is not tested on %s", id, o.profile)
 		}
