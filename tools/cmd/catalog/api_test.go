@@ -13,6 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
+	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
 
 func TestSchemasAreGeneratedFromTheGoTypes(t *testing.T) {
@@ -82,6 +83,34 @@ detection: {crds: [webs.example.com]}
 security: {summary: Reads nothing., podSecurity: restricted}
 `
 
+const blogTemplate = `apiVersion: catalog.zeabur.com/v1
+kind: Template
+metadata:
+  name: Blog
+  version: "1.0.0"
+  summary: A blog.
+  locales: {}
+  license: MIT
+  homepage: https://example.com
+services:
+  - name: blog
+    podSecurity: restricted
+    ports: [{name: http, port: 8080}]
+    resources: {requests: {cpu: 10m, memory: 64Mi}, limits: {cpu: 100m, memory: 128Mi}}
+security: {summary: Reads nothing., risks: []}
+smoke:
+  - {name: ready, resource: deployment/blog, condition: condition=Available, timeout: 60s}
+`
+
+// blogManifests has a Go template field, so it is not YAML until it is expanded.
+const blogManifests = `# The blog.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blog
+  namespace: '{{ .Namespace }}'
+`
+
 // writeTestAPI writes the API of a catalog with components/web.yaml and one measurement of it
 // to out/v1 in a new working directory.
 func writeTestAPI(t *testing.T) {
@@ -101,13 +130,25 @@ func writeTestAPI(t *testing.T) {
 		t.Fatal(err)
 	}
 	writeFile(t, "measurements/components/web.json", measurement{Component: "web", Environments: []Environment{k3sEnv("amd64", 30, "2026-11-01")}})
+	if err := os.MkdirAll("templates/blog", 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for name, text := range map[string]string{"template.yaml": blogTemplate, "manifests.yaml": blogManifests} {
+		if err := os.WriteFile("templates/blog/"+name, []byte(text), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
 	cat, err := catalog.Load(".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ts, err := templates.Load(".")
 	if err != nil {
 		t.Fatal(err)
 	}
 	cfg := config{Versions: []string{"1.36.0", "1.37.0"}}
 	cfg.K3s.Version = "v1.36.5+k3s1"
-	if err := writeAPI(cat, cfg, "out/v1", "0.5.0", strings.Repeat("a", 40)); err != nil {
+	if err := writeAPI(cat, ts, cfg, "out/v1", "0.5.0", strings.Repeat("a", 40)); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -172,12 +213,71 @@ func TestAPIPublishesTheDeclarationRenderAndMeasurements(t *testing.T) {
 	}
 }
 
+func TestAPIPublishesTheTemplateAsWritten(t *testing.T) {
+	writeTestAPI(t)
+	if err := checkAPI("out/v1"); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile("out/v1/templates/blog.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var file struct {
+		ID           string
+		SourceDigest string
+		Template     any
+		Manifests    string
+	}
+	if err := json.Unmarshal(data, &file); err != nil {
+		t.Fatal(err)
+	}
+
+	var written any
+	if err := catalog.ReadYAML("templates/blog/template.yaml", &written); err != nil {
+		t.Fatal(err)
+	}
+	if err := remarshal(written, &written); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(file.Template, written) {
+		t.Errorf("template = %v, want templates/blog/template.yaml as written", file.Template)
+	}
+	if file.Manifests != blogManifests {
+		t.Errorf("manifests = %q, want templates/blog/manifests.yaml as written", file.Manifests)
+	}
+	digest, err := sourceDigest("templates/blog")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if file.ID != "blog" || file.SourceDigest != digest {
+		t.Errorf("id, sourceDigest = %q, %q, want blog, %q", file.ID, file.SourceDigest, digest)
+	}
+
+	var index CatalogFile
+	if data, err = os.ReadFile("out/v1/catalog.json"); err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(data, &index); err != nil {
+		t.Fatal(err)
+	}
+	if want := []TemplateEntry{{ID: "blog", SourceDigest: digest}}; !reflect.DeepEqual(index.Templates, want) {
+		t.Errorf("catalog.json templates = %v, want %v", index.Templates, want)
+	}
+	if _, err := os.Stat("out/v1/schema/template.schema.json"); err != nil {
+		t.Error("the API does not publish template.schema.json")
+	}
+}
+
 func TestAPICheckRejectsABrokenFile(t *testing.T) {
 	for _, c := range []struct {
 		name, file string
 		breakIt    func(doc map[string]any)
 	}{
 		{"component without sourceDigest", "components/web.json", func(doc map[string]any) { delete(doc, "sourceDigest") }},
+		{"template without manifests", "templates/blog.json", func(doc map[string]any) { delete(doc, "manifests") }},
+		{"template with an unknown field", "templates/blog.json", func(doc map[string]any) {
+			doc["template"].(map[string]any)["replicas"] = 2
+		}},
 		{"declaration with an unknown field", "components/web.json", func(doc map[string]any) {
 			doc["declaration"].(map[string]any)["replicas"] = 2
 		}},

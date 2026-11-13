@@ -18,15 +18,17 @@ import (
 	utilyaml "k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
+	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
 
 // apiMajor is the N of the /vN/ path of the API. It changes only on an incompatible change.
 const apiMajor = 1
 
 // apiSchemas are the schemas that the API publishes under schema/.
-var apiSchemas = []string{"catalog.schema.json", "component-file.schema.json", "component.schema.json"}
+var apiSchemas = []string{"catalog.schema.json", "component-file.schema.json", "component.schema.json", "template-file.schema.json", "template.schema.json"}
 
-// CatalogFile is catalog.json: the catalog release, its test environments and its components.
+// CatalogFile is catalog.json: the catalog release, its test environments, its components and its
+// templates.
 type CatalogFile struct {
 	Catalog CatalogRelease `json:"catalog"`
 	// The profiles that every component describes.
@@ -37,6 +39,7 @@ type CatalogFile struct {
 	// distributionVersion tested another release.
 	Distributions []PinnedDistribution `json:"distributions"`
 	Components    []ComponentEntry     `json:"components"`
+	Templates     []TemplateEntry      `json:"templates"`
 }
 
 // CatalogRelease is the catalog release that the API was built from.
@@ -62,6 +65,32 @@ type ComponentEntry struct {
 	// tested an older file.
 	SourceDigest string `json:"sourceDigest"`
 }
+
+// TemplateEntry names a template. templates/<id>.json holds the rest.
+type TemplateEntry struct {
+	// The directory name of the template under templates/.
+	ID string `json:"id" jsonschema:"pattern=^[a-z0-9]+(-[a-z0-9]+)*$"`
+	// The Go module hash (h1:) of the directory templates/<id>/. A measurement with another
+	// sourceDigest tested older files.
+	SourceDigest string `json:"sourceDigest"`
+}
+
+// TemplateFile is templates/<id>.json: the two files of a template as written.
+type TemplateFile struct {
+	TemplateEntry
+	// templates/<id>/template.yaml as written.
+	Template WrittenTemplate `json:"template"`
+	// The text of templates/<id>/manifests.yaml. It has Go template fields such as {{ .Namespace }},
+	// so it is not YAML yet: the installer expands it, then reads the objects.
+	Manifests string `json:"manifests"`
+}
+
+// WrittenTemplate is a template file, decoded as written.
+type WrittenTemplate struct{ raw any }
+
+func (w WrittenTemplate) MarshalJSON() ([]byte, error) { return json.Marshal(w.raw) }
+
+func (WrittenTemplate) JSONSchema() *gen.Schema { return &gen.Schema{Ref: "template.schema.json"} }
 
 // ComponentFile is components/<id>.json: the declaration of a component, the objects it renders
 // and the runs of its e2e test.
@@ -147,14 +176,15 @@ func api(fs *flag.FlagSet, r *repo) error {
 		return err
 	}
 	dir := filepath.Join(*out, fmt.Sprintf("v%d", apiMajor))
-	if err := writeAPI(r.cat, cfg, dir, *version, strings.TrimSpace(commit)); err != nil {
+	if err := writeAPI(r.cat, r.templates, cfg, dir, *version, strings.TrimSpace(commit)); err != nil {
 		return err
 	}
 	return checkAPI(dir)
 }
 
-// writeAPI replaces dir with catalog.json, components/<id>.json and the schemas of schema/v1.
-func writeAPI(cat *catalog.Catalog, cfg config, dir, version, commit string) error {
+// writeAPI replaces dir with catalog.json, components/<id>.json, templates/<id>.json and the
+// schemas of schema/v1.
+func writeAPI(cat *catalog.Catalog, ts []*templates.Template, cfg config, dir, version, commit string) error {
 	if err := os.RemoveAll(dir); err != nil {
 		return err
 	}
@@ -164,6 +194,7 @@ func writeAPI(cat *catalog.Catalog, cfg config, dir, version, commit string) err
 		Profiles:   catalog.Profiles,
 		Kubernetes: cfg.Versions,
 		Components: []ComponentEntry{},
+		Templates:  []TemplateEntry{},
 	}
 	for _, p := range hostProfiles {
 		index.Distributions = append(index.Distributions, PinnedDistribution{Name: p, Version: cfg.pinnedVersion(p)})
@@ -189,6 +220,22 @@ func writeAPI(cat *catalog.Catalog, cfg config, dir, version, commit string) err
 			file.Measurements = []Environment{}
 		}
 		if err := writeJSON(filepath.Join(dir, "components", c.ID+".json"), file); err != nil {
+			return err
+		}
+	}
+	for _, t := range ts {
+		digest, err := sourceDigest(t.Dir)
+		if err != nil {
+			return err
+		}
+		manifests, err := os.ReadFile(filepath.Join(t.Dir, "manifests.yaml"))
+		if err != nil {
+			return err
+		}
+		entry := TemplateEntry{ID: t.ID, SourceDigest: digest}
+		index.Templates = append(index.Templates, entry)
+		file := TemplateFile{TemplateEntry: entry, Template: WrittenTemplate{t.Written()}, Manifests: string(manifests)}
+		if err := writeJSON(filepath.Join(dir, "templates", t.ID+".json"), file); err != nil {
 			return err
 		}
 	}
@@ -240,6 +287,13 @@ func checkAPI(dir string) error {
 	}
 	for _, f := range files {
 		check("component-file.schema.json", f)
+	}
+	files, err = filepath.Glob(filepath.Join(dir, "templates", "*.json"))
+	if err != nil {
+		return err
+	}
+	for _, f := range files {
+		check("template-file.schema.json", f)
 	}
 	return errors.Join(errs...)
 }
