@@ -8,38 +8,38 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "rag-db",
           "kind": "Cluster",
-          "memory": "110Mi",
-          "cpu": "6m"
+          "memory": "90Mi",
+          "cpu": "4m"
         },
         {
           "workload": "librechat",
           "kind": "Deployment",
-          "memory": "268Mi",
+          "memory": "250Mi",
           "cpu": "2m"
         },
         {
           "workload": "rag-api",
           "kind": "Deployment",
-          "memory": "225Mi",
+          "memory": "217Mi",
           "cpu": "2m"
         },
         {
           "workload": "meilisearch",
           "kind": "StatefulSet",
-          "memory": "9Mi",
+          "memory": "16Mi",
           "cpu": "0"
         },
         {
           "workload": "mongodb-rs0",
           "kind": "StatefulSet",
-          "memory": "206Mi",
-          "cpu": "45m"
+          "memory": "181Mi",
+          "cpu": "32m"
         }
       ],
       "versions": [
@@ -65,7 +65,13 @@
         }
       ],
       "sourceDigest": "h1:BxPKyrTwNW3m5XnvZUqmKT5SoLXg+9+ZmGQaO1hQjew=",
-      "measuredAt": "2026-11-11"
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cloudnative-pg": "h1:sfHDjsosLaiS7MassT/Z6A/IareJUQk+yPcGhX2Yyis=",
+        "percona-mongodb": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "measuredAt": "2026-11-12"
     }
   ]
 }

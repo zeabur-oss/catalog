@@ -8,13 +8,13 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "open-webui",
           "kind": "Deployment",
-          "memory": "752Mi",
+          "memory": "876Mi",
           "cpu": "3m"
         },
         {
@@ -37,7 +37,11 @@
         }
       ],
       "sourceDigest": "h1:qEcH4M7Wic8FapF2sfKymipckGZ7iol3ND3uGMZw6P4=",
-      "measuredAt": "2026-11-11"
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "measuredAt": "2026-11-12"
     }
   ]
 }

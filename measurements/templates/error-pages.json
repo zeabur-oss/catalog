@@ -8,7 +8,7 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
@@ -26,7 +26,10 @@
         }
       ],
       "sourceDigest": "h1:HwFBcyt6Elx5r5PWvPIyLr0IjTcqNQIN4a8LLwnU03o=",
-      "measuredAt": "2026-11-11"
+      "dependencies": {
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "measuredAt": "2026-11-12"
     }
   ]
 }

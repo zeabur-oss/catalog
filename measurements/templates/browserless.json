@@ -8,13 +8,13 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "browserless",
           "kind": "Deployment",
-          "memory": "303Mi",
+          "memory": "294Mi",
           "cpu": "11m"
         }
       ],
@@ -26,7 +26,11 @@
         }
       ],
       "sourceDigest": "h1:zQMAApDw/2VLL+JXNmfVqbO9rqEzSAwmna5s2OABrmw=",
-      "measuredAt": "2026-11-11"
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "measuredAt": "2026-11-12"
     }
   ]
 }

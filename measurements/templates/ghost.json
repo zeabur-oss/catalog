@@ -8,20 +8,20 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "ghost",
           "kind": "StatefulSet",
-          "memory": "164Mi",
-          "cpu": "0"
+          "memory": "163Mi",
+          "cpu": "1m"
         },
         {
           "workload": "ghost-mysql",
           "kind": "StatefulSet",
-          "memory": "236Mi",
-          "cpu": "7m"
+          "memory": "235Mi",
+          "cpu": "8m"
         }
       ],
       "versions": [
@@ -37,7 +37,11 @@
         }
       ],
       "sourceDigest": "h1:5ge9dj+2MplYinmLF0LNViIXD1kljQUHoyfhy+sTYGw=",
-      "measuredAt": "2026-11-11"
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "measuredAt": "2026-11-12"
     }
   ]
 }

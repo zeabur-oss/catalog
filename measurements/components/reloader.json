@@ -8,14 +8,14 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+k3s1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+k3s1",
       "result": "passed",
       "pods": [
         {
           "workload": "reloader-reloader",
           "kind": "Deployment",
-          "memory": "9Mi",
+          "memory": "16Mi",
           "cpu": "0"
         }
       ],
@@ -26,7 +26,7 @@
         }
       ],
       "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
-      "measuredAt": "2026-11-11"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "k3s",
@@ -35,14 +35,14 @@
         "os": "linux",
         "architecture": "arm64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+k3s1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+k3s1",
       "result": "passed",
       "pods": [
         {
           "workload": "reloader-reloader",
           "kind": "Deployment",
-          "memory": "10Mi",
+          "memory": "14Mi",
           "cpu": "0"
         }
       ],
@@ -53,7 +53,7 @@
         }
       ],
       "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
-      "measuredAt": "2026-11-11"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
@@ -62,33 +62,7 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "reloader-reloader",
-          "kind": "Deployment",
-          "memory": "9Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "reloader",
-          "version": "2.2.19"
-        }
-      ],
-      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
@@ -105,7 +79,33 @@
         }
       ],
       "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
-      "measuredAt": "2026-11-11"
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "reloader-reloader",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "reloader",
+          "version": "2.2.19"
+        }
+      ],
+      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
@@ -114,13 +114,13 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "reloader-reloader",
           "kind": "Deployment",
-          "memory": "9Mi",
+          "memory": "8Mi",
           "cpu": "0"
         }
       ],
@@ -131,7 +131,7 @@
         }
       ],
       "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
-      "measuredAt": "2026-11-11"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
@@ -140,61 +140,7 @@
         "os": "linux",
         "architecture": "arm64"
       },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "reloader-reloader",
-          "kind": "Deployment",
-          "memory": "9Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "reloader",
-          "version": "2.2.19"
-        }
-      ],
-      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.35.7",
-      "distributionVersion": "v1.2.3",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "reloader-reloader",
-          "kind": "Deployment",
-          "memory": "9Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "reloader",
-          "version": "2.2.19"
-        }
-      ],
-      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.35.7",
-      "distributionVersion": "v1.2.3",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
@@ -211,17 +157,17 @@
         }
       ],
       "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
-      "measuredAt": "2026-11-11"
+      "measuredAt": "2026-11-12"
     },
     {
-      "distribution": "rke2",
+      "distribution": "kubesolo",
       "profile": "single-node",
       "platform": {
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+rke2r1",
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
       "result": "passed",
       "pods": [
         {
@@ -238,23 +184,26 @@
         }
       ],
       "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
-      "measuredAt": "2026-11-11"
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-12"
     },
     {
-      "distribution": "rke2",
+      "distribution": "kubesolo",
       "profile": "single-node",
       "platform": {
         "os": "linux",
         "architecture": "arm64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+rke2r1",
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
       "result": "passed",
       "pods": [
         {
           "workload": "reloader-reloader",
           "kind": "Deployment",
-          "memory": "11Mi",
+          "memory": "10Mi",
           "cpu": "0"
         }
       ],
@@ -265,7 +214,70 @@
         }
       ],
       "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
-      "measuredAt": "2026-11-11"
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "reloader-reloader",
+          "kind": "Deployment",
+          "memory": "17Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "reloader",
+          "version": "2.2.19"
+        }
+      ],
+      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
+      "addOns": {
+        "local-path-provisioner": "v0.0.37"
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "reloader-reloader",
+          "kind": "Deployment",
+          "memory": "17Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "reloader",
+          "version": "2.2.19"
+        }
+      ],
+      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
+      "addOns": {
+        "local-path-provisioner": "v0.0.37"
+      },
+      "measuredAt": "2026-11-12"
     }
   ]
 }

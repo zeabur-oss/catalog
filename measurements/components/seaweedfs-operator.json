@@ -8,247 +8,8 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+k3s1",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "seaweedfs-operator",
-          "kind": "Deployment",
-          "memory": "26Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "seaweedfs-operator",
-          "version": "0.1.46"
-        }
-      ],
-      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "k3s",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+k3s1",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "seaweedfs-operator",
-          "kind": "Deployment",
-          "memory": "26Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "seaweedfs-operator",
-          "version": "0.1.46"
-        }
-      ],
-      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "seaweedfs-operator",
-          "kind": "Deployment",
-          "memory": "26Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "seaweedfs-operator",
-          "version": "0.1.46"
-        }
-      ],
-      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "seaweedfs-operator",
-          "kind": "Deployment",
-          "memory": "28Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "seaweedfs-operator",
-          "version": "0.1.46"
-        }
-      ],
-      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "seaweedfs-operator",
-          "kind": "Deployment",
-          "memory": "28Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "seaweedfs-operator",
-          "version": "0.1.46"
-        }
-      ],
-      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "seaweedfs-operator",
-          "kind": "Deployment",
-          "memory": "26Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "seaweedfs-operator",
-          "version": "0.1.46"
-        }
-      ],
-      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.35.7",
-      "distributionVersion": "v1.2.3",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "seaweedfs-operator",
-          "kind": "Deployment",
-          "memory": "23Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "seaweedfs-operator",
-          "version": "0.1.46"
-        }
-      ],
-      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.35.7",
-      "distributionVersion": "v1.2.3",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "seaweedfs-operator",
-          "kind": "Deployment",
-          "memory": "24Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "seaweedfs-operator",
-          "version": "0.1.46"
-        }
-      ],
-      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "rke2",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+rke2r1",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "seaweedfs-operator",
-          "kind": "Deployment",
-          "memory": "30Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "seaweedfs-operator",
-          "version": "0.1.46"
-        }
-      ],
-      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "rke2",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+rke2r1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+k3s1",
       "result": "passed",
       "pods": [
         {
@@ -265,7 +26,298 @@
         }
       ],
       "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
-      "measuredAt": "2026-11-11"
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "28Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.46"
+        }
+      ],
+      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "26Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.46"
+        }
+      ],
+      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "25Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.46"
+        }
+      ],
+      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "26Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.46"
+        }
+      ],
+      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "26Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.46"
+        }
+      ],
+      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "24Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.46"
+        }
+      ],
+      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "24Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.46"
+        }
+      ],
+      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "27Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.46"
+        }
+      ],
+      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "addOns": {
+        "local-path-provisioner": "v0.0.37"
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "28Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.46"
+        }
+      ],
+      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "addOns": {
+        "local-path-provisioner": "v0.0.37"
+      },
+      "measuredAt": "2026-11-12"
     }
   ]
 }

@@ -8,25 +8,29 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "memos",
           "kind": "StatefulSet",
-          "memory": "16Mi",
+          "memory": "17Mi",
           "cpu": "0"
         }
       ],
       "versions": [
         {
           "image": "neosmemo/memos",
-          "version": "0.31.0",
-          "digest": "sha256:24c2707ddd8fbd2ceaa7a61ecab86a53cdcde640b24ce572b73da14b00b5785f"
+          "version": "26.11.0",
+          "digest": "sha256:087e7dc6b76b31fcd1107a5767398b2a310ced209adb791efd8760c745dc8034"
         }
       ],
-      "sourceDigest": "h1:kschrxBUO9JfD76Q1xHr9jf9kdKCwheNfX3Z3n9Qp3M=",
-      "measuredAt": "2026-11-11"
+      "sourceDigest": "h1:MXKE83llG/8VmruWQa3uKOZqvpeUlQGWa1CPqa56vHY=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "measuredAt": "2026-11-12"
     }
   ]
 }

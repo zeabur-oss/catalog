@@ -8,13 +8,13 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "dify-db",
           "kind": "Cluster",
-          "memory": "85Mi",
+          "memory": "72Mi",
           "cpu": "5m"
         },
         {
@@ -26,20 +26,20 @@
         {
           "workload": "dify-api",
           "kind": "Deployment",
-          "memory": "518Mi",
+          "memory": "519Mi",
           "cpu": "0"
         },
         {
           "workload": "dify-beat",
           "kind": "Deployment",
-          "memory": "487Mi",
-          "cpu": "5m"
+          "memory": "490Mi",
+          "cpu": "0"
         },
         {
           "workload": "dify-plugin",
           "kind": "Deployment",
           "memory": "14Mi",
-          "cpu": "1m"
+          "cpu": "2m"
         },
         {
           "workload": "dify-proxy",
@@ -50,26 +50,26 @@
         {
           "workload": "dify-sandbox",
           "kind": "Deployment",
-          "memory": "47Mi",
+          "memory": "34Mi",
           "cpu": "0"
         },
         {
           "workload": "dify-web",
           "kind": "Deployment",
-          "memory": "67Mi",
+          "memory": "79Mi",
           "cpu": "0"
         },
         {
           "workload": "dify-worker",
           "kind": "Deployment",
-          "memory": "506Mi",
-          "cpu": "7m"
+          "memory": "509Mi",
+          "cpu": "9m"
         },
         {
           "workload": "dify-dragonfly",
           "kind": "StatefulSet",
-          "memory": "14Mi",
-          "cpu": "9m"
+          "memory": "13Mi",
+          "cpu": "14m"
         }
       ],
       "versions": [
@@ -110,7 +110,14 @@
         }
       ],
       "sourceDigest": "h1:fLhQdmbBrX2nagiOD48hN3OlpJ1iV5L53Sz/iECOkPI=",
-      "measuredAt": "2026-11-11"
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cloudnative-pg": "h1:sfHDjsosLaiS7MassT/Z6A/IareJUQk+yPcGhX2Yyis=",
+        "dragonfly-operator": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
+        "seaweedfs-operator": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "measuredAt": "2026-11-12"
     }
   ]
 }

@@ -8,8 +8,8 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+k3s1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+k3s1",
       "result": "passed",
       "pods": [
         {
@@ -21,420 +21,25 @@
         {
           "workload": "vm-kube-state-metrics",
           "kind": "Deployment",
-          "memory": "25Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "70Mi",
-          "cpu": "5m"
-        },
-        {
-          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "34Mi",
-          "cpu": "5m"
-        },
-        {
-          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "107Mi",
-          "cpu": "11m"
-        },
-        {
-          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
-          "kind": "StatefulSet",
-          "memory": "26Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "k8s-stack",
-          "version": "0.96.0"
-        }
-      ],
-      "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "k3s",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+k3s1",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vm-prometheus-node-exporter",
-          "kind": "DaemonSet",
-          "memory": "8Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vm-kube-state-metrics",
-          "kind": "Deployment",
           "memory": "26Mi",
           "cpu": "0"
-        },
-        {
-          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "64Mi",
-          "cpu": "5m"
-        },
-        {
-          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "32Mi",
-          "cpu": "7m"
-        },
-        {
-          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "102Mi",
-          "cpu": "15m"
-        },
-        {
-          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
-          "kind": "StatefulSet",
-          "memory": "25Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "k8s-stack",
-          "version": "0.96.0"
-        }
-      ],
-      "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vm-prometheus-node-exporter",
-          "kind": "DaemonSet",
-          "memory": "7Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vm-kube-state-metrics",
-          "kind": "Deployment",
-          "memory": "24Mi",
-          "cpu": "1m"
         },
         {
           "workload": "vmagent-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
           "memory": "54Mi",
-          "cpu": "9m"
+          "cpu": "6m"
         },
         {
           "workload": "vmalert-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "32Mi",
-          "cpu": "7m"
-        },
-        {
-          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "124Mi",
-          "cpu": "20m"
-        },
-        {
-          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
-          "kind": "StatefulSet",
-          "memory": "23Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "k8s-stack",
-          "version": "0.96.0"
-        }
-      ],
-      "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vm-prometheus-node-exporter",
-          "kind": "DaemonSet",
-          "memory": "7Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "vm-kube-state-metrics",
-          "kind": "Deployment",
-          "memory": "25Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "50Mi",
-          "cpu": "8m"
-        },
-        {
-          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "33Mi",
-          "cpu": "7m"
-        },
-        {
-          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "119Mi",
-          "cpu": "18m"
-        },
-        {
-          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
-          "kind": "StatefulSet",
-          "memory": "23Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "k8s-stack",
-          "version": "0.96.0"
-        }
-      ],
-      "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vm-prometheus-node-exporter",
-          "kind": "DaemonSet",
-          "memory": "8Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vm-kube-state-metrics",
-          "kind": "Deployment",
-          "memory": "24Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "48Mi",
-          "cpu": "8m"
-        },
-        {
-          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "33Mi",
-          "cpu": "7m"
-        },
-        {
-          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "103Mi",
-          "cpu": "16m"
-        },
-        {
-          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
-          "kind": "StatefulSet",
-          "memory": "24Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "k8s-stack",
-          "version": "0.96.0"
-        }
-      ],
-      "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vm-prometheus-node-exporter",
-          "kind": "DaemonSet",
-          "memory": "8Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "vm-kube-state-metrics",
-          "kind": "Deployment",
-          "memory": "25Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "50Mi",
+          "memory": "36Mi",
           "cpu": "5m"
         },
         {
-          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "32Mi",
-          "cpu": "7m"
-        },
-        {
           "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "99Mi",
-          "cpu": "15m"
-        },
-        {
-          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
-          "kind": "StatefulSet",
-          "memory": "24Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "k8s-stack",
-          "version": "0.96.0"
-        }
-      ],
-      "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.35.7",
-      "distributionVersion": "v1.2.3",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vm-prometheus-node-exporter",
-          "kind": "DaemonSet",
-          "memory": "9Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vm-kube-state-metrics",
-          "kind": "Deployment",
-          "memory": "25Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "68Mi",
-          "cpu": "8m"
-        },
-        {
-          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "34Mi",
-          "cpu": "4m"
-        },
-        {
-          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "106Mi",
-          "cpu": "10m"
-        },
-        {
-          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
-          "kind": "StatefulSet",
-          "memory": "25Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "k8s-stack",
-          "version": "0.96.0"
-        }
-      ],
-      "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.35.7",
-      "distributionVersion": "v1.2.3",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vm-prometheus-node-exporter",
-          "kind": "DaemonSet",
-          "memory": "9Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vm-kube-state-metrics",
-          "kind": "Deployment",
-          "memory": "22Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "48Mi",
-          "cpu": "6m"
-        },
-        {
-          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "32Mi",
-          "cpu": "6m"
-        },
-        {
-          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "101Mi",
+          "memory": "94Mi",
           "cpu": "13m"
         },
         {
@@ -450,8 +55,449 @@
           "version": "0.96.0"
         }
       ],
-      "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk=",
-      "measuredAt": "2026-11-11"
+      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vm-prometheus-node-exporter",
+          "kind": "DaemonSet",
+          "memory": "8Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vm-kube-state-metrics",
+          "kind": "Deployment",
+          "memory": "24Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "75Mi",
+          "cpu": "5m"
+        },
+        {
+          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "33Mi",
+          "cpu": "6m"
+        },
+        {
+          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "103Mi",
+          "cpu": "13m"
+        },
+        {
+          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
+          "kind": "StatefulSet",
+          "memory": "26Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8s-stack",
+          "version": "0.96.0"
+        }
+      ],
+      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vm-prometheus-node-exporter",
+          "kind": "DaemonSet",
+          "memory": "8Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vm-kube-state-metrics",
+          "kind": "Deployment",
+          "memory": "26Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "49Mi",
+          "cpu": "8m"
+        },
+        {
+          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "31Mi",
+          "cpu": "5m"
+        },
+        {
+          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "125Mi",
+          "cpu": "15m"
+        },
+        {
+          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
+          "kind": "StatefulSet",
+          "memory": "24Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8s-stack",
+          "version": "0.96.0"
+        }
+      ],
+      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vm-prometheus-node-exporter",
+          "kind": "DaemonSet",
+          "memory": "7Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vm-kube-state-metrics",
+          "kind": "Deployment",
+          "memory": "26Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "53Mi",
+          "cpu": "8m"
+        },
+        {
+          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "33Mi",
+          "cpu": "8m"
+        },
+        {
+          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "114Mi",
+          "cpu": "19m"
+        },
+        {
+          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
+          "kind": "StatefulSet",
+          "memory": "24Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8s-stack",
+          "version": "0.96.0"
+        }
+      ],
+      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vm-prometheus-node-exporter",
+          "kind": "DaemonSet",
+          "memory": "8Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vm-kube-state-metrics",
+          "kind": "Deployment",
+          "memory": "25Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "50Mi",
+          "cpu": "5m"
+        },
+        {
+          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "31Mi",
+          "cpu": "6m"
+        },
+        {
+          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "105Mi",
+          "cpu": "15m"
+        },
+        {
+          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
+          "kind": "StatefulSet",
+          "memory": "24Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8s-stack",
+          "version": "0.96.0"
+        }
+      ],
+      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vm-prometheus-node-exporter",
+          "kind": "DaemonSet",
+          "memory": "8Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "vm-kube-state-metrics",
+          "kind": "Deployment",
+          "memory": "25Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "49Mi",
+          "cpu": "5m"
+        },
+        {
+          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "30Mi",
+          "cpu": "6m"
+        },
+        {
+          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "97Mi",
+          "cpu": "15m"
+        },
+        {
+          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
+          "kind": "StatefulSet",
+          "memory": "25Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8s-stack",
+          "version": "0.96.0"
+        }
+      ],
+      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vm-prometheus-node-exporter",
+          "kind": "DaemonSet",
+          "memory": "9Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vm-kube-state-metrics",
+          "kind": "Deployment",
+          "memory": "26Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "66Mi",
+          "cpu": "16m"
+        },
+        {
+          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "35Mi",
+          "cpu": "7m"
+        },
+        {
+          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "110Mi",
+          "cpu": "19m"
+        },
+        {
+          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
+          "kind": "StatefulSet",
+          "memory": "25Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8s-stack",
+          "version": "0.96.0"
+        }
+      ],
+      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+      },
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vm-prometheus-node-exporter",
+          "kind": "DaemonSet",
+          "memory": "9Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vm-kube-state-metrics",
+          "kind": "Deployment",
+          "memory": "25Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "72Mi",
+          "cpu": "10m"
+        },
+        {
+          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "34Mi",
+          "cpu": "6m"
+        },
+        {
+          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "114Mi",
+          "cpu": "13m"
+        },
+        {
+          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
+          "kind": "StatefulSet",
+          "memory": "26Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8s-stack",
+          "version": "0.96.0"
+        }
+      ],
+      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+      },
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "rke2",
@@ -460,8 +506,73 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+rke2r1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vm-prometheus-node-exporter",
+          "kind": "DaemonSet",
+          "memory": "8Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vm-kube-state-metrics",
+          "kind": "Deployment",
+          "memory": "30Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "57Mi",
+          "cpu": "6m"
+        },
+        {
+          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "35Mi",
+          "cpu": "6m"
+        },
+        {
+          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "126Mi",
+          "cpu": "15m"
+        },
+        {
+          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
+          "kind": "StatefulSet",
+          "memory": "26Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8s-stack",
+          "version": "0.96.0"
+        }
+      ],
+      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+      },
+      "addOns": {
+        "local-path-provisioner": "v0.0.37"
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
       "result": "passed",
       "pods": [
         {
@@ -479,65 +590,8 @@
         {
           "workload": "vmagent-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "55Mi",
-          "cpu": "5m"
-        },
-        {
-          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "34Mi",
-          "cpu": "7m"
-        },
-        {
-          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "122Mi",
-          "cpu": "19m"
-        },
-        {
-          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
-          "kind": "StatefulSet",
-          "memory": "25Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "k8s-stack",
-          "version": "0.96.0"
-        }
-      ],
-      "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "rke2",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+rke2r1",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vm-prometheus-node-exporter",
-          "kind": "DaemonSet",
-          "memory": "9Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "vm-kube-state-metrics",
-          "kind": "Deployment",
-          "memory": "26Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "62Mi",
-          "cpu": "4m"
+          "memory": "59Mi",
+          "cpu": "3m"
         },
         {
           "workload": "vmalert-vm-victoria-metrics-k8s-stack",
@@ -548,13 +602,13 @@
         {
           "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "119Mi",
-          "cpu": "15m"
+          "memory": "113Mi",
+          "cpu": "14m"
         },
         {
           "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
           "kind": "StatefulSet",
-          "memory": "24Mi",
+          "memory": "26Mi",
           "cpu": "1m"
         }
       ],
@@ -564,8 +618,16 @@
           "version": "0.96.0"
         }
       ],
-      "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk=",
-      "measuredAt": "2026-11-11"
+      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+      },
+      "addOns": {
+        "local-path-provisioner": "v0.0.37"
+      },
+      "measuredAt": "2026-11-12"
     }
   ]
 }

@@ -8,19 +8,19 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "n8n-db",
           "kind": "Cluster",
-          "memory": "81Mi",
-          "cpu": "6m"
+          "memory": "127Mi",
+          "cpu": "8m"
         },
         {
           "workload": "n8n",
           "kind": "Deployment",
-          "memory": "306Mi",
+          "memory": "329Mi",
           "cpu": "3m"
         },
         {
@@ -43,7 +43,12 @@
         }
       ],
       "sourceDigest": "h1:rb+d142CX/kKh6+Y6f7toE48l8RG+D/yGR1xsH1Z0Eo=",
-      "measuredAt": "2026-11-11"
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cloudnative-pg": "h1:sfHDjsosLaiS7MassT/Z6A/IareJUQk+yPcGhX2Yyis=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "measuredAt": "2026-11-12"
     }
   ]
 }

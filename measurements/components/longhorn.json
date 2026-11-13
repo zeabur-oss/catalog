@@ -8,95 +8,8 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+k3s1",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "engine-image-ei-2f3240cb",
-          "kind": "DaemonSet",
-          "memory": "3Mi",
-          "cpu": "7m"
-        },
-        {
-          "workload": "longhorn-csi-plugin",
-          "kind": "DaemonSet",
-          "memory": "21Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "longhorn-manager",
-          "kind": "DaemonSet",
-          "memory": "43Mi",
-          "cpu": "4m"
-        },
-        {
-          "workload": "csi-attacher",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "csi-provisioner",
-          "kind": "Deployment",
-          "memory": "13Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "csi-resizer",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "csi-snapshotter",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "2m"
-        },
-        {
-          "workload": "longhorn-driver-deployer",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "longhorn-global-manager",
-          "kind": "Deployment",
-          "memory": "19Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "longhorn-ui",
-          "kind": "Deployment",
-          "memory": "3Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "instance-manager-e8ff8d0c24c56889ea68b51d8bc7104f",
-          "kind": "InstanceManager",
-          "memory": "11Mi",
-          "cpu": "4m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "longhorn",
-          "version": "1.13.0"
-        }
-      ],
-      "sourceDigest": "h1:dbHxkgp4bBAWzBYzZPMQzErg9i2qzg4SaKy8hERvFPc=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "k3s",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+k3s1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+k3s1",
       "result": "passed",
       "pods": [
         {
@@ -114,277 +27,7 @@
         {
           "workload": "longhorn-manager",
           "kind": "DaemonSet",
-          "memory": "41Mi",
-          "cpu": "4m"
-        },
-        {
-          "workload": "csi-attacher",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "csi-provisioner",
-          "kind": "Deployment",
-          "memory": "14Mi",
-          "cpu": "2m"
-        },
-        {
-          "workload": "csi-resizer",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "csi-snapshotter",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "longhorn-driver-deployer",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "longhorn-global-manager",
-          "kind": "Deployment",
-          "memory": "19Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "longhorn-ui",
-          "kind": "Deployment",
-          "memory": "3Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "instance-manager-dcf5a8484bafdd86f771d449ac576bd9",
-          "kind": "InstanceManager",
-          "memory": "11Mi",
-          "cpu": "3m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "longhorn",
-          "version": "1.13.0"
-        }
-      ],
-      "sourceDigest": "h1:dbHxkgp4bBAWzBYzZPMQzErg9i2qzg4SaKy8hERvFPc=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "engine-image-ei-2f3240cb",
-          "kind": "DaemonSet",
-          "memory": "4Mi",
-          "cpu": "9m"
-        },
-        {
-          "workload": "longhorn-csi-plugin",
-          "kind": "DaemonSet",
-          "memory": "21Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "longhorn-manager",
-          "kind": "DaemonSet",
-          "memory": "44Mi",
-          "cpu": "4m"
-        },
-        {
-          "workload": "csi-attacher",
-          "kind": "Deployment",
-          "memory": "9Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "csi-provisioner",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "csi-resizer",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "csi-snapshotter",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "longhorn-driver-deployer",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "longhorn-global-manager",
-          "kind": "Deployment",
-          "memory": "19Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "longhorn-ui",
-          "kind": "Deployment",
-          "memory": "3Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "instance-manager-00e110915ba99d6afe6ab0fbd7fce6b8",
-          "kind": "InstanceManager",
-          "memory": "11Mi",
-          "cpu": "5m"
-        },
-        {
-          "workload": "instance-manager-014c2499fc2ba315987ecb47d68b7358",
-          "kind": "InstanceManager",
-          "memory": "12Mi",
-          "cpu": "5m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "longhorn",
-          "version": "1.13.0"
-        }
-      ],
-      "sourceDigest": "h1:dbHxkgp4bBAWzBYzZPMQzErg9i2qzg4SaKy8hERvFPc=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "engine-image-ei-2f3240cb",
-          "kind": "DaemonSet",
-          "memory": "3Mi",
-          "cpu": "7m"
-        },
-        {
-          "workload": "longhorn-csi-plugin",
-          "kind": "DaemonSet",
-          "memory": "21Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "longhorn-manager",
-          "kind": "DaemonSet",
-          "memory": "43Mi",
-          "cpu": "4m"
-        },
-        {
-          "workload": "csi-attacher",
-          "kind": "Deployment",
-          "memory": "9Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "csi-provisioner",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "csi-resizer",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "csi-snapshotter",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "longhorn-driver-deployer",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "longhorn-global-manager",
-          "kind": "Deployment",
-          "memory": "19Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "longhorn-ui",
-          "kind": "Deployment",
-          "memory": "2Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "instance-manager-af8d988ff2745440087af0baa2412135",
-          "kind": "InstanceManager",
-          "memory": "11Mi",
-          "cpu": "3m"
-        },
-        {
-          "workload": "instance-manager-fe93dc07cd7abee1a17f3ba5b63cd829",
-          "kind": "InstanceManager",
-          "memory": "11Mi",
-          "cpu": "3m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "longhorn",
-          "version": "1.13.0"
-        }
-      ],
-      "sourceDigest": "h1:dbHxkgp4bBAWzBYzZPMQzErg9i2qzg4SaKy8hERvFPc=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "engine-image-ei-2f3240cb",
-          "kind": "DaemonSet",
-          "memory": "3Mi",
-          "cpu": "7m"
-        },
-        {
-          "workload": "longhorn-csi-plugin",
-          "kind": "DaemonSet",
-          "memory": "21Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "longhorn-manager",
-          "kind": "DaemonSet",
-          "memory": "42Mi",
+          "memory": "50Mi",
           "cpu": "3m"
         },
         {
@@ -420,180 +63,7 @@
         {
           "workload": "longhorn-global-manager",
           "kind": "Deployment",
-          "memory": "19Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "longhorn-ui",
-          "kind": "Deployment",
-          "memory": "3Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "instance-manager-0bb75b9353974b8b1407e6bc1392e9d8",
-          "kind": "InstanceManager",
-          "memory": "12Mi",
-          "cpu": "4m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "longhorn",
-          "version": "1.13.0"
-        }
-      ],
-      "sourceDigest": "h1:dbHxkgp4bBAWzBYzZPMQzErg9i2qzg4SaKy8hERvFPc=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "engine-image-ei-2f3240cb",
-          "kind": "DaemonSet",
-          "memory": "2Mi",
-          "cpu": "7m"
-        },
-        {
-          "workload": "longhorn-csi-plugin",
-          "kind": "DaemonSet",
-          "memory": "21Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "longhorn-manager",
-          "kind": "DaemonSet",
-          "memory": "39Mi",
-          "cpu": "4m"
-        },
-        {
-          "workload": "csi-attacher",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "csi-provisioner",
-          "kind": "Deployment",
-          "memory": "13Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "csi-resizer",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "csi-snapshotter",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "longhorn-driver-deployer",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "longhorn-global-manager",
-          "kind": "Deployment",
-          "memory": "19Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "longhorn-ui",
-          "kind": "Deployment",
-          "memory": "2Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "instance-manager-5c33ed8ebbabca0e80d50ed6125f0f60",
-          "kind": "InstanceManager",
-          "memory": "11Mi",
-          "cpu": "4m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "longhorn",
-          "version": "1.13.0"
-        }
-      ],
-      "sourceDigest": "h1:dbHxkgp4bBAWzBYzZPMQzErg9i2qzg4SaKy8hERvFPc=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "rke2",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+rke2r1",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "engine-image-ei-2f3240cb",
-          "kind": "DaemonSet",
-          "memory": "3Mi",
-          "cpu": "7m"
-        },
-        {
-          "workload": "longhorn-csi-plugin",
-          "kind": "DaemonSet",
-          "memory": "20Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "longhorn-manager",
-          "kind": "DaemonSet",
-          "memory": "49Mi",
-          "cpu": "3m"
-        },
-        {
-          "workload": "csi-attacher",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "csi-provisioner",
-          "kind": "Deployment",
-          "memory": "14Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "csi-resizer",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "csi-snapshotter",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "longhorn-driver-deployer",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "longhorn-global-manager",
-          "kind": "Deployment",
-          "memory": "19Mi",
+          "memory": "22Mi",
           "cpu": "1m"
         },
         {
@@ -616,7 +86,540 @@
         }
       ],
       "sourceDigest": "h1:dbHxkgp4bBAWzBYzZPMQzErg9i2qzg4SaKy8hERvFPc=",
-      "measuredAt": "2026-11-11"
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "engine-image-ei-2f3240cb",
+          "kind": "DaemonSet",
+          "memory": "2Mi",
+          "cpu": "7m"
+        },
+        {
+          "workload": "longhorn-csi-plugin",
+          "kind": "DaemonSet",
+          "memory": "21Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "longhorn-manager",
+          "kind": "DaemonSet",
+          "memory": "51Mi",
+          "cpu": "3m"
+        },
+        {
+          "workload": "csi-attacher",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "csi-provisioner",
+          "kind": "Deployment",
+          "memory": "14Mi",
+          "cpu": "2m"
+        },
+        {
+          "workload": "csi-resizer",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "csi-snapshotter",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "longhorn-driver-deployer",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "longhorn-global-manager",
+          "kind": "Deployment",
+          "memory": "21Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "longhorn-ui",
+          "kind": "Deployment",
+          "memory": "2Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "instance-manager-dcf5a8484bafdd86f771d449ac576bd9",
+          "kind": "InstanceManager",
+          "memory": "11Mi",
+          "cpu": "4m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "longhorn",
+          "version": "1.13.0"
+        }
+      ],
+      "sourceDigest": "h1:dbHxkgp4bBAWzBYzZPMQzErg9i2qzg4SaKy8hERvFPc=",
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "engine-image-ei-2f3240cb",
+          "kind": "DaemonSet",
+          "memory": "4Mi",
+          "cpu": "10m"
+        },
+        {
+          "workload": "longhorn-csi-plugin",
+          "kind": "DaemonSet",
+          "memory": "21Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "longhorn-manager",
+          "kind": "DaemonSet",
+          "memory": "48Mi",
+          "cpu": "4m"
+        },
+        {
+          "workload": "csi-attacher",
+          "kind": "Deployment",
+          "memory": "9Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "csi-provisioner",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "csi-resizer",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "csi-snapshotter",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "longhorn-driver-deployer",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "longhorn-global-manager",
+          "kind": "Deployment",
+          "memory": "21Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "longhorn-ui",
+          "kind": "Deployment",
+          "memory": "3Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "instance-manager-495ef55028b143e9608604d27e27c710",
+          "kind": "InstanceManager",
+          "memory": "13Mi",
+          "cpu": "6m"
+        },
+        {
+          "workload": "instance-manager-8aa89d741c38b355de0288a8de3f11a1",
+          "kind": "InstanceManager",
+          "memory": "12Mi",
+          "cpu": "4m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "longhorn",
+          "version": "1.13.0"
+        }
+      ],
+      "sourceDigest": "h1:dbHxkgp4bBAWzBYzZPMQzErg9i2qzg4SaKy8hERvFPc=",
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "engine-image-ei-2f3240cb",
+          "kind": "DaemonSet",
+          "memory": "3Mi",
+          "cpu": "7m"
+        },
+        {
+          "workload": "longhorn-csi-plugin",
+          "kind": "DaemonSet",
+          "memory": "22Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "longhorn-manager",
+          "kind": "DaemonSet",
+          "memory": "47Mi",
+          "cpu": "4m"
+        },
+        {
+          "workload": "csi-attacher",
+          "kind": "Deployment",
+          "memory": "9Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "csi-provisioner",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "csi-resizer",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "csi-snapshotter",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "longhorn-driver-deployer",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "longhorn-global-manager",
+          "kind": "Deployment",
+          "memory": "21Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "longhorn-ui",
+          "kind": "Deployment",
+          "memory": "2Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "instance-manager-8b08cb745e44585146557dc82b0deb79",
+          "kind": "InstanceManager",
+          "memory": "11Mi",
+          "cpu": "3m"
+        },
+        {
+          "workload": "instance-manager-d98bd17e55bef08493323f447f5ec7b2",
+          "kind": "InstanceManager",
+          "memory": "14Mi",
+          "cpu": "4m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "longhorn",
+          "version": "1.13.0"
+        }
+      ],
+      "sourceDigest": "h1:dbHxkgp4bBAWzBYzZPMQzErg9i2qzg4SaKy8hERvFPc=",
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "engine-image-ei-2f3240cb",
+          "kind": "DaemonSet",
+          "memory": "3Mi",
+          "cpu": "9m"
+        },
+        {
+          "workload": "longhorn-csi-plugin",
+          "kind": "DaemonSet",
+          "memory": "22Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "longhorn-manager",
+          "kind": "DaemonSet",
+          "memory": "44Mi",
+          "cpu": "2m"
+        },
+        {
+          "workload": "csi-attacher",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "csi-provisioner",
+          "kind": "Deployment",
+          "memory": "13Mi",
+          "cpu": "2m"
+        },
+        {
+          "workload": "csi-resizer",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "csi-snapshotter",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "longhorn-driver-deployer",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "longhorn-global-manager",
+          "kind": "Deployment",
+          "memory": "21Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "longhorn-ui",
+          "kind": "Deployment",
+          "memory": "3Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "instance-manager-cb28b29153fbc3655720dc9d68fcb996",
+          "kind": "InstanceManager",
+          "memory": "11Mi",
+          "cpu": "4m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "longhorn",
+          "version": "1.13.0"
+        }
+      ],
+      "sourceDigest": "h1:dbHxkgp4bBAWzBYzZPMQzErg9i2qzg4SaKy8hERvFPc=",
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "engine-image-ei-2f3240cb",
+          "kind": "DaemonSet",
+          "memory": "2Mi",
+          "cpu": "7m"
+        },
+        {
+          "workload": "longhorn-csi-plugin",
+          "kind": "DaemonSet",
+          "memory": "21Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "longhorn-manager",
+          "kind": "DaemonSet",
+          "memory": "43Mi",
+          "cpu": "4m"
+        },
+        {
+          "workload": "csi-attacher",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "csi-provisioner",
+          "kind": "Deployment",
+          "memory": "14Mi",
+          "cpu": "2m"
+        },
+        {
+          "workload": "csi-resizer",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "csi-snapshotter",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "longhorn-driver-deployer",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "longhorn-global-manager",
+          "kind": "Deployment",
+          "memory": "21Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "longhorn-ui",
+          "kind": "Deployment",
+          "memory": "2Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "instance-manager-775a2274a74db0af7046f6488e814d84",
+          "kind": "InstanceManager",
+          "memory": "11Mi",
+          "cpu": "4m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "longhorn",
+          "version": "1.13.0"
+        }
+      ],
+      "sourceDigest": "h1:dbHxkgp4bBAWzBYzZPMQzErg9i2qzg4SaKy8hERvFPc=",
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "engine-image-ei-2f3240cb",
+          "kind": "DaemonSet",
+          "memory": "3Mi",
+          "cpu": "7m"
+        },
+        {
+          "workload": "longhorn-csi-plugin",
+          "kind": "DaemonSet",
+          "memory": "20Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "longhorn-manager",
+          "kind": "DaemonSet",
+          "memory": "52Mi",
+          "cpu": "2m"
+        },
+        {
+          "workload": "csi-attacher",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "csi-provisioner",
+          "kind": "Deployment",
+          "memory": "13Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "csi-resizer",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "csi-snapshotter",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "longhorn-driver-deployer",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "longhorn-global-manager",
+          "kind": "Deployment",
+          "memory": "21Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "longhorn-ui",
+          "kind": "Deployment",
+          "memory": "3Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "instance-manager-51514c08c445c8f9bd4fbf35c79e57f9",
+          "kind": "InstanceManager",
+          "memory": "11Mi",
+          "cpu": "3m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "longhorn",
+          "version": "1.13.0"
+        }
+      ],
+      "sourceDigest": "h1:dbHxkgp4bBAWzBYzZPMQzErg9i2qzg4SaKy8hERvFPc=",
+      "addOns": {
+        "local-path-provisioner": "v0.0.37"
+      },
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "rke2",
@@ -625,8 +628,8 @@
         "os": "linux",
         "architecture": "arm64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+rke2r1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
       "result": "passed",
       "pods": [
         {
@@ -644,8 +647,8 @@
         {
           "workload": "longhorn-manager",
           "kind": "DaemonSet",
-          "memory": "46Mi",
-          "cpu": "5m"
+          "memory": "54Mi",
+          "cpu": "2m"
         },
         {
           "workload": "csi-attacher",
@@ -674,25 +677,25 @@
         {
           "workload": "longhorn-driver-deployer",
           "kind": "Deployment",
-          "memory": "10Mi",
+          "memory": "11Mi",
           "cpu": "0"
         },
         {
           "workload": "longhorn-global-manager",
           "kind": "Deployment",
-          "memory": "20Mi",
+          "memory": "21Mi",
           "cpu": "1m"
         },
         {
           "workload": "longhorn-ui",
           "kind": "Deployment",
-          "memory": "3Mi",
+          "memory": "2Mi",
           "cpu": "0"
         },
         {
           "workload": "instance-manager-dcf5a8484bafdd86f771d449ac576bd9",
           "kind": "InstanceManager",
-          "memory": "11Mi",
+          "memory": "12Mi",
           "cpu": "4m"
         }
       ],
@@ -703,7 +706,10 @@
         }
       ],
       "sourceDigest": "h1:dbHxkgp4bBAWzBYzZPMQzErg9i2qzg4SaKy8hERvFPc=",
-      "measuredAt": "2026-11-11"
+      "addOns": {
+        "local-path-provisioner": "v0.0.37"
+      },
+      "measuredAt": "2026-11-12"
     }
   ]
 }
