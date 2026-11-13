@@ -1,0 +1,396 @@
+{
+  "id": "k8up",
+  "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
+  "declaration": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "defaults": {
+      "multi-node": "optional",
+      "single-node": "optional"
+    },
+    "detection": {
+      "crds": [
+        "schedules.k8up.io",
+        "backups.k8up.io"
+      ],
+      "helmCharts": [
+        "k8up"
+      ],
+      "workloads": [
+        {
+          "kind": "Deployment",
+          "labels": {
+            "app.kubernetes.io/name": "k8up"
+          }
+        }
+      ]
+    },
+    "distributions": [
+      "k3s",
+      "rke2",
+      "kubesolo"
+    ],
+    "kind": "Component",
+    "kubeVersion": "\u003e=1.34.0-0",
+    "leftovers": [
+      "customresourcedefinitions"
+    ],
+    "metadata": {
+      "homepage": "https://k8up.io",
+      "license": "Apache-2.0",
+      "locales": {
+        "zh-CN": {
+          "summary": "把各项目的卷备份到兼容 S3 的存储，数据库备份不需要它。"
+        },
+        "zh-TW": {
+          "summary": "備份各專案的磁碟區，存到相容 S3 的儲存空間，資料庫備份不需要它。"
+        }
+      },
+      "name": "K8up",
+      "summary": "Backs up each project's volumes to S3-compatible storage; database backups don't need it."
+    },
+    "provides": {
+      "capability": "volume-backup"
+    },
+    "releases": [
+      {
+        "chart": "k8up",
+        "chartDigest": "sha256:6d8a2e69ea3b75e25de80b4d173b2858e337586edf603c485567c5bf1ec8697a",
+        "name": "k8up",
+        "namespace": "k8up-system",
+        "profiles": {
+          "multi-node": "# Keeps schedules firing through node drains.\nreplicaCount: 2\nresources:\n  # Single-node's request; the leader uses about 20Mi on a two-node\n  # cluster with apps. The limit leaves room for more schedules.\n  requests: {cpu: 10m, memory: 32Mi}\n  limits: {memory: 512Mi}\n",
+          "single-node": "k8up:\n  # No leader election with a single replica.\n  enableLeaderElection: false\nresources:\n  # Idle between schedules; backup Jobs have their own requests.\n  requests: {cpu: 10m, memory: 32Mi}\n  limits: {memory: 256Mi}\n"
+        },
+        "repo": "https://k8up-io.github.io/k8up",
+        "type": "helm",
+        "values": "# Pinned by digest; a tag alone can move. The chart joins registry and\n# repository. registry comes second, so Renovate reads both.\nimage:\n  repository: k8up-io/k8up\n  registry: ghcr.io\n  tag: v2.16.1@sha256:f59bfa37c51511d5ad67e53816fb55c62d0e6411890e59bb6b965923129f30b5\nk8up:\n  # Back up only PVCs annotated for backup.\n  skipWithoutAnnotation: true\n",
+        "version": "4.10.1"
+      }
+    ],
+    "security": {
+      "podSecurity": "baseline",
+      "summary": "Watches K8up objects cluster-wide; backup Jobs mount PVCs in their own namespace."
+    }
+  },
+  "render": {
+    "kubernetesVersion": "1.37.0",
+    "profiles": {
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "k8up",
+            "namespace": "k8up-system",
+            "name": "k8up",
+            "kind": "Deployment",
+            "replicas": 2,
+            "containers": [
+              {
+                "name": "k8up-operator",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "32Mi"
+                },
+                "limits": {
+                  "memory": "512Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      },
+      "single-node": {
+        "workloads": [
+          {
+            "release": "k8up",
+            "namespace": "k8up-system",
+            "name": "k8up",
+            "kind": "Deployment",
+            "replicas": 1,
+            "containers": [
+              {
+                "name": "k8up-operator",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "32Mi"
+                },
+                "limits": {
+                  "memory": "256Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      }
+    }
+  },
+  "measurements": [
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "k8up",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8up",
+          "version": "4.10.1"
+        }
+      ],
+      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "k8up",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8up",
+          "version": "4.10.1"
+        }
+      ],
+      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "k8up",
+          "kind": "Deployment",
+          "memory": "12Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8up",
+          "version": "4.10.1"
+        }
+      ],
+      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "k8up",
+          "kind": "Deployment",
+          "memory": "12Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8up",
+          "version": "4.10.1"
+        }
+      ],
+      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "k8up",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8up",
+          "version": "4.10.1"
+        }
+      ],
+      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "k8up",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8up",
+          "version": "4.10.1"
+        }
+      ],
+      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "k8up",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8up",
+          "version": "4.10.1"
+        }
+      ],
+      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "k8up",
+          "kind": "Deployment",
+          "memory": "12Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8up",
+          "version": "4.10.1"
+        }
+      ],
+      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "k8up",
+          "kind": "Deployment",
+          "memory": "12Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8up",
+          "version": "4.10.1"
+        }
+      ],
+      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "k8up",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8up",
+          "version": "4.10.1"
+        }
+      ],
+      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

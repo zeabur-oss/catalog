@@ -1,0 +1,410 @@
+{
+  "id": "reloader",
+  "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
+  "declaration": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "defaults": {
+      "multi-node": "optional",
+      "single-node": "optional"
+    },
+    "detection": {
+      "helmCharts": [
+        "reloader"
+      ],
+      "workloads": [
+        {
+          "kind": "Deployment",
+          "labels": {
+            "app.kubernetes.io/name": "reloader"
+          }
+        }
+      ]
+    },
+    "distributions": [
+      "k3s",
+      "rke2",
+      "kubesolo"
+    ],
+    "kind": "Component",
+    "kubeVersion": "\u003e=1.34.0-0",
+    "leftovers": [
+      "configmaps/reloader-meta-info"
+    ],
+    "metadata": {
+      "homepage": "https://github.com/stakater/Reloader",
+      "license": "Apache-2.0",
+      "locales": {
+        "zh-CN": {
+          "summary": "服务使用的 ConfigMap 或 Secret 变更时，自动重启服务。"
+        },
+        "zh-TW": {
+          "summary": "服務使用的 ConfigMap 或 Secret 變更時，自動重新啟動服務。"
+        }
+      },
+      "name": "Stakater Reloader",
+      "summary": "Restarts services when a ConfigMap or Secret they use changes."
+    },
+    "provides": {
+      "capability": "config-reload"
+    },
+    "releases": [
+      {
+        "chart": "reloader",
+        "chartDigest": "sha256:5ac13440bd6cceff9464f62e4b836374b88be12076bcd31da34dc9bcd345c0b5",
+        "name": "reloader",
+        "namespace": "reloader",
+        "profiles": {
+          "multi-node": "reloader:\n  # Leader election, so a standby takes over when the leader's node\n  # drains. A change made before it holds the Lease (up to 15s) is\n  # missed: syncAfterRestart would cover it by rolling every tracked\n  # workload on each handoff, so it stays off.\n  enableHA: true\n  deployment:\n    # One leader and one standby.\n    replicas: 2\n    resources:\n      # Single-node's request; the leader uses about 44Mi on a two-node\n      # cluster with apps. The limit leaves room for more ConfigMaps and Secrets.\n      requests: {cpu: 10m, memory: 64Mi}\n      limits: {memory: 512Mi}\n",
+          "single-node": "reloader:\n  deployment:\n    resources:\n      # Caches every ConfigMap and Secret; grows with their count.\n      requests: {cpu: 10m, memory: 64Mi}\n      limits: {memory: 256Mi}\n"
+        },
+        "repo": "https://stakater.github.io/stakater-charts",
+        "type": "helm",
+        "values": "# Pinned by digest; a tag alone can move.\nimage:\n  repository: ghcr.io/stakater/reloader\n  tag: v1.4.22@sha256:def2480040adc164b3a57340e77674eadfd88fb7f0593df25e93297f29c7fd7c\nreloader:\n  # Only workloads annotated reloader.stakater.com/auto or */reload restart.\n  autoReloadAll: false\n  # Marks the pod template with an annotation instead of adding an\n  # environment variable, which the upstream README prefers for Flux and Argo CD.\n  reloadStrategy: annotations\n  # Leave Jobs alone and never create Jobs from CronJobs; this also drops\n  # the chart's batch RBAC rules.\n  ignoreJobs: true\n  ignoreCronJobs: true\n  # Tenants opt in per workload; a namespace list would differ per cluster.\n  watchGlobally: true\n  deployment:\n    # The namespace enforces Pod Security restricted.\n    containerSecurityContext:\n      allowPrivilegeEscalation: false\n      capabilities: {drop: [ALL]}\n",
+        "version": "2.2.19"
+      }
+    ],
+    "security": {
+      "podSecurity": "restricted",
+      "summary": "ClusterRole: reads, lists and watches every Secret and ConfigMap; reads, updates and patches Deployments, StatefulSets and DaemonSets; creates Events. Role in its namespace: lists, reads, watches, creates and updates every ConfigMap there, not only its own, and on multi-node the leader-election Lease.\n"
+    },
+    "smoke": [
+      {
+        "manifest": "apiVersion: v1\nkind: ConfigMap\nmetadata: {name: smoke, namespace: catalog-smoke}\ndata: {revision: \"1\"}\n---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: smoke\n  namespace: catalog-smoke\n  annotations: {reloader.stakater.com/auto: \"true\"}\nspec:\n  selector: {matchLabels: {app: smoke}}\n  template:\n    metadata: {labels: {app: smoke}}\n    spec:\n      containers:\n        - name: pause\n          image: registry.k8s.io/pause:3.10\n          envFrom: [{configMapRef: {name: smoke}}]\n",
+        "name": "deployment-ready",
+        "wait": [
+          "-n catalog-smoke deployment/smoke --for=condition=Available"
+        ]
+      },
+      {
+        "manifest": "apiVersion: v1\nkind: ConfigMap\nmetadata: {name: smoke, namespace: catalog-smoke}\ndata: {revision: \"2\"}\n",
+        "name": "rolls-on-configmap-change",
+        "wait": [
+          "-n catalog-smoke deployment/smoke --for=jsonpath={.spec.template.metadata.annotations.reloader\\.stakater\\.com/last-reloaded-from}",
+          "-n catalog-smoke deployment/smoke --for=jsonpath={.metadata.generation}=2",
+          "-n catalog-smoke deployment/smoke --for=condition=Available"
+        ]
+      }
+    ]
+  },
+  "render": {
+    "kubernetesVersion": "1.37.0",
+    "profiles": {
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "reloader",
+            "namespace": "reloader",
+            "name": "reloader-reloader",
+            "kind": "Deployment",
+            "replicas": 2,
+            "containers": [
+              {
+                "name": "reloader-reloader",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "64Mi"
+                },
+                "limits": {
+                  "memory": "512Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      },
+      "single-node": {
+        "workloads": [
+          {
+            "release": "reloader",
+            "namespace": "reloader",
+            "name": "reloader-reloader",
+            "kind": "Deployment",
+            "replicas": 1,
+            "containers": [
+              {
+                "name": "reloader-reloader",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "64Mi"
+                },
+                "limits": {
+                  "memory": "256Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      }
+    }
+  },
+  "measurements": [
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "reloader-reloader",
+          "kind": "Deployment",
+          "memory": "9Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "reloader",
+          "version": "2.2.19"
+        }
+      ],
+      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "reloader-reloader",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "reloader",
+          "version": "2.2.19"
+        }
+      ],
+      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "reloader-reloader",
+          "kind": "Deployment",
+          "memory": "9Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "reloader",
+          "version": "2.2.19"
+        }
+      ],
+      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "reloader-reloader",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "reloader",
+          "version": "2.2.19"
+        }
+      ],
+      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "reloader-reloader",
+          "kind": "Deployment",
+          "memory": "9Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "reloader",
+          "version": "2.2.19"
+        }
+      ],
+      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "reloader-reloader",
+          "kind": "Deployment",
+          "memory": "9Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "reloader",
+          "version": "2.2.19"
+        }
+      ],
+      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "reloader-reloader",
+          "kind": "Deployment",
+          "memory": "9Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "reloader",
+          "version": "2.2.19"
+        }
+      ],
+      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "reloader-reloader",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "reloader",
+          "version": "2.2.19"
+        }
+      ],
+      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "reloader-reloader",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "reloader",
+          "version": "2.2.19"
+        }
+      ],
+      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "reloader-reloader",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "reloader",
+          "version": "2.2.19"
+        }
+      ],
+      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

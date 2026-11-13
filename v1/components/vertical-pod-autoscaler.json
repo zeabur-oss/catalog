@@ -1,0 +1,382 @@
+{
+  "id": "vertical-pod-autoscaler",
+  "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
+  "declaration": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "defaults": {
+      "multi-node": "optional",
+      "single-node": "optional"
+    },
+    "detection": {
+      "crds": [
+        "verticalpodautoscalers.autoscaling.k8s.io"
+      ],
+      "helmCharts": [
+        "vertical-pod-autoscaler"
+      ],
+      "workloads": [
+        {
+          "kind": "Deployment",
+          "labels": {
+            "app.kubernetes.io/component": "recommender"
+          }
+        }
+      ]
+    },
+    "distributions": [
+      "k3s",
+      "rke2",
+      "kubesolo"
+    ],
+    "kind": "Component",
+    "kubeVersion": "\u003e=1.34.0-0",
+    "leftovers": [
+      "customresourcedefinitions"
+    ],
+    "metadata": {
+      "homepage": "https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler",
+      "license": "Apache-2.0",
+      "locales": {
+        "zh-CN": {
+          "summary": "根据实际用量建议 CPU 和内存的预留量。"
+        },
+        "zh-TW": {
+          "summary": "依實際用量建議 CPU 與記憶體的保留量。"
+        }
+      },
+      "name": "Vertical Pod Autoscaler (recommender only)",
+      "summary": "Suggests CPU and memory requests from actual use."
+    },
+    "provides": {
+      "capability": "resource-recommendations"
+    },
+    "releases": [
+      {
+        "chart": "vertical-pod-autoscaler",
+        "chartDigest": "sha256:dc9682d3d41a92b535e01d0fc2726e9d595eacd22f676ccc3f5333b4c6425624",
+        "name": "vpa",
+        "namespace": "vpa-system",
+        "repo": "https://kubernetes.github.io/autoscaler",
+        "type": "helm",
+        "values": "# The chart sets no container context and no seccomp profile; the namespace enforces Pod Security restricted.\npodSecurityContext:\n  runAsNonRoot: true\n  runAsUser: 65534\n  seccompProfile: {type: RuntimeDefault}\n# Pod Security restricted requires both settings.\ncontainerSecurityContext:\n  allowPrivilegeEscalation: false\n  capabilities: {drop: [ALL]}\nrecommender:\n  # Produces suggestions from metrics.k8s.io.\n  enabled: true\n  # Pinned by digest; a tag alone can move.\n  image:\n    repository: registry.k8s.io/autoscaling/vpa-recommender\n    tag: 1.8.1@sha256:edf874b830984d1df9d60f839874eba42de3465051922b929754edc42ea0f69b\nupdater:\n  # Evicts pods to apply suggestions; keep changes manual.\n  enabled: false\nadmissionController:\n  # Rewrites pod resources at admission; same reason.\n  enabled: false\n",
+        "version": "0.15.0"
+      }
+    ],
+    "requires": [
+      {
+        "component": "metrics-server"
+      }
+    ],
+    "security": {
+      "podSecurity": "restricted",
+      "summary": "Reads pods, workloads and metrics in all namespaces; writes VPA status."
+    }
+  },
+  "render": {
+    "kubernetesVersion": "1.37.0",
+    "profiles": {
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "vpa",
+            "namespace": "vpa-system",
+            "name": "vpa-vertical-pod-autoscaler-recommender",
+            "kind": "Deployment",
+            "replicas": 2,
+            "containers": [
+              {
+                "name": "recommender"
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      },
+      "single-node": {
+        "workloads": [
+          {
+            "release": "vpa",
+            "namespace": "vpa-system",
+            "name": "vpa-vertical-pod-autoscaler-recommender",
+            "kind": "Deployment",
+            "replicas": 2,
+            "containers": [
+              {
+                "name": "recommender"
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      }
+    }
+  },
+  "measurements": [
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vpa-vertical-pod-autoscaler-recommender",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "vpa",
+          "version": "0.15.0"
+        }
+      ],
+      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vpa-vertical-pod-autoscaler-recommender",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "vpa",
+          "version": "0.15.0"
+        }
+      ],
+      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vpa-vertical-pod-autoscaler-recommender",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "vpa",
+          "version": "0.15.0"
+        }
+      ],
+      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vpa-vertical-pod-autoscaler-recommender",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "vpa",
+          "version": "0.15.0"
+        }
+      ],
+      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vpa-vertical-pod-autoscaler-recommender",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "vpa",
+          "version": "0.15.0"
+        }
+      ],
+      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vpa-vertical-pod-autoscaler-recommender",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "vpa",
+          "version": "0.15.0"
+        }
+      ],
+      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vpa-vertical-pod-autoscaler-recommender",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "vpa",
+          "version": "0.15.0"
+        }
+      ],
+      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vpa-vertical-pod-autoscaler-recommender",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "vpa",
+          "version": "0.15.0"
+        }
+      ],
+      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vpa-vertical-pod-autoscaler-recommender",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "vpa",
+          "version": "0.15.0"
+        }
+      ],
+      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vpa-vertical-pod-autoscaler-recommender",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "vpa",
+          "version": "0.15.0"
+        }
+      ],
+      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

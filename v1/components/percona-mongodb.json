@@ -1,0 +1,407 @@
+{
+  "id": "percona-mongodb",
+  "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
+  "declaration": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "defaults": {
+      "multi-node": "optional",
+      "single-node": "optional"
+    },
+    "detection": {
+      "crds": [
+        "perconaservermongodbs.psmdb.percona.com"
+      ],
+      "helmCharts": [
+        "psmdb-operator"
+      ],
+      "workloads": [
+        {
+          "kind": "Deployment",
+          "labels": {
+            "app.kubernetes.io/name": "psmdb-operator"
+          }
+        }
+      ]
+    },
+    "distributions": [
+      "k3s",
+      "rke2",
+      "kubesolo"
+    ],
+    "kind": "Component",
+    "kubeVersion": "\u003e=1.34.0-0",
+    "leftovers": [
+      "customresourcedefinitions",
+      "persistentvolumeclaims"
+    ],
+    "metadata": {
+      "homepage": "https://docs.percona.com/percona-operator-for-mongodb/",
+      "license": "Apache-2.0 AND SSPL-1.0",
+      "locales": {
+        "zh-CN": {
+          "summary": "运行 MongoDB 数据库并备份到 S3，采用 SSPL 许可。"
+        },
+        "zh-TW": {
+          "summary": "執行 MongoDB 資料庫並備份到 S3，採 SSPL 授權。"
+        }
+      },
+      "name": "Percona Operator for MongoDB",
+      "summary": "Runs MongoDB databases with backups to S3, under the SSPL licence."
+    },
+    "persistsData": true,
+    "provides": {
+      "capability": "databases"
+    },
+    "releases": [
+      {
+        "chart": "psmdb-operator",
+        "chartDigest": "sha256:80e629dc31f8cfe2615a5efb8b0d1d2ed418f25e8c0b168f981412c8594a07e9",
+        "name": "psmdb-operator",
+        "namespace": "psmdb-operator",
+        "profiles": {
+          "multi-node": "# Leader election keeps one active; survives a drain.\nreplicaCount: 2\nresources:\n  # Single-node's request; the leader uses about 52Mi on a two-node\n  # cluster with apps. The limit leaves room for more clusters.\n  requests: {cpu: 10m, memory: 64Mi}\n  limits: {memory: 512Mi}\n",
+          "single-node": "resources:\n  # Idles near 25Mi; grows with clusters. Chart sets none.\n  requests: {cpu: 10m, memory: 64Mi}\n  limits: {memory: 256Mi}\n"
+        },
+        "repo": "https://percona.github.io/percona-helm-charts",
+        "type": "helm",
+        "values": "# Pinned by digest; a tag alone can move.\nimage:\n  repository: percona/percona-server-mongodb-operator\n  tag: 1.23.1@sha256:78c87b933e184b9af36dbb0078751862c75934c1521c33d3be4d0a38aa58dd0a\n# Reconcile clusters in every namespace.\nwatchAllNamespaces: true\n# Telemetry is on by default and reports to Percona.\ndisableTelemetry: true\n# The chart sets no security context; the namespace enforces Pod Security restricted.\npodSecurityContext:\n  runAsNonRoot: true\n  seccompProfile: {type: RuntimeDefault}\n# Pod Security restricted requires both settings.\nsecurityContext:\n  allowPrivilegeEscalation: false\n  capabilities: {drop: [ALL]}\n",
+        "version": "1.23.2"
+      }
+    ],
+    "security": {
+      "podSecurity": "restricted",
+      "summary": "Manages pods, Services, Secrets and PVCs for MongoDB clusters in every namespace."
+    },
+    "smoke": [
+      {
+        "manifest": "apiVersion: psmdb.percona.com/v1\nkind: PerconaServerMongoDB\nmetadata: {name: smoke, namespace: catalog-smoke}\nspec:\n  crVersion: 1.23.1\n  # MongoDB 8 does not start on Linux 6.19 and newer (SERVER-121912); 7.0 runs everywhere.\n  image: percona/percona-server-mongodb:7.0.43-23\n  unsafeFlags: {replsetSize: true}\n  replsets:\n    - name: rs0\n      size: 1\n      volumeSpec:\n        persistentVolumeClaim:\n          resources: {requests: {storage: 1Gi}}\n  sharding: {enabled: false}\n",
+        "name": "one-member-replset",
+        "timeout": "600s",
+        "wait": [
+          "-n catalog-smoke psmdb/smoke --for=jsonpath={.status.state}=ready"
+        ]
+      }
+    ]
+  },
+  "render": {
+    "kubernetesVersion": "1.37.0",
+    "profiles": {
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "psmdb-operator",
+            "namespace": "psmdb-operator",
+            "name": "psmdb-operator",
+            "kind": "Deployment",
+            "replicas": 2,
+            "containers": [
+              {
+                "name": "psmdb-operator",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "64Mi"
+                },
+                "limits": {
+                  "memory": "512Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      },
+      "single-node": {
+        "workloads": [
+          {
+            "release": "psmdb-operator",
+            "namespace": "psmdb-operator",
+            "name": "psmdb-operator",
+            "kind": "Deployment",
+            "replicas": 1,
+            "containers": [
+              {
+                "name": "psmdb-operator",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "64Mi"
+                },
+                "limits": {
+                  "memory": "256Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      }
+    }
+  },
+  "measurements": [
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "psmdb-operator",
+          "kind": "Deployment",
+          "memory": "18Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "psmdb-operator",
+          "version": "1.23.2"
+        }
+      ],
+      "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "psmdb-operator",
+          "kind": "Deployment",
+          "memory": "17Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "psmdb-operator",
+          "version": "1.23.2"
+        }
+      ],
+      "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "psmdb-operator",
+          "kind": "Deployment",
+          "memory": "18Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "psmdb-operator",
+          "version": "1.23.2"
+        }
+      ],
+      "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "psmdb-operator",
+          "kind": "Deployment",
+          "memory": "19Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "psmdb-operator",
+          "version": "1.23.2"
+        }
+      ],
+      "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "psmdb-operator",
+          "kind": "Deployment",
+          "memory": "17Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "psmdb-operator",
+          "version": "1.23.2"
+        }
+      ],
+      "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "psmdb-operator",
+          "kind": "Deployment",
+          "memory": "18Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "psmdb-operator",
+          "version": "1.23.2"
+        }
+      ],
+      "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "psmdb-operator",
+          "kind": "Deployment",
+          "memory": "19Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "psmdb-operator",
+          "version": "1.23.2"
+        }
+      ],
+      "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "psmdb-operator",
+          "kind": "Deployment",
+          "memory": "18Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "psmdb-operator",
+          "version": "1.23.2"
+        }
+      ],
+      "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "psmdb-operator",
+          "kind": "Deployment",
+          "memory": "20Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "psmdb-operator",
+          "version": "1.23.2"
+        }
+      ],
+      "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "psmdb-operator",
+          "kind": "Deployment",
+          "memory": "19Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "psmdb-operator",
+          "version": "1.23.2"
+        }
+      ],
+      "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

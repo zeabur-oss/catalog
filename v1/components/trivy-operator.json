@@ -1,0 +1,428 @@
+{
+  "id": "trivy-operator",
+  "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
+  "declaration": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "defaults": {
+      "multi-node": "optional",
+      "single-node": "optional"
+    },
+    "detection": {
+      "crds": [
+        "vulnerabilityreports.aquasecurity.github.io"
+      ],
+      "helmCharts": [
+        "trivy-operator"
+      ],
+      "workloads": [
+        {
+          "kind": "Deployment",
+          "labels": {
+            "app.kubernetes.io/name": "trivy-operator"
+          }
+        }
+      ]
+    },
+    "distributions": [
+      "k3s",
+      "rke2",
+      "kubesolo"
+    ],
+    "internalCRDs": [
+      "vulnerabilityreports.aquasecurity.github.io"
+    ],
+    "kind": "Component",
+    "kubeVersion": "\u003e=1.34.0-0",
+    "leftovers": [
+      "customresourcedefinitions"
+    ],
+    "metadata": {
+      "homepage": "https://aquasecurity.github.io/trivy-operator/",
+      "license": "Apache-2.0",
+      "locales": {
+        "zh-CN": {
+          "summary": "扫描运行中的镜像和配置，找出已知漏洞。"
+        },
+        "zh-TW": {
+          "summary": "掃描執行中的映像檔與設定，找出已知弱點。"
+        }
+      },
+      "name": "Trivy Operator",
+      "summary": "Scans running images and settings for known vulnerabilities."
+    },
+    "provides": {
+      "capability": "vulnerability-scanning"
+    },
+    "releases": [
+      {
+        "chart": "trivy-operator",
+        "chartDigest": "sha256:9c1de16f159bb9e1fca820b43cd7c5b1475fa869c2ce90541db0e747e8a4c674",
+        "name": "trivy-operator",
+        "namespace": "trivy-system",
+        "profiles": {
+          "multi-node": "operator:\n  # A few parallel scans keep reports fresh without flooding nodes.\n  scanJobsConcurrentLimit: 3\nresources:\n  # More workloads to track.\n  requests: {cpu: 50m, memory: 128Mi}\n  limits: {memory: 1Gi}\n",
+          "single-node": "operator:\n  # One scan at a time; each job loads an image and the DB.\n  scanJobsConcurrentLimit: 1\n  # One report per (mostly system) role; RBAC review is an admin task.\n  rbacAssessmentScannerEnabled: false\ntrivy:\n  # Low severity is noise on a small cluster.\n  severity: MEDIUM,HIGH,CRITICAL\nresources:\n  # The operator idles under 100Mi; scan jobs set their own.\n  requests: {cpu: 20m, memory: 64Mi}\n  limits: {memory: 512Mi}\n"
+        },
+        "repo": "https://aquasecurity.github.io/helm-charts",
+        "type": "helm",
+        "values": "# Pinned by digest; a tag alone can move. The chart joins registry and\n# repository. registry comes second, so Renovate reads both.\nimage:\n  repository: aquasec/trivy-operator\n  registry: mirror.gcr.io\n  tag: 0.35.0@sha256:4cdb11af98ff409cfa7af980098203a841a5fe957cc6a0bbb0df7668065eb5fa\n# The chart's container context is restricted already; the pod context lacks runAsNonRoot and seccomp.\npodSecurityContext:\n  runAsNonRoot: true\n  seccompProfile: {type: RuntimeDefault}\noperator:\n  # Reading every Secret is too broad; list pull secrets explicitly.\n  accessGlobalSecretsAndServiceAccount: false\n  # Compliance scans run privileged collectors; opt in explicitly.\n  infraAssessmentScannerEnabled: false\n  clusterComplianceEnabled: false\n  # SBOMs duplicate vulnerability reports and inflate operator memory.\n  sbomGenerationEnabled: false\ntrivy:\n  # Only fixable findings are actionable.\n  ignoreUnfixed: true\n",
+        "version": "0.38.1"
+      }
+    ],
+    "security": {
+      "podSecurity": "restricted",
+      "summary": "Reads workloads cluster-wide, runs scan Jobs and writes reports next to workloads."
+    }
+  },
+  "render": {
+    "kubernetesVersion": "1.37.0",
+    "profiles": {
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "trivy-operator",
+            "namespace": "trivy-system",
+            "name": "trivy-operator",
+            "kind": "Deployment",
+            "replicas": 1,
+            "containers": [
+              {
+                "name": "trivy-operator",
+                "requests": {
+                  "cpu": "50m",
+                  "memory": "128Mi"
+                },
+                "limits": {
+                  "memory": "1Gi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      },
+      "single-node": {
+        "workloads": [
+          {
+            "release": "trivy-operator",
+            "namespace": "trivy-system",
+            "name": "trivy-operator",
+            "kind": "Deployment",
+            "replicas": 1,
+            "containers": [
+              {
+                "name": "trivy-operator",
+                "requests": {
+                  "cpu": "20m",
+                  "memory": "64Mi"
+                },
+                "limits": {
+                  "memory": "512Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      }
+    }
+  },
+  "measurements": [
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "trivy-operator",
+          "kind": "Deployment",
+          "memory": "108Mi",
+          "cpu": "3m"
+        },
+        {
+          "workload": "scan-vulnerabilityreport-6d95c58984",
+          "kind": "Job",
+          "memory": "0",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.38.1"
+        }
+      ],
+      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "trivy-operator",
+          "kind": "Deployment",
+          "memory": "108Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.38.1"
+        }
+      ],
+      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "trivy-operator",
+          "kind": "Deployment",
+          "memory": "135Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.38.1"
+        }
+      ],
+      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "trivy-operator",
+          "kind": "Deployment",
+          "memory": "128Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.38.1"
+        }
+      ],
+      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "trivy-operator",
+          "kind": "Deployment",
+          "memory": "128Mi",
+          "cpu": "2m"
+        },
+        {
+          "workload": "scan-vulnerabilityreport-54989867fd",
+          "kind": "Job",
+          "memory": "0",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.38.1"
+        }
+      ],
+      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "trivy-operator",
+          "kind": "Deployment",
+          "memory": "180Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.38.1"
+        }
+      ],
+      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "trivy-operator",
+          "kind": "Deployment",
+          "memory": "104Mi",
+          "cpu": "3m"
+        },
+        {
+          "workload": "scan-vulnerabilityreport-65c8599f9c",
+          "kind": "Job",
+          "memory": "0",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.38.1"
+        }
+      ],
+      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "trivy-operator",
+          "kind": "Deployment",
+          "memory": "163Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.38.1"
+        }
+      ],
+      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "trivy-operator",
+          "kind": "Deployment",
+          "memory": "131Mi",
+          "cpu": "3m"
+        },
+        {
+          "workload": "scan-vulnerabilityreport-94b9cb4dd",
+          "kind": "Job",
+          "memory": "0",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.38.1"
+        }
+      ],
+      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "trivy-operator",
+          "kind": "Deployment",
+          "memory": "153Mi",
+          "cpu": "2m"
+        },
+        {
+          "workload": "scan-vulnerabilityreport-589c6c56d8",
+          "kind": "Job",
+          "memory": "0",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.38.1"
+        }
+      ],
+      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

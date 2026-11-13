@@ -1,0 +1,1017 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oss-catalog.zeabur.com/v1/schema/component.schema.json",
+  "$defs": {
+    "addon": {
+      "properties": {
+        "distribution": {
+          "type": "string",
+          "description": "A reader ignores an entry of a distribution it does not know."
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "distribution",
+        "name"
+      ],
+      "description": "Addon is an add-on of a distribution."
+    },
+    "contribution": {
+      "properties": {
+        "target": {
+          "$ref": "#/$defs/releaseRef"
+        },
+        "values": {
+          "type": "string",
+          "description": "Helm values (YAML). Every value needs a comment saying why."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "target",
+        "values"
+      ],
+      "description": "Contribution is values that a component adds to a release of another component."
+    },
+    "detectedWorkload": {
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "Deployment",
+            "StatefulSet",
+            "DaemonSet"
+          ]
+        },
+        "labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "kind",
+        "labels"
+      ],
+      "description": "DetectedWorkload is a workload whose labels show the upstream."
+    },
+    "detection": {
+      "properties": {
+        "crds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "apiServices": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "gatewayControllers": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "ingressControllers": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "csiDrivers": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "CSI drivers of the PersistentVolumes it provides."
+        },
+        "helmCharts": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "addons": {
+          "items": {
+            "$ref": "#/$defs/addon"
+          },
+          "type": "array",
+          "description": "Add-ons of a distribution that install the same upstream, such as k3s's packaged Traefik."
+        },
+        "workloads": {
+          "items": {
+            "$ref": "#/$defs/detectedWorkload"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "minProperties": 1,
+      "description": "Detection is how to recognise an existing installation."
+    },
+    "generate": {
+      "oneOf": [
+        {
+          "properties": {
+            "type": {
+              "const": "random"
+            }
+          },
+          "required": [
+            "bytes",
+            "encoding"
+          ]
+        },
+        {
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "bytes"
+                ]
+              },
+              {
+                "required": [
+                  "encoding"
+                ]
+              }
+            ]
+          },
+          "properties": {
+            "type": {
+              "const": "clusterIP"
+            }
+          }
+        }
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "random: bytes random bytes in encoding. clusterIP: a free address in the cluster's Service\nCIDR, for a Service's fixed ClusterIP. A template generates random values only."
+        },
+        "bytes": {
+          "type": "integer",
+          "maximum": 64,
+          "minimum": 12,
+          "description": "Random bytes to generate."
+        },
+        "encoding": {
+          "type": "string",
+          "enum": [
+            "hex",
+            "base64url"
+          ],
+          "description": "hex, or base64url without padding."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "description": "Generate is how the installer makes the value instead of asking. A reader does not fill in an\ninput whose type it does not know."
+    },
+    "health": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "resource": {
+          "$ref": "#/$defs/healthResource",
+          "description": "The objects to wait for."
+        },
+        "condition": {
+          "type": "string",
+          "pattern": "^[A-Za-z]+$",
+          "description": "The condition the objects reach, such as Ready or Available."
+        },
+        "timeout": {
+          "type": "string",
+          "pattern": "^[0-9]+(s|m)$"
+        },
+        "advice": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What to do when the check fails, in English. An installer shows it to the reader."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "resource",
+        "condition",
+        "timeout",
+        "advice"
+      ],
+      "description": "Health is a read-only check of an installed component: one kubectl wait\nthat applies nothing, so it can run on a production cluster."
+    },
+    "healthResource": {
+      "oneOf": [
+        {
+          "required": [
+            "name"
+          ]
+        },
+        {
+          "required": [
+            "selector"
+          ]
+        },
+        {
+          "required": [
+            "all"
+          ]
+        }
+      ],
+      "if": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "DaemonSet",
+              "Deployment",
+              "Node.longhorn.io",
+              "Pod",
+              "StatefulSet"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "namespace"
+        ]
+      },
+      "else": {
+        "not": {
+          "required": [
+            "namespace"
+          ]
+        }
+      },
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "APIService",
+            "DaemonSet",
+            "Deployment",
+            "GatewayClass",
+            "Node.longhorn.io",
+            "Pod",
+            "StatefulSet"
+          ],
+          "description": "The kind of the objects. A kind outside the core and apps groups that shares a name with\nanother has its group after a dot, such as Node.longhorn.io."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The name of one object."
+        },
+        "selector": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object",
+          "minProperties": 1,
+          "description": "The labels of the objects, each a key with its value."
+        },
+        "all": {
+          "type": "boolean",
+          "const": true,
+          "description": "Every object of the kind."
+        },
+        "namespace": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The namespace of the objects. A kind that has namespaces needs it, and any other kind can't have it."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "description": "HealthResource names the objects of one kind by name, by labels, or all of them."
+    },
+    "input": {
+      "oneOf": [
+        {
+          "required": [
+            "path"
+          ]
+        },
+        {
+          "required": [
+            "secret"
+          ]
+        }
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][A-Za-z0-9]*$",
+          "description": "camelCase."
+        },
+        "description": {
+          "type": "string"
+        },
+        "release": {
+          "type": "string",
+          "description": "Release whose values receive the input; defaults to the first chart release."
+        },
+        "path": {
+          "type": "string",
+          "description": "Dotted values path; numbers index lists."
+        },
+        "secret": {
+          "$ref": "#/$defs/secretRef",
+          "description": "Store the input in this Secret, created before install."
+        },
+        "generate": {
+          "$ref": "#/$defs/generate"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "default": true,
+        "testValue": {
+          "description": "Value CI installs with."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "description"
+      ],
+      "description": "Input is a value the installer asks for or generates."
+    },
+    "metadata": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name for people."
+        },
+        "summary": {
+          "type": "string",
+          "pattern": "^[^\\n]+$",
+          "description": "What it gives the cluster, in one plain sentence for people choosing components."
+        },
+        "locales": {
+          "$ref": "#/$defs/summaryLocales"
+        },
+        "license": {
+          "type": "string",
+          "description": "SPDX expression; every identifier must be OSI-approved, or listed under optInOnly in\nconfig/licenses.yaml with no profile recommending the component."
+        },
+        "homepage": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "summary",
+        "locales",
+        "license",
+        "homepage"
+      ],
+      "description": "Metadata is a component's name and summary."
+    },
+    "modes": {
+      "properties": {
+        "single-node": {
+          "enum": [
+            "recommended",
+            "optional",
+            "unsupported"
+          ]
+        },
+        "multi-node": {
+          "enum": [
+            "recommended",
+            "optional",
+            "unsupported"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "single-node",
+        "multi-node"
+      ]
+    },
+    "provides": {
+      "properties": {
+        "capability": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "description": "The capability it offers, such as logs. A requires entry {capability: \u003cname\u003e} installs one\ncomponent that offers it."
+        },
+        "registry": {
+          "$ref": "#/$defs/registry"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "minProperties": 1,
+      "description": "Provides is what a component offers other software in the cluster."
+    },
+    "quantities": {
+      "properties": {
+        "cpu": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          ]
+        },
+        "memory": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "minProperties": 1,
+      "description": "Kubernetes quantities by resource name, such as memory: 256Mi. Each is above zero."
+    },
+    "ref": {
+      "oneOf": [
+        {
+          "required": [
+            "component"
+          ]
+        },
+        {
+          "required": [
+            "capability"
+          ]
+        }
+      ],
+      "properties": {
+        "component": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "capability": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "description": "Ref is a component by id, or a capability: its recommended upstream on the profile, else an\noptional one."
+    },
+    "registry": {
+      "properties": {
+        "host": {
+          "type": "string",
+          "pattern": "^[a-z0-9.-]+:[0-9]+$",
+          "description": "host:port that images name."
+        },
+        "ca": {
+          "$ref": "#/$defs/secretRef",
+          "description": "The CA that signs its serving certificate."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "host",
+        "ca"
+      ],
+      "description": "Registry is an OCI registry in the cluster that nodes pull from."
+    },
+    "release": {
+      "oneOf": [
+        {
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "urls"
+                ]
+              },
+              {
+                "required": [
+                  "manifests"
+                ]
+              }
+            ]
+          },
+          "properties": {
+            "type": {
+              "const": "helm"
+            }
+          },
+          "required": [
+            "chart",
+            "version",
+            "chartDigest"
+          ]
+        },
+        {
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "chart"
+                ]
+              },
+              {
+                "required": [
+                  "manifests"
+                ]
+              }
+            ]
+          },
+          "properties": {
+            "type": {
+              "const": "manifest"
+            }
+          },
+          "required": [
+            "urls",
+            "version",
+            "urlDigests"
+          ]
+        },
+        {
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "chart"
+                ]
+              },
+              {
+                "required": [
+                  "urls"
+                ]
+              }
+            ]
+          },
+          "properties": {
+            "type": {
+              "const": "inline"
+            }
+          },
+          "required": [
+            "manifests"
+          ]
+        }
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "helm",
+            "manifest",
+            "inline"
+          ],
+          "description": "helm: a chart. manifest: files downloaded from urls. inline: the objects in manifests."
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "releaseName": {
+          "type": "string",
+          "description": "Helm release name; defaults to name."
+        },
+        "skipIfPresent": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "Skip when these CRDs already exist."
+        },
+        "chart": {
+          "type": "string",
+          "description": "oci://registry/path/chart, or a chart name with repo."
+        },
+        "repo": {
+          "type": "string",
+          "pattern": "^https://",
+          "description": "HTTP chart repository."
+        },
+        "urls": {
+          "items": {
+            "type": "string",
+            "pattern": "\\{version\\}"
+          },
+          "type": "array",
+          "description": "Manifest URLs; {version} is replaced."
+        },
+        "version": {
+          "type": "string"
+        },
+        "chartDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "description": "The chart at version: for an oci:// chart, its OCI manifest digest; for a chart in an HTTP\nrepository, the SHA-256 of the chart archive, as the repository's index.yaml records it."
+        },
+        "urlDigests": {
+          "items": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$"
+          },
+          "type": "array",
+          "description": "The SHA-256 of each file in urls, in the same order."
+        },
+        "unpinnedImages": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "Images, without tag, that the chart cannot pin by digest. A comment says why."
+        },
+        "manifests": {
+          "type": "string",
+          "description": "Objects applied as written."
+        },
+        "values": {
+          "type": "string",
+          "description": "Values for every profile: Helm values (YAML). Every value needs a comment saying why."
+        },
+        "profiles": {
+          "properties": {
+            "single-node": {
+              "type": "string"
+            },
+            "multi-node": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "type",
+        "namespace"
+      ],
+      "dependentRequired": {
+        "chartDigest": [
+          "chart"
+        ],
+        "profiles": [
+          "chart"
+        ],
+        "repo": [
+          "chart"
+        ],
+        "urlDigests": [
+          "urls"
+        ],
+        "values": [
+          "chart"
+        ]
+      },
+      "description": "Release is one install step of a component."
+    },
+    "releaseRef": {
+      "properties": {
+        "component": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "release": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "component",
+        "release"
+      ],
+      "description": "ReleaseRef is the release of another component that receives the values."
+    },
+    "resources": {
+      "properties": {
+        "work": {
+          "items": {
+            "$ref": "#/$defs/work"
+          },
+          "type": "array",
+          "minItems": 1,
+          "description": "Each kind of work the component does, such as a build. Names are unique."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "work"
+      ],
+      "description": "Resources is what a component needs beyond its measured idle use."
+    },
+    "secretRef": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "key",
+        "namespace"
+      ],
+      "description": "SecretRef is a key of a Secret."
+    },
+    "security": {
+      "properties": {
+        "summary": {
+          "type": "string",
+          "description": "What its RBAC lets it do."
+        },
+        "podSecurity": {
+          "type": "string",
+          "enum": [
+            "restricted",
+            "baseline",
+            "privileged"
+          ],
+          "description": "The Pod Security Standard level its namespaces need."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "summary",
+        "podSecurity"
+      ],
+      "description": "Security is what a component's RBAC lets it do and what its namespaces must allow."
+    },
+    "smoke": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "manifest": {
+          "type": "string",
+          "description": "Objects to apply first, in namespace catalog-smoke."
+        },
+        "wait": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "`kubectl wait` arguments."
+        },
+        "timeout": {
+          "type": "string",
+          "default": "180s"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "wait"
+      ],
+      "description": "Smoke is an e2e check after install."
+    },
+    "summaryLocale": {
+      "properties": {
+        "summary": {
+          "type": "string",
+          "pattern": "^[^\\n]+$"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "summary"
+      ],
+      "description": "SummaryLocale is a summary in one language."
+    },
+    "summaryLocales": {
+      "additionalProperties": {
+        "$ref": "#/$defs/summaryLocale"
+      },
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^([a-z]{2,3}(-[a-z]{3}){0,3}|[a-z]{4,8})(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?(-([a-z0-9]{5,8}|[0-9][a-z0-9]{3}))*(-[a-wyz0-9](-[a-z0-9]{2,8})+)*(-x(-[a-z0-9]{1,8})+)?$"
+      },
+      "type": "object",
+      "description": "SummaryLocales is the summary in other languages, by BCP 47 tag.\nconfig/locales.yaml lists the tags each needs."
+    },
+    "work": {
+      "anyOf": [
+        {
+          "required": [
+            "requests"
+          ]
+        },
+        {
+          "required": [
+            "limits"
+          ]
+        },
+        {
+          "required": [
+            "use"
+          ]
+        }
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "requests": {
+          "$ref": "#/$defs/quantities",
+          "description": "Resource requests of each pod doing one unit of work, for pods that no render shows, such as\na build pod."
+        },
+        "limits": {
+          "$ref": "#/$defs/quantities",
+          "description": "Resource limits of each pod doing one unit of work."
+        },
+        "use": {
+          "$ref": "#/$defs/quantities",
+          "description": "What one unit of work uses on top of the component's idle use."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "description": "Work is one kind of work a component does, such as a build."
+    }
+  },
+  "properties": {
+    "apiVersion": {
+      "const": "catalog.zeabur.com/v1"
+    },
+    "kind": {
+      "const": "Component"
+    },
+    "metadata": {
+      "$ref": "#/$defs/metadata"
+    },
+    "defaults": {
+      "$ref": "#/$defs/modes",
+      "description": "Per profile: recommended (on by default), optional (off by default) or unsupported."
+    },
+    "distributions": {
+      "items": {
+        "type": "string",
+        "enum": [
+          "k3s",
+          "rke2",
+          "kubesolo"
+        ]
+      },
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "Distributions it runs on and e2e tests it on, of k3s, rke2 and kubesolo. kind tests it\nregardless. A reader ignores a value it does not know."
+    },
+    "kubeVersion": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The Kubernetes versions it supports, as a SemVer range like Helm's Chart.yaml kubeVersion:\nthe strictest kubeVersion of its charts, else the oldest version that config/kubernetes.yaml\nrenders. Every version that config/kubernetes.yaml renders or tests on must be in it."
+    },
+    "persistsData": {
+      "type": "boolean",
+      "description": "Keeps state in volumes; uninstalling loses data."
+    },
+    "requires": {
+      "items": {
+        "$ref": "#/$defs/ref"
+      },
+      "type": "array",
+      "uniqueItems": true,
+      "description": "Components installed first."
+    },
+    "inputs": {
+      "items": {
+        "$ref": "#/$defs/input"
+      },
+      "type": "array",
+      "description": "Values the installer asks for or generates."
+    },
+    "releases": {
+      "items": {
+        "$ref": "#/$defs/release"
+      },
+      "type": "array",
+      "minItems": 1,
+      "description": "Installed in order."
+    },
+    "provides": {
+      "$ref": "#/$defs/provides",
+      "description": "What it offers other software in the cluster."
+    },
+    "internalCRDs": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array",
+      "description": "CRDs of detection.crds whose objects the component writes itself, so they don't mean anyone\nuses it."
+    },
+    "resources": {
+      "$ref": "#/$defs/resources"
+    },
+    "networkPolicies": {
+      "type": "string",
+      "description": "Standard NetworkPolicy objects in its namespaces, for installers that block incoming traffic\nto each namespace by default: applied before the releases, they admit the traffic the\ncomponent needs from elsewhere."
+    },
+    "contributes": {
+      "items": {
+        "$ref": "#/$defs/contribution"
+      },
+      "type": "array",
+      "description": "Values this component adds to another component's release."
+    },
+    "detection": {
+      "$ref": "#/$defs/detection"
+    },
+    "security": {
+      "$ref": "#/$defs/security"
+    },
+    "health": {
+      "items": {
+        "$ref": "#/$defs/health"
+      },
+      "type": "array",
+      "description": "Read-only checks that a tool such as zeabur-installer doctor runs on an installed cluster.\nEach is one `kubectl wait` and applies nothing. e2e runs them after install, before smoke."
+    },
+    "smoke": {
+      "items": {
+        "$ref": "#/$defs/smoke"
+      },
+      "type": "array",
+      "description": "Extra e2e checks after install. They may apply objects in catalog-smoke, so only e2e runs\nthem. Read-only checks go in health."
+    },
+    "leftovers": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array",
+      "description": "What the upstream keeps on uninstall: a kind (customresourcedefinitions) or\n\u003cresource\u003e/\u003cname\u003e."
+    }
+  },
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "defaults",
+    "distributions",
+    "kubeVersion",
+    "releases",
+    "detection",
+    "security"
+  ],
+  "title": "Component",
+  "description": "Component is one upstream, at components/\u003cid\u003e.yaml. A cluster administrator installs it."
+}

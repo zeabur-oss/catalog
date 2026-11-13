@@ -1,0 +1,427 @@
+{
+  "id": "dragonfly-operator",
+  "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
+  "declaration": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "defaults": {
+      "multi-node": "optional",
+      "single-node": "optional"
+    },
+    "detection": {
+      "crds": [
+        "dragonflies.dragonflydb.io"
+      ],
+      "helmCharts": [
+        "dragonfly-operator"
+      ],
+      "workloads": [
+        {
+          "kind": "Deployment",
+          "labels": {
+            "app.kubernetes.io/name": "dragonfly-operator"
+          }
+        }
+      ]
+    },
+    "distributions": [
+      "k3s",
+      "rke2",
+      "kubesolo"
+    ],
+    "kind": "Component",
+    "kubeVersion": "\u003e=1.34.0-0",
+    "leftovers": [
+      "customresourcedefinitions"
+    ],
+    "metadata": {
+      "homepage": "https://www.dragonflydb.io/docs/managing-dragonfly/operator/installation",
+      "license": "Apache-2.0 AND BUSL-1.1",
+      "locales": {
+        "zh-CN": {
+          "summary": "运行与 Redis 兼容的 Dragonfly，支持副本和快照，但不是开源许可。"
+        },
+        "zh-TW": {
+          "summary": "執行與 Redis 相容的 Dragonfly，支援副本和快照，但不是開放原始碼授權。"
+        }
+      },
+      "name": "Dragonfly Operator",
+      "summary": "Runs Dragonfly, a Redis-compatible store, with replicas and snapshots, under a licence that is not open source."
+    },
+    "persistsData": true,
+    "provides": {
+      "capability": "databases"
+    },
+    "releases": [
+      {
+        "chart": "oci://ghcr.io/dragonflydb/dragonfly-operator/helm/dragonfly-operator",
+        "chartDigest": "sha256:334cdd6cd58e08e77289b87ec8756b9f65fd085929ac8bb31e8b847981023376",
+        "name": "dragonfly-operator",
+        "namespace": "dragonfly-operator-system",
+        "profiles": {
+          "multi-node": "# Leader election keeps one active; survives a drain.\nreplicaCount: 2\npodDisruptionBudget:\n  # Keeps one replica through voluntary evictions.\n  enabled: true\nmanager:\n  resources:\n    # Single-node's request; the leader uses about 34Mi on a two-node\n    # cluster with apps. The limit leaves room for more Dragonfly objects.\n    requests: {cpu: 10m, memory: 64Mi}\n    limits: {memory: 512Mi}\nrbacProxy:\n  resources:\n    # Guards the metrics port; the chart asks for 64Mi.\n    requests: {cpu: 5m, memory: 32Mi}\n    limits: {memory: 128Mi}\n",
+          "single-node": "manager:\n  resources:\n    # The chart sets none; grows with Dragonfly objects.\n    requests: {cpu: 10m, memory: 64Mi}\n    limits: {memory: 256Mi}\nrbacProxy:\n  resources:\n    # Guards the metrics port; the chart asks for 64Mi.\n    requests: {cpu: 5m, memory: 32Mi}\n    limits: {memory: 128Mi}\n"
+        },
+        "type": "helm",
+        "values": "manager:\n  # Pinned by digest; a tag alone can move.\n  image:\n    repository: docker.dragonflydb.io/dragonflydb/operator\n    tag: v1.7.1@sha256:bc0067369a456810d00715d7292da32b82f6df491fd51d6c57f2b2b3193ab490\nrbacProxy:\n  # Pinned by digest; a tag alone can move.\n  image:\n    repository: quay.io/brancz/kube-rbac-proxy\n    tag: v0.20.2@sha256:ad0fa9f0adc928b557663297bd22c610533960d77acdec289ce8a636f0ea2114\ncrds:\n  # The chart's default, stated: CRDs outlive the release, and with them\n  # every Dragonfly object.\n  keep: true\n# Restricted Pod Security; the chart sets only runAsNonRoot.\npodSecurityContext:\n  runAsNonRoot: true\n  seccompProfile: {type: RuntimeDefault}\n",
+        "version": "v1.7.1"
+      }
+    ],
+    "security": {
+      "podSecurity": "restricted",
+      "summary": "Manages pods, StatefulSets, Services and PDBs for Dragonfly objects in every namespace."
+    },
+    "smoke": [
+      {
+        "manifest": "# Proves Dragonfly runs under restricted Pod Security.\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: catalog-smoke\n  labels: {pod-security.kubernetes.io/enforce: restricted}\n---\napiVersion: dragonflydb.io/v1alpha1\nkind: Dragonfly\nmetadata: {name: smoke, namespace: catalog-smoke}\nspec:\n  replicas: 1\n  args: [\"--proactor_threads=1\"]\n  resources:\n    requests: {cpu: 50m, memory: 256Mi}\n    limits: {memory: 512Mi}\n  podSecurityContext:\n    runAsNonRoot: true\n    runAsUser: 999\n    runAsGroup: 999\n    fsGroup: 999\n    seccompProfile: {type: RuntimeDefault}\n  containerSecurityContext:\n    allowPrivilegeEscalation: false\n    capabilities: {drop: [ALL]}\n",
+        "name": "one-instance",
+        "timeout": "600s",
+        "wait": [
+          "-n catalog-smoke dragonfly/smoke --for=jsonpath={.status.phase}=Ready"
+        ]
+      }
+    ]
+  },
+  "render": {
+    "kubernetesVersion": "1.37.0",
+    "profiles": {
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "dragonfly-operator",
+            "namespace": "dragonfly-operator-system",
+            "name": "dragonfly-operator",
+            "kind": "Deployment",
+            "replicas": 2,
+            "containers": [
+              {
+                "name": "kube-rbac-proxy",
+                "requests": {
+                  "cpu": "5m",
+                  "memory": "32Mi"
+                },
+                "limits": {
+                  "cpu": "500m",
+                  "memory": "128Mi"
+                }
+              },
+              {
+                "name": "manager",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "64Mi"
+                },
+                "limits": {
+                  "memory": "512Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      },
+      "single-node": {
+        "workloads": [
+          {
+            "release": "dragonfly-operator",
+            "namespace": "dragonfly-operator-system",
+            "name": "dragonfly-operator",
+            "kind": "Deployment",
+            "replicas": 1,
+            "containers": [
+              {
+                "name": "kube-rbac-proxy",
+                "requests": {
+                  "cpu": "5m",
+                  "memory": "32Mi"
+                },
+                "limits": {
+                  "cpu": "500m",
+                  "memory": "128Mi"
+                }
+              },
+              {
+                "name": "manager",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "64Mi"
+                },
+                "limits": {
+                  "memory": "256Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      }
+    }
+  },
+  "measurements": [
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "dragonfly-operator",
+          "kind": "Deployment",
+          "memory": "19Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "dragonfly-operator",
+          "version": "v1.7.1"
+        }
+      ],
+      "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "dragonfly-operator",
+          "kind": "Deployment",
+          "memory": "19Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "dragonfly-operator",
+          "version": "v1.7.1"
+        }
+      ],
+      "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "dragonfly-operator",
+          "kind": "Deployment",
+          "memory": "19Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "dragonfly-operator",
+          "version": "v1.7.1"
+        }
+      ],
+      "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "dragonfly-operator",
+          "kind": "Deployment",
+          "memory": "19Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "dragonfly-operator",
+          "version": "v1.7.1"
+        }
+      ],
+      "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "dragonfly-operator",
+          "kind": "Deployment",
+          "memory": "19Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "dragonfly-operator",
+          "version": "v1.7.1"
+        }
+      ],
+      "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "dragonfly-operator",
+          "kind": "Deployment",
+          "memory": "19Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "dragonfly-operator",
+          "version": "v1.7.1"
+        }
+      ],
+      "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "dragonfly-operator",
+          "kind": "Deployment",
+          "memory": "20Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "dragonfly-operator",
+          "version": "v1.7.1"
+        }
+      ],
+      "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "dragonfly-operator",
+          "kind": "Deployment",
+          "memory": "20Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "dragonfly-operator",
+          "version": "v1.7.1"
+        }
+      ],
+      "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "dragonfly-operator",
+          "kind": "Deployment",
+          "memory": "21Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "dragonfly-operator",
+          "version": "v1.7.1"
+        }
+      ],
+      "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "dragonfly-operator",
+          "kind": "Deployment",
+          "memory": "20Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "dragonfly-operator",
+          "version": "v1.7.1"
+        }
+      ],
+      "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

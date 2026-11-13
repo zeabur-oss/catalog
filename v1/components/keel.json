@@ -1,0 +1,407 @@
+{
+  "id": "keel",
+  "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
+  "declaration": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "defaults": {
+      "multi-node": "optional",
+      "single-node": "optional"
+    },
+    "detection": {
+      "helmCharts": [
+        "keel"
+      ],
+      "workloads": [
+        {
+          "kind": "Deployment",
+          "labels": {
+            "app": "keel"
+          }
+        }
+      ]
+    },
+    "distributions": [
+      "k3s",
+      "rke2",
+      "kubesolo"
+    ],
+    "kind": "Component",
+    "kubeVersion": "\u003e=1.34.0-0",
+    "metadata": {
+      "homepage": "https://keel.sh",
+      "license": "MPL-2.0",
+      "locales": {
+        "zh-CN": {
+          "summary": "新的镜像一构建好，就部署到开了自动部署的服务。"
+        },
+        "zh-TW": {
+          "summary": "新的映像檔一建好，就部署到開了自動部署的服務。"
+        }
+      },
+      "name": "Keel",
+      "summary": "Deploys each new image to the services you turn auto-deploy on for."
+    },
+    "provides": {
+      "capability": "image-updates"
+    },
+    "releases": [
+      {
+        "chart": "keel",
+        "chartDigest": "sha256:ba5b56c43064f653759f81f99f6c42ec97feba98224b5dc26e414c91295c4b8b",
+        "name": "keel",
+        "namespace": "keel",
+        "profiles": {
+          "multi-node": "resources:\n  # More workloads to track. Still one replica (the chart fixes it):\n  # Keel has no leader election, and two would roll each workload twice.\n  requests: {cpu: 20m, memory: 64Mi}\n  limits: {memory: 256Mi}\n",
+          "single-node": "resources:\n  # Caches annotated workloads only.\n  requests: {cpu: 10m, memory: 32Mi}\n  limits: {memory: 128Mi}\n"
+        },
+        "repo": "https://keel-hq.github.io/keel/",
+        "type": "helm",
+        "values": "image:\n  # Pinned by digest; a tag alone can move. Always would hit the\n  # registry on every restart.\n  repository: ghcr.io/keel-hq/keel\n  tag: 0.22.4@sha256:09872633675df8da591fd2c2a7a37fbe8f08e19f9972c8f64a4c1e473876ac05\n  pullPolicy: IfNotPresent\nhelmProvider:\n  # Workload annotations only. The Helm provider rewrites release\n  # values, which conflicts with whoever owns the release.\n  enabled: false\npolling:\n  # For workloads annotated keel.sh/trigger: poll, such as those on\n  # public registries that send no webhook.\n  enabled: true\n  # Fewer registry requests than the chart's 1m; a workload sets\n  # keel.sh/pollSchedule to poll faster.\n  defaultSchedule: \"@every 5m\"\nservice:\n  # Builder posts to http://keel.keel.svc:9300/v1/webhooks/native. The\n  # chart's LoadBalancer would publish an unauthenticated webhook.\n  enabled: true\n  type: ClusterIP\n  externalPort: 9300\nrbac:\n  clusterRole:\n    # The chart's rules minus configmaps and pods/portforward, unused\n    # with the Helm provider off.\n    rules:\n      - apiGroups: [\"\"]\n        resources: [namespaces, nodes]\n        verbs: [get, watch, list]\n      - apiGroups: [\"\"]\n        resources: [secrets]\n        verbs: [get, watch, list]\n      - apiGroups: [\"\", extensions, apps, batch]\n        resources: [pods, replicasets, replicationcontrollers, statefulsets, deployments, daemonsets, jobs, cronjobs]\n        verbs: [get, delete, watch, list, update]\npodSecurityContext:\n  # The image runs as uid 666; enforce it and the default seccomp profile.\n  runAsNonRoot: true\n  seccompProfile: {type: RuntimeDefault}\ncontainerSecurityContext:\n  # Root filesystem stays writable: keel.db lives in /data.\n  allowPrivilegeEscalation: false\n  capabilities: {drop: [ALL]}\npersistence:\n  # keel.db holds approvals and the audit log; neither is used here.\n  enabled: false\n",
+        "version": "v1.2.3"
+      },
+      {
+        "manifests": "apiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: keel-webhook\n  namespace: keel\nspec:\n  podSelector:\n    matchLabels: {app: keel}\n  policyTypes: [Ingress]\n  ingress:\n    - from:\n        - namespaceSelector:\n            matchLabels: {kubernetes.io/metadata.name: builder-system}\n        - podSelector: {}\n      ports:\n        - {port: 9300, protocol: TCP}\n",
+        "name": "webhook-policy",
+        "namespace": "keel",
+        "type": "inline"
+      }
+    ],
+    "security": {
+      "podSecurity": "restricted",
+      "summary": "ClusterRole: reads, lists and watches every Secret (registry credentials of tracked workloads), Namespace and Node; reads, updates and deletes Pods, ReplicaSets, ReplicationControllers, Deployments, StatefulSets, DaemonSets, Jobs and CronJobs in every namespace.\n"
+    },
+    "smoke": [
+      {
+        "manifest": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: smoke\n  namespace: catalog-smoke\n  annotations: {keel.sh/policy: force}\nspec:\n  selector: {matchLabels: {app: smoke}}\n  template:\n    metadata: {labels: {app: smoke}}\n    spec:\n      containers:\n        - name: pause\n          image: registry.k8s.io/pause:3.9\n---\n# Retries until Keel has seen the Deployment; a repeated event is a no-op.\n# In Keel's namespace: the NetworkPolicy refuses catalog-smoke.\napiVersion: batch/v1\nkind: Job\nmetadata: {name: webhook, namespace: keel}\nspec:\n  template:\n    spec:\n      restartPolicy: Never\n      containers:\n        - name: curl\n          image: curlimages/curl:8.23.0@sha256:3fb7e13e5d179a845c97d78204f3f1064d1907037f26a3ebf91710571151fd93\n          command: [sh, -c]\n          args:\n            - for i in 1 2 3 4 5 6; do curl -sSf -d '{\"name\":\"registry.k8s.io/pause\",\"tag\":\"3.10\"}' http://keel.keel.svc:9300/v1/webhooks/native; sleep 10; done\n",
+        "name": "rolls-on-native-webhook",
+        "wait": [
+          "-n catalog-smoke deployment/smoke --for=jsonpath={.spec.template.spec.containers[0].image}=registry.k8s.io/pause:3.10",
+          "-n catalog-smoke deployment/smoke --for=condition=Available"
+        ]
+      }
+    ]
+  },
+  "render": {
+    "kubernetesVersion": "1.37.0",
+    "profiles": {
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "keel",
+            "namespace": "keel",
+            "name": "keel",
+            "kind": "Deployment",
+            "replicas": 1,
+            "containers": [
+              {
+                "name": "keel",
+                "requests": {
+                  "cpu": "20m",
+                  "memory": "64Mi"
+                },
+                "limits": {
+                  "cpu": "100m",
+                  "memory": "256Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      },
+      "single-node": {
+        "workloads": [
+          {
+            "release": "keel",
+            "namespace": "keel",
+            "name": "keel",
+            "kind": "Deployment",
+            "replicas": 1,
+            "containers": [
+              {
+                "name": "keel",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "32Mi"
+                },
+                "limits": {
+                  "cpu": "100m",
+                  "memory": "128Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      }
+    }
+  },
+  "measurements": [
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "keel",
+          "kind": "Deployment",
+          "memory": "16Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "keel",
+          "version": "v1.2.3"
+        }
+      ],
+      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "keel",
+          "kind": "Deployment",
+          "memory": "15Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "keel",
+          "version": "v1.2.3"
+        }
+      ],
+      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "keel",
+          "kind": "Deployment",
+          "memory": "15Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "keel",
+          "version": "v1.2.3"
+        }
+      ],
+      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "keel",
+          "kind": "Deployment",
+          "memory": "15Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "keel",
+          "version": "v1.2.3"
+        }
+      ],
+      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "keel",
+          "kind": "Deployment",
+          "memory": "15Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "keel",
+          "version": "v1.2.3"
+        }
+      ],
+      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "keel",
+          "kind": "Deployment",
+          "memory": "15Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "keel",
+          "version": "v1.2.3"
+        }
+      ],
+      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "keel",
+          "kind": "Deployment",
+          "memory": "15Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "keel",
+          "version": "v1.2.3"
+        }
+      ],
+      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "keel",
+          "kind": "Deployment",
+          "memory": "15Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "keel",
+          "version": "v1.2.3"
+        }
+      ],
+      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "keel",
+          "kind": "Deployment",
+          "memory": "16Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "keel",
+          "version": "v1.2.3"
+        }
+      ],
+      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "keel",
+          "kind": "Deployment",
+          "memory": "16Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "keel",
+          "version": "v1.2.3"
+        }
+      ],
+      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

@@ -1,0 +1,558 @@
+{
+  "id": "mariadb-operator",
+  "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
+  "declaration": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "defaults": {
+      "multi-node": "optional",
+      "single-node": "optional"
+    },
+    "detection": {
+      "crds": [
+        "mariadbs.k8s.mariadb.com"
+      ],
+      "helmCharts": [
+        "mariadb-operator"
+      ],
+      "workloads": [
+        {
+          "kind": "Deployment",
+          "labels": {
+            "app.kubernetes.io/name": "mariadb-operator"
+          }
+        }
+      ]
+    },
+    "distributions": [
+      "k3s",
+      "rke2",
+      "kubesolo"
+    ],
+    "kind": "Component",
+    "kubeVersion": "\u003e=1.26.0-0",
+    "leftovers": [
+      "persistentvolumeclaims"
+    ],
+    "metadata": {
+      "homepage": "https://github.com/mariadb-operator/mariadb-operator",
+      "license": "MIT AND GPL-2.0-only",
+      "locales": {
+        "zh-CN": {
+          "summary": "运行与 MySQL 兼容的 MariaDB 数据库，并备份到 S3。"
+        },
+        "zh-TW": {
+          "summary": "執行與 MySQL 相容的 MariaDB 資料庫，並備份到 S3。"
+        }
+      },
+      "name": "MariaDB Operator",
+      "summary": "Runs MariaDB databases, a MySQL-compatible choice, with backups to S3."
+    },
+    "persistsData": true,
+    "provides": {
+      "capability": "databases"
+    },
+    "releases": [
+      {
+        "chart": "mariadb-operator-crds",
+        "chartDigest": "sha256:08c3540473c3e78a130eec47817257c866eab87549d4e6c1a8f7396827e971b0",
+        "name": "mariadb-operator-crds",
+        "namespace": "mariadb-operator",
+        "repo": "https://helm.mariadb.com/mariadb-operator",
+        "type": "helm",
+        "version": "26.10.2"
+      },
+      {
+        "chart": "mariadb-operator",
+        "chartDigest": "sha256:db364a229041e55bcd58e79dbdc723a8ff33e2a512c47551d1502cd7b0c75e07",
+        "name": "mariadb-operator",
+        "namespace": "mariadb-operator",
+        "profiles": {
+          "multi-node": "ha:\n  # Leader election keeps one active; survives a drain.\n  enabled: true\n  replicas: 2\nresources:\n  # Single-node's request; the leader uses about 54Mi on a two-node\n  # cluster with apps. The limit leaves room for more MariaDB objects.\n  requests: {cpu: 10m, memory: 64Mi}\n  limits: {memory: 512Mi}\nwebhook:\n  ha:\n    # Admission keeps working during a drain.\n    enabled: true\n    replicas: 2\n  resources:\n    # Only admits MariaDB objects.\n    requests: {cpu: 10m, memory: 32Mi}\n    limits: {memory: 128Mi}\n",
+          "single-node": "resources:\n  # The chart sets none; grows with MariaDB objects.\n  requests: {cpu: 10m, memory: 64Mi}\n  limits: {memory: 256Mi}\nwebhook:\n  resources:\n    # Only admits MariaDB objects.\n    requests: {cpu: 10m, memory: 32Mi}\n    limits: {memory: 128Mi}\n"
+        },
+        "repo": "https://helm.mariadb.com/mariadb-operator",
+        "type": "helm",
+        "values": "# Pinned by digest; a tag alone can move.\nimage:\n  repository: ghcr.io/mariadb-operator/mariadb-operator\n  tag: 26.10.1@sha256:37714fb240a53b2a496fd77d784879961b098bdbe0ef344ac7ba703ee3632017\ncrds:\n  # From the mariadb-operator-crds release.\n  enabled: false\nextraEnv:\n  # With client-go's streaming list, the controllers start 90 s or more late\n  # on a new KubeSolo cluster, often past their cache-sync limit, and the\n  # manager exits.\n  - {name: KUBE_FEATURE_WatchListClient, value: \"false\"}\nwebhook:\n  # The operator image, pinned by digest.\n  image:\n    repository: ghcr.io/mariadb-operator/mariadb-operator\n    tag: 26.10.1@sha256:37714fb240a53b2a496fd77d784879961b098bdbe0ef344ac7ba703ee3632017\n  cert:\n    certManager:\n      # cert-manager issues the webhook certificate, so the chart's\n      # cert-controller Deployment is not installed.\n      enabled: true\n  # Restricted Pod Security; the chart sets none.\n  podSecurityContext:\n    runAsNonRoot: true\n    seccompProfile: {type: RuntimeDefault}\n  # Restricted Pod Security; the chart sets none.\n  securityContext:\n    allowPrivilegeEscalation: false\n    readOnlyRootFilesystem: true\n    capabilities: {drop: [ALL]}\n# Restricted Pod Security; the chart sets none.\npodSecurityContext:\n  runAsNonRoot: true\n  seccompProfile: {type: RuntimeDefault}\n# Restricted Pod Security; the chart sets none.\nsecurityContext:\n  allowPrivilegeEscalation: false\n  readOnlyRootFilesystem: true\n  capabilities: {drop: [ALL]}\n",
+        "version": "26.10.2"
+      }
+    ],
+    "requires": [
+      {
+        "capability": "certificates"
+      }
+    ],
+    "security": {
+      "podSecurity": "restricted",
+      "summary": "Manages pods, Services, Secrets, PVCs, Jobs and RBAC for MariaDB objects in every namespace."
+    },
+    "smoke": [
+      {
+        "manifest": "# Proves MariaDB runs under restricted Pod Security.\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: catalog-smoke\n  labels: {pod-security.kubernetes.io/enforce: restricted}\n---\napiVersion: k8s.mariadb.com/v1alpha1\nkind: MariaDB\nmetadata: {name: smoke, namespace: catalog-smoke}\nspec:\n  storage: {size: 1Gi}\n  podSecurityContext:\n    runAsNonRoot: true\n    runAsUser: 999\n    runAsGroup: 999\n    fsGroup: 999\n    seccompProfile: {type: RuntimeDefault}\n  securityContext:\n    allowPrivilegeEscalation: false\n    capabilities: {drop: [ALL]}\n",
+        "name": "standalone",
+        "timeout": "600s",
+        "wait": [
+          "-n catalog-smoke mariadb/smoke --for=condition=Ready"
+        ]
+      }
+    ]
+  },
+  "render": {
+    "kubernetesVersion": "1.37.0",
+    "profiles": {
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "mariadb-operator",
+            "namespace": "mariadb-operator",
+            "name": "mariadb-operator",
+            "kind": "Deployment",
+            "replicas": 2,
+            "containers": [
+              {
+                "name": "controller",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "64Mi"
+                },
+                "limits": {
+                  "memory": "512Mi"
+                }
+              }
+            ]
+          },
+          {
+            "release": "mariadb-operator",
+            "namespace": "mariadb-operator",
+            "name": "mariadb-operator-webhook",
+            "kind": "Deployment",
+            "replicas": 2,
+            "containers": [
+              {
+                "name": "webhook",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "32Mi"
+                },
+                "limits": {
+                  "memory": "128Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      },
+      "single-node": {
+        "workloads": [
+          {
+            "release": "mariadb-operator",
+            "namespace": "mariadb-operator",
+            "name": "mariadb-operator",
+            "kind": "Deployment",
+            "replicas": 1,
+            "containers": [
+              {
+                "name": "controller",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "64Mi"
+                },
+                "limits": {
+                  "memory": "256Mi"
+                }
+              }
+            ]
+          },
+          {
+            "release": "mariadb-operator",
+            "namespace": "mariadb-operator",
+            "name": "mariadb-operator-webhook",
+            "kind": "Deployment",
+            "replicas": 1,
+            "containers": [
+              {
+                "name": "webhook",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "32Mi"
+                },
+                "limits": {
+                  "memory": "128Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      }
+    }
+  },
+  "measurements": [
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "mariadb-operator",
+          "kind": "Deployment",
+          "memory": "27Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "mariadb-operator-webhook",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "mariadb-operator-crds",
+          "version": "26.10.2"
+        },
+        {
+          "release": "mariadb-operator",
+          "version": "26.10.2"
+        }
+      ],
+      "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "mariadb-operator",
+          "kind": "Deployment",
+          "memory": "27Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "mariadb-operator-webhook",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "mariadb-operator-crds",
+          "version": "26.10.2"
+        },
+        {
+          "release": "mariadb-operator",
+          "version": "26.10.2"
+        }
+      ],
+      "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "mariadb-operator",
+          "kind": "Deployment",
+          "memory": "28Mi",
+          "cpu": "2m"
+        },
+        {
+          "workload": "mariadb-operator-webhook",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "mariadb-operator-crds",
+          "version": "26.10.2"
+        },
+        {
+          "release": "mariadb-operator",
+          "version": "26.10.2"
+        }
+      ],
+      "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "mariadb-operator",
+          "kind": "Deployment",
+          "memory": "28Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "mariadb-operator-webhook",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "mariadb-operator-crds",
+          "version": "26.10.2"
+        },
+        {
+          "release": "mariadb-operator",
+          "version": "26.10.2"
+        }
+      ],
+      "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "mariadb-operator",
+          "kind": "Deployment",
+          "memory": "27Mi",
+          "cpu": "2m"
+        },
+        {
+          "workload": "mariadb-operator-webhook",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "mariadb-operator-crds",
+          "version": "26.10.2"
+        },
+        {
+          "release": "mariadb-operator",
+          "version": "26.10.2"
+        }
+      ],
+      "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "mariadb-operator",
+          "kind": "Deployment",
+          "memory": "27Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "mariadb-operator-webhook",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "mariadb-operator-crds",
+          "version": "26.10.2"
+        },
+        {
+          "release": "mariadb-operator",
+          "version": "26.10.2"
+        }
+      ],
+      "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "mariadb-operator",
+          "kind": "Deployment",
+          "memory": "26Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "mariadb-operator-webhook",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "mariadb-operator-crds",
+          "version": "26.10.2"
+        },
+        {
+          "release": "mariadb-operator",
+          "version": "26.10.2"
+        }
+      ],
+      "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "mariadb-operator",
+          "kind": "Deployment",
+          "memory": "27Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "mariadb-operator-webhook",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "mariadb-operator-crds",
+          "version": "26.10.2"
+        },
+        {
+          "release": "mariadb-operator",
+          "version": "26.10.2"
+        }
+      ],
+      "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "mariadb-operator",
+          "kind": "Deployment",
+          "memory": "30Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "mariadb-operator-webhook",
+          "kind": "Deployment",
+          "memory": "12Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "mariadb-operator-crds",
+          "version": "26.10.2"
+        },
+        {
+          "release": "mariadb-operator",
+          "version": "26.10.2"
+        }
+      ],
+      "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "mariadb-operator",
+          "kind": "Deployment",
+          "memory": "30Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "mariadb-operator-webhook",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "mariadb-operator-crds",
+          "version": "26.10.2"
+        },
+        {
+          "release": "mariadb-operator",
+          "version": "26.10.2"
+        }
+      ],
+      "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

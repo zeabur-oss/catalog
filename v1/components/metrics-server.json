@@ -1,0 +1,421 @@
+{
+  "id": "metrics-server",
+  "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
+  "declaration": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "defaults": {
+      "multi-node": "recommended",
+      "single-node": "recommended"
+    },
+    "detection": {
+      "addons": [
+        {
+          "distribution": "k3s",
+          "name": "metrics-server"
+        },
+        {
+          "distribution": "rke2",
+          "name": "rke2-metrics-server"
+        }
+      ],
+      "apiServices": [
+        "v1beta1.metrics.k8s.io"
+      ],
+      "helmCharts": [
+        "metrics-server"
+      ],
+      "workloads": [
+        {
+          "kind": "Deployment",
+          "labels": {
+            "app.kubernetes.io/name": "metrics-server"
+          }
+        },
+        {
+          "kind": "Deployment",
+          "labels": {
+            "k8s-app": "metrics-server"
+          }
+        }
+      ]
+    },
+    "distributions": [
+      "k3s",
+      "rke2",
+      "kubesolo"
+    ],
+    "health": [
+      {
+        "advice": "The metrics API doesn't answer, so kubectl top and autoscaling have no data. Check the metrics-server pod with kubectl -n kube-system get pods.",
+        "condition": "Available",
+        "name": "metrics-api",
+        "resource": {
+          "kind": "APIService",
+          "name": "v1beta1.metrics.k8s.io"
+        },
+        "timeout": "60s"
+      }
+    ],
+    "kind": "Component",
+    "kubeVersion": "\u003e=1.34.0-0",
+    "metadata": {
+      "homepage": "https://github.com/kubernetes-sigs/metrics-server",
+      "license": "Apache-2.0",
+      "locales": {
+        "zh-CN": {
+          "summary": "显示每个 Pod 当前用了多少 CPU 和内存。"
+        },
+        "zh-TW": {
+          "summary": "顯示每個 Pod 目前用了多少 CPU 與記憶體。"
+        }
+      },
+      "name": "Kubernetes Metrics Server",
+      "summary": "Shows the CPU and memory each pod uses right now."
+    },
+    "networkPolicies": "apiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: metrics-server-apiserver\n  namespace: kube-system\nspec:\n  podSelector:\n    matchLabels: {app.kubernetes.io/name: metrics-server}\n  policyTypes: [Ingress]\n  ingress:\n    - ports: [{protocol: TCP, port: 10250}]\n",
+    "provides": {
+      "capability": "metrics"
+    },
+    "releases": [
+      {
+        "chart": "metrics-server",
+        "chartDigest": "sha256:c2ca1185c01e6e7f53dd1b7d131f0c9b3fa50e003ed068b784563a1b5a3422a1",
+        "name": "metrics-server",
+        "namespace": "kube-system",
+        "profiles": {
+          "multi-node": "# HPA stops while metrics.k8s.io is down; two replicas.\nreplicas: 2\npodDisruptionBudget:\n  # Keep one replica during node drains.\n  enabled: true\n  minAvailable: 1\nresources:\n  # Covers clusters of a few dozen nodes.\n  requests: {cpu: 50m, memory: 96Mi}\n  limits: {memory: 256Mi}\n",
+          "single-node": "resources:\n  # Idles near 25Mi; the chart's 200Mi request is sized for 100+ nodes.\n  requests: {cpu: 20m, memory: 32Mi}\n  limits: {memory: 128Mi}\n"
+        },
+        "repo": "https://kubernetes-sigs.github.io/metrics-server",
+        "type": "helm",
+        "values": "# Pinned by digest; a tag alone can move.\nimage:\n  repository: registry.k8s.io/metrics-server/metrics-server\n  tag: v0.9.0@sha256:d9862115e7c7881280d3d75ca26bda8ffc0fc213315979575bf23ce9826205c0\nargs:\n  # 15s is fresh enough for live views; the default is 60s.\n  - --metric-resolution=15s\n",
+        "version": "3.14.0"
+      }
+    ],
+    "security": {
+      "podSecurity": "restricted",
+      "summary": "Reads kubelet metrics; registers an aggregated API."
+    }
+  },
+  "render": {
+    "kubernetesVersion": "1.37.0",
+    "profiles": {
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "metrics-server",
+            "namespace": "kube-system",
+            "name": "metrics-server",
+            "kind": "Deployment",
+            "replicas": 2,
+            "containers": [
+              {
+                "name": "metrics-server",
+                "requests": {
+                  "cpu": "50m",
+                  "memory": "96Mi"
+                },
+                "limits": {
+                  "memory": "256Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      },
+      "single-node": {
+        "workloads": [
+          {
+            "release": "metrics-server",
+            "namespace": "kube-system",
+            "name": "metrics-server",
+            "kind": "Deployment",
+            "replicas": 1,
+            "containers": [
+              {
+                "name": "metrics-server",
+                "requests": {
+                  "cpu": "20m",
+                  "memory": "32Mi"
+                },
+                "limits": {
+                  "memory": "128Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      }
+    }
+  },
+  "measurements": [
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "metrics-server",
+          "kind": "Deployment",
+          "memory": "17Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "metrics-server",
+          "version": "3.14.0"
+        }
+      ],
+      "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "metrics-server",
+          "kind": "Deployment",
+          "memory": "17Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "metrics-server",
+          "version": "3.14.0"
+        }
+      ],
+      "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "metrics-server",
+          "kind": "Deployment",
+          "memory": "17Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "metrics-server",
+          "version": "3.14.0"
+        }
+      ],
+      "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "metrics-server",
+          "kind": "Deployment",
+          "memory": "17Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "metrics-server",
+          "version": "3.14.0"
+        }
+      ],
+      "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "metrics-server",
+          "kind": "Deployment",
+          "memory": "17Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "metrics-server",
+          "version": "3.14.0"
+        }
+      ],
+      "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "metrics-server",
+          "kind": "Deployment",
+          "memory": "16Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "metrics-server",
+          "version": "3.14.0"
+        }
+      ],
+      "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "metrics-server",
+          "kind": "Deployment",
+          "memory": "17Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "metrics-server",
+          "version": "3.14.0"
+        }
+      ],
+      "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "metrics-server",
+          "kind": "Deployment",
+          "memory": "17Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "metrics-server",
+          "version": "3.14.0"
+        }
+      ],
+      "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "metrics-server",
+          "kind": "Deployment",
+          "memory": "17Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "metrics-server",
+          "version": "3.14.0"
+        }
+      ],
+      "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "metrics-server",
+          "kind": "Deployment",
+          "memory": "17Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "metrics-server",
+          "version": "3.14.0"
+        }
+      ],
+      "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

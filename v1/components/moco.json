@@ -1,0 +1,412 @@
+{
+  "id": "moco",
+  "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
+  "declaration": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "defaults": {
+      "multi-node": "optional",
+      "single-node": "optional"
+    },
+    "detection": {
+      "crds": [
+        "mysqlclusters.moco.cybozu.com"
+      ],
+      "helmCharts": [
+        "moco"
+      ],
+      "workloads": [
+        {
+          "kind": "Deployment",
+          "labels": {
+            "app.kubernetes.io/name": "moco"
+          }
+        }
+      ]
+    },
+    "distributions": [
+      "k3s",
+      "rke2",
+      "kubesolo"
+    ],
+    "kind": "Component",
+    "kubeVersion": "\u003e=1.22.0-0",
+    "leftovers": [
+      "customresourcedefinitions",
+      "persistentvolumeclaims"
+    ],
+    "metadata": {
+      "homepage": "https://cybozu-go.github.io/moco/",
+      "license": "Apache-2.0 AND GPL-2.0-only",
+      "locales": {
+        "zh-CN": {
+          "summary": "运行 MySQL 8 数据库，支持副本，并能备份到 S3。"
+        },
+        "zh-TW": {
+          "summary": "執行 MySQL 8 資料庫，支援副本，並能備份到 S3。"
+        }
+      },
+      "name": "MOCO",
+      "summary": "Runs MySQL 8 databases with replicas and backups to S3."
+    },
+    "persistsData": true,
+    "provides": {
+      "capability": "databases"
+    },
+    "releases": [
+      {
+        "chart": "moco",
+        "chartDigest": "sha256:98c147a7915f233c0b539824bec7d6748a177ceed25fdfbdbdf41e46d42f9fbb",
+        "name": "moco",
+        "namespace": "moco-system",
+        "profiles": {
+          "multi-node": "# The chart's default, stated: leader election keeps one active.\nreplicaCount: 2\nresources:\n  # Single-node's request; the leader uses about 46Mi on a two-node\n  # cluster with apps. The limit leaves room for more MySQLClusters.\n  requests: {cpu: 10m, memory: 64Mi}\n  limits: {memory: 512Mi}\n",
+          "single-node": "# One node: a second replica gains nothing.\nreplicaCount: 1\nresources:\n  # The chart asks for 100m and 20Mi; grows with MySQLClusters.\n  requests: {cpu: 10m, memory: 64Mi}\n  limits: {memory: 256Mi}\n"
+        },
+        "repo": "https://cybozu-go.github.io/moco/",
+        "type": "helm",
+        "values": "# Pinned by digest; a tag alone can move.\nimage:\n  repository: ghcr.io/cybozu-go/moco\n  tag: 0.37.0@sha256:32e7cab1bdd8ea302e570685696287a9524017f26eaf4ed63d5929e8053d6fce\n",
+        "version": "0.28.0"
+      }
+    ],
+    "requires": [
+      {
+        "capability": "certificates"
+      }
+    ],
+    "security": {
+      "podSecurity": "baseline",
+      "summary": "Manages pods, StatefulSets, Services, Secrets, PVCs, CronJobs, Jobs and Roles for MySQLClusters in every namespace, and copies certificates into them.\n"
+    },
+    "smoke": [
+      {
+        "manifest": "# Proves MySQL runs under restricted Pod Security.\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: catalog-smoke\n  labels: {pod-security.kubernetes.io/enforce: restricted}\n---\napiVersion: moco.cybozu.com/v1beta2\nkind: MySQLCluster\nmetadata: {name: smoke, namespace: catalog-smoke}\nspec:\n  replicas: 1\n  podTemplate:\n    spec:\n      securityContext:\n        runAsNonRoot: true\n        seccompProfile: {type: RuntimeDefault}\n      containers:\n        - name: mysqld\n          image: ghcr.io/cybozu-go/moco/mysql:8.4.10.1\n          securityContext:\n            runAsUser: 10000\n            runAsGroup: 10000\n            allowPrivilegeEscalation: false\n            capabilities: {drop: [ALL]}\n    overwriteContainers:\n      - name: agent\n        securityContext: \u0026system\n          runAsUser: 10000\n          runAsGroup: 10000\n          allowPrivilegeEscalation: false\n          capabilities: {drop: [ALL]}\n      - name: moco-init\n        securityContext: *system\n      - name: copy-moco-init\n        securityContext: *system\n      - name: slow-log\n        securityContext: *system\n  volumeClaimTemplates:\n    - metadata: {name: mysql-data}\n      spec:\n        accessModes: [ReadWriteOnce]\n        resources: {requests: {storage: 1Gi}}\n",
+        "name": "one-instance",
+        "timeout": "600s",
+        "wait": [
+          "-n catalog-smoke mysqlcluster/smoke --for=condition=Healthy"
+        ]
+      }
+    ]
+  },
+  "render": {
+    "kubernetesVersion": "1.37.0",
+    "profiles": {
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "moco",
+            "namespace": "moco-system",
+            "name": "moco-controller",
+            "kind": "Deployment",
+            "replicas": 2,
+            "containers": [
+              {
+                "name": "moco-controller",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "64Mi"
+                },
+                "limits": {
+                  "memory": "512Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      },
+      "single-node": {
+        "workloads": [
+          {
+            "release": "moco",
+            "namespace": "moco-system",
+            "name": "moco-controller",
+            "kind": "Deployment",
+            "replicas": 1,
+            "containers": [
+              {
+                "name": "moco-controller",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "64Mi"
+                },
+                "limits": {
+                  "memory": "256Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      }
+    }
+  },
+  "measurements": [
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "moco-controller",
+          "kind": "Deployment",
+          "memory": "20Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "moco",
+          "version": "0.28.0"
+        }
+      ],
+      "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "moco-controller",
+          "kind": "Deployment",
+          "memory": "20Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "moco",
+          "version": "0.28.0"
+        }
+      ],
+      "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "moco-controller",
+          "kind": "Deployment",
+          "memory": "20Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "moco",
+          "version": "0.28.0"
+        }
+      ],
+      "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "moco-controller",
+          "kind": "Deployment",
+          "memory": "19Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "moco",
+          "version": "0.28.0"
+        }
+      ],
+      "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "moco-controller",
+          "kind": "Deployment",
+          "memory": "19Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "moco",
+          "version": "0.28.0"
+        }
+      ],
+      "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "moco-controller",
+          "kind": "Deployment",
+          "memory": "19Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "moco",
+          "version": "0.28.0"
+        }
+      ],
+      "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "moco-controller",
+          "kind": "Deployment",
+          "memory": "19Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "moco",
+          "version": "0.28.0"
+        }
+      ],
+      "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "moco-controller",
+          "kind": "Deployment",
+          "memory": "19Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "moco",
+          "version": "0.28.0"
+        }
+      ],
+      "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "moco-controller",
+          "kind": "Deployment",
+          "memory": "22Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "moco",
+          "version": "0.28.0"
+        }
+      ],
+      "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "moco-controller",
+          "kind": "Deployment",
+          "memory": "21Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "moco",
+          "version": "0.28.0"
+        }
+      ],
+      "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}

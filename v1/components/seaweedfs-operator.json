@@ -1,0 +1,415 @@
+{
+  "id": "seaweedfs-operator",
+  "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+  "declaration": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "defaults": {
+      "multi-node": "optional",
+      "single-node": "optional"
+    },
+    "detection": {
+      "crds": [
+        "seaweeds.seaweed.seaweedfs.com"
+      ],
+      "helmCharts": [
+        "seaweedfs-operator"
+      ],
+      "workloads": [
+        {
+          "kind": "Deployment",
+          "labels": {
+            "app.kubernetes.io/name": "seaweedfs-operator"
+          }
+        }
+      ]
+    },
+    "distributions": [
+      "k3s",
+      "rke2",
+      "kubesolo"
+    ],
+    "kind": "Component",
+    "kubeVersion": "\u003e=1.34.0-0",
+    "leftovers": [
+      "customresourcedefinitions",
+      "persistentvolumeclaims"
+    ],
+    "metadata": {
+      "homepage": "https://github.com/seaweedfs/seaweedfs-operator",
+      "license": "Apache-2.0",
+      "locales": {
+        "zh-CN": {
+          "summary": "运行提供 S3 API 的 SeaweedFS 对象存储，目前为 Beta。"
+        },
+        "zh-TW": {
+          "summary": "執行提供 S3 API 的 SeaweedFS 物件儲存，目前為 Beta。"
+        }
+      },
+      "name": "SeaweedFS Operator",
+      "summary": "Runs SeaweedFS object storage with an S3 API, in beta."
+    },
+    "persistsData": true,
+    "provides": {
+      "capability": "object-storage"
+    },
+    "releases": [
+      {
+        "chart": "seaweedfs-operator",
+        "chartDigest": "sha256:713909bbe0ea6d7afb9790ca353d9cca25186d54d3fada20b9b7a0da6adbae64",
+        "name": "seaweedfs-operator",
+        "namespace": "seaweedfs-operator",
+        "profiles": {
+          "multi-node": "# Leader election keeps one active; survives a drain.\nreplicaCount: 2\nresources:\n  # Single-node's request; the leader uses about 52Mi on a two-node\n  # cluster with apps. The limit leaves room for more clusters and buckets.\n  requests: {cpu: 10m, memory: 64Mi}\n  limits: {memory: 512Mi}\n",
+          "single-node": "resources:\n  # The chart asks for 100m and 50Mi; it idles lower.\n  requests: {cpu: 10m, memory: 64Mi}\n  limits: {memory: 256Mi}\n"
+        },
+        "repo": "https://seaweedfs.github.io/seaweedfs-operator/",
+        "type": "helm",
+        "values": "# Pinned by digest; a tag alone can move. An empty registry lets\n# repository hold the full name, which Renovate looks up.\nimage:\n  registry: \"\"\n  repository: chrislusf/seaweedfs-operator\n  tag: 1.0.43@sha256:d17e9a623d9e19812e1533c9ab63bb1535bd21a50367c6e9e6830f14a52610d9\nwebhook:\n  certManager:\n    # cert-manager issues the webhook certificate instead of the chart's\n    # certgen hook Job.\n    enabled: true\n  # Restricted Pod Security; the chart's default.\n  podSecurityContext:\n    runAsNonRoot: true\n    runAsUser: 65532\n    fsGroup: 65532\n    seccompProfile: {type: RuntimeDefault}\ngrafanaDashboard:\n  # On by default; no Grafana assumed.\n  enabled: false\n# Restricted Pod Security; the chart leaves out the seccomp profile.\npodSecurityContext:\n  runAsNonRoot: true\n  runAsUser: 65532\n  fsGroup: 65532\n  seccompProfile: {type: RuntimeDefault}\n",
+        "version": "0.1.46"
+      }
+    ],
+    "requires": [
+      {
+        "capability": "certificates"
+      }
+    ],
+    "security": {
+      "podSecurity": "restricted",
+      "summary": "Manages pods, StatefulSets, Services, Secrets, PVCs, Jobs and Ingresses for Seaweed objects in every namespace, and calls each cluster's admin API.\n"
+    },
+    "smoke": [
+      {
+        "manifest": "# Proves SeaweedFS runs under restricted Pod Security.\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: catalog-smoke\n  labels: {pod-security.kubernetes.io/enforce: restricted}\n---\napiVersion: seaweed.seaweedfs.com/v1\nkind: Seaweed\nmetadata: {name: smoke, namespace: catalog-smoke}\nspec:\n  image: chrislusf/seaweedfs:4.52\n  volumeServerDiskCount: 1\n  master:\n    replicas: 1\n    podSecurityContext: \u0026pod\n      runAsNonRoot: true\n      runAsUser: 1000\n      runAsGroup: 1000\n      fsGroup: 1000\n      seccompProfile: {type: RuntimeDefault}\n    containerSecurityContext: \u0026container\n      allowPrivilegeEscalation: false\n      capabilities: {drop: [ALL]}\n  volume:\n    replicas: 1\n    requests: {storage: 1Gi}\n    podSecurityContext: *pod\n    containerSecurityContext: *container\n  filer:\n    replicas: 1\n    podSecurityContext: *pod\n    containerSecurityContext: *container\n  s3:\n    replicas: 1\n    podSecurityContext: *pod\n    containerSecurityContext: *container\n",
+        "name": "one-node-s3",
+        "timeout": "600s",
+        "wait": [
+          "-n catalog-smoke deployment/smoke-s3 --for=create",
+          "-n catalog-smoke deployment/smoke-s3 --for=condition=Available"
+        ]
+      }
+    ]
+  },
+  "render": {
+    "kubernetesVersion": "1.37.0",
+    "profiles": {
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "seaweedfs-operator",
+            "namespace": "seaweedfs-operator",
+            "name": "seaweedfs-operator",
+            "kind": "Deployment",
+            "replicas": 2,
+            "containers": [
+              {
+                "name": "seaweedfs-operator",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "64Mi"
+                },
+                "limits": {
+                  "cpu": "500m",
+                  "memory": "512Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      },
+      "single-node": {
+        "workloads": [
+          {
+            "release": "seaweedfs-operator",
+            "namespace": "seaweedfs-operator",
+            "name": "seaweedfs-operator",
+            "kind": "Deployment",
+            "replicas": 1,
+            "containers": [
+              {
+                "name": "seaweedfs-operator",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "64Mi"
+                },
+                "limits": {
+                  "cpu": "500m",
+                  "memory": "256Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      }
+    }
+  },
+  "measurements": [
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "26Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.46"
+        }
+      ],
+      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "26Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.46"
+        }
+      ],
+      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "26Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.46"
+        }
+      ],
+      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "28Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.46"
+        }
+      ],
+      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "28Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.46"
+        }
+      ],
+      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.4",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "26Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.46"
+        }
+      ],
+      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "23Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.46"
+        }
+      ],
+      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.35.7",
+      "distributionVersion": "v1.2.3",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "24Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.46"
+        }
+      ],
+      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "30Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.46"
+        }
+      ],
+      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "measuredAt": "2026-11-11"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.5",
+      "distributionVersion": "v1.36.5+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "27Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.46"
+        }
+      ],
+      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "measuredAt": "2026-11-11"
+    }
+  ]
+}
