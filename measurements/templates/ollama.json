@@ -8,13 +8,13 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "ollama",
           "kind": "Deployment",
-          "memory": "15Mi",
+          "memory": "70Mi",
           "cpu": "0"
         }
       ],
@@ -26,7 +26,7 @@
         }
       ],
       "sourceDigest": "h1:/UdgbWYlf4hkxosOC5zurSHy4b4lzoUh3n8DJhYdv1Q=",
-      "measuredAt": "2026-11-11"
+      "measuredAt": "2026-11-12"
     }
   ]
 }

@@ -8,15 +8,15 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+k3s1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+k3s1",
       "result": "passed",
       "pods": [
         {
           "workload": "vpa-vertical-pod-autoscaler-recommender",
           "kind": "Deployment",
           "memory": "10Mi",
-          "cpu": "1m"
+          "cpu": "0"
         }
       ],
       "versions": [
@@ -26,7 +26,10 @@
         }
       ],
       "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
-      "measuredAt": "2026-11-11"
+      "dependencies": {
+        "metrics-server": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU="
+      },
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "k3s",
@@ -35,8 +38,8 @@
         "os": "linux",
         "architecture": "arm64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+k3s1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+k3s1",
       "result": "passed",
       "pods": [
         {
@@ -53,7 +56,10 @@
         }
       ],
       "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
-      "measuredAt": "2026-11-11"
+      "dependencies": {
+        "metrics-server": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU="
+      },
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
@@ -62,7 +68,190 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vpa-vertical-pod-autoscaler-recommender",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "vpa",
+          "version": "0.15.0"
+        }
+      ],
+      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
+      "dependencies": {
+        "metrics-server": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vpa-vertical-pod-autoscaler-recommender",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "vpa",
+          "version": "0.15.0"
+        }
+      ],
+      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
+      "dependencies": {
+        "metrics-server": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vpa-vertical-pod-autoscaler-recommender",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "vpa",
+          "version": "0.15.0"
+        }
+      ],
+      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
+      "dependencies": {
+        "metrics-server": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vpa-vertical-pod-autoscaler-recommender",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "vpa",
+          "version": "0.15.0"
+        }
+      ],
+      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
+      "dependencies": {
+        "metrics-server": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vpa-vertical-pod-autoscaler-recommender",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "vpa",
+          "version": "0.15.0"
+        }
+      ],
+      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
+      "dependencies": {
+        "metrics-server": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU="
+      },
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vpa-vertical-pod-autoscaler-recommender",
+          "kind": "Deployment",
+          "memory": "9Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "vpa",
+          "version": "0.15.0"
+        }
+      ],
+      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
+      "dependencies": {
+        "metrics-server": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU="
+      },
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
       "result": "passed",
       "pods": [
         {
@@ -79,166 +268,13 @@
         }
       ],
       "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
+      "dependencies": {
+        "metrics-server": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU="
       },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vpa-vertical-pod-autoscaler-recommender",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "vpa",
-          "version": "0.15.0"
-        }
-      ],
-      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
+      "addOns": {
+        "local-path-provisioner": "v0.0.37"
       },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vpa-vertical-pod-autoscaler-recommender",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "vpa",
-          "version": "0.15.0"
-        }
-      ],
-      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vpa-vertical-pod-autoscaler-recommender",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "vpa",
-          "version": "0.15.0"
-        }
-      ],
-      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.35.7",
-      "distributionVersion": "v1.2.3",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vpa-vertical-pod-autoscaler-recommender",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "vpa",
-          "version": "0.15.0"
-        }
-      ],
-      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.35.7",
-      "distributionVersion": "v1.2.3",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vpa-vertical-pod-autoscaler-recommender",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "vpa",
-          "version": "0.15.0"
-        }
-      ],
-      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "rke2",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+rke2r1",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vpa-vertical-pod-autoscaler-recommender",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "vpa",
-          "version": "0.15.0"
-        }
-      ],
-      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
-      "measuredAt": "2026-11-11"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "rke2",
@@ -247,8 +283,8 @@
         "os": "linux",
         "architecture": "arm64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+rke2r1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
       "result": "passed",
       "pods": [
         {
@@ -265,7 +301,13 @@
         }
       ],
       "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI=",
-      "measuredAt": "2026-11-11"
+      "dependencies": {
+        "metrics-server": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU="
+      },
+      "addOns": {
+        "local-path-provisioner": "v0.0.37"
+      },
+      "measuredAt": "2026-11-12"
     }
   ]
 }

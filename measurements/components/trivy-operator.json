@@ -8,21 +8,15 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+k3s1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+k3s1",
       "result": "passed",
       "pods": [
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "108Mi",
-          "cpu": "3m"
-        },
-        {
-          "workload": "scan-vulnerabilityreport-6d95c58984",
-          "kind": "Job",
-          "memory": "0",
-          "cpu": "0"
+          "memory": "115Mi",
+          "cpu": "2m"
         }
       ],
       "versions": [
@@ -32,7 +26,7 @@
         }
       ],
       "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
-      "measuredAt": "2026-11-11"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "k3s",
@@ -41,14 +35,14 @@
         "os": "linux",
         "architecture": "arm64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+k3s1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+k3s1",
       "result": "passed",
       "pods": [
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "108Mi",
+          "memory": "113Mi",
           "cpu": "1m"
         }
       ],
@@ -59,7 +53,7 @@
         }
       ],
       "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
-      "measuredAt": "2026-11-11"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
@@ -68,13 +62,13 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "135Mi",
+          "memory": "138Mi",
           "cpu": "2m"
         }
       ],
@@ -85,7 +79,7 @@
         }
       ],
       "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
-      "measuredAt": "2026-11-11"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
@@ -94,14 +88,14 @@
         "os": "linux",
         "architecture": "arm64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "128Mi",
-          "cpu": "1m"
+          "memory": "125Mi",
+          "cpu": "2m"
         }
       ],
       "versions": [
@@ -111,7 +105,7 @@
         }
       ],
       "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
-      "measuredAt": "2026-11-11"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
@@ -120,17 +114,17 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "128Mi",
-          "cpu": "2m"
+          "memory": "134Mi",
+          "cpu": "1m"
         },
         {
-          "workload": "scan-vulnerabilityreport-54989867fd",
+          "workload": "scan-vulnerabilityreport-67fd875dc",
           "kind": "Job",
           "memory": "0",
           "cpu": "0"
@@ -143,7 +137,7 @@
         }
       ],
       "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
-      "measuredAt": "2026-11-11"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
@@ -152,14 +146,14 @@
         "os": "linux",
         "architecture": "arm64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "180Mi",
-          "cpu": "2m"
+          "memory": "134Mi",
+          "cpu": "6m"
         }
       ],
       "versions": [
@@ -169,7 +163,7 @@
         }
       ],
       "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
-      "measuredAt": "2026-11-11"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kubesolo",
@@ -178,21 +172,15 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.35.7",
-      "distributionVersion": "v1.2.3",
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
       "result": "passed",
       "pods": [
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "104Mi",
+          "memory": "113Mi",
           "cpu": "3m"
-        },
-        {
-          "workload": "scan-vulnerabilityreport-65c8599f9c",
-          "kind": "Job",
-          "memory": "0",
-          "cpu": "0"
         }
       ],
       "versions": [
@@ -202,7 +190,10 @@
         }
       ],
       "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
-      "measuredAt": "2026-11-11"
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kubesolo",
@@ -211,15 +202,21 @@
         "os": "linux",
         "architecture": "arm64"
       },
-      "kubernetesVersion": "v1.35.7",
-      "distributionVersion": "v1.2.3",
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
       "result": "passed",
       "pods": [
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "163Mi",
-          "cpu": "1m"
+          "memory": "107Mi",
+          "cpu": "2m"
+        },
+        {
+          "workload": "scan-vulnerabilityreport-56948f96f6",
+          "kind": "Job",
+          "memory": "0",
+          "cpu": "0"
         }
       ],
       "versions": [
@@ -229,7 +226,10 @@
         }
       ],
       "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
-      "measuredAt": "2026-11-11"
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "rke2",
@@ -238,21 +238,21 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+rke2r1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
       "result": "passed",
       "pods": [
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "131Mi",
+          "memory": "155Mi",
           "cpu": "3m"
         },
         {
-          "workload": "scan-vulnerabilityreport-94b9cb4dd",
+          "workload": "scan-vulnerabilityreport-84dfb5b8c7",
           "kind": "Job",
-          "memory": "0",
-          "cpu": "0"
+          "memory": "105Mi",
+          "cpu": "209m"
         }
       ],
       "versions": [
@@ -262,7 +262,10 @@
         }
       ],
       "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
-      "measuredAt": "2026-11-11"
+      "addOns": {
+        "local-path-provisioner": "v0.0.37"
+      },
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "rke2",
@@ -271,18 +274,18 @@
         "os": "linux",
         "architecture": "arm64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+rke2r1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
       "result": "passed",
       "pods": [
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "153Mi",
-          "cpu": "2m"
+          "memory": "142Mi",
+          "cpu": "3m"
         },
         {
-          "workload": "scan-vulnerabilityreport-589c6c56d8",
+          "workload": "scan-vulnerabilityreport-5c478b6879",
           "kind": "Job",
           "memory": "0",
           "cpu": "0"
@@ -295,7 +298,10 @@
         }
       ],
       "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
-      "measuredAt": "2026-11-11"
+      "addOns": {
+        "local-path-provisioner": "v0.0.37"
+      },
+      "measuredAt": "2026-11-12"
     }
   ]
 }

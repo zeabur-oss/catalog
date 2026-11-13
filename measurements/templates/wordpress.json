@@ -8,20 +8,20 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "wordpress",
           "kind": "Deployment",
-          "memory": "61Mi",
+          "memory": "60Mi",
           "cpu": "2m"
         },
         {
           "workload": "mariadb",
           "kind": "StatefulSet",
           "memory": "98Mi",
-          "cpu": "10m"
+          "cpu": "14m"
         }
       ],
       "versions": [
@@ -47,7 +47,12 @@
         }
       ],
       "sourceDigest": "h1:zySgBQQAn1xxEhh+1s0COEx85yarCBQnfdqWCZaac+8=",
-      "measuredAt": "2026-11-11"
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "mariadb-operator": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "measuredAt": "2026-11-12"
     }
   ]
 }

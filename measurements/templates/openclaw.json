@@ -8,14 +8,14 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "openclaw",
           "kind": "Deployment",
-          "memory": "831Mi",
-          "cpu": "12m"
+          "memory": "1000Mi",
+          "cpu": "10m"
         }
       ],
       "versions": [
@@ -26,7 +26,11 @@
         }
       ],
       "sourceDigest": "h1:FewoXYJlO0kaEIR1ZZpC1pBZjAqibDwtohFo5F/ec2w=",
-      "measuredAt": "2026-11-11"
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "measuredAt": "2026-11-12"
     }
   ]
 }

@@ -8,19 +8,19 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "gitea-db",
           "kind": "Cluster",
-          "memory": "62Mi",
-          "cpu": "5m"
+          "memory": "70Mi",
+          "cpu": "4m"
         },
         {
           "workload": "gitea",
           "kind": "Deployment",
-          "memory": "91Mi",
+          "memory": "93Mi",
           "cpu": "1m"
         }
       ],
@@ -32,7 +32,12 @@
         }
       ],
       "sourceDigest": "h1:ppceRqgquyR17BH4DE2b2vfgVnqDS3Gd6vZoIuoU81g=",
-      "measuredAt": "2026-11-11"
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cloudnative-pg": "h1:sfHDjsosLaiS7MassT/Z6A/IareJUQk+yPcGhX2Yyis=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "measuredAt": "2026-11-12"
     }
   ]
 }

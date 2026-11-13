@@ -8,13 +8,13 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "openclaw-sandbox-browser",
           "kind": "Deployment",
-          "memory": "178Mi",
+          "memory": "137Mi",
           "cpu": "1m"
         }
       ],
@@ -26,7 +26,7 @@
         }
       ],
       "sourceDigest": "h1:dDcFgFeuPhE4hjR4nkZQfylKCCPV229YeKX10m9lIns=",
-      "measuredAt": "2026-11-11"
+      "measuredAt": "2026-11-12"
     }
   ]
 }

@@ -8,20 +8,20 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "halo-db",
           "kind": "Cluster",
-          "memory": "64Mi",
+          "memory": "63Mi",
           "cpu": "5m"
         },
         {
           "workload": "halo",
           "kind": "StatefulSet",
-          "memory": "359Mi",
-          "cpu": "8m"
+          "memory": "390Mi",
+          "cpu": "7m"
         }
       ],
       "versions": [
@@ -32,7 +32,12 @@
         }
       ],
       "sourceDigest": "h1:+TFzWFjN56MrY9/uwNmuYuXBbYNw2N5B/Hdh4AemUM8=",
-      "measuredAt": "2026-11-11"
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cloudnative-pg": "h1:sfHDjsosLaiS7MassT/Z6A/IareJUQk+yPcGhX2Yyis=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "measuredAt": "2026-11-12"
     }
   ]
 }
