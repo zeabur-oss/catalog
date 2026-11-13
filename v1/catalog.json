@@ -1,7 +1,7 @@
 {
   "catalog": {
-    "version": "0.5.0",
-    "commit": "7c7b4e8471a4282a5f489788f8a03d37f69a624e"
+    "version": "0.5.1",
+    "commit": "0501b273f39282c8780c1055a3db54f294e3fab1"
   },
   "profiles": [
     "single-node",
@@ -16,15 +16,15 @@
   "distributions": [
     {
       "name": "k3s",
-      "version": "v1.36.5+k3s1"
+      "version": "v1.37.2+k3s1"
     },
     {
       "name": "rke2",
-      "version": "v1.36.5+rke2r1"
+      "version": "v1.37.2+rke2r1"
     },
     {
       "name": "kubesolo",
-      "version": "v1.2.3"
+      "version": "v1.3.0"
     }
   ],
   "components": [
@@ -130,7 +130,7 @@
     },
     {
       "id": "victoria-metrics",
-      "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk="
+      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg="
     },
     {
       "id": "victoria-metrics-operator",

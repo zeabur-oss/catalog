@@ -223,8 +223,8 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+k3s1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+k3s1",
       "result": "passed",
       "pods": [
         {
@@ -242,7 +242,7 @@
         {
           "workload": "keda-add-ons-http-interceptor",
           "kind": "Deployment",
-          "memory": "12Mi",
+          "memory": "11Mi",
           "cpu": "1m"
         }
       ],
@@ -253,7 +253,10 @@
         }
       ],
       "sourceDigest": "h1:GdksQ1WxTrWsuJJWfmnym+ayN9E2wwvEF71QACXD/r0=",
-      "measuredAt": "2026-11-11"
+      "dependencies": {
+        "keda": "h1:kUWDM7dkML7U76e8EbPQHoeFO0Ht2IB9zNgKv0qeuXI="
+      },
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "k3s",
@@ -262,166 +265,14 @@
         "os": "linux",
         "architecture": "arm64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+k3s1",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "keda-add-ons-http-controller-manager",
-          "kind": "Deployment",
-          "memory": "12Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "keda-add-ons-http-external-scaler",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "2m"
-        },
-        {
-          "workload": "keda-add-ons-http-interceptor",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "http-add-on",
-          "version": "0.16.0"
-        }
-      ],
-      "sourceDigest": "h1:GdksQ1WxTrWsuJJWfmnym+ayN9E2wwvEF71QACXD/r0=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "keda-add-ons-http-controller-manager",
-          "kind": "Deployment",
-          "memory": "12Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "keda-add-ons-http-external-scaler",
-          "kind": "Deployment",
-          "memory": "12Mi",
-          "cpu": "3m"
-        },
-        {
-          "workload": "keda-add-ons-http-interceptor",
-          "kind": "Deployment",
-          "memory": "12Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "http-add-on",
-          "version": "0.16.0"
-        }
-      ],
-      "sourceDigest": "h1:GdksQ1WxTrWsuJJWfmnym+ayN9E2wwvEF71QACXD/r0=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+k3s1",
       "result": "passed",
       "pods": [
         {
           "workload": "keda-add-ons-http-controller-manager",
           "kind": "Deployment",
           "memory": "13Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "keda-add-ons-http-external-scaler",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "3m"
-        },
-        {
-          "workload": "keda-add-ons-http-interceptor",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "http-add-on",
-          "version": "0.16.0"
-        }
-      ],
-      "sourceDigest": "h1:GdksQ1WxTrWsuJJWfmnym+ayN9E2wwvEF71QACXD/r0=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "keda-add-ons-http-controller-manager",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "keda-add-ons-http-external-scaler",
-          "kind": "Deployment",
-          "memory": "12Mi",
-          "cpu": "3m"
-        },
-        {
-          "workload": "keda-add-ons-http-interceptor",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "http-add-on",
-          "version": "0.16.0"
-        }
-      ],
-      "sourceDigest": "h1:GdksQ1WxTrWsuJJWfmnym+ayN9E2wwvEF71QACXD/r0=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "keda-add-ons-http-controller-manager",
-          "kind": "Deployment",
-          "memory": "11Mi",
           "cpu": "1m"
         },
         {
@@ -444,36 +295,38 @@
         }
       ],
       "sourceDigest": "h1:GdksQ1WxTrWsuJJWfmnym+ayN9E2wwvEF71QACXD/r0=",
-      "measuredAt": "2026-11-11"
+      "dependencies": {
+        "keda": "h1:kUWDM7dkML7U76e8EbPQHoeFO0Ht2IB9zNgKv0qeuXI="
+      },
+      "measuredAt": "2026-11-12"
     },
     {
-      "distribution": "kubesolo",
-      "profile": "single-node",
+      "distribution": "kind",
+      "profile": "multi-node",
       "platform": {
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.35.7",
-      "distributionVersion": "v1.2.3",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "keda-add-ons-http-controller-manager",
           "kind": "Deployment",
-          "memory": "12Mi",
+          "memory": "11Mi",
           "cpu": "1m"
         },
         {
           "workload": "keda-add-ons-http-external-scaler",
           "kind": "Deployment",
           "memory": "11Mi",
-          "cpu": "2m"
+          "cpu": "3m"
         },
         {
           "workload": "keda-add-ons-http-interceptor",
           "kind": "Deployment",
-          "memory": "12Mi",
-          "cpu": "1m"
+          "memory": "11Mi",
+          "cpu": "2m"
         }
       ],
       "versions": [
@@ -483,17 +336,19 @@
         }
       ],
       "sourceDigest": "h1:GdksQ1WxTrWsuJJWfmnym+ayN9E2wwvEF71QACXD/r0=",
-      "measuredAt": "2026-11-11"
+      "dependencies": {
+        "keda": "h1:kUWDM7dkML7U76e8EbPQHoeFO0Ht2IB9zNgKv0qeuXI="
+      },
+      "measuredAt": "2026-11-12"
     },
     {
-      "distribution": "kubesolo",
-      "profile": "single-node",
+      "distribution": "kind",
+      "profile": "multi-node",
       "platform": {
         "os": "linux",
         "architecture": "arm64"
       },
-      "kubernetesVersion": "v1.35.7",
-      "distributionVersion": "v1.2.3",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
@@ -505,6 +360,47 @@
         {
           "workload": "keda-add-ons-http-external-scaler",
           "kind": "Deployment",
+          "memory": "12Mi",
+          "cpu": "3m"
+        },
+        {
+          "workload": "keda-add-ons-http-interceptor",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "http-add-on",
+          "version": "0.16.0"
+        }
+      ],
+      "sourceDigest": "h1:GdksQ1WxTrWsuJJWfmnym+ayN9E2wwvEF71QACXD/r0=",
+      "dependencies": {
+        "keda": "h1:kUWDM7dkML7U76e8EbPQHoeFO0Ht2IB9zNgKv0qeuXI="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "keda-add-ons-http-controller-manager",
+          "kind": "Deployment",
+          "memory": "12Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "keda-add-ons-http-external-scaler",
+          "kind": "Deployment",
           "memory": "11Mi",
           "cpu": "2m"
         },
@@ -522,17 +418,19 @@
         }
       ],
       "sourceDigest": "h1:GdksQ1WxTrWsuJJWfmnym+ayN9E2wwvEF71QACXD/r0=",
-      "measuredAt": "2026-11-11"
+      "dependencies": {
+        "keda": "h1:kUWDM7dkML7U76e8EbPQHoeFO0Ht2IB9zNgKv0qeuXI="
+      },
+      "measuredAt": "2026-11-12"
     },
     {
-      "distribution": "rke2",
+      "distribution": "kind",
       "profile": "single-node",
       "platform": {
         "os": "linux",
-        "architecture": "amd64"
+        "architecture": "arm64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+rke2r1",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
@@ -550,7 +448,7 @@
         {
           "workload": "keda-add-ons-http-interceptor",
           "kind": "Deployment",
-          "memory": "12Mi",
+          "memory": "11Mi",
           "cpu": "1m"
         }
       ],
@@ -561,17 +459,20 @@
         }
       ],
       "sourceDigest": "h1:GdksQ1WxTrWsuJJWfmnym+ayN9E2wwvEF71QACXD/r0=",
-      "measuredAt": "2026-11-11"
+      "dependencies": {
+        "keda": "h1:kUWDM7dkML7U76e8EbPQHoeFO0Ht2IB9zNgKv0qeuXI="
+      },
+      "measuredAt": "2026-11-12"
     },
     {
-      "distribution": "rke2",
+      "distribution": "kubesolo",
       "profile": "single-node",
       "platform": {
         "os": "linux",
-        "architecture": "arm64"
+        "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+rke2r1",
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
       "result": "passed",
       "pods": [
         {
@@ -600,7 +501,148 @@
         }
       ],
       "sourceDigest": "h1:GdksQ1WxTrWsuJJWfmnym+ayN9E2wwvEF71QACXD/r0=",
-      "measuredAt": "2026-11-11"
+      "dependencies": {
+        "keda": "h1:kUWDM7dkML7U76e8EbPQHoeFO0Ht2IB9zNgKv0qeuXI="
+      },
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "keda-add-ons-http-controller-manager",
+          "kind": "Deployment",
+          "memory": "12Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "keda-add-ons-http-external-scaler",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "2m"
+        },
+        {
+          "workload": "keda-add-ons-http-interceptor",
+          "kind": "Deployment",
+          "memory": "12Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "http-add-on",
+          "version": "0.16.0"
+        }
+      ],
+      "sourceDigest": "h1:GdksQ1WxTrWsuJJWfmnym+ayN9E2wwvEF71QACXD/r0=",
+      "dependencies": {
+        "keda": "h1:kUWDM7dkML7U76e8EbPQHoeFO0Ht2IB9zNgKv0qeuXI="
+      },
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "keda-add-ons-http-controller-manager",
+          "kind": "Deployment",
+          "memory": "12Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "keda-add-ons-http-external-scaler",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "3m"
+        },
+        {
+          "workload": "keda-add-ons-http-interceptor",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "http-add-on",
+          "version": "0.16.0"
+        }
+      ],
+      "sourceDigest": "h1:GdksQ1WxTrWsuJJWfmnym+ayN9E2wwvEF71QACXD/r0=",
+      "dependencies": {
+        "keda": "h1:kUWDM7dkML7U76e8EbPQHoeFO0Ht2IB9zNgKv0qeuXI="
+      },
+      "addOns": {
+        "local-path-provisioner": "v0.0.37"
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "keda-add-ons-http-controller-manager",
+          "kind": "Deployment",
+          "memory": "12Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "keda-add-ons-http-external-scaler",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "2m"
+        },
+        {
+          "workload": "keda-add-ons-http-interceptor",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "http-add-on",
+          "version": "0.16.0"
+        }
+      ],
+      "sourceDigest": "h1:GdksQ1WxTrWsuJJWfmnym+ayN9E2wwvEF71QACXD/r0=",
+      "dependencies": {
+        "keda": "h1:kUWDM7dkML7U76e8EbPQHoeFO0Ht2IB9zNgKv0qeuXI="
+      },
+      "addOns": {
+        "local-path-provisioner": "v0.0.37"
+      },
+      "measuredAt": "2026-11-12"
     }
   ]
 }

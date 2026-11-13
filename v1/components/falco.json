@@ -196,20 +196,20 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+k3s1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+k3s1",
       "result": "passed",
       "pods": [
         {
           "workload": "falco",
           "kind": "DaemonSet",
           "memory": "55Mi",
-          "cpu": "2m"
+          "cpu": "3m"
         },
         {
           "workload": "falco-falcosidekick",
           "kind": "Deployment",
-          "memory": "11Mi",
+          "memory": "13Mi",
           "cpu": "0"
         }
       ],
@@ -224,7 +224,7 @@
         }
       ],
       "sourceDigest": "h1:iPC8/+lNBcPT2W1WCKzULuctwAD0cojiIE+F9Ypwa3g=",
-      "measuredAt": "2026-11-11"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "k3s",
@@ -233,14 +233,14 @@
         "os": "linux",
         "architecture": "arm64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+k3s1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+k3s1",
       "result": "passed",
       "pods": [
         {
           "workload": "falco",
           "kind": "DaemonSet",
-          "memory": "56Mi",
+          "memory": "58Mi",
           "cpu": "3m"
         },
         {
@@ -261,7 +261,7 @@
         }
       ],
       "sourceDigest": "h1:iPC8/+lNBcPT2W1WCKzULuctwAD0cojiIE+F9Ypwa3g=",
-      "measuredAt": "2026-11-11"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
@@ -270,19 +270,19 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "falco",
           "kind": "DaemonSet",
-          "memory": "52Mi",
-          "cpu": "10m"
+          "memory": "66Mi",
+          "cpu": "9m"
         },
         {
           "workload": "falco-falcosidekick",
           "kind": "Deployment",
-          "memory": "17Mi",
+          "memory": "12Mi",
           "cpu": "0"
         }
       ],
@@ -297,7 +297,7 @@
         }
       ],
       "sourceDigest": "h1:iPC8/+lNBcPT2W1WCKzULuctwAD0cojiIE+F9Ypwa3g=",
-      "measuredAt": "2026-11-11"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
@@ -306,19 +306,19 @@
         "os": "linux",
         "architecture": "arm64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "falco",
           "kind": "DaemonSet",
-          "memory": "53Mi",
-          "cpu": "8m"
+          "memory": "65Mi",
+          "cpu": "7m"
         },
         {
           "workload": "falco-falcosidekick",
           "kind": "Deployment",
-          "memory": "16Mi",
+          "memory": "12Mi",
           "cpu": "0"
         }
       ],
@@ -333,7 +333,7 @@
         }
       ],
       "sourceDigest": "h1:iPC8/+lNBcPT2W1WCKzULuctwAD0cojiIE+F9Ypwa3g=",
-      "measuredAt": "2026-11-11"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
@@ -342,7 +342,7 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
@@ -369,7 +369,7 @@
         }
       ],
       "sourceDigest": "h1:iPC8/+lNBcPT2W1WCKzULuctwAD0cojiIE+F9Ypwa3g=",
-      "measuredAt": "2026-11-11"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
@@ -378,19 +378,19 @@
         "os": "linux",
         "architecture": "arm64"
       },
-      "kubernetesVersion": "v1.36.4",
+      "kubernetesVersion": "v1.37.0",
       "result": "passed",
       "pods": [
         {
           "workload": "falco",
           "kind": "DaemonSet",
-          "memory": "57Mi",
+          "memory": "58Mi",
           "cpu": "5m"
         },
         {
           "workload": "falco-falcosidekick",
           "kind": "Deployment",
-          "memory": "12Mi",
+          "memory": "11Mi",
           "cpu": "0"
         }
       ],
@@ -405,7 +405,7 @@
         }
       ],
       "sourceDigest": "h1:iPC8/+lNBcPT2W1WCKzULuctwAD0cojiIE+F9Ypwa3g=",
-      "measuredAt": "2026-11-11"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kubesolo",
@@ -414,52 +414,15 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.35.7",
-      "distributionVersion": "v1.2.3",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "falco",
-          "kind": "DaemonSet",
-          "memory": "52Mi",
-          "cpu": "2m"
-        },
-        {
-          "workload": "falco-falcosidekick",
-          "kind": "Deployment",
-          "memory": "12Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "policy-report-crds",
-          "version": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
-        },
-        {
-          "release": "falco",
-          "version": "9.2.1"
-        }
-      ],
-      "sourceDigest": "h1:iPC8/+lNBcPT2W1WCKzULuctwAD0cojiIE+F9Ypwa3g=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.35.7",
-      "distributionVersion": "v1.2.3",
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
       "result": "passed",
       "pods": [
         {
           "workload": "falco",
           "kind": "DaemonSet",
           "memory": "53Mi",
-          "cpu": "2m"
+          "cpu": "66m"
         },
         {
           "workload": "falco-falcosidekick",
@@ -479,7 +442,50 @@
         }
       ],
       "sourceDigest": "h1:iPC8/+lNBcPT2W1WCKzULuctwAD0cojiIE+F9Ypwa3g=",
-      "measuredAt": "2026-11-11"
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "falco",
+          "kind": "DaemonSet",
+          "memory": "53Mi",
+          "cpu": "89m"
+        },
+        {
+          "workload": "falco-falcosidekick",
+          "kind": "Deployment",
+          "memory": "12Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "policy-report-crds",
+          "version": "ed0ca5a1c7788055074c7500915b76fc4518ed33"
+        },
+        {
+          "release": "falco",
+          "version": "9.2.1"
+        }
+      ],
+      "sourceDigest": "h1:iPC8/+lNBcPT2W1WCKzULuctwAD0cojiIE+F9Ypwa3g=",
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "rke2",
@@ -488,15 +494,15 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+rke2r1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
       "result": "passed",
       "pods": [
         {
           "workload": "falco",
           "kind": "DaemonSet",
-          "memory": "62Mi",
-          "cpu": "6m"
+          "memory": "60Mi",
+          "cpu": "10m"
         },
         {
           "workload": "falco-falcosidekick",
@@ -516,7 +522,10 @@
         }
       ],
       "sourceDigest": "h1:iPC8/+lNBcPT2W1WCKzULuctwAD0cojiIE+F9Ypwa3g=",
-      "measuredAt": "2026-11-11"
+      "addOns": {
+        "local-path-provisioner": "v0.0.37"
+      },
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "rke2",
@@ -525,14 +534,14 @@
         "os": "linux",
         "architecture": "arm64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+rke2r1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
       "result": "passed",
       "pods": [
         {
           "workload": "falco",
           "kind": "DaemonSet",
-          "memory": "62Mi",
+          "memory": "64Mi",
           "cpu": "6m"
         },
         {
@@ -553,7 +562,10 @@
         }
       ],
       "sourceDigest": "h1:iPC8/+lNBcPT2W1WCKzULuctwAD0cojiIE+F9Ypwa3g=",
-      "measuredAt": "2026-11-11"
+      "addOns": {
+        "local-path-provisioner": "v0.0.37"
+      },
+      "measuredAt": "2026-11-12"
     }
   ]
 }

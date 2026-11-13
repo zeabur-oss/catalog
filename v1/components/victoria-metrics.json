@@ -1,6 +1,6 @@
 {
   "id": "victoria-metrics",
-  "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk=",
+  "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "contributes": [
@@ -68,7 +68,7 @@
         "version": "0.96.0"
       },
       {
-        "manifests": "apiVersion: operator.victoriametrics.com/v1beta1\nkind: VMRule\nmetadata:\n  name: zeabur-notifications\n  namespace: observability\nspec:\n  groups:\n    - name: zeabur-project\n      interval: 30s\n      rules:\n        - alert: ZeaburBuildFailed\n          expr: |\n            max by (namespace, build, buildrun, reason) (\n              zeabur_builder_buildrun_completion_time{phase=\"Failed\"}\n            ) \u003e time() - 900\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          labels: {zeabur_event: build-failed, zeabur_kind: event, severity: warning}\n          annotations:\n            summary: \"Build {{ $labels.build }} failed ({{ $labels.reason }}).\"\n            description: \"BuildRun {{ $labels.buildrun }} in {{ $labels.namespace }} failed with reason {{ $labels.reason }}.\"\n        - alert: ZeaburBuildSucceeded\n          expr: |\n            max by (namespace, build, buildrun) (\n              zeabur_builder_buildrun_completion_time{phase=\"Succeeded\"}\n            ) \u003e time() - 900\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          labels: {zeabur_event: build-succeeded, zeabur_kind: event, severity: info}\n          annotations:\n            summary: \"Build {{ $labels.build }} succeeded.\"\n            description: \"BuildRun {{ $labels.buildrun }} in {{ $labels.namespace }} succeeded.\"\n        # The Deployment controller gives up on a rollout after\n        # progressDeadlineSeconds (600 by default).\n        - alert: ZeaburDeployFailed\n          expr: |\n            max by (namespace, deployment) (\n              kube_deployment_status_condition{condition=\"Progressing\", status=\"false\"}\n            ) == 1\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          labels: {zeabur_event: deploy-failed, zeabur_kind: state, severity: warning}\n          annotations:\n            summary: \"Deployment of {{ $labels.deployment }} failed.\"\n            description: \"The rollout of {{ $labels.deployment }} in {{ $labels.namespace }} passed its progress deadline.\"\n        # A rollout makes a new ReplicaSet. It succeeded when the\n        # Deployment then runs only up-to-date, available replicas. A\n        # rollback to an earlier ReplicaSet does not count.\n        - alert: ZeaburDeploySucceeded\n          expr: |\n            max by (namespace, deployment) (\n              label_replace(\n                (time() - kube_replicaset_created \u003c 1800)\n                * on (namespace, replicaset) group_left (owner_name)\n                kube_replicaset_owner{owner_kind=\"Deployment\"},\n                \"deployment\", \"$1\", \"owner_name\", \"(.+)\"\n              )\n            )\n            and on (namespace, deployment) (kube_deployment_status_observed_generation == kube_deployment_metadata_generation)\n            and on (namespace, deployment) (kube_deployment_status_replicas_updated == kube_deployment_spec_replicas)\n            and on (namespace, deployment) (kube_deployment_status_replicas_available == kube_deployment_spec_replicas)\n            and on (namespace, deployment) (kube_deployment_status_replicas == kube_deployment_spec_replicas)\n            and on (namespace, deployment) (kube_deployment_spec_replicas \u003e 0)\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          labels: {zeabur_event: deploy-succeeded, zeabur_kind: event, severity: info}\n          annotations:\n            summary: \"{{ $labels.deployment }} is deployed.\"\n            description: \"All replicas of {{ $labels.deployment }} in {{ $labels.namespace }} run the new version.\"\n        - alert: ZeaburCrashLooping\n          expr: |\n            max by (namespace, pod, container) (\n              kube_pod_container_status_waiting_reason{reason=\"CrashLoopBackOff\"}\n            ) == 1\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          for: 5m\n          labels: {zeabur_event: crash-loop, zeabur_kind: state, severity: warning}\n          annotations:\n            summary: \"{{ $labels.pod }} keeps crashing.\"\n            description: \"Container {{ $labels.container }} of {{ $labels.pod }} in {{ $labels.namespace }} has been in CrashLoopBackOff for 5 minutes.\"\n        - alert: ZeaburOutOfMemory\n          expr: |\n            max by (namespace, pod, container) (\n              kube_pod_container_status_last_terminated_reason{reason=\"OOMKilled\"}\n            ) == 1\n            and on (namespace, pod, container) (\n              max by (namespace, pod, container) (increase(kube_pod_container_status_restarts_total[10m])) \u003e 0\n            )\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          labels: {zeabur_event: out-of-memory, zeabur_kind: event, severity: warning}\n          annotations:\n            summary: \"{{ $labels.pod }} ran out of memory.\"\n            description: \"Container {{ $labels.container }} of {{ $labels.pod }} in {{ $labels.namespace }} used its memory limit and restarted.\"\n        # Without the phase in the grouping, a move from one unhealthy\n        # phase to another does not restart the 15 minutes.\n        - alert: ZeaburPostgresUnhealthy\n          expr: |\n            max by (namespace, cluster) (\n              zeabur_cnpg_cluster_phase{phase!=\"Cluster in healthy state\"}\n            ) == 1\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          for: 15m\n          labels: {zeabur_event: database-unhealthy, zeabur_kind: state, severity: critical}\n          annotations:\n            summary: \"PostgreSQL {{ $labels.cluster }} is not healthy.\"\n            description: \"PostgreSQL cluster {{ $labels.cluster }} in {{ $labels.namespace }} has not been healthy for 15 minutes.\"\n        - alert: ZeaburMongoDBUnhealthy\n          expr: |\n            max by (namespace, cluster) (zeabur_psmdb_state{state=\"error\"}) == 1\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          for: 10m\n          labels: {zeabur_event: database-unhealthy, zeabur_kind: state, severity: critical}\n          annotations:\n            summary: \"MongoDB {{ $labels.cluster }} is in error.\"\n            description: \"MongoDB cluster {{ $labels.cluster }} in {{ $labels.namespace }} has been in error for 10 minutes.\"\n        - alert: ZeaburPostgresBackupFailed\n          expr: |\n            max by (namespace, cluster, backup) (\n              zeabur_cnpg_backup_created{phase=~\"failed|walArchivingFailing\"}\n            ) \u003e time() - 21600\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          labels: {zeabur_event: backup-failed, zeabur_kind: event, severity: critical}\n          annotations:\n            summary: \"Backup {{ $labels.backup }} of PostgreSQL {{ $labels.cluster }} failed.\"\n            description: \"Backup {{ $labels.backup }} in {{ $labels.namespace }} failed.\"\n        - alert: ZeaburMongoDBBackupFailed\n          expr: |\n            max by (namespace, cluster, backup) (\n              zeabur_psmdb_backup_created{state=~\"error|rejected\"}\n            ) \u003e time() - 21600\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          labels: {zeabur_event: backup-failed, zeabur_kind: event, severity: critical}\n          annotations:\n            summary: \"Backup {{ $labels.backup }} of MongoDB {{ $labels.cluster }} failed.\"\n            description: \"Backup {{ $labels.backup }} in {{ $labels.namespace }} failed.\"\n        - alert: ZeaburVolumeBackupFailed\n          expr: |\n            max by (namespace, backup) (\n              zeabur_k8up_backup_condition_time{type=\"Completed\", reason=\"Failed\"}\n            ) \u003e time() - 21600\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          labels: {zeabur_event: backup-failed, zeabur_kind: event, severity: critical}\n          annotations:\n            summary: \"Volume backup {{ $labels.backup }} failed.\"\n            description: \"K8up backup {{ $labels.backup }} in {{ $labels.namespace }} failed.\"\n        # Volumes on local-path report no usage; this covers the others.\n        - alert: ZeaburVolumeAlmostFull\n          expr: |\n            max by (namespace, persistentvolumeclaim) (\n              kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes\n            ) \u003c 0.1\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          for: 10m\n          labels: {zeabur_event: volume-almost-full, zeabur_kind: state, severity: warning}\n          annotations:\n            summary: \"Volume {{ $labels.persistentvolumeclaim }} is almost full.\"\n            description: \"Less than 10% of volume {{ $labels.persistentvolumeclaim }} in {{ $labels.namespace }} is free.\"\n        # cert-manager renews 30 days before expiry, so 14 days left\n        # means renewal keeps failing.\n        - alert: ZeaburCertificateExpiring\n          expr: |\n            max by (namespace, certificate) (zeabur_certmanager_certificate_not_after) - time() \u003c 14 * 86400\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          labels: {zeabur_event: certificate, zeabur_kind: state, severity: warning}\n          annotations:\n            summary: \"Certificate {{ $labels.certificate }} expires soon.\"\n            description: \"Certificate {{ $labels.certificate }} in {{ $labels.namespace }} expires in less than 14 days and was not renewed.\"\n        - alert: ZeaburCertificateNotReady\n          expr: |\n            max by (namespace, certificate) (zeabur_certmanager_certificate_condition{type=\"Ready\"}) == 0\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          for: 1h\n          labels: {zeabur_event: certificate, zeabur_kind: state, severity: warning}\n          annotations:\n            summary: \"Certificate {{ $labels.certificate }} is not ready.\"\n            description: \"Certificate {{ $labels.certificate }} in {{ $labels.namespace }} has not been issued for an hour.\"\n        # Zeabur creates a short-lived Job with this label to test a\n        # channel. The namespace comes from the Job, so a person can\n        # only test the channels of a namespace where they create Jobs.\n        - alert: ZeaburNotificationTest\n          expr: |\n            label_replace(\n              max by (namespace, label_zeabur_com_notification_test) (\n                kube_job_labels{label_zeabur_com_notification_test!=\"\"}\n              ),\n              \"zeabur_channel\", \"$1\", \"label_zeabur_com_notification_test\", \"(.+)\"\n            )\n          labels: {zeabur_event: test, zeabur_kind: event, severity: info}\n          annotations:\n            summary: \"Test notification from Zeabur.\"\n            description: \"This channel receives notifications from {{ $labels.namespace }}.\"\n    - name: zeabur-cluster\n      interval: 30s\n      # The cluster's channels are in observability.\n      labels: {namespace: observability}\n      rules:\n        - alert: ZeaburNodeNotReady\n          expr: |\n            max by (node) (kube_node_status_condition{condition=\"Ready\", status=\"true\"}) == 0\n          for: 5m\n          labels: {zeabur_event: node-not-ready, zeabur_kind: state, severity: critical}\n          annotations:\n            summary: \"Node {{ $labels.node }} is not ready.\"\n            description: \"Node {{ $labels.node }} has not been ready for 5 minutes.\"\n        - alert: ZeaburNodeDiskAlmostFull\n          expr: |\n            max by (instance, mountpoint) (\n              node_filesystem_avail_bytes{fstype!~\"tmpfs|ramfs\"} / node_filesystem_size_bytes{fstype!~\"tmpfs|ramfs\"}\n            ) \u003c 0.1\n          for: 10m\n          labels: {zeabur_event: volume-almost-full, zeabur_kind: state, severity: warning}\n          annotations:\n            summary: \"Disk {{ $labels.mountpoint }} on {{ $labels.instance }} is almost full.\"\n            description: \"Less than 10% of {{ $labels.mountpoint }} on {{ $labels.instance }} is free.\"\n        - alert: ZeaburSystemCrashLooping\n          expr: |\n            label_move(\n              max by (namespace, pod, container) (\n                kube_pod_container_status_waiting_reason{reason=\"CrashLoopBackOff\"}\n              ) == 1\n              unless on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"},\n              \"namespace\", \"object_namespace\"\n            )\n          for: 5m\n          labels: {zeabur_event: crash-loop, zeabur_kind: state, severity: critical}\n          annotations:\n            summary: \"System pod {{ $labels.pod }} keeps crashing.\"\n            description: \"Container {{ $labels.container }} of {{ $labels.pod }} in {{ $labels.object_namespace }} has been in CrashLoopBackOff for 5 minutes.\"\n        - alert: ZeaburSystemVolumeAlmostFull\n          expr: |\n            label_move(\n              max by (namespace, persistentvolumeclaim) (\n                kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes\n              ) \u003c 0.1\n              unless on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"},\n              \"namespace\", \"object_namespace\"\n            )\n          for: 10m\n          labels: {zeabur_event: volume-almost-full, zeabur_kind: state, severity: warning}\n          annotations:\n            summary: \"Volume {{ $labels.persistentvolumeclaim }} is almost full.\"\n            description: \"Less than 10% of volume {{ $labels.persistentvolumeclaim }} in {{ $labels.object_namespace }} is free.\"\n        - alert: ZeaburSystemCertificateExpiring\n          expr: |\n            label_move(\n              max by (namespace, certificate) (zeabur_certmanager_certificate_not_after) - time() \u003c 14 * 86400\n              unless on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"},\n              \"namespace\", \"object_namespace\"\n            )\n          labels: {zeabur_event: certificate, zeabur_kind: state, severity: warning}\n          annotations:\n            summary: \"Certificate {{ $labels.certificate }} expires soon.\"\n            description: \"Certificate {{ $labels.certificate }} in {{ $labels.object_namespace }} expires in less than 14 days and was not renewed.\"\n        - alert: ZeaburClusterBackupFailed\n          expr: |\n            label_move(\n              max by (namespace, backup) (\n                zeabur_velero_backup_created{phase=~\"Failed|PartiallyFailed|FailedValidation\"}\n              ) \u003e time() - 21600,\n              \"namespace\", \"object_namespace\"\n            )\n          labels: {zeabur_event: backup-failed, zeabur_kind: event, severity: critical}\n          annotations:\n            summary: \"Cluster backup {{ $labels.backup }} failed.\"\n            description: \"Velero backup {{ $labels.backup }} did not complete.\"\n---\n# Only the alert senders and the scraper reach Alertmanager. Without\n# this, any pod could post alerts with another project's namespace, or\n# silence them. kubectl port-forward does not pass through\n# NetworkPolicies, so it still works.\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: vmalertmanager-senders-only\n  namespace: observability\nspec:\n  podSelector:\n    matchLabels: {app.kubernetes.io/name: vmalertmanager}\n  policyTypes: [Ingress]\n  ingress:\n    - from:\n        - podSelector:\n            matchLabels: {app.kubernetes.io/name: vmalert}\n      ports:\n        - {port: 9093, protocol: TCP}\n    - from:\n        - namespaceSelector:\n            matchLabels: {kubernetes.io/metadata.name: falco}\n          podSelector:\n            matchLabels: {app.kubernetes.io/name: falcosidekick}\n      ports:\n        - {port: 9093, protocol: TCP}\n    - from:\n        - podSelector:\n            matchLabels: {app.kubernetes.io/name: vmagent}\n      ports:\n        - {port: 9093, protocol: TCP}\n        - {port: 8435, protocol: TCP}\n    # Replicas gossip silences and notification state.\n    - from:\n        - podSelector:\n            matchLabels: {app.kubernetes.io/name: vmalertmanager}\n      ports:\n        - {port: 9094, protocol: TCP}\n        - {port: 9094, protocol: UDP}\n",
+        "manifests": "apiVersion: operator.victoriametrics.com/v1beta1\nkind: VMRule\nmetadata:\n  name: zeabur-notifications\n  namespace: observability\nspec:\n  groups:\n    - name: zeabur-project\n      interval: 30s\n      rules:\n        - alert: ZeaburBuildFailed\n          expr: |\n            max by (namespace, build, buildrun, reason) (\n              zeabur_builder_buildrun_completion_time{phase=\"Failed\"}\n            ) \u003e time() - 900\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          labels: {zeabur_event: build-failed, zeabur_kind: event, severity: warning}\n          annotations:\n            summary: \"Build {{ $labels.build }} failed ({{ $labels.reason }}).\"\n            description: \"BuildRun {{ $labels.buildrun }} in {{ $labels.namespace }} failed with reason {{ $labels.reason }}.\"\n        - alert: ZeaburBuildSucceeded\n          expr: |\n            max by (namespace, build, buildrun) (\n              zeabur_builder_buildrun_completion_time{phase=\"Succeeded\"}\n            ) \u003e time() - 900\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          labels: {zeabur_event: build-succeeded, zeabur_kind: event, severity: info}\n          annotations:\n            summary: \"Build {{ $labels.build }} succeeded.\"\n            description: \"BuildRun {{ $labels.buildrun }} in {{ $labels.namespace }} succeeded.\"\n        # The Deployment controller gives up on a rollout after\n        # progressDeadlineSeconds (600 by default).\n        - alert: ZeaburDeployFailed\n          expr: |\n            max by (namespace, deployment) (\n              kube_deployment_status_condition{condition=\"Progressing\", status=\"false\"}\n            ) == 1\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          labels: {zeabur_event: deploy-failed, zeabur_kind: state, severity: warning}\n          annotations:\n            summary: \"Deployment of {{ $labels.deployment }} failed.\"\n            description: \"The rollout of {{ $labels.deployment }} in {{ $labels.namespace }} passed its progress deadline.\"\n        # A rollout makes a new ReplicaSet. It succeeded when the\n        # Deployment then runs only up-to-date, available replicas. A\n        # rollback to an earlier ReplicaSet does not count.\n        - alert: ZeaburDeploySucceeded\n          expr: |\n            max by (namespace, deployment) (\n              label_replace(\n                (time() - kube_replicaset_created \u003c 1800)\n                * on (namespace, replicaset) group_left (owner_name)\n                kube_replicaset_owner{owner_kind=\"Deployment\"},\n                \"deployment\", \"$1\", \"owner_name\", \"(.+)\"\n              )\n            )\n            and on (namespace, deployment) (kube_deployment_status_observed_generation == kube_deployment_metadata_generation)\n            and on (namespace, deployment) (kube_deployment_status_replicas_updated == kube_deployment_spec_replicas)\n            and on (namespace, deployment) (kube_deployment_status_replicas_available == kube_deployment_spec_replicas)\n            and on (namespace, deployment) (kube_deployment_status_replicas == kube_deployment_spec_replicas)\n            and on (namespace, deployment) (kube_deployment_spec_replicas \u003e 0)\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          labels: {zeabur_event: deploy-succeeded, zeabur_kind: event, severity: info}\n          annotations:\n            summary: \"{{ $labels.deployment }} is deployed.\"\n            description: \"All replicas of {{ $labels.deployment }} in {{ $labels.namespace }} run the new version.\"\n        # The kubelet's back-off waiting reason shows only for a moment between two runs\n        # on K3s 1.36, so the alert counts restarts, as Zeabur's status light does.\n        - alert: ZeaburCrashLooping\n          expr: |\n            max by (namespace, pod, container) (\n              increase(kube_pod_container_status_restarts_total[10m])\n            ) \u003e= 2\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          labels: {zeabur_event: crash-loop, zeabur_kind: state, severity: warning}\n          annotations:\n            summary: \"{{ $labels.pod }} keeps crashing.\"\n            description: \"Container {{ $labels.container }} of {{ $labels.pod }} in {{ $labels.namespace }} restarted at least twice in 10 minutes.\"\n        - alert: ZeaburOutOfMemory\n          expr: |\n            max by (namespace, pod, container) (\n              kube_pod_container_status_last_terminated_reason{reason=\"OOMKilled\"}\n            ) == 1\n            and on (namespace, pod, container) (\n              max by (namespace, pod, container) (increase(kube_pod_container_status_restarts_total[10m])) \u003e 0\n            )\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          labels: {zeabur_event: out-of-memory, zeabur_kind: event, severity: warning}\n          annotations:\n            summary: \"{{ $labels.pod }} ran out of memory.\"\n            description: \"Container {{ $labels.container }} of {{ $labels.pod }} in {{ $labels.namespace }} used its memory limit and restarted.\"\n        # Without the phase in the grouping, a move from one unhealthy\n        # phase to another does not restart the 15 minutes.\n        - alert: ZeaburPostgresUnhealthy\n          expr: |\n            max by (namespace, cluster) (\n              zeabur_cnpg_cluster_phase{phase!=\"Cluster in healthy state\"}\n            ) == 1\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          for: 15m\n          labels: {zeabur_event: database-unhealthy, zeabur_kind: state, severity: critical}\n          annotations:\n            summary: \"PostgreSQL {{ $labels.cluster }} is not healthy.\"\n            description: \"PostgreSQL cluster {{ $labels.cluster }} in {{ $labels.namespace }} has not been healthy for 15 minutes.\"\n        - alert: ZeaburMongoDBUnhealthy\n          expr: |\n            max by (namespace, cluster) (zeabur_psmdb_state{state=\"error\"}) == 1\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          for: 10m\n          labels: {zeabur_event: database-unhealthy, zeabur_kind: state, severity: critical}\n          annotations:\n            summary: \"MongoDB {{ $labels.cluster }} is in error.\"\n            description: \"MongoDB cluster {{ $labels.cluster }} in {{ $labels.namespace }} has been in error for 10 minutes.\"\n        - alert: ZeaburPostgresBackupFailed\n          expr: |\n            max by (namespace, cluster, backup) (\n              zeabur_cnpg_backup_created{phase=~\"failed|walArchivingFailing\"}\n            ) \u003e time() - 21600\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          labels: {zeabur_event: backup-failed, zeabur_kind: event, severity: critical}\n          annotations:\n            summary: \"Backup {{ $labels.backup }} of PostgreSQL {{ $labels.cluster }} failed.\"\n            description: \"Backup {{ $labels.backup }} in {{ $labels.namespace }} failed.\"\n        - alert: ZeaburMongoDBBackupFailed\n          expr: |\n            max by (namespace, cluster, backup) (\n              zeabur_psmdb_backup_created{state=~\"error|rejected\"}\n            ) \u003e time() - 21600\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          labels: {zeabur_event: backup-failed, zeabur_kind: event, severity: critical}\n          annotations:\n            summary: \"Backup {{ $labels.backup }} of MongoDB {{ $labels.cluster }} failed.\"\n            description: \"Backup {{ $labels.backup }} in {{ $labels.namespace }} failed.\"\n        - alert: ZeaburVolumeBackupFailed\n          expr: |\n            max by (namespace, backup) (\n              zeabur_k8up_backup_condition_time{type=\"Completed\", reason=\"Failed\"}\n            ) \u003e time() - 21600\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          labels: {zeabur_event: backup-failed, zeabur_kind: event, severity: critical}\n          annotations:\n            summary: \"Volume backup {{ $labels.backup }} failed.\"\n            description: \"K8up backup {{ $labels.backup }} in {{ $labels.namespace }} failed.\"\n        # Volumes on local-path report no usage; this covers the others.\n        - alert: ZeaburVolumeAlmostFull\n          expr: |\n            max by (namespace, persistentvolumeclaim) (\n              kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes\n            ) \u003c 0.1\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          for: 10m\n          labels: {zeabur_event: volume-almost-full, zeabur_kind: state, severity: warning}\n          annotations:\n            summary: \"Volume {{ $labels.persistentvolumeclaim }} is almost full.\"\n            description: \"Less than 10% of volume {{ $labels.persistentvolumeclaim }} in {{ $labels.namespace }} is free.\"\n        # cert-manager renews 30 days before expiry, so 14 days left\n        # means renewal keeps failing.\n        - alert: ZeaburCertificateExpiring\n          expr: |\n            max by (namespace, certificate) (zeabur_certmanager_certificate_not_after) - time() \u003c 14 * 86400\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          labels: {zeabur_event: certificate, zeabur_kind: state, severity: warning}\n          annotations:\n            summary: \"Certificate {{ $labels.certificate }} expires soon.\"\n            description: \"Certificate {{ $labels.certificate }} in {{ $labels.namespace }} expires in less than 14 days and was not renewed.\"\n        - alert: ZeaburCertificateNotReady\n          expr: |\n            max by (namespace, certificate) (zeabur_certmanager_certificate_condition{type=\"Ready\"}) == 0\n            and on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"}\n          for: 1h\n          labels: {zeabur_event: certificate, zeabur_kind: state, severity: warning}\n          annotations:\n            summary: \"Certificate {{ $labels.certificate }} is not ready.\"\n            description: \"Certificate {{ $labels.certificate }} in {{ $labels.namespace }} has not been issued for an hour.\"\n        # Zeabur creates a short-lived Job with this label to test a\n        # channel. The namespace comes from the Job, so a person can\n        # only test the channels of a namespace where they create Jobs.\n        - alert: ZeaburNotificationTest\n          expr: |\n            label_replace(\n              max by (namespace, label_zeabur_com_notification_test) (\n                kube_job_labels{label_zeabur_com_notification_test!=\"\"}\n              ),\n              \"zeabur_channel\", \"$1\", \"label_zeabur_com_notification_test\", \"(.+)\"\n            )\n          labels: {zeabur_event: test, zeabur_kind: event, severity: info}\n          annotations:\n            summary: \"Test notification from Zeabur.\"\n            description: \"This channel receives notifications from {{ $labels.namespace }}.\"\n    - name: zeabur-cluster\n      interval: 30s\n      # The cluster's channels are in observability.\n      labels: {namespace: observability}\n      rules:\n        - alert: ZeaburNodeNotReady\n          expr: |\n            max by (node) (kube_node_status_condition{condition=\"Ready\", status=\"true\"}) == 0\n          for: 5m\n          labels: {zeabur_event: node-not-ready, zeabur_kind: state, severity: critical}\n          annotations:\n            summary: \"Node {{ $labels.node }} is not ready.\"\n            description: \"Node {{ $labels.node }} has not been ready for 5 minutes.\"\n        - alert: ZeaburNodeDiskAlmostFull\n          expr: |\n            max by (instance, mountpoint) (\n              node_filesystem_avail_bytes{fstype!~\"tmpfs|ramfs\"} / node_filesystem_size_bytes{fstype!~\"tmpfs|ramfs\"}\n            ) \u003c 0.1\n          for: 10m\n          labels: {zeabur_event: volume-almost-full, zeabur_kind: state, severity: warning}\n          annotations:\n            summary: \"Disk {{ $labels.mountpoint }} on {{ $labels.instance }} is almost full.\"\n            description: \"Less than 10% of {{ $labels.mountpoint }} on {{ $labels.instance }} is free.\"\n        - alert: ZeaburSystemCrashLooping\n          expr: |\n            label_move(\n              max by (namespace, pod, container) (\n                kube_pod_container_status_waiting_reason{reason=\"CrashLoopBackOff\"}\n              ) == 1\n              unless on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"},\n              \"namespace\", \"object_namespace\"\n            )\n          for: 5m\n          labels: {zeabur_event: crash-loop, zeabur_kind: state, severity: critical}\n          annotations:\n            summary: \"System pod {{ $labels.pod }} keeps crashing.\"\n            description: \"Container {{ $labels.container }} of {{ $labels.pod }} in {{ $labels.object_namespace }} has been in CrashLoopBackOff for 5 minutes.\"\n        - alert: ZeaburSystemVolumeAlmostFull\n          expr: |\n            label_move(\n              max by (namespace, persistentvolumeclaim) (\n                kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes\n              ) \u003c 0.1\n              unless on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"},\n              \"namespace\", \"object_namespace\"\n            )\n          for: 10m\n          labels: {zeabur_event: volume-almost-full, zeabur_kind: state, severity: warning}\n          annotations:\n            summary: \"Volume {{ $labels.persistentvolumeclaim }} is almost full.\"\n            description: \"Less than 10% of volume {{ $labels.persistentvolumeclaim }} in {{ $labels.object_namespace }} is free.\"\n        - alert: ZeaburSystemCertificateExpiring\n          expr: |\n            label_move(\n              max by (namespace, certificate) (zeabur_certmanager_certificate_not_after) - time() \u003c 14 * 86400\n              unless on (namespace) kube_namespace_labels{label_zeabur_com_project!=\"\"},\n              \"namespace\", \"object_namespace\"\n            )\n          labels: {zeabur_event: certificate, zeabur_kind: state, severity: warning}\n          annotations:\n            summary: \"Certificate {{ $labels.certificate }} expires soon.\"\n            description: \"Certificate {{ $labels.certificate }} in {{ $labels.object_namespace }} expires in less than 14 days and was not renewed.\"\n        - alert: ZeaburClusterBackupFailed\n          expr: |\n            label_move(\n              max by (namespace, backup) (\n                zeabur_velero_backup_created{phase=~\"Failed|PartiallyFailed|FailedValidation\"}\n              ) \u003e time() - 21600,\n              \"namespace\", \"object_namespace\"\n            )\n          labels: {zeabur_event: backup-failed, zeabur_kind: event, severity: critical}\n          annotations:\n            summary: \"Cluster backup {{ $labels.backup }} failed.\"\n            description: \"Velero backup {{ $labels.backup }} did not complete.\"\n---\n# Only the alert senders and the scraper reach Alertmanager. Without\n# this, any pod could post alerts with another project's namespace, or\n# silence them. kubectl port-forward does not pass through\n# NetworkPolicies, so it still works.\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: vmalertmanager-senders-only\n  namespace: observability\nspec:\n  podSelector:\n    matchLabels: {app.kubernetes.io/name: vmalertmanager}\n  policyTypes: [Ingress]\n  ingress:\n    - from:\n        - podSelector:\n            matchLabels: {app.kubernetes.io/name: vmalert}\n      ports:\n        - {port: 9093, protocol: TCP}\n    - from:\n        - namespaceSelector:\n            matchLabels: {kubernetes.io/metadata.name: falco}\n          podSelector:\n            matchLabels: {app.kubernetes.io/name: falcosidekick}\n      ports:\n        - {port: 9093, protocol: TCP}\n    - from:\n        - podSelector:\n            matchLabels: {app.kubernetes.io/name: vmagent}\n      ports:\n        - {port: 9093, protocol: TCP}\n        - {port: 8435, protocol: TCP}\n    # Replicas gossip silences and notification state.\n    - from:\n        - podSelector:\n            matchLabels: {app.kubernetes.io/name: vmalertmanager}\n      ports:\n        - {port: 9094, protocol: TCP}\n        - {port: 9094, protocol: UDP}\n",
         "name": "notifications",
         "namespace": "observability",
         "type": "inline"
@@ -193,8 +193,8 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+k3s1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+k3s1",
       "result": "passed",
       "pods": [
         {
@@ -206,420 +206,25 @@
         {
           "workload": "vm-kube-state-metrics",
           "kind": "Deployment",
-          "memory": "25Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "70Mi",
-          "cpu": "5m"
-        },
-        {
-          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "34Mi",
-          "cpu": "5m"
-        },
-        {
-          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "107Mi",
-          "cpu": "11m"
-        },
-        {
-          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
-          "kind": "StatefulSet",
-          "memory": "26Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "k8s-stack",
-          "version": "0.96.0"
-        }
-      ],
-      "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "k3s",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+k3s1",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vm-prometheus-node-exporter",
-          "kind": "DaemonSet",
-          "memory": "8Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vm-kube-state-metrics",
-          "kind": "Deployment",
           "memory": "26Mi",
           "cpu": "0"
-        },
-        {
-          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "64Mi",
-          "cpu": "5m"
-        },
-        {
-          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "32Mi",
-          "cpu": "7m"
-        },
-        {
-          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "102Mi",
-          "cpu": "15m"
-        },
-        {
-          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
-          "kind": "StatefulSet",
-          "memory": "25Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "k8s-stack",
-          "version": "0.96.0"
-        }
-      ],
-      "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vm-prometheus-node-exporter",
-          "kind": "DaemonSet",
-          "memory": "7Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vm-kube-state-metrics",
-          "kind": "Deployment",
-          "memory": "24Mi",
-          "cpu": "1m"
         },
         {
           "workload": "vmagent-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
           "memory": "54Mi",
-          "cpu": "9m"
+          "cpu": "6m"
         },
         {
           "workload": "vmalert-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "32Mi",
-          "cpu": "7m"
-        },
-        {
-          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "124Mi",
-          "cpu": "20m"
-        },
-        {
-          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
-          "kind": "StatefulSet",
-          "memory": "23Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "k8s-stack",
-          "version": "0.96.0"
-        }
-      ],
-      "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vm-prometheus-node-exporter",
-          "kind": "DaemonSet",
-          "memory": "7Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "vm-kube-state-metrics",
-          "kind": "Deployment",
-          "memory": "25Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "50Mi",
-          "cpu": "8m"
-        },
-        {
-          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "33Mi",
-          "cpu": "7m"
-        },
-        {
-          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "119Mi",
-          "cpu": "18m"
-        },
-        {
-          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
-          "kind": "StatefulSet",
-          "memory": "23Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "k8s-stack",
-          "version": "0.96.0"
-        }
-      ],
-      "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vm-prometheus-node-exporter",
-          "kind": "DaemonSet",
-          "memory": "8Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vm-kube-state-metrics",
-          "kind": "Deployment",
-          "memory": "24Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "48Mi",
-          "cpu": "8m"
-        },
-        {
-          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "33Mi",
-          "cpu": "7m"
-        },
-        {
-          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "103Mi",
-          "cpu": "16m"
-        },
-        {
-          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
-          "kind": "StatefulSet",
-          "memory": "24Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "k8s-stack",
-          "version": "0.96.0"
-        }
-      ],
-      "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.4",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vm-prometheus-node-exporter",
-          "kind": "DaemonSet",
-          "memory": "8Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "vm-kube-state-metrics",
-          "kind": "Deployment",
-          "memory": "25Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "50Mi",
+          "memory": "36Mi",
           "cpu": "5m"
         },
         {
-          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "32Mi",
-          "cpu": "7m"
-        },
-        {
           "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "99Mi",
-          "cpu": "15m"
-        },
-        {
-          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
-          "kind": "StatefulSet",
-          "memory": "24Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "k8s-stack",
-          "version": "0.96.0"
-        }
-      ],
-      "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.35.7",
-      "distributionVersion": "v1.2.3",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vm-prometheus-node-exporter",
-          "kind": "DaemonSet",
-          "memory": "9Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vm-kube-state-metrics",
-          "kind": "Deployment",
-          "memory": "25Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "68Mi",
-          "cpu": "8m"
-        },
-        {
-          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "34Mi",
-          "cpu": "4m"
-        },
-        {
-          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "106Mi",
-          "cpu": "10m"
-        },
-        {
-          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
-          "kind": "StatefulSet",
-          "memory": "25Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "k8s-stack",
-          "version": "0.96.0"
-        }
-      ],
-      "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.35.7",
-      "distributionVersion": "v1.2.3",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vm-prometheus-node-exporter",
-          "kind": "DaemonSet",
-          "memory": "9Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vm-kube-state-metrics",
-          "kind": "Deployment",
-          "memory": "22Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "48Mi",
-          "cpu": "6m"
-        },
-        {
-          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "32Mi",
-          "cpu": "6m"
-        },
-        {
-          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "101Mi",
+          "memory": "94Mi",
           "cpu": "13m"
         },
         {
@@ -635,8 +240,449 @@
           "version": "0.96.0"
         }
       ],
-      "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk=",
-      "measuredAt": "2026-11-11"
+      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "k3s",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+k3s1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vm-prometheus-node-exporter",
+          "kind": "DaemonSet",
+          "memory": "8Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vm-kube-state-metrics",
+          "kind": "Deployment",
+          "memory": "24Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "75Mi",
+          "cpu": "5m"
+        },
+        {
+          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "33Mi",
+          "cpu": "6m"
+        },
+        {
+          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "103Mi",
+          "cpu": "13m"
+        },
+        {
+          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
+          "kind": "StatefulSet",
+          "memory": "26Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8s-stack",
+          "version": "0.96.0"
+        }
+      ],
+      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vm-prometheus-node-exporter",
+          "kind": "DaemonSet",
+          "memory": "8Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vm-kube-state-metrics",
+          "kind": "Deployment",
+          "memory": "26Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "49Mi",
+          "cpu": "8m"
+        },
+        {
+          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "31Mi",
+          "cpu": "5m"
+        },
+        {
+          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "125Mi",
+          "cpu": "15m"
+        },
+        {
+          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
+          "kind": "StatefulSet",
+          "memory": "24Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8s-stack",
+          "version": "0.96.0"
+        }
+      ],
+      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vm-prometheus-node-exporter",
+          "kind": "DaemonSet",
+          "memory": "7Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vm-kube-state-metrics",
+          "kind": "Deployment",
+          "memory": "26Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "53Mi",
+          "cpu": "8m"
+        },
+        {
+          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "33Mi",
+          "cpu": "8m"
+        },
+        {
+          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "114Mi",
+          "cpu": "19m"
+        },
+        {
+          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
+          "kind": "StatefulSet",
+          "memory": "24Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8s-stack",
+          "version": "0.96.0"
+        }
+      ],
+      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vm-prometheus-node-exporter",
+          "kind": "DaemonSet",
+          "memory": "8Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vm-kube-state-metrics",
+          "kind": "Deployment",
+          "memory": "25Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "50Mi",
+          "cpu": "5m"
+        },
+        {
+          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "31Mi",
+          "cpu": "6m"
+        },
+        {
+          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "105Mi",
+          "cpu": "15m"
+        },
+        {
+          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
+          "kind": "StatefulSet",
+          "memory": "24Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8s-stack",
+          "version": "0.96.0"
+        }
+      ],
+      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vm-prometheus-node-exporter",
+          "kind": "DaemonSet",
+          "memory": "8Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "vm-kube-state-metrics",
+          "kind": "Deployment",
+          "memory": "25Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "49Mi",
+          "cpu": "5m"
+        },
+        {
+          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "30Mi",
+          "cpu": "6m"
+        },
+        {
+          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "97Mi",
+          "cpu": "15m"
+        },
+        {
+          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
+          "kind": "StatefulSet",
+          "memory": "25Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8s-stack",
+          "version": "0.96.0"
+        }
+      ],
+      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vm-prometheus-node-exporter",
+          "kind": "DaemonSet",
+          "memory": "9Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vm-kube-state-metrics",
+          "kind": "Deployment",
+          "memory": "26Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "66Mi",
+          "cpu": "16m"
+        },
+        {
+          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "35Mi",
+          "cpu": "7m"
+        },
+        {
+          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "110Mi",
+          "cpu": "19m"
+        },
+        {
+          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
+          "kind": "StatefulSet",
+          "memory": "25Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8s-stack",
+          "version": "0.96.0"
+        }
+      ],
+      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+      },
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vm-prometheus-node-exporter",
+          "kind": "DaemonSet",
+          "memory": "9Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vm-kube-state-metrics",
+          "kind": "Deployment",
+          "memory": "25Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "72Mi",
+          "cpu": "10m"
+        },
+        {
+          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "34Mi",
+          "cpu": "6m"
+        },
+        {
+          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "114Mi",
+          "cpu": "13m"
+        },
+        {
+          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
+          "kind": "StatefulSet",
+          "memory": "26Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8s-stack",
+          "version": "0.96.0"
+        }
+      ],
+      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+      },
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "rke2",
@@ -645,8 +691,73 @@
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+rke2r1",
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vm-prometheus-node-exporter",
+          "kind": "DaemonSet",
+          "memory": "8Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vm-kube-state-metrics",
+          "kind": "Deployment",
+          "memory": "30Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "57Mi",
+          "cpu": "6m"
+        },
+        {
+          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "35Mi",
+          "cpu": "6m"
+        },
+        {
+          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
+          "kind": "Deployment",
+          "memory": "126Mi",
+          "cpu": "15m"
+        },
+        {
+          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
+          "kind": "StatefulSet",
+          "memory": "26Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8s-stack",
+          "version": "0.96.0"
+        }
+      ],
+      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+      },
+      "addOns": {
+        "local-path-provisioner": "v0.0.37"
+      },
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
       "result": "passed",
       "pods": [
         {
@@ -664,65 +775,8 @@
         {
           "workload": "vmagent-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "55Mi",
-          "cpu": "5m"
-        },
-        {
-          "workload": "vmalert-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "34Mi",
-          "cpu": "7m"
-        },
-        {
-          "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "122Mi",
-          "cpu": "19m"
-        },
-        {
-          "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
-          "kind": "StatefulSet",
-          "memory": "25Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "k8s-stack",
-          "version": "0.96.0"
-        }
-      ],
-      "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk=",
-      "measuredAt": "2026-11-11"
-    },
-    {
-      "distribution": "rke2",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.5",
-      "distributionVersion": "v1.36.5+rke2r1",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vm-prometheus-node-exporter",
-          "kind": "DaemonSet",
-          "memory": "9Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "vm-kube-state-metrics",
-          "kind": "Deployment",
-          "memory": "26Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "vmagent-vm-victoria-metrics-k8s-stack",
-          "kind": "Deployment",
-          "memory": "62Mi",
-          "cpu": "4m"
+          "memory": "59Mi",
+          "cpu": "3m"
         },
         {
           "workload": "vmalert-vm-victoria-metrics-k8s-stack",
@@ -733,13 +787,13 @@
         {
           "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "119Mi",
-          "cpu": "15m"
+          "memory": "113Mi",
+          "cpu": "14m"
         },
         {
           "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
           "kind": "StatefulSet",
-          "memory": "24Mi",
+          "memory": "26Mi",
           "cpu": "1m"
         }
       ],
@@ -749,8 +803,16 @@
           "version": "0.96.0"
         }
       ],
-      "sourceDigest": "h1:HrjsrFYr81SUH9eIcWliPzi0HAc+gcyPQcz2Mtgjcwk=",
-      "measuredAt": "2026-11-11"
+      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+      "dependencies": {
+        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+      },
+      "addOns": {
+        "local-path-provisioner": "v0.0.37"
+      },
+      "measuredAt": "2026-11-12"
     }
   ]
 }
