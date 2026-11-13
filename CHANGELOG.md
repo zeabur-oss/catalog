@@ -2,6 +2,22 @@
 
 All notable changes to this catalog are documented in this file; each section comes from the change files in `.changeset/` (CONTRIBUTING.md, "Releases").
 
+## 0.5.1 (2026-11-13)
+
+### Features
+
+#### Measurements record the digests of the components a run installed first
+
+Each measurement in `v1/components/<id>.json` has `dependencies`, the `sourceDigest` of each component that the run installed before this one, by ID. Measurements whose inputs differ from the release's files and pinned Kubernetes and distribution releases are no longer published: a run of older files, of another `kubernetesVersion` on kind, or of another `distributionVersion` on a host distribution.
+
+### Fixes
+
+- The crash loop alert fires on restarts
+
+#### Memos moves to 26.11.0
+
+The Memos template now creates the administrator and turns off sign-up from the files in `/etc/memos/config`, because Memos 26.10.0 and later no longer read `/etc/secrets` and have removed the `/api/v1` routes.
+
 ## 0.5.0 (2026-11-11)
 
 ### Breaking Changes
