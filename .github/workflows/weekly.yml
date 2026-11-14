@@ -1,101 +1,32 @@
-# The full tier, the e2e matrix. A push to main that changes components/ or templates/, every
-# Saturday at 13:00 UTC and a manual run test what is stale: what has no passing run of its current
-# inputs (see catalog list -stale). Opens or updates a pull request with the idle memory and CPU it
-# measured, so measurements/ is only ever written by CI. The pull request is zeabur-oss-bot's:
-# GitHub signs its commit, and CI runs on it, which it would not for GITHUB_TOKEN.
 name: weekly
-
 on:
-  push:
-    branches: [main]
-    paths: ["components/**", "templates/**"]
-  schedule:
-    - cron: "0 13 * * 6"
   workflow_dispatch:
     inputs:
       components:
-        description: Component or template IDs, separated by commas, to test instead of what is stale
         type: string
         required: false
-
 permissions:
   contents: read
-
-# One run at a time. A newer run replaces a waiting one and loses nothing, as it computes what is
-# stale again.
-concurrency:
-  group: weekly
-  cancel-in-progress: false
-
 jobs:
-  e2e-kind:
-    uses: ./.github/workflows/e2e.yml
-    with:
-      profiles: single-node,multi-node
-      components: ${{ inputs.components }}
-
-  e2e-hosts:
-    uses: ./.github/workflows/e2e.yml
-    with:
-      profiles: k3s,rke2,kubesolo
-      components: ${{ inputs.components }}
-
-  pull-request:
-    needs: [e2e-kind, e2e-hosts]
-    # Nothing to record when both matrices were empty; an open pull request stays as it is.
-    if: ${{ !cancelled() && (needs.e2e-kind.outputs.ran == 'true' || needs.e2e-hosts.outputs.ran == 'true') }}
-    runs-on: ubuntu-slim
-    # Holds zeabur-oss-bot's key (see vendorhash.yml).
-    environment: vendorhash
-    permissions:
-      contents: read
+  e2e:
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: instabox-medium, id: reloader }
+          - { runner: ubuntu-26.04, id: reloader }
+          - { runner: instabox-medium, id: longhorn }
+    name: ${{ matrix.runner }} ${{ matrix.id }}
     steps:
-      - id: token
-        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
-        with:
-          client-id: ${{ vars.ZEABUR_OSS_BOT_CLIENT_ID }}
-          private-key: ${{ secrets.ZEABUR_OSS_BOT_PRIVATE_KEY }}
-          repositories: catalog
-          permission-contents: write
-          permission-pull-requests: write
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version-file: go.mod
-          cache: false
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          pattern: measurements-*
-          path: downloaded/
-      # Keeps the open pull request's results where no job measured, then drops each run whose
-      # inputs differ from those of this commit.
-      - name: Merge measurements from every job
-        run: |
-          mkdir -p downloaded kept
-          if git fetch --depth=1 origin ci/measurements; then
-            git archive FETCH_HEAD measurements | tar -x --strip-components=1 -C kept
-          fi
-          go run ./tools/cmd/catalog merge -keep kept downloaded
-      - uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
-        with:
-          token: ${{ steps.token.outputs.token }}
-          # Commits through the API as zeabur-oss-bot, which the sign-off must name for DCO.
-          sign-commits: true
-          branch: ci/measurements
-          title: "chore: update measured resource usage"
-          commit-message: |
-            chore: update measured resource usage
-
-            Signed-off-by: zeabur-oss-bot[bot] <349476329+zeabur-oss-bot[bot]@users.noreply.github.com>
-          body: |
-            Idle memory and CPU of components and templates, measured by the e2e workflow on kind, k3s, RKE2 and KubeSolo. The last run tested ${{ inputs.components || 'what was stale' }}.
-
-            | Job | Result |
-            | --- | --- |
-            | kind (single-node, multi-node) | ${{ needs.e2e-kind.result }} |
-            | k3s, RKE2, KubeSolo | ${{ needs.e2e-hosts.result }} |
-
-            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          add-paths: measurements/
+      - run: |
+          uname -m; nproc; free -g | head -2
+          docker version --format '{{.Server.Version}}' || echo "no docker"
+          sudo modprobe iscsi_tcp && echo "iscsi_tcp ok" || echo "no iscsi_tcp"
+      - uses: ./.github/actions/setup
+      - if: matrix.id == 'longhorn'
+        run: sudo modprobe iscsi_tcp
+      - run: nix develop -c go run ./tools/cmd/catalog e2e -tier full -profile single-node -write "${{ matrix.id }}"
