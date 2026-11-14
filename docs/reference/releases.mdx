@@ -19,13 +19,14 @@ The shared release workflow of [zeabur-oss/.github](https://github.com/zeabur-os
 
 ## The API
 
-The API is static JSON files. It holds facts: what each component declares, what it renders, and what e2e measured. It doesn't hold values worked out from them, such as totals or the distributions a component passed on. A reader works those out, as [How installers choose and install components](installers.mdx#what-the-installer-works-out) describes.
+The API is static JSON files. It holds facts: what each component declares, what it renders, what e2e measured, and each template as written. It doesn't hold values worked out from them, such as totals or the distributions a component passed on. A reader works those out, as [How installers choose and install components](installers.mdx#what-the-installer-works-out) describes.
 
 | Path | Contents | Schema |
 | --- | --- | --- |
-| `v1/catalog.json` | The release's `version` and `commit`, the profiles, the Kubernetes versions, the pinned `distributions` and each component's `id` and `sourceDigest`. | [`catalog.schema.json`](../../schema/v1/catalog.schema.json) |
+| `v1/catalog.json` | The release's `version` and `commit`, the profiles, the Kubernetes versions, the pinned `distributions` and the `id` and `sourceDigest` of each component and each template. | [`catalog.schema.json`](../../schema/v1/catalog.schema.json) |
 | `v1/components/<id>.json` | One component: its `id` and `sourceDigest`, its `declaration`, its `render` and its `measurements`. | [`component-file.schema.json`](../../schema/v1/component-file.schema.json) |
-| `v1/schema/` | The schemas above, and `component.schema.json`, the schema of a declaration. | |
+| `v1/templates/<id>.json` | One template: its `id` and `sourceDigest`, its `template` and its `manifests`. | [`template-file.schema.json`](../../schema/v1/template-file.schema.json) |
+| `v1/schema/` | The schemas above, `component.schema.json`, the schema of a declaration, and `template.schema.json`, the schema of `template`. | |
 
 The schemas are the contract, and the Go types of the catalog's tools generate them. Each file of a release passes its schema.
 
@@ -33,6 +34,9 @@ The schemas are the contract, and the Go types of the catalog's tools generate t
 - `sourceDigest` is the digest of the component file. A measurement with the same `sourceDigest` measured this file.
 - `render` is what `helm template` renders for each profile the component supports, at `kubernetesVersion`, the newest Kubernetes version the catalog tests. For each profile, `workloads` lists each Deployment, StatefulSet and DaemonSet with its `release`, `namespace`, `name`, `kind`, `replicas`, and the `requests` and `limits` of its `containers` and `initContainers`. A StatefulSet also has the `storage` of its `volumeClaimTemplates`. A DaemonSet has no `replicas`; it runs one pod on each node. `persistentVolumeClaims` lists the claims the component renders with their `storage`.
 - `measurements` lists each environment where e2e ran the component.
+- `template` is `template.yaml` as written, as JSON. See [Template format](template-format.mdx).
+- `manifests` is the text of `manifests.yaml` as written, as one string. It has `{{ .Namespace }}` fields, so it isn't YAML until the installer expands it, and a JSON object couldn't keep its comments or those fields.
+- A template's `sourceDigest` is the digest of its directory, `template.yaml` and `manifests.yaml` together.
 
 `https://oss-catalog.zeabur.com/v1/` always holds the latest release of API major version 1. A change that would break a reader of `v1` comes with `v2`, at its own path, and `v1` then keeps the last release that had it. A newer release can add a field or a value without a new major version. A reader ignores a field it doesn't know, and handles a value it doesn't know as follows:
 
@@ -63,6 +67,10 @@ Each measurement names its environment with `distribution` (`kind`, `k3s`, `rke2
 ```
 
 A passing run has `pods`, one row for each workload: its `workload` name, its `kind`, and the idle `memory` and `cpu` of one pod of it. Both are Kubernetes quantities such as `22Mi` and `3m`, rounded to whole MiB and millicores. A workload is a Deployment, StatefulSet, DaemonSet, or bare Pod, or the controller of a Job. The rows cover the pods in the component's own namespaces as the cluster ran them, including pods that an operator creates. To get a total, multiply each row by the workload's `replicas` in `render` and add them up. The scheduler places pods by requests, so an installer compares the sum of the memory requests in `render` with a node's allocatable memory.
+
+## What a reader trusts
+
+A reader that reads the API trusts the HTTPS origin, `oss-catalog.zeabur.com`. The files aren't signed one by one. A mirror is a different origin, so a reader trusts it only when its configuration says so. To trust a release instead of an origin, verify `SHA256SUMS`, which covers `api-v1.tar.gz`, as [below](#verify-and-read-a-release) describes.
 
 ## Verify and read a release
 

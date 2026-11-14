@@ -36,6 +36,7 @@ func schemaFiles() (map[string][]byte, error) {
 		{"yaml", "template.schema.json", "Template", &templates.Template{}},
 		{"json", "catalog.schema.json", "catalog.json", &CatalogFile{}},
 		{"json", "component-file.schema.json", "components/<id>.json", &ComponentFile{}},
+		{"json", "template-file.schema.json", "templates/<id>.json", &TemplateFile{}},
 	} {
 		r, err := catalog.NewReflector(f.tag)
 		if err != nil {

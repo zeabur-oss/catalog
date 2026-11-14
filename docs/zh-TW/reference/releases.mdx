@@ -19,13 +19,14 @@ description: 從靜態 API 讀取 catalog、固定 Zeabur Catalog 版本並驗�
 
 ## API
 
-API 是一組靜態 JSON 檔案，存放各元件的宣告、算繪結果和 e2e 量測資料，不存總量或元件通過測試的發行版等計算結果。這些結果由讀取工具自行算出，做法見[安裝工具如何選擇和安裝元件](installers.mdx#安裝工具要算出的清單)。
+API 是一組靜態 JSON 檔案，存放各元件的宣告、算繪結果、e2e 量測資料，以及原樣的各個範本，不存總量或元件通過測試的發行版等計算結果。這些結果由讀取工具自行算出，做法見[安裝工具如何選擇和安裝元件](installers.mdx#安裝工具要算出的清單)。
 
 | 路徑 | 內容 | Schema |
 | --- | --- | --- |
-| `v1/catalog.json` | 版本的 `version` 和 `commit`、profile、Kubernetes 版本、固定版本的 `distributions`，以及各元件的 `id` 和 `sourceDigest`。 | [`catalog.schema.json`](../../../schema/v1/catalog.schema.json) |
+| `v1/catalog.json` | 版本的 `version` 和 `commit`、profile、Kubernetes 版本、固定版本的 `distributions`，以及各元件和各範本的 `id` 和 `sourceDigest`。 | [`catalog.schema.json`](../../../schema/v1/catalog.schema.json) |
 | `v1/components/<id>.json` | 一個元件的 `id`、`sourceDigest`、`declaration`、`render` 和 `measurements`。 | [`component-file.schema.json`](../../../schema/v1/component-file.schema.json) |
-| `v1/schema/` | 上面的 schema，以及宣告的 schema `component.schema.json`。 | |
+| `v1/templates/<id>.json` | 一個範本的 `id`、`sourceDigest`、`template` 和 `manifests`。 | [`template-file.schema.json`](../../../schema/v1/template-file.schema.json) |
+| `v1/schema/` | 上面的 schema，宣告的 schema `component.schema.json`，以及 `template` 的 schema `template.schema.json`。 | |
 
 Schema 定義資料格式，由 catalog 工具的 Go 型別產生。每個版本的所有檔案都通過對應 schema 的檢查。
 
@@ -33,6 +34,9 @@ Schema 定義資料格式，由 catalog 工具的 Go 型別產生。每個版本
 - `sourceDigest` 是元件檔案的雜湊值。量測紀錄的 `sourceDigest` 相同，就表示量測的是這個檔案。
 - `render` 是 `helm template` 在元件支援的各個 profile 下算繪出的內容，使用的 `kubernetesVersion` 是 catalog 測試的最新 Kubernetes 版本。每個 profile 的 `workloads` 列出各 Deployment、StatefulSet 和 DaemonSet 的 `release`、`namespace`、`name`、`kind`、`replicas`，以及 `containers` 和 `initContainers` 的 `requests` 與 `limits`。StatefulSet 另有 `volumeClaimTemplates` 的 `storage`。DaemonSet 沒有 `replicas`，在每個節點上各執行一個 Pod。`persistentVolumeClaims` 列出元件算繪出的 PVC 及其 `storage`。
 - `measurements` 列出 e2e 執行這個元件的每個環境。
+- `template` 是 `template.yaml` 原有的內容，改用 JSON 表示。見[範本檔案格式](template-format.mdx)。
+- `manifests` 是 `manifests.yaml` 原有的文字，整份放在一個字串裡。裡面有 `{{ .Namespace }}` 這類欄位，要等安裝工具展開後才是 YAML；JSON 物件留不住這些欄位和註解。
+- 範本的 `sourceDigest` 是整個範本目錄的雜湊值，包含 `template.yaml` 和 `manifests.yaml`。
 
 `https://oss-catalog.zeabur.com/v1/` 永遠提供 API 主版本 1 的最新版本。如果變更會讓讀取 `v1` 的工具無法繼續使用，就會在另一個路徑發布 `v2`，`v1` 則保留最後一個提供它的版本。新版本可以新增欄位或值，不必更換主版本。讀取工具略過不認得的欄位，遇到不認得的值則照下表處理：
 
@@ -63,6 +67,10 @@ Schema 定義資料格式，由 catalog 工具的 Go 型別產生。每個版本
 ```
 
 通過測試的紀錄有 `pods`，每個工作負載一列，內容是 `workload` 名稱、`kind`，以及其中一個 Pod 的閒置用量 `memory` 和 `cpu`。兩者都是 Kubernetes 的數量寫法，例如 `22Mi`、`3m`，記憶體取整到 MiB，CPU 取整到 millicore。工作負載指 Deployment、StatefulSet、DaemonSet 或單獨的 Pod，Job 則記在它的控制器底下。這些列涵蓋元件自己的 Namespace 裡實際執行的 Pod，包含 operator 建立的 Pod。要算總量，就把每一列的用量乘上 `render` 裡該工作負載的 `replicas`，再加總。排程器依請求量放置 Pod，所以安裝工具會把 `render` 裡的記憶體請求量加總，和節點可分配的記憶體比較。
+
+## 讀取工具信任什麼
+
+讀取 API 的工具信任 HTTPS 來源 `oss-catalog.zeabur.com`。這些檔案不會逐個簽章。鏡像是另一個來源，只有工具的設定寫明信任它，才會信任它。要信任某個版本而不是某個來源時，驗證 `SHA256SUMS`，它涵蓋 `api-v1.tar.gz`，做法見[下方](#驗證並讀取版本)。
 
 ## 驗證並讀取版本
 

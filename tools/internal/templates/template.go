@@ -211,6 +211,9 @@ func Load(root string) ([]*Template, error) {
 	return out, nil
 }
 
+// Written returns template.yaml decoded as written, for JSON.
+func (t *Template) Written() any { return t.raw }
+
 // Get returns the template with the given ID.
 func Get(all []*Template, id string) (*Template, error) {
 	for _, t := range all {

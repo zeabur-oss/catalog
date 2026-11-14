@@ -60,6 +60,26 @@
         "version"
       ],
       "description": "PinnedDistribution is the release of a distribution that e2e installs on the host."
+    },
+    "templateEntry": {
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "description": "The directory name of the template under templates/."
+        },
+        "sourceDigest": {
+          "type": "string",
+          "description": "The Go module hash (h1:) of the directory templates/\u003cid\u003e/. A measurement with another\nsourceDigest tested older files."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "id",
+        "sourceDigest"
+      ],
+      "description": "TemplateEntry names a template. templates/\u003cid\u003e.json holds the rest."
     }
   },
   "properties": {
@@ -92,6 +112,12 @@
         "$ref": "#/$defs/componentEntry"
       },
       "type": "array"
+    },
+    "templates": {
+      "items": {
+        "$ref": "#/$defs/templateEntry"
+      },
+      "type": "array"
     }
   },
   "additionalProperties": false,
@@ -101,8 +127,9 @@
     "profiles",
     "kubernetes",
     "distributions",
-    "components"
+    "components",
+    "templates"
   ],
   "title": "catalog.json",
-  "description": "CatalogFile is catalog.json: the catalog release, its test environments and its components."
+  "description": "CatalogFile is catalog.json: the catalog release, its test environments, its components and its\ntemplates."
 }
