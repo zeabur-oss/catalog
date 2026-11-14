@@ -68,11 +68,21 @@ func mergeMeasurements(src, keep, dst string) error {
 	if err != nil {
 		return err
 	}
+	// download-artifact extracts a single artifact straight into src, so src
+	// is the job itself.
+	var dirs []string
 	for _, job := range jobs {
 		if !job.IsDir() {
 			continue
 		}
-		err := walkMeasurements(filepath.Join(src, job.Name()), func(rel string, m measurement) error { return put(rel, m, true) })
+		if job.Name() == "components" || job.Name() == "templates" {
+			dirs = []string{src}
+			break
+		}
+		dirs = append(dirs, filepath.Join(src, job.Name()))
+	}
+	for _, dir := range dirs {
+		err := walkMeasurements(dir, func(rel string, m measurement) error { return put(rel, m, true) })
 		if err != nil {
 			return err
 		}

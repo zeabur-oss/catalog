@@ -86,6 +86,26 @@ func TestMergeKeepsEnvironmentsNoJobMeasured(t *testing.T) {
 	}
 }
 
+func TestMergeSingleArtifactExtractedIntoSrc(t *testing.T) {
+	t.Chdir(t.TempDir())
+	writeFile(t, "downloaded/templates/ghost.json", measurement{
+		Template:     "ghost",
+		Environments: []Environment{kindEnv("single-node", "amd64", 310, "2026-10-25")},
+	})
+
+	if err := mergeMeasurements("downloaded", "", "measurements"); err != nil {
+		t.Fatal(err)
+	}
+
+	ghost := readMeasurement("measurements/templates/ghost.json")
+	if ghost.Template != "ghost" || get(t, ghost, kindEnv("single-node", "amd64", 0, "")).Pods[0].Memory.Value() != 310<<20 {
+		t.Errorf("templates/ghost.json = %+v, want the uploaded template measurement", ghost)
+	}
+	if _, err := os.Stat("measurements/ghost.json"); err == nil {
+		t.Error("wrote measurements/ghost.json outside components/ and templates/")
+	}
+}
+
 func TestMergeRejectsBrokenFile(t *testing.T) {
 	t.Chdir(t.TempDir())
 	path := "downloaded/job/templates/ghost.json"
