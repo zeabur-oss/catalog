@@ -12,7 +12,7 @@ runs:
         restore-prefixes-first-match: nix-${{ runner.os }}-${{ runner.arch }}-
         gc-max-store-size-linux: 3G
         # Only main saves, so pull requests do not evict each other.
-        save: ${{ github.ref == 'refs/heads/main' }}
+        save: true
     - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: |

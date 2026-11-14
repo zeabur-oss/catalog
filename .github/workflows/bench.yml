@@ -1,0 +1,28 @@
+name: bench
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  e2e:
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: instabox-medium, id: reloader }
+          - { runner: ubuntu-26.04, id: reloader }
+          - { runner: instabox-medium, id: longhorn }
+    name: ${{ matrix.runner }} ${{ matrix.id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: |
+          uname -m; nproc; free -g | head -2
+          docker version --format '{{.Server.Version}}' || echo "no docker"
+          sudo modprobe iscsi_tcp && echo "iscsi_tcp ok" || echo "no iscsi_tcp"
+      - uses: ./.github/actions/setup
+      - if: matrix.id == 'longhorn'
+        run: sudo modprobe iscsi_tcp
+      - run: nix develop -c go run ./tools/cmd/catalog e2e -tier full -profile single-node -write "${{ matrix.id }}"
