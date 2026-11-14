@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oss-catalog.zeabur.com/v1/schema/template-file.schema.json",
+  "$defs": {
+    "writtenTemplate": {
+      "$ref": "template.schema.json"
+    }
+  },
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "The directory name of the template under templates/."
+    },
+    "sourceDigest": {
+      "type": "string",
+      "description": "The Go module hash (h1:) of the directory templates/\u003cid\u003e/. A measurement with another\nsourceDigest tested older files."
+    },
+    "template": {
+      "$ref": "#/$defs/writtenTemplate",
+      "description": "templates/\u003cid\u003e/template.yaml as written."
+    },
+    "manifests": {
+      "type": "string",
+      "description": "The text of templates/\u003cid\u003e/manifests.yaml. It has Go template fields such as {{ .Namespace }},\nso it is not YAML yet: the installer expands it, then reads the objects."
+    }
+  },
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "id",
+    "sourceDigest",
+    "template",
+    "manifests"
+  ],
+  "title": "templates/\u003cid\u003e.json",
+  "description": "TemplateFile is templates/\u003cid\u003e.json: the two files of a template as written."
+}
