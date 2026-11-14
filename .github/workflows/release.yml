@@ -27,7 +27,9 @@ jobs:
       id-token: write
       attestations: write
     with:
+      runner: ${{ vars.CI_RUNNER_LINT || 'ubuntu-26.04-arm' }}
       name: Zeabur Catalog
       version: ${{ inputs.version }}
       # The release is data, the same on every platform; it was built on arm64 before.
-      platforms: '[{"os": "linux", "arch": "arm64", "runner": "ubuntu-26.04-arm"}]'
+      platforms: >-
+        [{"os": "linux", "arch": "arm64", "runner": "${{ vars.CI_RUNNER || 'ubuntu-26.04-arm' }}"}]

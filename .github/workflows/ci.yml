@@ -26,12 +26,12 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
-# A job whose runs-on can name Instabox (instabox-<size>) runs on a fresh Instabox machine when the
-# organization variable CI_INSTABOX is "true". Otherwise, and for the jobs that need Docker, jobs
-# run on GitHub's runners.
+# A job that can run on Instabox takes its runner from a variable, such as instabox-small: lint from
+# CI_RUNNER_LINT, the ubuntu-slim jobs from CI_RUNNER_SLIM, the others from CI_RUNNER. Without the
+# variable it runs on GitHub's runner. The jobs that need Docker, k3d or kind stay there.
 jobs:
   lint:
-    runs-on: ${{ vars.CI_INSTABOX == 'true' && 'instabox-small' || 'ubuntu-26.04' }}
+    runs-on: ${{ vars.CI_RUNNER_LINT || 'ubuntu-26.04' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -40,7 +40,7 @@ jobs:
       - run: nix develop -c scripts/ci/lint.sh
 
   test:
-    runs-on: ${{ vars.CI_INSTABOX == 'true' && 'instabox-medium' || 'ubuntu-26.04' }}
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-26.04' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -49,7 +49,7 @@ jobs:
       - run: nix develop -c scripts/ci/test.sh
 
   check:
-    runs-on: ${{ vars.CI_INSTABOX == 'true' && 'instabox-medium' || 'ubuntu-26.04' }}
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-26.04' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -60,7 +60,7 @@ jobs:
       - run: nix develop -c scripts/ci/check.sh
 
   release:
-    runs-on: ${{ vars.CI_INSTABOX == 'true' && 'instabox-medium' || 'ubuntu-26.04' }}
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-26.04' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -84,7 +84,7 @@ jobs:
     name: check / ok
     if: always()
     needs: [lint, test, check, release, zizmor]
-    runs-on: ubuntu-slim
+    runs-on: ${{ vars.CI_RUNNER_SLIM || 'ubuntu-slim' }}
     steps:
       - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
         run: exit 1
@@ -94,7 +94,7 @@ jobs:
 
   smoke-matrix:
     if: github.event_name == 'merge_group'
-    runs-on: ubuntu-slim
+    runs-on: ${{ vars.CI_RUNNER_SLIM || 'ubuntu-slim' }}
     outputs:
       matrix: ${{ steps.list.outputs.matrix }}
     steps:
@@ -140,7 +140,7 @@ jobs:
   smoke-ok:
     if: always()
     needs: [smoke-matrix, smoke]
-    runs-on: ubuntu-slim
+    runs-on: ${{ vars.CI_RUNNER_SLIM || 'ubuntu-slim' }}
     steps:
       - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
         run: exit 1

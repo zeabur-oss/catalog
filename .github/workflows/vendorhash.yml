@@ -28,7 +28,7 @@ jobs:
       github.event.pull_request.user.login == 'renovate[bot]' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
       startsWith(github.head_ref, 'renovate/')
-    runs-on: ubuntu-26.04
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-26.04' }}
     permissions:
       contents: read
     outputs:
@@ -57,7 +57,7 @@ jobs:
     name: push
     needs: hash
     if: needs.hash.outputs.hash != ''
-    runs-on: ubuntu-26.04
+    runs-on: ${{ vars.CI_RUNNER_LINT || 'ubuntu-26.04' }}
     environment: vendorhash
     permissions:
       contents: read

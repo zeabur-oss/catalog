@@ -23,7 +23,7 @@ concurrency:
 jobs:
   pages:
     if: ${{ github.event_name == 'workflow_dispatch' || !github.event.release.prerelease }}
-    runs-on: ubuntu-26.04
+    runs-on: ${{ vars.CI_RUNNER_LINT || 'ubuntu-26.04' }}
     permissions:
       contents: write
       pages: write
