@@ -14,19 +14,19 @@
         {
           "workload": "ollama",
           "kind": "Deployment",
-          "memory": "70Mi",
+          "memory": "219Mi",
           "cpu": "0"
         }
       ],
       "versions": [
         {
           "image": "docker.io/ollama/ollama",
-          "version": "0.40.14",
-          "digest": "sha256:ebaef4f4c5d93660e1f25f8ad085a112f51ccfb0e8458073e71793959dba91c9"
+          "version": "0.40.15",
+          "digest": "sha256:0e59999e0e8f9fd4e704bd788a89b7e4cad399367fb1365f8c102ac662288761"
         }
       ],
-      "sourceDigest": "h1:/UdgbWYlf4hkxosOC5zurSHy4b4lzoUh3n8DJhYdv1Q=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:Hem9jYN+NXQCeOCYGOINFRcowurogbpyYLkDVwMv1b4=",
+      "measuredAt": "2026-11-15"
     }
   ]
 }
