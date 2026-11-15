@@ -33,7 +33,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       initContainers:
         - name: configure
-          image: eceasy/cli-proxy-api:v8.0.54@sha256:66e51ccba4786099f85f40439ba17f975dc5e9468def96ba914d3da39041d03a
+          image: eceasy/cli-proxy-api:v8.0.60@sha256:873ec3df3b673a82f7d956d4636c7736b0c961dc6ee28f9fb403238b2898dc0d
           command: [/bin/sh, -ec]
           args:
             - |
@@ -72,7 +72,7 @@ spec:
             - {name: runtime, mountPath: /runtime}
       containers:
         - name: cliproxyapi
-          image: eceasy/cli-proxy-api:v8.0.54@sha256:66e51ccba4786099f85f40439ba17f975dc5e9468def96ba914d3da39041d03a
+          image: eceasy/cli-proxy-api:v8.0.60@sha256:873ec3df3b673a82f7d956d4636c7736b0c961dc6ee28f9fb403238b2898dc0d
           command: [/CLIProxyAPI/CLIProxyAPI]
           args: [--config, /runtime/config.yaml, --local-model]
           env:
