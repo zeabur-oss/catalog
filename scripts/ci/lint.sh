@@ -9,7 +9,7 @@ if [[ -n "$unformatted" ]]; then
   exit 1
 fi
 shellcheck scripts/ci/*.sh
-actionlint
+jactionlint
 bun install --frozen-lockfile
 bun fmt --check scripts/release.ts
 bun check scripts/

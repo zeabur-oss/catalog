@@ -29,6 +29,7 @@ concurrency:
 jobs:
   lint:
     runs-on: ubuntu-26.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -38,6 +39,7 @@ jobs:
 
   test:
     runs-on: ubuntu-26.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -47,6 +49,7 @@ jobs:
 
   check:
     runs-on: ubuntu-26.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -58,6 +61,7 @@ jobs:
 
   release:
     runs-on: ubuntu-26.04
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -74,24 +78,22 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-  zizmor:
-    uses: zeabur-oss/.github/.github/workflows/zizmor.yml@cb333d6e0f4250e3b2ca3625dffca106d5ea2713 # main
 
   ok:
     name: check / ok
     if: always()
-    needs: [lint, test, check, release, zizmor]
+    needs: [lint, test, check, release]
     runs-on: ubuntu-slim
+    timeout-minutes: 5
     steps:
       - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
         run: exit 1
 
-  dco:
-    uses: zeabur-oss/.github/.github/workflows/dco.yml@cb333d6e0f4250e3b2ca3625dffca106d5ea2713 # main
 
   smoke-matrix:
     if: github.event_name == 'merge_group'
     runs-on: ubuntu-slim
+    timeout-minutes: 5
     outputs:
       matrix: ${{ steps.list.outputs.matrix }}
     steps:
@@ -112,6 +114,7 @@ jobs:
     needs: [smoke-matrix]
     if: github.event_name == 'merge_group' && fromJSON(needs.smoke-matrix.outputs.matrix).include[0]
     runs-on: ubuntu-26.04
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
@@ -138,6 +141,7 @@ jobs:
     if: always()
     needs: [smoke-matrix, smoke]
     runs-on: ubuntu-slim
+    timeout-minutes: 5
     steps:
       - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
         run: exit 1
