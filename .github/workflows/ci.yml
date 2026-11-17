@@ -28,27 +28,27 @@ concurrency:
 
 jobs:
   lint:
-    runs-on: ubuntu-26.04
+    runs-on: instabox-small
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: zeabur-oss/.github/actions/ci-setup@cb333d6e0f4250e3b2ca3625dffca106d5ea2713 # main
+      - uses: zeabur-oss/.github/actions/ci-setup@3e2e5ba4210b60c1e97fa53e2029e1ea9f5e468e # main
       - run: nix develop -c scripts/ci/lint.sh
 
   test:
-    runs-on: ubuntu-26.04
+    runs-on: instabox-small
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: zeabur-oss/.github/actions/ci-setup@cb333d6e0f4250e3b2ca3625dffca106d5ea2713 # main
+      - uses: zeabur-oss/.github/actions/ci-setup@3e2e5ba4210b60c1e97fa53e2029e1ea9f5e468e # main
       - run: nix develop -c scripts/ci/test.sh
 
   check:
-    runs-on: ubuntu-26.04
+    runs-on: instabox-small
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -56,7 +56,7 @@ jobs:
           persist-credentials: false
           # The history of origin/main, to find the merge-base to dry-run an upgrade from.
           fetch-depth: 0
-      - uses: zeabur-oss/.github/actions/ci-setup@cb333d6e0f4250e3b2ca3625dffca106d5ea2713 # main
+      - uses: zeabur-oss/.github/actions/ci-setup@3e2e5ba4210b60c1e97fa53e2029e1ea9f5e468e # main
       - run: nix develop -c scripts/ci/check.sh
 
   release:
@@ -66,7 +66,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: zeabur-oss/.github/actions/ci-setup@cb333d6e0f4250e3b2ca3625dffca106d5ea2713 # main
+      - uses: zeabur-oss/.github/actions/ci-setup@3e2e5ba4210b60c1e97fa53e2029e1ea9f5e468e # main
       - run: nix develop -c scripts/ci/release.sh
         env:
           CI_ARTIFACTS: ${{ runner.temp }}/ci-artifacts
@@ -83,7 +83,7 @@ jobs:
     name: check / ok
     if: always()
     needs: [lint, test, check, release]
-    runs-on: ubuntu-slim
+    runs-on: instabox-small
     timeout-minutes: 5
     steps:
       - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
@@ -140,7 +140,7 @@ jobs:
   smoke-ok:
     if: always()
     needs: [smoke-matrix, smoke]
-    runs-on: ubuntu-slim
+    runs-on: instabox-small
     timeout-minutes: 5
     steps:
       - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
