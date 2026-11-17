@@ -49,7 +49,7 @@ jobs:
               { echo "::error::$VERSION is not on main"; exit 1; }
           fi
       - name: Build the bundle and the static API
-        run: scripts/release-files.sh "$VERSION" assets
+        run: scripts/ci/release.sh "$VERSION" assets
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: assets
@@ -110,7 +110,7 @@ jobs:
         run: |
           gh release download "$VERSION" --repo "$GITHUB_REPOSITORY" --dir downloaded
           bun x zeabur-oss-release verify-assets downloaded
-          scripts/release-files.sh "$VERSION" rebuilt
+          scripts/ci/release.sh "$VERSION" rebuilt
           for file in rebuilt/*; do
             cmp "$file" "downloaded/${file#rebuilt/}" ||
               { echo "::error::${file#rebuilt/} differs from a rebuild at $VERSION"; exit 1; }

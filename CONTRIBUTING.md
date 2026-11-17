@@ -58,7 +58,7 @@ create kind clusters on a Linux machine with Docker.
 ## Releases
 
 The Release workflow, `.github/workflows/release.yml`, builds `bundle.tar.gz` and `api-v<N>.tar.gz`
-with `scripts/release-files.sh`, signs their `SHA256SUMS` and attests them with `zeabur-oss-release`
+with `scripts/ci/release.sh`, signs their `SHA256SUMS` and attests them with `zeabur-oss-release`
 of [zeabur-oss/.github](https://github.com/zeabur-oss/.github), and verifies the draft against a
 rebuild.
 

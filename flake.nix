@@ -63,7 +63,7 @@
           inherit catalog kube-apiserver;
           # The bundle that a release publishes. Zeabur builds this output at its
           # pinned commit, so it embeds the same bytes as the release. The static API needs helm
-          # to fetch charts, so scripts/release-files.sh builds it outside this sandbox.
+          # to fetch charts, so scripts/ci/release.sh builds it outside this sandbox.
           release = pkgs.runCommand "catalog-release" { nativeBuildInputs = [ catalog ]; } ''
             cp -r ${self} src
             chmod -R u+w src

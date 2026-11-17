@@ -13,7 +13,7 @@ Follow the shared skills `zeabur-oss-standards` (with [`STANDARDS.md`](STANDARDS
 
 ## Checks (what CI runs)
 Each pull request job is `nix develop -c scripts/ci/<job>.sh` (the jobs of `.github/workflows/ci.yml`).
-The Release workflow builds its files with `scripts/release-files.sh <version> <dir>`. Underneath:
+The Release workflow builds its files with `scripts/ci/release.sh <version> <dir>`. Underneath:
 ```sh
 nix develop -c go test ./...
 nix develop -c go run ./tools/cmd/catalog validate   # schema, licences, references, value comments

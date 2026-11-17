@@ -8,5 +8,5 @@ if [[ -n "$unformatted" ]]; then
   echo "$unformatted" >&2
   exit 1
 fi
-shellcheck scripts/*.sh scripts/ci/*.sh
+shellcheck scripts/ci/*.sh
 jactionlint

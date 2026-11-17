@@ -132,6 +132,6 @@ go run ./tools/cmd/catalog api -version X.Y.Z -out out/api
 - `LICENSE`
 - `README.md`
 
-`catalog api` 將 API 寫入 `out/api/v1/`，並用對應的 schema 檢查每個檔案。這個指令會算繪 chart，需要 helm 和網路連線。`scripts/release-files.sh <version> <dir>` 會按發布版本的方式，將 API 打包成 `api-v1.tar.gz`。
+`catalog api` 將 API 寫入 `out/api/v1/`，並用對應的 schema 檢查每個檔案。這個指令會算繪 chart，需要 helm 和網路連線。`scripts/ci/release.sh <version> <dir>` 會按發布版本的方式，將 API 打包成 `api-v1.tar.gz`。
 
 這些指令建置的檔案會與發布版本逐位元組相同。工具可以先從尚未發布的 commit 建置檔案，等該 commit 發布後，再與已簽章的版本比對。
