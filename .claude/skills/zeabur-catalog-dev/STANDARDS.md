@@ -1,7 +1,6 @@
 # Engineering standards: Zeabur Catalog's part
 
-Apply `zeabur-oss-standards`' STANDARDS.md first. Zeabur Catalog adds these items to its
-sections.
+What Zeabur Catalog checks in review, by section.
 
 ## 1. Comments, doc comments and commit messages
 

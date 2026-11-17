@@ -8,8 +8,7 @@ description: Development loop for the Zeabur Catalog repository — the checks C
 Data format and how to add a component or template: `docs/contribute/add-component.mdx`, `docs/contribute/add-template.mdx`. Template rules:
 `docs/reference/template-standards.mdx`. Pull request rules: `CONTRIBUTING.md`.
 
-Follow the shared skills `zeabur-oss-standards` (with [`STANDARDS.md`](STANDARDS.md) here),
-`zeabur-oss-workflow` and `zeabur-oss-cluster-tests`.
+Review standards: [`STANDARDS.md`](STANDARDS.md).
 
 ## Checks (what CI runs)
 Each pull request job is `nix develop -c scripts/ci/<job>.sh` (the jobs of `.github/workflows/ci.yml`).
@@ -23,8 +22,7 @@ nix develop -c go run ./tools/cmd/catalog render     # helm template every profi
 nix develop -c go run ./tools/cmd/catalog template lint -values values.json <id>   # safety rules, kubeconform
 ```
 Cluster tests come in tiers (`docs/contribute/tests.mdx`). `check` starts its own etcd and kube-apiserver and
-needs no Docker. `smoke` and `full` create their own kind clusters, where and how
-`zeabur-oss-cluster-tests` says:
+needs no Docker. `smoke` and `full` create their own kind clusters; run them on a disposable Linux machine or VM:
 ```sh
 nix develop -c go run ./tools/cmd/catalog e2e -tier check            # every pull request
 nix develop -c go run ./tools/cmd/catalog e2e -tier smoke <ids>      # merge queue: install, smoke
