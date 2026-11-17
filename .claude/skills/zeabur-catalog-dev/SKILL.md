@@ -1,14 +1,12 @@
 ---
 name: zeabur-catalog-dev
-description: Development loop for the Zeabur Catalog repository — the checks CI runs and the engineering standards for comments, commits, tests, design and scale. Use before changing any component, template, Go tool, Nix or CI file in this repo.
+description: Development loop for the Zeabur Catalog repository — the checks CI runs, the cluster test tiers, and the rules for value comments and for manifests at scale. Use before changing any component, template, Go tool, Nix or CI file in this repo.
 ---
 
 # Zeabur Catalog development loop
 
 Data format and how to add a component or template: `docs/contribute/add-component.mdx`, `docs/contribute/add-template.mdx`. Template rules:
 `docs/reference/template-standards.mdx`. Pull request rules: `CONTRIBUTING.md`.
-
-Review standards: [`STANDARDS.md`](STANDARDS.md).
 
 ## Checks (what CI runs)
 Each pull request job is `nix develop -c scripts/ci/<job>.sh` (the jobs of `.github/workflows/ci.yml`).
@@ -33,3 +31,15 @@ that commit and `HEAD`, as the merge queue does (`tools/cmd/catalog/selection.go
 edits do not count): a changed component or template, with what installs it; a change under
 `tools/`, `go.*`, `flake.*`, `config/` or `.github/workflows/`, the `smokeRepresentative` list in
 `config/e2e.yaml`; a change to `config/kubernetes.yaml`, everything.
+
+## Values and manifests
+
+- A value comment states the constraint or the difference from the upstream default, not the
+  history or the measurements behind it.
+- One operator per cluster reconciles every instance of its kind. Never ship a controller,
+  Deployment or CronJob per tenant item.
+- A CronJob can run zero or two times, so its Job is idempotent. Keep finished Jobs bounded:
+  `successfulJobsHistoryLimit: 3`, `failedJobsHistoryLimit: 1`, `ttlSecondsAfterFinished`.
+- A workload that keeps required state in memory or on its own volume runs one replica, unless a
+  shared store lets it run more.
+- A value that ends up in one object stays under the object size limits.
