@@ -3,7 +3,7 @@ title: Releases and the API
 description: Read the catalog from its static API, pin a Zeabur Catalog version and verify its Sigstore signature, or build the release files from a specific commit.
 ---
 
-Pushing a `vX.Y.Z` tag publishes `bundle.tar.gz`, `api-v1.tar.gz`, `checksums.txt`, and `SHA256SUMS` with its Sigstore signature bundle. Each release that isn't a pre-release also publishes its API at `https://oss-catalog.zeabur.com/v1/`. Before 1.0, a minor release can change the file format, so pin an exact release when you need one.
+Pushing a `vX.Y.Z` tag publishes `bundle.tar.gz`, `api-v1.tar.gz`, and `SHA256SUMS` with its Sigstore signature bundle. Each release that isn't a pre-release also publishes its API at `https://oss-catalog.zeabur.com/v1/`. Before 1.0, a minor release can change the file format, so pin an exact release when you need one.
 
 ## Release files
 
@@ -11,7 +11,6 @@ Pushing a `vX.Y.Z` tag publishes `bundle.tar.gz`, `api-v1.tar.gz`, `checksums.tx
 | --- | --- |
 | `api-v1.tar.gz` | The [API](#the-api) of this release, under `v1/`. |
 | `bundle.tar.gz` | A bundle containing cross-check data, components, templates, schemas, conformance cases and related files. |
-| `checksums.txt` | Checksums of the two archives. |
 
 `SHA256SUMS` lists the checksum of every other file and has a cosign keyless Sigstore signature bundle, `SHA256SUMS.sigstore.json`. Every file also has a GitHub build provenance attestation.
 
@@ -85,14 +84,14 @@ The tool first pins the version to use, then verifies the file. The following co
 ```sh
 tag=vX.Y.Z
 cosign verify-blob SHA256SUMS --bundle SHA256SUMS.sigstore.json \
-  --certificate-identity-regexp '^https://github\.com/zeabur-oss/\.github/\.github/workflows/release\.yml@' \
-  --certificate-github-workflow-repository zeabur-oss/catalog \
-  --certificate-github-workflow-ref "refs/tags/$tag" \
+  --certificate-identity "https://github.com/zeabur-oss/catalog/.github/workflows/release.yml@refs/tags/$tag" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 sha256sum --check --ignore-missing SHA256SUMS
 ```
 
-To check the attestation instead, run `gh attestation verify api-v1.tar.gz --repo zeabur-oss/catalog --signer-workflow zeabur-oss/.github/.github/workflows/release.yml`.
+To check the attestation instead, run `gh attestation verify api-v1.tar.gz --repo zeabur-oss/catalog --signer-workflow zeabur-oss/catalog/.github/workflows/release.yml`.
+
+Releases up to v0.5.1 were signed by `release.yml` of `zeabur-oss/.github`; for those, use `--certificate-identity-regexp '^https://github\.com/zeabur-oss/\.github/\.github/workflows/release\.yml@'` with `--certificate-github-workflow-repository zeabur-oss/catalog` and `--certificate-github-workflow-ref "refs/tags/$tag"`, and `--signer-workflow zeabur-oss/.github/.github/workflows/release.yml`.
 
 </Step>
 
@@ -133,6 +132,6 @@ go run ./tools/cmd/catalog api -version X.Y.Z -out out/api
 - `LICENSE`
 - `README.md`
 
-`catalog api` writes the API to `out/api/v1/` and checks each file against its schema. It renders the charts, so it needs helm and the network. `bun scripts/release.ts build` packs it into `api-v1.tar.gz` the same way a release does.
+`catalog api` writes the API to `out/api/v1/` and checks each file against its schema. It renders the charts, so it needs helm and the network. `scripts/ci/release.sh <version> <dir>` packs it into `api-v1.tar.gz` the same way a release does.
 
 These commands build files that are byte-for-byte identical to the release files. Tools can build from an unreleased commit, then compare the files with the signed release after that commit is released.

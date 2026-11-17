@@ -3,7 +3,7 @@ title: 版本與 API
 description: 從靜態 API 讀取 catalog、固定 Zeabur Catalog 版本並驗證 Sigstore 簽章，或從指定 commit 建置版本檔案。
 ---
 
-打上 `vX.Y.Z` tag 後，就會發布 `bundle.tar.gz`、`api-v1.tar.gz`、`checksums.txt`，以及 `SHA256SUMS` 和它的 Sigstore 簽章套件。非預發布版本也會將 API 發布到 `https://oss-catalog.zeabur.com/v1/`。1.0 之前，像 0.1 升到 0.2 這樣的更新也可能改變檔案格式，需要固定版本時，請指定某個確切版本。
+打上 `vX.Y.Z` tag 後，就會發布 `bundle.tar.gz`、`api-v1.tar.gz`，以及 `SHA256SUMS` 和它的 Sigstore 簽章套件。非預發布版本也會將 API 發布到 `https://oss-catalog.zeabur.com/v1/`。1.0 之前，像 0.1 升到 0.2 這樣的更新也可能改變檔案格式，需要固定版本時，請指定某個確切版本。
 
 ## 版本檔案
 
@@ -11,7 +11,6 @@ description: 從靜態 API 讀取 catalog、固定 Zeabur Catalog 版本並驗�
 | --- | --- |
 | `api-v1.tar.gz` | 這個版本的 [API](#api)，放在 `v1/` 下。 |
 | `bundle.tar.gz` | 套件包（bundle），包含交叉檢查資料、元件、範本、schema、一致性測試案例及相關檔案。 |
-| `checksums.txt` | 兩個壓縮檔的檢查碼。 |
 
 `SHA256SUMS` 列出其他每個檔案的雜湊值，並附有 cosign 無金鑰 Sigstore 簽章套件 `SHA256SUMS.sigstore.json`。每個檔案也都有 GitHub 建置來源證明（build provenance attestation）。
 
@@ -85,14 +84,14 @@ Schema 定義資料格式，由 catalog 工具的 Go 型別產生。每個版本
 ```sh
 tag=vX.Y.Z
 cosign verify-blob SHA256SUMS --bundle SHA256SUMS.sigstore.json \
-  --certificate-identity-regexp '^https://github\.com/zeabur-oss/\.github/\.github/workflows/release\.yml@' \
-  --certificate-github-workflow-repository zeabur-oss/catalog \
-  --certificate-github-workflow-ref "refs/tags/$tag" \
+  --certificate-identity "https://github.com/zeabur-oss/catalog/.github/workflows/release.yml@refs/tags/$tag" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 sha256sum --check --ignore-missing SHA256SUMS
 ```
 
-若要改為檢查來源證明，請執行 `gh attestation verify api-v1.tar.gz --repo zeabur-oss/catalog --signer-workflow zeabur-oss/.github/.github/workflows/release.yml`。
+若要改為檢查來源證明，請執行 `gh attestation verify api-v1.tar.gz --repo zeabur-oss/catalog --signer-workflow zeabur-oss/catalog/.github/workflows/release.yml`。
+
+v0.5.1 以前的版本由 `zeabur-oss/.github` 的 `release.yml` 簽署，驗證時改用 `--certificate-identity-regexp '^https://github\.com/zeabur-oss/\.github/\.github/workflows/release\.yml@'`，加上 `--certificate-github-workflow-repository zeabur-oss/catalog` 和 `--certificate-github-workflow-ref "refs/tags/$tag"`；來源證明則用 `--signer-workflow zeabur-oss/.github/.github/workflows/release.yml`。
 
 </Step>
 
@@ -133,6 +132,6 @@ go run ./tools/cmd/catalog api -version X.Y.Z -out out/api
 - `LICENSE`
 - `README.md`
 
-`catalog api` 將 API 寫入 `out/api/v1/`，並用對應的 schema 檢查每個檔案。這個指令會算繪 chart，需要 helm 和網路連線。`bun scripts/release.ts build` 會按發布版本的方式，將 API 打包成 `api-v1.tar.gz`。
+`catalog api` 將 API 寫入 `out/api/v1/`，並用對應的 schema 檢查每個檔案。這個指令會算繪 chart，需要 helm 和網路連線。`scripts/ci/release.sh <version> <dir>` 會按發布版本的方式，將 API 打包成 `api-v1.tar.gz`。
 
 這些指令建置的檔案會與發布版本逐位元組相同。工具可以先從尚未發布的 commit 建置檔案，等該 commit 發布後，再與已簽章的版本比對。

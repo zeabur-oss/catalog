@@ -1,33 +1,117 @@
-name: release
+name: Release
 
-# Tag vX.Y.Z or vX.Y.Z-<pre-release> on main: the shared release validates, builds and signs the catalog, then leaves a
-# draft. Manual run: rehearse.
+# Tag vX.Y.Z or vX.Y.Z-<pre-release> on main: build the bundle and the static API, sign their
+# SHA256SUMS, attest them, add them to the draft release that the Release pull request workflow left
+# when it tagged, and verify the draft against a rebuild. A maintainer publishes the draft. Manual
+# run: rehearse, which builds and publishes nothing.
 on:
   push:
     tags: ["v[0-9]*"]
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to rehearse (v0.1.1, v0.1.2-beta.1); a rehearsal never publishes"
+        description: "Version to rehearse, as in flake.nix (v0.1.1); a rehearsal never publishes"
         required: true
 
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: nix develop --command bash -eo pipefail {0}
+
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  VERSION: ${{ inputs.version || github.ref_name }}
+
 jobs:
+  build:
+    runs-on: instabox-small
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: zeabur-oss/.github/actions/ci-setup@3e2e5ba4210b60c1e97fa53e2029e1ea9f5e468e # main
+      - name: Install the packages
+        run: bun install --frozen-lockfile
+      - name: The version is flake.nix's, with a CHANGELOG.md section, on main
+        run: |
+          [[ "$VERSION" == "v$(nix eval --raw .#catalog.version)" ]] ||
+            { echo "::error::$VERSION is not the version in flake.nix"; exit 1; }
+          bun x zeabur-oss-release notes CHANGELOG.md "$VERSION" >/dev/null
+          if [[ "$GITHUB_EVENT_NAME" == push ]]; then
+            git merge-base --is-ancestor HEAD origin/main ||
+              { echo "::error::$VERSION is not on main"; exit 1; }
+          fi
+      - name: Build the bundle and the static API
+        run: scripts/ci/release.sh "$VERSION" assets
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: assets
+          path: assets
+          if-no-files-found: error
+          retention-days: 7
+
   release:
-    uses: zeabur-oss/.github/.github/workflows/release.yml@cb333d6e0f4250e3b2ca3625dffca106d5ea2713 # main
+    if: github.event_name == 'push'
+    needs: build
+    runs-on: instabox-small
+    timeout-minutes: 15
     permissions:
-      contents: write
-      packages: write
+      contents: write # the draft
       id-token: write
       attestations: write
-    with:
-      name: Zeabur Catalog
-      version: ${{ inputs.version }}
-      # The release is data, the same on every platform; it was built on arm64 before.
-      platforms: '[{"os": "linux", "arch": "arm64", "runner": "ubuntu-26.04-arm"}]'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: zeabur-oss/.github/actions/ci-setup@3e2e5ba4210b60c1e97fa53e2029e1ea9f5e468e # main
+      - name: Install the packages
+        run: bun install --frozen-lockfile
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: assets
+          path: assets
+      - name: Sign the checksums of the assets
+        run: bun x zeabur-oss-release checksums assets
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-checksums: assets/SHA256SUMS
+      - name: Add the assets to the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$VERSION" assets/* --repo "$GITHUB_REPOSITORY" --clobber
+
+  verify:
+    needs: release
+    runs-on: instabox-small
+    timeout-minutes: 60
+    permissions:
+      # GitHub shows a draft release only to a token that can push.
+      contents: write
+      attestations: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: zeabur-oss/.github/actions/ci-setup@3e2e5ba4210b60c1e97fa53e2029e1ea9f5e468e # main
+      - name: Install the packages
+        run: bun install --frozen-lockfile
+      - name: Verify the draft's files, and that a rebuild at the tag makes the same bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SOURCE_REPOSITORY: ${{ github.repository }}
+          RELEASE_SOURCE_REF: refs/tags/${{ env.VERSION }}
+        run: |
+          gh release download "$VERSION" --repo "$GITHUB_REPOSITORY" --dir downloaded
+          bun x zeabur-oss-release verify-assets downloaded
+          scripts/ci/release.sh "$VERSION" rebuilt
+          for file in rebuilt/*; do
+            cmp "$file" "downloaded/${file#rebuilt/}" ||
+              { echo "::error::${file#rebuilt/} differs from a rebuild at $VERSION"; exit 1; }
+          done

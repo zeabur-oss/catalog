@@ -25,9 +25,7 @@ Download `bundle.tar.gz`, `SHA256SUMS` and `SHA256SUMS.sigstore.json` from the s
 ```sh
 tag=vX.Y.Z
 cosign verify-blob SHA256SUMS --bundle SHA256SUMS.sigstore.json \
-  --certificate-identity-regexp '^https://github\.com/zeabur-oss/\.github/\.github/workflows/release\.yml@' \
-  --certificate-github-workflow-repository zeabur-oss/catalog \
-  --certificate-github-workflow-ref "refs/tags/$tag" \
+  --certificate-identity "https://github.com/zeabur-oss/catalog/.github/workflows/release.yml@refs/tags/$tag" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 sha256sum --check --ignore-missing SHA256SUMS
 ```

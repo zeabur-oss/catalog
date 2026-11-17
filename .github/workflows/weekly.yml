@@ -45,6 +45,7 @@ jobs:
     # Nothing to record when both matrices were empty; an open pull request stays as it is.
     if: ${{ !cancelled() && (needs.e2e-kind.outputs.ran == 'true' || needs.e2e-hosts.outputs.ran == 'true') }}
     runs-on: ubuntu-slim
+    timeout-minutes: 30
     # Holds zeabur-oss-bot's key (see vendorhash.yml).
     environment: vendorhash
     permissions:
@@ -75,6 +76,7 @@ jobs:
         run: |
           mkdir -p downloaded kept
           if git fetch --depth=1 origin ci/measurements; then
+            set -o pipefail
             git archive FETCH_HEAD measurements | tar -x --strip-components=1 -C kept
           fi
           go run ./tools/cmd/catalog merge -keep kept downloaded

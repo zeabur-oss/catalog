@@ -34,6 +34,7 @@ permissions:
 jobs:
   matrix:
     runs-on: ubuntu-slim
+    timeout-minutes: 120
     outputs:
       matrix: ${{ steps.list.outputs.matrix }}
       ran: ${{ fromJSON(steps.list.outputs.matrix).include[0] != null }}
@@ -55,6 +56,7 @@ jobs:
     needs: matrix
     if: fromJSON(needs.matrix.outputs.matrix).include[0]
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       # The organisation runs 20 jobs at once and weekly.yml calls this twice: 12 at most,
@@ -115,6 +117,7 @@ jobs:
     needs: e2e
     if: contains(inputs.profiles, 'single-node')
     runs-on: ubuntu-26.04
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
