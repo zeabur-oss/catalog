@@ -60,7 +60,7 @@ jobs:
       - run: nix develop -c scripts/ci/check.sh
 
   release:
-    runs-on: ubuntu-26.04
+    runs-on: instabox-small
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

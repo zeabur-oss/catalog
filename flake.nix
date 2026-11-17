@@ -6,7 +6,7 @@
     flake-utils.url = "github:numtide/flake-utils";
     # The base shell of every zeabur-oss repository: Bun, the release tools and the shared linters.
     oss = {
-      url = "github:zeabur-oss/.github";
+      url = "github:zeabur-oss/.github/3e2e5ba4210b60c1e97fa53e2029e1ea9f5e468e";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -22,7 +22,7 @@
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        # The release version: scripts/release.ts check compares the tag with it.
+        # The release version: the Release workflow compares the tag with it.
         version = "0.5.1";
         catalog = pkgs.buildGoModule {
           pname = "catalog";
@@ -61,9 +61,9 @@
       {
         packages = {
           inherit catalog kube-apiserver;
-          # The bundle that scripts/release.ts publishes. Zeabur builds this output at its
+          # The bundle that a release publishes. Zeabur builds this output at its
           # pinned commit, so it embeds the same bytes as the release. The static API needs helm
-          # to fetch charts, so release.ts builds it outside this sandbox.
+          # to fetch charts, so scripts/release-files.sh builds it outside this sandbox.
           release = pkgs.runCommand "catalog-release" { nativeBuildInputs = [ catalog ]; } ''
             cp -r ${self} src
             chmod -R u+w src

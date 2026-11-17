@@ -8,8 +8,5 @@ if [[ -n "$unformatted" ]]; then
   echo "$unformatted" >&2
   exit 1
 fi
-shellcheck scripts/ci/*.sh
+shellcheck scripts/*.sh scripts/ci/*.sh
 jactionlint
-bun install --frozen-lockfile
-bun fmt --check scripts/release.ts
-bun check scripts/

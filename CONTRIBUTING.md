@@ -57,8 +57,10 @@ create kind clusters on a Linux machine with Docker.
 
 ## Releases
 
-The release workflow is the shared one of [zeabur-oss/.github](https://github.com/zeabur-oss/.github);
-its stages are `bun scripts/release.ts check|build|publish|assets|verify`.
+The Release workflow, `.github/workflows/release.yml`, builds `bundle.tar.gz` and `api-v<N>.tar.gz`
+with `scripts/release-files.sh`, signs their `SHA256SUMS` and attests them with `zeabur-oss-release`
+of [zeabur-oss/.github](https://github.com/zeabur-oss/.github), and verifies the draft against a
+rebuild.
 
 A pull request that changes what users of the catalog see (components, the index, the CLI, the
 release files) adds a change file. `nix develop -c knope document-change` asks for its level and

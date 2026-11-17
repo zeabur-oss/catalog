@@ -8,13 +8,12 @@ description: Development loop for the Zeabur Catalog repository — the checks C
 Data format and how to add a component or template: `docs/contribute/add-component.mdx`, `docs/contribute/add-template.mdx`. Template rules:
 `docs/reference/template-standards.mdx`. Pull request rules: `CONTRIBUTING.md`.
 
-Follow the shared skills (copied from zeabur-oss/.github by the Update workflow):
-`zeabur-oss-standards` (with [`STANDARDS.md`](STANDARDS.md) here), `zeabur-oss-workflow`,
-`zeabur-oss-cluster-tests`.
+Follow the shared skills `zeabur-oss-standards` (with [`STANDARDS.md`](STANDARDS.md) here),
+`zeabur-oss-workflow` and `zeabur-oss-cluster-tests`.
 
 ## Checks (what CI runs)
 Each pull request job is `nix develop -c scripts/ci/<job>.sh` (the jobs of `.github/workflows/ci.yml`).
-The release stages are `bun scripts/release.ts <stage>`. Underneath:
+The Release workflow builds its files with `scripts/release-files.sh <version> <dir>`. Underneath:
 ```sh
 nix develop -c go test ./...
 nix develop -c go run ./tools/cmd/catalog validate   # schema, licences, references, value comments
