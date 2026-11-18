@@ -4,7 +4,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"strings"
 	"testing"
 )
 
@@ -52,12 +51,14 @@ spec:
 	}
 }
 
-func TestSafeIsOneFileName(t *testing.T) {
-	for _, in := range []string{"", ".", "..", "../..", "../../etc", "a/b", `a\b`, "https://x/../y"} {
-		got := safe(in)
-		if got == "" || got == "." || got == ".." || strings.ContainsAny(got, `/\`) {
-			t.Errorf("safe(%q) = %q, want one plain file name", in, got)
+func TestCacheKeyKeepsPartsApart(t *testing.T) {
+	keys := map[string][]string{}
+	for _, parts := range [][]string{{"a/b", "c"}, {"a_b", "c"}, {"a", "b/c"}, {"ab", "c"}, {"a", "bc"}} {
+		k := cacheKey(parts...)
+		if prev, ok := keys[k]; ok {
+			t.Errorf("%q and %q share the cache key %s", prev, parts, k)
 		}
+		keys[k] = parts
 	}
 }
 

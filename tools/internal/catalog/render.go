@@ -37,7 +37,7 @@ func Run(stdin []byte, name string, args ...string) (string, error) {
 // pull fetches a chart into the cache once and returns the .tgz path. If the
 // release has a chartDigest, pull fails unless the chart matches it.
 func pull(rel Release) (string, error) {
-	dir := filepath.Join(CacheDir, "charts", safe(rel.Repo+rel.Chart), safe(rel.Version), safe(rel.ChartDigest))
+	dir := filepath.Join(CacheDir, "charts", cacheKey(rel.Repo, rel.Chart, rel.Version, rel.ChartDigest))
 	m, _ := filepath.Glob(filepath.Join(dir, "*.tgz"))
 	if len(m) != 1 {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -153,7 +153,7 @@ func Template(c *Component, rel Release, profile, kubeVersion string, extra ...m
 }
 
 func download(url string) ([]byte, error) {
-	f := filepath.Join(CacheDir, "manifests", safe(url))
+	f := filepath.Join(CacheDir, "manifests", cacheKey(url))
 	if data, err := os.ReadFile(f); err == nil {
 		return data, nil
 	}
@@ -175,15 +175,10 @@ func download(url string) ([]byte, error) {
 	return data, os.WriteFile(f, data, 0o644)
 }
 
-var unsafeChars = regexp.MustCompile(`[^A-Za-z0-9._-]+`)
-
-// safe turns s into one plain file name: no separator, and never "." or "..".
-func safe(s string) string {
-	s = unsafeChars.ReplaceAllString(s, "_")
-	if strings.Trim(s, ".") == "" {
-		return "_"
-	}
-	return s
+// cacheKey names a cache entry: the SHA-256 of the parts, so it is one file
+// name and different parts never share an entry.
+func cacheKey(parts ...string) string {
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(strings.Join(parts, "\x00"))))
 }
 
 // ParseValues parses a values document (contributions, test overrides).
