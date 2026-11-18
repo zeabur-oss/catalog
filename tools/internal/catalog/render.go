@@ -37,7 +37,7 @@ func Run(stdin []byte, name string, args ...string) (string, error) {
 // pull fetches a chart into the cache once and returns the .tgz path. If the
 // release has a chartDigest, pull fails unless the chart matches it.
 func pull(rel Release) (string, error) {
-	dir := filepath.Join(CacheDir, "charts", safe(rel.Repo+rel.Chart), rel.Version, safe(rel.ChartDigest))
+	dir := filepath.Join(CacheDir, "charts", safe(rel.Repo+rel.Chart), safe(rel.Version), safe(rel.ChartDigest))
 	m, _ := filepath.Glob(filepath.Join(dir, "*.tgz"))
 	if len(m) != 1 {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -177,7 +177,14 @@ func download(url string) ([]byte, error) {
 
 var unsafeChars = regexp.MustCompile(`[^A-Za-z0-9._-]+`)
 
-func safe(s string) string { return unsafeChars.ReplaceAllString(s, "_") }
+// safe turns s into one plain file name: no separator, and never "." or "..".
+func safe(s string) string {
+	s = unsafeChars.ReplaceAllString(s, "_")
+	if strings.Trim(s, ".") == "" {
+		return "_"
+	}
+	return s
+}
 
 // ParseValues parses a values document (contributions, test overrides).
 func ParseValues(doc string) (map[string]any, error) {

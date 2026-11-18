@@ -1,7 +1,10 @@
 package catalog
 
 import (
+	"os"
+	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -46,5 +49,32 @@ spec:
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func TestSafeIsOneFileName(t *testing.T) {
+	for _, in := range []string{"", ".", "..", "../..", "../../etc", "a/b", `a\b`, "https://x/../y"} {
+		got := safe(in)
+		if got == "" || got == "." || got == ".." || strings.ContainsAny(got, `/\`) {
+			t.Errorf("safe(%q) = %q, want one plain file name", in, got)
+		}
+	}
+}
+
+func TestPullCacheStaysInCacheDir(t *testing.T) {
+	old := CacheDir
+	CacheDir = t.TempDir()
+	defer func() { CacheDir = old }()
+	outside := filepath.Join(CacheDir, "outside")
+	if err := os.Mkdir(outside, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", t.TempDir())
+	rel := Release{Chart: "c", Repo: "https://example.com", Version: "../../outside"}
+	if _, err := pull(rel); err == nil {
+		t.Fatal("pull without helm succeeded")
+	}
+	if entries, _ := os.ReadDir(outside); len(entries) != 0 {
+		t.Errorf("pull wrote into %s: %v", outside, entries)
 	}
 }
