@@ -1,9 +1,9 @@
 name: Release
 
 # Tag vX.Y.Z or vX.Y.Z-<pre-release> on main: build the bundle and the static API, sign their
-# SHA256SUMS, attest them, add them to the draft release that the Release pull request workflow left
-# when it tagged, and verify the draft against a rebuild. A maintainer publishes the draft. Manual
-# run: rehearse, which builds and publishes nothing.
+# SHA256SUMS, attest them, create the draft release with them, and verify the draft against a
+# rebuild. A maintainer publishes the draft. Manual run: rehearse, which builds and publishes
+# nothing.
 on:
   push:
     tags: ["v[0-9]*"]
@@ -82,10 +82,11 @@ jobs:
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-checksums: assets/SHA256SUMS
-      - name: Add the assets to the draft release
+      # The draft is created with its files, never before: a published release takes no more files.
+      - name: Create the draft release with the assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$VERSION" assets/* --repo "$GITHUB_REPOSITORY" --clobber
+        run: bun x zeabur-oss-release draft CHANGELOG.md "$VERSION" assets --name "Zeabur Catalog" --docs https://oss.zeabur.com/docs/catalog/
 
   verify:
     needs: release
