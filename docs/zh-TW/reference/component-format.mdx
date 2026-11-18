@@ -55,7 +55,7 @@ releases:                         # installed in order
     type: helm                                  # helm, manifest or inline
     namespace: traefik
     chart: oci://ghcr.io/traefik/helm/traefik   # or repo: https://… plus chart: <name>
-    version: 41.7.1                             # exact; Renovate bumps it
+    version: 42.1.3                             # exact; Renovate bumps it
     chartDigest: sha256:…                       # required with chart; see Digests
     values: |                                   # shared by every profile
       gatewayClass:
@@ -73,7 +73,7 @@ releases:                         # installed in order
     type: manifest
     namespace: kube-system
     urls: [https://github.com/…/releases/download/{version}/standard-install.yaml]
-    version: v1.6.2
+    version: v1.6.3
     urlDigests: [sha256:…]                      # one per URL, in order
   # or type: inline with manifests: |  objects applied as written
 
@@ -122,7 +122,7 @@ provides:
 
 `resources.work` 列出元件會做的每一種工作，例如建置。每一項有 `name`（在清單裡不可重複），再加上下列至少一個欄位，都用 Kubernetes 數量寫 `cpu` 和 `memory`：
 
-- `requests` 和 `limits` 是做一份這種工作的每個 Pod 的資源請求量和上限。工作用的 Pod 由控制器建立、算繪結果裡看不到時（例如建置用的 Pod），就寫這兩個欄位。數值從 chart 的 values 抄過來，升級 chart 時若 values 改了，就跟著改。
+- `requests` 和 `limits` 是做一份這種工作的每個 Pod 的資源請求量和上限。工作用的 Pod 由控制器建立、渲染結果裡看不到時（例如建置用的 Pod），就寫這兩個欄位。數值從 chart 的 values 抄過來，升級 chart 時若 values 改了，就跟著改。
 - `use` 是元件做一份這種工作時，在閒置用量之外還要多用的資源。閒置用量由 e2e 量測，發布在 [API](releases.mdx#api)。
 
 ```yaml
@@ -134,9 +134,9 @@ resources:
       use: {memory: 500Mi}
 ```
 
-API 原樣發布 `resources.work`。排程器看的是請求量，所以安裝工具要把 `requests` 的記憶體用量加進元件算繪出的物件裡 Pod 的請求量。寫了 `cpu` 和 `memory` 以外的資源，或數量不大於零時，`validate` 會失敗。設定檔（profile）和輸入不會改變結果。
+API 原樣發布 `resources.work`。排程器看的是請求量，所以安裝工具要把 `requests` 的記憶體用量加進元件渲染出的物件裡 Pod 的請求量。寫了 `cpu` 和 `memory` 以外的資源，或數量不大於零時，`validate` 會失敗。設定檔（profile）和輸入不會改變結果。
 
-`health` 列出唯讀檢查，讓安裝工具（例如 `zeabur-installer doctor`）檢查已安裝的叢集。每項檢查會在 `timeout` 指定的時間內，等待 `resource` 指定的物件符合 `condition` 條件。`resource` 要填 `kind`，該種類有命名空間時也要填 `namespace`，並且只能從下列三種方式選一種：用 `name` 指定單一物件、用 `selector` 指定符合標籤的物件，或用 `all: true` 指定該種類的所有物件。`kind` 不在 [schema](../../../schema/v1/component.schema.json) 列出的種類中，或缺少必填欄位時，`validate` 會失敗。檢查失敗時，安裝工具會顯示 `advice`，用英文告訴使用者該怎麼處理。健康檢查沒有 manifest，也不會套用任何物件。要建立物件的檢查放在 `smoke`，只有 e2e 會執行。e2e 在安裝完成後、執行 `smoke` 之前，先執行 `health`。
+`health` 列出唯讀檢查，讓安裝工具檢查已安裝的叢集。每項檢查會在 `timeout` 指定的時間內，等待 `resource` 指定的物件符合 `condition` 條件。`resource` 要填 `kind`，該種類有命名空間時也要填 `namespace`，並且只能從下列三種方式選一種：用 `name` 指定單一物件、用 `selector` 指定符合標籤的物件，或用 `all: true` 指定該種類的所有物件。`kind` 不在 [schema](../../../schema/v1/component.schema.json) 列出的種類中，或缺少必填欄位時，`validate` 會失敗。檢查失敗時，安裝工具會顯示 `advice`，用英文告訴使用者該怎麼處理。健康檢查沒有 manifest，也不會套用任何物件。要建立物件的檢查放在 `smoke`，只有 e2e 會執行。e2e 在安裝完成後、執行 `smoke` 之前，先執行 `health`。
 
 ```yaml
 health:
@@ -168,13 +168,13 @@ contributes:
 
 `detection.addons` 列出發行版自帶、安裝同一個上游的附加元件，例如 k3s 內建的 Traefik 寫成 `{distribution: k3s, name: traefik}`，RKE2 的寫成 `{distribution: rke2, name: rke2-traefik}`。名稱是該附加元件在 `kube-system` 裡的 HelmChart。讀取方遇到不認得的發行版時，略過那一項。
 
-`security.podSecurity` 是元件自己的 namespace 需要的 Pod Security 等級：`restricted`、`baseline` 或 `privileged`。`catalog render` 會用它檢查算繪出的每個 Pod。
+`security.podSecurity` 是元件自己的 namespace 需要的 Pod Security 等級：`restricted`、`baseline` 或 `privileged`。`catalog render` 會用它檢查渲染出的每個 Pod。
 
 `networkPolicies` 給預設擋掉每個命名空間入站流量的安裝工具用。內容是元件自己命名空間裡的標準 NetworkPolicy 物件，這類安裝工具會在安裝 releases 前套用，放行元件需要從其他地方進來的流量。其他安裝工具可以忽略它。`catalog validate` 會檢查每個物件都是元件命名空間裡的 NetworkPolicy。
 
 ## 用 digest 固定內容
 
-每個 `releases` 項目都要用 digest 固定內容。如果 chart 或 URL 的內容與 digest 不符，Zeabur Installer 與 `catalog render` 就會停止。
+每個 `releases` 項目都要用 digest 固定內容。如果 chart 或 URL 的內容與 digest 不符，`catalog render` 會停止，安裝工具也必須停止。
 
 - HTTP chart 的 `chartDigest` 使用儲存庫 `index.yaml` 中對應項目的 `digest`，也就是 `.tgz` 的 sha256。
 - OCI chart 的 `chartDigest` 使用 manifest digest，也就是 `helm push` 輸出的值。`helm pull <chart>:<version>@sha256:…` 會檢查這個值。

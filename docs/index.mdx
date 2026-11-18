@@ -1,32 +1,56 @@
 ---
 title: Get started with Zeabur Catalog
-description: Tested Kubernetes components and application templates, with versions, configuration, and installation instructions.
+description: One-click application templates for your own server, each installed and tested before it ships. Use them in Zeabur, or read the catalog from your own tools.
 ---
 
-Zeabur Catalog contains data that CI has installed and tested. It has two parts: components and templates. Each release publishes a signed bundle and a static API that any tool can read to generate `helm install` commands, Flux or Argo CD manifests, k3s `HelmChart` objects, or template installations.
+Zeabur Catalog is the set of application templates you deploy in Zeabur with one click: n8n, WordPress, Dify, OpenClaw and more. Before any change to a template is merged, CI installs it on a Kubernetes cluster and checks that the application answers. It is the open-source counterpart of zeabur.com's template marketplace.
+
+## I use Zeabur
+
+The catalog is already built into Zeabur, and you don't install it. In a project, select **Add** → **App template**, pick an application and deploy it. See [Deploy from an application template](https://oss.zeabur.com/docs/zeabur/deploy/templates/) in the Zeabur docs.
+
+- Coming from zeabur.com? [Templates from zeabur.com](get-started/zeabur-com-templates.mdx) lists the catalog template for each popular zeabur.com template, and which aren't in the catalog yet. The [Zeabur docs](https://oss.zeabur.com/docs/zeabur/) cover moving your services to your own server.
+- If a template needs a component, such as CloudNativePG for PostgreSQL, see [View and install cluster components](https://oss.zeabur.com/docs/zeabur/cluster/components/) in the Zeabur docs.
+- The [template list](reference/templates.mdx) has every template.
+
+Each template pins its images, so it installs the same application every time. Zeabur bundles one catalog release, and new templates and versions arrive when you upgrade Zeabur. Passwords and keys are generated when you deploy and stored as Kubernetes Secrets. Each template states the CPU and memory it needs, and runs without root where the application allows.
+
+If you use Zeabur, you can stop reading here. The rest of this page is for people who use the catalog on its own.
+
+## I use the catalog on its own
+
+Without Zeabur, the catalog is tested component and template data for Kubernetes clusters. Each release publishes one signed bundle and a static API that any tool can read to generate `helm install` commands, Flux or Argo CD manifests, k3s `HelmChart` objects, or template installations.
 
 - **Components** are installed once per cluster by cluster administrators. Examples include Ingress, certificates, metrics, and database operators. Each capability specifies the upstream chart, version, configuration, and reasons for those choices.
 - **Templates** are installed into a single Namespace by project members. Examples include n8n, Dify, WordPress, and PostgreSQL. Templates pin images, set resource requests and limits, and run under the Restricted Pod Security Standard where possible. Templates name their required components in `requires`.
 
-## I want to deploy a template
+### Deploy a template
 
 Verify the release signature, render the template's objects, generate passwords, and apply the objects to the cluster.
 
 [Deploy a template with the catalog command](get-started/deploy-a-template.mdx)
 
-## I want to see what's available
+### See what's available
 
 The [component list](reference/components.mdx) shows each component's default state for single-node and multi-node clusters. The [template list](reference/templates.mdx) lists all application templates. See [distribution differences](reference/distributions.mdx) for differences across Kubernetes distributions.
 
-## I want to read the catalog from my own tools
+### Read the catalog from your own tools
 
 Read the [static API](reference/releases.mdx#the-api) at `https://oss-catalog.zeabur.com/v1/`, or pin a release and verify its signature. See [releases and the API](reference/releases.mdx) for details, and [component file format](reference/component-format.mdx) and [template file format](reference/template-format.mdx) for the file formats.
 
-## I want to add a component or template
+To check that the API answers, print the release it holds:
+
+```sh
+curl -s https://oss-catalog.zeabur.com/v1/catalog.json | jq -r .catalog.version
+```
+
+The output is a version number, such as `0.5.3`.
+
+### Add a component or template
 
 Start with [adding a component](contribute/add-component.mdx) or [adding a template](contribute/add-template.mdx). Templates must meet the [template standards](reference/template-standards.mdx). See [tests and CI](contribute/tests.mdx) for the checks CI runs.
 
-## File layout
+### File layout
 
 ```text
 components/<id>.yaml                      One file per upstream; provides names its capability

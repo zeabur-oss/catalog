@@ -7,14 +7,44 @@ After you verify the release signature, use the `catalog` command to render and 
 
 ## Before you begin
 
-- Build the `catalog` command from a source checkout you trust, using the tag you plan to deploy. Don't run unverified downloads.
+- Install Go, `git`, `gh`, `cosign`, `kubectl` and `sha256sum` (on macOS, from GNU coreutils).
 - Install every component listed in the template's `requires`, all at the same version.
 - Use a CNI that enforces NetworkPolicy. The installer isolates each project's Namespace. Templates don't restrict outbound traffic.
-- Set a StorageClass as the default. Templates don't specify a StorageClass, so volumes use the default. Without a default StorageClass, PersistentVolumeClaims remain `Pending`.
 - If the template requires a domain, prepare a cert-manager ClusterIssuer first.
 - Install each template only once per Namespace. Object names within a template are fixed.
 
 <Steps>
+
+<Step>
+
+### Check the cluster
+
+Templates don't specify a StorageClass, so volumes use the default. Without a default StorageClass, PersistentVolumeClaims remain `Pending`. List the StorageClasses:
+
+```sh
+kubectl get storageclass
+```
+
+One line has `(default)` after its name, such as `local-path (default)`. If none does, set a StorageClass as the default before you continue.
+
+</Step>
+
+<Step>
+
+### Get the catalog command
+
+Replace `vX.Y.Z` with the release tag you plan to deploy, check out its source, and run the `catalog` command from that checkout. Don't run unverified downloads.
+
+```sh
+tag=vX.Y.Z
+git clone --depth 1 --branch "$tag" https://github.com/zeabur-oss/catalog
+cd catalog
+go run ./tools/cmd/catalog validate
+```
+
+`validate` prints `ok`.
+
+</Step>
 
 <Step>
 
@@ -23,12 +53,17 @@ After you verify the release signature, use the `catalog` command to render and 
 Download `bundle.tar.gz`, `SHA256SUMS` and `SHA256SUMS.sigstore.json` from the same release tag into a new private directory. Then verify the signature of `SHA256SUMS` against the workflow, the repository and the tag, and check the bundle against it:
 
 ```sh
-tag=vX.Y.Z
-cosign verify-blob SHA256SUMS --bundle SHA256SUMS.sigstore.json \
-  --certificate-identity "https://github.com/zeabur-oss/catalog/.github/workflows/release.yml@refs/tags/$tag" \
-  --certificate-oidc-issuer https://token.actions.githubusercontent.com
-sha256sum --check --ignore-missing SHA256SUMS
+dir=$(mktemp -d)
+gh release download "$tag" --repo zeabur-oss/catalog --dir "$dir" \
+  --pattern bundle.tar.gz --pattern SHA256SUMS --pattern SHA256SUMS.sigstore.json
+(cd "$dir" &&
+  cosign verify-blob SHA256SUMS --bundle SHA256SUMS.sigstore.json \
+    --certificate-identity "https://github.com/zeabur-oss/catalog/.github/workflows/release.yml@refs/tags/$tag" \
+    --certificate-oidc-issuer https://token.actions.githubusercontent.com &&
+  sha256sum --check --ignore-missing SHA256SUMS)
 ```
+
+`cosign` prints `Verified OK`, and `sha256sum` prints `bundle.tar.gz: OK`. Stop if either prints anything else.
 
 Checking only the issuer or the workflow accepts signatures from other workflows or other zeabur-oss repositories. Extract the bundle only after signature verification succeeds, and reject absolute paths, `..`, and links.
 
@@ -59,7 +94,19 @@ kubectl -n app apply -f plan.yaml
 
 Don't commit `secrets.json` to version control. Each run of `inputs` generates new values. Run it only once per deployment, and reuse the existing Secrets during upgrades.
 
-After you apply the objects, run the template's smoke check and your own tests.
+Check that every pod starts:
+
+```sh
+kubectl -n app get pods
+```
+
+Within a few minutes, each pod shows `Running` in `STATUS`, and both numbers in `READY` match, such as `1/1`. A pod of a finished Job shows `Completed`. Then run the checks listed under `smoke` in `template.yaml` and your own tests. For a template with a domain:
+
+```sh
+curl -sI https://app.example.com | head -n 1
+```
+
+The first line is the status line, such as `HTTP/2 200`.
 
 </Step>
 

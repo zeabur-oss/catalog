@@ -3,7 +3,7 @@ title: How installers choose and install components
 description: The rules an installer follows to choose components from the catalog API, order them and check them once installed, with cases to test an installer against.
 ---
 
-An installer reads the [API](releases.mdx#the-api) of a catalog release and decides which components to install. This page gives the rules. Zeabur Installer follows them, and another installer that follows them chooses the same components for the same configuration. Each rule has a case in [`conformance/select/`](#test-cases) to test against.
+An installer reads the [API](releases.mdx#the-api) of a catalog release and decides which components to install. This page gives the rules. Two installers that follow them choose the same components for the same configuration. Each rule has a case in [`conformance/select/`](#test-cases) to test against.
 
 ## What an installer starts from
 
@@ -94,7 +94,7 @@ For example, Longhorn's `nodes-ready` check runs:
 kubectl wait --for=condition=Ready nodes.longhorn.io --all -n longhorn-system --timeout=60s
 ```
 
-An installer may use its own time limit in place of `timeout`. For example, `zeabur-installer apply` waits up to 5 minutes right after installing, and `zeabur-installer doctor` uses each check's `timeout`. When a check fails, show its `advice`.
+An installer may use its own time limit in place of `timeout`. When a check fails, show its `advice`.
 
 ## Test cases
 
@@ -107,6 +107,7 @@ components:            # each component with only the fields selection reads, an
   - id: traefik
     provides: {capability: ingress}
     defaults: {single-node: recommended, multi-node: recommended}
+    distributions: [k3s, rke2, kubesolo]
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
       - {distribution: rke2, platforms: [linux/amd64]}
@@ -114,6 +115,7 @@ components:            # each component with only the fields selection reads, an
   - id: victoria-logs
     provides: {capability: logs}
     defaults: {single-node: recommended, multi-node: recommended}
+    distributions: [k3s, rke2, kubesolo]
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
       - {distribution: kubesolo, platforms: [linux/amd64]}

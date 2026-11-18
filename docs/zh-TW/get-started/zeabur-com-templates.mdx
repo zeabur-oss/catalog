@@ -1,0 +1,77 @@
+---
+title: Zeabur 範本對照表
+description: 查詢熱門 Zeabur 範本在 catalog 裡對應的範本，包括名稱不同和還沒收錄的範本。
+---
+
+在 Zeabur 上用過某個範本，可以在這裡查到 Zeabur 開源版要部署哪個範本。在 Zeabur 開源版開啟**新增** → **應用程式範本**，搜尋 catalog 範本的名稱即可。資料怎麼搬過來，請看 [Zeabur 開源版文件](https://oss.zeabur.com/zh-TW/docs/zeabur/)。
+
+## 熱門的 Zeabur 範本
+
+依 [Zeabur 範本市集](https://zeabur.com/templates)的熱門程度排列，最熱門的在最前面。
+
+| Zeabur 範本 | Catalog 範本 | ID |
+| --- | --- | --- |
+| OpenClaw 🦞 | OpenClaw | `openclaw` |
+| n8n | n8n PostgreSQL | `n8n` |
+| PostgreSQL | 不是範本：在 Zeabur 開源版[建立 PostgreSQL 資料庫](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/) | |
+| MySQL | 不是範本：在 Zeabur 開源版[建立 MySQL 資料庫](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/) | |
+| SillyTavern | SillyTavern | `sillytavern` |
+| Redis | 不是範本：在 Zeabur 開源版[建立 Dragonfly 資料庫](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/)，與 Redis 相容 | |
+| LunaTV | 還沒收錄 | |
+| WeWe RSS | 還沒收錄 | |
+| WordPress | WordPress | `wordpress` |
+| LobeChat | LobeChat | `lobechat` |
+| One-API | 還沒收錄 | |
+| MongoDB | 不是範本：在 Zeabur 開源版[建立 MongoDB 資料庫](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/) | |
+| Dify | Dify | `dify` |
+| RSSHub | 還沒收錄 | |
+| Supabase | 還沒收錄 | |
+| n8n(sqlite) | n8n SQLite | `n8n-sqlite` |
+| New API | New API | `new-api` |
+| nginx | nginx | `nginx` |
+| OpenClaw Browser Sandbox | OpenClaw Browser Sandbox | `openclaw-browser-sandbox` |
+| Uptime-Kuma | Uptime Kuma | `uptime-kuma` |
+| OpenList | OpenList | `openlist` |
+| Hermes Agent | Hermes Agent | `hermes-agent` |
+| LibreChat | LibreChat | `librechat` |
+| ChatNio | 還沒收錄 | |
+| Open WebUI | Open WebUI | `open-webui` |
+| Ghost | Ghost | `ghost` |
+| MinIO | 還沒收錄 | |
+| Halo | Halo | `halo` |
+| Ollama | Ollama | `ollama` |
+| SearXNG | SearXNG | `searxng` |
+
+## catalog 也有的其他 Zeabur 範本
+
+| Zeabur 範本 | Catalog 範本 | ID |
+| --- | --- | --- |
+| Browserless | Browserless | `browserless` |
+| Gitea | Gitea | `gitea` |
+| LiteLLM | LiteLLM | `litellm` |
+| Meilisearch | Meilisearch | `meilisearch` |
+| Memos | Memos | `memos` |
+| Miniflux Reader | Miniflux | `miniflux` |
+| ntfy | ntfy | `ntfy` |
+| PostgreSQL with pgvector | PostgreSQL with pgvector | `postgresql-pgvector` |
+| Qdrant | Qdrant | `qdrant` |
+| Umami | Umami | `umami` |
+| Vaultwarden | Vaultwarden | `vaultwarden` |
+
+[範本清單](../reference/templates.mdx)列出 catalog 的所有範本。想要的範本還沒收錄，可以[開一個 issue](https://github.com/zeabur-oss/catalog/issues/new)。
+
+## 部署前
+
+同一個應用程式，catalog 範本和 Zeabur 範本的版本、資料庫和設定可能不同。搬資料之前，先比對兩邊的應用程式版本：一邊是 Zeabur 上的版本，一邊是 catalog 範本 `template.yaml` 寫的版本。接著到 Zeabur 開源版讀範本的**部署前要知道的事**。
+
+也可以在終端機讀取[靜態 API](../reference/releases.mdx#api)，查詢 catalog 範本的版本和需要的元件。API 提供的是最新的 catalog 版本，可能比你的 Zeabur 開源版內建的版本新。把 `n8n` 換成範本 ID：
+
+```sh
+curl -s https://oss-catalog.zeabur.com/v1/templates/n8n.json | jq -c '[.template.metadata.version, [.template.requires[].component]]'
+```
+
+輸出依序是應用程式版本和需要的元件：
+
+```json
+["3.1.0",["traefik","cert-manager","cloudnative-pg"]]
+```

@@ -16,10 +16,12 @@ apiVersion: catalog.zeabur.com/v1
 kind: Template
 metadata:
   name: PostgreSQL
-  summary: PostgreSQL 18, with backups to S3.
+  # renovate: depName=ghcr.io/cloudnative-pg/postgresql
+  version: "18-standard-trixie"     # the tag of the main image in manifests.yaml
+  summary: A PostgreSQL 18 database.
   locales:
-    zh-TW: {summary: "PostgreSQL 18 資料庫，備份到 S3。"}
-    zh-CN: {summary: "PostgreSQL 18 数据库，备份到 S3。"}
+    zh-TW: {summary: "PostgreSQL 18 資料庫。"}
+    zh-CN: {summary: "PostgreSQL 18 数据库。"}
   license: PostgreSQL AND Apache-2.0
   homepage: https://www.postgresql.org/
 
@@ -32,14 +34,20 @@ services:                         # the workloads in manifests.yaml
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "1", memory: 1Gi}}
 
 inputs:
-  - name: backupDestination       # the person installing gives it
-    description: Dedicated S3 bucket and unique prefix for this cluster.
+  - name: databaseName            # the person installing gives it
+    label: Database name
+    description: Name of the database to create.
+    locales:
+      zh-TW: {label: 資料庫名稱, description: "要建立的資料庫名稱。"}
+      zh-CN: {label: 数据库名称, description: "要创建的数据库名称。"}
     required: true
-    validation: {pattern: '^s3://[a-z0-9][a-z0-9.-]+/[A-Za-z0-9/_-]+$'}
+    validation: {pattern: '^[a-z][a-z0-9_]{0,62}$'}
   # From n8n: the installer generates this value into a Secret.
   # - name: encryptionKey
+  #   description: Deploy-time random secret; preserve it across upgrades.
   #   generate: {type: random, bytes: 32, encoding: base64url}
   #   secret: {name: n8n-secrets, key: encryption-key}
+  #   validation: {pattern: '^[A-Za-z0-9_-]{43}$'}
 
 security: {...}      # summary, risks with mitigations, unauthenticated services
 smoke: []            # resource condition, then an HTTP or SQL check

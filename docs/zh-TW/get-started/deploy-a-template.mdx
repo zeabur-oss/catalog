@@ -7,10 +7,9 @@ description: 驗證版本簽章、準備叢集，再渲染並套用範本，完�
 
 ## 開始前
 
-- 使用你信任的原始程式碼 checkout，以你要部署的 tag 建置 `catalog` 指令。不要執行未驗證的下載檔。
+- 安裝 Go、`git`、`gh`、`cosign`、`kubectl` 和 `sha256sum`（macOS 可從 GNU coreutils 取得）。
 - 安裝範本 `requires` 列出的每個元件，全部使用同一個版本。
 - 使用會落實 NetworkPolicy 的 CNI。安裝程式會隔離各專案的 Namespace。範本不限制對外流量。
-- 把一個 StorageClass 設為預設。範本不指定 StorageClass，磁碟區會使用預設值。沒有預設 StorageClass 時，PersistentVolumeClaim 會停在 `Pending`。
 - 如果範本需要網域，先準備好 cert-manager ClusterIssuer。
 - 每個 Namespace 內，同一個範本只能安裝一次，因為範本內的物件名稱固定。
 
@@ -18,17 +17,53 @@ description: 驗證版本簽章、準備叢集，再渲染並套用範本，完�
 
 <Step>
 
-### 驗證版本
+### 檢查叢集
 
-先建立私有目錄，把同一個版本 tag 的 `bundle.tar.gz`、`SHA256SUMS` 和 `SHA256SUMS.sigstore.json` 下載到裡面。再依工作流程、儲存庫和 tag 驗證 `SHA256SUMS` 的簽章，並用它核對 bundle：
+範本不指定 StorageClass，磁碟區會使用預設的 StorageClass。沒有預設 StorageClass 時，PersistentVolumeClaim 會停在 `Pending`。列出 StorageClass：
+
+```sh
+kubectl get storageclass
+```
+
+其中一行的名稱後面有 `(default)`，例如 `local-path (default)`。如果沒有，先把一個 StorageClass 設為預設再繼續。
+
+</Step>
+
+<Step>
+
+### 取得 catalog 指令
+
+把 `vX.Y.Z` 換成你要部署的版本 tag，取出這個 tag 的原始程式碼，在裡面執行 `catalog` 指令。不要執行未驗證的下載檔。
 
 ```sh
 tag=vX.Y.Z
-cosign verify-blob SHA256SUMS --bundle SHA256SUMS.sigstore.json \
-  --certificate-identity "https://github.com/zeabur-oss/catalog/.github/workflows/release.yml@refs/tags/$tag" \
-  --certificate-oidc-issuer https://token.actions.githubusercontent.com
-sha256sum --check --ignore-missing SHA256SUMS
+git clone --depth 1 --branch "$tag" https://github.com/zeabur-oss/catalog
+cd catalog
+go run ./tools/cmd/catalog validate
 ```
+
+`validate` 會印出 `ok`。
+
+</Step>
+
+<Step>
+
+### 驗證版本
+
+建立一個私有目錄，把同一個版本 tag 的 `bundle.tar.gz`、`SHA256SUMS` 和 `SHA256SUMS.sigstore.json` 下載到裡面。再依工作流程、儲存庫和 tag 驗證 `SHA256SUMS` 的簽章，並用它核對 bundle：
+
+```sh
+dir=$(mktemp -d)
+gh release download "$tag" --repo zeabur-oss/catalog --dir "$dir" \
+  --pattern bundle.tar.gz --pattern SHA256SUMS --pattern SHA256SUMS.sigstore.json
+(cd "$dir" &&
+  cosign verify-blob SHA256SUMS --bundle SHA256SUMS.sigstore.json \
+    --certificate-identity "https://github.com/zeabur-oss/catalog/.github/workflows/release.yml@refs/tags/$tag" \
+    --certificate-oidc-issuer https://token.actions.githubusercontent.com &&
+  sha256sum --check --ignore-missing SHA256SUMS)
+```
+
+`cosign` 會印出 `Verified OK`，`sha256sum` 會印出 `bundle.tar.gz: OK`。只要任何一個印出別的內容，就停下來。
 
 如果只檢查簽發者或工作流程，驗證時也會接受其他工作流程或其他 zeabur-oss 儲存庫的簽章。簽章驗證通過後，才能解開套件包（bundle）。解開時必須拒絕絕對路徑、`..` 和連結。
 
@@ -59,7 +94,19 @@ kubectl -n app apply -f plan.yaml
 
 不要把 `secrets.json` 加入版本控制。每次執行 `inputs` 都會產生新值，所以每次部署只執行一次，升級時沿用既有的 Secret。
 
-套用完成後，執行一次範本附的煙霧測試，也要執行你自己的測試。
+確認每個 Pod 都有啟動：
+
+```sh
+kubectl -n app get pods
+```
+
+幾分鐘內，每個 Pod 的 `STATUS` 會是 `Running`，`READY` 的兩個數字相同，例如 `1/1`。已完成的 Job 的 Pod 會顯示 `Completed`。接著執行 `template.yaml` 中 `smoke` 列出的檢查，以及你自己的測試。範本有網域時：
+
+```sh
+curl -sI https://app.example.com | head -n 1
+```
+
+第一行是 HTTP 狀態列，例如 `HTTP/2 200`。
 
 </Step>
 

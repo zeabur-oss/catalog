@@ -3,7 +3,7 @@ title: 版本与 API
 description: 从静态 API 读取 catalog、固定 Zeabur Catalog 版本并验证 Sigstore 签名，或从指定 commit 构建版本文件。
 ---
 
-打上 `vX.Y.Z` tag 会发布 `bundle.tar.gz`、`api-v1.tar.gz`，以及 `SHA256SUMS` 和它的 Sigstore 签名包。非预发布版本也会将 API 发布到 `https://oss-catalog.zeabur.com/v1/`。1.0 之前，像 0.1 升到 0.2 这样的更新也可能改变文件格式，需要固定版本时，请指定某个具体版本。
+打上 `vX.Y.Z` tag 会构建 `bundle.tar.gz`、`api-v1.tar.gz`，以及 `SHA256SUMS` 和它的 Sigstore 签名包，并用它们创建草稿版本，由维护者发布。已发布的非预发布版本也会将 API 发布到 `https://oss-catalog.zeabur.com/v1/`。1.0 之前，像 0.1 升到 0.2 这样的更新也可能改变文件格式，需要固定版本时，请指定某个具体版本。
 
 ## 版本文件
 
@@ -14,7 +14,7 @@ description: 从静态 API 读取 catalog、固定 Zeabur Catalog 版本并验�
 
 `SHA256SUMS` 列出其他每个文件的哈希值，并附有 cosign 无密钥 Sigstore 签名包 `SHA256SUMS.sigstore.json`。每个文件也都有 GitHub 构建来源证明（build provenance attestation）。
 
-所有 zeabur-oss 版本都由 [zeabur-oss/.github](https://github.com/zeabur-oss/.github) 的共享发布工作流签名。签名会记录该工作流、仓库 `zeabur-oss/catalog` 和 tag。
+从 v0.5.2 起，每个版本都由 `zeabur-oss/catalog` 的 `release.yml` 工作流签名。签名会记录该工作流和 tag。
 
 ## API
 
@@ -44,7 +44,7 @@ Schema 定义数据格式，由 catalog 工具的 Go 类型生成。每个版本
 | `defaults.<profile>` | 当作 `unsupported`。 |
 | `releases[].type`、`security.podSecurity` | 不提供这个组件。 |
 | `inputs[].generate.type` | 不为这个输入填值。需要这个输入的组件或模板无法安装。 |
-| `distributions`、`detection.addons[].distribution`、测量记录的 `distribution` | 跳过这一项。 |
+| `distributions`、`detection.addons[].distribution`、测量记录的 `distribution`、`render` 里工作负载的 `kind` | 跳过这一项。 |
 | 测量记录的 `result` | 视为未通过。 |
 
 每条测量记录用 `distribution`（`kind`、`k3s`、`rke2` 或 `kubesolo`）、`profile`、`platform`、`kubernetesVersion` 和 `distributionVersion` 指明是哪个环境，其中 `distributionVersion` 是装在主机上的发行版版本。`result` 是 `passed` 或 `failed`，`sourceDigest` 是该次运行安装的组件文件哈希值，`dependencies` 则按 ID 列出该次运行先安装的每个组件的 `sourceDigest`。`addOns` 按名称列出该次运行在主机上安装的每个附加组件的固定版本。`versions` 列出该次运行安装的每个 release 的版本。
