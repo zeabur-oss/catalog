@@ -90,7 +90,8 @@ To release:
 2. Optionally rehearse: run the Release workflow by hand with the version. It builds the release
    and publishes nothing.
 3. Merge the release pull request. zeabur-oss-bot tags the merge commit, and the Release workflow
-   leaves a draft release; check it and publish it. If its verify job fails because of the check itself, fix
+   creates the draft release with its files and verifies it. When the run has passed, check the
+   draft and publish it. If its verify job fails because of the check itself, fix
    the check and run `verify` again from a checkout, as zeabur-oss/.github's README shows.
 
 ## License
