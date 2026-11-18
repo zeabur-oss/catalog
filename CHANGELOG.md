@@ -2,6 +2,22 @@
 
 All notable changes to this catalog are documented in this file; each section comes from the change files in `.changeset/` (CONTRIBUTING.md, "Releases").
 
+## 0.5.2 (2026-11-18)
+
+### Features
+
+#### The API publishes the templates
+
+`catalog api` writes `v1/templates/<id>.json` for each template: its `id` and `sourceDigest`, its `template` (`template.yaml` as JSON) and its `manifests` (the text of `manifests.yaml`). `v1/catalog.json` lists each template's `id` and `sourceDigest` in `templates`, and `v1/schema/` holds `template.schema.json` and `template-file.schema.json`.
+
+#### Releases are signed by the catalog's own release workflow, and checksums.txt is gone
+
+Verify `SHA256SUMS` with `--certificate-identity "https://github.com/zeabur-oss/catalog/.github/workflows/release.yml@refs/tags/<tag>"`, and attestations with `--signer-workflow zeabur-oss/catalog/.github/workflows/release.yml` ([releases](docs/reference/releases.mdx)). Releases up to v0.5.1 keep the identity of `zeabur-oss/.github`. `SHA256SUMS` already lists the two archives, so a release no longer has `checksums.txt`.
+
+### Fixes
+
+- A weekly run that measures one item updates the right file
+
 ## 0.5.1 (2026-11-13)
 
 ### Features
