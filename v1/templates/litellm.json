@@ -1,0 +1,214 @@
+{
+  "id": "litellm",
+  "sourceDigest": "h1:na8IJpVmi3wzd/mfWGh9sLozjljx6QTbp+3nm7TG64w=",
+  "template": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "inputs": [
+      {
+        "description": "Admin API key without the sk- prefix. The key is sk- followed by this value; it is also the password of the admin user in the UI.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "masterKey",
+        "secret": {
+          "key": "master-key",
+          "name": "litellm-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Encrypts provider credentials stored in the database. Never change it after you add a model.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "saltKey",
+        "secret": {
+          "key": "salt-key",
+          "name": "litellm-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      }
+    ],
+    "kind": "Template",
+    "metadata": {
+      "homepage": "https://www.litellm.ai/",
+      "license": "MIT AND LicenseRef-LiteLLM-Enterprise AND PostgreSQL AND Apache-2.0",
+      "locales": {
+        "zh-CN": {
+          "summary": "用一个代理接入多家 LLM 服务，密钥、模型和花费存在 PostgreSQL。"
+        },
+        "zh-TW": {
+          "summary": "用一個代理串接多家 LLM 服務，金鑰、模型和花費存在 PostgreSQL。"
+        }
+      },
+      "name": "LiteLLM",
+      "summary": "One proxy for many LLM providers, with keys, models and spend kept in PostgreSQL.",
+      "version": "v1.106.3"
+    },
+    "requires": [
+      {
+        "component": "traefik"
+      },
+      {
+        "component": "cert-manager"
+      },
+      {
+        "component": "cloudnative-pg"
+      }
+    ],
+    "security": {
+      "locales": {
+        "zh-CN": {
+          "summary": "LiteLLM 以 UID 65534 运行，根文件系统只读，没有服务账号令牌，多余的权限都去掉了。对外连接没有限制。每个 API 调用都要带主密钥，或由主密钥发出的密钥。"
+        },
+        "zh-TW": {
+          "summary": "LiteLLM 以 UID 65534 執行，根檔案系統唯讀，沒有服務帳號權杖，多餘的權限都拿掉了。對外連線沒有限制。每個 API 呼叫都要帶主金鑰，或由主金鑰發出的金鑰。"
+        }
+      },
+      "risks": [
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "主密钥只留给管理用。给应用使用的，请发出有预算和模型限制的虚拟密钥。",
+              "risk": "主密钥可以完整访问代理、代理发出的密钥，以及它保存的服务商凭证。"
+            },
+            "zh-TW": {
+              "mitigation": "主金鑰只留給管理用。給應用程式使用的，請發出有預算和模型限制的虛擬金鑰。",
+              "risk": "主金鑰可以完整存取代理、代理發出的金鑰，以及它保存的服務商認證資訊。"
+            }
+          },
+          "mitigation": "Keep the master key for administration only. Give applications virtual keys with budgets and model limits.",
+          "risk": "The master key gives full access to the proxy, to its keys and to the provider credentials it stores."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "模板没有设置 LITELLM_LICENSE，所以企业版功能是关闭的。因为企业版代码包含在镜像里，安装模板的人必须接受企业版许可。",
+              "risk": "企业版功能需要 BerriAI 的许可。"
+            },
+            "zh-TW": {
+              "mitigation": "範本沒有設定 LITELLM_LICENSE，所以企業版功能是關閉的。因為企業版程式碼包含在映像檔裡，安裝範本的人必須接受企業版授權。",
+              "risk": "企業版功能需要 BerriAI 的授權。"
+            }
+          },
+          "mitigation": "No LITELLM_LICENSE is set, so enterprise features stay off. Because the enterprise code ships in the image, the person who installs the template must accept the enterprise license.",
+          "risk": "Enterprise features need a license from BerriAI."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "cloudnative-pg 组件会为每个集群创建对应的 RBAC 权限。LiteLLM 的 Pod 没有令牌。",
+              "risk": "CloudNativePG 的数据库实例会用 operator 创建的身份调用 Kubernetes API。"
+            },
+            "zh-TW": {
+              "mitigation": "cloudnative-pg 元件會為每個叢集建立對應的 RBAC 權限。LiteLLM 的 Pod 沒有權杖。",
+              "risk": "CloudNativePG 的資料庫實例會用 operator 建立的身分呼叫 Kubernetes API。"
+            }
+          },
+          "mitigation": "The cloudnative-pg component creates the RBAC permissions for each cluster. The LiteLLM Pod has no token.",
+          "risk": "The CloudNativePG database instances call the Kubernetes API with an identity that the operator creates."
+        }
+      ],
+      "summary": "LiteLLM runs as UID 65534 with a read-only root filesystem, no service-account token and all extra capabilities dropped. Outbound traffic is not limited. Every API call needs the master key or a key that the master key issued."
+    },
+    "services": [
+      {
+        "domains": [
+          "{{ .Domain }}"
+        ],
+        "name": "litellm",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "http",
+            "port": 4000
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "2",
+            "memory": "2Gi"
+          },
+          "requests": {
+            "cpu": "200m",
+            "memory": "512Mi"
+          }
+        }
+      },
+      {
+        "name": "litellm-db",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "postgresql",
+            "port": 5432
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "1",
+            "memory": "1Gi"
+          },
+          "requests": {
+            "cpu": "100m",
+            "memory": "256Mi"
+          }
+        }
+      }
+    ],
+    "smoke": [
+      {
+        "condition": "condition=Ready",
+        "name": "postgresql-ready",
+        "resource": "cluster/litellm-db",
+        "timeout": "900s"
+      },
+      {
+        "condition": "condition=Available",
+        "http": {
+          "contains": "connected",
+          "path": "/health/readiness",
+          "port": 4000,
+          "service": "litellm",
+          "status": 200
+        },
+        "name": "litellm-ready",
+        "resource": "deployment/litellm",
+        "timeout": "900s"
+      },
+      {
+        "condition": "condition=Available",
+        "http": {
+          "path": "/key/list",
+          "port": 4000,
+          "service": "litellm",
+          "status": 401
+        },
+        "name": "authentication-required",
+        "resource": "deployment/litellm",
+        "timeout": "120s"
+      },
+      {
+        "condition": "condition=Ready",
+        "name": "migrations-applied",
+        "resource": "cluster/litellm-db",
+        "sql": {
+          "cluster": "litellm-db",
+          "database": "litellm",
+          "expect": "t",
+          "query": "SELECT count(*) \u003e 0 FROM _prisma_migrations WHERE finished_at IS NOT NULL"
+        },
+        "timeout": "120s"
+      }
+    ]
+  },
+  "manifests": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: litellm\n  namespace: '{{ .Namespace }}'\nspec:\n  replicas: 1\n  strategy:\n    type: Recreate\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: litellm\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: litellm\n        app.kubernetes.io/name: litellm\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 65534\n        runAsGroup: 65534\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: litellm\n        image: ghcr.io/berriai/litellm-non_root:v1.106.3@sha256:4fe2270c8b66d25654514744ee6629445c255c0303c292fcbd2d973117a04207\n        args: [--port, '4000']\n        ports:\n        - name: http\n          containerPort: 4000\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop: [ALL]\n        resources:\n          requests:\n            cpu: 200m\n            memory: 512Mi\n          limits:\n            cpu: '2'\n            memory: 2Gi\n        env:\n        - name: MASTER_KEY\n          valueFrom:\n            secretKeyRef:\n              name: litellm-secrets\n              key: master-key\n        - name: LITELLM_MASTER_KEY\n          value: sk-$(MASTER_KEY)\n        - name: LITELLM_SALT_KEY\n          valueFrom:\n            secretKeyRef:\n              name: litellm-secrets\n              key: salt-key\n        - name: DATABASE_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: litellm-db-app\n              key: password\n        # Prisma takes the CA as sslcert; sslaccept=strict verifies it.\n        - name: DATABASE_URL\n          value: postgresql://litellm:$(DATABASE_PASSWORD)@litellm-db-rw:5432/litellm?sslmode=require\u0026sslcert=/db-ca/ca.crt\u0026sslaccept=strict\n        - name: STORE_MODEL_IN_DB\n          value: 'True'\n        - name: LITELLM_LOCAL_MODEL_COST_MAP\n          value: 'True'\n        - name: LITELLM_MIGRATION_DIR\n          value: /var/lib/litellm/migrations\n        - name: UI_USERNAME\n          value: admin\n        volumeMounts:\n        - name: db-ca\n          mountPath: /db-ca\n          readOnly: true\n        - name: tmp\n          mountPath: /tmp\n        - name: cache\n          mountPath: /app/.cache\n        - name: runtime\n          mountPath: /var/lib/litellm/ui\n          subPath: ui\n        - name: runtime\n          mountPath: /var/lib/litellm/assets\n          subPath: assets\n        - name: runtime\n          mountPath: /var/lib/litellm/migrations\n          subPath: migrations\n        startupProbe:\n          httpGet:\n            path: /health/liveliness\n            port: http\n          periodSeconds: 5\n          failureThreshold: 120\n        readinessProbe:\n          httpGet:\n            path: /health/readiness\n            port: http\n          periodSeconds: 10\n          timeoutSeconds: 5\n        livenessProbe:\n          httpGet:\n            path: /health/liveliness\n            port: http\n          periodSeconds: 20\n          timeoutSeconds: 5\n          failureThreshold: 6\n      volumes:\n      - name: db-ca\n        secret:\n          secretName: litellm-db-ca\n          items:\n          - {key: ca.crt, path: ca.crt}\n      - name: tmp\n        emptyDir:\n          sizeLimit: 512Mi\n      - name: cache\n        emptyDir:\n          sizeLimit: 256Mi\n      - name: runtime\n        emptyDir:\n          sizeLimit: 512Mi\n      terminationGracePeriodSeconds: 30\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: litellm\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: litellm\n  ports:\n  - name: http\n    port: 4000\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: litellm\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts: ['{{ .Domain }}']\n    secretName: litellm-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: litellm\n            port:\n              number: 4000\n---\napiVersion: postgresql.cnpg.io/v1\nkind: Cluster\nmetadata:\n  name: litellm-db\n  namespace: '{{ .Namespace }}'\nspec:\n  inheritedMetadata:\n    labels:\n      templates.zeabur.com/template: litellm\n  instances: 1\n  imageName: ghcr.io/cloudnative-pg/postgresql:18-minimal-trixie@sha256:0675340b02be838319b9b6f323c206693e519dcd62ec729d539be9f46bb7a2f9\n  enableSuperuserAccess: false\n  enablePDB: true\n  postgresUID: 26\n  postgresGID: 26\n  seccompProfile:\n    type: RuntimeDefault\n  bootstrap:\n    initdb:\n      database: litellm\n      owner: litellm\n      encoding: UTF8\n  storage:\n    size: 10Gi\n  resources:\n    requests:\n      cpu: 100m\n      memory: 256Mi\n    limits:\n      cpu: '1'\n      memory: 1Gi\n  postgresql:\n    parameters:\n      shared_buffers: 128MB\n      max_connections: '100'\n"
+}

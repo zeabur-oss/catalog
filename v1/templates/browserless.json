@@ -1,0 +1,164 @@
+{
+  "id": "browserless",
+  "sourceDigest": "h1:zQMAApDw/2VLL+JXNmfVqbO9rqEzSAwmna5s2OABrmw=",
+  "template": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "inputs": [
+      {
+        "description": "Generated Browserless bearer/query token. Retrieve from browserless-secrets/token through authorized Kubernetes access; never put the value in a URL logged by a proxy.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "token",
+        "secret": {
+          "key": "token",
+          "name": "browserless-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      }
+    ],
+    "kind": "Template",
+    "metadata": {
+      "homepage": "https://github.com/browserless/browserless",
+      "license": "SSPL-1.0 OR LicenseRef-Browserless-Commercial",
+      "locales": {
+        "zh-CN": {
+          "summary": "让自动化工具用令牌操作的无头 Chrome 浏览器。"
+        },
+        "zh-TW": {
+          "summary": "讓自動化工具用權杖操作的無頭 Chrome 瀏覽器。"
+        }
+      },
+      "name": "Browserless",
+      "summary": "A headless Chrome that your automation tools drive with a token.",
+      "version": "latest"
+    },
+    "requires": [
+      {
+        "component": "traefik"
+      },
+      {
+        "component": "cert-manager"
+      }
+    ],
+    "security": {
+      "locales": {
+        "zh-CN": {
+          "summary": "Browserless 以受限的非 root 身份运行，文件系统只读。API 需要令牌才能调用，Pod 也没有 Kubernetes 服务账号令牌。对外连接没有限制。不要让互不信任的租户共用同一个实例。"
+        },
+        "zh-TW": {
+          "summary": "Browserless 以受限的非 root 身分執行，檔案系統唯讀。API 需要權杖才能呼叫，Pod 也沒有 Kubernetes 服務帳號權杖。對外連線沒有限制。不要讓彼此不信任的租戶共用同一個實例。"
+        }
+      },
+      "risks": [
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "只让可信的客户端调用 API。镜像要持续更新。处理敏感内容时，请把这个服务放在自己的租户命名空间，并使用专用节点。保留受限的准入策略，不要授予 SYS_ADMIN 或主机访问权限。不要让互不信任的租户共用同一个实例。",
+              "risk": "浏览器启动时带有 --no-sandbox，因为上游就是这样启动 Chromium。如果有网站攻破浏览器，攻击者就能控制容器，拿到 Browserless 令牌，也能看到其他浏览器会话的内容。"
+            },
+            "zh-TW": {
+              "mitigation": "只讓信任的用戶端呼叫 API。映像檔要持續更新。處理敏感內容時，請把這個服務放在自己的租戶命名空間，並使用專用節點。保留受限的准入政策，不要給 SYS_ADMIN 或主機存取權。不要讓彼此不信任的租戶共用同一個實例。",
+              "risk": "瀏覽器啟動時帶有 --no-sandbox，因為上游就是這樣啟動 Chromium。如果有網站攻破瀏覽器，攻擊者就能控制容器，拿到 Browserless 權杖，也能看到其他瀏覽器工作階段的內容。"
+            }
+          },
+          "mitigation": "Let only trusted clients call the API. Keep the image patched. For sensitive browsing, run this service in its own tenant namespace on dedicated nodes. Keep the restricted admission policy, and do not grant SYS_ADMIN or host access. Do not share one instance between tenants you do not trust.",
+          "risk": "The browser starts with --no-sandbox, because upstream launches Chromium that way. If a website exploits the browser, the attacker can take over the container, read its Browserless token and see what other browser sessions show."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "文件协议、GET 形式的浏览器调用和 CORS 都已关闭。模板没有限制对外连接，浏览器仍然可以访问私有网络、集群内部和云端 metadata 地址。在让不可信的客户端使用 API 之前，请先添加 egress NetworkPolicy，拦截私有地址范围。",
+              "risk": "只要能用浏览器 API，就可以让服务器去访问内部地址（SSRF）。Browserless 本身可以拦截私有网络，但默认是关闭的。"
+            },
+            "zh-TW": {
+              "mitigation": "檔案協定、GET 形式的瀏覽器呼叫和 CORS 都已關閉。範本沒有限制對外連線，瀏覽器仍然可以連到私有網路、叢集內部和雲端 metadata 位址。在讓不受信任的用戶端使用 API 之前，請先加上 egress NetworkPolicy，擋掉私有位址範圍。",
+              "risk": "只要能用瀏覽器 API，就可以讓伺服器去連內部網址（SSRF）。Browserless 本身可以擋掉私有網路，但預設是關的。"
+            }
+          },
+          "mitigation": "The file protocol, GET-style browser calls and CORS are disabled. The template does not limit outbound traffic, so the browser can still open private, cluster and cloud metadata addresses. Before untrusted clients use the API, add an egress NetworkPolicy that blocks private address ranges.",
+          "risk": "Anyone who can use the browser API can make the server open internal addresses (SSRF). Browserless can block private networks by itself, but that is off by default."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "模板说明里有写明许可证。部署本身不会给你授权。请先确认自己适用哪一种许可证，要用在商业产品时，先咨询法律专业人士。",
+              "risk": "Browserless 采用 SSPL 与商业双重许可。SSPL 不是 OSI 认可的开源许可证，闭源的商业用途也受到限制。"
+            },
+            "zh-TW": {
+              "mitigation": "範本說明裡有寫明授權。部署本身不會給你授權。請先確認自己適用哪一種授權，要用在商業產品時，先請教法律專業人士。",
+              "risk": "Browserless 採用 SSPL 與商業雙重授權。SSPL 不是 OSI 認可的開源授權，閉源的商業用途也受到限制。"
+            }
+          },
+          "mitigation": "The template description names the license. Deploying does not give you a license. Check which license applies to you, and ask a lawyer before using it in a commercial product.",
+          "risk": "Browserless uses an SSPL and commercial dual license. SSPL is not an OSI-approved open source license, and closed-source commercial use is restricted."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "令牌在部署时自动生成。客户端支持时，改用 Authorization 请求头传送。限制谁能读取 Kubernetes 机密和日志。外部代理的日志要去掉查询字符串。令牌一旦泄露就要更换。",
+              "risk": "共用的令牌可以执行很强的自动化操作，也可能出现在客户端 URL 和访问日志里。"
+            },
+            "zh-TW": {
+              "mitigation": "權杖在部署時自動產生。用戶端支援時，改用 Authorization 標頭傳送。限制誰能讀取 Kubernetes 機密和紀錄。外部代理伺服器的紀錄要去掉查詢字串。權杖一旦外洩就要更換。",
+              "risk": "共用的權杖可以執行很強的自動化操作，也可能出現在用戶端網址和存取紀錄裡。"
+            }
+          },
+          "mitigation": "The token is generated at deploy time. Send it in the Authorization header where the client supports it. Limit who can read the Kubernetes Secret and the logs. Strip query strings in any external proxy logs. Rotate the token if it leaks.",
+          "risk": "One shared token allows powerful automation. It can also show up in client URLs and access logs."
+        }
+      ],
+      "summary": "Browserless runs as a restricted non-root container with a read-only filesystem. Its API needs a token, and the pod has no Kubernetes service-account token. Outbound traffic is not limited. Do not share one instance between tenants you do not trust."
+    },
+    "services": [
+      {
+        "domains": [
+          "{{ .Domain }}"
+        ],
+        "name": "browserless",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "web",
+            "port": 3000
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "2",
+            "memory": "2Gi"
+          },
+          "requests": {
+            "cpu": "250m",
+            "memory": "512Mi"
+          }
+        }
+      }
+    ],
+    "smoke": [
+      {
+        "condition": "condition=Available",
+        "name": "browserless-ready",
+        "resource": "deployment/browserless",
+        "timeout": "300s"
+      },
+      {
+        "condition": "condition=Available",
+        "http": {
+          "path": "/pressure",
+          "port": 3000,
+          "service": "browserless",
+          "status": 401
+        },
+        "name": "authentication-required",
+        "resource": "deployment/browserless",
+        "timeout": "300s"
+      }
+    ]
+  },
+  "manifests": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: browserless\n  namespace: {{ .Namespace }}\nspec:\n  replicas: 1\n  revisionHistoryLimit: 2\n  strategy:\n    type: Recreate\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: browserless\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: browserless\n        app.kubernetes.io/name: browserless\n    spec:\n      automountServiceAccountToken: false\n      terminationGracePeriodSeconds: 90\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 999\n        runAsGroup: 999\n        fsGroup: 999\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n        - name: browserless\n          image: ghcr.io/browserless/chromium:latest@sha256:3231c6747363e1214b7d674e2945606bb68b629a10ae59a489dc44d99572a022\n          imagePullPolicy: IfNotPresent\n          securityContext:\n            allowPrivilegeEscalation: false\n            readOnlyRootFilesystem: true\n            capabilities:\n              drop: [ALL]\n          ports:\n            - name: web\n              containerPort: 3000\n          env:\n            - name: TOKEN\n              valueFrom:\n                secretKeyRef:\n                  name: browserless-secrets\n                  key: token\n            - name: HOST\n              value: 0.0.0.0\n            - name: PORT\n              value: \"3000\"\n            - name: CONCURRENT\n              value: \"4\"\n            - name: QUEUED\n              value: \"4\"\n            - name: TIMEOUT\n              value: \"60000\"\n            - name: ALLOW_FILE_PROTOCOL\n              value: \"false\"\n            - name: ALLOW_GET\n              value: \"false\"\n            - name: CORS\n              value: \"false\"\n            - name: STRICT_TOKEN_USE\n              value: \"true\"\n          resources:\n            requests:\n              cpu: 250m\n              memory: 512Mi\n              ephemeral-storage: 256Mi\n            limits:\n              cpu: \"2\"\n              memory: 2Gi\n              ephemeral-storage: 2Gi\n          startupProbe:\n            tcpSocket:\n              port: web\n            periodSeconds: 5\n            failureThreshold: 60\n          readinessProbe:\n            exec:\n              command:\n                - node\n                - -e\n                - 'fetch(\"http://127.0.0.1:3000/pressure?token=\"+encodeURIComponent(process.env.TOKEN),{headers:{Accept:\"text/plain\"}}).then(r=\u003eprocess.exit(r.ok?0:1)).catch(()=\u003eprocess.exit(1))'\n            periodSeconds: 10\n            timeoutSeconds: 5\n          livenessProbe:\n            tcpSocket:\n              port: web\n            periodSeconds: 20\n            timeoutSeconds: 3\n            failureThreshold: 6\n          volumeMounts:\n            - name: tmp\n              mountPath: /tmp\n            - name: home\n              mountPath: /home/blessuser\n            - name: shm\n              mountPath: /dev/shm\n      volumes:\n        - name: tmp\n          emptyDir:\n            sizeLimit: 1Gi\n        - name: home\n          emptyDir:\n            sizeLimit: 256Mi\n        - name: shm\n          emptyDir:\n            medium: Memory\n            sizeLimit: 256Mi\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: browserless\n  namespace: {{ .Namespace }}\nspec:\n  selector:\n    app.kubernetes.io/name: browserless\n  ports:\n    - name: web\n      port: 3000\n      targetPort: web\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: browserless\n  namespace: {{ .Namespace }}\n  annotations:\n    cert-manager.io/cluster-issuer: {{ .ClusterIssuer }}\nspec:\n  ingressClassName: traefik\n  tls:\n    - hosts: [\"{{ .Domain }}\"]\n      secretName: browserless-tls\n  rules:\n    - host: {{ .Domain }}\n      http:\n        paths:\n          - path: /\n            pathType: Prefix\n            backend:\n              service:\n                name: browserless\n                port:\n                  name: web\n"
+}

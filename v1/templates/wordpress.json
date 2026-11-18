@@ -1,0 +1,360 @@
+{
+  "id": "wordpress",
+  "sourceDigest": "h1:zySgBQQAn1xxEhh+1s0COEx85yarCBQnfdqWCZaac+8=",
+  "template": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "inputs": [
+      {
+        "description": "WordPress administrator email.",
+        "label": "Administrator email",
+        "locales": {
+          "zh-CN": {
+            "description": "WordPress 管理员的邮箱。",
+            "label": "管理员邮箱"
+          },
+          "zh-TW": {
+            "description": "WordPress 管理員的 Email。",
+            "label": "管理員 Email"
+          }
+        },
+        "name": "adminEmail",
+        "required": true,
+        "validation": {
+          "pattern": "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+        }
+      },
+      {
+        "description": "Deploy-time random secret; preserve it across upgrades.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "databasePassword",
+        "secret": {
+          "key": "database-password",
+          "name": "wordpress-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Deploy-time random secret; preserve it across upgrades.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "databaseRootPassword",
+        "secret": {
+          "key": "database-root-password",
+          "name": "wordpress-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Deploy-time random secret; preserve it across upgrades.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "adminPassword",
+        "secret": {
+          "key": "admin-password",
+          "name": "wordpress-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Deploy-time random secret; preserve it across upgrades.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "wordpressAuthKey",
+        "secret": {
+          "key": "auth-key",
+          "name": "wordpress-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Deploy-time random secret; preserve it across upgrades.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "wordpressSecureAuthKey",
+        "secret": {
+          "key": "secure-auth-key",
+          "name": "wordpress-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Deploy-time random secret; preserve it across upgrades.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "wordpressLoggedInKey",
+        "secret": {
+          "key": "logged-in-key",
+          "name": "wordpress-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Deploy-time random secret; preserve it across upgrades.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "wordpressNonceKey",
+        "secret": {
+          "key": "nonce-key",
+          "name": "wordpress-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Deploy-time random secret; preserve it across upgrades.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "wordpressAuthSalt",
+        "secret": {
+          "key": "auth-salt",
+          "name": "wordpress-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Deploy-time random secret; preserve it across upgrades.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "wordpressSecureAuthSalt",
+        "secret": {
+          "key": "secure-auth-salt",
+          "name": "wordpress-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Deploy-time random secret; preserve it across upgrades.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "wordpressLoggedInSalt",
+        "secret": {
+          "key": "logged-in-salt",
+          "name": "wordpress-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Deploy-time random secret; preserve it across upgrades.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "wordpressNonceSalt",
+        "secret": {
+          "key": "nonce-salt",
+          "name": "wordpress-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      }
+    ],
+    "kind": "Template",
+    "metadata": {
+      "homepage": "https://wordpress.org/",
+      "license": "GPL-2.0-or-later AND GPL-2.0-only AND BSD-2-Clause AND MIT",
+      "locales": {
+        "zh-CN": {
+          "summary": "WordPress 网站，搭配 MariaDB，并预先建好所有者账号。"
+        },
+        "zh-TW": {
+          "summary": "WordPress 網站，搭配 MariaDB，並先建好擁有者帳號。"
+        }
+      },
+      "name": "WordPress",
+      "summary": "WordPress, with MariaDB and an owner account ready.",
+      "version": "php8.3-fpm-alpine"
+    },
+    "requires": [
+      {
+        "component": "traefik"
+      },
+      {
+        "component": "cert-manager"
+      },
+      {
+        "component": "mariadb-operator"
+      }
+    ],
+    "security": {
+      "locales": {
+        "zh-CN": {
+          "summary": "WordPress 和 MariaDB 的 Pod 都不用 root 权限运行，并应用严格限制。数据库一律要用 TLS 连接，SQL 账号密码是自动生成的。运算符的辅助镜像，是你使用这个目录时必须信任的一部分。"
+        },
+        "zh-TW": {
+          "summary": "WordPress 和 MariaDB 的 Pod 都不用 root 權限執行，並套用嚴格限制。資料庫一律要用 TLS 連線，SQL 帳密是自動產生的。運算子的輔助映像檔，是你使用這個目錄時必須信任的一部分。"
+        }
+      },
+      "risks": [
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "限制管理员人数，安装插件前先检查，并且持续更新。FastCGI 端口没有对外开放。上传文件夹里不能运行 PHP，wp-config、隐藏文件和原始备份文件的请求也会被挡下来。",
+              "risk": "WordPress 的插件和主题会运行代码，这些代码碰得到数据库和上传的文件。"
+            },
+            "zh-TW": {
+              "mitigation": "限制管理員人數，安裝外掛前先檢查，並且持續更新。FastCGI 連接埠沒有對外開放。上傳資料夾裡不能執行 PHP，wp-config、隱藏檔和原始備份檔的請求也會被擋下來。",
+              "risk": "WordPress 的外掛和佈景主題會執行程式，這些程式碰得到資料庫和上傳的檔案。"
+            }
+          },
+          "mitigation": "Limit who is an administrator, check plugins before you install them and keep them updated. There is no public FastCGI port. PHP cannot run in the uploads folder, and requests for wp-config, hidden files and raw backup files are denied.",
+          "risk": "WordPress plugins and themes run code that can reach the database and the uploaded files."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "网页 Pod 准备好之前，初始化容器（官方的 WP-CLI，用 digest 固定版本）会先用自动生成的密码创建管理员账号。运行过程中不会下载任何东西。",
+              "risk": "WordPress 还没设置好的时候，第一个打开网站的人就能认领这个网站。"
+            },
+            "zh-TW": {
+              "mitigation": "網頁 Pod 準備好之前，初始化容器（官方的 WP-CLI，用 digest 固定版本）會先用自動產生的密碼建立管理員帳號。執行過程中不會下載任何東西。",
+              "risk": "WordPress 還沒設定好的時候，第一個打開網站的人就能認領這個網站。"
+            }
+          },
+          "mitigation": "An init container (official WP-CLI, pinned by digest) creates the admin account with a generated password before the web pods become ready. Nothing is downloaded while it runs.",
+          "risk": "On a WordPress site that is not set up yet, the first visitor can claim the site."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "使用之前，装上目录指定的那个提供者，并固定它的镜像设置。引擎的初始化容器沿用模板的镜像 digest。MaxScale 和 Galera 都没有安装。",
+              "risk": "MariaDB Operator 会跨命名空间运作，所以你得信任它能管整个集群。"
+            },
+            "zh-TW": {
+              "mitigation": "使用之前，裝上目錄指定的那個提供者，並固定它的映像檔設定。引擎的初始化容器沿用範本的映像檔 digest。MaxScale 和 Galera 都沒有安裝。",
+              "risk": "MariaDB Operator 會跨命名空間運作，所以你得信任它能管整個叢集。"
+            }
+          },
+          "mitigation": "Install the exact catalog provider and pin its image settings before you use it. The engine init container uses the template's image digest. MaxScale and Galera are not installed.",
+          "risk": "The MariaDB Operator works across namespaces, so you have to trust it with the whole cluster."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "保留 SQL 机密和 TLS 证书，并且定期演练恢复。先让 WordPress 暂停写入，再把 wordpress-data 卷和机密，跟数据库备份在同一个恢复时间点一起归档。",
+              "risk": "数据库备份不含 wordpress-data 卷里的上传文件、插件和主题。"
+            },
+            "zh-TW": {
+              "mitigation": "保留 SQL 機密和 TLS 憑證，並且定期演練還原。先讓 WordPress 暫停寫入，再把 wordpress-data 磁碟區和機密，跟資料庫備份在同一個還原時間點一起封存。",
+              "risk": "資料庫備份不含 wordpress-data 磁碟區裡的上傳檔案、外掛和佈景主題。"
+            }
+          },
+          "mitigation": "Keep the SQL Secrets and the TLS certificates, and run restore drills. Pause WordPress, then archive the wordpress-data volume and the Secrets at the same recovery point as the database.",
+          "risk": "Database backups do not include the uploads, plugins and themes on the wordpress-data volume."
+        }
+      ],
+      "summary": "The WordPress and MariaDB pods run without root rights under restricted settings. The database requires TLS, and the SQL credentials are generated. The operator's helper images are part of what you trust when you use this catalog."
+    },
+    "services": [
+      {
+        "domains": [
+          "{{ .Domain }}"
+        ],
+        "name": "wordpress",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "http",
+            "port": 8080
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "1500m",
+            "memory": "1280Mi"
+          },
+          "requests": {
+            "cpu": "125m",
+            "memory": "320Mi"
+          }
+        }
+      },
+      {
+        "name": "mariadb",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "database",
+            "port": 3306
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "1000m",
+            "memory": "1Gi"
+          },
+          "requests": {
+            "cpu": "100m",
+            "memory": "256Mi"
+          }
+        }
+      }
+    ],
+    "smoke": [
+      {
+        "condition": "condition=Available",
+        "name": "workload-ready",
+        "resource": "deployment/wordpress",
+        "timeout": "900s"
+      },
+      {
+        "condition": "condition=Ready",
+        "name": "database-ready",
+        "resource": "mariadb/mariadb",
+        "timeout": "900s"
+      }
+    ]
+  },
+  "manifests": "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: wordpress-config\n  namespace: '{{ .Namespace }}'\ndata:\n  nginx.conf: \"worker_processes auto;\\npid /tmp/nginx.pid;\\nerror_log /dev/stderr warn;\\nevents { worker_connections\\\n    \\ 1024; }\\nhttp {\\n  include /etc/nginx/mime.types;\\n  default_type application/octet-stream;\\n  access_log\\\n    \\ /dev/stdout;\\n  client_max_body_size 256m;\\n  client_body_temp_path /tmp/client_temp;\\n  proxy_temp_path /tmp/proxy_temp;\\n\\\n    \\  fastcgi_temp_path /tmp/fastcgi_temp;\\n  uwsgi_temp_path /tmp/uwsgi_temp;\\n  scgi_temp_path /tmp/scgi_temp;\\n\\\n    \\  server {\\n    listen 8080;\\n    root /var/www/html;\\n    index index.php;\\n    location = /wp-config.php\\\n    \\ { deny all; }\\n    location ~ /\\\\. { deny all; }\\n    location ~* \\\\.(phar|sql|log|bak)$ { deny all; }\\n \\\n    \\   location ~* ^/wp-content/uploads/.*\\\\.php$ { deny all; }\\n    location / { try_files $uri $uri/ /index.php?$args;\\\n    \\ }\\n    location ~ \\\\.php$ {\\n      try_files $uri =404;\\n      include /etc/nginx/fastcgi_params;\\n      fastcgi_param\\\n    \\ SCRIPT_FILENAME $document_root$fastcgi_script_name;\\n      fastcgi_param HTTP_PROXY \\\"\\\";\\n      fastcgi_pass\\\n    \\ 127.0.0.1:9000;\\n      fastcgi_read_timeout 300s;\\n    }\\n  }\\n}\\n\"\n  uploads.ini: 'file_uploads=On\n\n    upload_max_filesize=256M\n\n    post_max_size=256M\n\n    memory_limit=1024M\n\n    max_execution_time=300\n\n    '\n  database-tls.ini: |\n    openssl.cafile=/tmp/database-ca-bundle.pem\n---\napiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: wordpress-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes:\n  - ReadWriteOnce\n  resources:\n    requests:\n      storage: 10Gi\n---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: wordpress\n  namespace: '{{ .Namespace }}'\nspec:\n  replicas: 1\n  strategy:\n    type: Recreate\n  selector:\n    matchLabels:\n      app: wordpress\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: wordpress\n        app: wordpress\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 82\n        runAsGroup: 82\n        fsGroup: 82\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: wordpress\n        image: docker.io/wordpress:php8.3-fpm-alpine@sha256:82d93a279778e5307902813c402b9118521e8104459a0e350ed719f6d6c4d1ab\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n          seccompProfile:\n            type: RuntimeDefault\n        resources:\n          requests:\n            cpu: 100m\n            memory: 256Mi\n          limits:\n            cpu: 1000m\n            memory: 1Gi\n        volumeMounts: \u0026id001\n        - name: html\n          mountPath: /var/www/html\n        - name: tmp\n          mountPath: /tmp\n        - name: tools\n          mountPath: /tools\n        - name: config\n          mountPath: /usr/local/etc/php/conf.d/uploads.ini\n          subPath: uploads.ini\n          readOnly: true\n        - name: config\n          mountPath: /usr/local/etc/php/conf.d/database-tls.ini\n          subPath: database-tls.ini\n          readOnly: true\n        - name: database-ca\n          mountPath: /database-ca\n          readOnly: true\n        startupProbe:\n          tcpSocket:\n            port: 9000\n          periodSeconds: 5\n          failureThreshold: 120\n        readinessProbe:\n          tcpSocket:\n            port: 9000\n          periodSeconds: 10\n          timeoutSeconds: 3\n        livenessProbe:\n          tcpSocket:\n            port: 9000\n          periodSeconds: 20\n          timeoutSeconds: 3\n          failureThreshold: 6\n        env:\n        - \u0026id002\n          name: WORDPRESS_DB_HOST\n          value: mariadb:3306\n        - \u0026id003\n          name: WORDPRESS_DB_NAME\n          value: zeabur\n        - \u0026id004\n          name: WORDPRESS_DB_USER\n          value: wordpress\n        - \u0026id005\n          name: WORDPRESS_DB_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: wordpress-secrets\n              key: database-password\n        - \u0026id006\n          name: WORDPRESS_CONFIG_EXTRA\n          value: define('WP_HOME', 'https://{{ .Domain }}'); define('WP_SITEURL', 'https://{{ .Domain }}'); define('FORCE_SSL_ADMIN',\n            true); define('MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL);\n        - \u0026id007\n          name: WORDPRESS_AUTH_KEY\n          valueFrom:\n            secretKeyRef:\n              name: wordpress-secrets\n              key: auth-key\n        - \u0026id008\n          name: WORDPRESS_SECURE_AUTH_KEY\n          valueFrom:\n            secretKeyRef:\n              name: wordpress-secrets\n              key: secure-auth-key\n        - \u0026id009\n          name: WORDPRESS_LOGGED_IN_KEY\n          valueFrom:\n            secretKeyRef:\n              name: wordpress-secrets\n              key: logged-in-key\n        - \u0026id010\n          name: WORDPRESS_NONCE_KEY\n          valueFrom:\n            secretKeyRef:\n              name: wordpress-secrets\n              key: nonce-key\n        - \u0026id011\n          name: WORDPRESS_AUTH_SALT\n          valueFrom:\n            secretKeyRef:\n              name: wordpress-secrets\n              key: auth-salt\n        - \u0026id012\n          name: WORDPRESS_SECURE_AUTH_SALT\n          valueFrom:\n            secretKeyRef:\n              name: wordpress-secrets\n              key: secure-auth-salt\n        - \u0026id013\n          name: WORDPRESS_LOGGED_IN_SALT\n          valueFrom:\n            secretKeyRef:\n              name: wordpress-secrets\n              key: logged-in-salt\n        - \u0026id014\n          name: WORDPRESS_NONCE_SALT\n          valueFrom:\n            secretKeyRef:\n              name: wordpress-secrets\n              key: nonce-salt\n        - name: PATH\n          value: /tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n      - name: web\n        image: docker.io/nginxinc/nginx-unprivileged:stable-alpine@sha256:f5116ed4606f3eb015dd4a8e28cb9b351476dc0ad4bc6e9f93b19cec130cdf03\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n          seccompProfile:\n            type: RuntimeDefault\n          runAsUser: 101\n          runAsGroup: 101\n        resources:\n          requests:\n            cpu: 25m\n            memory: 64Mi\n          limits:\n            cpu: 500m\n            memory: 256Mi\n        volumeMounts:\n        - name: html\n          mountPath: /var/www/html\n          readOnly: true\n        - name: tmp\n          mountPath: /tmp\n        - name: config\n          mountPath: /etc/nginx/nginx.conf\n          subPath: nginx.conf\n          readOnly: true\n        ports:\n        - name: http\n          containerPort: 8080\n        startupProbe:\n          tcpSocket:\n            port: 8080\n          periodSeconds: 5\n          failureThreshold: 120\n        readinessProbe:\n          httpGet:\n            path: /wp-login.php\n            port: 8080\n          periodSeconds: 10\n          timeoutSeconds: 5\n        livenessProbe:\n          tcpSocket:\n            port: 8080\n          periodSeconds: 20\n          timeoutSeconds: 3\n          failureThreshold: 6\n        command:\n        - nginx\n        - -g\n        - daemon off;\n      volumes:\n      - name: html\n        persistentVolumeClaim:\n          claimName: wordpress-data\n      - name: tmp\n        emptyDir:\n          sizeLimit: 1Gi\n      - name: tools\n        emptyDir: {}\n      - name: config\n        configMap:\n          name: wordpress-config\n      - name: database-ca\n        secret:\n          secretName: mariadb-ca\n          items:\n          - key: ca.crt\n            path: ca.crt\n      initContainers:\n      - name: initialize-wordpress\n        image: docker.io/wordpress:php8.3-fpm-alpine@sha256:82d93a279778e5307902813c402b9118521e8104459a0e350ed719f6d6c4d1ab\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n          seccompProfile:\n            type: RuntimeDefault\n        resources:\n          requests:\n            cpu: 100m\n            memory: 256Mi\n          limits:\n            cpu: 1000m\n            memory: 1Gi\n        volumeMounts: *id001\n        env:\n        - *id002\n        - *id003\n        - *id004\n        - *id005\n        - *id006\n        - *id007\n        - *id008\n        - *id009\n        - *id010\n        - *id011\n        - *id012\n        - *id013\n        - *id014\n        command:\n        - /bin/sh\n        - -ec\n        - cat /etc/ssl/cert.pem /database-ca/ca.crt \u003e /tmp/database-ca-bundle.pem; exec docker-entrypoint.sh php-fpm -t\n      - name: install-owner\n        image: docker.io/wordpress:cli-php8.3@sha256:661db880e953da051abcac6c0a769767b995a82cd52101c003ca7438dd427d7d\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n          seccompProfile:\n            type: RuntimeDefault\n        resources:\n          requests:\n            cpu: 100m\n            memory: 256Mi\n          limits:\n            cpu: 1000m\n            memory: 1Gi\n        volumeMounts: *id001\n        env:\n        - *id002\n        - *id003\n        - *id004\n        - *id005\n        - *id006\n        - *id007\n        - *id008\n        - *id009\n        - *id010\n        - *id011\n        - *id012\n        - *id013\n        - *id014\n        - name: HOME\n          value: /tmp\n        - name: WP_CLI_CACHE_DIR\n          value: /tmp/wp-cli-cache\n        - name: WORDPRESS_ADMIN_EMAIL\n          value: '{{ .Inputs.adminEmail }}'\n        - name: WORDPRESS_ADMIN_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: wordpress-secrets\n              key: admin-password\n        command:\n        - /bin/sh\n        - -ec\n        - cp /usr/local/bin/wp /tools/wp; n=0; until wp db check --quiet --ssl --ssl-ca=/database-ca/ca.crt --ssl-verify-server-cert; do n=$((n+1)); [ \"$n\" -lt 120 ] || exit\n          1; sleep 5; done; if ! wp core is-installed; then wp core install --url=\"https://{{ .Domain }}\" --title=\"WordPress\"\n          --admin_user=admin --admin_password=\"$WORDPRESS_ADMIN_PASSWORD\" --admin_email=\"$WORDPRESS_ADMIN_EMAIL\"\n          --skip-email; fi\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: wordpress\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app: wordpress\n  ports:\n  - name: http\n    port: 8080\n    targetPort: 8080\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: wordpress\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\n    traefik.ingress.kubernetes.io/router.entrypoints: websecure\n    traefik.ingress.kubernetes.io/router.tls: 'true'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts:\n    - '{{ .Domain }}'\n    secretName: wordpress-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: wordpress\n            port:\n              number: 8080\n---\napiVersion: v1\nkind: ServiceAccount\nmetadata:\n  name: mariadb-workload\n  namespace: '{{ .Namespace }}'\nautomountServiceAccountToken: false\n---\napiVersion: k8s.mariadb.com/v1alpha1\nkind: MariaDB\nmetadata:\n  name: mariadb\n  namespace: '{{ .Namespace }}'\nspec:\n  podMetadata:\n    labels:\n      templates.zeabur.com/template: wordpress\n  image: docker.io/mariadb:12.3.3@sha256:d46e102fa8b9b72bfcdeb56f9dd538742092119dc8b11f31fe662605cd234cd9\n  replicas: 1\n  rootPasswordSecretKeyRef:\n    name: wordpress-secrets\n    key: database-root-password\n    generate: false\n  serviceAccountName: mariadb-workload\n  tls:\n    enabled: true\n    required: true\n  storage:\n    size: 10Gi\n    pvcRetentionPolicy:\n      whenDeleted: Retain\n      whenScaled: Retain\n  podSecurityContext:\n    runAsNonRoot: true\n    runAsUser: 999\n    runAsGroup: 999\n    fsGroup: 999\n    fsGroupChangePolicy: OnRootMismatch\n    seccompProfile:\n      type: RuntimeDefault\n  securityContext:\n    allowPrivilegeEscalation: false\n    capabilities:\n      drop: [ALL]\n  resources:\n    requests: {cpu: 100m, memory: 256Mi}\n    limits: {cpu: 1000m, memory: 1Gi}\n  updateStrategy:\n    autoUpdateDataPlane: false\n    mariadbAutoUpgradeEnabled: false\n---\napiVersion: k8s.mariadb.com/v1alpha1\nkind: Database\nmetadata:\n  name: wordpress\n  namespace: '{{ .Namespace }}'\nspec:\n  mariaDbRef: {name: mariadb, waitForIt: true}\n  name: zeabur\n  characterSet: utf8mb4\n  collate: utf8mb4_unicode_ci\n  cleanupPolicy: Skip\n---\napiVersion: k8s.mariadb.com/v1alpha1\nkind: User\nmetadata:\n  name: wordpress\n  namespace: '{{ .Namespace }}'\nspec:\n  mariaDbRef: {name: mariadb, waitForIt: true}\n  name: wordpress\n  host: '%'\n  passwordSecretKeyRef:\n    name: wordpress-secrets\n    key: database-password\n  require: {ssl: true}\n  maxUserConnections: 30\n  cleanupPolicy: Skip\n---\napiVersion: k8s.mariadb.com/v1alpha1\nkind: Grant\nmetadata:\n  name: wordpress\n  namespace: '{{ .Namespace }}'\nspec:\n  mariaDbRef: {name: mariadb, waitForIt: true}\n  username: wordpress\n  host: '%'\n  database: zeabur\n  table: '*'\n  privileges: [SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, INDEX]\n  grantOption: false\n  cleanupPolicy: Skip\n"
+}

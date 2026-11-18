@@ -1,0 +1,130 @@
+{
+  "id": "sillytavern",
+  "sourceDigest": "h1:EUdS+TvH7ULnuqVriwI13+i6OjXqtKT1EWxraQoyRsQ=",
+  "template": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "inputs": [
+      {
+        "description": "Basic authentication password for username user; generated, never a shared default.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "basicPassword",
+        "secret": {
+          "key": "basic-password",
+          "name": "app-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      }
+    ],
+    "kind": "Template",
+    "metadata": {
+      "homepage": "https://github.com/SillyTavern/SillyTavern",
+      "license": "AGPL-3.0-only",
+      "locales": {
+        "zh-CN": {
+          "summary": "用密码保护的 LLM 聊天前端，对话存在卷上。"
+        },
+        "zh-TW": {
+          "summary": "用密碼保護的 LLM 聊天前端，對話存在磁碟區。"
+        }
+      },
+      "name": "SillyTavern",
+      "summary": "An LLM chat frontend behind a password, with conversations kept on a volume.",
+      "version": "1.19.0"
+    },
+    "requires": [
+      {
+        "component": "traefik"
+      },
+      {
+        "component": "cert-manager"
+      }
+    ],
+    "security": {
+      "locales": {
+        "zh-CN": {
+          "summary": "SillyTavern 不用 root 权限运行，根文件系统只读，没有服务账号令牌，也没有额外的 Linux 权限。只有 Traefik 能通过 HTTPS 连到它。向外的网络流量没有限制。"
+        },
+        "zh-TW": {
+          "summary": "SillyTavern 不用 root 權限執行，根檔案系統唯讀，沒有服務帳號權杖，也沒有額外的 Linux 權限。只有 Traefik 能透過 HTTPS 連到它。往外的網路流量沒有限制。"
+        }
+      },
+      "risks": [
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "这是设计给单个可信任的用户用的。访问靠自动生成的 Basic auth 密码，并走 HTTPS。SillyTavern 自己会挡内网地址，但这个模板不限制向外的网络流量。不要把账号密码分享给你不信任的人。",
+              "risk": "登录的用户可以设置对外的模型和 API 连接，也能看到存放的供应商密钥和聊天记录。"
+            },
+            "zh-TW": {
+              "mitigation": "這是設計給單一可信任的使用者用的。存取靠自動產生的 Basic auth 密碼，並走 HTTPS。SillyTavern 自己會擋內網位址，但這個範本不限制往外的網路流量。不要把帳密分享給你不信任的人。",
+              "risk": "登入的使用者可以設定對外的模型和 API 連線，也能看到存放的供應商金鑰和聊天紀錄。"
+            }
+          },
+          "mitigation": "This is meant for one trusted user. Access uses a generated Basic auth password over HTTPS. SillyTavern blocks private addresses on its own, but the template does not limit outbound traffic. Do not share the credentials with people you do not trust.",
+          "risk": "A signed-in user can set up outbound model and API connections, and can read the stored provider keys and chats."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "服务器插件已关闭，扩展的自动更新和模型下载也都关闭了。安装每个扩展之前，先看过它的代码。",
+              "risk": "插件和扩展会在服务器上运行代码，或者在浏览器里运行脚本。"
+            },
+            "zh-TW": {
+              "mitigation": "伺服器外掛已關閉，擴充功能的自動更新和模型下載也都關閉了。安裝每個擴充功能之前，先看過它的程式碼。",
+              "risk": "外掛和擴充功能會在伺服器上執行程式，或是在瀏覽器裡執行腳本。"
+            }
+          },
+          "mitigation": "Server plugins are turned off. Automatic extension updates and model downloads are turned off too. Read the code of each extension before you install it.",
+          "risk": "Plugins and extensions run code on the server or scripts in the browser."
+        }
+      ],
+      "summary": "SillyTavern runs without root rights, with a read-only root filesystem, no service-account token and no extra Linux capabilities. Only Traefik can reach it, over HTTPS. Outbound traffic is not limited."
+    },
+    "services": [
+      {
+        "domains": [
+          "{{ .Domain }}"
+        ],
+        "name": "sillytavern",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "http",
+            "port": 8000
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "1000m",
+            "memory": "1Gi"
+          },
+          "requests": {
+            "cpu": "100m",
+            "memory": "256Mi"
+          }
+        }
+      }
+    ],
+    "smoke": [
+      {
+        "condition": "condition=Available",
+        "http": {
+          "path": "/",
+          "port": 8000,
+          "service": "sillytavern",
+          "status": 401
+        },
+        "name": "sillytavern-ready",
+        "resource": "deployment/sillytavern",
+        "timeout": "300s"
+      }
+    ]
+  },
+  "manifests": "apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: sillytavern-data\n  namespace: {{ .Namespace }}\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests: {storage: 10Gi}\n---\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: sillytavern\n  namespace: {{ .Namespace }}\ndata:\n  config.yaml: |\n    dataRoot: ./data\n    listen: true\n    port: 8000\n    whitelistMode: false\n    enableForwardedWhitelist: false\n    basicAuthMode: true\n    basicAuthUser:\n      username: user\n    enableUserAccounts: false\n    enableCorsProxy: false\n    disableCsrfProtection: false\n    securityOverride: false\n    allowKeysExposure: false\n    enableServerPlugins: false\n    browserLaunch:\n      enabled: false\n    privateAddressWhitelist:\n      enabled: true\n      allowUnresolvedHosts: false\n      allowedRanges: []\n    hostWhitelist:\n      enabled: true\n      hosts: ['{{ .Domain }}']\n    extensions:\n      enabled: true\n      autoUpdate: false\n      models:\n        autoDownload: false\n    logging:\n      enableAccessLog: false\n---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: sillytavern\n  namespace: {{ .Namespace }}\nspec:\n  replicas: 1\n  revisionHistoryLimit: 3\n  strategy: {type: Recreate}\n  selector:\n    matchLabels: {app.kubernetes.io/name: sillytavern}\n  template:\n    metadata:\n      labels: {app.kubernetes.io/name: sillytavern, templates.zeabur.com/template: sillytavern}\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile: {type: RuntimeDefault}\n      initContainers:\n        - name: initialize-storage\n          image: ghcr.io/sillytavern/sillytavern:1.19.0@sha256:eef27ff0c7961f1a2f488400f581f48ff38f8b910c5d3b8d389138d71791bb14\n          command: [/bin/sh, -ec]\n          args:\n            - mkdir -p /state/data /state/plugins /state/extensions /state/backups; cp /defaults/config.yaml /config/config.yaml\n          securityContext:\n            runAsNonRoot: true\n            allowPrivilegeEscalation: false\n            readOnlyRootFilesystem: true\n            capabilities: {drop: [ALL]}\n          resources:\n            requests: {cpu: 100m, memory: 256Mi}\n            limits: {cpu: 1000m, memory: 1Gi}\n          volumeMounts:\n            - {name: state, mountPath: /state}\n            - {name: defaults, mountPath: /defaults, readOnly: true}\n            - {name: config, mountPath: /config}\n      containers:\n        - name: sillytavern\n          image: ghcr.io/sillytavern/sillytavern:1.19.0@sha256:eef27ff0c7961f1a2f488400f581f48ff38f8b910c5d3b8d389138d71791bb14\n          env:\n            - name: SILLYTAVERN_BASICAUTHUSER_PASSWORD\n              valueFrom:\n                secretKeyRef: {name: app-secrets, key: basic-password}\n            - {name: NPM_CONFIG_CACHE, value: /tmp/npm}\n          ports: [{name: http, containerPort: 8000}]\n          securityContext:\n            runAsNonRoot: true\n            allowPrivilegeEscalation: false\n            readOnlyRootFilesystem: true\n            capabilities: {drop: [ALL]}\n          resources:\n            requests: {cpu: 100m, memory: 256Mi}\n            limits: {cpu: 1000m, memory: 1Gi}\n          startupProbe:\n            tcpSocket: {port: http}\n            periodSeconds: 5\n            failureThreshold: 60\n          readinessProbe:\n            tcpSocket: {port: http}\n            periodSeconds: 10\n          livenessProbe:\n            tcpSocket: {port: http}\n            periodSeconds: 20\n            failureThreshold: 6\n          volumeMounts:\n            - {name: state, mountPath: /home/node/app/data, subPath: data}\n            - {name: state, mountPath: /home/node/app/plugins, subPath: plugins}\n            - {name: state, mountPath: /home/node/app/public/scripts/extensions/third-party, subPath: extensions}\n            - {name: state, mountPath: /home/node/app/backups, subPath: backups}\n            - {name: config, mountPath: /home/node/app/config}\n            - {name: tmp, mountPath: /tmp}\n      volumes:\n        - name: state\n          persistentVolumeClaim: {claimName: sillytavern-data}\n        - name: defaults\n          configMap: {name: sillytavern}\n        - name: config\n          emptyDir: {sizeLimit: 16Mi}\n        - name: tmp\n          emptyDir: {sizeLimit: 256Mi}\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: sillytavern\n  namespace: {{ .Namespace }}\nspec:\n  selector: {app.kubernetes.io/name: sillytavern}\n  ports: [{name: http, port: 8000, targetPort: http}]\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: sillytavern\n  namespace: {{ .Namespace }}\n  annotations:\n    cert-manager.io/cluster-issuer: {{ .ClusterIssuer }}\nspec:\n  ingressClassName: traefik\n  tls:\n    - hosts: [{{ .Domain }}]\n      secretName: sillytavern-tls\n  rules:\n    - host: {{ .Domain }}\n      http:\n        paths:\n          - path: /\n            pathType: Prefix\n            backend:\n              service:\n                name: sillytavern\n                port: {name: http}\n"
+}

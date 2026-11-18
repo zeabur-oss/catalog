@@ -1,0 +1,214 @@
+{
+  "id": "umami",
+  "sourceDigest": "h1:af54U8FWasEmkiUuSYiWrWs8Q00fieG0W2VXWVHHx50=",
+  "template": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "inputs": [
+      {
+        "description": "Password of the admin user. It replaces the default password once, at the first start. Change it in Umami after you sign in.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "adminPassword",
+        "secret": {
+          "key": "admin-password",
+          "name": "umami-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Signs sign-in tokens and share links. Rotating it signs everyone out.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "appSecret",
+        "secret": {
+          "key": "app-secret",
+          "name": "umami-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      }
+    ],
+    "kind": "Template",
+    "metadata": {
+      "homepage": "https://umami.is/",
+      "license": "MIT AND PostgreSQL AND Apache-2.0",
+      "locales": {
+        "zh-CN": {
+          "summary": "网站流量分析，搭配 PostgreSQL。"
+        },
+        "zh-TW": {
+          "summary": "網站流量分析，搭配 PostgreSQL。"
+        }
+      },
+      "name": "Umami",
+      "summary": "Website analytics, with PostgreSQL.",
+      "version": "3.4.1"
+    },
+    "requires": [
+      {
+        "component": "traefik"
+      },
+      {
+        "component": "cert-manager"
+      },
+      {
+        "component": "cloudnative-pg"
+      }
+    ],
+    "security": {
+      "locales": {
+        "zh-CN": {
+          "summary": "Umami 以普通用户（UID 1001）运行，根文件系统只读，没有服务账号令牌，也没有额外的 Linux 权限。向外的网络流量没有限制，不过 Umami 本身不会对外发出请求。"
+        },
+        "zh-TW": {
+          "summary": "Umami 以一般使用者（UID 1001）執行，根檔案系統唯讀，沒有服務帳號權杖，也沒有額外的 Linux 權限。往外的網路流量沒有限制，不過 Umami 本身不會對外發出請求。"
+        }
+      },
+      "risks": [
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "Umami 启动之前，初始化容器会把这个密码换成自动生成的密码。它只会换掉默认密码，所以你在 Umami 里自己设的密码不会被改掉。",
+              "risk": "Umami 会用公开的密码 umami 创建管理员账号。"
+            },
+            "zh-TW": {
+              "mitigation": "Umami 啟動之前，初始化容器會把這個密碼換成自動產生的密碼。它只會換掉預設密碼，所以你在 Umami 裡自己設的密碼不會被改掉。",
+              "risk": "Umami 會用公開的密碼 umami 建立管理員帳號。"
+            }
+          },
+          "mitigation": "An init container replaces that password with a generated one before Umami starts. It replaces only the default password, so a password you set in Umami stays.",
+          "risk": "Umami creates the admin account with the published password umami."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "Umami 只会保存 Umami 里已经存在的网站 ID 的事件。",
+              "risk": "跟踪端点会接受任何网站发来的事件。"
+            },
+            "zh-TW": {
+              "mitigation": "Umami 只會儲存 Umami 裡已經存在的網站 ID 的事件。",
+              "risk": "追蹤端點會接受任何網站送來的事件。"
+            }
+          },
+          "mitigation": "Umami stores events only for website IDs that exist in Umami.",
+          "risk": "The tracking endpoint accepts events from any website."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "cloudnative-pg 组件会为每个集群创建对应的权限（RBAC）。Umami 的 Pod 本身没有令牌。",
+              "risk": "数据库 Pod（CloudNativePG）会用运算符创建的身份去调用 Kubernetes API。"
+            },
+            "zh-TW": {
+              "mitigation": "cloudnative-pg 元件會替每個叢集建立對應的權限（RBAC）。Umami 的 Pod 本身沒有權杖。",
+              "risk": "資料庫 Pod（CloudNativePG）會用運算子建立的身分去呼叫 Kubernetes API。"
+            }
+          },
+          "mitigation": "The cloudnative-pg component creates the permissions (RBAC) for each cluster. The Umami pod itself has no token.",
+          "risk": "The database pods (CloudNativePG) call the Kubernetes API with an identity that the operator creates."
+        }
+      ],
+      "summary": "Umami runs as an unprivileged user (UID 1001) with a read-only root filesystem, no service-account token and no extra Linux capabilities. Outbound traffic is not limited, but Umami makes no outbound requests."
+    },
+    "services": [
+      {
+        "domains": [
+          "{{ .Domain }}"
+        ],
+        "name": "umami",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "http",
+            "port": 3000
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "1",
+            "memory": "1Gi"
+          },
+          "requests": {
+            "cpu": "100m",
+            "memory": "256Mi"
+          }
+        }
+      },
+      {
+        "name": "umami-db",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "postgresql",
+            "port": 5432
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "1",
+            "memory": "1Gi"
+          },
+          "requests": {
+            "cpu": "100m",
+            "memory": "256Mi"
+          }
+        }
+      }
+    ],
+    "smoke": [
+      {
+        "condition": "condition=Ready",
+        "name": "postgresql-ready",
+        "resource": "cluster/umami-db",
+        "timeout": "900s"
+      },
+      {
+        "condition": "condition=Available",
+        "http": {
+          "contains": "\"ok\":true",
+          "path": "/api/heartbeat",
+          "port": 3000,
+          "service": "umami",
+          "status": 200
+        },
+        "name": "umami-ready",
+        "resource": "deployment/umami",
+        "timeout": "600s"
+      },
+      {
+        "condition": "condition=Available",
+        "http": {
+          "path": "/api/websites",
+          "port": 3000,
+          "service": "umami",
+          "status": 401
+        },
+        "name": "authentication-required",
+        "resource": "deployment/umami",
+        "timeout": "120s"
+      },
+      {
+        "condition": "condition=Ready",
+        "name": "default-password-replaced",
+        "resource": "cluster/umami-db",
+        "sql": {
+          "cluster": "umami-db",
+          "database": "umami",
+          "expect": "1",
+          "query": "SELECT count(*) FROM \"user\" WHERE username = 'admin' AND password LIKE '$2a$%'"
+        },
+        "timeout": "120s"
+      }
+    ]
+  },
+  "manifests": "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: umami-setup\n  namespace: '{{ .Namespace }}'\ndata:\n  # The first migration creates admin with the published password \"umami\".\n  # Replace it once; a password changed in Umami no longer matches.\n  set-admin-password.mjs: |\n    import { PrismaPg } from '@prisma/adapter-pg';\n    import { PrismaClient } from './generated/prisma/client.js';\n\n    const prisma = new PrismaClient({\n      adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),\n    });\n    const changed = await prisma.$executeRaw`\n      UPDATE \"user\" SET password = crypt(${process.env.ADMIN_PASSWORD}, gen_salt('bf', 10))\n      WHERE username = 'admin'\n        AND password = '$2b$10$BUli0c.muyCW1ErNJc3jL.vFRFtFJWrT8/GcR4A.sUdCznaXiqFXa'`;\n    console.log(`default admin password replaced: ${changed}`);\n    await prisma.$disconnect();\n---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: umami\n  namespace: '{{ .Namespace }}'\nspec:\n  replicas: 1\n  strategy:\n    type: Recreate\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: umami\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: umami\n        app.kubernetes.io/name: umami\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1001\n        runAsGroup: 65533\n        seccompProfile:\n          type: RuntimeDefault\n      initContainers:\n      - name: setup\n        image: ghcr.io/umami-software/umami:3.4.1@sha256:e69d1a7932e9dab0fc523edc7be1f3a53f3c261f57856fc2167ae74a8fc022e8\n        command:\n        - /bin/sh\n        - -ec\n        - |\n          export PATH=\"$PWD/node_modules/.bin:$PATH\"\n          node scripts/check-db.js\n          node --input-type=module \u003c /setup/set-admin-password.mjs\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop: [ALL]\n        resources:\n          requests:\n            cpu: 100m\n            memory: 256Mi\n          limits:\n            cpu: '1'\n            memory: 1Gi\n        env: \u0026env\n        - name: DATABASE_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: umami-db-app\n              key: password\n        - name: DATABASE_URL\n          value: postgresql://umami:$(DATABASE_PASSWORD)@umami-db-rw:5432/umami?sslmode=verify-full\u0026sslrootcert=/db-ca/ca.crt\n        # prisma migrate uses the schema engine, which takes sslcert for the CA.\n        - name: DIRECT_DATABASE_URL\n          value: postgresql://umami:$(DATABASE_PASSWORD)@umami-db-rw:5432/umami?sslmode=require\u0026sslcert=/db-ca/ca.crt\u0026sslaccept=strict\n        - name: ADMIN_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: umami-secrets\n              key: admin-password\n        - name: APP_SECRET\n          valueFrom:\n            secretKeyRef:\n              name: umami-secrets\n              key: app-secret\n        - name: DISABLE_TELEMETRY\n          value: '1'\n        - name: CHECKPOINT_DISABLE\n          value: '1'\n        - name: HOME\n          value: /tmp\n        volumeMounts:\n        - name: setup\n          mountPath: /setup\n          readOnly: true\n        - name: db-ca\n          mountPath: /db-ca\n          readOnly: true\n        - name: tmp\n          mountPath: /tmp\n      containers:\n      - name: umami\n        image: ghcr.io/umami-software/umami:3.4.1@sha256:e69d1a7932e9dab0fc523edc7be1f3a53f3c261f57856fc2167ae74a8fc022e8\n        command: [node, server.js]\n        ports:\n        - name: http\n          containerPort: 3000\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop: [ALL]\n        resources:\n          requests:\n            cpu: 100m\n            memory: 256Mi\n          limits:\n            cpu: '1'\n            memory: 1Gi\n        env: *env\n        volumeMounts:\n        - name: db-ca\n          mountPath: /db-ca\n          readOnly: true\n        - name: tmp\n          mountPath: /tmp\n        - name: next-cache\n          mountPath: /app/.next/cache\n        startupProbe:\n          httpGet:\n            path: /api/heartbeat\n            port: http\n          periodSeconds: 5\n          failureThreshold: 60\n        readinessProbe:\n          httpGet:\n            path: /api/heartbeat\n            port: http\n          periodSeconds: 10\n        livenessProbe:\n          httpGet:\n            path: /api/heartbeat\n            port: http\n          periodSeconds: 20\n          failureThreshold: 6\n      volumes:\n      - name: setup\n        configMap:\n          name: umami-setup\n      - name: db-ca\n        secret:\n          secretName: umami-db-ca\n          items:\n          - {key: ca.crt, path: ca.crt}\n      - name: tmp\n        emptyDir:\n          sizeLimit: 256Mi\n      - name: next-cache\n        emptyDir:\n          sizeLimit: 512Mi\n      terminationGracePeriodSeconds: 30\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: umami\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: umami\n  ports:\n  - name: http\n    port: 3000\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: umami\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts: ['{{ .Domain }}']\n    secretName: umami-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: umami\n            port:\n              number: 3000\n---\napiVersion: postgresql.cnpg.io/v1\nkind: Cluster\nmetadata:\n  name: umami-db\n  namespace: '{{ .Namespace }}'\nspec:\n  inheritedMetadata:\n    labels:\n      templates.zeabur.com/template: umami\n  instances: 1\n  imageName: ghcr.io/cloudnative-pg/postgresql:18-minimal-trixie@sha256:0675340b02be838319b9b6f323c206693e519dcd62ec729d539be9f46bb7a2f9\n  enableSuperuserAccess: false\n  enablePDB: true\n  postgresUID: 26\n  postgresGID: 26\n  seccompProfile:\n    type: RuntimeDefault\n  bootstrap:\n    initdb:\n      database: umami\n      owner: umami\n      postInitApplicationSQL:\n      - CREATE EXTENSION IF NOT EXISTS pgcrypto\n      encoding: UTF8\n  storage:\n    size: 10Gi\n  resources:\n    requests:\n      cpu: 100m\n      memory: 256Mi\n    limits:\n      cpu: '1'\n      memory: 1Gi\n  postgresql:\n    parameters:\n      shared_buffers: 128MB\n      max_connections: '100'\n"
+}

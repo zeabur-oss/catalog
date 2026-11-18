@@ -1,0 +1,143 @@
+{
+  "id": "lobechat",
+  "sourceDigest": "h1:FINp6qJvqzij5SlUidPC/TTnrVQFvG7sxg3BT/TJfag=",
+  "template": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "inputs": [
+      {
+        "description": "Generated access-code; retrieve from Secret lobechat-secrets, never from a public URL.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "accessCode",
+        "secret": {
+          "key": "access-code",
+          "name": "lobechat-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Pre-existing Secret with key api-key for the OpenAI provider.",
+        "label": "OpenAI API key secret",
+        "locales": {
+          "zh-CN": {
+            "description": "这个项目里现有的机密，键 api-key 放 OpenAI 的 API 密钥。",
+            "label": "OpenAI API 密钥的机密"
+          },
+          "zh-TW": {
+            "description": "這個專案裡現有的機密，鍵 api-key 放 OpenAI 的 API 金鑰。",
+            "label": "OpenAI API 金鑰的機密"
+          }
+        },
+        "name": "providerSecret",
+        "required": true,
+        "validation": {
+          "pattern": "^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$"
+        }
+      }
+    ],
+    "kind": "Template",
+    "metadata": {
+      "homepage": "https://github.com/lobehub/lobe-chat",
+      "license": "LicenseRef-LobeHub-Community",
+      "locales": {
+        "zh-CN": {
+          "summary": "聊天机器人界面，对话存在各自的浏览器里，用访问码保护。"
+        },
+        "zh-TW": {
+          "summary": "聊天機器人介面，對話存在各自的瀏覽器裡，用存取碼保護。"
+        }
+      },
+      "name": "LobeChat",
+      "summary": "A chatbot interface that keeps chats in each browser, behind an access code.",
+      "version": "1.143.3"
+    },
+    "requires": [
+      {
+        "component": "traefik"
+      },
+      {
+        "component": "cert-manager"
+      }
+    ],
+    "security": {
+      "locales": {
+        "zh-CN": {
+          "summary": "LobeChat 以非 root 身份运行，根文件系统只读，应用 restricted 级别的 Pod Security。它没有 Kubernetes 令牌，Ingress 使用 TLS。对外连接没有限制。"
+        },
+        "zh-TW": {
+          "summary": "LobeChat 以非 root 身分執行，根檔案系統唯讀，套用 restricted 等級的 Pod Security。它沒有 Kubernetes 權杖，Ingress 使用 TLS。對外連線沒有限制。"
+        }
+      },
+      "risks": [
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "模板说明里有写明许可证。模板运行的是未经修改的镜像，声明都完整保留。要分发衍生作品之前，请先取得商业授权许可。",
+              "risk": "LobeHub 社区许可限制你分发衍生作品的方式。"
+            },
+            "zh-TW": {
+              "mitigation": "範本說明裡有寫明授權。範本執行的是未經修改的映像檔，聲明都完整保留。要散布衍生作品之前，請先取得商業授權許可。",
+              "risk": "LobeHub 社群授權限制你散布衍生作品的方式。"
+            }
+          },
+          "mitigation": "The template description names the license. The template runs the unmodified image with its notices intact. Get commercial permission before you distribute a derivative.",
+          "risk": "The LobeHub Community License limits how you may distribute derivative works."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "只把部署分享给彼此信任的用户。访问码是高强度随机生成的，上游的登录保护已开启，Ingress 只允许 TLS 连接。",
+              "risk": "知道共用访问码的人，都会共用同一个实例和同一把模型密钥，费用由服务器这边承担。"
+            },
+            "zh-TW": {
+              "mitigation": "只把部署分享給彼此信任的使用者。存取碼是高強度隨機產生的，上游的登入保護已開啟，Ingress 只允許 TLS 連線。",
+              "risk": "知道共用存取碼的人，都會共用同一個實例和同一把模型金鑰，費用由伺服器這邊負擔。"
+            }
+          },
+          "mitigation": "Share a deployment only with users who trust each other. The code is generated with high entropy, the upstream sign-in protection is on, and ingress allows TLS only.",
+          "risk": "Everyone who knows the shared access code uses the same instance and the same model key, and the server pays for it."
+        }
+      ],
+      "summary": "LobeChat runs as non-root with a read-only root filesystem and the restricted Pod Security level. It has no Kubernetes token, and ingress uses TLS. Outbound traffic is not limited."
+    },
+    "services": [
+      {
+        "domains": [
+          "{{ .Domain }}"
+        ],
+        "name": "lobechat",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "http",
+            "port": 3210
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "2",
+            "memory": "2Gi"
+          },
+          "requests": {
+            "cpu": "100m",
+            "memory": "256Mi"
+          }
+        }
+      }
+    ],
+    "smoke": [
+      {
+        "condition": "condition=Available",
+        "name": "Application available",
+        "resource": "deployment/lobechat",
+        "timeout": "10m"
+      }
+    ]
+  },
+  "manifests": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: lobechat\n  namespace: '{{ .Namespace }}'\n  labels:\n    app.kubernetes.io/name: lobechat\nspec:\n  replicas: 1\n  strategy:\n    type: Recreate\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: lobechat\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: lobechat\n        app.kubernetes.io/name: lobechat\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1001\n        runAsGroup: 1001\n        fsGroup: 1001\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: lobechat\n        image: docker.io/lobehub/lobe-chat:1.143.3@sha256:b2d2454525523d9f0a19c79661f83ec45f13363dbadd5c1180887e77af35d872\n        ports:\n        - name: http\n          containerPort: 3210\n        env:\n        - name: ACCESS_CODE\n          valueFrom:\n            secretKeyRef:\n              name: lobechat-secrets\n              key: access-code\n        - name: OPENAI_API_KEY\n          valueFrom:\n            secretKeyRef:\n              name: '{{ .Inputs.providerSecret }}'\n              key: api-key\n        - name: ENABLE_AUTH_PROTECTION\n          value: '1'\n        - name: APP_URL\n          value: https://{{ .Domain }}\n        - name: HOSTNAME\n          value: 0.0.0.0\n        - name: PORT\n          value: '3210'\n        - name: SSRF_ALLOW_PRIVATE_IP_ADDRESS\n          value: '0'\n        securityContext:\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n        resources:\n          requests:\n            cpu: 100m\n            memory: 256Mi\n          limits:\n            cpu: '2'\n            memory: 2Gi\n        volumeMounts:\n        - name: tmp\n          mountPath: /tmp\n        - name: cache\n          mountPath: /app/.next/cache\n        readinessProbe:\n          tcpSocket:\n            port: http\n          periodSeconds: 10\n          timeoutSeconds: 3\n          failureThreshold: 6\n        livenessProbe:\n          tcpSocket:\n            port: http\n          periodSeconds: 10\n          timeoutSeconds: 3\n          failureThreshold: 6\n        startupProbe:\n          tcpSocket:\n            port: http\n          periodSeconds: 10\n          timeoutSeconds: 3\n          failureThreshold: 30\n      volumes:\n      - name: tmp\n        emptyDir:\n          sizeLimit: 1Gi\n      - name: cache\n        emptyDir:\n          sizeLimit: 512Mi\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: lobechat\n  namespace: '{{ .Namespace }}'\n  labels:\n    app.kubernetes.io/name: lobechat\nspec:\n  selector:\n    app.kubernetes.io/name: lobechat\n  ports:\n  - name: http\n    port: 3210\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: lobechat\n  namespace: '{{ .Namespace }}'\n  labels:\n    app.kubernetes.io/name: lobechat\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\n    traefik.ingress.kubernetes.io/router.entrypoints: websecure\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts:\n    - '{{ .Domain }}'\n    secretName: lobechat-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: lobechat\n            port:\n              name: http\n"
+}

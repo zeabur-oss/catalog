@@ -1,0 +1,120 @@
+{
+  "id": "postgresql-pgvector",
+  "sourceDigest": "h1:vS4WSJf/6SPbGwa0g+gCm+mdsufnap22jFxd9ADBiSQ=",
+  "template": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "kind": "Template",
+    "metadata": {
+      "homepage": "https://github.com/pgvector/pgvector",
+      "license": "PostgreSQL AND Apache-2.0",
+      "locales": {
+        "zh-CN": {
+          "summary": "已启用 pgvector 的 PostgreSQL 18 数据库。"
+        },
+        "zh-TW": {
+          "summary": "已啟用 pgvector 的 PostgreSQL 18 資料庫。"
+        }
+      },
+      "name": "PostgreSQL with pgvector",
+      "summary": "A PostgreSQL 18 database with pgvector.",
+      "version": "18-standard-trixie"
+    },
+    "requires": [
+      {
+        "component": "cloudnative-pg"
+      }
+    ],
+    "security": {
+      "locales": {
+        "zh-CN": {
+          "summary": "CloudNativePG 运算符（CNPG）让数据库 Pod 不用 root 权限运行，并为每个集群设好权限。数据库没有对外的端口，也不能用超级用户登录。SQL 扩展只在数据库第一次创建时安装。"
+        },
+        "zh-TW": {
+          "summary": "CloudNativePG 運算子（CNPG）讓資料庫 Pod 不用 root 權限執行，並替每個叢集設好權限。資料庫沒有對外的連接埠，也不能用超級使用者登入。SQL 擴充套件只在資料庫第一次建立時安裝。"
+        }
+      },
+      "risks": [
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "检查目录里的运算符创建了哪些权限，以及它生成的 Pod。数据库 Pod 的令牌自动挂载要保持开启，因为运算符需要它。",
+              "risk": "数据库 Pod 需要一个 Kubernetes API 令牌，由运算符负责管理。这个模板本身不会创建任何 Role 或绑定。"
+            },
+            "zh-TW": {
+              "mitigation": "檢查目錄裡的運算子建立了哪些權限，以及它產生的 Pod。資料庫 Pod 的權杖自動掛載要保持開啟，因為運算子需要它。",
+              "risk": "資料庫 Pod 需要一個 Kubernetes API 權杖，由運算子負責管理。這個範本本身不會建立任何 Role 或綁定。"
+            }
+          },
+          "mitigation": "Check the permissions the catalog operator creates and the pods it generates. Leave token automount on for the database pods, because the operator needs it.",
+          "risk": "The database pods need a Kubernetes API token, which the operator manages. The template itself creates no Role or binding."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "检查运算符的版本、数据库镜像的 digest 和备份。正式上线前和升级前，都要用 pgvector 实际测试恢复。",
+              "risk": "Local-path 存储没有快照，也不能跨节点保持可用。扩展和插件的镜像是额外要信任的软件。"
+            },
+            "zh-TW": {
+              "mitigation": "檢查運算子的版本、資料庫映像檔的 digest 和備份。正式上線前和升級前，都要用 pgvector 實際測試還原。",
+              "risk": "Local-path 儲存沒有快照，也不能跨節點維持可用。擴充套件和外掛的映像檔是額外要信任的軟體。"
+            }
+          },
+          "mitigation": "Check the operator release, the database image digest and your backups. Test a restore with pgvector before you go to production and before upgrades.",
+          "risk": "Local-path storage has no snapshots and no availability across nodes. The extension and plugin images are extra software you have to trust."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "正式上线前，用有代表性的向量数据实际演练一次恢复。",
+              "risk": "备份顺利完成，向量和索引也不一定能正确恢复。"
+            },
+            "zh-TW": {
+              "mitigation": "正式上線前，用有代表性的向量資料實際演練一次還原。",
+              "risk": "備份順利完成，向量和索引也不一定能正確還原。"
+            }
+          },
+          "mitigation": "Run a restore drill with representative vectors before production.",
+          "risk": "A backup that finished without errors does not prove that your vectors and indexes restore correctly."
+        }
+      ],
+      "summary": "The CloudNativePG operator (CNPG) runs the database pods without root rights and sets up permissions for each cluster. There is no public database port and no superuser login. SQL extensions are created only when the database is first set up."
+    },
+    "services": [
+      {
+        "name": "postgresql",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "postgresql",
+            "port": 5432
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "1",
+            "memory": "1Gi"
+          },
+          "requests": {
+            "cpu": "100m",
+            "memory": "256Mi"
+          }
+        }
+      }
+    ],
+    "smoke": [
+      {
+        "condition": "condition=Ready",
+        "name": "cluster-ready",
+        "resource": "cluster/postgresql",
+        "sql": {
+          "cluster": "postgresql",
+          "database": "zeabur",
+          "expect": "1",
+          "query": "SELECT '[1,2,3]'::vector \u003c-\u003e '[1,2,4]'::vector"
+        },
+        "timeout": "600s"
+      }
+    ]
+  },
+  "manifests": "apiVersion: postgresql.cnpg.io/v1\nkind: Cluster\nmetadata:\n  name: postgresql\n  namespace: {{ .Namespace }}\nspec:\n  inheritedMetadata:\n    labels:\n      templates.zeabur.com/template: postgresql-pgvector\n  instances: 1\n  imageName: ghcr.io/cloudnative-pg/postgresql:18-standard-trixie@sha256:d72ace96f5803b12c341bb5dac48532e8c1f92f69e8a717a59d779bfc038dea9\n  enableSuperuserAccess: false\n  enablePDB: true\n  postgresUID: 26\n  postgresGID: 26\n  seccompProfile: {type: RuntimeDefault}\n  bootstrap:\n    initdb:\n      database: zeabur\n      owner: app\n      encoding: UTF8\n      postInitApplicationSQL:\n        - CREATE EXTENSION IF NOT EXISTS vector;\n  storage:\n    size: 10Gi\n  resources:\n    requests: {cpu: 100m, memory: 256Mi}\n    limits: {cpu: '1', memory: 1Gi}\n  postgresql:\n    parameters:\n      shared_buffers: 128MB\n      max_connections: '100'\n"
+}

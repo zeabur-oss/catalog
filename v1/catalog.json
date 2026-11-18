@@ -1,7 +1,7 @@
 {
   "catalog": {
-    "version": "0.5.1",
-    "commit": "0501b273f39282c8780c1055a3db54f294e3fab1"
+    "version": "0.5.3",
+    "commit": "9c489e070dbc917fb0e224929f93ba342cfa27e1"
   },
   "profiles": [
     "single-node",
@@ -139,6 +139,140 @@
     {
       "id": "zeabur-builder",
       "sourceDigest": "h1:iy1SaUB0Cotb0AHVn9NVF5a7yInAA3VctgEYRpNtXU0="
+    }
+  ],
+  "templates": [
+    {
+      "id": "browserless",
+      "sourceDigest": "h1:zQMAApDw/2VLL+JXNmfVqbO9rqEzSAwmna5s2OABrmw="
+    },
+    {
+      "id": "cliproxyapi",
+      "sourceDigest": "h1:vMlq9x6B9zDsqnhDsujjujm8edQjOC34l2YosblrJq4="
+    },
+    {
+      "id": "dify",
+      "sourceDigest": "h1:riTAR9aVyJh7fTkuiACCxBmBTRE8R3tLxYnfoP8655w="
+    },
+    {
+      "id": "error-pages",
+      "sourceDigest": "h1:HwFBcyt6Elx5r5PWvPIyLr0IjTcqNQIN4a8LLwnU03o="
+    },
+    {
+      "id": "ghost",
+      "sourceDigest": "h1:5ge9dj+2MplYinmLF0LNViIXD1kljQUHoyfhy+sTYGw="
+    },
+    {
+      "id": "gitea",
+      "sourceDigest": "h1:ppceRqgquyR17BH4DE2b2vfgVnqDS3Gd6vZoIuoU81g="
+    },
+    {
+      "id": "halo",
+      "sourceDigest": "h1:+TFzWFjN56MrY9/uwNmuYuXBbYNw2N5B/Hdh4AemUM8="
+    },
+    {
+      "id": "hermes-agent",
+      "sourceDigest": "h1:OfEER9hGcps//6avwav/+7HaX7+wbeJxZPmFyrng1Js="
+    },
+    {
+      "id": "librechat",
+      "sourceDigest": "h1:BxPKyrTwNW3m5XnvZUqmKT5SoLXg+9+ZmGQaO1hQjew="
+    },
+    {
+      "id": "litellm",
+      "sourceDigest": "h1:na8IJpVmi3wzd/mfWGh9sLozjljx6QTbp+3nm7TG64w="
+    },
+    {
+      "id": "lobechat",
+      "sourceDigest": "h1:FINp6qJvqzij5SlUidPC/TTnrVQFvG7sxg3BT/TJfag="
+    },
+    {
+      "id": "meilisearch",
+      "sourceDigest": "h1:jcfNKTBoS7QYSG37wLH62UkzJV6Kr4R1rYHPxfY8Ar4="
+    },
+    {
+      "id": "memos",
+      "sourceDigest": "h1:MXKE83llG/8VmruWQa3uKOZqvpeUlQGWa1CPqa56vHY="
+    },
+    {
+      "id": "miniflux",
+      "sourceDigest": "h1:q3v6Nm7KFobn+blakE/PBfDyhV7zdcDOH6f3yLjL27Q="
+    },
+    {
+      "id": "n8n",
+      "sourceDigest": "h1:rb+d142CX/kKh6+Y6f7toE48l8RG+D/yGR1xsH1Z0Eo="
+    },
+    {
+      "id": "n8n-ai-brain",
+      "sourceDigest": "h1:t5CcoUiDQ5VSfYNTOGoQekdAbE0B99He7NSvbFO3FvU="
+    },
+    {
+      "id": "n8n-sqlite",
+      "sourceDigest": "h1:671G2eqriYmjID70LYU6JEjJ3R8KgIDVTlqcs+ipjug="
+    },
+    {
+      "id": "new-api",
+      "sourceDigest": "h1:gCNp7dz/hQHKJZfY8WJP/V1WlTwjke3mHSHU+awbC8A="
+    },
+    {
+      "id": "nginx",
+      "sourceDigest": "h1:hBka5vJqt4I3fzrpURbfeENlDoJaHDIPF/X4CYp4vuo="
+    },
+    {
+      "id": "ntfy",
+      "sourceDigest": "h1:UlBTExBoffgyPtESG07SlzePnA9T/Ll2UzLKNq8uj6E="
+    },
+    {
+      "id": "ollama",
+      "sourceDigest": "h1:Hem9jYN+NXQCeOCYGOINFRcowurogbpyYLkDVwMv1b4="
+    },
+    {
+      "id": "open-webui",
+      "sourceDigest": "h1:qEcH4M7Wic8FapF2sfKymipckGZ7iol3ND3uGMZw6P4="
+    },
+    {
+      "id": "openclaw",
+      "sourceDigest": "h1:FewoXYJlO0kaEIR1ZZpC1pBZjAqibDwtohFo5F/ec2w="
+    },
+    {
+      "id": "openclaw-browser-sandbox",
+      "sourceDigest": "h1:dDcFgFeuPhE4hjR4nkZQfylKCCPV229YeKX10m9lIns="
+    },
+    {
+      "id": "openlist",
+      "sourceDigest": "h1:MCDfwHjf5onDLHkCG2x64/H2zYQqNRZ344nxMYgkm7c="
+    },
+    {
+      "id": "postgresql-pgvector",
+      "sourceDigest": "h1:vS4WSJf/6SPbGwa0g+gCm+mdsufnap22jFxd9ADBiSQ="
+    },
+    {
+      "id": "qdrant",
+      "sourceDigest": "h1:sMICSSKVeLH1FQZzIiT7M/wTlTasdJ/MmDEJnj1tPmo="
+    },
+    {
+      "id": "searxng",
+      "sourceDigest": "h1:D7W8I2Ijiw8FF7PyidsMUpJuP/mHRDbJ2oNPx0EByIo="
+    },
+    {
+      "id": "sillytavern",
+      "sourceDigest": "h1:EUdS+TvH7ULnuqVriwI13+i6OjXqtKT1EWxraQoyRsQ="
+    },
+    {
+      "id": "umami",
+      "sourceDigest": "h1:af54U8FWasEmkiUuSYiWrWs8Q00fieG0W2VXWVHHx50="
+    },
+    {
+      "id": "uptime-kuma",
+      "sourceDigest": "h1:JaiYSU6OVWfqAC902A7/mLUWaC/wfqKbcBgTqyvNpso="
+    },
+    {
+      "id": "vaultwarden",
+      "sourceDigest": "h1:ey1+aG8LRNcO96EQxRJ6SnFPk9kGGnWx2KhrDcQF/dw="
+    },
+    {
+      "id": "wordpress",
+      "sourceDigest": "h1:zySgBQQAn1xxEhh+1s0COEx85yarCBQnfdqWCZaac+8="
     }
   ]
 }

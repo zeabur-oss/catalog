@@ -1,0 +1,144 @@
+{
+  "id": "searxng",
+  "sourceDigest": "h1:D7W8I2Ijiw8FF7PyidsMUpJuP/mHRDbJ2oNPx0EByIo=",
+  "template": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "inputs": [
+      {
+        "description": "Persistent server signing key; generated at installation.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "signingKey",
+        "secret": {
+          "key": "signing-key",
+          "name": "app-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      }
+    ],
+    "kind": "Template",
+    "metadata": {
+      "homepage": "https://github.com/searxng/searxng",
+      "license": "AGPL-3.0-or-later",
+      "locales": {
+        "zh-CN": {
+          "summary": "注重隐私的元搜索引擎。"
+        },
+        "zh-TW": {
+          "summary": "注重隱私的整合搜尋引擎。"
+        }
+      },
+      "name": "SearXNG",
+      "summary": "A private metasearch engine.",
+      "version": "2026.10.24-ef0ec03da"
+    },
+    "requires": [
+      {
+        "component": "traefik"
+      },
+      {
+        "component": "cert-manager"
+      }
+    ],
+    "security": {
+      "locales": {
+        "zh-CN": {
+          "summary": "SearXNG 不用 root 权限运行，根文件系统只读，没有服务账号令牌，也没有额外的 Linux 权限。只有 Traefik 能通过 HTTPS 连到它。向外的网络流量没有限制。"
+        },
+        "zh-TW": {
+          "summary": "SearXNG 不用 root 權限執行，根檔案系統唯讀，沒有服務帳號權杖，也沒有額外的 Linux 權限。只有 Traefik 能透過 HTTPS 連到它。往外的網路流量沒有限制。"
+        }
+      },
+      "risks": [
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "公开实例模式是关闭的，基于 Valkey 的流量限制器也没有开。请只用于私人、查询量小的搜索。要对外公开之前，先在 ingress 加上登录验证和流量限制。",
+              "risk": "搜索如果对外公开，可能被人滥用，上游的搜索引擎也可能限速或封禁这台服务器。"
+            },
+            "zh-TW": {
+              "mitigation": "公開實例模式是關閉的，用 Valkey 的流量限制器也沒有開。請只用在私人、查詢量小的搜尋。要對外公開之前，先在 ingress 加上登入驗證和流量限制。",
+              "risk": "搜尋如果對外公開，可能被人濫用，上游的搜尋引擎也可能限速或封鎖這台伺服器。"
+            }
+          },
+          "mitigation": "Public instance mode is off, and the Valkey-backed rate limiter is not turned on. Use this instance for private, low-volume search. Before you publish it, add sign-in and rate limiting at the ingress.",
+          "risk": "If the search is open to the public, others can abuse it, and the upstream search engines may slow down or block this server."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "这个模板不限制向外的网络流量。请读过你开启的每个搜索引擎的隐私政策。",
+              "risk": "SearXNG 要连到公共网络上的许多搜索引擎，所以你的搜索关键词会离开这个集群。"
+            },
+            "zh-TW": {
+              "mitigation": "這個範本不限制往外的網路流量。請讀過你開啟的每個搜尋引擎的隱私權政策。",
+              "risk": "SearXNG 要連到公開網路上的許多搜尋引擎，所以你的搜尋關鍵字會離開這個叢集。"
+            }
+          },
+          "mitigation": "The template does not limit outbound traffic. Read the privacy policy of each search engine you turn on.",
+          "risk": "SearXNG must reach many search engines on the public Internet, so your search terms leave this cluster."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "如果你改过代码，或者提供给其他人使用，按许可要求公开对应的源代码。",
+              "risk": "SearXNG 采用 AGPL-3.0-or-later 许可。"
+            },
+            "zh-TW": {
+              "mitigation": "如果你改過程式碼，或是提供給其他人使用，依授權要求公開對應的原始碼。",
+              "risk": "SearXNG 採用 AGPL-3.0-or-later 授權。"
+            }
+          },
+          "mitigation": "If you change the code or offer it to other users, publish the matching source code as the license requires.",
+          "risk": "SearXNG uses the AGPL-3.0-or-later license."
+        }
+      ],
+      "summary": "SearXNG runs without root rights, with a read-only root filesystem, no service-account token and no extra Linux capabilities. Only Traefik can reach it, over HTTPS. Outbound traffic is not limited."
+    },
+    "services": [
+      {
+        "domains": [
+          "{{ .Domain }}"
+        ],
+        "name": "searxng",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "http",
+            "port": 8080
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "1000m",
+            "memory": "1Gi"
+          },
+          "requests": {
+            "cpu": "100m",
+            "memory": "256Mi"
+          }
+        }
+      }
+    ],
+    "smoke": [
+      {
+        "condition": "condition=Available",
+        "http": {
+          "path": "/healthz",
+          "port": 8080,
+          "service": "searxng",
+          "status": 200
+        },
+        "name": "searxng-ready",
+        "resource": "deployment/searxng",
+        "timeout": "300s"
+      }
+    ]
+  },
+  "manifests": "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: searxng\n  namespace: {{ .Namespace }}\ndata:\n  settings.yml: |\n    use_default_settings: true\n    general:\n      instance_name: SearXNG\n    server:\n      bind_address: 0.0.0.0\n      port: 8080\n      base_url: https://{{ .Domain }}/\n      limiter: false\n      public_instance: false\n      image_proxy: true\n    search:\n      formats: [html, json]\n---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: searxng\n  namespace: {{ .Namespace }}\nspec:\n  replicas: 1\n  revisionHistoryLimit: 3\n  strategy: {type: Recreate}\n  selector:\n    matchLabels: {app.kubernetes.io/name: searxng}\n  template:\n    metadata:\n      labels: {app.kubernetes.io/name: searxng, templates.zeabur.com/template: searxng}\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 977\n        runAsGroup: 977\n        fsGroup: 977\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile: {type: RuntimeDefault}\n      containers:\n        - name: searxng\n          image: searxng/searxng:2026.10.24-ef0ec03da@sha256:7c7cbe509429e82755104b2a95f52085a98633c95d53f44e4e905fa3a59f08c8\n          env:\n            - {name: SEARXNG_BASE_URL, value: 'https://{{ .Domain }}/'}\n            - name: SEARXNG_SECRET\n              valueFrom:\n                secretKeyRef: {name: app-secrets, key: signing-key}\n            - {name: FORCE_OWNERSHIP, value: 'false'}\n            - {name: GRANIAN_HOST, value: '0.0.0.0'}\n          ports: [{name: http, containerPort: 8080}]\n          securityContext:\n            runAsNonRoot: true\n            allowPrivilegeEscalation: false\n            readOnlyRootFilesystem: true\n            capabilities: {drop: [ALL]}\n          resources:\n            requests: {cpu: 100m, memory: 256Mi}\n            limits: {cpu: 1000m, memory: 1Gi}\n          startupProbe:\n            httpGet: {path: /healthz, port: http}\n            periodSeconds: 5\n            failureThreshold: 60\n          readinessProbe:\n            httpGet: {path: /healthz, port: http}\n            periodSeconds: 10\n          livenessProbe:\n            httpGet: {path: /healthz, port: http}\n            periodSeconds: 20\n            failureThreshold: 6\n          volumeMounts:\n            - {name: config, mountPath: /etc/searxng, readOnly: true}\n            - {name: cache, mountPath: /var/cache/searxng}\n            - {name: tmp, mountPath: /tmp}\n      volumes:\n        - name: config\n          configMap: {name: searxng}\n        - name: cache\n          emptyDir: {sizeLimit: 256Mi}\n        - name: tmp\n          emptyDir: {sizeLimit: 128Mi}\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: searxng\n  namespace: {{ .Namespace }}\nspec:\n  selector: {app.kubernetes.io/name: searxng}\n  ports: [{name: http, port: 8080, targetPort: http}]\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: searxng\n  namespace: {{ .Namespace }}\n  annotations:\n    cert-manager.io/cluster-issuer: {{ .ClusterIssuer }}\nspec:\n  ingressClassName: traefik\n  tls:\n    - hosts: [{{ .Domain }}]\n      secretName: searxng-tls\n  rules:\n    - host: {{ .Domain }}\n      http:\n        paths:\n          - path: /\n            pathType: Prefix\n            backend:\n              service:\n                name: searxng\n                port: {name: http}\n"
+}

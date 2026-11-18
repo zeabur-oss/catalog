@@ -1,0 +1,181 @@
+{
+  "id": "openclaw",
+  "sourceDigest": "h1:FewoXYJlO0kaEIR1ZZpC1pBZjAqibDwtohFo5F/ec2w=",
+  "template": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "inputs": [
+      {
+        "description": "Generated gateway-token; retrieve from Secret openclaw-secrets, never from a public URL.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "gatewayToken",
+        "secret": {
+          "key": "gateway-token",
+          "name": "openclaw-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Pre-existing Secret in this namespace containing the model provider API key in key api-key.",
+        "label": "Provider API key secret",
+        "locales": {
+          "zh-CN": {
+            "description": "这个项目里现有的机密，键 api-key 放模型服务的 API 密钥。",
+            "label": "模型服务 API 密钥的机密"
+          },
+          "zh-TW": {
+            "description": "這個專案裡現有的機密，鍵 api-key 放模型服務的 API 金鑰。",
+            "label": "模型服務 API 金鑰的機密"
+          }
+        },
+        "name": "providerSecret",
+        "required": true,
+        "validation": {
+          "pattern": "^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$"
+        }
+      },
+      {
+        "description": "OpenAI-compatible HTTPS API base URL; public network on TCP 443 only.",
+        "label": "API base URL",
+        "locales": {
+          "zh-CN": {
+            "description": "OpenAI 兼容的 HTTPS API 地址，只能是公网上的 TCP 443。",
+            "label": "API 地址"
+          },
+          "zh-TW": {
+            "description": "OpenAI 相容的 HTTPS API 網址，只能是公開網路上的 TCP 443。",
+            "label": "API 網址"
+          }
+        },
+        "name": "llmBaseUrl",
+        "required": true,
+        "validation": {
+          "pattern": "^https://[A-Za-z0-9.-]+(:443)?/[A-Za-z0-9._~/-]*$"
+        }
+      },
+      {
+        "description": "Model identifier for the configured compatible provider.",
+        "label": "Model",
+        "locales": {
+          "zh-CN": {
+            "description": "模型服务上的模型名称。",
+            "label": "模型"
+          },
+          "zh-TW": {
+            "description": "模型服務上的模型名稱。",
+            "label": "模型"
+          }
+        },
+        "name": "llmModel",
+        "required": true,
+        "validation": {
+          "pattern": "^[A-Za-z0-9._:/-]+$"
+        }
+      }
+    ],
+    "kind": "Template",
+    "metadata": {
+      "homepage": "https://github.com/openclaw/openclaw",
+      "license": "MIT",
+      "locales": {
+        "zh-CN": {
+          "summary": "个人 AI 助手，可以连接 WhatsApp、Telegram、Slack、Discord 等通讯软件。"
+        },
+        "zh-TW": {
+          "summary": "個人 AI 助理，可以串接 WhatsApp、Telegram、Slack、Discord 等通訊軟體。"
+        }
+      },
+      "name": "OpenClaw",
+      "summary": "A personal AI assistant that connects to WhatsApp, Telegram, Slack, Discord and more.",
+      "version": "2026.10.7"
+    },
+    "requires": [
+      {
+        "component": "traefik"
+      },
+      {
+        "component": "cert-manager"
+      }
+    ],
+    "security": {
+      "locales": {
+        "zh-CN": {
+          "summary": "OpenClaw 不用 root 权限运行，根文件系统只读，应用最严格的 Kubernetes Pod 安全设置，也没有 Kubernetes 令牌。对外连接一律走 HTTPS。向外的网络流量没有限制。"
+        },
+        "zh-TW": {
+          "summary": "OpenClaw 不用 root 權限執行，根檔案系統唯讀，套用最嚴格的 Kubernetes Pod 安全設定，也沒有 Kubernetes 權杖。對外連線一律走 HTTPS。往外的網路流量沒有限制。"
+        }
+      },
+      "risks": [
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "每个命名空间和网关只给一位可信任的所有者使用。Pod 没有挂载主机目录，没有服务账号令牌，也没有 Docker socket，资源也有上限。不要分享给你不信任的人。",
+              "risk": "AI 助理可以执行命令，也能读到它的 Pod 碰得到的所有东西，包括状态数据和模型的凭证。Pod 的安全设置挡不住提示注入，也就是有人用恶意消息骗助理去做事。"
+            },
+            "zh-TW": {
+              "mitigation": "每個命名空間和閘道只給一位可信任的擁有者使用。Pod 沒有掛載主機目錄，沒有服務帳號權杖，也沒有 Docker socket，資源也有上限。不要分享給你不信任的人。",
+              "risk": "AI 助理可以執行指令，也能讀到它的 Pod 碰得到的所有東西，包括狀態資料和模型的認證資訊。Pod 的安全設定擋不住提示注入，也就是有人用惡意訊息騙助理去做事。"
+            }
+          },
+          "mitigation": "Use one trusted owner per namespace and gateway. The pod has no host mounts, no service-account token and no Docker socket, and its resources are limited. Do not share it with users you do not trust.",
+          "risk": "The AI assistant can run commands and read everything its pod can reach, including its state and model credentials. Pod security settings do not stop prompt injection, where a hostile message tricks the assistant into acting."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "先停止写入，再把整个 PVC、网关机密和供应商机密做加密备份，存到集群外面。节点本地的 StorageClass 没有高可用，也不能做卷快照。",
+              "risk": "代理程序的状态和频道凭证都放在同一个 PVC（一个数据卷）里。"
+            },
+            "zh-TW": {
+              "mitigation": "先停止寫入，再把整個 PVC、閘道機密和供應商機密做加密備份，存到叢集外面。節點本機的 StorageClass 沒有高可用，也不能做磁碟區快照。",
+              "risk": "代理程式的狀態和頻道認證資訊都放在同一個 PVC（一個資料磁碟區）裡。"
+            }
+          },
+          "mitigation": "Stop writes, then make encrypted backups outside the cluster of the whole PVC, the gateway Secret and the provider Secret. A node-local StorageClass has no high availability and no volume snapshots.",
+          "risk": "The agent's state and channel credentials are stored together on one PVC (one data volume)."
+        }
+      ],
+      "summary": "OpenClaw runs without root rights, with a read-only root filesystem, the strictest Kubernetes pod security profile and no Kubernetes token. Traffic comes in over HTTPS. Outbound traffic is not limited."
+    },
+    "services": [
+      {
+        "domains": [
+          "{{ .Domain }}"
+        ],
+        "name": "openclaw",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "http",
+            "port": 18789
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "2",
+            "memory": "4Gi"
+          },
+          "requests": {
+            "cpu": "500m",
+            "memory": "1Gi"
+          }
+        }
+      }
+    ],
+    "smoke": [
+      {
+        "condition": "condition=Available",
+        "name": "Application available",
+        "resource": "deployment/openclaw",
+        "timeout": "10m"
+      }
+    ]
+  },
+  "manifests": "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: openclaw-bootstrap\n  namespace: '{{ .Namespace }}'\n  labels:\n    app.kubernetes.io/name: openclaw-bootstrap\ndata:\n  bootstrap.cjs: \"const fs = require('node:fs');\\nconst p = '/home/node/.openclaw/openclaw.json';\\nfs.mkdirSync('/home/node/.openclaw',\\\n    \\ { recursive: true, mode: 0o700 });\\nif (!fs.existsSync(p)) {\\n  const c = {\\n    gateway: { mode: 'local', bind: 'lan',\\\n    \\ auth: { mode: 'token', token: '${OPENCLAW_GATEWAY_TOKEN}' }, controlUi: { allowedOrigins: ['https://' + process.env.PUBLIC_DOMAIN]\\\n    \\ } },\\n    models: { providers: { custom: { baseUrl: process.env.LLM_BASE_URL, apiKey: '${LLM_API_KEY}', api: 'openai-completions',\\\n    \\ models: [{ id: process.env.LLM_MODEL, name: process.env.LLM_MODEL, input: ['text', 'image'], contextWindow: 128000,\\\n    \\ maxTokens: 8192 }] } } },\\n    agents: { defaults: { model: { primary: 'custom/' + process.env.LLM_MODEL }, workspace:\\\n    \\ '/home/node/.openclaw/workspace' } }\\n  };\\n  fs.writeFileSync(p, JSON.stringify(c, null, 2), { mode: 0o600, flag: 'wx'\\\n    \\ });\\n}\\n\"\n---\napiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: openclaw-home\n  namespace: '{{ .Namespace }}'\n  labels:\n    app.kubernetes.io/name: openclaw-home\nspec:\n  accessModes:\n  - ReadWriteOnce\n  resources:\n    requests:\n      storage: 20Gi\n---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: openclaw\n  namespace: '{{ .Namespace }}'\n  labels:\n    app.kubernetes.io/name: openclaw\nspec:\n  replicas: 1\n  strategy:\n    type: Recreate\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: openclaw\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: openclaw\n        app.kubernetes.io/name: openclaw\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: openclaw\n        image: ghcr.io/openclaw/openclaw:2026.10.7@sha256:fb26f0841659dc757f23feec9adeab51f11d76779a409db5d22e191b43841afa\n        ports:\n        - name: http\n          containerPort: 18789\n        env:\n        - name: HOME\n          value: /home/node\n        - name: PUBLIC_DOMAIN\n          value: '{{ .Domain }}'\n        - name: LLM_BASE_URL\n          value: '{{ .Inputs.llmBaseUrl }}'\n        - name: LLM_MODEL\n          value: '{{ .Inputs.llmModel }}'\n        - name: OPENCLAW_DISABLE_BONJOUR\n          value: '1'\n        - name: NODE_OPTIONS\n          value: --max-old-space-size=2048\n        - name: OPENCLAW_GATEWAY_TOKEN\n          valueFrom:\n            secretKeyRef:\n              name: openclaw-secrets\n              key: gateway-token\n        - name: LLM_API_KEY\n          valueFrom:\n            secretKeyRef:\n              name: '{{ .Inputs.providerSecret }}'\n              key: api-key\n        securityContext:\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n        resources:\n          requests:\n            cpu: 500m\n            memory: 1Gi\n          limits:\n            cpu: '2'\n            memory: 4Gi\n        volumeMounts:\n        - name: tmp\n          mountPath: /tmp\n        - name: home\n          mountPath: /home/node\n        - name: bootstrap\n          mountPath: /bootstrap\n          readOnly: true\n        command:\n        - /usr/bin/tini\n        - -s\n        - --\n        - /bin/sh\n        - -ec\n        args:\n        - node /bootstrap/bootstrap.cjs; exec node /app/openclaw.mjs gateway --bind lan\n        readinessProbe:\n          httpGet:\n            path: /startupz\n            port: http\n          periodSeconds: 10\n          timeoutSeconds: 3\n        livenessProbe:\n          httpGet:\n            path: /healthz\n            port: http\n          periodSeconds: 30\n          timeoutSeconds: 3\n        startupProbe:\n          httpGet:\n            path: /startupz\n            port: http\n          periodSeconds: 10\n          timeoutSeconds: 3\n          failureThreshold: 60\n      volumes:\n      - name: tmp\n        emptyDir:\n          sizeLimit: 1Gi\n      - name: home\n        persistentVolumeClaim:\n          claimName: openclaw-home\n      - name: bootstrap\n        configMap:\n          name: openclaw-bootstrap\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: openclaw\n  namespace: '{{ .Namespace }}'\n  labels:\n    app.kubernetes.io/name: openclaw\nspec:\n  selector:\n    app.kubernetes.io/name: openclaw\n  ports:\n  - name: http\n    port: 18789\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: openclaw\n  namespace: '{{ .Namespace }}'\n  labels:\n    app.kubernetes.io/name: openclaw\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\n    traefik.ingress.kubernetes.io/router.entrypoints: websecure\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts:\n    - '{{ .Domain }}'\n    secretName: openclaw-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: openclaw\n            port:\n              name: http\n"
+}

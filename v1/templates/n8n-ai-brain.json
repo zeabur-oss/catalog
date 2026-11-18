@@ -1,0 +1,307 @@
+{
+  "id": "n8n-ai-brain",
+  "sourceDigest": "h1:t5CcoUiDQ5VSfYNTOGoQekdAbE0B99He7NSvbFO3FvU=",
+  "template": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "inputs": [
+      {
+        "description": "Owner email; the account is provisioned before the first public request. The password is generated in app-secrets/owner-password.",
+        "label": "Owner email",
+        "locales": {
+          "zh-CN": {
+            "description": "n8n 所有者账号的邮箱，第一次有人访问之前就会创建好。密码会自动生成，放在机密 app-secrets 的 owner-password。",
+            "label": "所有者邮箱"
+          },
+          "zh-TW": {
+            "description": "n8n 擁有者帳號的 Email，第一次有人連進來之前就會建立好。密碼會自動產生，放在機密 app-secrets 的 owner-password。",
+            "label": "擁有者 Email"
+          }
+        },
+        "name": "ownerEmail",
+        "required": true,
+        "validation": {
+          "pattern": "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+        }
+      },
+      {
+        "description": "Generated owner password; preserve it across upgrades.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "ownerPassword",
+        "secret": {
+          "key": "owner-password",
+          "name": "app-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Encryption key for stored workflow credentials. Preserve permanently with encrypted backups.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "encryptionKey",
+        "secret": {
+          "key": "encryption-key",
+          "name": "app-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Shared authentication token for isolated external JavaScript/Python runners.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "runnerToken",
+        "secret": {
+          "key": "runner-token",
+          "name": "app-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Persistent user-management JWT secret.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "jwtKey",
+        "secret": {
+          "key": "jwt-key",
+          "name": "app-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      }
+    ],
+    "kind": "Template",
+    "metadata": {
+      "homepage": "https://github.com/n8n-io/n8n",
+      "license": "LicenseRef-n8n-Sustainable-Use AND PostgreSQL AND Apache-2.0",
+      "locales": {
+        "zh-CN": {
+          "summary": "面向 AI 的工作流自动化，搭配 PostgreSQL 和隔离的代码执行器。"
+        },
+        "zh-TW": {
+          "summary": "為 AI 準備的工作流程自動化，搭配 PostgreSQL 和隔離的程式碼執行器。"
+        }
+      },
+      "name": "n8n (AI Brain)",
+      "summary": "Workflow automation for AI, with PostgreSQL and isolated code runners.",
+      "version": "3.1.0"
+    },
+    "requires": [
+      {
+        "component": "traefik"
+      },
+      {
+        "component": "cert-manager"
+      },
+      {
+        "component": "cloudnative-pg"
+      }
+    ],
+    "security": {
+      "locales": {
+        "zh-CN": {
+          "summary": "应用用非 root 用户运行，限制很严。外部执行器是隔离的。应用没有 Kubernetes API 令牌，根文件系统只读。编辑器、webhook 和表单都开放在公开的 HTTPS 域名上。执行器只能连到 n8n 和 DNS，其他对外连接没有限制。数据库 operator（CloudNativePG）自己管范围很小的数据库权限和令牌。"
+        },
+        "zh-TW": {
+          "summary": "應用程式用非 root 使用者執行，限制很嚴。外部執行器是隔離的。應用程式沒有 Kubernetes API 權杖，根檔案系統唯讀。編輯器、webhook 和表單都開放在公開的 HTTPS 網域上。執行器只能連到 n8n 和 DNS，其他對外連線沒有限制。資料庫 operator（CloudNativePG）自己管範圍很小的資料庫權限和權杖。"
+        }
+      },
+      "risks": [
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "模板说明里有写明许可。只能用在公司内部业务、个人或非商业用途，不然就要另外取得许可。",
+              "risk": "n8n 用的是 Sustainable Use License，使用和分发都有限制，不算 OSI 认可的开源许可。"
+            },
+            "zh-TW": {
+              "mitigation": "範本說明裡有寫明授權。只能用在公司內部業務、個人或非商業用途，不然就要另外取得授權。",
+              "risk": "n8n 用的是 Sustainable Use License，使用和散布都有限制，不算 OSI 認可的開源授權。"
+            }
+          },
+          "mitigation": "The template description names the license. Use it only for internal business, personal or noncommercial purposes, or get a separate license.",
+          "risk": "n8n uses the Sustainable Use License, which limits how you can use and share it. It is not OSI-approved open source."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "所有者账号在 n8n 启动前就建好了，用的是 ownerEmail 和自动生成、放在 app-secrets/owner-password 的密码，所以没有访客能抢走它。编辑器、webhook 和表单，只要连得到域名的人都能打开，n8n 本身有登录。想限制谁能连进来，请在服务的网络设置里加 IP 限制。设计工作流时，每个 webhook 都要加上验证。作者权限只给信任的操作人员。这个实例不能当沙箱，不要拿来运行不信任租户的工作流。安装社区包的功能已关闭。",
+              "risk": "工作流的作者可以用到已连接的凭据，公开的 webhook 触发器也可能被滥用。"
+            },
+            "zh-TW": {
+              "mitigation": "擁有者帳號在 n8n 啟動前就建好了，用的是 ownerEmail 和自動產生、放在 app-secrets/owner-password 的密碼，所以沒有訪客能搶走它。編輯器、webhook 和表單，只要連得到網域的人都能開，n8n 本身有登入。想限制誰連得進來，請在服務的網路設定裡加 IP 限制。設計工作流程時，每個 webhook 都要加上驗證。作者權限只給信任的操作人員。這個實例不能當沙箱，不要拿來執行不信任租戶的工作流程。安裝社群套件的功能已關閉。",
+              "risk": "工作流程的作者可以用到已連接的認證資訊，公開的 webhook 觸發器也可能被濫用。"
+            }
+          },
+          "mitigation": "The owner account is created before n8n starts, from ownerEmail and a generated password in app-secrets/owner-password, so no visitor can claim it. The editor, webhooks and forms are open to anyone who can reach the domain, and n8n has its own sign-in. To limit who can reach them, add an IP limit in the service's network settings. Add authentication to each webhook when you build the workflow. Give author access only to trusted operators. This instance is not a sandbox for workflows from untrusted tenants. Installing community packages is disabled.",
+          "risk": "Workflow authors can reach the connected credentials, and attackers can abuse public webhook triggers."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "它们有一条 NetworkPolicy，不接受任何进来的连接，只让它们连到 n8n 和 DNS。这是模板里唯一的 NetworkPolicy，其他部分靠命名空间隔离。",
+              "risk": "执行器会运行工作流的代码，本身没有登录验证。"
+            },
+            "zh-TW": {
+              "mitigation": "它們有一條 NetworkPolicy，不接受任何進來的連線，只讓它們連到 n8n 和 DNS。這是範本裡唯一的 NetworkPolicy，其他部分靠命名空間隔離。",
+              "risk": "執行器會執行工作流程的程式碼，本身沒有登入驗證。"
+            }
+          },
+          "mitigation": "They have a NetworkPolicy that accepts no incoming connections and lets them reach only n8n and DNS. It is the only NetworkPolicy in the template. Namespace isolation covers everything else.",
+          "risk": "The runners execute workflow code and have no sign-in of their own."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "用目录里的 CloudNativePG 安装方式，由 operator 为这些 Pod 创建范围很小的服务账号。",
+              "risk": "数据库 Pod（CloudNativePG）需要 Kubernetes API 的权限。"
+            },
+            "zh-TW": {
+              "mitigation": "用目錄裡的 CloudNativePG 安裝方式，由 operator 為這些 Pod 建立範圍很小的服務帳號。",
+              "risk": "資料庫 Pod（CloudNativePG）需要 Kubernetes API 的權限。"
+            }
+          },
+          "mitigation": "Use the catalog's CloudNativePG installation. The operator creates narrowly scoped service accounts for these pods.",
+          "risk": "The database pods (CloudNativePG) need Kubernetes API permissions."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "如果你又加了别的代理或负载均衡器，而且它会设置转发头，请改 N8N_PROXY_HOPS。",
+              "risk": "N8N_PROXY_HOPS=1 假设 n8n 前面只有 Traefik 一层代理。"
+            },
+            "zh-TW": {
+              "mitigation": "如果你又加了別的代理或負載平衡器，而且它會設定轉發標頭，請改 N8N_PROXY_HOPS。",
+              "risk": "N8N_PROXY_HOPS=1 假設 n8n 前面只有 Traefik 一層代理。"
+            }
+          },
+          "mitigation": "If you add another proxy or load balancer that sets forwarding headers, change N8N_PROXY_HOPS.",
+          "risk": "N8N_PROXY_HOPS=1 assumes Traefik is the only proxy in front of n8n."
+        }
+      ],
+      "summary": "The app runs as a non-root user with restricted settings. The external runners are isolated. The app has no Kubernetes API tokens and its root filesystems are read-only. The editor, webhooks and forms are open on the public HTTPS domain. The runners can reach only n8n and DNS; other outbound traffic is not limited. The database operator (CloudNativePG) owns narrowly scoped database permissions and tokens.",
+      "unauthenticated": [
+        "n8n-runners"
+      ]
+    },
+    "services": [
+      {
+        "domains": [
+          "{{ .Domain }}"
+        ],
+        "name": "n8n",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "http",
+            "port": 5678
+          },
+          {
+            "name": "broker",
+            "port": 5679
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "1000m",
+            "memory": "1Gi"
+          },
+          "requests": {
+            "cpu": "100m",
+            "memory": "256Mi"
+          }
+        }
+      },
+      {
+        "name": "n8n-runners",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "health",
+            "port": 5680
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "1000m",
+            "memory": "1Gi"
+          },
+          "requests": {
+            "cpu": "100m",
+            "memory": "256Mi"
+          }
+        }
+      },
+      {
+        "name": "n8n-db",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "postgresql",
+            "port": 5432
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "1000m",
+            "memory": "1Gi"
+          },
+          "requests": {
+            "cpu": "100m",
+            "memory": "256Mi"
+          }
+        }
+      }
+    ],
+    "smoke": [
+      {
+        "condition": "condition=Ready",
+        "name": "database-ready",
+        "resource": "cluster/n8n-db",
+        "sql": {
+          "cluster": "n8n-db",
+          "database": "n8n",
+          "expect": "1",
+          "query": "SELECT 1"
+        },
+        "timeout": "600s"
+      },
+      {
+        "condition": "condition=Available",
+        "http": {
+          "path": "/healthz/readiness",
+          "port": 5678,
+          "service": "n8n",
+          "status": 200
+        },
+        "name": "n8n-ready",
+        "resource": "deployment/n8n",
+        "timeout": "600s"
+      },
+      {
+        "condition": "condition=Available",
+        "name": "runners-ready",
+        "resource": "deployment/n8n-runners",
+        "timeout": "600s"
+      }
+    ]
+  },
+  "manifests": "apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: n8n-data\n  namespace: {{ .Namespace }}\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests: {storage: 10Gi}\n---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: n8n\n  namespace: {{ .Namespace }}\nspec:\n  replicas: 1\n  revisionHistoryLimit: 3\n  strategy: {type: Recreate}\n  selector:\n    matchLabels: {app.kubernetes.io/name: n8n}\n  template:\n    metadata:\n      labels: {app.kubernetes.io/name: n8n, templates.zeabur.com/template: n8n-ai-brain}\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile: {type: RuntimeDefault}\n      containers:\n        - name: n8n\n          image: n8nio/n8n:3.1.0@sha256:6e9f220e9cf0d2f17d3c2371c8d8a6fe6720f99b82a9672afb96bf068cfd04a5\n          env:\n            - {name: DB_TYPE, value: postgresdb}\n            - {name: DB_POSTGRESDB_HOST, value: n8n-db-rw}\n            - {name: DB_POSTGRESDB_DATABASE, value: n8n}\n            - {name: DB_POSTGRESDB_USER, value: n8n}\n            - name: DB_POSTGRESDB_PASSWORD\n              valueFrom:\n                secretKeyRef: {name: n8n-db-app, key: password}\n            - {name: DB_POSTGRESDB_SSL_ENABLED, value: 'true'}\n            - {name: DB_POSTGRESDB_SSL_REJECT_UNAUTHORIZED, value: 'true'}\n            - name: DB_POSTGRESDB_SSL_CA\n              valueFrom:\n                secretKeyRef: {name: n8n-db-ca, key: ca.crt}\n            - name: N8N_ENCRYPTION_KEY\n              valueFrom:\n                secretKeyRef: {name: app-secrets, key: encryption-key}\n            - name: N8N_USER_MANAGEMENT_JWT_SECRET\n              valueFrom:\n                secretKeyRef: {name: app-secrets, key: jwt-key}\n            - name: N8N_RUNNERS_AUTH_TOKEN\n              valueFrom:\n                secretKeyRef: {name: app-secrets, key: runner-token}\n            - {name: N8N_INSTANCE_OWNER_MANAGED_BY_ENV, value: 'true'}\n            - {name: N8N_INSTANCE_OWNER_EMAIL, value: '{{ .Inputs.ownerEmail }}'}\n            - {name: N8N_INSTANCE_OWNER_FIRST_NAME, value: Instance}\n            - {name: N8N_INSTANCE_OWNER_LAST_NAME, value: Owner}\n            - name: OWNER_PASSWORD\n              valueFrom:\n                secretKeyRef: {name: app-secrets, key: owner-password}\n            - {name: N8N_RUNNERS_MODE, value: external}\n            - {name: N8N_RUNNERS_BROKER_LISTEN_ADDRESS, value: '0.0.0.0'}\n            - {name: N8N_NATIVE_PYTHON_RUNNER, value: 'true'}\n            - {name: N8N_HOST, value: '{{ .Domain }}'}\n            - {name: N8N_PROTOCOL, value: https}\n            - {name: WEBHOOK_URL, value: 'https://{{ .Domain }}/'}\n            - {name: N8N_EDITOR_BASE_URL, value: 'https://{{ .Domain }}/'}\n            - {name: N8N_PROXY_HOPS, value: '1'}\n            - {name: GENERIC_TIMEZONE, value: Asia/Taipei}\n            - {name: TZ, value: Asia/Taipei}\n            - {name: N8N_DIAGNOSTICS_ENABLED, value: 'false'}\n            - {name: N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS, value: 'true'}\n            - {name: N8N_BLOCK_ENV_ACCESS_IN_NODE, value: 'true'}\n            - {name: N8N_COMMUNITY_PACKAGES_ENABLED, value: 'false'}\n          command:\n            - tini\n            - --\n            - /bin/sh\n            - -ec\n            - export N8N_INSTANCE_OWNER_PASSWORD_HASH=\"$(node -e 'process.stdout.write(require(\"/usr/local/lib/node_modules/n8n/node_modules/bcryptjs\").hashSync(process.env.OWNER_PASSWORD,12))')\";\n              unset OWNER_PASSWORD; exec /docker-entrypoint.sh start\n          ports:\n            - {name: http, containerPort: 5678}\n            - {name: broker, containerPort: 5679}\n          securityContext:\n            runAsNonRoot: true\n            allowPrivilegeEscalation: false\n            readOnlyRootFilesystem: true\n            capabilities: {drop: [ALL]}\n          resources:\n            requests: {cpu: 100m, memory: 256Mi}\n            limits: {cpu: 1000m, memory: 1Gi}\n          startupProbe:\n            httpGet: {path: /healthz, port: http}\n            periodSeconds: 5\n            failureThreshold: 120\n          readinessProbe:\n            httpGet: {path: /healthz/readiness, port: http}\n            periodSeconds: 10\n          livenessProbe:\n            httpGet: {path: /healthz, port: http}\n            periodSeconds: 20\n            failureThreshold: 6\n          volumeMounts:\n            - {name: data, mountPath: /home/node/.n8n}\n            - {name: tmp, mountPath: /tmp}\n            - {name: cache, mountPath: /home/node/.cache}\n      volumes:\n        - name: data\n          persistentVolumeClaim: {claimName: n8n-data}\n        - name: tmp\n          emptyDir: {sizeLimit: 256Mi}\n        - name: cache\n          emptyDir: {sizeLimit: 256Mi}\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: n8n-broker\n  namespace: {{ .Namespace }}\nspec:\n  selector: {app.kubernetes.io/name: n8n}\n  ports: [{name: broker, port: 5679, targetPort: broker}]\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: n8n\n  namespace: {{ .Namespace }}\nspec:\n  selector: {app.kubernetes.io/name: n8n}\n  ports: [{name: http, port: 5678, targetPort: http}]\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: n8n\n  namespace: {{ .Namespace }}\n  annotations:\n    cert-manager.io/cluster-issuer: {{ .ClusterIssuer }}\nspec:\n  ingressClassName: traefik\n  tls:\n    - hosts: [{{ .Domain }}]\n      secretName: n8n-tls\n  rules:\n    - host: {{ .Domain }}\n      http:\n        paths:\n          - path: /\n            pathType: Prefix\n            backend:\n              service:\n                name: n8n\n                port: {name: http}\n---\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: n8n-runners-network\n  namespace: {{ .Namespace }}\nspec:\n  podSelector:\n    matchLabels: {app.kubernetes.io/name: n8n-runners, templates.zeabur.com/template: n8n-ai-brain}\n  policyTypes: [Ingress, Egress]\n  egress:\n    - {to: [{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: kube-system}}, podSelector: {matchLabels: {k8s-app: kube-dns}}}], ports: [{protocol: UDP, port: 53}, {protocol: TCP, port: 53}]}\n    - to:\n        - podSelector:\n            matchLabels: {app.kubernetes.io/name: n8n, templates.zeabur.com/template: n8n-ai-brain}\n      ports: [{protocol: TCP, port: 5679}]\n---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: n8n-runners\n  namespace: {{ .Namespace }}\nspec:\n  replicas: 1\n  revisionHistoryLimit: 3\n  strategy: {type: Recreate}\n  selector:\n    matchLabels: {app.kubernetes.io/name: n8n-runners}\n  template:\n    metadata:\n      labels: {app.kubernetes.io/name: n8n-runners, templates.zeabur.com/template: n8n-ai-brain}\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile: {type: RuntimeDefault}\n      containers:\n        - name: runners\n          image: n8nio/runners:3.1.0@sha256:730c78a31b9d5711319fff053a18e98ba5265f11769c88d1917506e9b33d2616\n          env:\n            - {name: N8N_RUNNERS_TASK_BROKER_URI, value: 'http://n8n-broker:5679'}\n            - name: N8N_RUNNERS_AUTH_TOKEN\n              valueFrom:\n                secretKeyRef: {name: app-secrets, key: runner-token}\n          ports: [{name: health, containerPort: 5680}]\n          securityContext:\n            runAsNonRoot: true\n            allowPrivilegeEscalation: false\n            readOnlyRootFilesystem: true\n            capabilities: {drop: [ALL]}\n          resources:\n            requests: {cpu: 100m, memory: 256Mi}\n            limits: {cpu: 1000m, memory: 1Gi}\n          startupProbe:\n            httpGet: {path: /healthz, port: health}\n            periodSeconds: 5\n            failureThreshold: 120\n          readinessProbe:\n            httpGet: {path: /healthz, port: health}\n            periodSeconds: 10\n          livenessProbe:\n            httpGet: {path: /healthz, port: health}\n            periodSeconds: 20\n          volumeMounts:\n            - {name: tmp, mountPath: /tmp}\n      volumes:\n        - name: tmp\n          emptyDir: {sizeLimit: 256Mi}\n---\n---\napiVersion: postgresql.cnpg.io/v1\nkind: Cluster\nmetadata:\n  name: n8n-db\n  namespace: {{ .Namespace }}\nspec:\n  inheritedMetadata:\n    labels:\n      templates.zeabur.com/template: n8n-ai-brain\n  instances: 1\n  imageName: ghcr.io/cloudnative-pg/postgresql:17-minimal-trixie@sha256:87f97b9a922e469b91faaaa36ced7c2092cf890efd3622f29095d252b70b9718\n  enableSuperuserAccess: false\n  enablePDB: true\n  postgresUID: 26\n  postgresGID: 26\n  seccompProfile: {type: RuntimeDefault}\n  bootstrap:\n    initdb:\n      database: n8n\n      owner: n8n\n      encoding: UTF8\n  storage:\n    size: 10Gi\n  resources:\n    requests: {cpu: 100m, memory: 256Mi}\n    limits: {cpu: '1', memory: 1Gi}\n---\n"
+}

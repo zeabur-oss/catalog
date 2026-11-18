@@ -1,0 +1,304 @@
+{
+  "id": "gitea",
+  "sourceDigest": "h1:ppceRqgquyR17BH4DE2b2vfgVnqDS3Gd6vZoIuoU81g=",
+  "template": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "inputs": [
+      {
+        "description": "Password of the administrator gitea_admin, created at the first start. Change it in Gitea after you sign in; the Secret is not applied again.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "adminPassword",
+        "secret": {
+          "key": "admin-password",
+          "name": "gitea-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Encrypts stored credentials such as two-factor secrets. Keep it for the life of the database.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "secretKey",
+        "secret": {
+          "key": "secret-key",
+          "name": "gitea-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Authenticates Git hooks to the Gitea web process.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "internalToken",
+        "secret": {
+          "key": "internal-token",
+          "name": "gitea-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Signs OAuth2 tokens. Rotating it signs out OAuth2 clients.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "jwtSecret",
+        "secret": {
+          "key": "jwt-secret",
+          "name": "gitea-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Signs Git LFS tokens.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "lfsJwtSecret",
+        "secret": {
+          "key": "lfs-jwt-secret",
+          "name": "gitea-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      }
+    ],
+    "kind": "Template",
+    "metadata": {
+      "homepage": "https://about.gitea.com/",
+      "license": "MIT AND PostgreSQL AND Apache-2.0",
+      "locales": {
+        "zh-CN": {
+          "summary": "Git 托管服务，仓库放在卷上，搭配 PostgreSQL。"
+        },
+        "zh-TW": {
+          "summary": "Git 代管服務，儲存庫放在磁碟區，搭配 PostgreSQL。"
+        }
+      },
+      "name": "Gitea",
+      "summary": "Git hosting, with repositories on a volume and PostgreSQL.",
+      "version": "28.2.0-rootless"
+    },
+    "requires": [
+      {
+        "component": "traefik"
+      },
+      {
+        "component": "cert-manager"
+      },
+      {
+        "component": "cloudnative-pg"
+      }
+    ],
+    "security": {
+      "locales": {
+        "zh-CN": {
+          "summary": "免 root 的镜像以 UID 1000 运行，根文件系统只读，没有服务账号令牌，所有额外权限都去掉了。对外连接没有限制。注册已关闭，安装页面也锁住了。"
+        },
+        "zh-TW": {
+          "summary": "免 root 的映像檔以 UID 1000 執行，根檔案系統唯讀，沒有服務帳號權杖，所有額外權限都拿掉了。對外連線沒有限制。註冊已關閉，安裝頁面也鎖住了。"
+        }
+      },
+      "risks": [
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "INSTALL_LOCK 设为 true，配置都来自环境变量。Gitea 启动前，初始化容器会用生成好的密码创建 gitea_admin 账号。",
+              "risk": "安装页面如果没锁，第一个来的访客就能配置这台服务器。"
+            },
+            "zh-TW": {
+              "mitigation": "INSTALL_LOCK 設為 true，設定都來自環境變數。Gitea 啟動前，初始化容器會用產生好的密碼建立 gitea_admin 帳號。",
+              "risk": "安裝頁面如果沒鎖，第一個來的訪客就能設定這台伺服器。"
+            }
+          },
+          "mitigation": "INSTALL_LOCK is true and the settings come from environment variables. Before Gitea starts, an init container creates the gitea_admin account with the generated password.",
+          "risk": "If the install page is not locked, the first visitor can configure the server."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "DISABLE_REGISTRATION 设为 true。用户由管理员在站点管理里创建。",
+              "risk": "任何人都可以自己注册账号。"
+            },
+            "zh-TW": {
+              "mitigation": "DISABLE_REGISTRATION 設為 true。使用者由管理員在網站管理裡建立。",
+              "risk": "任何人都可以自己註冊帳號。"
+            }
+          },
+          "mitigation": "DISABLE_REGISTRATION is true. The administrator creates users in Site Administration.",
+          "risk": "Anyone could register an account."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "Ingress 只转发 HTTP，所以 SSH 服务器是关闭的。用 HTTPS 搭配密码或访问令牌来 clone 和 push。",
+              "risk": "无法使用 SSH 访问 Git。"
+            },
+            "zh-TW": {
+              "mitigation": "Ingress 只轉送 HTTP，所以 SSH 伺服器是關閉的。用 HTTPS 搭配密碼或存取權杖來 clone 和 push。",
+              "risk": "無法使用 SSH 存取 Git。"
+            }
+          },
+          "mitigation": "The Ingress carries HTTP only, so the SSH server is off. Clone and push over HTTPS with a password or an access token.",
+          "risk": "Git over SSH does not work."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "Gitea 默认会拦截指向私有地址的 webhook。模板没有限制对外连接，需要限制时，请添加 egress NetworkPolicy。模板没有配置 SMTP 服务器，所以 Gitea 不会发邮件。",
+              "risk": "Webhook、镜像和仓库迁移，都会让服务器去访问用户指定的地址。"
+            },
+            "zh-TW": {
+              "mitigation": "Gitea 預設會擋掉指向私有位址的 webhook。範本沒有限制對外連線，需要限制時，請加上 egress NetworkPolicy。範本沒有設定 SMTP 伺服器，所以 Gitea 不會寄信。",
+              "risk": "Webhook、鏡像和儲存庫遷移，都會讓伺服器去連使用者指定的位址。"
+            }
+          },
+          "mitigation": "Gitea blocks private webhook targets by default. The template does not limit outbound traffic. To limit it, add an egress NetworkPolicy. No SMTP server is set up, so Gitea sends no email.",
+          "risk": "Webhooks, mirrors and repository migrations make the server send requests to addresses that users choose."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "cloudnative-pg 组件会为每个集群创建对应的 RBAC 权限。Gitea 的 Pod 没有令牌。",
+              "risk": "CloudNativePG 的数据库实例会用 operator 创建的身份调用 Kubernetes API。"
+            },
+            "zh-TW": {
+              "mitigation": "cloudnative-pg 元件會為每個叢集建立對應的 RBAC 權限。Gitea 的 Pod 沒有權杖。",
+              "risk": "CloudNativePG 的資料庫實例會用 operator 建立的身分呼叫 Kubernetes API。"
+            }
+          },
+          "mitigation": "The cloudnative-pg component creates the RBAC permissions for each cluster. The Gitea Pod has no token.",
+          "risk": "The CloudNativePG database instances call the Kubernetes API with an identity that the operator creates."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "另外备份 gitea-data 卷，例如用 gitea dump。正式上线前，先演练一次恢复。",
+              "risk": "仓库和 LFS 对象放在卷上，数据库备份不会包含它们。"
+            },
+            "zh-TW": {
+              "mitigation": "另外備份 gitea-data 磁碟區，例如用 gitea dump。正式上線前，先演練一次還原。",
+              "risk": "儲存庫和 LFS 物件放在磁碟區上，資料庫備份不會包含它們。"
+            }
+          },
+          "mitigation": "Back up the gitea-data volume separately, for example with gitea dump. Try a restore before you go to production.",
+          "risk": "Repositories and LFS objects live on the volume, so the database backup does not include them."
+        }
+      ],
+      "summary": "The rootless image runs as UID 1000 with a read-only root filesystem, no service-account token and all capabilities dropped. Outbound traffic is not limited. Sign-up is closed and the install page is locked."
+    },
+    "services": [
+      {
+        "domains": [
+          "{{ .Domain }}"
+        ],
+        "name": "gitea",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "http",
+            "port": 3000
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "2",
+            "memory": "1Gi"
+          },
+          "requests": {
+            "cpu": "100m",
+            "memory": "256Mi"
+          }
+        }
+      },
+      {
+        "name": "gitea-db",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "postgresql",
+            "port": 5432
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "1",
+            "memory": "1Gi"
+          },
+          "requests": {
+            "cpu": "100m",
+            "memory": "256Mi"
+          }
+        }
+      }
+    ],
+    "smoke": [
+      {
+        "condition": "condition=Ready",
+        "name": "postgresql-ready",
+        "resource": "cluster/gitea-db",
+        "timeout": "900s"
+      },
+      {
+        "condition": "condition=Available",
+        "http": {
+          "contains": "pass",
+          "path": "/api/healthz",
+          "port": 3000,
+          "service": "gitea",
+          "status": 200
+        },
+        "name": "gitea-ready",
+        "resource": "deployment/gitea",
+        "timeout": "900s"
+      },
+      {
+        "condition": "condition=Available",
+        "http": {
+          "path": "/api/v1/user",
+          "port": 3000,
+          "service": "gitea",
+          "status": 401
+        },
+        "name": "authentication-required",
+        "resource": "deployment/gitea",
+        "timeout": "120s"
+      },
+      {
+        "condition": "condition=Ready",
+        "name": "administrator-created",
+        "resource": "cluster/gitea-db",
+        "sql": {
+          "cluster": "gitea-db",
+          "database": "gitea",
+          "expect": "1",
+          "query": "SELECT count(*) FROM \"user\" WHERE is_admin"
+        },
+        "timeout": "120s"
+      }
+    ]
+  },
+  "manifests": "apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: gitea-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 20Gi\n---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: gitea\n  namespace: '{{ .Namespace }}'\nspec:\n  replicas: 1\n  strategy:\n    type: Recreate\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: gitea\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: gitea\n        app.kubernetes.io/name: gitea\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      initContainers:\n      # Applies database migrations, then creates the administrator if no\n      # account with that name exists.\n      - name: setup\n        image: docker.gitea.com/gitea:28.2.0-rootless@sha256:94807314454f6525994a3b76286ba12bc7e7f8cd14f61d9e67431767f8103306\n        command:\n        - /usr/local/bin/docker-entrypoint.sh\n        - /bin/sh\n        - -ec\n        - |\n          gitea migrate\n          if ! gitea admin user list --admin | awk '{print $2}' | grep -qx gitea_admin; then\n            gitea admin user create --admin --username gitea_admin \\\n              --email \"gitea_admin@{{ .Domain }}\" --password \"$ADMIN_PASSWORD\" \\\n              --must-change-password=false\n          fi\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop: [ALL]\n        resources:\n          requests:\n            cpu: 100m\n            memory: 128Mi\n          limits:\n            cpu: '1'\n            memory: 512Mi\n        env: \u0026env\n        - name: ADMIN_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: gitea-secrets\n              key: admin-password\n        - name: GITEA__server__DOMAIN\n          value: '{{ .Domain }}'\n        - name: GITEA__server__ROOT_URL\n          value: https://{{ .Domain }}/\n        - name: GITEA__server__DISABLE_SSH\n          value: 'true'\n        - name: GITEA__server__START_SSH_SERVER\n          value: 'false'\n        - name: GITEA__server__LFS_START_SERVER\n          value: 'true'\n        - name: GITEA__server__LFS_JWT_SECRET__FILE\n          value: /secrets/lfs-jwt-secret\n        - name: GITEA__security__INSTALL_LOCK\n          value: 'true'\n        - name: GITEA__security__SECRET_KEY__FILE\n          value: /secrets/secret-key\n        - name: GITEA__security__INTERNAL_TOKEN__FILE\n          value: /secrets/internal-token\n        - name: GITEA__oauth2__JWT_SECRET__FILE\n          value: /secrets/jwt-secret\n        - name: GITEA__service__DISABLE_REGISTRATION\n          value: 'true'\n        - name: GITEA__database__DB_TYPE\n          value: postgres\n        - name: GITEA__database__HOST\n          value: gitea-db-rw:5432\n        - name: GITEA__database__NAME\n          value: gitea\n        - name: GITEA__database__USER\n          value: gitea\n        - name: GITEA__database__PASSWD\n          valueFrom:\n            secretKeyRef:\n              name: gitea-db-app\n              key: password\n        - name: GITEA__database__SSL_MODE\n          value: verify-full\n        - name: PGSSLROOTCERT\n          value: /db-ca/ca.crt\n        - name: GITEA__log__MODE\n          value: console\n        volumeMounts: \u0026mounts\n        - name: data\n          mountPath: /var/lib/gitea\n        - name: config\n          mountPath: /etc/gitea\n        - name: tmp\n          mountPath: /tmp\n        - name: secrets\n          mountPath: /secrets\n          readOnly: true\n        - name: db-ca\n          mountPath: /db-ca\n          readOnly: true\n      containers:\n      - name: gitea\n        image: docker.gitea.com/gitea:28.2.0-rootless@sha256:94807314454f6525994a3b76286ba12bc7e7f8cd14f61d9e67431767f8103306\n        ports:\n        - name: http\n          containerPort: 3000\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop: [ALL]\n        resources:\n          requests:\n            cpu: 100m\n            memory: 256Mi\n          limits:\n            cpu: '2'\n            memory: 1Gi\n        env: *env\n        volumeMounts: *mounts\n        startupProbe:\n          httpGet:\n            path: /api/healthz\n            port: http\n          periodSeconds: 5\n          failureThreshold: 120\n        readinessProbe:\n          httpGet:\n            path: /api/healthz\n            port: http\n          periodSeconds: 10\n          timeoutSeconds: 5\n        livenessProbe:\n          tcpSocket:\n            port: http\n          periodSeconds: 20\n          failureThreshold: 6\n      volumes:\n      - name: data\n        persistentVolumeClaim:\n          claimName: gitea-data\n      - name: config\n        emptyDir:\n          sizeLimit: 16Mi\n      - name: tmp\n        emptyDir:\n          sizeLimit: 2Gi\n      - name: secrets\n        secret:\n          secretName: gitea-secrets\n          items:\n          - {key: secret-key, path: secret-key}\n          - {key: internal-token, path: internal-token}\n          - {key: jwt-secret, path: jwt-secret}\n          - {key: lfs-jwt-secret, path: lfs-jwt-secret}\n      - name: db-ca\n        secret:\n          secretName: gitea-db-ca\n          items:\n          - {key: ca.crt, path: ca.crt}\n      terminationGracePeriodSeconds: 60\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: gitea\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: gitea\n  ports:\n  - name: http\n    port: 3000\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: gitea\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts: ['{{ .Domain }}']\n    secretName: gitea-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: gitea\n            port:\n              number: 3000\n---\napiVersion: postgresql.cnpg.io/v1\nkind: Cluster\nmetadata:\n  name: gitea-db\n  namespace: '{{ .Namespace }}'\nspec:\n  inheritedMetadata:\n    labels:\n      templates.zeabur.com/template: gitea\n  instances: 1\n  imageName: ghcr.io/cloudnative-pg/postgresql:18-minimal-trixie@sha256:0675340b02be838319b9b6f323c206693e519dcd62ec729d539be9f46bb7a2f9\n  enableSuperuserAccess: false\n  enablePDB: true\n  postgresUID: 26\n  postgresGID: 26\n  seccompProfile:\n    type: RuntimeDefault\n  bootstrap:\n    initdb:\n      database: gitea\n      owner: gitea\n      encoding: UTF8\n  storage:\n    size: 10Gi\n  resources:\n    requests:\n      cpu: 100m\n      memory: 256Mi\n    limits:\n      cpu: '1'\n      memory: 1Gi\n  postgresql:\n    parameters:\n      shared_buffers: 128MB\n      max_connections: '100'\n"
+}

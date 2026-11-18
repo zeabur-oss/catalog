@@ -1,0 +1,84 @@
+{
+  "id": "nginx",
+  "sourceDigest": "h1:hBka5vJqt4I3fzrpURbfeENlDoJaHDIPF/X4CYp4vuo=",
+  "template": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "kind": "Template",
+    "metadata": {
+      "homepage": "https://nginx.org/",
+      "license": "BSD-2-Clause AND Apache-2.0",
+      "locales": {
+        "zh-CN": {
+          "summary": "通过 HTTPS 提供服务的 NGINX 网页服务器。"
+        },
+        "zh-TW": {
+          "summary": "透過 HTTPS 提供服務的 NGINX 網頁伺服器。"
+        }
+      },
+      "name": "nginx",
+      "summary": "An NGINX web server over HTTPS.",
+      "version": "1.31-alpine"
+    },
+    "requires": [
+      {
+        "component": "traefik"
+      },
+      {
+        "component": "cert-manager"
+      }
+    ],
+    "security": {
+      "locales": {
+        "zh-CN": {
+          "summary": "Pod 不能访问 Kubernetes API。以非 root 的 UID 101 运行，文件系统只读，没有任何额外的系统权限，也不会对外连接。"
+        },
+        "zh-TW": {
+          "summary": "Pod 不能存取 Kubernetes API。以非 root 的 UID 101 執行，檔案系統唯讀，沒有任何額外的系統權限，也不會對外連線。"
+        }
+      },
+      "risks": [],
+      "summary": "The Pod has no Kubernetes API access. It runs as non-root UID 101 with a read-only filesystem and no extra system privileges. It makes no outbound connections."
+    },
+    "services": [
+      {
+        "domains": [
+          "{{ .Domain }}"
+        ],
+        "name": "nginx",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "http",
+            "port": 8080
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "500m",
+            "memory": "128Mi"
+          },
+          "requests": {
+            "cpu": "10m",
+            "memory": "32Mi"
+          }
+        }
+      }
+    ],
+    "smoke": [
+      {
+        "condition": "condition=Available",
+        "http": {
+          "contains": "Hello from Nginx deployed on Zeabur!",
+          "path": "/",
+          "port": 8080,
+          "service": "nginx",
+          "status": 200
+        },
+        "name": "nginx-ready",
+        "resource": "deployment/nginx",
+        "timeout": "180s"
+      }
+    ]
+  },
+  "manifests": "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: nginx\n  namespace: {{ .Namespace }}\ndata:\n  nginx.conf: |\n    worker_processes auto;\n    pid /tmp/nginx.pid;\n    error_log /dev/stderr warn;\n    events { worker_connections 1024; }\n    http {\n      access_log /dev/stdout;\n      client_body_temp_path /tmp/client_temp;\n      proxy_temp_path /tmp/proxy_temp;\n      fastcgi_temp_path /tmp/fastcgi_temp;\n      uwsgi_temp_path /tmp/uwsgi_temp;\n      scgi_temp_path /tmp/scgi_temp;\n      server {\n        listen 8080;\n        server_name _;\n        location / {\n          default_type text/plain;\n          return 200 'Hello from Nginx deployed on Zeabur!';\n        }\n      }\n    }\n---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: nginx\n  namespace: {{ .Namespace }}\nspec:\n  replicas: 1\n  revisionHistoryLimit: 3\n  selector:\n    matchLabels: {app.kubernetes.io/name: nginx}\n  strategy:\n    type: RollingUpdate\n    rollingUpdate: {maxSurge: 1, maxUnavailable: 0}\n  template:\n    metadata:\n      labels: {app.kubernetes.io/name: nginx, templates.zeabur.com/template: nginx}\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 101\n        runAsGroup: 101\n        fsGroup: 101\n        seccompProfile: {type: RuntimeDefault}\n      containers:\n        - name: nginx\n          image: nginxinc/nginx-unprivileged:1.31-alpine@sha256:b5047b9b76845eac124358373c6852377c52e4b05834a47647e955dd91cb8f1e\n          command: [nginx]\n          args: [-g, 'daemon off;']\n          ports: [{name: http, containerPort: 8080}]\n          securityContext:\n            runAsNonRoot: true\n            allowPrivilegeEscalation: false\n            readOnlyRootFilesystem: true\n            capabilities: {drop: [ALL]}\n          resources:\n            requests: {cpu: 10m, memory: 32Mi}\n            limits: {cpu: 500m, memory: 128Mi}\n          startupProbe:\n            httpGet: {path: /, port: http}\n            failureThreshold: 30\n            periodSeconds: 2\n          readinessProbe:\n            httpGet: {path: /, port: http}\n            periodSeconds: 5\n          livenessProbe:\n            httpGet: {path: /, port: http}\n            periodSeconds: 10\n          volumeMounts:\n            - {name: config, mountPath: /etc/nginx/nginx.conf, subPath: nginx.conf, readOnly: true}\n            - {name: tmp, mountPath: /tmp}\n      volumes:\n        - name: config\n          configMap: {name: nginx}\n        - name: tmp\n          emptyDir: {sizeLimit: 64Mi}\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: nginx\n  namespace: {{ .Namespace }}\nspec:\n  selector: {app.kubernetes.io/name: nginx}\n  ports: [{name: http, port: 8080, targetPort: http}]\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: nginx\n  namespace: {{ .Namespace }}\n  annotations:\n    cert-manager.io/cluster-issuer: {{ .ClusterIssuer }}\nspec:\n  ingressClassName: traefik\n  tls:\n    - hosts: [{{ .Domain }}]\n      secretName: nginx-tls\n  rules:\n    - host: {{ .Domain }}\n      http:\n        paths:\n          - path: /\n            pathType: Prefix\n            backend:\n              service:\n                name: nginx\n                port: {name: http}\n---\napiVersion: policy/v1\nkind: PodDisruptionBudget\nmetadata:\n  name: nginx\n  namespace: {{ .Namespace }}\nspec:\n  minAvailable: 1\n  selector:\n    matchLabels: {app.kubernetes.io/name: nginx}\n"
+}

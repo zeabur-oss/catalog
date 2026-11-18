@@ -1,0 +1,157 @@
+{
+  "id": "ntfy",
+  "sourceDigest": "h1:UlBTExBoffgyPtESG07SlzePnA9T/Ll2UzLKNq8uj6E=",
+  "template": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "inputs": [
+      {
+        "description": "Password of the admin user. It is applied at each start, so change the Secret to rotate it. Generated at installation.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "adminPassword",
+        "secret": {
+          "key": "admin-password",
+          "name": "ntfy-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      }
+    ],
+    "kind": "Template",
+    "metadata": {
+      "homepage": "https://ntfy.sh/",
+      "license": "Apache-2.0 OR GPL-2.0-only",
+      "locales": {
+        "zh-CN": {
+          "summary": "推送通知服务器，主题需要账号，消息存在卷上。"
+        },
+        "zh-TW": {
+          "summary": "推播通知伺服器，主題需要帳號，訊息存在磁碟區。"
+        }
+      },
+      "name": "ntfy",
+      "summary": "A push notification server where topics need an account and messages stay on a volume.",
+      "version": "v2.37.2"
+    },
+    "requires": [
+      {
+        "component": "traefik"
+      },
+      {
+        "component": "cert-manager"
+      }
+    ],
+    "security": {
+      "locales": {
+        "zh-CN": {
+          "summary": "以 UID 1000 运行，文件系统只读，没有 Kubernetes 令牌，也去掉了所有额外的系统权限。对外连接没有限制。匿名用户不能读写主题。"
+        },
+        "zh-TW": {
+          "summary": "以 UID 1000 執行，檔案系統唯讀，沒有 Kubernetes 權杖，也拿掉了所有額外的系統權限。對外連線沒有限制。匿名使用者不能讀寫主題。"
+        }
+      },
+      "risks": [
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "这个模板把 auth-default-access 设成 deny-all。admin 用户可以读写所有主题。要创建用户、访问规则和令牌，请在 Pod 里运行 ntfy user、ntfy access 和 ntfy token。",
+              "risk": "ntfy 默认让任何人都能发布和读取任何主题。"
+            },
+            "zh-TW": {
+              "mitigation": "這個範本把 auth-default-access 設成 deny-all。admin 使用者可以讀寫所有主題。要建立使用者、存取規則和權杖，請在 Pod 裡執行 ntfy user、ntfy access 和 ntfy token。",
+              "risk": "ntfy 預設讓任何人都能發佈和讀取任何主題。"
+            }
+          },
+          "mitigation": "This template sets auth-default-access to deny-all. The admin user can read and write all topics. To create users, access rules and tokens, run ntfy user, ntfy access and ntfy token in the Pod.",
+          "risk": "By default, ntfy lets anyone publish to and read any topic."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "Android 和网页客户端会用自己的连接收消息。想用 upstream-base-url 或其他发送方式，请到 ntfy 设置里自己加。",
+              "risk": "iOS app 的即时推送、Firebase、网页推送、电子邮件和电话通知都是关闭的。"
+            },
+            "zh-TW": {
+              "mitigation": "Android 和網頁用戶端會用自己的連線收訊息。想用 upstream-base-url 或其他寄送方式，請到 ntfy 設定裡自己加。",
+              "risk": "iOS app 的即時推送、Firebase、網頁推播、電子郵件和電話通知都是關閉的。"
+            }
+          },
+          "mitigation": "Android and web clients receive messages over their own connection. To use upstream-base-url or another sender, set it in the ntfy configuration.",
+          "risk": "Instant delivery to the iOS app, Firebase, web push, email and calls are off."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "附件缓存总共最多 2G，单个文件最多 15M。消息缓存只保留 12 小时的消息。",
+              "risk": "附件会占用存储卷的磁盘空间。"
+            },
+            "zh-TW": {
+              "mitigation": "附件快取總共最多 2G，單一檔案最多 15M。訊息快取只保留 12 小時的訊息。",
+              "risk": "附件會佔用儲存空間的磁碟。"
+            }
+          },
+          "mitigation": "The attachment cache is limited to 2G in total and 15M per file. The message cache keeps 12 hours of messages.",
+          "risk": "Attachments use disk space on the volume."
+        }
+      ],
+      "summary": "The container runs as UID 1000 with a read-only filesystem, no Kubernetes token and all extra system privileges removed. Outbound traffic is not limited. Anonymous users cannot read or write topics."
+    },
+    "services": [
+      {
+        "domains": [
+          "{{ .Domain }}"
+        ],
+        "name": "ntfy",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "http",
+            "port": 8080
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "1",
+            "memory": "512Mi"
+          },
+          "requests": {
+            "cpu": "50m",
+            "memory": "64Mi"
+          }
+        }
+      }
+    ],
+    "smoke": [
+      {
+        "condition": "jsonpath={.status.readyReplicas}=1",
+        "http": {
+          "contains": "\"healthy\":true",
+          "path": "/v1/health",
+          "port": 8080,
+          "service": "ntfy",
+          "status": 200
+        },
+        "name": "ntfy-ready",
+        "resource": "statefulset/ntfy",
+        "timeout": "600s"
+      },
+      {
+        "condition": "jsonpath={.status.readyReplicas}=1",
+        "http": {
+          "path": "/test/json?poll=1",
+          "port": 8080,
+          "service": "ntfy",
+          "status": 403
+        },
+        "name": "anonymous-access-denied",
+        "resource": "statefulset/ntfy",
+        "timeout": "120s"
+      }
+    ]
+  },
+  "manifests": "apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: ntfy-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 5Gi\n---\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: ntfy\n  namespace: '{{ .Namespace }}'\nspec:\n  serviceName: ntfy\n  replicas: 1\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: ntfy\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: ntfy\n        app.kubernetes.io/name: ntfy\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: ntfy\n        image: binwiederhier/ntfy:v2.37.2@sha256:1875ddcf815c8a3c981d6d78c67a93452d0abba79b1ab9520b1f5f5238902bd7\n        # auth-users takes a bcrypt hash. Hash the generated password at each\n        # start, so the Secret stays the source of the admin password.\n        command:\n        - /bin/sh\n        - -ec\n        - |\n          hash=\"$(printf '%s\\n%s\\n' \"$ADMIN_PASSWORD\" \"$ADMIN_PASSWORD\" | ntfy user hash | sed -n 's/.*\\(\\$2[aby]\\$.*\\)/\\1/p')\"\n          [ -n \"$hash\" ]\n          unset ADMIN_PASSWORD\n          export NTFY_AUTH_USERS=\"admin:$hash:admin\"\n          exec ntfy serve\n        ports:\n        - name: http\n          containerPort: 8080\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop: [ALL]\n        resources:\n          requests:\n            cpu: 50m\n            memory: 64Mi\n          limits:\n            cpu: '1'\n            memory: 512Mi\n        env:\n        - name: ADMIN_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: ntfy-secrets\n              key: admin-password\n        - name: NTFY_BASE_URL\n          value: https://{{ .Domain }}\n        - name: NTFY_LISTEN_HTTP\n          value: :8080\n        - name: NTFY_BEHIND_PROXY\n          value: 'true'\n        - name: NTFY_CACHE_FILE\n          value: /var/lib/ntfy/cache.db\n        - name: NTFY_AUTH_FILE\n          value: /var/lib/ntfy/user.db\n        - name: NTFY_AUTH_DEFAULT_ACCESS\n          value: deny-all\n        - name: NTFY_ENABLE_LOGIN\n          value: 'true'\n        - name: NTFY_ATTACHMENT_CACHE_DIR\n          value: /var/lib/ntfy/attachments\n        - name: NTFY_ATTACHMENT_TOTAL_SIZE_LIMIT\n          value: 2G\n        volumeMounts:\n        - name: data\n          mountPath: /var/lib/ntfy\n        - name: tmp\n          mountPath: /tmp\n        startupProbe:\n          httpGet:\n            path: /v1/health\n            port: http\n          periodSeconds: 5\n          failureThreshold: 60\n        readinessProbe:\n          httpGet:\n            path: /v1/health\n            port: http\n          periodSeconds: 10\n        livenessProbe:\n          httpGet:\n            path: /v1/health\n            port: http\n          periodSeconds: 20\n          failureThreshold: 6\n      volumes:\n      - name: data\n        persistentVolumeClaim:\n          claimName: ntfy-data\n      - name: tmp\n        emptyDir:\n          sizeLimit: 256Mi\n      terminationGracePeriodSeconds: 30\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: ntfy\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: ntfy\n  ports:\n  - name: http\n    port: 8080\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: ntfy\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts: ['{{ .Domain }}']\n    secretName: ntfy-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: ntfy\n            port:\n              number: 8080\n"
+}

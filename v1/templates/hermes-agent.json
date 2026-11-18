@@ -1,0 +1,272 @@
+{
+  "id": "hermes-agent",
+  "sourceDigest": "h1:OfEER9hGcps//6avwav/+7HaX7+wbeJxZPmFyrng1Js=",
+  "template": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "inputs": [
+      {
+        "description": "Existing namespaced Secret with key api-key that holds the provider API key, an OpenRouter key when providerEndpoint is empty.",
+        "label": "Provider API key secret",
+        "locales": {
+          "zh-CN": {
+            "description": "这个项目里现有的机密，键 api-key 放模型服务的 API 密钥；没有填 API 端点时放 OpenRouter 的密钥。",
+            "label": "模型服务 API 密钥的机密"
+          },
+          "zh-TW": {
+            "description": "這個專案裡現有的機密，鍵 api-key 放模型服務的 API 金鑰；沒有填 API 端點時放 OpenRouter 的金鑰。",
+            "label": "模型服務 API 金鑰的機密"
+          }
+        },
+        "name": "providerSecret",
+        "required": true,
+        "validation": {
+          "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+        }
+      },
+      {
+        "description": "Provider model identifier including owner/path where required.",
+        "label": "Model",
+        "locales": {
+          "zh-CN": {
+            "description": "模型服务上的模型名称，需要时包含所有者或路径。",
+            "label": "模型"
+          },
+          "zh-TW": {
+            "description": "模型服務上的模型名稱，需要時包含擁有者或路徑。",
+            "label": "模型"
+          }
+        },
+        "name": "model",
+        "required": true,
+        "validation": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}$"
+        }
+      },
+      {
+        "description": "Generated API bearer key; retrieve hermes-secrets/api-key through authorized Kubernetes access.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "apiKey",
+        "secret": {
+          "key": "api-key",
+          "name": "hermes-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "default": "https://openrouter.ai/api/v1",
+        "description": "Public OpenAI-compatible HTTPS endpoint on TCP 443, including its /v1 suffix if required. If it is empty, the template uses OpenRouter (https://openrouter.ai/api/v1).",
+        "label": "API endpoint",
+        "locales": {
+          "zh-CN": {
+            "description": "公网的 OpenAI 兼容 HTTPS 端点（TCP 443），需要时包含 /v1。留空就用 OpenRouter（https://openrouter.ai/api/v1）。",
+            "label": "API 端点"
+          },
+          "zh-TW": {
+            "description": "公開的 OpenAI 相容 HTTPS 端點（TCP 443），需要時包含 /v1。留空就用 OpenRouter（https://openrouter.ai/api/v1）。",
+            "label": "API 端點"
+          }
+        },
+        "name": "providerEndpoint",
+        "required": false,
+        "validation": {
+          "pattern": "^https://[A-Za-z0-9.-]+(:443)?(/[A-Za-z0-9._~/-]*)?$"
+        }
+      },
+      {
+        "description": "Separate HTTPS dashboard hostname.",
+        "label": "Dashboard domain",
+        "locales": {
+          "zh-CN": {
+            "description": "管理界面单独使用的 HTTPS 域名。",
+            "label": "管理界面域名"
+          },
+          "zh-TW": {
+            "description": "管理介面另外使用的 HTTPS 網域。",
+            "label": "管理介面網域"
+          }
+        },
+        "name": "adminDomain",
+        "required": true,
+        "validation": {
+          "pattern": "^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$"
+        }
+      },
+      {
+        "description": "Independent generated dashboard password for user admin.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "dashboardPassword",
+        "secret": {
+          "key": "dashboard-password",
+          "name": "hermes-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Independent generated dashboard session-signing key.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "dashboardSessionKey",
+        "secret": {
+          "key": "dashboard-session-key",
+          "name": "hermes-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      }
+    ],
+    "kind": "Template",
+    "metadata": {
+      "homepage": "https://github.com/NousResearch/hermes-agent",
+      "license": "MIT",
+      "locales": {
+        "zh-CN": {
+          "summary": "Hermes AI 智能体，附 API 和管理面板，可接 OpenRouter 或其他兼容 OpenAI 的服务。"
+        },
+        "zh-TW": {
+          "summary": "Hermes AI 代理，附 API 和管理面板，可接 OpenRouter 或其他相容 OpenAI 的服務。"
+        }
+      },
+      "name": "Hermes Agent",
+      "summary": "The Hermes AI agent with an API and a dashboard, using OpenRouter or another OpenAI-compatible provider.",
+      "version": "v2026.8.16.2"
+    },
+    "requires": [
+      {
+        "component": "traefik"
+      },
+      {
+        "component": "cert-manager"
+      }
+    ],
+    "security": {
+      "locales": {
+        "zh-CN": {
+          "summary": "Pod 以 UID 10000 运行，没有多余的权限，不能提升权限，根文件系统只读。可写入的路径只有少数几个，而且有大小上限。API 需要认证，消息平台默认全部拒绝。对外连接没有限制。"
+        },
+        "zh-TW": {
+          "summary": "Pod 以 UID 10000 執行，沒有多餘的權限，不能提升權限，根檔案系統唯讀。可寫入的路徑只有少數幾個，而且有大小上限。API 需要驗證，通訊平台預設全部拒絕。對外連線沒有限制。"
+        }
+      },
+      "risks": [
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "没有挂载主机的 socket 或路径，不用特权模式，也没有服务账号凭证。对外连接没有限制，所以代理的任务可以访问私有地址和云端 metadata 地址，请添加 egress NetworkPolicy 拦截它们。恶意的技能、提示词或网页内容，可能接管代理的状态和凭证。每个信任范围请各用一个命名空间，不可信的用户请用专用节点。",
+              "risk": "代理的工具会启动子进程，并替高度可信的用户运行代码。"
+            },
+            "zh-TW": {
+              "mitigation": "沒有掛載主機的 socket 或路徑，不用特權模式，也沒有服務帳號認證資訊。對外連線沒有限制，所以代理的任務可以連到私有位址和雲端 metadata 位址，請加上 egress NetworkPolicy 擋掉它們。惡意的技能、提示詞或網頁內容，可能接管代理的狀態和認證資訊。每個信任範圍請各用一個命名空間，不信任的使用者請用專用節點。",
+              "risk": "代理的工具會啟動子程序，並替高度受信任的使用者執行程式碼。"
+            }
+          },
+          "mitigation": "There is no host socket or host path, no privileged mode and no service-account credentials. Outbound traffic is not limited, so agent tasks can reach private and cloud metadata addresses. Add an egress NetworkPolicy to block them. A malicious skill, prompt or web page can take over the agent's state and credentials. Give each trust boundary its own namespace, and use dedicated nodes for users you do not trust.",
+          "risk": "The agent's tools start subprocesses and run code for highly trusted users."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "只允许一个写入者，只安装你信任的技能。延迟安装已关闭。在网关停止时，做加密的备份并存到节点之外的地方，也要演练恢复。恢复之后，先检查文件所有者、服务商访问权限和消息白名单，再让客户端连回来。只存在节点本地的 StorageClass 没有高可用，也没有快照。",
+              "risk": "保存的状态里有服务商凭证、对话、记忆，还有能运行代码的技能。"
+            },
+            "zh-TW": {
+              "mitigation": "只允許一個寫入者，只安裝你信任的技能。延遲安裝已關閉。在閘道停止時，做加密的備份並存到節點以外的地方，也要演練還原。還原之後，先檢查檔案擁有者、服務商存取權和通訊白名單，再讓用戶端連回來。只存在節點本機的 StorageClass 沒有高可用，也沒有快照。",
+              "risk": "保存的狀態裡有服務商認證資訊、對話、記憶，還有能執行程式碼的技能。"
+            }
+          },
+          "mitigation": "Allow only one writer, and install only skills you trust. Lazy installs are turned off. Take encrypted backups off the node while the gateway is stopped, and rehearse a restore. After a restore, check file ownership, provider access and the messaging allowlists before you send clients back to it. A node-local StorageClass has no high availability and no snapshots.",
+          "risk": "The saved state holds provider credentials, conversations, memories and skills that can run code."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "Basic-auth 密码和会话密钥是分开生成的，仪表板也有自己独立的主机名。任何能访问那个主机名的人都能打开仪表板，所以请保管好生成的密码。想限制谁能访问，请在服务的网络设置里添加 IP 限制。",
+              "risk": "仪表板可以管理工具、配置文件和机密，能进去的人权力很大。"
+            },
+            "zh-TW": {
+              "mitigation": "Basic-auth 密碼和工作階段金鑰是分開產生的，儀表板也有自己獨立的主機名稱。任何連得到那個主機名稱的人都能開啟儀表板，所以請保管好產生的密碼。想限制誰能連進來，請在服務的網路設定裡加上 IP 限制。",
+              "risk": "儀表板可以管理工具、設定檔和機密，能進去的人權力很大。"
+            }
+          },
+          "mitigation": "The Basic-auth password and the session key are generated separately, and the dashboard has its own hostname. Anyone who can reach that hostname can open the dashboard, so keep the generated password private. To limit who can reach it, add an IP limit in the service's network settings.",
+          "risk": "The dashboard can manage tools, profiles and secrets, so whoever gets in has a lot of power."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "这个密钥会盖过 hermes-secrets 里的密钥，用 Secret 里的密钥调用 API 可能会得到 401。这时改用 /opt/data/.env 里的 API_SERVER_KEY。镜像内置的技能不会自动设置。",
+              "risk": "Pod 不运行镜像的 s6 /init，因为 /init 需要 DAC_OVERRIDE 权限。所以镜像第一次启动时的技能初始化不会运行，而且新版本会把随机的 API_SERVER_KEY 写进 /opt/data/.env。"
+            },
+            "zh-TW": {
+              "mitigation": "這把金鑰會蓋過 hermes-secrets 裡的金鑰，用 Secret 裡的金鑰呼叫 API 可能會得到 401。這時改用 /opt/data/.env 裡的 API_SERVER_KEY。映像檔內建的技能不會自動設定。",
+              "risk": "Pod 不執行映像檔的 s6 /init，因為 /init 需要 DAC_OVERRIDE 權限。所以映像檔第一次啟動時的技能初始化不會執行，而且新版本會把隨機的 API_SERVER_KEY 寫進 /opt/data/.env。"
+            }
+          },
+          "mitigation": "That key overrides the one from hermes-secrets, so API calls with the Secret key may get 401. If that happens, use the API_SERVER_KEY in /opt/data/.env. The bundled skills are not set up.",
+          "risk": "The pod does not run the image's s6 /init, because /init needs the DAC_OVERRIDE capability. So the image's first-boot skill setup does not run, and newer versions write a random API_SERVER_KEY to /opt/data/.env."
+        }
+      ],
+      "summary": "The pod runs as UID 10000 with no extra capabilities, no privilege escalation and a read-only root filesystem. Only a few paths are writable, and they have size limits. The API needs authentication, and messaging platforms are denied by default. Outbound traffic is not limited."
+    },
+    "services": [
+      {
+        "domains": [
+          "{{ .Inputs.adminDomain }}",
+          "{{ .Domain }}"
+        ],
+        "name": "hermes-agent",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "dashboard",
+            "port": 9119
+          },
+          {
+            "name": "api",
+            "port": 5000
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "2500m",
+            "memory": "3Gi"
+          },
+          "requests": {
+            "cpu": "300m",
+            "memory": "768Mi"
+          }
+        }
+      }
+    ],
+    "smoke": [
+      {
+        "condition": "condition=Available",
+        "http": {
+          "path": "/health",
+          "port": 5000,
+          "service": "hermes-agent",
+          "status": 200
+        },
+        "name": "hermes-api-ready",
+        "resource": "deployment/hermes-agent",
+        "timeout": "600s"
+      }
+    ]
+  },
+  "manifests": "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: hermes-bootstrap\n  namespace: '{{ .Namespace }}'\ndata:\n  provider-config.py: |\n    import os\n    from pathlib import Path\n    import yaml\n    path = Path(os.environ[\"HERMES_HOME\"]) / \"config.yaml\"\n    config = yaml.safe_load(path.read_text()) if path.exists() else None\n    config = config or {}\n    model = config.get(\"model\") or {}\n    model[\"provider\"] = \"custom\"\n    model[\"base_url\"] = os.environ[\"LLM_BASE_URL\"]\n    model[\"api_key\"] = os.environ[\"LLM_API_KEY\"]\n    model[\"default\"] = os.environ[\"LLM_MODEL\"]\n    config[\"model\"] = model\n    path.write_text(yaml.safe_dump(config, sort_keys=False, allow_unicode=True))\n    path.chmod(0o600)\n---\napiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: hermes-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes:\n  - ReadWriteOnce\n  resources:\n    requests:\n      storage: 10Gi\n---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: hermes-agent\n  namespace: '{{ .Namespace }}'\nspec:\n  replicas: 1\n  revisionHistoryLimit: 2\n  strategy:\n    type: Recreate\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: hermes-agent\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: hermes-agent\n        app.kubernetes.io/name: hermes-agent\n    spec:\n      automountServiceAccountToken: false\n      terminationGracePeriodSeconds: 90\n      securityContext:\n        runAsUser: 10000\n        runAsGroup: 10000\n        runAsNonRoot: true\n        fsGroup: 10000\n        seccompProfile:\n          type: RuntimeDefault\n      initContainers:\n      - name: provider-config\n        image: nousresearch/hermes-agent:v2026.8.16.2@sha256:a39fc11620213e3669a327aff5c6cb1eb2b8a238c6044e33e7ef8885833d89a7\n        command:\n        - /opt/hermes/.venv/bin/python\n        - /bootstrap/provider-config.py\n        env:\n        - name: HOME\n          value: /opt/data\n        - name: HERMES_HOME\n          value: /opt/data\n        - name: LLM_MODEL\n          value: '{{ .Inputs.model }}'\n        - name: LLM_API_KEY\n          valueFrom:\n            secretKeyRef:\n              name: '{{ .Inputs.providerSecret }}'\n              key: api-key\n        - name: LLM_BASE_URL\n          value: '{{ .Inputs.providerEndpoint }}'\n        securityContext:\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n        resources:\n          requests:\n            cpu: 50m\n            memory: 64Mi\n          limits:\n            cpu: 500m\n            memory: 256Mi\n        volumeMounts:\n        - name: data\n          mountPath: /opt/data\n        - name: bootstrap\n          mountPath: /bootstrap\n          readOnly: true\n      containers:\n      - name: hermes-agent\n        image: nousresearch/hermes-agent:v2026.8.16.2@sha256:a39fc11620213e3669a327aff5c6cb1eb2b8a238c6044e33e7ef8885833d89a7\n        command:\n        - /opt/hermes/.venv/bin/hermes\n        - gateway\n        - run\n        env:\n        - name: HOME\n          value: /opt/data\n        - name: HERMES_HOME\n          value: /opt/data\n        - name: HERMES_WRITE_SAFE_ROOT\n          value: /opt/data\n        - name: HERMES_DISABLE_LAZY_INSTALLS\n          value: '1'\n        - name: API_SERVER_ENABLED\n          value: 'true'\n        - name: API_SERVER_HOST\n          value: 0.0.0.0\n        - name: API_SERVER_PORT\n          value: '5000'\n        - name: GATEWAY_ALLOW_ALL_USERS\n          value: 'false'\n        - name: API_SERVER_KEY\n          valueFrom:\n            secretKeyRef:\n              name: hermes-secrets\n              key: api-key\n        - name: LLM_MODEL\n          value: '{{ .Inputs.model }}'\n        - name: LLM_API_KEY\n          valueFrom:\n            secretKeyRef:\n              name: '{{ .Inputs.providerSecret }}'\n              key: api-key\n        - name: LLM_BASE_URL\n          value: '{{ .Inputs.providerEndpoint }}'\n        securityContext:\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n        ports:\n        - name: api\n          containerPort: 5000\n        resources:\n          requests:\n            cpu: 250m\n            memory: 512Mi\n            ephemeral-storage: 256Mi\n          limits:\n            cpu: '2'\n            memory: 2Gi\n            ephemeral-storage: 2Gi\n        startupProbe:\n          httpGet:\n            path: /health\n            port: api\n          periodSeconds: 5\n          failureThreshold: 120\n        readinessProbe:\n          httpGet:\n            path: /health\n            port: api\n          periodSeconds: 10\n          timeoutSeconds: 5\n        livenessProbe:\n          httpGet:\n            path: /health\n            port: api\n          periodSeconds: 30\n          timeoutSeconds: 5\n          failureThreshold: 5\n        volumeMounts:\n        - name: data\n          mountPath: /opt/data\n        - name: tmp\n          mountPath: /tmp\n      - name: dashboard\n        image: nousresearch/hermes-agent:v2026.8.16.2@sha256:a39fc11620213e3669a327aff5c6cb1eb2b8a238c6044e33e7ef8885833d89a7\n        command:\n        - /opt/hermes/.venv/bin/hermes\n        - dashboard\n        - --host\n        - 0.0.0.0\n        - --port\n        - '9119'\n        - --no-open\n        env:\n        - name: HOME\n          value: /opt/data\n        - name: HERMES_HOME\n          value: /opt/data\n        - name: HERMES_WRITE_SAFE_ROOT\n          value: /opt/data\n        - name: HERMES_DISABLE_LAZY_INSTALLS\n          value: '1'\n        - name: HERMES_DASHBOARD_BASIC_AUTH_USERNAME\n          value: admin\n        - name: HERMES_DASHBOARD_BASIC_AUTH_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: hermes-secrets\n              key: dashboard-password\n        - name: HERMES_DASHBOARD_BASIC_AUTH_SECRET\n          valueFrom:\n            secretKeyRef:\n              name: hermes-secrets\n              key: dashboard-session-key\n        securityContext:\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n        ports:\n        - name: dashboard\n          containerPort: 9119\n        resources:\n          requests:\n            cpu: 50m\n            memory: 256Mi\n          limits:\n            cpu: 500m\n            memory: 1Gi\n        startupProbe:\n          tcpSocket:\n            port: dashboard\n          periodSeconds: 5\n          failureThreshold: 60\n        readinessProbe:\n          tcpSocket:\n            port: dashboard\n          periodSeconds: 10\n        livenessProbe:\n          tcpSocket:\n            port: dashboard\n          periodSeconds: 30\n          failureThreshold: 5\n        volumeMounts:\n        - name: data\n          mountPath: /opt/data\n        - name: tmp\n          mountPath: /tmp\n      volumes:\n      - name: data\n        persistentVolumeClaim:\n          claimName: hermes-data\n      - name: tmp\n        emptyDir:\n          sizeLimit: 1Gi\n      - name: bootstrap\n        configMap:\n          name: hermes-bootstrap\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: hermes-agent\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: hermes-agent\n  ports:\n  - name: dashboard\n    port: 9119\n    targetPort: dashboard\n  - name: api\n    port: 5000\n    targetPort: api\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: hermes-api\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts:\n    - '{{ .Domain }}'\n    secretName: hermes-api-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: hermes-agent\n            port:\n              name: api\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: hermes-dashboard\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts:\n    - '{{ .Inputs.adminDomain }}'\n    secretName: hermes-dashboard-tls\n  rules:\n  - host: '{{ .Inputs.adminDomain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: hermes-agent\n            port:\n              name: dashboard\n"
+}

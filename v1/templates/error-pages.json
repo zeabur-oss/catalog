@@ -1,0 +1,110 @@
+{
+  "id": "error-pages",
+  "sourceDigest": "h1:HwFBcyt6Elx5r5PWvPIyLr0IjTcqNQIN4a8LLwnU03o=",
+  "template": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "kind": "Template",
+    "metadata": {
+      "homepage": "https://nginx.org/",
+      "license": "BSD-2-Clause AND Apache-2.0",
+      "locales": {
+        "zh-CN": {
+          "summary": "为项目的域名显示维护页面和错误页面。"
+        },
+        "zh-TW": {
+          "summary": "為專案的網域顯示維護頁面和錯誤頁面。"
+        }
+      },
+      "name": "Error pages",
+      "summary": "Shows a maintenance page and error pages for the project's domains.",
+      "version": "1.31.7-alpine-slim"
+    },
+    "requires": [
+      {
+        "component": "traefik"
+      }
+    ],
+    "security": {
+      "locales": {
+        "zh-CN": {
+          "summary": "Pod 无法访问 Kubernetes API。它以非 root 的 UID 101 运行，文件系统只读，没有多余的权限，也不会主动对外连接。Service 和存放页面的 ConfigMap 都带有 zeabur.com/page-server=true 标签，Zeabur 靠这个标签找到页面服务器。"
+        },
+        "zh-TW": {
+          "summary": "Pod 無法存取 Kubernetes API。它以非 root 的 UID 101 執行，檔案系統唯讀，沒有多餘的權限，也不會主動對外連線。Service 和放頁面的 ConfigMap 都帶有 zeabur.com/page-server=true 標籤，Zeabur 靠這個標籤找到頁面伺服器。"
+        }
+      },
+      "risks": [
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "只把 ConfigMap 的编辑权限给可以修改网站的人。服务器会原样送出 HTML，不会执行任何代码。",
+              "risk": "能编辑 ConfigMap 的人，就能改变访客看到的内容。"
+            },
+            "zh-TW": {
+              "mitigation": "只把 ConfigMap 的編輯權限給可以修改網站的人。伺服器會原封不動送出 HTML，不會執行任何程式。",
+              "risk": "能編輯 ConfigMap 的人，就能改變訪客看到的內容。"
+            }
+          },
+          "mitigation": "Give edit rights on ConfigMaps only to people who may change the site. The server sends the HTML as is and runs no code.",
+          "risk": "Anyone who can edit the ConfigMap changes what visitors see."
+        }
+      ],
+      "summary": "The pod cannot reach the Kubernetes API. It runs as non-root UID 101 with a read-only filesystem and no extra capabilities, and it makes no outbound connections. The Service and the ConfigMap of pages carry the label zeabur.com/page-server=true, which Zeabur uses to find the page server."
+    },
+    "services": [
+      {
+        "name": "error-pages",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "pages",
+            "port": 8080
+          },
+          {
+            "name": "maintenance",
+            "port": 8081
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "100m",
+            "memory": "32Mi"
+          },
+          "requests": {
+            "cpu": "5m",
+            "memory": "8Mi"
+          }
+        }
+      }
+    ],
+    "smoke": [
+      {
+        "condition": "condition=Available",
+        "http": {
+          "contains": "Bad gateway",
+          "path": "/502.html",
+          "port": 8080,
+          "service": "error-pages",
+          "status": 200
+        },
+        "name": "pages",
+        "resource": "deployment/error-pages",
+        "timeout": "180s"
+      },
+      {
+        "condition": "condition=Available",
+        "http": {
+          "contains": "Down for maintenance",
+          "path": "/any/path",
+          "port": 8081,
+          "service": "error-pages",
+          "status": 503
+        },
+        "name": "maintenance-port",
+        "resource": "deployment/error-pages",
+        "timeout": "60s"
+      }
+    ]
+  },
+  "manifests": "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: error-pages\n  namespace: {{ .Namespace }}\n  labels:\n    # Zeabur edits the pages of the ConfigMap with this label.\n    zeabur.com/page-server: \"true\"\ndata:\n  404.html: |\n    \u003c!doctype html\u003e\n    \u003chtml lang=\"en\"\u003e\n    \u003chead\u003e\n    \u003cmeta charset=\"utf-8\"\u003e\n    \u003cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1\"\u003e\n    \u003ctitle\u003eNot found\u003c/title\u003e\n    \u003cstyle\u003e\n    body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: system-ui, sans-serif; color: #1f1f1f; background: #fafafa; }\n    main { max-width: 32rem; padding: 2rem; text-align: center; }\n    h1 { font-size: 1.5rem; font-weight: 600; }\n    p { color: #5c5c5c; }\n    @media (prefers-color-scheme: dark) { body { color: #ededed; background: #141414; } p { color: #a3a3a3; } }\n    \u003c/style\u003e\n    \u003c/head\u003e\n    \u003cbody\u003e\n    \u003cmain\u003e\n    \u003ch1\u003eNot found\u003c/h1\u003e\n    \u003cp\u003eCheck the address and try again.\u003c/p\u003e\n    \u003c/main\u003e\n    \u003c/body\u003e\n    \u003c/html\u003e\n  502.html: |\n    \u003c!doctype html\u003e\n    \u003chtml lang=\"en\"\u003e\n    \u003chead\u003e\n    \u003cmeta charset=\"utf-8\"\u003e\n    \u003cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1\"\u003e\n    \u003ctitle\u003eBad gateway\u003c/title\u003e\n    \u003cstyle\u003e\n    body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: system-ui, sans-serif; color: #1f1f1f; background: #fafafa; }\n    main { max-width: 32rem; padding: 2rem; text-align: center; }\n    h1 { font-size: 1.5rem; font-weight: 600; }\n    p { color: #5c5c5c; }\n    @media (prefers-color-scheme: dark) { body { color: #ededed; background: #141414; } p { color: #a3a3a3; } }\n    \u003c/style\u003e\n    \u003c/head\u003e\n    \u003cbody\u003e\n    \u003cmain\u003e\n    \u003ch1\u003eBad gateway\u003c/h1\u003e\n    \u003cp\u003eThe site cannot answer right now. Try again in a few minutes.\u003c/p\u003e\n    \u003c/main\u003e\n    \u003c/body\u003e\n    \u003c/html\u003e\n  503.html: |\n    \u003c!doctype html\u003e\n    \u003chtml lang=\"en\"\u003e\n    \u003chead\u003e\n    \u003cmeta charset=\"utf-8\"\u003e\n    \u003cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1\"\u003e\n    \u003ctitle\u003eService unavailable\u003c/title\u003e\n    \u003cstyle\u003e\n    body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: system-ui, sans-serif; color: #1f1f1f; background: #fafafa; }\n    main { max-width: 32rem; padding: 2rem; text-align: center; }\n    h1 { font-size: 1.5rem; font-weight: 600; }\n    p { color: #5c5c5c; }\n    @media (prefers-color-scheme: dark) { body { color: #ededed; background: #141414; } p { color: #a3a3a3; } }\n    \u003c/style\u003e\n    \u003c/head\u003e\n    \u003cbody\u003e\n    \u003cmain\u003e\n    \u003ch1\u003eService unavailable\u003c/h1\u003e\n    \u003cp\u003eThe site cannot answer right now. Try again in a few minutes.\u003c/p\u003e\n    \u003c/main\u003e\n    \u003c/body\u003e\n    \u003c/html\u003e\n  504.html: |\n    \u003c!doctype html\u003e\n    \u003chtml lang=\"en\"\u003e\n    \u003chead\u003e\n    \u003cmeta charset=\"utf-8\"\u003e\n    \u003cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1\"\u003e\n    \u003ctitle\u003eGateway timeout\u003c/title\u003e\n    \u003cstyle\u003e\n    body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: system-ui, sans-serif; color: #1f1f1f; background: #fafafa; }\n    main { max-width: 32rem; padding: 2rem; text-align: center; }\n    h1 { font-size: 1.5rem; font-weight: 600; }\n    p { color: #5c5c5c; }\n    @media (prefers-color-scheme: dark) { body { color: #ededed; background: #141414; } p { color: #a3a3a3; } }\n    \u003c/style\u003e\n    \u003c/head\u003e\n    \u003cbody\u003e\n    \u003cmain\u003e\n    \u003ch1\u003eGateway timeout\u003c/h1\u003e\n    \u003cp\u003eThe site took too long to answer. Try again in a few minutes.\u003c/p\u003e\n    \u003c/main\u003e\n    \u003c/body\u003e\n    \u003c/html\u003e\n  maintenance.html: |\n    \u003c!doctype html\u003e\n    \u003chtml lang=\"en\"\u003e\n    \u003chead\u003e\n    \u003cmeta charset=\"utf-8\"\u003e\n    \u003cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1\"\u003e\n    \u003ctitle\u003eDown for maintenance\u003c/title\u003e\n    \u003cstyle\u003e\n    body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: system-ui, sans-serif; color: #1f1f1f; background: #fafafa; }\n    main { max-width: 32rem; padding: 2rem; text-align: center; }\n    h1 { font-size: 1.5rem; font-weight: 600; }\n    p { color: #5c5c5c; }\n    @media (prefers-color-scheme: dark) { body { color: #ededed; background: #141414; } p { color: #a3a3a3; } }\n    \u003c/style\u003e\n    \u003c/head\u003e\n    \u003cbody\u003e\n    \u003cmain\u003e\n    \u003ch1\u003eDown for maintenance\u003c/h1\u003e\n    \u003cp\u003eThe site is back soon.\u003c/p\u003e\n    \u003c/main\u003e\n    \u003c/body\u003e\n    \u003c/html\u003e\n---\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: error-pages-nginx\n  namespace: {{ .Namespace }}\ndata:\n  # nginx opens each page on each request, so an edited page needs no restart.\n  nginx.conf: |\n    worker_processes 1;\n    pid /tmp/nginx.pid;\n    error_log /dev/stderr warn;\n    events {\n        worker_connections 256;\n    }\n    http {\n        include /etc/nginx/mime.types;\n        default_type application/octet-stream;\n        charset utf-8;\n        server_tokens off;\n        access_log off;\n        client_body_temp_path /tmp/client_temp;\n        proxy_temp_path /tmp/proxy_temp;\n        fastcgi_temp_path /tmp/fastcgi_temp;\n        uwsgi_temp_path /tmp/uwsgi_temp;\n        scgi_temp_path /tmp/scgi_temp;\n        root /usr/share/nginx/html;\n        server {\n            listen 8080;\n            location = /healthz {\n                default_type text/plain;\n                return 200 \"ok\\n\";\n            }\n        }\n        server {\n            listen 8081;\n            add_header Cache-Control \"no-store\" always;\n            error_page 404 503 =503 /maintenance.html;\n            location / {\n                return 503;\n            }\n            location = /maintenance.html {\n                internal;\n            }\n        }\n    }\n---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: error-pages\n  namespace: {{ .Namespace }}\nspec:\n  replicas: 1\n  revisionHistoryLimit: 3\n  selector:\n    matchLabels: {app.kubernetes.io/name: error-pages}\n  strategy:\n    type: RollingUpdate\n    rollingUpdate: {maxSurge: 1, maxUnavailable: 0}\n  template:\n    metadata:\n      labels: {app.kubernetes.io/name: error-pages, templates.zeabur.com/template: error-pages}\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 101\n        runAsGroup: 101\n        seccompProfile: {type: RuntimeDefault}\n      containers:\n        - name: nginx\n          image: docker.io/nginxinc/nginx-unprivileged:1.31.7-alpine-slim@sha256:a8cb0f33d51fa107c96fd2bd3a71aaf564ec131e9d2bdf8700944f0ed8b170d7\n          command: [nginx]\n          args: [-g, 'daemon off;']\n          ports:\n            - {name: pages, containerPort: 8080}\n            - {name: maintenance, containerPort: 8081}\n          securityContext:\n            runAsNonRoot: true\n            allowPrivilegeEscalation: false\n            readOnlyRootFilesystem: true\n            capabilities: {drop: [ALL]}\n          resources:\n            requests: {cpu: 5m, memory: 8Mi}\n            limits: {cpu: 100m, memory: 32Mi}\n          readinessProbe:\n            httpGet: {path: /healthz, port: pages}\n            periodSeconds: 5\n          livenessProbe:\n            httpGet: {path: /healthz, port: pages}\n            periodSeconds: 10\n          volumeMounts:\n            - {name: pages, mountPath: /usr/share/nginx/html, readOnly: true}\n            - {name: config, mountPath: /etc/nginx/nginx.conf, subPath: nginx.conf, readOnly: true}\n            - {name: tmp, mountPath: /tmp}\n      volumes:\n        - name: pages\n          configMap: {name: error-pages}\n        - name: config\n          configMap: {name: error-pages-nginx}\n        - name: tmp\n          emptyDir: {medium: Memory, sizeLimit: 8Mi}\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: error-pages\n  namespace: {{ .Namespace }}\n  labels:\n    # Zeabur sends maintenance and error pages to the Service with this label.\n    zeabur.com/page-server: \"true\"\nspec:\n  selector: {app.kubernetes.io/name: error-pages}\n  ports:\n    - {name: pages, port: 8080, targetPort: pages, appProtocol: http}\n    - {name: maintenance, port: 8081, targetPort: maintenance, appProtocol: http}\n"
+}

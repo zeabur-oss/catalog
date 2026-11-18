@@ -1,0 +1,448 @@
+{
+  "id": "librechat",
+  "sourceDigest": "h1:BxPKyrTwNW3m5XnvZUqmKT5SoLXg+9+ZmGQaO1hQjew=",
+  "template": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "inputs": [
+      {
+        "description": "Initial administrator email; password is generated in app-secrets/admin-password. Public registration is disabled. Changing the Secret later does not reset an existing password.",
+        "label": "Administrator email",
+        "locales": {
+          "zh-CN": {
+            "description": "第一个管理员的邮箱。密码会自动生成，放在机密 app-secrets 的 admin-password。不开放公开注册。之后修改机密不会重置已有的密码。",
+            "label": "管理员邮箱"
+          },
+          "zh-TW": {
+            "description": "第一個管理員的 Email。密碼會自動產生，放在機密 app-secrets 的 admin-password。不開放公開註冊。之後改機密不會重設已有的密碼。",
+            "label": "管理員 Email"
+          }
+        },
+        "name": "adminEmail",
+        "required": true,
+        "validation": {
+          "pattern": "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+        }
+      },
+      {
+        "description": "Existing Secret with real OPENAI_API_KEY used by chat and RAG embeddings.",
+        "label": "OpenAI API key secret",
+        "locales": {
+          "zh-CN": {
+            "description": "这个项目里现有的机密，含真实的 OPENAI_API_KEY，聊天和 RAG 嵌入都会用到。",
+            "label": "OpenAI API 密钥的机密"
+          },
+          "zh-TW": {
+            "description": "這個專案裡現有的機密，含真實的 OPENAI_API_KEY，聊天和 RAG 嵌入都會用到。",
+            "label": "OpenAI API 金鑰的機密"
+          }
+        },
+        "name": "providerSecret",
+        "required": true,
+        "validation": {
+          "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+        }
+      },
+      {
+        "description": "adminPassword generated credential; retain during upgrades.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "adminPassword",
+        "secret": {
+          "key": "admin-password",
+          "name": "app-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "mongoPassword generated credential; retain during upgrades.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "mongoPassword",
+        "secret": {
+          "key": "mongo-password",
+          "name": "app-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "jwtSecret generated credential; retain during upgrades.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "jwtSecret",
+        "secret": {
+          "key": "jwt-secret",
+          "name": "app-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "jwtRefreshSecret generated credential; retain during upgrades.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "jwtRefreshSecret",
+        "secret": {
+          "key": "jwt-refresh-secret",
+          "name": "app-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "credsKey generated credential; retain during upgrades.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "credsKey",
+        "secret": {
+          "key": "creds-key",
+          "name": "app-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "credsIv generated credential; retain during upgrades.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "credsIv",
+        "secret": {
+          "key": "creds-iv",
+          "name": "app-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "meiliKey generated credential; retain during upgrades.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "meiliKey",
+        "secret": {
+          "key": "meili-key",
+          "name": "app-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      }
+    ],
+    "kind": "Template",
+    "metadata": {
+      "homepage": "https://github.com/danny-avila/LibreChat",
+      "license": "MIT AND SSPL-1.0 AND PostgreSQL AND Apache-2.0",
+      "locales": {
+        "zh-CN": {
+          "summary": "需要登录的 AI 聊天应用，搭配 MongoDB、用于文档检索的 PostgreSQL 和 Meilisearch。"
+        },
+        "zh-TW": {
+          "summary": "需要登入的 AI 聊天應用程式，搭配 MongoDB、用來搜尋文件的 PostgreSQL 和 Meilisearch。"
+        }
+      },
+      "name": "LibreChat",
+      "summary": "An AI chat app with sign-in, MongoDB, PostgreSQL for document search and Meilisearch.",
+      "version": "latest"
+    },
+    "requires": [
+      {
+        "component": "percona-mongodb"
+      },
+      {
+        "component": "cloudnative-pg"
+      },
+      {
+        "component": "traefik"
+      },
+      {
+        "component": "cert-manager"
+      }
+    ],
+    "security": {
+      "locales": {
+        "zh-CN": {
+          "summary": "应用 Pod 以非 root 身份运行，镜像只读，没有 API 令牌。使用 TLS 和认证的 Percona MongoDB Pod 保持受限配置，只有一个例外：根文件系统可写入，因为 TLS 文件写死放在 /tmp。CloudNativePG 使用 operator 管理、权限受限的令牌。MongoDB 要求客户端证书。LibreChat 会出示集群 CA 签发、有效期 90 天的客户端证书，由 cert-manager 负责更新，证书一换，LibreChat 就会重启。"
+        },
+        "zh-TW": {
+          "summary": "應用程式 Pod 以非 root 身分執行，映像檔唯讀，沒有 API 權杖。使用 TLS 和驗證的 Percona MongoDB Pod 維持受限設定，只有一個例外：根檔案系統可寫入，因為 TLS 檔案寫死放在 /tmp。CloudNativePG 使用 operator 管理、權限受限的權杖。MongoDB 要求用戶端憑證。LibreChat 會出示叢集 CA 簽發、有效期 90 天的用戶端憑證，由 cert-manager 負責更新，憑證一換，LibreChat 就會重新啟動。"
+        }
+      },
+      "risks": [
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "只有 operator 管理的 Pod 拿到这个明确的例外：readOnlyRootFilesystem=false。它们仍然强制使用 TLS，以 UID 1001 运行，去掉所有额外权限，不允许提升权限，并使用 RuntimeDefault。所有普通应用的镜像都保持只读。协调完成后不会再改动任何东西，TLS 也不会被关掉。",
+              "risk": "Percona v1.23.1 的启动脚本，会把 TLS 文件写到写死的路径 /tmp/tls.pem 和 /tmp/tls-internal.pem。自定义资源也没办法为主容器单独挂载 /tmp。"
+            },
+            "zh-TW": {
+              "mitigation": "只有 operator 管理的 Pod 拿到這個明確的例外：readOnlyRootFilesystem=false。它們仍然強制使用 TLS，以 UID 1001 執行，拿掉所有額外權限，不允許提升權限，並使用 RuntimeDefault。所有一般應用程式的映像檔都維持唯讀。協調完成後不會再改動任何東西，TLS 也不會被關掉。",
+              "risk": "Percona v1.23.1 的啟動腳本，會把 TLS 檔案寫到寫死的路徑 /tmp/tls.pem 和 /tmp/tls-internal.pem。自訂資源也沒辦法替主容器另外掛載 /tmp。"
+            }
+          },
+          "mitigation": "Only the operator-managed pods get this explicit exception, readOnlyRootFilesystem=false. They still require TLS, run as UID 1001, drop all capabilities, allow no escalation and use RuntimeDefault. All ordinary application images stay read-only. Nothing is changed after reconcile, and TLS is never turned off.",
+          "risk": "The Percona v1.23.1 entry scripts write TLS files to the hardcoded paths /tmp/tls.pem and /tmp/tls-internal.pem. The custom resource has no way to mount /tmp separately in the main container."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "部署时必须明确确认这份许可。Mongo 服务是私有的，只有应用能访问。operator 的 Apache-2.0 许可只涵盖 operator 本身。Meilisearch 使用 MIT 许可的社区版镜像，不含 BUSL 许可的企业版模块。",
+              "risk": "MongoDB 服务器采用 SSPL-1.0 许可，把 MongoDB 作为服务提供给别人时，要承担额外义务。SSPL 并未通过 OSI 认可。"
+            },
+            "zh-TW": {
+              "mitigation": "部署時必須明確確認這份授權。Mongo 服務是私有的，只有應用程式連得到。operator 的 Apache-2.0 授權只涵蓋 operator 本身。Meilisearch 使用 MIT 授權的社群版映像檔，不含 BUSL 授權的企業版模組。",
+              "risk": "MongoDB 伺服器採用 SSPL-1.0 授權，把 MongoDB 當成服務提供給別人時，要負擔額外義務。SSPL 並未通過 OSI 認可。"
+            }
+          },
+          "mitigation": "You must acknowledge the exact license when you deploy. The Mongo service is private and reachable only by the app. The Apache-2.0 license of the operator covers only the operator. Meilisearch uses the MIT community image, and the BUSL enterprise modules are not included.",
+          "risk": "The MongoDB server uses the SSPL-1.0 license, which sets duties for anyone who offers MongoDB as a service. SSPL is not OSI-approved."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "目录里的 operator 会为每个集群创建服务账号和 RBAC 权限。普通应用 Pod 和 Percona Pod 的令牌都已停用。",
+              "risk": "CloudNativePG 的 instance manager 需要 Kubernetes API 凭证。"
+            },
+            "zh-TW": {
+              "mitigation": "目錄裡的 operator 會為每個叢集建立服務帳號和 RBAC 權限。一般應用程式 Pod 和 Percona Pod 的權杖都已停用。",
+              "risk": "CloudNativePG 的 instance manager 需要 Kubernetes API 認證資訊。"
+            }
+          },
+          "mitigation": "The catalog operator creates a service account and RBAC permissions for each cluster. The ordinary app pods and the Percona pods have their tokens turned off.",
+          "risk": "The CloudNativePG instance manager needs Kubernetes API credentials."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "Meilisearch 以加固过的单副本 StatefulSet 运行。文件、MongoDB、pgvector、Meilisearch 转储文件和生成的机密，请一起备份。为了让文件备份一致，备份时要先停掉写入的程序。请在独立的命名空间测试完整恢复，并检查登录、已保存的凭证、搜索和文档检索是否正常。",
+              "risk": "Meilisearch 在目录里没有 operator。本地文件和各个数据库的恢复时间点也各不相同。"
+            },
+            "zh-TW": {
+              "mitigation": "Meilisearch 以加固過的單副本 StatefulSet 執行。檔案、MongoDB、pgvector、Meilisearch 傾印檔和產生的機密，請一起備份。為了讓檔案備份一致，備份時要先停掉寫入的程式。請在獨立的命名空間測試完整還原，並檢查登入、已儲存的認證資訊、搜尋和文件擷取是否正常。",
+              "risk": "Meilisearch 在目錄裡沒有 operator。本機檔案和各個資料庫的還原時間點也各不相同。"
+            }
+          },
+          "mitigation": "Meilisearch runs as a hardened single-replica StatefulSet. Back up the files, MongoDB, pgvector, Meilisearch dumps and the generated Secrets together. Stop the writers so the file backup is consistent. Test a full restore in an isolated namespace, and check login, saved credentials, search and document retrieval.",
+          "risk": "Meilisearch has no operator in the catalog. The local files and the databases are also restored from separate points in time."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "公开使用之前，请先设置你自己的隐私政策和服务条款。",
+              "risk": "应用显示的是上游 LibreChat 的隐私政策和服务条款链接。"
+            },
+            "zh-TW": {
+              "mitigation": "公開使用之前，請先設定你自己的隱私權政策和服務條款。",
+              "risk": "應用程式顯示的是上游 LibreChat 的隱私權政策和服務條款連結。"
+            }
+          },
+          "mitigation": "Set your own privacy policy and terms of service before you open the site to the public.",
+          "risk": "The app shows the upstream LibreChat privacy policy and terms links."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "新内核上 MongoDB 一启动就崩溃时，请确认 Percona Pod 带有 GLIBC_TUNABLES=glibc.pthread.rseq=1。",
+              "risk": "MongoDB 8.0.32 在 Linux 内核 6.19 以上无法启动（SERVER-121912）。模板设置了 GLIBC_TUNABLES 来绕过，但还没有在真实集群上验证过。"
+            },
+            "zh-TW": {
+              "mitigation": "新核心上 MongoDB 一啟動就當掉時，請確認 Percona Pod 有帶 GLIBC_TUNABLES=glibc.pthread.rseq=1。",
+              "risk": "MongoDB 8.0.32 在 Linux 核心 6.19 以上無法啟動（SERVER-121912）。範本設定了 GLIBC_TUNABLES 來繞過，但還沒有在真實叢集上驗證過。"
+            }
+          },
+          "mitigation": "If MongoDB crashes at start on a new kernel, check that the Percona pods carry GLIBC_TUNABLES=glibc.pthread.rseq=1.",
+          "risk": "MongoDB 8.0.32 does not start on Linux kernel 6.19 or newer (SERVER-121912). The template sets GLIBC_TUNABLES as a workaround, and this has not been verified on a real cluster."
+        }
+      ],
+      "summary": "The app pods run as non-root with read-only images and no API token. The Percona MongoDB pods use TLS and authentication and stay restricted, with one exception: a writable root filesystem for TLS files that are hardcoded to /tmp. CloudNativePG uses limited tokens that the operator manages. MongoDB requires client certificates. LibreChat presents a 90-day client certificate from the cluster CA, cert-manager renews it, and LibreChat restarts when it changes."
+    },
+    "services": [
+      {
+        "domains": [
+          "{{ .Domain }}"
+        ],
+        "name": "librechat",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "http",
+            "port": 3080
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "2",
+            "memory": "3Gi"
+          },
+          "requests": {
+            "cpu": "500m",
+            "memory": "1Gi"
+          }
+        }
+      },
+      {
+        "name": "rag-api",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "http",
+            "port": 8000
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "2",
+            "memory": "2Gi"
+          },
+          "requests": {
+            "cpu": "250m",
+            "memory": "512Mi"
+          }
+        }
+      },
+      {
+        "name": "meilisearch",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "http",
+            "port": 7700
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "1",
+            "memory": "2Gi"
+          },
+          "requests": {
+            "cpu": "200m",
+            "memory": "512Mi"
+          }
+        }
+      },
+      {
+        "name": "rag-db",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "postgresql",
+            "port": 5432
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "2",
+            "memory": "2Gi"
+          },
+          "requests": {
+            "cpu": "250m",
+            "memory": "512Mi"
+          }
+        }
+      },
+      {
+        "name": "mongodb",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "mongodb",
+            "port": 27017
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "2",
+            "memory": "2Gi"
+          },
+          "requests": {
+            "cpu": "250m",
+            "memory": "512Mi"
+          }
+        }
+      }
+    ],
+    "smoke": [
+      {
+        "condition": "condition=Available",
+        "http": {
+          "path": "/health",
+          "port": 3080,
+          "service": "librechat",
+          "status": 200
+        },
+        "name": "librechat-ready",
+        "resource": "deployment/librechat",
+        "timeout": "600s"
+      },
+      {
+        "condition": "condition=Available",
+        "http": {
+          "path": "/health",
+          "port": 8000,
+          "service": "rag-api",
+          "status": 200
+        },
+        "name": "rag-api-ready",
+        "resource": "deployment/rag-api",
+        "timeout": "600s"
+      },
+      {
+        "condition": "jsonpath={.status.readyReplicas}=1",
+        "http": {
+          "path": "/health",
+          "port": 7700,
+          "service": "meilisearch",
+          "status": 200
+        },
+        "name": "meilisearch-ready",
+        "resource": "statefulset/meilisearch",
+        "timeout": "600s"
+      },
+      {
+        "condition": "jsonpath={.status.state}=ready",
+        "name": "mongodb-ready",
+        "resource": "perconaservermongodb/mongodb",
+        "timeout": "1200s"
+      },
+      {
+        "condition": "condition=Ready",
+        "name": "pgvector-ready",
+        "resource": "cluster/rag-db",
+        "sql": {
+          "cluster": "rag-db",
+          "database": "rag",
+          "expect": "1",
+          "query": "SELECT count(*) FROM pg_extension WHERE extname='vector'"
+        },
+        "timeout": "600s"
+      }
+    ]
+  },
+  "manifests": "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: librechat-config\n  namespace: '{{ .Namespace }}'\ndata:\n  start.cjs: |\n    const { spawnSync } = require('node:child_process');\n    const path = require('node:path');\n    process.chdir('/app');\n    process.env.CREDS_KEY = Buffer.from(process.env.CREDS_KEY_SEED, 'base64url').toString('hex');\n    process.env.CREDS_IV = Buffer.from(process.env.CREDS_IV_SEED, 'base64url').subarray(0, 16).toString('hex');\n    process.env.MONGO_URI = `mongodb://librechat:${encodeURIComponent(process.env.MONGO_PASSWORD)}@mongodb-rs0-0.mongodb-rs0.{{ .Namespace }}.svc.cluster.local:27017/LibreChat?authSource=admin\u0026replicaSet=rs0\u0026tls=true\u0026tlsCAFile=/mongo-tls/ca.crt\u0026tlsCertificateKeyFile=/mongo-client/client.pem`;\n    if (process.argv[2] === 'init') {\n      for (const name of ['data', 'uploads', 'logs', 'images', 'skill']) require('node:fs').mkdirSync('/persistent/' + name, {recursive: true});\n      // The upstream administrative CLI uses the same registration service as the app.\n      // Check existence first so a container restart does not reset the account password.\n      const mongoose = require('/app/node_modules/mongoose');\n      (async () =\u003e {\n        await mongoose.connect(process.env.MONGO_URI, {serverSelectionTimeoutMS: 30000});\n        const existing = await mongoose.connection.db.collection('users').findOne({email: process.env.BOOTSTRAP_EMAIL});\n        await mongoose.disconnect();\n        if (existing) return;\n        const child = spawnSync(process.execPath, ['/app/config/create-user.js', process.env.BOOTSTRAP_EMAIL, 'Administrator', 'admin', process.env.BOOTSTRAP_PASSWORD, '--email-verified=true'], {stdio: 'inherit', env: process.env, cwd: '/app'});\n        if (child.error) throw child.error;\n        if (child.status !== 0) throw new Error('Upstream account creation failed');\n      })().catch(error =\u003e { console.error(error.message); process.exitCode = 1; });\n    } else {\n      // The driver reads the client certificate once. Exit after cert-manager renews it, so that the container restarts with the new one.\n      const fs = require('node:fs');\n      const loaded = fs.readFileSync('/mongo-client/client.pem');\n      setInterval(() =\u003e {\n        try {\n          if (fs.readFileSync('/mongo-client/client.pem').equals(loaded)) return;\n        } catch {\n          return;\n        }\n        console.log('MongoDB client certificate renewed; restarting');\n        process.exit(0);\n      }, 60000).unref();\n      require('/app/api/server/index.js');\n    }\n  librechat.yaml: 'version: 1.2.1\n\n    cache: true\n\n    '\n---\napiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: librechat-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes:\n  - ReadWriteOnce\n  resources:\n    requests:\n      storage: 20Gi\n---\napiVersion: v1\nkind: ServiceAccount\nmetadata:\n  name: mongodb-operand\n  namespace: '{{ .Namespace }}'\nautomountServiceAccountToken: false\n---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: librechat\n  namespace: '{{ .Namespace }}'\nspec:\n  replicas: 1\n  strategy:\n    type: Recreate\n  revisionHistoryLimit: 2\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: librechat\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: librechat\n        app.kubernetes.io/name: librechat\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: librechat\n        image: ghcr.io/danny-avila/librechat-dev:latest@sha256:b278c620834c5653801030091072cad1974b47d0fc15a5009ed1a7d6e4c4f0d7\n        ports:\n        - name: http\n          containerPort: 3080\n        env:\n        - \u0026id001\n          name: HOST\n          value: 0.0.0.0\n        - \u0026id002\n          name: PORT\n          value: '3080'\n        - \u0026id003\n          name: NODE_ENV\n          value: production\n        - \u0026id004\n          name: HOME\n          value: /app/data/home\n        - \u0026id005\n          name: CONFIG_PATH\n          value: /bootstrap/librechat.yaml\n        - \u0026id006\n          name: DOMAIN_CLIENT\n          value: https://{{ .Domain }}\n        - \u0026id007\n          name: DOMAIN_SERVER\n          value: https://{{ .Domain }}\n        - \u0026id008\n          name: ALLOW_REGISTRATION\n          value: 'false'\n        - \u0026id009\n          name: ALLOW_EMAIL_LOGIN\n          value: 'true'\n        - \u0026id010\n          name: ALLOW_UNVERIFIED_EMAIL_LOGIN\n          value: 'true'\n        - \u0026id011\n          name: MEILI_HOST\n          value: http://meilisearch:7700\n        - \u0026id012\n          name: SEARCH\n          value: 'true'\n        - \u0026id013\n          name: MEILI_MASTER_KEY\n          valueFrom:\n            secretKeyRef:\n              name: app-secrets\n              key: meili-key\n        - \u0026id014\n          name: RAG_API_URL\n          value: http://rag-api:8000\n        - \u0026id015\n          name: RAG_PORT\n          value: '8000'\n        - \u0026id016\n          name: JWT_SECRET\n          valueFrom:\n            secretKeyRef:\n              name: app-secrets\n              key: jwt-secret\n        - \u0026id017\n          name: JWT_REFRESH_SECRET\n          valueFrom:\n            secretKeyRef:\n              name: app-secrets\n              key: jwt-refresh-secret\n        - \u0026id018\n          name: CREDS_KEY_SEED\n          valueFrom:\n            secretKeyRef:\n              name: app-secrets\n              key: creds-key\n        - \u0026id019\n          name: CREDS_IV_SEED\n          valueFrom:\n            secretKeyRef:\n              name: app-secrets\n              key: creds-iv\n        - \u0026id020\n          name: MONGO_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: app-secrets\n              key: mongo-password\n        - \u0026id021\n          name: OPENAI_API_KEY\n          valueFrom:\n            secretKeyRef:\n              name: '{{ .Inputs.providerSecret }}'\n              key: OPENAI_API_KEY\n        - \u0026id022\n          name: LIBRECHAT_TEMP_CREDENTIALS_PATH\n          value: /app/data/.env.temp\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n        resources: \u0026id024\n          requests:\n            cpu: 500m\n            memory: 1Gi\n          limits:\n            cpu: '2'\n            memory: 3Gi\n        volumeMounts:\n        - \u0026id025\n          name: persistent\n          mountPath: /app/data\n          subPath: data\n        - \u0026id026\n          name: persistent\n          mountPath: /app/uploads\n          subPath: uploads\n        - \u0026id027\n          name: persistent\n          mountPath: /app/logs\n          subPath: logs\n        - \u0026id028\n          name: persistent\n          mountPath: /app/client/public/images\n          subPath: images\n        - \u0026id029\n          name: persistent\n          mountPath: /app/skill\n          subPath: skill\n        - \u0026id030\n          name: bootstrap\n          mountPath: /bootstrap\n          readOnly: true\n        - \u0026id031\n          name: mongo-tls\n          mountPath: /mongo-tls\n        - \u0026id033\n          name: mongo-client\n          mountPath: /mongo-client\n          readOnly: true\n        - \u0026id032\n          name: tmp\n          mountPath: /tmp\n        startupProbe:\n          httpGet:\n            path: /health\n            port: http\n          failureThreshold: 90\n          periodSeconds: 5\n          timeoutSeconds: 3\n        readinessProbe:\n          httpGet:\n            path: /health\n            port: http\n          periodSeconds: 10\n          timeoutSeconds: 3\n        livenessProbe:\n          httpGet:\n            path: /health\n            port: http\n          periodSeconds: 30\n          timeoutSeconds: 3\n          failureThreshold: 6\n        command:\n        - node\n        - /bootstrap/start.cjs\n      volumes:\n      - name: persistent\n        persistentVolumeClaim:\n          claimName: librechat-data\n      - name: bootstrap\n        configMap:\n          name: librechat-config\n      - name: mongo-tls\n        secret:\n          secretName: mongodb-ssl\n          items:\n          - key: ca.crt\n            path: ca.crt\n      - name: mongo-client\n        secret:\n          secretName: librechat-mongodb-client\n          items:\n          - key: tls-combined.pem\n            path: client.pem\n      - name: tmp\n        emptyDir:\n          sizeLimit: 1Gi\n      initContainers:\n      - name: prepare-storage\n        image: ghcr.io/danny-avila/librechat-dev:latest@sha256:b278c620834c5653801030091072cad1974b47d0fc15a5009ed1a7d6e4c4f0d7\n        command:\n        - node\n        - -e\n        - const fs=require('node:fs');for(const n of ['data','uploads','logs','images','skill']){const\n          p='/persistent/'+n;if(!fs.existsSync(p)){if(n==='images')fs.cpSync('/app/client/public/images',p,{recursive:true});else\n          fs.mkdirSync(p,{recursive:true});}}fs.mkdirSync('/persistent/data/home',{recursive:true});\n        securityContext: \u0026id023\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n          seccompProfile:\n            type: RuntimeDefault\n        resources:\n          requests:\n            cpu: 50m\n            memory: 64Mi\n          limits:\n            cpu: 500m\n            memory: 256Mi\n        volumeMounts:\n        - name: persistent\n          mountPath: /persistent\n        - name: tmp\n          mountPath: /tmp\n      - name: initialize-account-and-storage\n        image: ghcr.io/danny-avila/librechat-dev:latest@sha256:b278c620834c5653801030091072cad1974b47d0fc15a5009ed1a7d6e4c4f0d7\n        command:\n        - node\n        - /bootstrap/start.cjs\n        - init\n        env:\n        - *id001\n        - *id002\n        - *id003\n        - *id004\n        - *id005\n        - *id006\n        - *id007\n        - *id008\n        - *id009\n        - *id010\n        - *id011\n        - *id012\n        - *id013\n        - *id014\n        - *id015\n        - *id016\n        - *id017\n        - *id018\n        - *id019\n        - *id020\n        - *id021\n        - *id022\n        - name: BOOTSTRAP_EMAIL\n          value: '{{ .Inputs.adminEmail }}'\n        - name: BOOTSTRAP_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: app-secrets\n              key: admin-password\n        securityContext: *id023\n        resources: *id024\n        volumeMounts:\n        - name: persistent\n          mountPath: /persistent\n        - *id025\n        - *id026\n        - *id027\n        - *id028\n        - *id029\n        - *id030\n        - *id031\n        - *id032\n        - *id033\n---\n# mongod requires a client certificate. Percona's operator issues the cluster TLS from the Issuer mongodb-psmdb-issuer.\napiVersion: cert-manager.io/v1\nkind: Certificate\nmetadata:\n  name: librechat-mongodb-client\n  namespace: '{{ .Namespace }}'\nspec:\n  secretName: librechat-mongodb-client\n  commonName: librechat\n  duration: 2160h\n  renewBefore: 720h\n  usages:\n  - client auth\n  privateKey:\n    algorithm: ECDSA\n    size: 256\n    rotationPolicy: Always\n  additionalOutputFormats:\n  - type: CombinedPEM\n  issuerRef:\n    group: cert-manager.io\n    kind: Issuer\n    name: mongodb-psmdb-issuer\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: librechat\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: librechat\n  ports:\n  - name: http\n    port: 3080\n    targetPort: http\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: rag-api\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: rag-api\n  ports:\n  - name: http\n    port: 8000\n    targetPort: http\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: meilisearch\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: meilisearch\n  ports:\n  - name: http\n    port: 7700\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: librechat\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts:\n    - '{{ .Domain }}'\n    secretName: librechat-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: librechat\n            port:\n              number: 3080\n---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: rag-api\n  namespace: '{{ .Namespace }}'\nspec:\n  replicas: 1\n  strategy:\n    type: Recreate\n  revisionHistoryLimit: 2\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: rag-api\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: librechat\n        app.kubernetes.io/name: rag-api\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: rag-api\n        image: ghcr.io/danny-avila/librechat-rag-api-dev-lite:latest@sha256:a62ce2221b43a9bb57fa6cb733e7047c80132960272c33d5704028f3071a1251\n        ports:\n        - name: http\n          containerPort: 8000\n        env:\n        - name: HOME\n          value: /tmp\n        - name: PYTHONDONTWRITEBYTECODE\n          value: '1'\n        - name: RAG_HOST\n          value: 0.0.0.0\n        - name: RAG_PORT\n          value: '8000'\n        - name: DB_HOST\n          value: rag-db-rw\n        - name: DB_PORT\n          value: '5432'\n        - name: POSTGRES_DB\n          value: rag\n        - name: POSTGRES_USER\n          value: app\n        - name: POSTGRES_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: rag-db-app\n              key: password\n        - name: PGVECTOR_CREATE_EXTENSION\n          value: 'false'\n        - name: PGSSLMODE\n          value: verify-full\n        - name: OPENAI_API_KEY\n          valueFrom:\n            secretKeyRef:\n              name: '{{ .Inputs.providerSecret }}'\n              key: OPENAI_API_KEY\n        - name: RAG_UPLOAD_DIR\n          value: /tmp/uploads\n        - name: SCARF_NO_ANALYTICS\n          value: 'true'\n        - name: PGSSLROOTCERT\n          value: /pg-tls/ca.crt\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n        resources:\n          requests:\n            cpu: 250m\n            memory: 512Mi\n          limits:\n            cpu: '2'\n            memory: 2Gi\n        volumeMounts:\n        - name: tmp\n          mountPath: /tmp\n        - name: pg-tls\n          mountPath: /pg-tls\n          readOnly: true\n        startupProbe:\n          httpGet:\n            path: /health\n            port: http\n          failureThreshold: 90\n          periodSeconds: 5\n          timeoutSeconds: 3\n        readinessProbe:\n          httpGet:\n            path: /health\n            port: http\n          periodSeconds: 10\n          timeoutSeconds: 3\n        livenessProbe:\n          httpGet:\n            path: /health\n            port: http\n          periodSeconds: 30\n          timeoutSeconds: 3\n          failureThreshold: 6\n      volumes:\n      - name: tmp\n        emptyDir:\n          sizeLimit: 1Gi\n      - name: pg-tls\n        secret:\n          secretName: rag-db-ca\n          items:\n          - key: ca.crt\n            path: ca.crt\n---\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: meilisearch\n  namespace: '{{ .Namespace }}'\nspec:\n  serviceName: meilisearch\n  replicas: 1\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: meilisearch\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: librechat\n        app.kubernetes.io/name: meilisearch\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: meilisearch\n        image: docker.io/getmeili/meilisearch:v1.56.1@sha256:b7ba431bf6f9b26cc86132798f3640964147a699cf23f026b74c6c05dbb1d60d\n        ports:\n        - name: http\n          containerPort: 7700\n        env:\n        - name: MEILI_MASTER_KEY\n          valueFrom:\n            secretKeyRef:\n              name: app-secrets\n              key: meili-key\n        - name: MEILI_ENV\n          value: production\n        - name: MEILI_NO_ANALYTICS\n          value: 'true'\n        - name: MEILI_UPGRADE_DB\n          value: 'true'\n        - name: HOME\n          value: /meili_data\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n        resources:\n          requests:\n            cpu: 200m\n            memory: 512Mi\n          limits:\n            cpu: '1'\n            memory: 2Gi\n        volumeMounts:\n        - name: data\n          mountPath: /meili_data\n        - name: tmp\n          mountPath: /tmp\n        startupProbe:\n          httpGet:\n            path: /health\n            port: http\n          failureThreshold: 90\n          periodSeconds: 5\n          timeoutSeconds: 3\n        readinessProbe:\n          httpGet:\n            path: /health\n            port: http\n          periodSeconds: 10\n          timeoutSeconds: 3\n        livenessProbe:\n          httpGet:\n            path: /health\n            port: http\n          periodSeconds: 30\n          timeoutSeconds: 3\n          failureThreshold: 6\n      volumes:\n      - name: tmp\n        emptyDir:\n          sizeLimit: 1Gi\n  volumeClaimTemplates:\n  - metadata:\n      name: data\n    spec:\n      accessModes:\n      - ReadWriteOnce\n      resources:\n        requests:\n          storage: 10Gi\n---\napiVersion: postgresql.cnpg.io/v1\nkind: Cluster\nmetadata:\n  name: rag-db\n  namespace: '{{ .Namespace }}'\nspec:\n  inheritedMetadata:\n    labels:\n      templates.zeabur.com/template: librechat\n  instances: 1\n  imageName: ghcr.io/cloudnative-pg/postgresql:17-standard-trixie@sha256:ed6923f9ba2399cf9070379a353c710c29ced8a294be73986a2c3dae7e599ce3\n  enableSuperuserAccess: false\n  enablePDB: true\n  postgresUID: 26\n  postgresGID: 26\n  seccompProfile:\n    type: RuntimeDefault\n  bootstrap:\n    initdb:\n      database: rag\n      owner: app\n      encoding: UTF8\n      postInitApplicationSQL:\n      - CREATE EXTENSION IF NOT EXISTS vector;\n  storage:\n    size: 10Gi\n  resources:\n    requests:\n      cpu: 250m\n      memory: 512Mi\n    limits:\n      cpu: '2'\n      memory: 2Gi\n---\napiVersion: psmdb.percona.com/v1\nkind: PerconaServerMongoDB\nmetadata:\n  name: mongodb\n  namespace: '{{ .Namespace }}'\nspec:\n  crVersion: 1.23.1\n  unsafeFlags:\n    replsetSize: true\n  image: docker.io/percona/percona-server-mongodb:8.0.32-14@sha256:5ba5f240d2dc98bc6236ab1d79c0862c4b62dba9d98cd0ffdf716c30473d2d11\n  initImage: docker.io/percona/percona-server-mongodb-operator:1.23.1@sha256:78c87b933e184b9af36dbb0078751862c75934c1521c33d3be4d0a38aa58dd0a\n  initContainerSecurityContext:\n    runAsNonRoot: true\n    allowPrivilegeEscalation: false\n    readOnlyRootFilesystem: true\n    capabilities: \u0026id001\n      drop:\n      - ALL\n    seccompProfile: \u0026id002\n      type: RuntimeDefault\n  imagePullPolicy: IfNotPresent\n  updateStrategy: SmartUpdate\n  upgradeOptions:\n    apply: disabled\n    setFCV: false\n  tls:\n    mode: requireTLS\n    allowInvalidCertificates: false\n  secrets:\n    users: mongodb-system-users\n    encryptionKey: mongodb-encryption-key\n  sharding:\n    enabled: false\n  users:\n  - name: librechat\n    db: admin\n    passwordSecretRef:\n      name: app-secrets\n      key: mongo-password\n    roles:\n    - name: readWrite\n      db: LibreChat\n  replsets:\n  - name: rs0\n    size: 1\n    labels:\n      templates.zeabur.com/template: librechat\n    serviceAccountName: mongodb-operand\n    # The image sets glibc.pthread.rseq=0, so TCMalloc takes rseq for per-CPU caches.\n    # Kernels 6.19 to 7.0.13 break that, and mongod 8.0 then exits at start (SERVER-121912).\n    # With rseq kept by glibc, TCMalloc uses per-thread caches and mongod starts.\n    env:\n    - name: GLIBC_TUNABLES\n      value: glibc.pthread.rseq=1\n    affinity:\n      antiAffinityTopologyKey: kubernetes.io/hostname\n    podSecurityContext:\n      runAsNonRoot: true\n      runAsUser: 1001\n      runAsGroup: 1001\n      fsGroup: 1001\n      seccompProfile:\n        type: RuntimeDefault\n    containerSecurityContext: \u0026id003\n      runAsNonRoot: true\n      allowPrivilegeEscalation: false\n      readOnlyRootFilesystem: false\n      capabilities: *id001\n      seccompProfile: *id002\n      runAsUser: 1001\n      runAsGroup: 1001\n    resources:\n      requests:\n        cpu: 250m\n        memory: 512Mi\n      limits:\n        cpu: '2'\n        memory: 2Gi\n    podDisruptionBudget:\n      maxUnavailable: 1\n    expose:\n      enabled: false\n    volumeSpec:\n      persistentVolumeClaim:\n        accessModes:\n        - ReadWriteOnce\n        resources:\n          requests:\n            storage: 10Gi\n"
+}

@@ -1,0 +1,151 @@
+{
+  "id": "openlist",
+  "sourceDigest": "h1:MCDfwHjf5onDLHkCG2x64/H2zYQqNRZ344nxMYgkm7c=",
+  "template": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "inputs": [
+      {
+        "description": "Password for the OpenList user admin. It is applied again at each restart, so a password changed in the UI is lost on restart. Change this Secret to rotate it.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "adminPassword",
+        "secret": {
+          "key": "admin-password",
+          "name": "openlist-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      },
+      {
+        "description": "Aria2 loopback JSON-RPC secret. In OpenList offline download settings, set endpoint http://127.0.0.1:6800/jsonrpc and this token.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "aria2Password",
+        "secret": {
+          "key": "aria2-password",
+          "name": "openlist-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      }
+    ],
+    "kind": "Template",
+    "metadata": {
+      "homepage": "https://github.com/OpenListTeam/OpenList",
+      "license": "AGPL-3.0-only",
+      "locales": {
+        "zh-CN": {
+          "summary": "文件列表与 WebDAV，内含 FFmpeg 和 Aria2 下载。"
+        },
+        "zh-TW": {
+          "summary": "檔案列表與 WebDAV，內含 FFmpeg 和 Aria2 下載。"
+        }
+      },
+      "name": "OpenList",
+      "summary": "File listing and WebDAV, with FFmpeg and Aria2 downloads.",
+      "version": "latest-aio"
+    },
+    "requires": [
+      {
+        "component": "traefik"
+      },
+      {
+        "component": "cert-manager"
+      }
+    ],
+    "security": {
+      "locales": {
+        "zh-CN": {
+          "summary": "所有工作负载都放在自己的命名空间，不用 root 权限运行，镜像版本固定，根文件系统只读。它们没有 Kubernetes 令牌，也没有额外的 Linux 权限。向外的网络流量没有限制。"
+        },
+        "zh-TW": {
+          "summary": "所有工作負載都放在自己的命名空間，不用 root 權限執行，映像檔版本固定，根檔案系統唯讀。它們沒有 Kubernetes 權杖，也沒有額外的 Linux 權限。往外的網路流量沒有限制。"
+        }
+      },
+      "risks": [
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "这个模板启动 Aria2 时开启了 RPC 密码验证，而且只监听本机回环，同时保留 FFmpeg、BitTorrent 和下载功能。向外的网络流量没有限制，所以下载网址可以连到内网和云端 metadata 地址。加上 egress NetworkPolicy 把这些地址挡掉。",
+              "risk": "上游的一体式 Aria2 设置没有 RPC 密码，下载来源可以让它去抓任何网址。"
+            },
+            "zh-TW": {
+              "mitigation": "這個範本啟動 Aria2 時有開 RPC 密碼驗證，而且只監聽本機迴路，同時保留 FFmpeg、BitTorrent 和下載功能。往外的網路流量沒有限制，所以下載網址可以連到內網和雲端 metadata 位址。加上 egress NetworkPolicy 把這些位址擋掉。",
+              "risk": "上游的一體式 Aria2 設定沒有 RPC 密碼，下載來源可以叫它去抓任何網址。"
+            }
+          },
+          "mitigation": "The template starts Aria2 with a password-protected RPC that listens on loopback only, and it keeps FFmpeg, BitTorrent and downloads working. Outbound traffic is not limited, so download URLs can reach private and cloud metadata addresses. Add an egress NetworkPolicy to block them.",
+          "risk": "The upstream all-in-one Aria2 setup has no RPC password, and download providers can point it at any URL."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "限制谁能读取 PVC、机密和日志。使用自动生成的管理员账号密码。存到节点外的备份要加密。",
+              "risk": "存储空间的凭证和管理员密码的哈希值都放在 SQLite 数据卷里。"
+            },
+            "zh-TW": {
+              "mitigation": "限制誰能讀取 PVC、機密和日誌。使用自動產生的管理員帳密。存到節點外的備份要加密。",
+              "risk": "儲存空間的認證資訊和管理員密碼的雜湊值都放在 SQLite 資料磁碟區裡。"
+            }
+          },
+          "mitigation": "Limit who can read the PVC, the Secrets and the logs. Use the generated administrator credentials. Encrypt any backup you store off the node.",
+          "risk": "Storage credentials and administrator password hashes are kept in the SQLite data volume."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "使用没改过的镜像，或者把你的修改用 AGPL-3.0 公开。保留许可声明。",
+              "risk": "OpenList 采用 AGPL-3.0 许可。如果你改过代码，又通过网络提供给别人用，就必须把源代码提供给用户。"
+            },
+            "zh-TW": {
+              "mitigation": "使用沒改過的映像檔，或是把你的修改用 AGPL-3.0 公開。保留授權聲明。",
+              "risk": "OpenList 採用 AGPL-3.0 授權。如果你改過程式，又透過網路提供給別人用，就必須把原始碼提供給使用者。"
+            }
+          },
+          "mitigation": "Run the unmodified image, or publish your changes under AGPL-3.0. Keep the license notices.",
+          "risk": "OpenList uses the AGPL-3.0 license. If you change it and offer it over a network, you must give your users the source code."
+        }
+      ],
+      "summary": "The workloads live in their own namespace, run without root rights, use pinned image versions and have read-only root filesystems. They have no Kubernetes token and no extra Linux capabilities. Outbound traffic is not limited."
+    },
+    "services": [
+      {
+        "name": "openlist",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "http",
+            "port": 5244
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "2",
+            "memory": "1Gi"
+          },
+          "requests": {
+            "cpu": "100m",
+            "memory": "128Mi"
+          }
+        }
+      }
+    ],
+    "smoke": [
+      {
+        "condition": "jsonpath={.status.readyReplicas}=1",
+        "name": "application-ready",
+        "resource": "statefulset/openlist",
+        "timeout": "600s"
+      }
+    ]
+  },
+  "manifests": "apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: openlist-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes:\n  - ReadWriteOnce\n  resources:\n    requests:\n      storage: 10Gi\n---\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: openlist\n  namespace: '{{ .Namespace }}'\nspec:\n  serviceName: openlist\n  replicas: 1\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: openlist\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: openlist\n        app.kubernetes.io/name: openlist\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1001\n        runAsGroup: 1001\n        fsGroup: 1001\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: openlist\n        image: openlistteam/openlist:latest-aio@sha256:8b9f6f2e11ff8ceb682b9107ccb3424290d81738d6c1f79a3f95006588b27477\n        ports:\n        - name: http\n          containerPort: 5244\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n        resources:\n          requests:\n            cpu: 100m\n            memory: 128Mi\n          limits:\n            cpu: '2'\n            memory: 1Gi\n        env:\n        - name: TZ\n          value: Asia/Shanghai\n        - name: UMASK\n          value: '077'\n        - name: ADMIN_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: openlist-secrets\n              key: admin-password\n        - name: ARIA2_RPC_SECRET\n          valueFrom:\n            secretKeyRef:\n              name: openlist-secrets\n              key: aria2-password\n        volumeMounts:\n        - name: data\n          mountPath: /opt/openlist/data\n        - name: tmp\n          mountPath: /tmp\n        command:\n        - /bin/sh\n        - -ec\n        args:\n        - 'set -eu\n\n          umask 077\n\n          mkdir -p /opt/openlist/data/downloads /opt/openlist/data/aria2\n\n          ./openlist admin set \"$ADMIN_PASSWORD\" \u003e/dev/null 2\u003e\u00261\n\n          touch /opt/openlist/data/aria2/session\n\n          aria2c --conf-path=/dev/null --enable-rpc=true --rpc-listen-all=false --rpc-secret=\"$ARIA2_RPC_SECRET\"\n          --dir=/opt/openlist/data/downloads --input-file=/opt/openlist/data/aria2/session --save-session=/opt/openlist/data/aria2/session\n          --save-session-interval=60 --log=- \u0026\n\n          aria_pid=$!\n\n          ./openlist server --no-prefix \u0026\n\n          app_pid=$!\n\n          trap ''kill -TERM \"$app_pid\" \"$aria_pid\" 2\u003e/dev/null || true; wait'' TERM INT\n\n          set +e\n\n          wait \"$app_pid\"\n\n          status=$?\n\n          kill -TERM \"$aria_pid\" 2\u003e/dev/null\n\n          wait \"$aria_pid\"\n\n          exit \"$status\"\n\n          '\n        startupProbe:\n          httpGet:\n            path: /ping\n            port: http\n          failureThreshold: 90\n          periodSeconds: 5\n        readinessProbe:\n          httpGet:\n            path: /ping\n            port: http\n          periodSeconds: 10\n        livenessProbe:\n          httpGet:\n            path: /ping\n            port: http\n          periodSeconds: 20\n          failureThreshold: 6\n      volumes:\n      - name: data\n        persistentVolumeClaim:\n          claimName: openlist-data\n      - name: tmp\n        emptyDir:\n          sizeLimit: 512Mi\n      terminationGracePeriodSeconds: 60\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: openlist\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: openlist\n  ports:\n  - name: http\n    port: 5244\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: openlist\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts:\n    - '{{ .Domain }}'\n    secretName: openlist-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: openlist\n            port:\n              number: 5244\n"
+}

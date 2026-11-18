@@ -1,0 +1,157 @@
+{
+  "id": "meilisearch",
+  "sourceDigest": "h1:jcfNKTBoS7QYSG37wLH62UkzJV6Kr4R1rYHPxfY8Ar4=",
+  "template": {
+    "apiVersion": "catalog.zeabur.com/v1",
+    "inputs": [
+      {
+        "description": "Master key. Use it only to manage API keys, and give clients the search or admin keys from GET /keys. Generated at installation.",
+        "generate": {
+          "bytes": 32,
+          "encoding": "base64url",
+          "type": "random"
+        },
+        "name": "masterKey",
+        "secret": {
+          "key": "master-key",
+          "name": "meilisearch-secrets"
+        },
+        "validation": {
+          "pattern": "^[A-Za-z0-9_-]{43}$"
+        }
+      }
+    ],
+    "kind": "Template",
+    "metadata": {
+      "homepage": "https://www.meilisearch.com/",
+      "license": "MIT",
+      "locales": {
+        "zh-CN": {
+          "summary": "快速的搜索引擎，用主密钥保护，索引存在卷上。"
+        },
+        "zh-TW": {
+          "summary": "快速的搜尋引擎，用主金鑰保護，索引存在磁碟區。"
+        }
+      },
+      "name": "Meilisearch",
+      "summary": "A fast search engine with a master key and indexes on a volume.",
+      "version": "v1.56.1"
+    },
+    "requires": [
+      {
+        "component": "traefik"
+      },
+      {
+        "component": "cert-manager"
+      }
+    ],
+    "security": {
+      "locales": {
+        "zh-CN": {
+          "summary": "以 UID 1000 运行，文件系统只读，没有 Kubernetes 令牌，也去掉了所有额外的系统权限。生产模式必须有主密钥。Ingress 路由是公开的。"
+        },
+        "zh-TW": {
+          "summary": "以 UID 1000 執行，檔案系統唯讀，沒有 Kubernetes 權杖，也拿掉了所有額外的系統權限。正式模式一定要有主金鑰。Ingress 路由是公開的。"
+        }
+      },
+      "risks": [
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "没有有效密钥的请求都会被拒绝，搜索预览页面也已关闭。给浏览器的只能是搜索密钥或租户令牌，千万不要把主密钥给它。",
+              "risk": "任何人都能从网络访问 Ingress 上的 API。"
+            },
+            "zh-TW": {
+              "mitigation": "沒有有效金鑰的請求都會被拒絕，搜尋預覽頁面也已關閉。給瀏覽器的只能是搜尋金鑰或租戶權杖，千萬不要把主金鑰給它。",
+              "risk": "任何人都能從網路連到 Ingress 上的 API。"
+            }
+          },
+          "mitigation": "Without a valid key, Meilisearch rejects requests. The search preview page is off. Give browsers only a search key or a tenant token. Never give them the master key.",
+          "risk": "Anyone on the internet can reach the API through the Ingress."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "只设置你信任的服务商地址。也可以加一条 egress NetworkPolicy（限制对外连接的规则）来限制。",
+              "risk": "AI 搜索的嵌入服务、webhook 和网络搜索都会对外连接，模板没有限制。有人可能把其中一个设置指向内部的私有地址。"
+            },
+            "zh-TW": {
+              "mitigation": "只設定你信任的服務商位址。也可以加一條 egress NetworkPolicy（限制對外連線的規則）來限制。",
+              "risk": "AI 搜尋的嵌入服務、webhook 和網路搜尋都會對外連線，範本沒有限制。有人可能把其中一個設定指向內部的私有位址。"
+            }
+          },
+          "mitigation": "Set up only provider endpoints you trust. You can also add an egress NetworkPolicy (a rule that limits outbound traffic) to restrict them.",
+          "risk": "AI-powered search embedders, webhooks and network search make outbound calls, and the template does not limit them. Someone could point one at a private address."
+        },
+        {
+          "locales": {
+            "zh-CN": {
+              "mitigation": "分片、复制和 S3 快照会返回 requires_enterprise_edition 错误。要用这些功能得另外使用企业版镜像，它采用 BUSL-1.1 许可，生产环境使用要买商业许可。",
+              "risk": "这个镜像不含企业版功能。"
+            },
+            "zh-TW": {
+              "mitigation": "分片、複寫和 S3 快照會回傳 requires_enterprise_edition 錯誤。要用這些功能得另外使用企業版映像檔，它採用 BUSL-1.1 授權，正式環境使用要買商業授權。",
+              "risk": "這個映像檔不含企業版功能。"
+            }
+          },
+          "mitigation": "Sharding, replication and S3 snapshots return a requires_enterprise_edition error. They need the separate Enterprise image, which uses the BUSL-1.1 license and needs a commercial license for production use.",
+          "risk": "Enterprise Edition features are not in this image."
+        }
+      ],
+      "summary": "The container runs as UID 1000 with a read-only filesystem, no Kubernetes token and all extra system privileges removed. Production mode needs the master key. The ingress route is public."
+    },
+    "services": [
+      {
+        "domains": [
+          "{{ .Domain }}"
+        ],
+        "name": "meilisearch",
+        "podSecurity": "restricted",
+        "ports": [
+          {
+            "name": "http",
+            "port": 7700
+          }
+        ],
+        "resources": {
+          "limits": {
+            "cpu": "2",
+            "memory": "2Gi"
+          },
+          "requests": {
+            "cpu": "200m",
+            "memory": "512Mi"
+          }
+        }
+      }
+    ],
+    "smoke": [
+      {
+        "condition": "jsonpath={.status.readyReplicas}=1",
+        "http": {
+          "contains": "available",
+          "path": "/health",
+          "port": 7700,
+          "service": "meilisearch",
+          "status": 200
+        },
+        "name": "meilisearch-ready",
+        "resource": "statefulset/meilisearch",
+        "timeout": "600s"
+      },
+      {
+        "condition": "jsonpath={.status.readyReplicas}=1",
+        "http": {
+          "path": "/keys",
+          "port": 7700,
+          "service": "meilisearch",
+          "status": 401
+        },
+        "name": "master-key-required",
+        "resource": "statefulset/meilisearch",
+        "timeout": "120s"
+      }
+    ]
+  },
+  "manifests": "apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: meilisearch-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 20Gi\n---\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: meilisearch\n  namespace: '{{ .Namespace }}'\nspec:\n  serviceName: meilisearch\n  replicas: 1\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: meilisearch\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: meilisearch\n        app.kubernetes.io/name: meilisearch\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: meilisearch\n        image: getmeili/meilisearch:v1.56.1@sha256:b7ba431bf6f9b26cc86132798f3640964147a699cf23f026b74c6c05dbb1d60d\n        ports:\n        - name: http\n          containerPort: 7700\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop: [ALL]\n        resources:\n          requests:\n            cpu: 200m\n            memory: 512Mi\n          limits:\n            cpu: '2'\n            memory: 2Gi\n        env:\n        - name: MEILI_ENV\n          value: production\n        - name: MEILI_MASTER_KEY\n          valueFrom:\n            secretKeyRef:\n              name: meilisearch-secrets\n              key: master-key\n        - name: MEILI_NO_ANALYTICS\n          value: 'true'\n        - name: MEILI_DB_PATH\n          value: /meili_data/data.ms\n        - name: MEILI_DUMP_DIR\n          value: /meili_data/dumps\n        - name: MEILI_SNAPSHOT_DIR\n          value: /meili_data/snapshots\n        - name: MEILI_MAX_INDEXING_MEMORY\n          value: '1073741824'\n        volumeMounts:\n        - name: data\n          mountPath: /meili_data\n        - name: tmp\n          mountPath: /tmp\n        startupProbe:\n          httpGet:\n            path: /health\n            port: http\n          periodSeconds: 5\n          failureThreshold: 120\n        readinessProbe:\n          httpGet:\n            path: /health\n            port: http\n          periodSeconds: 10\n        livenessProbe:\n          httpGet:\n            path: /health\n            port: http\n          periodSeconds: 20\n          failureThreshold: 6\n      volumes:\n      - name: data\n        persistentVolumeClaim:\n          claimName: meilisearch-data\n      - name: tmp\n        emptyDir:\n          sizeLimit: 2Gi\n      terminationGracePeriodSeconds: 60\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: meilisearch\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: meilisearch\n  ports:\n  - name: http\n    port: 7700\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: meilisearch\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts: ['{{ .Domain }}']\n    secretName: meilisearch-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: meilisearch\n            port:\n              number: 7700\n"
+}
