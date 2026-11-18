@@ -33,7 +33,7 @@ permissions:
 
 jobs:
   matrix:
-    runs-on: ubuntu-slim
+    runs-on: instabox-small
     timeout-minutes: 120
     outputs:
       matrix: ${{ steps.list.outputs.matrix }}
@@ -70,15 +70,7 @@ jobs:
         with:
           persist-credentials: false
       - uses: zeabur-oss/.github/actions/ci-setup@f3ae87d7ef3c37447432e398200d200b546dfa46 # main
-      # The chart and manifest downloads and the Go caches.
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            ~/.cache/catalog
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: downloads-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('go.sum', 'components/**') }}
-          restore-keys: downloads-${{ runner.os }}-${{ runner.arch }}-
+      - uses: ./.github/actions/downloads
       - name: iSCSI module for Longhorn
         if: matrix.component == 'longhorn'
         run: sudo modprobe iscsi_tcp
@@ -125,22 +117,14 @@ jobs:
   budget:
     needs: e2e
     if: contains(inputs.profiles, 'single-node')
-    runs-on: ubuntu-26.04
+    runs-on: instabox-medium
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: zeabur-oss/.github/actions/ci-setup@f3ae87d7ef3c37447432e398200d200b546dfa46 # main
-      # The chart and manifest downloads and the Go caches.
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            ~/.cache/catalog
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: downloads-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('go.sum', 'components/**') }}
-          restore-keys: downloads-${{ runner.os }}-${{ runner.arch }}-
+      - uses: ./.github/actions/downloads
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: measurements-single-node-amd64-*
