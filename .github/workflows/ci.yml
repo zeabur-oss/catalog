@@ -31,46 +31,59 @@ jobs:
     runs-on: instabox-medium
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: zeabur-oss/.github/actions/ci-setup@f3ae87d7ef3c37447432e398200d200b546dfa46 # main
-      - run: nix develop -c scripts/ci/lint.sh
+      - name: Set up Nix
+        uses: zeabur-oss/.github/actions/ci-setup@f3ae87d7ef3c37447432e398200d200b546dfa46 # main
+      - name: Lint
+        run: nix develop -c scripts/ci/lint.sh
 
   test:
     runs-on: instabox-medium
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: zeabur-oss/.github/actions/ci-setup@f3ae87d7ef3c37447432e398200d200b546dfa46 # main
-      - run: nix develop -c scripts/ci/test.sh
+      - name: Set up Nix
+        uses: zeabur-oss/.github/actions/ci-setup@f3ae87d7ef3c37447432e398200d200b546dfa46 # main
+      - name: Test
+        run: nix develop -c scripts/ci/test.sh
 
   check:
     runs-on: instabox-medium
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           # The history of origin/main, to find the merge-base to dry-run an upgrade from.
           fetch-depth: 0
-      - uses: zeabur-oss/.github/actions/ci-setup@f3ae87d7ef3c37447432e398200d200b546dfa46 # main
-      - run: nix develop -c scripts/ci/check.sh
+      - name: Set up Nix
+        uses: zeabur-oss/.github/actions/ci-setup@f3ae87d7ef3c37447432e398200d200b546dfa46 # main
+      - name: Check the catalog
+        run: nix develop -c scripts/ci/check.sh
 
   release:
     runs-on: instabox-medium
     timeout-minutes: 120
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: zeabur-oss/.github/actions/ci-setup@f3ae87d7ef3c37447432e398200d200b546dfa46 # main
-      - run: nix develop -c scripts/ci/release.sh
+      - name: Set up Nix
+        uses: zeabur-oss/.github/actions/ci-setup@f3ae87d7ef3c37447432e398200d200b546dfa46 # main
+      - name: Build the release
+        run: nix develop -c scripts/ci/release.sh
         env:
           CI_ARTIFACTS: ${{ runner.temp }}/ci-artifacts
-      - if: always()
+      - name: Upload the release files
+        if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release
@@ -86,26 +99,30 @@ jobs:
     runs-on: instabox-small
     timeout-minutes: 5
     steps:
-      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+      - name: Fail if a job failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
         run: exit 1
 
 
   smoke-matrix:
     if: github.event_name == 'merge_group'
-    runs-on: ubuntu-slim
+    runs-on: instabox-small
     timeout-minutes: 5
     outputs:
       matrix: ${{ steps.list.outputs.matrix }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           fetch-depth: 0
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
-      - id: list
+      - name: List the components to smoke test
+        id: list
         env:
           BASE: ${{ github.event.merge_group.base_sha }}
         run: echo "matrix=$(go run ./tools/cmd/catalog list -tier smoke -since "$BASE")" >> "$GITHUB_OUTPUT"
@@ -121,10 +138,14 @@ jobs:
         include: ${{ fromJSON(needs.smoke-matrix.outputs.matrix).include }}
     name: smoke ${{ matrix.ids }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: ./.github/actions/setup
+      - name: Set up Nix
+        uses: zeabur-oss/.github/actions/ci-setup@f3ae87d7ef3c37447432e398200d200b546dfa46 # main
+      - name: Restore the downloads
+        uses: ./.github/actions/downloads
       - name: iSCSI module for Longhorn
         if: contains(matrix.ids, 'longhorn')
         run: sudo modprobe iscsi_tcp
@@ -143,5 +164,6 @@ jobs:
     runs-on: instabox-small
     timeout-minutes: 5
     steps:
-      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+      - name: Fail if a smoke job failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
         run: exit 1

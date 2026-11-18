@@ -35,12 +35,15 @@ jobs:
     outputs:
       hash: ${{ steps.hash.outputs.hash }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out the pull request
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
-      - uses: DeterminateSystems/determinate-nix-action@16f94ba7aae399b9f9077c254b6719ec6de7e3e3 # v3.24.2
-      - id: hash
+      - name: Set up Nix
+        uses: DeterminateSystems/determinate-nix-action@16f94ba7aae399b9f9077c254b6719ec6de7e3e3 # v3.24.2
+      - name: Compute the vendorHash
+        id: hash
         run: |
           if nix build --no-link .#catalog.goModules 2> build.log; then
             echo "vendorHash is current"
@@ -64,18 +67,21 @@ jobs:
     permissions:
       contents: read
     steps:
-      - id: token
+      - name: Create a bot token
+        id: token
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           client-id: ${{ vars.ZEABUR_OSS_BOT_CLIENT_ID }}
           private-key: ${{ secrets.ZEABUR_OSS_BOT_PRIVATE_KEY }}
           repositories: catalog
           permission-contents: write
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out the pull request
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
-      - env:
+      - name: Commit and push the new vendorHash
+        env:
           HASH: ${{ needs.hash.outputs.hash }}
           TOKEN: ${{ steps.token.outputs.token }}
           BOT: zeabur-oss-bot[bot]
