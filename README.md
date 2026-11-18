@@ -1,6 +1,6 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/cover-dark.avif">
-  <img alt="Zeabur Catalog: which chart, which version, which values, and why, for each Kubernetes component, installed and measured in CI" src="docs/images/cover-light.avif">
+  <img alt="Zeabur Catalog: every template is installed and tested first. It just runs. Logos of WordPress, n8n, Ghost, Uptime Kuma, Vaultwarden, Umami, Gitea, Ollama, SearXNG and ntfy." src="docs/images/cover-light.avif">
 </picture>
 
 # Zeabur Catalog
