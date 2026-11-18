@@ -1,32 +1,56 @@
 ---
 title: 開始使用 Zeabur Catalog
-description: 經過測試的 Kubernetes 元件與應用程式範本，附版本、設定與安裝方式。
+description: 在自己的伺服器上一鍵部署的應用程式範本，每個範本上架前都先裝過、測過。可以在 Zeabur 開源版使用，也可以用自己的工具讀取。
 ---
 
-Zeabur Catalog 收錄了在 CI 中實際安裝並測試過的元件和範本。每次發行都會提供一個已簽章的套件包和一份靜態 API。任何工具都能讀取它們，產生 `helm install` 指令、Flux 或 Argo CD 清單、k3s 的 `HelmChart` 物件，或安裝範本。
+Zeabur Catalog 是 Zeabur 開源版裡一鍵部署的應用程式範本，包括 n8n、WordPress、Dify、OpenClaw 等。範本的每次修改合併前，CI 都會把範本裝到 Kubernetes 叢集上，確認應用程式有回應。Zeabur 上有範本市集，Zeabur 開源版則有 Zeabur Catalog。
+
+## 我用 Zeabur 開源版
+
+Zeabur 開源版已經內建 catalog，不用另外安裝。在專案選擇**新增** → **應用程式範本**，挑一個應用程式就能部署。詳情見 Zeabur 開源版文件的[從應用程式範本部署](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/templates/)。
+
+- 從 Zeabur 搬過來？[Zeabur 範本對照表](get-started/zeabur-com-templates.mdx)列出每個熱門 Zeabur 範本在 catalog 裡對應的範本，以及還沒收錄的範本。把服務搬到自己的伺服器，請看 [Zeabur 開源版文件](https://oss.zeabur.com/zh-TW/docs/zeabur/)。
+- 範本需要元件時，例如 PostgreSQL 需要 CloudNativePG，請看 Zeabur 開源版文件的[檢視與安裝叢集元件](https://oss.zeabur.com/zh-TW/docs/zeabur/cluster/components/)。
+- [範本清單](reference/templates.mdx)列出所有範本。
+
+每個範本都固定映像檔版本，每次裝出來都是同一個應用程式版本。Zeabur 開源版內建一個 catalog 版本，升級 Zeabur 開源版時才會帶來新範本和新版本。部署時會自動產生密碼和金鑰，存成 Kubernetes Secret。每個範本都寫明需要多少 CPU 和記憶體，應用程式允許時以非 root 使用者執行。
+
+使用 Zeabur 開源版的話，讀到這裡就夠了。下面的內容寫給單獨使用 catalog 的人。
+
+## 我單獨使用 catalog
+
+不搭配 Zeabur 開源版時，catalog 是一份給 Kubernetes 叢集用的元件與範本資料，全部經過測試。每次發行都會提供一個已簽章的套件包和一份靜態 API。任何工具都能讀取它們，產生 `helm install` 指令、Flux 或 Argo CD 清單、k3s 的 `HelmChart` 物件，或安裝範本。
 
 - **元件**由叢集管理員在每個叢集安裝一次，例如 Ingress、憑證、指標和資料庫 operator。每種用途都會寫明採用的上游 chart、版本、設定，以及選擇的原因。
 - **範本**由專案成員安裝到單一 Namespace，例如 n8n、Dify、WordPress 和 PostgreSQL。範本會固定映像檔，設定資源要求與上限，並盡可能遵守 Restricted Pod Security Standard。範本也會用 `requires` 列出需要的元件。
 
-## 我想部署一個範本
+### 部署範本
 
 先驗證版本簽章，再渲染範本的物件、產生密碼，最後套用到叢集。
 
 [用 catalog 指令部署範本](get-started/deploy-a-template.mdx)
 
-## 我想知道有哪些內容
+### 有哪些內容
 
 [元件清單](reference/components.mdx)列出每個元件在單節點與多節點叢集中的預設狀態。[範本清單](reference/templates.mdx)列出所有應用程式範本。想了解各種 Kubernetes 發行版有什麼不同，可以檢視[各發行版的差異](reference/distributions.mdx)。
 
-## 我想在自己的工具讀取 catalog
+### 用自己的工具讀取 catalog
 
 讀取 `https://oss-catalog.zeabur.com/v1/` 的[靜態 API](reference/releases.mdx#api)，或固定一個版本並驗證簽章。詳情請看[版本與 API](reference/releases.mdx)。檔案格式請看[元件檔案格式](reference/component-format.mdx)與[範本檔案格式](reference/template-format.mdx)。
 
-## 我想新增元件或範本
+確認 API 有回應，印出它目前的版本：
+
+```sh
+curl -s https://oss-catalog.zeabur.com/v1/catalog.json | jq -r .catalog.version
+```
+
+輸出是一個版本號碼，例如 `0.5.3`。
+
+### 新增元件或範本
 
 先看[新增元件](contribute/add-component.mdx)或[新增範本](contribute/add-template.mdx)。範本要符合[範本標準](reference/template-standards.mdx)。想了解 CI 會檢查哪些內容，請看[測試與 CI](contribute/tests.mdx)。
 
-## 檔案怎麼放
+### 檔案配置
 
 ```text
 components/<id>.yaml                      一個上游一個檔案，用途寫在 provides

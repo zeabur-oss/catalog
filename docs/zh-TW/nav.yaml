@@ -1,6 +1,7 @@
 - group: get-started
   label: 開始使用
   pages:
+    zeabur-com-templates: Zeabur 範本對照表
     deploy-a-template: 用 catalog 指令部署範本
 - group: reference
   label: 參考

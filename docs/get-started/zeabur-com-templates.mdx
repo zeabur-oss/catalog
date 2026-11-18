@@ -1,0 +1,77 @@
+---
+title: Templates from zeabur.com
+description: Look up the catalog template for a popular zeabur.com template, including name differences and templates not in the catalog yet.
+---
+
+If you run a template on zeabur.com, look it up here to find the template to deploy in Zeabur. In Zeabur, open **Add** → **App template** and search for the catalog template's name. Moving the data across is covered in the [Zeabur docs](https://oss.zeabur.com/docs/zeabur/).
+
+## Popular zeabur.com templates
+
+In the order of [zeabur.com's template marketplace](https://zeabur.com/templates), most popular first.
+
+| zeabur.com template | Catalog template | ID |
+| --- | --- | --- |
+| OpenClaw 🦞 | OpenClaw | `openclaw` |
+| n8n | n8n PostgreSQL | `n8n` |
+| PostgreSQL | Not a template: [create a PostgreSQL database](https://oss.zeabur.com/docs/zeabur/deploy/databases/) in Zeabur | |
+| MySQL | Not a template: [create a MySQL database](https://oss.zeabur.com/docs/zeabur/deploy/databases/) in Zeabur | |
+| SillyTavern | SillyTavern | `sillytavern` |
+| Redis | Not a template: [create a Dragonfly database](https://oss.zeabur.com/docs/zeabur/deploy/databases/) in Zeabur, which is Redis-compatible | |
+| LunaTV | Not in the catalog yet | |
+| WeWe RSS | Not in the catalog yet | |
+| WordPress | WordPress | `wordpress` |
+| LobeChat | LobeChat | `lobechat` |
+| One-API | Not in the catalog yet | |
+| MongoDB | Not a template: [create a MongoDB database](https://oss.zeabur.com/docs/zeabur/deploy/databases/) in Zeabur | |
+| Dify | Dify | `dify` |
+| RSSHub | Not in the catalog yet | |
+| Supabase | Not in the catalog yet | |
+| n8n(sqlite) | n8n SQLite | `n8n-sqlite` |
+| New API | New API | `new-api` |
+| nginx | nginx | `nginx` |
+| OpenClaw Browser Sandbox | OpenClaw Browser Sandbox | `openclaw-browser-sandbox` |
+| Uptime-Kuma | Uptime Kuma | `uptime-kuma` |
+| OpenList | OpenList | `openlist` |
+| Hermes Agent | Hermes Agent | `hermes-agent` |
+| LibreChat | LibreChat | `librechat` |
+| ChatNio | Not in the catalog yet | |
+| Open WebUI | Open WebUI | `open-webui` |
+| Ghost | Ghost | `ghost` |
+| MinIO | Not in the catalog yet | |
+| Halo | Halo | `halo` |
+| Ollama | Ollama | `ollama` |
+| SearXNG | SearXNG | `searxng` |
+
+## Other zeabur.com templates in the catalog
+
+| zeabur.com template | Catalog template | ID |
+| --- | --- | --- |
+| Browserless | Browserless | `browserless` |
+| Gitea | Gitea | `gitea` |
+| LiteLLM | LiteLLM | `litellm` |
+| Meilisearch | Meilisearch | `meilisearch` |
+| Memos | Memos | `memos` |
+| Miniflux Reader | Miniflux | `miniflux` |
+| ntfy | ntfy | `ntfy` |
+| PostgreSQL with pgvector | PostgreSQL with pgvector | `postgresql-pgvector` |
+| Qdrant | Qdrant | `qdrant` |
+| Umami | Umami | `umami` |
+| Vaultwarden | Vaultwarden | `vaultwarden` |
+
+The [template list](../reference/templates.mdx) has every catalog template. To ask for a template that isn't in the catalog, [open an issue](https://github.com/zeabur-oss/catalog/issues/new).
+
+## Before you deploy
+
+A catalog template and the zeabur.com template of the same application can differ in version, database and settings. Before you move data across, compare the application version on zeabur.com with the version in the catalog template's `template.yaml`, and read the template's notes in Zeabur under **Before you deploy**.
+
+To check a catalog template's version and the components it needs from a terminal, read it from the [static API](../reference/releases.mdx#the-api). The API holds the latest catalog release, which can be newer than the one your Zeabur bundles. Replace `n8n` with the template ID:
+
+```sh
+curl -s https://oss-catalog.zeabur.com/v1/templates/n8n.json | jq -c '[.template.metadata.version, [.template.requires[].component]]'
+```
+
+The output is the application version, then the components:
+
+```json
+["3.1.0",["traefik","cert-manager","cloudnative-pg"]]
+```

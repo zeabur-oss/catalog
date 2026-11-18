@@ -1,32 +1,56 @@
 ---
 title: 开始使用 Zeabur Catalog
-description: 经过测试的 Kubernetes 组件与应用模板，附版本、配置与安装方式。
+description: 在自己的服务器上一键部署的应用模板，每个模板上架前都先装过、测过。可以在 Zeabur 开源版中使用，也可以用自己的工具读取。
 ---
 
-Zeabur Catalog 是一份在 CI 中实际安装并测试过的数据，分为组件和模板两部分。每次发布都会提供一个签名的包和一份静态 API，任何工具都能读取它们，生成 `helm install` 命令、Flux 或 Argo CD 清单、k3s 的 `HelmChart` 对象，或安装模板。
+Zeabur Catalog 是 Zeabur 开源版中一键部署的应用模板，包括 n8n、WordPress、Dify、OpenClaw 等。模板的每次修改合并前，CI 都会把模板装到 Kubernetes 集群上，确认应用有响应。Zeabur 上有模板市场，Zeabur 开源版则有 Zeabur Catalog。
+
+## 我用 Zeabur 开源版
+
+Zeabur 开源版已经内置 catalog，不用另外安装。在项目中选择**新建** → **应用模板**，选一个应用就能部署。详见 Zeabur 开源版文档的[从应用模板部署](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/templates/)。
+
+- 从 Zeabur 迁移过来？[Zeabur 模板对照表](get-started/zeabur-com-templates.mdx)列出每个热门 Zeabur 模板在 catalog 中对应的模板，以及还没收录的模板。把服务迁移到自己的服务器，请看 [Zeabur 开源版文档](https://oss.zeabur.com/zh-CN/docs/zeabur/)。
+- 模板需要组件时，例如 PostgreSQL 需要 CloudNativePG，请看 Zeabur 开源版文档的[查看与安装集群组件](https://oss.zeabur.com/zh-CN/docs/zeabur/cluster/components/)。
+- [模板列表](reference/templates.mdx)列出所有模板。
+
+每个模板都固定镜像版本，每次装出来都是同一个应用版本。Zeabur 开源版内置一个 catalog 版本，升级 Zeabur 开源版时才会带来新模板和新版本。部署时自动生成密码和密钥，存为 Kubernetes Secret。每个模板都写明需要多少 CPU 和内存，应用允许时以非 root 用户运行。
+
+如果你用 Zeabur 开源版，读到这里就够了。下面的内容写给单独使用 catalog 的人。
+
+## 我单独使用 catalog
+
+不配合 Zeabur 开源版时，catalog 是一份给 Kubernetes 集群用的组件与模板数据，全部经过测试。每次发布都会提供一个签名的包和一份静态 API，任何工具都能读取它们，生成 `helm install` 命令、Flux 或 Argo CD 清单、k3s 的 `HelmChart` 对象，或安装模板。
 
 - **组件**由集群管理员在每个集群安装一次，例如 Ingress、证书、指标和数据库 operator。每种用途都写明采用哪个上游 chart、哪个版本、哪些配置，以及原因。
 - **模板**由项目成员安装到单个 Namespace，例如 n8n、Dify、WordPress 和 PostgreSQL。模板固定镜像，设置资源请求与限制，在可行时遵循 Restricted Pod Security Standard 运行。模板用 `requires` 指定需要的组件。
 
-## 我想部署一个模板
+### 部署模板
 
 验证版本的签名，渲染模板的对象，生成密码并应用到集群。
 
 [用 catalog 命令部署模板](get-started/deploy-a-template.mdx)
 
-## 我想知道有哪些内容
+### 有哪些内容
 
 [组件列表](reference/components.mdx)列出每个组件在单节点与多节点的默认状态，[模板列表](reference/templates.mdx)列出所有应用模板。不同 Kubernetes 发行版的差异见[各发行版的差异](reference/distributions.mdx)。
 
-## 我想在自己的工具中读取 catalog
+### 用自己的工具读取 catalog
 
 读取 `https://oss-catalog.zeabur.com/v1/` 的[静态 API](reference/releases.mdx#api)，或固定一个版本并验证签名。详情见[版本与 API](reference/releases.mdx)，文件格式见[组件文件格式](reference/component-format.mdx)与[模板文件格式](reference/template-format.mdx)。
 
-## 我想新增组件或模板
+确认 API 有响应，输出它当前的版本：
+
+```sh
+curl -s https://oss-catalog.zeabur.com/v1/catalog.json | jq -r .catalog.version
+```
+
+输出是一个版本号，例如 `0.5.3`。
+
+### 新增组件或模板
 
 先看[新增组件](contribute/add-component.mdx)或[新增模板](contribute/add-template.mdx)，模板要符合[模板标准](reference/template-standards.mdx)。CI 的检查内容见[测试与 CI](contribute/tests.mdx)。
 
-## 文件怎么放
+### 文件布局
 
 ```text
 components/<id>.yaml                      一个上游一个文件，用途写在 provides

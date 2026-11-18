@@ -3,7 +3,7 @@ title: 版本與 API
 description: 從靜態 API 讀取 catalog、固定 Zeabur Catalog 版本並驗證 Sigstore 簽章，或從指定 commit 建置版本檔案。
 ---
 
-打上 `vX.Y.Z` tag 後，就會發布 `bundle.tar.gz`、`api-v1.tar.gz`，以及 `SHA256SUMS` 和它的 Sigstore 簽章套件。非預發布版本也會將 API 發布到 `https://oss-catalog.zeabur.com/v1/`。1.0 之前，像 0.1 升到 0.2 這樣的更新也可能改變檔案格式，需要固定版本時，請指定某個確切版本。
+打上 `vX.Y.Z` tag 後，會建置 `bundle.tar.gz`、`api-v1.tar.gz`，以及 `SHA256SUMS` 和它的 Sigstore 簽章套件，並用它們建立草稿版本，由維護者發布。已發布的非預發布版本也會將 API 發布到 `https://oss-catalog.zeabur.com/v1/`。1.0 之前，像 0.1 升到 0.2 這樣的更新也可能改變檔案格式，需要固定版本時，請指定某個確切版本。
 
 ## 版本檔案
 
@@ -14,11 +14,11 @@ description: 從靜態 API 讀取 catalog、固定 Zeabur Catalog 版本並驗�
 
 `SHA256SUMS` 列出其他每個檔案的雜湊值，並附有 cosign 無金鑰 Sigstore 簽章套件 `SHA256SUMS.sigstore.json`。每個檔案也都有 GitHub 建置來源證明（build provenance attestation）。
 
-所有 zeabur-oss 版本都由 [zeabur-oss/.github](https://github.com/zeabur-oss/.github) 的共用發布工作流程簽署。簽章會記錄該工作流程、儲存庫 `zeabur-oss/catalog` 與 tag。
+從 v0.5.2 起，每個版本都由 `zeabur-oss/catalog` 的 `release.yml` 工作流程簽署。簽章會記錄該工作流程與 tag。
 
 ## API
 
-API 是一組靜態 JSON 檔案，存放各元件的宣告、算繪結果、e2e 量測資料，以及原樣的各個範本，不存總量或元件通過測試的發行版等計算結果。這些結果由讀取工具自行算出，做法見[安裝工具如何選擇和安裝元件](installers.mdx#安裝工具要算出的清單)。
+API 是一組靜態 JSON 檔案，存放各元件的宣告、渲染結果、e2e 量測資料，以及原樣的各個範本，不存總量或元件通過測試的發行版等計算結果。這些結果由讀取工具自行算出，做法見[安裝工具如何選擇和安裝元件](installers.mdx#安裝工具要算出的清單)。
 
 | 路徑 | 內容 | Schema |
 | --- | --- | --- |
@@ -31,7 +31,7 @@ Schema 定義資料格式，由 catalog 工具的 Go 型別產生。每個版本
 
 - `declaration` 是[元件檔案](component-format.mdx)原有的內容，改用 JSON 表示。
 - `sourceDigest` 是元件檔案的雜湊值。量測紀錄的 `sourceDigest` 相同，就表示量測的是這個檔案。
-- `render` 是 `helm template` 在元件支援的各個 profile 下算繪出的內容，使用的 `kubernetesVersion` 是 catalog 測試的最新 Kubernetes 版本。每個 profile 的 `workloads` 列出各 Deployment、StatefulSet 和 DaemonSet 的 `release`、`namespace`、`name`、`kind`、`replicas`，以及 `containers` 和 `initContainers` 的 `requests` 與 `limits`。StatefulSet 另有 `volumeClaimTemplates` 的 `storage`。DaemonSet 沒有 `replicas`，在每個節點上各執行一個 Pod。`persistentVolumeClaims` 列出元件算繪出的 PVC 及其 `storage`。
+- `render` 是 `helm template` 在元件支援的各個 profile 下渲染出的內容，使用的 `kubernetesVersion` 是 catalog 測試的最新 Kubernetes 版本。每個 profile 的 `workloads` 列出各 Deployment、StatefulSet 和 DaemonSet 的 `release`、`namespace`、`name`、`kind`、`replicas`，以及 `containers` 和 `initContainers` 的 `requests` 與 `limits`。StatefulSet 另有 `volumeClaimTemplates` 的 `storage`。DaemonSet 沒有 `replicas`，在每個節點上各執行一個 Pod。`persistentVolumeClaims` 列出元件渲染出的 PVC 及其 `storage`。
 - `measurements` 列出 e2e 執行這個元件的每個環境。
 - `template` 是 `template.yaml` 原有的內容，改用 JSON 表示。見[範本檔案格式](template-format.mdx)。
 - `manifests` 是 `manifests.yaml` 原有的文字，整份放在一個字串裡。裡面有 `{{ .Namespace }}` 這類欄位，要等安裝工具展開後才是 YAML；JSON 物件留不住這些欄位和註解。
@@ -44,7 +44,7 @@ Schema 定義資料格式，由 catalog 工具的 Go 型別產生。每個版本
 | `defaults.<profile>` | 當成 `unsupported`。 |
 | `releases[].type`、`security.podSecurity` | 不提供這個元件。 |
 | `inputs[].generate.type` | 不替這個輸入填值。需要這個輸入的元件或範本無法安裝。 |
-| `distributions`、`detection.addons[].distribution`、量測紀錄的 `distribution` | 略過這一項。 |
+| `distributions`、`detection.addons[].distribution`、量測紀錄的 `distribution`、`render` 裡工作負載的 `kind` | 略過這一項。 |
 | 量測紀錄的 `result` | 視為沒通過。 |
 
 每筆量測紀錄用 `distribution`（`kind`、`k3s`、`rke2` 或 `kubesolo`）、`profile`、`platform`、`kubernetesVersion` 和 `distributionVersion` 指出是哪個環境，其中 `distributionVersion` 是裝在主機上的發行版版本。`result` 是 `passed` 或 `failed`，`sourceDigest` 是該次執行安裝的元件檔案雜湊值，`dependencies` 則以 ID 列出該次執行先裝的每個元件的 `sourceDigest`。`addOns` 以名稱列出該次執行在主機上裝的每個附加元件的固定版本。`versions` 列出該次執行安裝的每個 release 的版本。
@@ -91,7 +91,7 @@ sha256sum --check --ignore-missing SHA256SUMS
 
 若要改為檢查來源證明，請執行 `gh attestation verify api-v1.tar.gz --repo zeabur-oss/catalog --signer-workflow zeabur-oss/catalog/.github/workflows/release.yml`。
 
-v0.5.1 以前的版本由 `zeabur-oss/.github` 的 `release.yml` 簽署，驗證時改用 `--certificate-identity-regexp '^https://github\.com/zeabur-oss/\.github/\.github/workflows/release\.yml@'`，加上 `--certificate-github-workflow-repository zeabur-oss/catalog` 和 `--certificate-github-workflow-ref "refs/tags/$tag"`；來源證明則用 `--signer-workflow zeabur-oss/.github/.github/workflows/release.yml`。
+v0.5.1 及之前的版本由 `zeabur-oss/.github` 的 `release.yml` 簽署，驗證時改用 `--certificate-identity-regexp '^https://github\.com/zeabur-oss/\.github/\.github/workflows/release\.yml@'`，加上 `--certificate-github-workflow-repository zeabur-oss/catalog` 和 `--certificate-github-workflow-ref "refs/tags/$tag"`；來源證明則用 `--signer-workflow zeabur-oss/.github/.github/workflows/release.yml`。
 
 </Step>
 
@@ -132,6 +132,6 @@ go run ./tools/cmd/catalog api -version X.Y.Z -out out/api
 - `LICENSE`
 - `README.md`
 
-`catalog api` 將 API 寫入 `out/api/v1/`，並用對應的 schema 檢查每個檔案。這個指令會算繪 chart，需要 helm 和網路連線。`scripts/ci/release.sh <version> <dir>` 會按發布版本的方式，將 API 打包成 `api-v1.tar.gz`。
+`catalog api` 將 API 寫入 `out/api/v1/`，並用對應的 schema 檢查每個檔案。這個指令會渲染 chart，需要 helm 和網路連線。`scripts/ci/release.sh <version> <dir>` 會按發布版本的方式，將 API 打包成 `api-v1.tar.gz`。
 
 這些指令建置的檔案會與發布版本逐位元組相同。工具可以先從尚未發布的 commit 建置檔案，等該 commit 發布後，再與已簽章的版本比對。

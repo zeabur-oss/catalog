@@ -3,7 +3,7 @@ title: 安装工具如何选择和安装组件
 description: 安装工具从 catalog API 选择组件、排定顺序、装好后检查时要遵守的规则，以及用来测试安装工具的用例。
 ---
 
-安装工具读取某个 catalog 版本的 [API](releases.mdx#api)，再决定安装哪些组件。本页列出选择的规则。Zeabur Installer 按这些规则选择。其他安装工具只要遵守同样的规则，同一份配置就会选出同样的组件。每条规则在 `conformance/select/` 都有一个测试用例，用法见本页最后一节。
+安装工具读取某个 catalog 版本的 [API](releases.mdx#api)，再决定安装哪些组件。本页列出选择的规则。遵守这些规则的安装工具，用同一份配置会选出同样的组件。每条规则在 `conformance/select/` 都有一个测试用例，用法见本页最后一节。
 
 ## 安装工具需要的数据
 
@@ -49,7 +49,7 @@ API 保存的是原始数据。安装工具根据这些数据，为每个组件�
    | `distributions` 没有列当前发行版 | `distributions` | 一律排除。启用的组件另外显示 `left-out` 警告 |
    | 当前 profile 的 `defaults` 是 `unsupported` | `unsupported` | 一律排除。启用的组件另外显示 `left-out` 警告 |
 
-   `testedOn` 没有在当前发行版下列出当前平台的已选组件，照样保留，并显示 `untested` 警告。从未在这里测试过的组件，和最近一次在这里测试失败的组件，都这样处理。
+   `testedOn` 没有在当前发行版下列出当前平台的已选组件，照样保留，并显示 `untested` 警告。从未在这里测试过的组件、最近一次在这里测试失败的组件，以及自上次通过测试后内容有变动的组件，都这样处理。
 5. 按 ID 顺序遍历已选的组件，取每个组件在当前 profile 的 `installOrder`，排出**安装顺序**。`installOrder` 先列它需要的组件，最后是它自己。结果里还没有的 ID 就依次加进去。结果里没有被选中的组件，是因为其他组件需要才安装的。
 
    `installOrder` 里需要的组件，可能已停用、被排除或没测试过：
@@ -100,7 +100,7 @@ API 保存的是原始数据。安装工具根据这些数据，为每个组件�
 kubectl wait --for=condition=Ready nodes.longhorn.io --all -n longhorn-system --timeout=60s
 ```
 
-安装工具可以用自己的等待时间代替 `timeout`。例如 `zeabur-installer apply` 刚装完时最多等 5 分钟，`zeabur-installer doctor` 则用每项检查自己的 `timeout`。检查失败时，显示它的 `advice`。
+安装工具可以用自己的等待时间代替 `timeout`。检查失败时，显示它的 `advice`。
 
 ## 测试用例
 
@@ -113,6 +113,7 @@ components:            # each component with only the fields selection reads, an
   - id: traefik
     provides: {capability: ingress}
     defaults: {single-node: recommended, multi-node: recommended}
+    distributions: [k3s, rke2, kubesolo]
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
       - {distribution: rke2, platforms: [linux/amd64]}
@@ -120,6 +121,7 @@ components:            # each component with only the fields selection reads, an
   - id: victoria-logs
     provides: {capability: logs}
     defaults: {single-node: recommended, multi-node: recommended}
+    distributions: [k3s, rke2, kubesolo]
     testedOn:
       - {distribution: k3s, platforms: [linux/amd64]}
       - {distribution: kubesolo, platforms: [linux/amd64]}

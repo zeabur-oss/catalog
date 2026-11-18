@@ -21,9 +21,9 @@ description: 了解各層 CI 的執行時機與檢查內容，並設定範本測
 
 <Step>
 
-### 執行 Go 測試
+### 執行 Go 測試與 lint
 
-執行 Go 測試。
+執行 Go 測試、`gofmt`、ShellCheck 與 actionlint。
 
 </Step>
 
@@ -72,11 +72,19 @@ description: 了解各層 CI 的執行時機與檢查內容，並設定範本測
 
 ### 交給 API server 驗證
 
-從 [`flake.nix`](../../../flake.nix) 啟動 etcd 與 kube-apiserver，使用 Zeabur Installer 固定的 Kubernetes 版本，並只載入渲染出的 CRD。
+從 [`flake.nix`](../../../flake.nix) 啟動 etcd 與 kube-apiserver，使用與 [`config/kubernetes.yaml`](../../../config/kubernetes.yaml) 裡 RKE2 版本相符的 Kubernetes 版本，並只載入渲染出的 CRD。
 
 接著，用 `kubectl apply --dry-run=server` 將兩種 profile 的所有元件與所有範本渲染結果送到 API server。API server 會檢查欄位、預設值、CEL 規則與 Pod Security，不會執行工作負載。
 
 每個範本的 Namespace 都會依照自己的 enforce 等級產生警告。只要出現警告，該範本的測試就會失敗。
+
+</Step>
+
+<Step>
+
+### 建置發行檔
+
+用 `nix build .#release` 建置 `bundle.tar.gz`，用 `catalog api` 建置靜態 API。變更 `go.sum` 後，要等 `flake.nix` 換成新的 `vendorHash`，這一步才會通過。
 
 </Step>
 
@@ -126,7 +134,7 @@ description: 了解各層 CI 的執行時機與檢查內容，並設定範本測
 
 ### 量測閒置資源用量
 
-每隔 10 秒取樣各 Pod 的閒置記憶體與 CPU 用量，連續五個樣本的總量穩定就停止，最多量測 3 分鐘。每個工作負載（Deployment、StatefulSet、DaemonSet、Job 的控制器，或單獨的 Pod）只記一筆，數值是其中一個 Pod 用量的中位數。總量、副本數與資源請求都不儲存，讀取的一方從算繪出的物件取得副本數與請求量。
+每隔 10 秒取樣各 Pod 的閒置記憶體與 CPU 用量，連續五個樣本的總量穩定就停止，最多量測 3 分鐘。每個工作負載（Deployment、StatefulSet、DaemonSet、Job 的控制器，或單獨的 Pod）只記一筆，數值是其中一個 Pod 用量的中位數。總量、副本數與資源請求都不儲存，讀取的一方從渲染出的物件取得副本數與請求量。
 
 </Step>
 

@@ -21,9 +21,9 @@ Standard tests use the `single-node` or `multi-node` profile, each with its own 
 
 <Step>
 
-### Run Go tests
+### Run Go tests and lint
 
-Run the Go tests.
+Run the Go tests, `gofmt`, ShellCheck and actionlint.
 
 </Step>
 
@@ -72,11 +72,19 @@ Render each template with test inputs, then check security rules, upstream Pod S
 
 ### Validate with the API server
 
-Start etcd and kube-apiserver from [`flake.nix`](../../flake.nix), use the Kubernetes version pinned by Zeabur Installer, and load only the rendered CRDs.
+Start etcd and kube-apiserver from [`flake.nix`](../../flake.nix), use the Kubernetes version that matches the RKE2 release in [`config/kubernetes.yaml`](../../config/kubernetes.yaml), and load only the rendered CRDs.
 
 Then use `kubectl apply --dry-run=server` to send the rendered output for all components in both profiles and all templates to the API server. The API server checks fields, defaults, CEL rules, and Pod Security without running workloads.
 
 Each template's Namespace generates warnings at its own enforce level. Any warning fails that template's test.
+
+</Step>
+
+<Step>
+
+### Build the release
+
+Build `bundle.tar.gz` with `nix build .#release` and the static API with `catalog api`. A change to `go.sum` fails here until `flake.nix` has the new `vendorHash`.
 
 </Step>
 

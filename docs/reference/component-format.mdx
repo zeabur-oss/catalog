@@ -55,7 +55,7 @@ releases:                         # installed in order
     type: helm                                  # helm, manifest or inline
     namespace: traefik
     chart: oci://ghcr.io/traefik/helm/traefik   # or repo: https://… plus chart: <name>
-    version: 41.7.1                             # exact; Renovate bumps it
+    version: 42.1.3                             # exact; Renovate bumps it
     chartDigest: sha256:…                       # required with chart; see Digests
     values: |                                   # shared by every profile
       gatewayClass:
@@ -73,7 +73,7 @@ releases:                         # installed in order
     type: manifest
     namespace: kube-system
     urls: [https://github.com/…/releases/download/{version}/standard-install.yaml]
-    version: v1.6.2
+    version: v1.6.3
     urlDigests: [sha256:…]                      # one per URL, in order
   # or type: inline with manifests: |  objects applied as written
 
@@ -136,7 +136,7 @@ resources:
 
 The API publishes `resources.work` as written. An installer adds the memory of `requests` to the requests of the pods in the component's rendered objects, because the scheduler counts requests. `validate` fails on a resource other than `cpu` and `memory`, or on an amount that is not above zero. Profiles and inputs don't change the result.
 
-`health` lists read-only checks that an installer such as `zeabur-installer doctor` runs on an installed cluster. Each check waits until the objects in `resource` reach `condition`, within `timeout`. `resource` has a `kind`, a `namespace` when the kind has one, and exactly one of these: `name` for one object, `selector` for the objects with those labels, or `all: true` for every object of the kind. `validate` fails on a kind that isn't listed in [the schema](../../schema/v1/component.schema.json), and on a missing field. When a check fails, the installer shows its `advice`, which tells the reader in English what to do. A health check has no manifest and applies nothing. Put checks that create objects in `smoke`, which only e2e runs. e2e runs `health` after install and before `smoke`.
+`health` lists read-only checks that an installer runs on an installed cluster. Each check waits until the objects in `resource` reach `condition`, within `timeout`. `resource` has a `kind`, a `namespace` when the kind has one, and exactly one of these: `name` for one object, `selector` for the objects with those labels, or `all: true` for every object of the kind. `validate` fails on a kind that isn't listed in [the schema](../../schema/v1/component.schema.json), and on a missing field. When a check fails, the installer shows its `advice`, which tells the reader in English what to do. A health check has no manifest and applies nothing. Put checks that create objects in `smoke`, which only e2e runs. e2e runs `health` after install and before `smoke`.
 
 ```yaml
 health:
@@ -174,7 +174,7 @@ The other lists of `detection` find an existing installation of the upstream, so
 
 ## Pin content with digests
 
-Every `releases` entry must pin its content with a digest. Zeabur Installer and `catalog render` stop if the chart or URL content doesn't match its digest.
+Every `releases` entry must pin its content with a digest. `catalog render` stops if the chart or URL content doesn't match its digest, and an installer must stop too.
 
 - For HTTP charts, `chartDigest` uses the `digest` from the corresponding entry in the repository's `index.yaml`, which is the sha256 of the `.tgz`.
 - For OCI charts, `chartDigest` uses the manifest digest, which is the value that `helm push` outputs. `helm pull <chart>:<version>@sha256:…` checks this value.

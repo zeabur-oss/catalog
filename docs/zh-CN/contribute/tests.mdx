@@ -21,9 +21,9 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 
 <Step>
 
-### 运行 Go 测试
+### 运行 Go 测试和 lint
 
-运行 Go 测试。
+运行 Go 测试、`gofmt`、ShellCheck 和 actionlint。
 
 </Step>
 
@@ -72,11 +72,19 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 
 ### 交给 API server 验证
 
-从 [`flake.nix`](../../../flake.nix) 启动 etcd 和 kube-apiserver，使用 Zeabur Installer 固定的 Kubernetes 版本，并且只加载渲染出的 CRD。
+从 [`flake.nix`](../../../flake.nix) 启动 etcd 和 kube-apiserver，使用与 [`config/kubernetes.yaml`](../../../config/kubernetes.yaml) 中 RKE2 版本相符的 Kubernetes 版本，并且只加载渲染出的 CRD。
 
 接着，用 `kubectl apply --dry-run=server` 将两种 profile 的所有组件和所有模板渲染结果发送到 API server。API server 会检查字段、默认值、CEL 规则和 Pod Security，不会运行工作负载。
 
 每个模板的 Namespace 都会按自身的 enforce 级别生成警告。只要出现警告，该模板的测试就会失败。
+
+</Step>
+
+<Step>
+
+### 构建发布文件
+
+用 `nix build .#release` 构建 `bundle.tar.gz`，用 `catalog api` 构建静态 API。变更 `go.sum` 后，要等 `flake.nix` 换成新的 `vendorHash`，这一步才会通过。
 
 </Step>
 
