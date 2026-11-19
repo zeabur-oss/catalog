@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"maps"
-	"regexp"
 	"slices"
 
 	"go.yaml.in/yaml/v4"
@@ -23,9 +22,6 @@ const (
 func Labels(r *Template) map[string]string {
 	return map[string]string{TemplateLabel: r.ID, InstanceLabel: r.ID, VersionLabel: r.Metadata.Version}
 }
-
-// labelValue is a Kubernetes label value that is not empty.
-var labelValue = regexp.MustCompile(`^[A-Za-z0-9]([-A-Za-z0-9_.]{0,61}[A-Za-z0-9])?$`)
 
 // stamp adds labels to the metadata of every object in manifest.
 func stamp(manifest []byte, labels map[string]string) ([]byte, error) {

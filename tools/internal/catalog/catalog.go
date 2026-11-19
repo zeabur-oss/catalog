@@ -302,8 +302,15 @@ type Addon struct {
 
 // DetectedWorkload is a workload whose labels show the upstream.
 type DetectedWorkload struct {
-	Kind   string            `yaml:"kind" jsonschema:"required,enum=Deployment,enum=StatefulSet,enum=DaemonSet"`
+	Kind   string            `yaml:"kind" jsonschema:"required"`
 	Labels map[string]string `yaml:"labels" jsonschema:"required"`
+}
+
+func (DetectedWorkload) JSONSchemaExtend(s *gen.Schema) {
+	kind, _ := s.Properties.Get("kind")
+	for _, k := range WorkloadKinds {
+		kind.Enum = append(kind.Enum, k)
+	}
 }
 
 // Health is a read-only check of an installed component: one kubectl wait
@@ -315,19 +322,17 @@ type Health struct {
 	// The condition the objects reach, such as Ready. A Deployment, DaemonSet or StatefulSet has none:
 	// it is ready when its rollout is complete.
 	Condition string `yaml:"condition" jsonschema:"pattern=^[A-Za-z]+$"`
-	Timeout   string `yaml:"timeout" jsonschema:"required,pattern=^[0-9]+(s|m)$"`
+	Timeout   string `yaml:"timeout" jsonschema:"required"`
 	// What to do when the check fails, in English. An installer shows it to the reader.
 	Advice string `yaml:"advice" jsonschema:"required,minLength=1"`
 }
 
-// workloadKinds roll out their pods. Their readiness is the rollout, so a check of one names no condition.
-var workloadKinds = []string{"DaemonSet", "Deployment", "StatefulSet"}
-
 func (Health) JSONSchemaExtend(s *gen.Schema) {
+	SetTimeout(s)
 	resource := gen.NewProperties()
 	kind := gen.NewProperties()
 	var workloads []any
-	for _, k := range workloadKinds {
+	for _, k := range WorkloadKinds {
 		workloads = append(workloads, k)
 	}
 	kind.Set("kind", &gen.Schema{Enum: workloads})
@@ -417,6 +422,8 @@ type Smoke struct {
 	Wait    []Wait `yaml:"wait" jsonschema:"required"`
 	Timeout string `yaml:"timeout" jsonschema:"default=180s"`
 }
+
+func (Smoke) JSONSchemaExtend(s *gen.Schema) { SetTimeout(s) }
 
 // HelmName is the Helm release name.
 func (r Release) HelmName() string { return cmp.Or(r.ReleaseName, r.Name) }

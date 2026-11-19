@@ -22,10 +22,11 @@ type Wait struct {
 	All bool `yaml:"all" json:"all,omitempty"`
 	// What the objects reach, as a kubectl wait --for value. A deployment, statefulset or daemonset
 	// has none: it is ready when its rollout is complete.
-	Condition string `yaml:"condition" json:"condition,omitempty" jsonschema:"pattern=^(condition=[A-Za-z][A-Za-z0-9]*(=(True|False|Unknown))?|jsonpath=.+)$"`
+	Condition string `yaml:"condition" json:"condition,omitempty"`
 }
 
 func (Wait) JSONSchemaExtend(s *gen.Schema) {
+	SetCondition(s)
 	selector, _ := s.Properties.Get("selector")
 	selector.MinProperties = new(uint64(1))
 	all, _ := s.Properties.Get("all")
@@ -40,7 +41,7 @@ func (Wait) JSONSchemaExtend(s *gen.Schema) {
 	// of a workload is a jsonpath on its fields. Any other object needs one, because nothing else
 	// says when it is ready.
 	workload := gen.NewProperties()
-	workload.Set("resource", &gen.Schema{Pattern: "^([Dd]eployment|[Ss]tateful[Ss]et|[Dd]aemon[Ss]et)(/|$)"})
+	workload.Set("resource", &gen.Schema{Pattern: WorkloadResource()})
 	jsonpathOnly := gen.NewProperties()
 	jsonpathOnly.Set("condition", &gen.Schema{Pattern: "^jsonpath="})
 	s.AllOf = []*gen.Schema{{

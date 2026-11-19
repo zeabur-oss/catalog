@@ -43,9 +43,9 @@
         "kind": {
           "type": "string",
           "enum": [
+            "DaemonSet",
             "Deployment",
-            "StatefulSet",
-            "DaemonSet"
+            "StatefulSet"
           ]
         },
         "labels": {
@@ -236,7 +236,7 @@
         },
         "timeout": {
           "type": "string",
-          "pattern": "^[0-9]+(s|m)$"
+          "pattern": "^[1-9][0-9]*(s|m)$"
         },
         "advice": {
           "type": "string",
@@ -841,6 +841,7 @@
         },
         "timeout": {
           "type": "string",
+          "pattern": "^[1-9][0-9]*(s|m)$",
           "default": "180s"
         }
       },
@@ -883,7 +884,7 @@
           "if": {
             "properties": {
               "resource": {
-                "pattern": "^([Dd]eployment|[Ss]tateful[Ss]et|[Dd]aemon[Ss]et)(/|$)"
+                "pattern": "^([Dd]aemon[Ss]et|[Dd]eployment|[Ss]tateful[Ss]et)(/|$)"
               }
             }
           },

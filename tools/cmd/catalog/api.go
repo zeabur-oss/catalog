@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	gen "github.com/invopop/jsonschema"
@@ -333,8 +334,8 @@ func readObjects(manifest []byte, rel catalog.Release, profile *RenderedProfile)
 	}
 	for _, o := range objs {
 		ns := cmp.Or(o.GetNamespace(), rel.Namespace)
-		switch o.GetKind() {
-		case "Deployment", "StatefulSet", "DaemonSet":
+		switch kind := o.GetKind(); {
+		case slices.Contains(catalog.WorkloadKinds, kind):
 			var obj struct {
 				Spec struct {
 					Replicas             *int32                         `json:"replicas"`
@@ -361,7 +362,7 @@ func readObjects(manifest []byte, rel catalog.Release, profile *RenderedProfile)
 				}
 			}
 			profile.Workloads = append(profile.Workloads, w)
-		case "PersistentVolumeClaim":
+		case kind == "PersistentVolumeClaim":
 			var pvc corev1.PersistentVolumeClaim
 			if err := kubeobj.Typed(o, &pvc); err != nil {
 				return err

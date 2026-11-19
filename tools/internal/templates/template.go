@@ -15,6 +15,7 @@ import (
 	gen "github.com/invopop/jsonschema"
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"go.yaml.in/yaml/v4"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 // Template is one application, at templates/<slug>/template.yaml with its objects in
@@ -169,8 +170,8 @@ type Smoke struct {
 	Resource string `yaml:"resource" json:"resource" jsonschema:"required,pattern=^[a-zA-Z0-9.-]+/[a-z0-9][a-z0-9.-]*$"`
 	// What the object reaches, as a kubectl wait --for value. A deployment, statefulset or daemonset
 	// has none: it is ready when its rollout is complete.
-	Condition string `yaml:"condition" json:"condition,omitempty" jsonschema:"pattern=^(condition=[A-Za-z][A-Za-z0-9]*(=(True|False|Unknown))?|jsonpath=.+)$"`
-	Timeout   string `yaml:"timeout" json:"timeout" jsonschema:"required,pattern=^[1-9][0-9]*(s|m)$"`
+	Condition string `yaml:"condition" json:"condition,omitempty"`
+	Timeout   string `yaml:"timeout" json:"timeout" jsonschema:"required"`
 	// GET through a port-forward to the Service.
 	HTTP *struct {
 		Service  string `yaml:"service" json:"service" jsonschema:"required,pattern=^[a-z0-9][a-z0-9-]*$"`
@@ -189,8 +190,10 @@ type Smoke struct {
 }
 
 func (Smoke) JSONSchemaExtend(s *gen.Schema) {
+	catalog.SetCondition(s)
+	catalog.SetTimeout(s)
 	resource := gen.NewProperties()
-	resource.Set("resource", &gen.Schema{Pattern: "^(deployment|statefulset|daemonset)/"})
+	resource.Set("resource", &gen.Schema{Pattern: catalog.WorkloadResource()})
 	s.If = &gen.Schema{Properties: resource}
 	s.Then = &gen.Schema{Not: &gen.Schema{Required: []string{"condition"}}}
 	s.Else = &gen.Schema{Required: []string{"condition"}}
@@ -304,7 +307,7 @@ func CheckVersion(templateYAML, manifests []byte, version string) error {
 		return errors.New(`metadata.version needs "# renovate: depName=<image>" on the line above it`)
 	}
 	image := regexp.MustCompile(`(^|[\s"'])` + regexp.QuoteMeta(string(m[1])+":"+version+"@sha256:"))
-	if !labelValue.MatchString(version) || !image.Match(manifests) {
+	if version == "" || len(validation.IsValidLabelValue(version)) > 0 || !image.Match(manifests) {
 		return fmt.Errorf("metadata.version must be the tag of %s in manifests.yaml, pinned with a digest", m[1])
 	}
 	return nil
