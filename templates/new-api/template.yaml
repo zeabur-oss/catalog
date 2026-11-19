@@ -106,7 +106,6 @@ security:
 smoke:
   - name: workload-ready
     resource: deployment/new-api
-    condition: condition=Available
     timeout: 900s
   - name: database-ready
     resource: cluster/newapi-db

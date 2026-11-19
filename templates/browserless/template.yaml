@@ -85,10 +85,8 @@ security:
 smoke:
   - name: browserless-ready
     resource: deployment/browserless
-    condition: condition=Available
     timeout: 300s
   - name: authentication-required
     resource: deployment/browserless
-    condition: condition=Available
     timeout: 300s
     http: {service: browserless, port: 3000, path: /pressure, status: 401}

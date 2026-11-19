@@ -98,12 +98,10 @@ smoke:
     timeout: 900s
   - name: umami-ready
     resource: deployment/umami
-    condition: condition=Available
     timeout: 600s
     http: {service: umami, port: 3000, path: /api/heartbeat, status: 200, contains: '"ok":true'}
   - name: authentication-required
     resource: deployment/umami
-    condition: condition=Available
     timeout: 120s
     http: {service: umami, port: 3000, path: /api/websites, status: 401}
   - name: default-password-replaced

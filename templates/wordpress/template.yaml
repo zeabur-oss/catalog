@@ -171,7 +171,6 @@ security:
 smoke:
   - name: workload-ready
     resource: deployment/wordpress
-    condition: condition=Available
     timeout: 900s
   - name: database-ready
     resource: mariadb/mariadb

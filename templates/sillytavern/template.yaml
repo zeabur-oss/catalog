@@ -73,6 +73,5 @@ security:
 smoke:
   - name: sillytavern-ready
     resource: deployment/sillytavern
-    condition: condition=Available
     timeout: 300s
     http: {service: sillytavern, port: 8000, path: /, status: 401}

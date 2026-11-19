@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	_ "embed"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -20,6 +21,7 @@ import (
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"github.com/zeabur-oss/catalog/tools/internal/kubeobj"
 	"go.yaml.in/yaml/v4"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // cluster is a kind cluster, or a distribution on this host, with its own
@@ -370,7 +372,7 @@ func (c *cluster) startK3s(k k3sConfig) error {
 		return err
 	}
 	return c.waitHost("/etc/rancher/k3s/k3s.yaml", [][]string{
-		{"-n", "kube-system", "wait", "--for=condition=Available", "deployment/coredns", "deployment/local-path-provisioner"},
+		{"-n", "kube-system", "rollout", "status", "deployment/coredns", "deployment/local-path-provisioner", "--timeout=30s"},
 	}, true)
 }
 
@@ -399,7 +401,7 @@ func (c *cluster) startRKE2(r rke2Config) error {
 		}
 	}
 	if err := c.waitHost("/etc/rancher/rke2/rke2.yaml", [][]string{
-		{"-n", "kube-system", "wait", "--for=condition=Available", "deployment/rke2-coredns-rke2-coredns"},
+		{"-n", "kube-system", "rollout", "status", "deployment/rke2-coredns-rke2-coredns", "--timeout=30s"},
 	}, true); err != nil {
 		return err
 	}
@@ -459,12 +461,11 @@ func (c *cluster) waitHost(adminKubeconfig string, ready [][]string, charts bool
 // helmChartsInstalled fails until the install Job of every HelmChart has
 // completed.
 func helmChartsInstalled() error {
-	out, err := catalog.Run(nil, "kubectl", "get", "helmcharts.helm.cattle.io", "-A", "-o",
-		`jsonpath={range .items[*]}{.metadata.namespace}{" "}{.metadata.name}{" "}{.status.jobName}{"\n"}{end}`)
+	out, err := catalog.Run(nil, "kubectl", "get", "helmcharts.helm.cattle.io", "-A", "-o", "json")
 	if err != nil {
 		return err
 	}
-	jobs, err := helmChartJobs(out)
+	jobs, err := helmChartJobs([]byte(out))
 	for _, j := range jobs {
 		if err != nil {
 			break
@@ -475,19 +476,26 @@ func helmChartsInstalled() error {
 	return err
 }
 
-// helmChartJobs returns <namespace>/<job> for each line "<namespace> <name>
-// <job>" of HelmCharts, or an error while a HelmChart has no Job yet.
-func helmChartJobs(out string) ([]string, error) {
+// helmChartJobs returns <namespace>/<job> for each HelmChart in the JSON of a kubectl get, or an
+// error while a HelmChart has no Job yet. A HelmChart has no kstatus, so the Job is the signal.
+func helmChartJobs(list []byte) ([]string, error) {
+	var l struct {
+		Items []struct {
+			metav1.ObjectMeta `json:"metadata"`
+			Status            struct {
+				JobName string `json:"jobName"`
+			} `json:"status"`
+		} `json:"items"`
+	}
+	if err := json.Unmarshal(list, &l); err != nil {
+		return nil, err
+	}
 	var jobs []string
-	for _, line := range strings.Split(strings.TrimSpace(out), "\n") {
-		f := strings.Fields(line)
-		switch len(f) {
-		case 0:
-		case 3:
-			jobs = append(jobs, f[0]+"/"+f[2])
-		default:
-			return nil, fmt.Errorf("HelmChart %s has no install Job yet", strings.Join(f, "/"))
+	for _, c := range l.Items {
+		if c.Status.JobName == "" {
+			return nil, fmt.Errorf("HelmChart %s/%s has no install Job yet", c.Namespace, c.Name)
 		}
+		jobs = append(jobs, c.Namespace+"/"+c.Status.JobName)
 	}
 	return jobs, nil
 }
@@ -517,8 +525,8 @@ func (c *cluster) startKubesolo(k kubesoloConfig) error {
 	}
 	// KubeSolo adds CoreDNS and its storage provisioner after the node is ready.
 	if err := c.waitHost("/var/lib/kubesolo/pki/admin/admin.kubeconfig", [][]string{
-		{"-n", "kube-system", "wait", "--for=condition=Available", "deployment/coredns"},
-		{"-n", "local-path-storage", "wait", "--for=condition=Available", "deployment/local-path-provisioner"},
+		{"-n", "kube-system", "rollout", "status", "deployment/coredns", "--timeout=30s"},
+		{"-n", "local-path-storage", "rollout", "status", "deployment/local-path-provisioner", "--timeout=30s"},
 	}, false); err != nil {
 		return err
 	}

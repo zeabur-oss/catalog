@@ -92,5 +92,4 @@ security:
 smoke:
   - name: Private browser available
     resource: deployment/openclaw-sandbox-browser
-    condition: condition=Available
     timeout: 10m

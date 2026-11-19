@@ -108,11 +108,9 @@ security:
 smoke:
   - name: vaultwarden-ready
     resource: statefulset/vaultwarden
-    condition: jsonpath={.status.readyReplicas}=1
     timeout: 600s
     http: {service: vaultwarden, port: 8080, path: /api/config, status: 200, contains: Vaultwarden}
   - name: authentication-required
     resource: statefulset/vaultwarden
-    condition: jsonpath={.status.readyReplicas}=1
     timeout: 120s
     http: {service: vaultwarden, port: 8080, path: /api/accounts/profile, status: 401}

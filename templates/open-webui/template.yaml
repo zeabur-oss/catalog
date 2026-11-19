@@ -123,11 +123,9 @@ security:
 smoke:
   - name: open-webui-ready
     resource: deployment/open-webui
-    condition: condition=Available
     timeout: 600s
     http: {service: open-webui, port: 8080, path: /health, status: 200}
   - name: pipeline-ready
     resource: deployment/pipeline
-    condition: condition=Available
     timeout: 600s
     http: {service: pipeline, port: 9099, path: /, status: 200}

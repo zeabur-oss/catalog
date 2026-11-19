@@ -83,11 +83,9 @@ security:
 smoke:
   - name: qdrant-ready
     resource: statefulset/qdrant
-    condition: jsonpath={.status.readyReplicas}=1
     timeout: 600s
     http: {service: qdrant, port: 6333, path: /readyz, status: 200}
   - name: api-key-required
     resource: statefulset/qdrant
-    condition: jsonpath={.status.readyReplicas}=1
     timeout: 120s
     http: {service: qdrant, port: 6333, path: /collections, status: 401}

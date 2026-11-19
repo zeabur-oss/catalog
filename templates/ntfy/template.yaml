@@ -83,11 +83,9 @@ security:
 smoke:
   - name: ntfy-ready
     resource: statefulset/ntfy
-    condition: jsonpath={.status.readyReplicas}=1
     timeout: 600s
     http: {service: ntfy, port: 8080, path: /v1/health, status: 200, contains: '"healthy":true'}
   - name: anonymous-access-denied
     resource: statefulset/ntfy
-    condition: jsonpath={.status.readyReplicas}=1
     timeout: 120s
     http: {service: ntfy, port: 8080, path: '/test/json?poll=1', status: 403}

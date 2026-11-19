@@ -129,12 +129,10 @@ smoke:
     timeout: 900s
   - name: gitea-ready
     resource: deployment/gitea
-    condition: condition=Available
     timeout: 900s
     http: {service: gitea, port: 3000, path: /api/healthz, status: 200, contains: pass}
   - name: authentication-required
     resource: deployment/gitea
-    condition: condition=Available
     timeout: 120s
     http: {service: gitea, port: 3000, path: /api/v1/user, status: 401}
   - name: administrator-created

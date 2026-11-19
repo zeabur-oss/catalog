@@ -82,5 +82,4 @@ security:
 smoke:
   - name: application-ready
     resource: statefulset/uptime-kuma
-    condition: jsonpath={.status.readyReplicas}=1
     timeout: 600s

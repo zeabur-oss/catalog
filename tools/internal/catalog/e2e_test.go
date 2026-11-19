@@ -28,7 +28,9 @@ func TestResidueVolumeFollowsClaim(t *testing.T) {
 func TestSharedDefaultAccountSurvivesOneComponentsUndo(t *testing.T) {
 	dir := t.TempDir()
 	log := filepath.Join(dir, "calls")
-	script := "#!/bin/sh\necho \"$@\" >> " + log + "\ncat >> " + log + "\n"
+	// kubectl get answers with an object that is ready: the install waits for what it applied.
+	script := "#!/bin/sh\necho \"$@\" >> " + log + "\ncat >> " + log + "\n" +
+		"[ \"$1\" = get ] && echo '{\"apiVersion\": \"v1\", \"kind\": \"ConfigMap\", \"metadata\": {\"name\": \"x\"}}'\nexit 0\n"
 	if err := os.WriteFile(filepath.Join(dir, "kubectl"), []byte(script), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -108,5 +110,17 @@ func TestSkipSmokeNamesExistingChecks(t *testing.T) {
 	tt.SkipSmoke = map[string]map[string]string{"x/y": {"ok": "why"}}
 	if err := tt.CheckSkipSmoke(); err == nil {
 		t.Error("unknown component passed")
+	}
+}
+
+func TestInstallWaitsForWorkloadsAndCRDsOnly(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "kubectl"), []byte("#!/bin/sh\necho \"cannot reach the cluster\" >&2\nexit 1\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir+":"+os.Getenv("PATH"))
+	issuer := "apiVersion: cert-manager.io/v1\nkind: ClusterIssuer\nmetadata: {name: letsencrypt}\nspec: {acme: {}}\n"
+	if err := waitReady([]byte(issuer), "cert-manager"); err != nil {
+		t.Errorf("the install waited for an issuer that needs Let's Encrypt: %v", err)
 	}
 }

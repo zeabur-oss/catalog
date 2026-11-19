@@ -76,7 +76,7 @@ The installer stops and installs nothing on these errors. The `kind` names the e
 
 Install the components in the order of the result, and remove the installed components that the result doesn't have. [Component file format](component-format.mdx) describes the releases of each one, the digests that pin them and the other fields an installer reads.
 
-Once a component is installed, run each of its `health` checks as one `kubectl wait`: `--for=condition=<condition>`, then the objects of `resource`, then `-n <namespace>` when it has one, and `--timeout=<timeout>`. Give the objects as `<resource>/<name>`, as `<resource> -l <key>=<value>,…` for a `selector`, or as `<resource> --all` for `all: true`. `<resource>` comes from the kind:
+Once a component is installed, run each of its `health` checks. A check with a `condition` is one `kubectl wait`: `--for=condition=<condition>`, then the objects of `resource`, then `-n <namespace>` when it has one, and `--timeout=<timeout>`. Give the objects as `<resource>/<name>`, as `<resource> -l <key>=<value>,…` for a `selector`, or as `<resource> --all` for `all: true`. Wait until the objects exist before you wait on the condition, because `kubectl wait` fails at once when there is none. A check of a `Deployment`, `DaemonSet` or `StatefulSet` has no `condition`. It is ready when the rollout is complete, so run `kubectl rollout status <resource>/<name>`, or `kubectl rollout status <resource> -l <key>=<value>,…` for a `selector`, with `-n <namespace>` and `--timeout=<timeout>`. kubectl compares `observedGeneration` with `generation`, so the pods of an earlier rollout never make a new one ready. `<resource>` comes from the kind:
 
 | `kind` | `<resource>` |
 | --- | --- |
@@ -94,7 +94,7 @@ For example, Longhorn's `nodes-ready` check runs:
 kubectl wait --for=condition=Ready nodes.longhorn.io --all -n longhorn-system --timeout=60s
 ```
 
-An installer may use its own time limit in place of `timeout`. When a check fails, show its `advice`.
+An installer may use its own time limit in place of `timeout`. When a check fails, show the reason and message of the object, as `kubectl describe` does, and then its `advice`. The `advice` says what to do, not what went wrong.
 
 ## Test cases
 

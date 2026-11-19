@@ -86,11 +86,9 @@ security:
 smoke:
   - name: memos-ready
     resource: statefulset/memos
-    condition: jsonpath={.status.readyReplicas}=1
     timeout: 600s
     http: {service: memos, port: 5230, path: /healthz, status: 200}
   - name: administrator-created
     resource: statefulset/memos
-    condition: jsonpath={.status.readyReplicas}=1
     timeout: 120s
     http: {service: memos, port: 5230, path: /api/instance/profile, status: 200, contains: '"needsSetup":false'}

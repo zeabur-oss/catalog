@@ -99,7 +99,7 @@ services:
     resources: {requests: {cpu: 10m, memory: 64Mi}, limits: {cpu: 100m, memory: 128Mi}}
 security: {summary: Reads nothing., risks: []}
 smoke:
-  - {name: ready, resource: deployment/blog, condition: condition=Available, timeout: 60s}
+  - {name: ready, resource: deployment/blog, timeout: 60s}
 `
 
 // blogManifests has a Go template field, so it is not YAML until it is expanded.

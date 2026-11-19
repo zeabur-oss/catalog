@@ -151,7 +151,7 @@ func E2E(t *catalog.Tester, r *Template, values E2EValues, measure bool) (usage 
 			continue
 		}
 		slog.Info("smoke", "template", r.ID, "check", s.Name)
-		if _, err := kubectl(nil, "wait", "-n", ns, s.Resource, "--for="+s.Condition, "--timeout="+s.Timeout); err != nil {
+		if err := waitSmoke(ns, s); err != nil {
 			diag := catalog.Diagnose(func(a ...string) (string, error) { return kubectl(nil, a...) }, ns, "-n", ns, s.Resource)
 			return nil, fmt.Errorf("smoke %s: %w%s", s.Name, err, diag)
 		}
@@ -336,4 +336,19 @@ func ReadValues(path string) (map[string]string, error) {
 		return nil, fmt.Errorf("%s: want a JSON object of strings: %v", path, err)
 	}
 	return values, nil
+}
+
+// waitSmoke waits for the object of s: a rollout for a workload, its condition for any other object.
+func waitSmoke(ns string, s Smoke) error {
+	get := func(a ...string) (string, error) { return kubectl(nil, a...) }
+	timeout, err := time.ParseDuration(s.Timeout)
+	if err != nil {
+		return err
+	}
+	resource, name, _ := strings.Cut(s.Resource, "/")
+	if s.Condition == "" {
+		return catalog.WaitReady(get, timeout, catalog.Target{Resource: resource, Namespace: ns, Name: name})
+	}
+	_, err = kubectl(nil, "wait", "-n", ns, s.Resource, "--for="+s.Condition, "--timeout="+s.Timeout)
+	return err
 }

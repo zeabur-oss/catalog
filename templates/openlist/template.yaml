@@ -95,5 +95,4 @@ security:
 smoke:
   - name: application-ready
     resource: statefulset/openlist
-    condition: jsonpath={.status.readyReplicas}=1
     timeout: 600s

@@ -31,7 +31,7 @@
           subPackages = [ "tools/cmd/catalog" ];
           # Change it when go.sum changes: nix build prints the new value. On Renovate's pull
           # requests the vendorhash workflow commits it.
-          vendorHash = "sha256-2oN475aF3BJpARJs4OTmY8TVr95CRz/ueKN7b5qHxMM=";
+          vendorHash = "sha256-6gbcU8+5lWQudN735Mj/sfaHd3NrhpgdWGxjJ5pARSk=";
           doCheck = false;
         };
         # The check tier runs this API server with etcd and no nodes. Keep the version equal to the RKE2

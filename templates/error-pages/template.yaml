@@ -46,7 +46,6 @@ security:
 smoke:
   - name: pages
     resource: deployment/error-pages
-    condition: condition=Available
     timeout: 180s
     http:
       service: error-pages
@@ -56,7 +55,6 @@ smoke:
       contains: Bad gateway
   - name: maintenance-port
     resource: deployment/error-pages
-    condition: condition=Available
     timeout: 60s
     http:
       service: error-pages

@@ -88,11 +88,9 @@ security:
 smoke:
   - name: meilisearch-ready
     resource: statefulset/meilisearch
-    condition: jsonpath={.status.readyReplicas}=1
     timeout: 600s
     http: {service: meilisearch, port: 7700, path: /health, status: 200, contains: available}
   - name: master-key-required
     resource: statefulset/meilisearch
-    condition: jsonpath={.status.readyReplicas}=1
     timeout: 120s
     http: {service: meilisearch, port: 7700, path: /keys, status: 401}

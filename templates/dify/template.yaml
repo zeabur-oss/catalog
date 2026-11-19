@@ -280,40 +280,31 @@ security:
 smoke:
   - name: dify available
     resource: deployment/dify
-    condition: condition=Available
     timeout: 15m
   - name: dify-api available
     resource: deployment/dify-api
-    condition: condition=Available
     timeout: 15m
   - name: dify-worker available
     resource: deployment/dify-worker
-    condition: condition=Available
     timeout: 15m
   - name: dify-beat available
     resource: deployment/dify-beat
-    condition: condition=Available
     timeout: 15m
   - name: dify-web available
     resource: deployment/dify-web
-    condition: condition=Available
     timeout: 15m
   - name: dify-plugin available
     resource: deployment/dify-plugin
-    condition: condition=Available
     timeout: 15m
   - name: dify-sandbox available
     resource: deployment/dify-sandbox
-    condition: condition=Available
     timeout: 15m
   - name: dify-web reads system features from dify-api
     resource: deployment/dify-web
-    condition: condition=Available
     timeout: 15m
     http: {service: dify-web, port: 3000, path: /signin, status: 200, contains: sso_enforced_for_signin}
   - name: dify-proxy available
     resource: deployment/dify-proxy
-    condition: condition=Available
     timeout: 15m
   - name: Database ready
     resource: cluster/dify-db

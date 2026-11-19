@@ -436,26 +436,27 @@ func crdsExist(crds []string) bool {
 	return err == nil
 }
 
+// installedKinds are the kinds that an install waits for.
+var installedKinds = []string{"CustomResourceDefinition", "DaemonSet", "Deployment", "StatefulSet"}
+
 // waitReady waits for a manifest's CRDs and workloads.
 func waitReady(manifest []byte, defaultNS string) error {
 	objs, err := kubeobj.Decode(manifest)
 	if err != nil {
 		return err
 	}
+	var targets []Target
 	for _, o := range objs {
-		var err error
-		switch o.GetKind() {
-		case "CustomResourceDefinition":
-			_, err = kubectl("wait", "--for=condition=Established", "crd/"+o.GetName(), "--timeout=2m")
-		case "Deployment", "StatefulSet", "DaemonSet":
-			ns, obj := cmp.Or(o.GetNamespace(), defaultNS), strings.ToLower(o.GetKind())+"/"+o.GetName()
-			if _, err = kubectl("-n", ns, "rollout", "status", obj, "--timeout=10m"); err != nil {
-				err = fmt.Errorf("%w%s", err, Diagnose(kubectl, ns, "-n", ns, obj))
-			}
+		// Other objects can depend on the outside, such as an ACME issuer on Let's Encrypt, and a
+		// smoke check waits for what it needs. Helm runs its hooks itself.
+		if _, hook := o.GetAnnotations()["helm.sh/hook"]; hook || !slices.Contains(installedKinds, o.GetKind()) {
+			continue
 		}
-		if err != nil {
-			return err
-		}
+		gk := o.GroupVersionKind().GroupKind()
+		targets = append(targets, Target{Resource: strings.TrimSuffix(gk.Kind+"."+gk.Group, "."), Namespace: cmp.Or(o.GetNamespace(), defaultNS), Name: o.GetName()})
+	}
+	if err := WaitReady(kubectl, 10*time.Minute, targets...); err != nil {
+		return fmt.Errorf("%w%s", err, Diagnose(kubectl, defaultNS))
 	}
 	return nil
 }
@@ -490,12 +491,14 @@ func (t *Tester) smoke(c *Component) error {
 			return fmt.Errorf("health %s: %w", h.Name, err)
 		}
 		// A check describes an installed component at rest. Right after
-		// install, the objects it waits for may not exist yet, and kubectl
-		// wait fails at once on no objects; poll until the timeout instead.
-		if err := retry(timeout, func() error {
-			_, err := kubectl(h.WaitArgs()...)
-			return err
-		}); err != nil {
+		// install, the objects it waits for may not exist yet.
+		target := h.Target()
+		if h.Condition == "" {
+			err = WaitReady(kubectl, timeout, target)
+		} else if err = WaitObjects(kubectl, timeout, target); err == nil {
+			_, err = kubectl(h.WaitArgs()...)
+		}
+		if err != nil {
 			return fmt.Errorf("health %s: %w", h.Name, err)
 		}
 	}
