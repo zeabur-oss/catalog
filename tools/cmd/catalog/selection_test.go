@@ -490,3 +490,20 @@ func TestUnreadyIsNeverStale(t *testing.T) {
 		t.Errorf("stale %v, want nothing: an unready component has no measurement to compare", got)
 	}
 }
+
+func TestTemplateRefsAddsSeaweedFSWhenS3IsSet(t *testing.T) {
+	r := scopeRepo(t)
+	tpl := r.templates[0]
+	tpl.E2E = templates.E2EValues{S3: true}
+	refs, err := templateRefs(r, tpl)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.ContainsFunc(refs, func(ref catalog.Ref) bool { return ref.Component == templates.S3Component }) {
+		t.Errorf("refs %v lack %s", refs, templates.S3Component)
+	}
+	tpl.E2E = templates.E2EValues{}
+	if refs, _ = templateRefs(r, tpl); slices.ContainsFunc(refs, func(ref catalog.Ref) bool { return ref.Component == templates.S3Component }) {
+		t.Errorf("refs %v have %s without s3", refs, templates.S3Component)
+	}
+}

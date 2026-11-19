@@ -1,4 +1,5 @@
 # Test data for catalog e2e; never published.
+s3: true
 inputs:
   storageEndpoint: '{{ .S3.Endpoint }}'
   storageRegion: us-east-1

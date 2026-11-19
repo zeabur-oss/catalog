@@ -44,12 +44,18 @@ skipSmoke:
     # services. They never become Ready in CI, and nothing else waits for them.
     acme-issuers: needs Let's Encrypt
 
+# Commands that run in every node before the component installs.
+nodeSetup:
+  # Longhorn attaches volumes over iSCSI from each node. kind's nodes ship
+  # without an initiator. The iscsi_tcp module comes from the host kernel.
+  longhorn: apt-get update -qq && apt-get install -y -qq open-iscsi nfs-common && systemctl enable --now iscsid
+
 # A template's own test data (inputs, objects to apply first, smoke checks to
 # skip) is its e2e.yaml: templates/<id>/e2e.yaml.
 #
 # Input values for template e2e runs, for every template that declares the
 # input. A value is a text/template with .ID, the template, and .S3, the
-# SeaweedFS S3 gateway the run starts when a value uses it: .S3.Endpoint
+# SeaweedFS S3 gateway the run starts when the template's e2e.yaml sets s3: true: .S3.Endpoint
 # (https://<host>) and .S3.Bucket. Its certificate comes from a test CA. The
 # Secret e2e-s3 in the template's namespace holds its credentials (access-key
 # and secret-key) and the CA as ca.crt. Every value is disposable test data.

@@ -122,14 +122,14 @@ func ids(cs []*catalog.Component) []string {
 }
 
 // templateRefs returns what a template's e2e installs: its requires, and the
-// SeaweedFS component when its test values use the S3 gateway.
+// SeaweedFS component when its e2e.yaml sets s3.
 func templateRefs(r *repo, t *templates.Template) ([]catalog.Ref, error) {
 	values, err := e2eValues(r, t)
 	if err != nil {
 		return nil, err
 	}
 	refs := slices.Clone(t.Requires)
-	if slices.ContainsFunc(slices.Collect(maps.Values(values.Inputs)), func(v string) bool { return strings.Contains(v, ".S3") }) {
+	if values.S3 {
 		refs = append(refs, catalog.Ref{Component: templates.S3Component})
 	}
 	return refs, nil
@@ -511,7 +511,7 @@ func smokeGroup(r *repo, cfg config, o tierOptions, g *group) []row {
 	var rows []row
 	if !o.current {
 		start := time.Now()
-		c, err := createCluster(templateProfile, cfg.E2E.Version, needs)
+		c, err := createCluster(templateProfile, cfg.E2E.Version, r.e2e.NodeSetup, needs)
 		setup := row{subject: "cluster for " + g.IDs[0] + " and others", err: err}
 		setup.timings.Since("cluster", start)
 		rows = append(rows, setup)
@@ -603,9 +603,9 @@ func runFull(r *repo, cfg config, o tierOptions) error {
 		if !o.current {
 			start := time.Now()
 			if slices.Contains(hostProfiles, o.profile) {
-				c, err = createHost(cfg, o.profile, s.order)
+				c, err = createHost(cfg, o.profile, r.e2e.NodeSetup, s.order)
 			} else {
-				c, err = createCluster(o.profile, cfg.E2E.Version, s.order)
+				c, err = createCluster(o.profile, cfg.E2E.Version, r.e2e.NodeSetup, s.order)
 			}
 			t.Timings.Since("cluster", start)
 			setupErr = err

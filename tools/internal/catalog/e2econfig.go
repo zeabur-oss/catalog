@@ -22,6 +22,9 @@ type E2EConfig struct {
 	SmokeRepresentative []string `yaml:"smokeRepresentative"`
 	// SkipSmoke maps a component and a smoke check to the reason e2e skips it.
 	SkipSmoke map[string]map[string]string `yaml:"skipSmoke"`
+	// NodeSetup maps a component to a shell script that runs in every node
+	// before the component installs.
+	NodeSetup map[string]string `yaml:"nodeSetup"`
 	// TemplateInputs are input values for every template that declares the input.
 	TemplateInputs map[string]string `yaml:"templateInputs"`
 }

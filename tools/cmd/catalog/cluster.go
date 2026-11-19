@@ -31,14 +31,6 @@ type cluster struct {
 	host      string // the host profile (k3s, rke2, kubesolo); empty for kind
 }
 
-// nodeSetup holds commands that run in every node before the components that
-// need them install.
-var nodeSetup = map[string]string{
-	// Longhorn attaches volumes over iSCSI from each node. kind's nodes ship
-	// without an initiator. The iscsi_tcp module comes from the host kernel.
-	"longhorn": "apt-get update -qq && apt-get install -y -qq open-iscsi nfs-common && systemctl enable --now iscsid",
-}
-
 // kindConfig is the part of a kind v1alpha4 cluster configuration that the tests set.
 type kindConfig struct {
 	Kind                    string     `yaml:"kind"`
@@ -60,7 +52,7 @@ type kindMount struct {
 
 // createCluster creates a kind cluster for profile and points KUBECONFIG at
 // it. needs is the install order of what the cluster tests.
-func createCluster(profile, version string, needs []*catalog.Component) (*cluster, error) {
+func createCluster(profile, version string, nodeSetup map[string]string, needs []*catalog.Component) (*cluster, error) {
 	dir, err := os.MkdirTemp("", "catalog-kind-")
 	if err != nil {
 		return nil, err
@@ -99,14 +91,14 @@ func createCluster(profile, version string, needs []*catalog.Component) (*cluste
 		return nil, err
 	}
 	os.Setenv("KUBECONFIG", kubeconfig)
-	if err := c.setup(needs); err != nil {
+	if err := c.setup(nodeSetup, needs); err != nil {
 		c.delete()
 		return nil, err
 	}
 	return c, nil
 }
 
-func (c *cluster) setup(needs []*catalog.Component) error {
+func (c *cluster) setup(nodeSetup map[string]string, needs []*catalog.Component) error {
 	out, err := catalog.Run(nil, "kind", "get", "nodes", "--name", c.name)
 	if err != nil {
 		return err
@@ -194,17 +186,8 @@ func loadContainerdProfile() error {
 // resetHost removes the distribution of host profile p and what it left on
 // the host. It is safe on a host without p, so a run starts from it too.
 func resetHost(p string) {
-	switch p {
-	case "k3s":
-		catalog.Run(nil, "sudo", "sh", "-c", "[ ! -x /usr/local/bin/k3s-uninstall.sh ] || /usr/local/bin/k3s-uninstall.sh")
-	case "rke2":
-		catalog.Run(nil, "sudo", "sh", "-c", "[ ! -x /usr/local/bin/rke2-uninstall.sh ] || /usr/local/bin/rke2-uninstall.sh")
-	case kubesoloProfile:
-		// KillMode=process leaves the containerd shims in the unit's cgroup,
-		// which keeps the transient unit loaded: kill every process in it.
-		catalog.Run(nil, "sudo", "systemctl", "kill", "--signal=KILL", "kubesolo")
-		catalog.Run(nil, "sudo", "systemctl", "stop", "kubesolo")
-		catalog.Run(nil, "sudo", "systemctl", "reset-failed", "kubesolo")
+	if d, ok := lookupDistribution(p); ok {
+		d.reset()
 	}
 	catalog.Run(nil, "sudo", "sh", "-c", "[ ! -e "+containerdProfilePath+" ] || apparmor_parser -R "+containerdProfilePath+"; rm -f "+containerdProfilePath)
 	if _, err := catalog.Run(nil, "sudo", "sh", "-c", hostCleanup); err != nil {
@@ -224,9 +207,72 @@ func forwardDrops(rules string) bool {
 	return false
 }
 
-// hostProfiles install a distribution on this host. Each tests the
-// components of single-node, with its values, whose distributions allow it.
-var hostProfiles = []string{"k3s", "rke2", kubesoloProfile}
+// distribution is a distribution that a host profile installs on this host,
+// in one place: the release config/kubernetes.yaml pins, the add-ons it
+// installs, how to start it and how to remove it.
+type distribution struct {
+	name    string
+	version func(config) string
+	addOns  func(config) map[string]string // by name; nil when it installs none
+	start   func(c *cluster, cfg config) error
+	reset   func()
+}
+
+// distributions install on this host. Each host profile tests the components
+// of single-node, with its values, whose distributions allow it.
+var distributions = []distribution{
+	{
+		name:    "k3s",
+		version: func(cfg config) string { return cfg.K3s.Version },
+		start:   func(c *cluster, cfg config) error { return c.startK3s(cfg.K3s) },
+		reset: func() {
+			catalog.Run(nil, "sudo", "sh", "-c", "[ ! -x /usr/local/bin/k3s-uninstall.sh ] || /usr/local/bin/k3s-uninstall.sh")
+		},
+	},
+	{
+		name:    "rke2",
+		version: func(cfg config) string { return cfg.RKE2.Version },
+		addOns: func(cfg config) map[string]string {
+			return map[string]string{"local-path-provisioner": cfg.RKE2.LocalPath.Version}
+		},
+		start: func(c *cluster, cfg config) error { return c.startRKE2(cfg.RKE2) },
+		reset: func() {
+			catalog.Run(nil, "sudo", "sh", "-c", "[ ! -x /usr/local/bin/rke2-uninstall.sh ] || /usr/local/bin/rke2-uninstall.sh")
+		},
+	},
+	{
+		name:    kubesoloProfile,
+		version: func(cfg config) string { return cfg.Kubesolo.Version },
+		addOns: func(cfg config) map[string]string {
+			return map[string]string{"helm-controller": cfg.Kubesolo.HelmController.Version}
+		},
+		start: func(c *cluster, cfg config) error { return c.startKubesolo(cfg.Kubesolo) },
+		reset: func() {
+			// KillMode=process leaves the containerd shims in the unit's cgroup,
+			// which keeps the transient unit loaded: kill every process in it.
+			catalog.Run(nil, "sudo", "systemctl", "kill", "--signal=KILL", "kubesolo")
+			catalog.Run(nil, "sudo", "systemctl", "stop", "kubesolo")
+			catalog.Run(nil, "sudo", "systemctl", "reset-failed", "kubesolo")
+		},
+	},
+}
+
+// hostProfiles are the names of distributions.
+var hostProfiles = func() []string {
+	var names []string
+	for _, d := range distributions {
+		names = append(names, d.name)
+	}
+	return names
+}()
+
+func lookupDistribution(name string) (distribution, bool) {
+	i := slices.IndexFunc(distributions, func(d distribution) bool { return d.name == name })
+	if i < 0 {
+		return distribution{}, false
+	}
+	return distributions[i], true
+}
 
 // hostRuns reports whether host profile p tests c.
 func hostRuns(p string, c *catalog.Component) bool {
@@ -237,13 +283,8 @@ func hostRuns(p string, c *catalog.Component) bool {
 // pinnedVersion returns the release of the distribution that cfg pins for
 // host profile p.
 func (cfg config) pinnedVersion(p string) string {
-	switch p {
-	case "k3s":
-		return cfg.K3s.Version
-	case "rke2":
-		return cfg.RKE2.Version
-	case kubesoloProfile:
-		return cfg.Kubesolo.Version
+	if d, ok := lookupDistribution(p); ok {
+		return d.version(cfg)
 	}
 	return ""
 }
@@ -251,11 +292,8 @@ func (cfg config) pinnedVersion(p string) string {
 // pinnedAddOns returns the release of each add-on that createHost installs
 // for host profile p, by name.
 func (cfg config) pinnedAddOns(p string) map[string]string {
-	switch p {
-	case "rke2":
-		return map[string]string{"local-path-provisioner": cfg.RKE2.LocalPath.Version}
-	case kubesoloProfile:
-		return map[string]string{"helm-controller": cfg.Kubesolo.HelmController.Version}
+	if d, ok := lookupDistribution(p); ok && d.addOns != nil {
+		return d.addOns(cfg)
 	}
 	return nil
 }
@@ -290,7 +328,7 @@ type kubesoloConfig struct {
 // createHost installs the distribution of host profile p on this host and
 // points KUBECONFIG at it. Every download must match its pinned checksum.
 // needs is the install order of what the cluster tests.
-func createHost(cfg config, p string, needs []*catalog.Component) (*cluster, error) {
+func createHost(cfg config, p string, nodeSetup map[string]string, needs []*catalog.Component) (*cluster, error) {
 	dir, err := os.MkdirTemp("", "catalog-"+p+"-")
 	if err != nil {
 		return nil, err
@@ -306,18 +344,14 @@ func createHost(cfg config, p string, needs []*catalog.Component) (*cluster, err
 		os.RemoveAll(dir)
 		return nil, err
 	}
-	switch p {
-	case "k3s":
-		err = c.startK3s(cfg.K3s)
-	case "rke2":
-		err = c.startRKE2(cfg.RKE2)
-	case kubesoloProfile:
-		err = c.startKubesolo(cfg.Kubesolo)
-	default:
+	d, ok := lookupDistribution(p)
+	if ok {
+		err = d.start(c, cfg)
+	} else {
 		err = fmt.Errorf("unknown host profile %q", p)
 	}
 	if err == nil {
-		err = hostSetup(needs)
+		err = hostSetup(nodeSetup, needs)
 	}
 	if err != nil {
 		c.delete()
@@ -327,7 +361,7 @@ func createHost(cfg config, p string, needs []*catalog.Component) (*cluster, err
 }
 
 // hostSetup runs the node setup of needs on this host, the only node.
-func hostSetup(needs []*catalog.Component) error {
+func hostSetup(nodeSetup map[string]string, needs []*catalog.Component) error {
 	for _, comp := range needs {
 		if script, ok := nodeSetup[comp.ID]; ok {
 			if _, err := catalog.Run(nil, "sudo", "sh", "-c", script); err != nil {
