@@ -15,13 +15,13 @@
           "workload": "n8n-db",
           "kind": "Cluster",
           "memory": "82Mi",
-          "cpu": "6m"
+          "cpu": "5m"
         },
         {
           "workload": "n8n",
           "kind": "Deployment",
-          "memory": "303Mi",
-          "cpu": "2m"
+          "memory": "312Mi",
+          "cpu": "3m"
         },
         {
           "workload": "n8n-runners",
@@ -33,20 +33,20 @@
       "versions": [
         {
           "image": "n8nio/n8n",
-          "version": "3.1.0",
-          "digest": "sha256:6e9f220e9cf0d2f17d3c2371c8d8a6fe6720f99b82a9672afb96bf068cfd04a5"
+          "version": "3.2.0",
+          "digest": "sha256:9e67c2627d3c30dbb0d51f5da83d4499ac7913f6b4f358a900a58026a832ba12"
         },
         {
           "image": "n8nio/runners",
-          "version": "3.1.0",
-          "digest": "sha256:730c78a31b9d5711319fff053a18e98ba5265f11769c88d1917506e9b33d2616"
+          "version": "3.2.0",
+          "digest": "sha256:121b0ae16e397b31dca8c9f188f44a611d75ed46bcda16bacc42381a4ea1ae90"
         }
       ],
-      "sourceDigest": "h1:3ON6hS7NKUn+zw8MMP0VhTPPEk1zzZ666FMOzL0cTZE=",
+      "sourceDigest": "h1:TsyIjA3XQWUk9duVvb1pGjal5E7GU9z6yuL4O0nNdGY=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "cloudnative-pg": "h1:1LuNPnwMkpjrJDzuE4fGPIhAn+AS77RnuHBRPWb2FK8=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cloudnative-pg": "h1:VlI7FbJq8eu7nUwyl03sJAPplBUBm53QJYGDhleao90=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     }

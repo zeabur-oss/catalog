@@ -15,17 +15,17 @@
         {
           "workload": "reloader-reloader",
           "kind": "Deployment",
-          "memory": "15Mi",
+          "memory": "16Mi",
           "cpu": "0"
         }
       ],
       "versions": [
         {
           "release": "reloader",
-          "version": "2.2.19"
+          "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:tG3UUXo+gWiwJ4F1RHHtjcI6TcmrX7+aTtYgxvkG/zk=",
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
       "measuredAt": "2026-11-19"
     },
     {
@@ -49,10 +49,10 @@
       "versions": [
         {
           "release": "reloader",
-          "version": "2.2.19"
+          "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:tG3UUXo+gWiwJ4F1RHHtjcI6TcmrX7+aTtYgxvkG/zk=",
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
       "measuredAt": "2026-11-19"
     },
     {
@@ -75,10 +75,10 @@
       "versions": [
         {
           "release": "reloader",
-          "version": "2.2.19"
+          "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:tG3UUXo+gWiwJ4F1RHHtjcI6TcmrX7+aTtYgxvkG/zk=",
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
       "measuredAt": "2026-11-19"
     },
     {
@@ -101,10 +101,10 @@
       "versions": [
         {
           "release": "reloader",
-          "version": "2.2.19"
+          "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:tG3UUXo+gWiwJ4F1RHHtjcI6TcmrX7+aTtYgxvkG/zk=",
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
       "measuredAt": "2026-11-19"
     },
     {
@@ -127,10 +127,10 @@
       "versions": [
         {
           "release": "reloader",
-          "version": "2.2.19"
+          "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:tG3UUXo+gWiwJ4F1RHHtjcI6TcmrX7+aTtYgxvkG/zk=",
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
       "measuredAt": "2026-11-19"
     },
     {
@@ -153,10 +153,10 @@
       "versions": [
         {
           "release": "reloader",
-          "version": "2.2.19"
+          "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:tG3UUXo+gWiwJ4F1RHHtjcI6TcmrX7+aTtYgxvkG/zk=",
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
       "measuredAt": "2026-11-19"
     },
     {
@@ -180,10 +180,10 @@
       "versions": [
         {
           "release": "reloader",
-          "version": "2.2.19"
+          "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:tG3UUXo+gWiwJ4F1RHHtjcI6TcmrX7+aTtYgxvkG/zk=",
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
@@ -210,10 +210,10 @@
       "versions": [
         {
           "release": "reloader",
-          "version": "2.2.19"
+          "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:tG3UUXo+gWiwJ4F1RHHtjcI6TcmrX7+aTtYgxvkG/zk=",
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
@@ -233,17 +233,17 @@
         {
           "workload": "reloader-reloader",
           "kind": "Deployment",
-          "memory": "18Mi",
+          "memory": "17Mi",
           "cpu": "0"
         }
       ],
       "versions": [
         {
           "release": "reloader",
-          "version": "2.2.19"
+          "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:tG3UUXo+gWiwJ4F1RHHtjcI6TcmrX7+aTtYgxvkG/zk=",
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
@@ -263,17 +263,17 @@
         {
           "workload": "reloader-reloader",
           "kind": "Deployment",
-          "memory": "17Mi",
+          "memory": "16Mi",
           "cpu": "0"
         }
       ],
       "versions": [
         {
           "release": "reloader",
-          "version": "2.2.19"
+          "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:tG3UUXo+gWiwJ4F1RHHtjcI6TcmrX7+aTtYgxvkG/zk=",
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },

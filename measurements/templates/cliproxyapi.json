@@ -14,21 +14,21 @@
         {
           "workload": "cliproxyapi",
           "kind": "Deployment",
-          "memory": "18Mi",
+          "memory": "19Mi",
           "cpu": "0"
         }
       ],
       "versions": [
         {
           "image": "eceasy/cli-proxy-api",
-          "version": "v8.0.60",
-          "digest": "sha256:873ec3df3b673a82f7d956d4636c7736b0c961dc6ee28f9fb403238b2898dc0d"
+          "version": "v8.0.67",
+          "digest": "sha256:2e098c0b3c79571f0c3150c8f27725ab2645b6a463cf6c4f862e4e86343466a1"
         }
       ],
-      "sourceDigest": "h1:sbEdTafJZhLeaPgOG+qVnENzWT3nXL1TCOX2c/aHKug=",
+      "sourceDigest": "h1:54c72q1UH8kyxGfDXcHNsZtDmwPz7lqS9+VRF0Etkew=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     }

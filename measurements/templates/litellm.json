@@ -14,14 +14,14 @@
         {
           "workload": "litellm-db",
           "kind": "Cluster",
-          "memory": "68Mi",
-          "cpu": "5m"
+          "memory": "67Mi",
+          "cpu": "6m"
         },
         {
           "workload": "litellm",
           "kind": "Deployment",
           "memory": "573Mi",
-          "cpu": "2m"
+          "cpu": "4m"
         }
       ],
       "versions": [
@@ -34,8 +34,8 @@
       "sourceDigest": "h1:eHftoDFrun77AZBJsY10vRpaEA6Mz4aHPNBHcD1JurQ=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "cloudnative-pg": "h1:1LuNPnwMkpjrJDzuE4fGPIhAn+AS77RnuHBRPWb2FK8=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cloudnative-pg": "h1:VlI7FbJq8eu7nUwyl03sJAPplBUBm53QJYGDhleao90=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     }

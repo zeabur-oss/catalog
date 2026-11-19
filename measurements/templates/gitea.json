@@ -15,7 +15,7 @@
           "workload": "gitea-db",
           "kind": "Cluster",
           "memory": "64Mi",
-          "cpu": "7m"
+          "cpu": "6m"
         },
         {
           "workload": "gitea",
@@ -34,8 +34,8 @@
       "sourceDigest": "h1:3s/IJNFEBs/Yx72MUi5YljEKwiVL6X4qm/fuwN6d/Tk=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "cloudnative-pg": "h1:1LuNPnwMkpjrJDzuE4fGPIhAn+AS77RnuHBRPWb2FK8=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cloudnative-pg": "h1:VlI7FbJq8eu7nUwyl03sJAPplBUBm53QJYGDhleao90=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     }

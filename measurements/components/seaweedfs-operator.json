@@ -15,20 +15,20 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "28Mi",
+          "memory": "27Mi",
           "cpu": "1m"
         }
       ],
       "versions": [
         {
           "release": "seaweedfs-operator",
-          "version": "0.1.46"
+          "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:wfDV+DkKmT/CXC80HBFCKvZbEry+Mi9pbZQ8u4631V4=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     },
@@ -46,20 +46,20 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "28Mi",
+          "memory": "27Mi",
           "cpu": "1m"
         }
       ],
       "versions": [
         {
           "release": "seaweedfs-operator",
-          "version": "0.1.46"
+          "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:wfDV+DkKmT/CXC80HBFCKvZbEry+Mi9pbZQ8u4631V4=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     },
@@ -76,20 +76,20 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "25Mi",
+          "memory": "26Mi",
           "cpu": "1m"
         }
       ],
       "versions": [
         {
           "release": "seaweedfs-operator",
-          "version": "0.1.46"
+          "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:wfDV+DkKmT/CXC80HBFCKvZbEry+Mi9pbZQ8u4631V4=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     },
@@ -113,13 +113,13 @@
       "versions": [
         {
           "release": "seaweedfs-operator",
-          "version": "0.1.46"
+          "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:wfDV+DkKmT/CXC80HBFCKvZbEry+Mi9pbZQ8u4631V4=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     },
@@ -136,20 +136,20 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "26Mi",
+          "memory": "25Mi",
           "cpu": "1m"
         }
       ],
       "versions": [
         {
           "release": "seaweedfs-operator",
-          "version": "0.1.46"
+          "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:wfDV+DkKmT/CXC80HBFCKvZbEry+Mi9pbZQ8u4631V4=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     },
@@ -166,20 +166,20 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "25Mi",
+          "memory": "26Mi",
           "cpu": "1m"
         }
       ],
       "versions": [
         {
           "release": "seaweedfs-operator",
-          "version": "0.1.46"
+          "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:wfDV+DkKmT/CXC80HBFCKvZbEry+Mi9pbZQ8u4631V4=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     },
@@ -197,20 +197,20 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "25Mi",
-          "cpu": "1m"
+          "memory": "27Mi",
+          "cpu": "2m"
         }
       ],
       "versions": [
         {
           "release": "seaweedfs-operator",
-          "version": "0.1.46"
+          "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:wfDV+DkKmT/CXC80HBFCKvZbEry+Mi9pbZQ8u4631V4=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "helm-controller": "v0.17.9"
@@ -231,20 +231,20 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "25Mi",
+          "memory": "23Mi",
           "cpu": "1m"
         }
       ],
       "versions": [
         {
           "release": "seaweedfs-operator",
-          "version": "0.1.46"
+          "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:wfDV+DkKmT/CXC80HBFCKvZbEry+Mi9pbZQ8u4631V4=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "helm-controller": "v0.17.9"
@@ -265,20 +265,20 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "29Mi",
+          "memory": "28Mi",
           "cpu": "1m"
         }
       ],
       "versions": [
         {
           "release": "seaweedfs-operator",
-          "version": "0.1.46"
+          "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:wfDV+DkKmT/CXC80HBFCKvZbEry+Mi9pbZQ8u4631V4=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
@@ -299,20 +299,20 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "28Mi",
+          "memory": "27Mi",
           "cpu": "1m"
         }
       ],
       "versions": [
         {
           "release": "seaweedfs-operator",
-          "version": "0.1.46"
+          "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:wfDV+DkKmT/CXC80HBFCKvZbEry+Mi9pbZQ8u4631V4=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"

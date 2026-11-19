@@ -15,7 +15,7 @@
         {
           "workload": "vm-prometheus-node-exporter",
           "kind": "DaemonSet",
-          "memory": "9Mi",
+          "memory": "8Mi",
           "cpu": "0"
         },
         {
@@ -27,19 +27,19 @@
         {
           "workload": "vmagent-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "73Mi",
-          "cpu": "5m"
+          "memory": "58Mi",
+          "cpu": "6m"
         },
         {
           "workload": "vmalert-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "33Mi",
+          "memory": "34Mi",
           "cpu": "6m"
         },
         {
           "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "105Mi",
+          "memory": "109Mi",
           "cpu": "15m"
         },
         {
@@ -58,7 +58,7 @@
       "sourceDigest": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "measuredAt": "2026-11-19"
@@ -77,32 +77,32 @@
         {
           "workload": "vm-prometheus-node-exporter",
           "kind": "DaemonSet",
-          "memory": "8Mi",
-          "cpu": "0"
+          "memory": "9Mi",
+          "cpu": "1m"
         },
         {
           "workload": "vm-kube-state-metrics",
           "kind": "Deployment",
-          "memory": "25Mi",
+          "memory": "24Mi",
           "cpu": "0"
         },
         {
           "workload": "vmagent-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "68Mi",
-          "cpu": "4m"
+          "memory": "78Mi",
+          "cpu": "12m"
         },
         {
           "workload": "vmalert-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "35Mi",
+          "memory": "34Mi",
           "cpu": "6m"
         },
         {
           "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "103Mi",
-          "cpu": "13m"
+          "memory": "94Mi",
+          "cpu": "15m"
         },
         {
           "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
@@ -120,7 +120,7 @@
       "sourceDigest": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "measuredAt": "2026-11-19"
@@ -139,7 +139,7 @@
           "workload": "vm-prometheus-node-exporter",
           "kind": "DaemonSet",
           "memory": "7Mi",
-          "cpu": "0"
+          "cpu": "1m"
         },
         {
           "workload": "vm-kube-state-metrics",
@@ -150,25 +150,25 @@
         {
           "workload": "vmagent-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "51Mi",
-          "cpu": "10m"
+          "memory": "46Mi",
+          "cpu": "8m"
         },
         {
           "workload": "vmalert-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "30Mi",
+          "memory": "33Mi",
           "cpu": "6m"
         },
         {
           "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "113Mi",
-          "cpu": "16m"
+          "memory": "125Mi",
+          "cpu": "17m"
         },
         {
           "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
           "kind": "StatefulSet",
-          "memory": "22Mi",
+          "memory": "23Mi",
           "cpu": "1m"
         }
       ],
@@ -181,7 +181,7 @@
       "sourceDigest": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "measuredAt": "2026-11-19"
@@ -199,37 +199,37 @@
         {
           "workload": "vm-prometheus-node-exporter",
           "kind": "DaemonSet",
-          "memory": "8Mi",
-          "cpu": "1m"
+          "memory": "7Mi",
+          "cpu": "0"
         },
         {
           "workload": "vm-kube-state-metrics",
           "kind": "Deployment",
-          "memory": "25Mi",
+          "memory": "24Mi",
           "cpu": "0"
         },
         {
           "workload": "vmagent-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "58Mi",
-          "cpu": "5m"
+          "memory": "51Mi",
+          "cpu": "7m"
         },
         {
           "workload": "vmalert-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "35Mi",
-          "cpu": "7m"
+          "memory": "34Mi",
+          "cpu": "6m"
         },
         {
           "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "125Mi",
-          "cpu": "20m"
+          "memory": "117Mi",
+          "cpu": "19m"
         },
         {
           "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
           "kind": "StatefulSet",
-          "memory": "25Mi",
+          "memory": "24Mi",
           "cpu": "1m"
         }
       ],
@@ -242,7 +242,7 @@
       "sourceDigest": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "measuredAt": "2026-11-19"
@@ -261,36 +261,36 @@
           "workload": "vm-prometheus-node-exporter",
           "kind": "DaemonSet",
           "memory": "8Mi",
-          "cpu": "0"
+          "cpu": "1m"
         },
         {
           "workload": "vm-kube-state-metrics",
           "kind": "Deployment",
-          "memory": "24Mi",
+          "memory": "23Mi",
           "cpu": "0"
         },
         {
           "workload": "vmagent-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "52Mi",
-          "cpu": "5m"
+          "memory": "47Mi",
+          "cpu": "9m"
         },
         {
           "workload": "vmalert-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "34Mi",
-          "cpu": "5m"
+          "memory": "31Mi",
+          "cpu": "6m"
         },
         {
           "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "112Mi",
-          "cpu": "13m"
+          "memory": "105Mi",
+          "cpu": "16m"
         },
         {
           "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
           "kind": "StatefulSet",
-          "memory": "25Mi",
+          "memory": "23Mi",
           "cpu": "1m"
         }
       ],
@@ -303,7 +303,7 @@
       "sourceDigest": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "measuredAt": "2026-11-19"
@@ -327,31 +327,31 @@
         {
           "workload": "vm-kube-state-metrics",
           "kind": "Deployment",
-          "memory": "25Mi",
+          "memory": "23Mi",
           "cpu": "0"
         },
         {
           "workload": "vmagent-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "50Mi",
+          "memory": "46Mi",
           "cpu": "5m"
         },
         {
           "workload": "vmalert-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "32Mi",
-          "cpu": "6m"
+          "memory": "30Mi",
+          "cpu": "7m"
         },
         {
           "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "103Mi",
-          "cpu": "13m"
+          "memory": "108Mi",
+          "cpu": "15m"
         },
         {
           "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
           "kind": "StatefulSet",
-          "memory": "24Mi",
+          "memory": "22Mi",
           "cpu": "1m"
         }
       ],
@@ -364,7 +364,7 @@
       "sourceDigest": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "measuredAt": "2026-11-19"
@@ -384,31 +384,31 @@
           "workload": "vm-prometheus-node-exporter",
           "kind": "DaemonSet",
           "memory": "8Mi",
-          "cpu": "1m"
+          "cpu": "2m"
         },
         {
           "workload": "vm-kube-state-metrics",
           "kind": "Deployment",
-          "memory": "27Mi",
+          "memory": "25Mi",
           "cpu": "0"
         },
         {
           "workload": "vmagent-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "74Mi",
-          "cpu": "14m"
+          "memory": "62Mi",
+          "cpu": "16m"
         },
         {
           "workload": "vmalert-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "32Mi",
-          "cpu": "6m"
+          "memory": "33Mi",
+          "cpu": "7m"
         },
         {
           "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "102Mi",
-          "cpu": "14m"
+          "memory": "112Mi",
+          "cpu": "15m"
         },
         {
           "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
@@ -426,7 +426,7 @@
       "sourceDigest": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "addOns": {
@@ -448,7 +448,7 @@
         {
           "workload": "vm-prometheus-node-exporter",
           "kind": "DaemonSet",
-          "memory": "8Mi",
+          "memory": "9Mi",
           "cpu": "1m"
         },
         {
@@ -460,19 +460,19 @@
         {
           "workload": "vmagent-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "72Mi",
-          "cpu": "4m"
+          "memory": "62Mi",
+          "cpu": "10m"
         },
         {
           "workload": "vmalert-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "35Mi",
-          "cpu": "5m"
+          "memory": "34Mi",
+          "cpu": "6m"
         },
         {
           "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "112Mi",
+          "memory": "103Mi",
           "cpu": "13m"
         },
         {
@@ -491,7 +491,7 @@
       "sourceDigest": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "addOns": {
@@ -519,31 +519,31 @@
         {
           "workload": "vm-kube-state-metrics",
           "kind": "Deployment",
-          "memory": "27Mi",
-          "cpu": "1m"
+          "memory": "28Mi",
+          "cpu": "0"
         },
         {
           "workload": "vmagent-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "58Mi",
-          "cpu": "3m"
+          "memory": "55Mi",
+          "cpu": "4m"
         },
         {
           "workload": "vmalert-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "31Mi",
+          "memory": "33Mi",
           "cpu": "6m"
         },
         {
           "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "111Mi",
-          "cpu": "15m"
+          "memory": "115Mi",
+          "cpu": "14m"
         },
         {
           "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
           "kind": "StatefulSet",
-          "memory": "24Mi",
+          "memory": "26Mi",
           "cpu": "1m"
         }
       ],
@@ -556,7 +556,7 @@
       "sourceDigest": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "addOns": {
@@ -579,36 +579,36 @@
           "workload": "vm-prometheus-node-exporter",
           "kind": "DaemonSet",
           "memory": "8Mi",
-          "cpu": "0"
+          "cpu": "1m"
         },
         {
           "workload": "vm-kube-state-metrics",
           "kind": "Deployment",
-          "memory": "28Mi",
+          "memory": "29Mi",
           "cpu": "0"
         },
         {
           "workload": "vmagent-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "53Mi",
-          "cpu": "6m"
+          "memory": "52Mi",
+          "cpu": "4m"
         },
         {
           "workload": "vmalert-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "29Mi",
-          "cpu": "7m"
+          "memory": "33Mi",
+          "cpu": "6m"
         },
         {
           "workload": "vmsingle-vm-victoria-metrics-k8s-stack",
           "kind": "Deployment",
-          "memory": "104Mi",
-          "cpu": "18m"
+          "memory": "110Mi",
+          "cpu": "16m"
         },
         {
           "workload": "vmalertmanager-vm-victoria-metrics-k8s-stack",
           "kind": "StatefulSet",
-          "memory": "24Mi",
+          "memory": "26Mi",
           "cpu": "1m"
         }
       ],
@@ -621,7 +621,7 @@
       "sourceDigest": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "addOns": {

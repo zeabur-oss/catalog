@@ -14,8 +14,8 @@
         {
           "workload": "dify-db",
           "kind": "Cluster",
-          "memory": "115Mi",
-          "cpu": "4m"
+          "memory": "116Mi",
+          "cpu": "5m"
         },
         {
           "workload": "dify",
@@ -26,20 +26,20 @@
         {
           "workload": "dify-api",
           "kind": "Deployment",
-          "memory": "522Mi",
+          "memory": "507Mi",
           "cpu": "0"
         },
         {
           "workload": "dify-beat",
           "kind": "Deployment",
-          "memory": "486Mi",
-          "cpu": "0"
+          "memory": "488Mi",
+          "cpu": "7m"
         },
         {
           "workload": "dify-plugin",
           "kind": "Deployment",
-          "memory": "14Mi",
-          "cpu": "1m"
+          "memory": "13Mi",
+          "cpu": "2m"
         },
         {
           "workload": "dify-proxy",
@@ -50,26 +50,26 @@
         {
           "workload": "dify-sandbox",
           "kind": "Deployment",
-          "memory": "34Mi",
+          "memory": "36Mi",
           "cpu": "0"
         },
         {
           "workload": "dify-web",
           "kind": "Deployment",
-          "memory": "66Mi",
+          "memory": "67Mi",
           "cpu": "0"
         },
         {
           "workload": "dify-worker",
           "kind": "Deployment",
-          "memory": "504Mi",
-          "cpu": "3m"
+          "memory": "505Mi",
+          "cpu": "8m"
         },
         {
           "workload": "dify-dragonfly",
           "kind": "StatefulSet",
           "memory": "14Mi",
-          "cpu": "9m"
+          "cpu": "15m"
         }
       ],
       "versions": [
@@ -112,10 +112,10 @@
       "sourceDigest": "h1:2IUWRn24gBluzHJuygLXxa9GjF0WgwiJkBEnCd/fSgQ=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "cloudnative-pg": "h1:1LuNPnwMkpjrJDzuE4fGPIhAn+AS77RnuHBRPWb2FK8=",
+        "cloudnative-pg": "h1:VlI7FbJq8eu7nUwyl03sJAPplBUBm53QJYGDhleao90=",
         "dragonfly-operator": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
-        "seaweedfs-operator": "h1:wfDV+DkKmT/CXC80HBFCKvZbEry+Mi9pbZQ8u4631V4=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "seaweedfs-operator": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     }

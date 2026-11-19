@@ -14,20 +14,20 @@
         {
           "workload": "rag-db",
           "kind": "Cluster",
-          "memory": "110Mi",
-          "cpu": "4m"
+          "memory": "109Mi",
+          "cpu": "8m"
         },
         {
           "workload": "librechat",
           "kind": "Deployment",
-          "memory": "246Mi",
-          "cpu": "3m"
+          "memory": "247Mi",
+          "cpu": "2m"
         },
         {
           "workload": "rag-api",
           "kind": "Deployment",
-          "memory": "196Mi",
-          "cpu": "2m"
+          "memory": "208Mi",
+          "cpu": "1m"
         },
         {
           "workload": "meilisearch",
@@ -38,15 +38,15 @@
         {
           "workload": "mongodb-rs0",
           "kind": "StatefulSet",
-          "memory": "211Mi",
-          "cpu": "35m"
+          "memory": "207Mi",
+          "cpu": "42m"
         }
       ],
       "versions": [
         {
           "image": "docker.io/getmeili/meilisearch",
-          "version": "v1.56.1",
-          "digest": "sha256:b7ba431bf6f9b26cc86132798f3640964147a699cf23f026b74c6c05dbb1d60d"
+          "version": "v1.56.2",
+          "digest": "sha256:9600db22be3fcbf3d506176d3a73dd70a65c5719d9aa1d2837355b75afb8f4fb"
         },
         {
           "image": "docker.io/percona/percona-server-mongodb",
@@ -64,12 +64,12 @@
           "digest": "sha256:a62ce2221b43a9bb57fa6cb733e7047c80132960272c33d5704028f3071a1251"
         }
       ],
-      "sourceDigest": "h1:ELWCxtCpsJatgichsZ/c91WqqdggryxGNWlTXBHnl4I=",
+      "sourceDigest": "h1:AU6TPG/YjfB2tOmFaaQmMcWS0CYrKUSmcvsl9RY22ao=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "cloudnative-pg": "h1:1LuNPnwMkpjrJDzuE4fGPIhAn+AS77RnuHBRPWb2FK8=",
+        "cloudnative-pg": "h1:VlI7FbJq8eu7nUwyl03sJAPplBUBm53QJYGDhleao90=",
         "percona-mongodb": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     }
