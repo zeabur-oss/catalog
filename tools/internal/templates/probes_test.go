@@ -20,21 +20,22 @@ func TestFiniteJobsUseCompletionInsteadOfLongRunningProbes(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			docs[0]["kind"] = kind
+			obj := docs[0].Object
+			obj["kind"] = kind
 			if kind != "Deployment" {
-				docs[0]["apiVersion"] = "batch/v1"
-				spec := docs[0]["spec"].(map[string]any)
+				obj["apiVersion"] = "batch/v1"
+				spec := obj["spec"].(map[string]any)
 				pod := spec["template"].(map[string]any)["spec"].(map[string]any)
 				pod["restartPolicy"] = "Never"
 				if kind == "CronJob" {
-					docs[0]["spec"] = map[string]any{"schedule": "0 0 * * *", "jobTemplate": map[string]any{"spec": spec}}
+					obj["spec"] = map[string]any{"schedule": "0 0 * * *", "jobTemplate": map[string]any{"spec": spec}}
 				}
 			}
 			encode := func() []byte {
 				t.Helper()
 				var parts []string
 				for _, doc := range docs {
-					b, e := json.Marshal(doc)
+					b, e := json.Marshal(doc.Object)
 					if e != nil {
 						t.Fatal(e)
 					}
@@ -52,7 +53,7 @@ func TestFiniteJobsUseCompletionInsteadOfLongRunningProbes(t *testing.T) {
 			if err != nil {
 				t.Fatalf("finite %s without probes rejected: %v", kind, err)
 			}
-			spec := docs[0]["spec"].(map[string]any)
+			spec := obj["spec"].(map[string]any)
 			if kind == "CronJob" {
 				spec = spec["jobTemplate"].(map[string]any)["spec"].(map[string]any)
 			}

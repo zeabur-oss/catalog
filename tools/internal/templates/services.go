@@ -7,6 +7,8 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+
+	"github.com/zeabur-oss/catalog/tools/internal/kubeobj"
 )
 
 // CheckServices checks that each service in template.yaml matches the
@@ -27,13 +29,13 @@ func CheckServices(r *Template, manifest []byte) error {
 		var operand map[string]any
 		found := false
 		for _, d := range docs {
-			if text(object(d["metadata"])["name"]) != s.Name {
+			if d.GetName() != s.Name {
 				continue
 			}
-			spec := object(d["spec"])
-			switch text(d["kind"]) {
+			spec := object(d.Object["spec"])
+			switch d.GetKind() {
 			case "Deployment", "StatefulSet", "DaemonSet":
-				t, _, err := podOf(d)
+				t, _, err := kubeobj.PodTemplate(d)
 				if err != nil {
 					fail("invalid pod: %v", err)
 					continue

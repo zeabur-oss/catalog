@@ -8,8 +8,10 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
+	"github.com/zeabur-oss/catalog/tools/internal/kubeobj"
 )
 
 func hasProvider(r *Template, id string) bool {
@@ -45,7 +47,7 @@ func safeOperandContext(p, c map[string]any, w string, fail func(string, Rule, .
 	checkPodSecurity(metav1.ObjectMeta{}, spec, "restricted", w, fail)
 }
 
-func checkPercona(r *Template, d map[string]any, docs []map[string]any, w string, fail func(string, Rule, ...string)) {
+func checkPercona(r *Template, d map[string]any, docs []*unstructured.Unstructured, w string, fail func(string, Rule, ...string)) {
 	if !hasProvider(r, "percona-mongodb") {
 		fail(w, "Percona operand requires exact percona-mongodb")
 	}
@@ -116,7 +118,7 @@ func checkPercona(r *Template, d map[string]any, docs []map[string]any, w string
 	}
 }
 
-func checkPerconaBackup(r *Template, d map[string]any, docs []map[string]any, w string, fail func(string, Rule, ...string)) {
+func checkPerconaBackup(r *Template, d map[string]any, docs []*unstructured.Unstructured, w string, fail func(string, Rule, ...string)) {
 	if !hasProvider(r, "percona-mongodb") {
 		fail(w, ErrPerconaBackupProvider)
 	}
@@ -137,10 +139,10 @@ func checkPerconaBackup(r *Template, d map[string]any, docs []map[string]any, w 
 		return
 	}
 	for _, doc := range docs {
-		if text(doc["apiVersion"]) != "psmdb.percona.com/v1" || text(doc["kind"]) != "PerconaServerMongoDB" || text(object(doc["metadata"])["name"]) != clusterName {
+		if doc.GetAPIVersion() != "psmdb.percona.com/v1" || doc.GetKind() != "PerconaServerMongoDB" || doc.GetName() != clusterName {
 			continue
 		}
-		backup := object(object(doc["spec"])["backup"])
+		backup := object(object(doc.Object["spec"])["backup"])
 		if !truth(backup["enabled"]) || !perconaStorageSafe(object(object(backup["storages"])[storageName])) {
 			fail(w, ErrPerconaBackupStorage)
 		}
@@ -195,16 +197,17 @@ func onlyKeys(spec map[string]any, allowed []string, what, w string, fail func(s
 	}
 }
 
-func declaredServiceAccount(docs []map[string]any, name string) bool {
-	for _, doc := range docs {
-		if text(doc["kind"]) == "ServiceAccount" && text(object(doc["metadata"])["name"]) == name && doc["automountServiceAccountToken"] == false {
-			return true
+func declaredServiceAccount(docs []*unstructured.Unstructured, name string) bool {
+	return slices.ContainsFunc(docs, func(doc *unstructured.Unstructured) bool {
+		if doc.GetAPIVersion() != "v1" || doc.GetKind() != "ServiceAccount" || doc.GetName() != name {
+			return false
 		}
-	}
-	return false
+		var sa corev1.ServiceAccount
+		return kubeobj.Typed(doc, &sa) == nil && sa.AutomountServiceAccountToken != nil && !*sa.AutomountServiceAccountToken
+	})
 }
 
-func checkDragonfly(r *Template, d map[string]any, docs []map[string]any, w string, fail func(string, Rule, ...string)) {
+func checkDragonfly(r *Template, d map[string]any, docs []*unstructured.Unstructured, w string, fail func(string, Rule, ...string)) {
 	if !hasProvider(r, "dragonfly-operator") {
 		fail(w, ErrDragonflyProvider)
 	}
@@ -238,21 +241,21 @@ func checkDragonfly(r *Template, d map[string]any, docs []map[string]any, w stri
 
 // checkMariaDBRef requires a reference to a MariaDB in this template. The operator
 // is cluster-wide, so a reference to another namespace reaches another tenant.
-func checkMariaDBRef(spec map[string]any, docs []map[string]any, namespace, w string, fail func(string, Rule, ...string)) {
+func checkMariaDBRef(spec map[string]any, docs []*unstructured.Unstructured, namespace, w string, fail func(string, Rule, ...string)) {
 	ref := object(spec["mariaDbRef"])
 	onlyKeys(ref, []string{"name", "namespace", "waitForIt"}, "mariaDbRef", w, fail)
 	if ns := text(ref["namespace"]); ns != "" && ns != namespace {
 		fail(w, ErrMariaDBRefNamespace)
 	}
 	for _, doc := range docs {
-		if text(doc["apiVersion"]) == "k8s.mariadb.com/v1alpha1" && text(doc["kind"]) == "MariaDB" && text(object(doc["metadata"])["name"]) == text(ref["name"]) {
+		if doc.GetAPIVersion() == "k8s.mariadb.com/v1alpha1" && doc.GetKind() == "MariaDB" && doc.GetName() == text(ref["name"]) {
 			return
 		}
 	}
 	fail(w, ErrMariaDBRefUndeclared)
 }
 
-func checkMariaDB(r *Template, d map[string]any, docs []map[string]any, namespace, w string, fail func(string, Rule, ...string)) {
+func checkMariaDB(r *Template, d map[string]any, docs []*unstructured.Unstructured, namespace, w string, fail func(string, Rule, ...string)) {
 	if !hasProvider(r, "mariadb-operator") {
 		fail(w, ErrMariaDBProvider)
 	}

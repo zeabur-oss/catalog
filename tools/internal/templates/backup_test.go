@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 )
 
@@ -37,7 +39,7 @@ func TestPerconaBackupStaysWithinDeclaredClusterAndStorage(t *testing.T) {
 			}
 			cluster := map[string]any{"apiVersion": "psmdb.percona.com/v1", "kind": "PerconaServerMongoDB", "metadata": map[string]any{"name": "database"}, "spec": map[string]any{"backup": map[string]any{"enabled": true, "storages": map[string]any{"s3": map[string]any{"type": "s3", "s3": map[string]any{"credentialsSecret": tc.credentials, "endpointUrl": endpoint, "insecureSkipTLSVerify": tc.insecure}}}}}}
 			var broken []Rule
-			checkPerconaBackup(r, doc, []map[string]any{cluster}, "backup/initial", func(_ string, rule Rule, _ ...string) { broken = append(broken, rule) })
+			checkPerconaBackup(r, doc, []*unstructured.Unstructured{{Object: cluster}}, "backup/initial", func(_ string, rule Rule, _ ...string) { broken = append(broken, rule) })
 			if (tc.rule == "" && len(broken) > 0) || (tc.rule != "" && !slices.Contains(broken, tc.rule)) {
 				t.Fatalf("got %v, want %v", broken, tc.rule)
 			}

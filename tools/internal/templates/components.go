@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/zeabur-oss/catalog/tools/internal/kubeobj"
 )
 
 // CheckPodSecurity evaluates every pod spec in a rendered component against
@@ -23,11 +25,11 @@ func CheckPodSecurity(manifest []byte, level string) error {
 	}
 	for _, d := range docs {
 		// helm test hooks run only on helm test, never at install.
-		if strings.Contains(text(object(object(d["metadata"])["annotations"])["helm.sh/hook"]), "test") {
+		if strings.Contains(d.GetAnnotations()["helm.sh/hook"], "test") {
 			continue
 		}
-		t, ok, err := podOf(d)
-		where := text(d["kind"]) + "/" + text(object(d["metadata"])["name"])
+		t, ok, err := kubeobj.PodTemplate(d)
+		where := d.GetKind() + "/" + d.GetName()
 		if err != nil {
 			errs = append(errs, fmt.Errorf("%s: invalid pod: %w", where, err))
 			continue

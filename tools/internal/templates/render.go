@@ -13,6 +13,7 @@ import (
 	"slices"
 	"strings"
 
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/validation"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
@@ -221,7 +222,7 @@ func validateInputs(inputs []Input) ([]*regexp.Regexp, error) {
 }
 
 // DecodeDocuments splits a YAML stream into objects and expands Lists.
-func DecodeDocuments(b []byte) ([]map[string]any, error) {
+func DecodeDocuments(b []byte) ([]*unstructured.Unstructured, error) {
 	objs, err := kubeobj.Decode(b)
 	if err != nil {
 		return nil, err
@@ -229,9 +230,5 @@ func DecodeDocuments(b []byte) ([]map[string]any, error) {
 	if len(objs) == 0 {
 		return nil, errors.New("no objects")
 	}
-	out := make([]map[string]any, len(objs))
-	for i, o := range objs {
-		out[i] = o.Object
-	}
-	return out, nil
+	return objs, nil
 }
