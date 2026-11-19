@@ -437,7 +437,7 @@ func crdsExist(crds []string) bool {
 }
 
 // installedKinds are the kinds that an install waits for.
-var installedKinds = []string{"CustomResourceDefinition", "DaemonSet", "Deployment", "StatefulSet"}
+var installedKinds = append([]string{"CustomResourceDefinition"}, WorkloadKinds...)
 
 // waitReady waits for a manifest's CRDs and workloads.
 func waitReady(manifest []byte, defaultNS string) error {

@@ -4,10 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
+	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"github.com/zeabur-oss/catalog/tools/internal/kubeobj"
 )
 
@@ -33,17 +35,17 @@ func CheckServices(r *Template, manifest []byte) error {
 				continue
 			}
 			spec := object(d.Object["spec"])
-			switch d.GetKind() {
-			case "Deployment", "StatefulSet", "DaemonSet":
+			switch kind := d.GetKind(); {
+			case slices.Contains(catalog.WorkloadKinds, kind):
 				t, _, err := kubeobj.PodTemplate(d)
 				if err != nil {
 					fail("invalid pod: %v", err)
 					continue
 				}
 				pod = t
-			case "Cluster", "Dragonfly", "MariaDB":
+			case kind == "Cluster", kind == "Dragonfly", kind == "MariaDB":
 				operand = object(spec["resources"])
-			case "PerconaServerMongoDB":
+			case kind == "PerconaServerMongoDB":
 				operand = object(object(array(spec["replsets"])[0])["resources"])
 			default:
 				continue
@@ -51,7 +53,7 @@ func CheckServices(r *Template, manifest []byte) error {
 			found = true
 		}
 		if !found {
-			fail("no Deployment, StatefulSet, DaemonSet or database object of the same name")
+			fail("no %s or database object of the same name", strings.Join(catalog.WorkloadKinds, ", "))
 			continue
 		}
 		var ports []Port

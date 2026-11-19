@@ -466,7 +466,7 @@
       "if": {
         "properties": {
           "resource": {
-            "pattern": "^(deployment|statefulset|daemonset)/"
+            "pattern": "^([Dd]aemon[Ss]et|[Dd]eployment|[Ss]tateful[Ss]et)(/|$)"
           }
         }
       },
