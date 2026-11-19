@@ -135,7 +135,7 @@ security:
 smoke:
   - name: operational
     wait:
-      - "-n observability vlsingle/victoria-logs --for=jsonpath={.status.updateStatus}=operational"
-      - "-n observability vlagent/collector --for=jsonpath={.status.updateStatus}=operational"
+      - {resource: vlsingle/victoria-logs, namespace: observability, condition: "jsonpath={.status.updateStatus}=operational"}
+      - {resource: vlagent/collector, namespace: observability, condition: "jsonpath={.status.updateStatus}=operational"}
 
 leftovers: [persistentvolumeclaims]

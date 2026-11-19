@@ -161,7 +161,7 @@ func TestHealthCheckRunsAsOneKubectlWait(t *testing.T) {
 		{"cluster-scoped", check(HealthResource{Kind: "APIService", Name: "v1beta1.metrics.k8s.io"}),
 			"wait --for=condition=Ready apiservices.apiregistration.k8s.io/v1beta1.metrics.k8s.io --timeout=60s"},
 	} {
-		if got := strings.Join(c.check.WaitArgs(), " "); got != c.want {
+		if got := strings.Join(c.check.Wait().Args("", c.check.Timeout), " "); got != c.want {
 			t.Errorf("%s: kubectl %s, want kubectl %s", c.name, got, c.want)
 		}
 	}
@@ -209,5 +209,42 @@ func TestLoadRefusesCapabilityFolders(t *testing.T) {
 	}
 	if _, err := Load(root); err == nil {
 		t.Error("Load accepted components/ingress/traefik.yaml")
+	}
+}
+
+func TestSmokeWaitsNeedAConditionExceptForWorkloads(t *testing.T) {
+	const root = "../../.."
+	const path = "components/cert-manager.yaml"
+	cat, err := Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []struct {
+		name string
+		ok   bool
+		wait map[string]any
+	}{
+		{"object with a condition", true, map[string]any{"resource": "certificate/smoke", "namespace": "x", "condition": "condition=Ready"}},
+		{"object without a condition", false, map[string]any{"resource": "certificate/smoke", "namespace": "x"}},
+		{"workload without a condition", true, map[string]any{"resource": "deployment/web", "namespace": "x"}},
+		{"workload with a condition", false, map[string]any{"resource": "deployment/web", "namespace": "x", "condition": "condition=Available"}},
+		{"workload with a jsonpath", true, map[string]any{"resource": "deployment/web", "namespace": "x", "condition": "jsonpath={.metadata.generation}=2"}},
+		{"kind alone without selector", false, map[string]any{"resource": "pod", "condition": "condition=Ready"}},
+		{"kind alone with selector", true, map[string]any{"resource": "pod", "selector": map[string]any{"a": "b"}, "condition": "condition=Ready"}},
+		{"object with all", false, map[string]any{"resource": "pod/x", "all": true, "condition": "condition=Ready"}},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			raw := cat.Raw[path].(map[string]any)
+			old := raw["smoke"]
+			raw["smoke"] = []any{map[string]any{"name": "x", "wait": []any{c.wait}}}
+			defer func() { raw["smoke"] = old }()
+			err := Check(root, cat)
+			if c.ok && err != nil {
+				t.Errorf("Check rejected a valid wait: %v", err)
+			}
+			if !c.ok && err == nil {
+				t.Error("Check accepted the wait")
+			}
+		})
 	}
 }

@@ -78,7 +78,7 @@ func newRun() *run {
 	return &run{installed: map[string]bool{}, releases: map[string]bool{}, contributions: map[string][]string{}}
 }
 
-func kubectl(args ...string) (string, error) { return Run(nil, "kubectl", args...) }
+func kubectl(args ...string) (string, error) { return Kubectl(nil, args...) }
 
 // Test installs id with its dependencies, measures and smoke tests it,
 // uninstalls everything and fails on anything left behind.
@@ -486,19 +486,9 @@ func (t *Tester) smoke(c *Component) error {
 	defer t.Timings.Since("smoke", time.Now())
 	for _, h := range c.Health {
 		slog.Info("health", "component", c.ID, "check", h.Name)
-		timeout, err := time.ParseDuration(h.Timeout)
-		if err != nil {
-			return fmt.Errorf("health %s: %w", h.Name, err)
-		}
 		// A check describes an installed component at rest. Right after
 		// install, the objects it waits for may not exist yet.
-		target := h.Target()
-		if h.Condition == "" {
-			err = WaitReady(kubectl, timeout, target)
-		} else if err = WaitObjects(kubectl, timeout, target); err == nil {
-			_, err = kubectl(h.WaitArgs()...)
-		}
-		if err != nil {
+		if err := h.Wait().Run(kubectl, "", h.Timeout); err != nil {
 			return fmt.Errorf("health %s: %w", h.Name, err)
 		}
 	}
@@ -524,9 +514,8 @@ func (t *Tester) smoke(c *Component) error {
 			}
 		}
 		for _, w := range s.Wait {
-			args := append(append([]string{"wait"}, strings.Fields(w)...), "--timeout="+cmp.Or(s.Timeout, "180s"))
-			if _, err := kubectl(args...); err != nil {
-				object, ns := waitTarget(strings.Fields(w))
+			if err := w.Run(kubectl, "", cmp.Or(s.Timeout, "180s")); err != nil {
+				object, ns := w.Describe("")
 				return fmt.Errorf("%s: %w%s", s.Name, err, Diagnose(kubectl, ns, object...))
 			}
 		}

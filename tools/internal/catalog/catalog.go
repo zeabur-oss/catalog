@@ -395,33 +395,17 @@ func (HealthResource) JSONSchemaExtend(s *gen.Schema) {
 	s.Else = &gen.Schema{Not: &gen.Schema{Required: []string{"namespace"}}}
 }
 
-// Target returns the objects that the check is about.
-func (h Health) Target() Target {
-	r := h.Resource
-	t := Target{Resource: healthKinds[r.Kind].resource, Namespace: r.Namespace, Name: r.Name}
-	for _, k := range slices.Sorted(maps.Keys(r.Selector)) {
-		t.Selector += "," + k + "=" + r.Selector[k]
+// Wait returns the wait that runs h.
+func (h Health) Wait() Wait {
+	r, k := h.Resource, healthKinds[h.Resource.Kind]
+	w := Wait{Resource: k.resource, Namespace: r.Namespace, Selector: r.Selector, All: r.All}
+	if r.Name != "" {
+		w.Resource += "/" + r.Name
 	}
-	t.Selector = strings.TrimPrefix(t.Selector, ",")
-	return t
-}
-
-// WaitArgs returns the arguments of the kubectl wait that runs h. A check without a condition
-// is run with WaitReady instead.
-func (h Health) WaitArgs() []string {
-	t, args := h.Target(), []string{"wait", "--for=condition=" + h.Condition}
-	switch {
-	case t.Name != "":
-		args = append(args, t.Resource+"/"+t.Name)
-	case t.Selector != "":
-		args = append(args, t.Resource, "-l", t.Selector)
-	default:
-		args = append(args, t.Resource, "--all")
+	if h.Condition != "" {
+		w.Condition = "condition=" + h.Condition
 	}
-	if t.Namespace != "" {
-		args = append(args, "-n", t.Namespace)
-	}
-	return append(args, "--timeout="+h.Timeout)
+	return w
 }
 
 // Smoke is an e2e check after install.
@@ -429,9 +413,9 @@ type Smoke struct {
 	Name string `yaml:"name" jsonschema:"required"`
 	// Objects to apply first, in namespace catalog-smoke.
 	Manifest string `yaml:"manifest"`
-	// `kubectl wait` arguments.
-	Wait    []string `yaml:"wait" jsonschema:"required"`
-	Timeout string   `yaml:"timeout" jsonschema:"default=180s"`
+	// What to wait for after the objects are applied.
+	Wait    []Wait `yaml:"wait" jsonschema:"required"`
+	Timeout string `yaml:"timeout" jsonschema:"default=180s"`
 }
 
 // HelmName is the Helm release name.

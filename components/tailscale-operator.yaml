@@ -100,5 +100,5 @@ security:
 smoke:
   - name: crds-established
     wait:
-      - "crd/proxyclasses.tailscale.com --for=condition=Established"
-      - "crd/connectors.tailscale.com --for=condition=Established"
+      - {resource: crd/proxyclasses.tailscale.com, condition: condition=Established}
+      - {resource: crd/connectors.tailscale.com, condition: condition=Established}

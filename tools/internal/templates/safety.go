@@ -26,8 +26,6 @@ func contains(a []any, s string) bool {
 	return false
 }
 
-var digestImage = catalog.PinnedImage
-
 // Rule is a safety rule that a rendered object breaks. Safety wraps each one it finds.
 type Rule string
 
@@ -173,7 +171,7 @@ func Safety(r *Template, b []byte, namespace string) error {
 			checkPod(&tmpl.Spec, where, k != "Job" && k != "CronJob", fail)
 		}
 		if k == "Cluster" && api == "postgresql.cnpg.io/v1" {
-			if !digestImage.MatchString(text(spec["imageName"])) {
+			if !catalog.PinnedImage.MatchString(text(spec["imageName"])) {
 				fail(where, "CNPG imageName must use sha256 digest")
 			}
 			checkResources(object(spec["resources"]), where, fail)
@@ -362,7 +360,7 @@ func checkPod(p *corev1.PodSpec, w string, requireProbes bool, fail func(string,
 	}
 	for _, c := range kubeobj.Containers(p) {
 		cw := w + "/" + c.Name
-		if !digestImage.MatchString(c.Image) {
+		if !catalog.PinnedImage.MatchString(c.Image) {
 			fail(cw, ErrImageDigest)
 		}
 		for _, m := range c.VolumeMounts {

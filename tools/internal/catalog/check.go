@@ -50,7 +50,7 @@ func Check(root string, cat *Catalog) error {
 	}
 
 	for _, c := range cat.Components {
-		if !idPattern.MatchString(c.ID) {
+		if !ValidID(c.ID) {
 			fail(c.Path, "the file name must be lowercase letters, digits and single hyphens")
 		}
 		// An installer reads a name in enable or disable as a component ID
@@ -134,6 +134,9 @@ func Check(root string, cat *Catalog) error {
 }
 
 var idPattern = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
+
+// ValidID reports whether id is a component or template ID: lowercase words joined by dashes.
+func ValidID(id string) bool { return idPattern.MatchString(id) }
 
 // testedKubeVersions returns the Kubernetes versions that
 // config/kubernetes.yaml renders and tests on.

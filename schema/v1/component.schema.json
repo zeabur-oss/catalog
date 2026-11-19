@@ -834,10 +834,10 @@
         },
         "wait": {
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/wait"
           },
           "type": "array",
-          "description": "`kubectl wait` arguments."
+          "description": "What to wait for after the objects are applied."
         },
         "timeout": {
           "type": "string",
@@ -876,6 +876,104 @@
       },
       "type": "object",
       "description": "SummaryLocales is the summary in other languages, by BCP 47 tag.\nconfig/locales.yaml lists the tags each needs."
+    },
+    "wait": {
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "resource": {
+                "pattern": "^([Dd]eployment|[Ss]tateful[Ss]et|[Dd]aemon[Ss]et)(/|$)"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "condition": {
+                "pattern": "^jsonpath="
+              }
+            }
+          },
+          "else": {
+            "required": [
+              "condition"
+            ]
+          }
+        }
+      ],
+      "if": {
+        "properties": {
+          "resource": {
+            "pattern": "/"
+          }
+        }
+      },
+      "then": {
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "selector"
+              ]
+            },
+            {
+              "required": [
+                "all"
+              ]
+            }
+          ]
+        }
+      },
+      "else": {
+        "oneOf": [
+          {
+            "required": [
+              "selector"
+            ]
+          },
+          {
+            "required": [
+              "all"
+            ]
+          }
+        ]
+      },
+      "properties": {
+        "resource": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9.]*(/[a-z0-9][a-z0-9.-]*)?$",
+          "description": "One object as kind/name, such as certificate/smoke. A kind alone takes a selector or all."
+        },
+        "namespace": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The namespace of the objects. A kind without namespaces has none."
+        },
+        "selector": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object",
+          "minProperties": 1,
+          "description": "The labels of the objects, each a key with its value."
+        },
+        "all": {
+          "type": "boolean",
+          "const": true,
+          "description": "Every object of the kind."
+        },
+        "condition": {
+          "type": "string",
+          "pattern": "^(condition=[A-Za-z][A-Za-z0-9]*(=(True|False|Unknown))?|jsonpath=.+)$",
+          "description": "What the objects reach, as a kubectl wait --for value. A deployment, statefulset or daemonset\nhas none: it is ready when its rollout is complete."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "resource"
+      ],
+      "description": "Wait is the objects that a check waits for, and what they reach. Health checks, the smoke checks\nof components and the smoke checks of templates all run as a Wait."
     },
     "work": {
       "anyOf": [

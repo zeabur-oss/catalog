@@ -34,21 +34,3 @@ func Diagnose(run func(args ...string) (string, error), ns string, describe ...s
 	}
 	return b.String()
 }
-
-// waitTarget splits the arguments of a kubectl wait into the object that
-// describe takes and its namespace, without the --for and --timeout flags.
-func waitTarget(fields []string) (object []string, ns string) {
-	for i := 0; i < len(fields); i++ {
-		f := fields[i]
-		switch {
-		case f == "-n" && i+1 < len(fields):
-			ns = fields[i+1]
-			object = append(object, f, ns)
-			i++
-		case strings.HasPrefix(f, "--for=") || strings.HasPrefix(f, "--timeout="):
-		default:
-			object = append(object, f)
-		}
-	}
-	return
-}

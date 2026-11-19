@@ -283,6 +283,6 @@ smoke:
                     until new=$(agent) && [ -n "$new" ] && [ "$(readlink /proc/$new/ns/net)" != "$net" ]; do sleep 5; done
                     echo "agent runs again as pid $new"
     wait:
-      - -n catalog-smoke job/agent-restart --for=condition=Complete
-      - -n crowdsec pod -l k8s-app=crowdsec,type=agent --for=condition=Ready
+      - {resource: job/agent-restart, namespace: catalog-smoke, condition: condition=Complete}
+      - {resource: pod, namespace: crowdsec, selector: {k8s-app: crowdsec, type: agent}, condition: condition=Ready}
     timeout: 480s

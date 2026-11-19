@@ -117,6 +117,7 @@ smoke:
             spec:
               accessModes: [ReadWriteOnce]
               resources: {requests: {storage: 1Gi}}
-    wait: ["-n catalog-smoke mysqlcluster/smoke --for=condition=Healthy"]
+    wait:
+      - {resource: mysqlcluster/smoke, namespace: catalog-smoke, condition: condition=Healthy}
     # Pulls the MySQL image and initialises the data directory first.
     timeout: 600s

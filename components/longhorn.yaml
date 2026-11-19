@@ -163,7 +163,8 @@ health:
 
 smoke:
   - name: driver
-    wait: ["-n longhorn-system deployment/longhorn-driver-deployer --for=condition=Available"]
+    wait:
+      - {resource: deployment/longhorn-driver-deployer, namespace: longhorn-system}
   - name: provision
     manifest: |
       apiVersion: v1
@@ -176,6 +177,6 @@ smoke:
           requests: {storage: 1Gi}
     wait:
       # The manager creates the class and the CSI driver after install.
-      - "-n catalog-smoke pvc/smoke --for=jsonpath={.status.phase}=Bound"
-      - "storageclass/longhorn --for=jsonpath={.allowVolumeExpansion}=true"
+      - {resource: pvc/smoke, namespace: catalog-smoke, condition: "jsonpath={.status.phase}=Bound"}
+      - {resource: storageclass/longhorn, condition: "jsonpath={.allowVolumeExpansion}=true"}
     timeout: 600s

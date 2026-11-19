@@ -11,6 +11,8 @@ import (
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 )
 
 // S3 is the SeaweedFS S3 gateway that template e2e runs use for object
@@ -53,11 +55,11 @@ func startS3() (_ *S3, stop func() error, err error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	if _, err := kubectl(nil, "create", "namespace", s3Namespace); err != nil {
+	if _, err := catalog.Kubectl(nil, "create", "namespace", s3Namespace); err != nil {
 		return nil, nil, err
 	}
 	del := func() error {
-		_, err := kubectl(nil, "delete", "namespace", s3Namespace, "--wait", "--timeout=5m")
+		_, err := catalog.Kubectl(nil, "delete", "namespace", s3Namespace, "--wait", "--timeout=5m")
 		return err
 	}
 	defer func() {
@@ -65,12 +67,12 @@ func startS3() (_ *S3, stop func() error, err error) {
 			err = errors.Join(err, del())
 		}
 	}()
-	if _, err := kubectl(nil, "label", "namespace", s3Namespace, "pod-security.kubernetes.io/enforce=restricted"); err != nil {
+	if _, err := catalog.Kubectl(nil, "label", "namespace", s3Namespace, "pod-security.kubernetes.io/enforce=restricted"); err != nil {
 		return nil, nil, err
 	}
 	// The webhooks of the operator and cert-manager can refuse requests for a short time after install.
 	for start := time.Now(); ; time.Sleep(5 * time.Second) {
-		if _, err = kubectl(manifest.Bytes(), "apply", "-f", "-"); err == nil || time.Since(start) > 2*time.Minute {
+		if _, err = catalog.Kubectl(manifest.Bytes(), "apply", "-f", "-"); err == nil || time.Since(start) > 2*time.Minute {
 			break
 		}
 	}
@@ -78,17 +80,20 @@ func startS3() (_ *S3, stop func() error, err error) {
 		return nil, nil, err
 	}
 	// The operator creates the S3 gateway after master, volume and filer.
-	for _, args := range [][]string{
-		{"certificate/s3-tls", "--for=condition=Ready", "--timeout=5m"},
-		{"deployment/e2e-s3", "--for=create", "--timeout=10m"},
-		{"deployment/e2e-s3", "--for=condition=Available", "--timeout=10m"},
-		{"bucket/e2e", "--for=condition=Ready", "--timeout=5m"},
+	get := func(a ...string) (string, error) { return catalog.Kubectl(nil, a...) }
+	for _, w := range []struct {
+		catalog.Wait
+		timeout string
+	}{
+		{catalog.Wait{Resource: "certificate/s3-tls", Condition: "condition=Ready"}, "5m"},
+		{catalog.Wait{Resource: "deployment/e2e-s3"}, "10m"},
+		{catalog.Wait{Resource: "bucket/e2e", Condition: "condition=Ready"}, "5m"},
 	} {
-		if _, err := kubectl(nil, append([]string{"wait", "-n", s3Namespace}, args...)...); err != nil {
+		if err := w.Run(get, s3Namespace, w.timeout); err != nil {
 			return nil, nil, err
 		}
 	}
-	ca, err := kubectl(nil, "get", "secret", "s3-tls", "-n", s3Namespace, "-o", `jsonpath={.data.ca\.crt}`)
+	ca, err := catalog.Kubectl(nil, "get", "secret", "s3-tls", "-n", s3Namespace, "-o", `jsonpath={.data.ca\.crt}`)
 	if err != nil {
 		return nil, nil, err
 	}

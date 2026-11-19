@@ -380,8 +380,8 @@ security:
 smoke:
   - name: ready
     wait:
-      - "-n zot certificate/zot-tls --for=condition=Ready"
-      - "-n zot statefulset/zot --for=jsonpath={.status.readyReplicas}=1"
+      - {resource: certificate/zot-tls, namespace: zot, condition: condition=Ready}
+      - {resource: statefulset/zot, namespace: zot}
   # In zot's namespace: the CA it checks against is the zot-tls Secret there.
   - name: tls-v2
     manifest: |
@@ -406,11 +406,12 @@ smoke:
                 args: [-sSf, --cacert, /tls/ca.crt, "https://zot.zot.svc:5000/v2/"]
                 volumeMounts: [{name: tls, mountPath: /tls}]
             volumes: [{name: tls, secret: {secretName: zot-tls}}]
-    wait: ["-n zot job/smoke --for=condition=Complete"]
+    wait:
+      - {resource: job/smoke, namespace: zot, condition: condition=Complete}
   - name: builder-ready
     wait:
-      - "-n builder-system deployment/zeabur-builder --for=condition=Available"
-      - "--for=condition=Established crd/builds.builder.zeabur.com"
+      - {resource: deployment/zeabur-builder, namespace: builder-system}
+      - {resource: crd/builds.builder.zeabur.com, condition: condition=Established}
 
 # zot's volumeClaimTemplate claims outlive the StatefulSet, with every image;
 # Builder's CRDs stay, with every Build.

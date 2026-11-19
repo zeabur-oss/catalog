@@ -234,9 +234,6 @@ func Get(all []*Template, id string) (*Template, error) {
 	return nil, fmt.Errorf("unknown template %q", id)
 }
 
-// The e2e namespace templates-e2e-<id> must be a DNS label.
-var idPattern = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
-
 // Check validates every template without a cluster: schema, ID, services,
 // inputs, manifests syntax and that the catalog provides what each requires.
 func Check(root string, cat *catalog.Catalog, all []*Template) error {
@@ -260,7 +257,8 @@ func Check(root string, cat *catalog.Catalog, all []*Template) error {
 		for _, p := range catalog.MissingLocales(t.raw, locales) {
 			fail("%s", p)
 		}
-		if !idPattern.MatchString(t.ID) || len(t.ID) > 49 {
+		// The e2e namespace templates-e2e-<id> must be a DNS label.
+		if !catalog.ValidID(t.ID) || len(t.ID) > 49 {
 			fail("directory name must be a DNS label of at most 49 characters")
 		}
 		if _, ok := cat.Get(t.ID); ok {

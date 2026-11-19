@@ -161,5 +161,5 @@ smoke:
                 args:
                   - for i in 1 2 3 4 5 6; do curl -sSf -d '{"name":"registry.k8s.io/pause","tag":"3.10"}' http://keel.keel.svc:9300/v1/webhooks/native; sleep 10; done
     wait:
-      - "-n catalog-smoke deployment/smoke --for=jsonpath={.spec.template.spec.containers[0].image}=registry.k8s.io/pause:3.10"
-      - "-n catalog-smoke deployment/smoke --for=condition=Available"
+      - {resource: deployment/smoke, namespace: catalog-smoke, condition: "jsonpath={.spec.template.spec.containers[0].image}=registry.k8s.io/pause:3.10"}
+      - {resource: deployment/smoke, namespace: catalog-smoke}

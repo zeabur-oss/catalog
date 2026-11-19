@@ -23,7 +23,23 @@ import (
 // CacheDir holds pulled charts and downloaded manifests.
 var CacheDir = filepath.Join(os.TempDir(), "catalog")
 
-// Run executes a command and returns its stdout; stderr goes into the error.
+// RunError is a command that failed. It keeps what the command wrote to stderr.
+type RunError struct {
+	Command string
+	Err     error
+	Stderr  string
+}
+
+func (e *RunError) Error() string { return fmt.Sprintf("%s: %v: %s", e.Command, e.Err, e.Stderr) }
+func (e *RunError) Unwrap() error { return e.Err }
+
+// Kubectl runs kubectl and returns its stdout without the space around it.
+func Kubectl(stdin []byte, args ...string) (string, error) {
+	out, err := Run(stdin, "kubectl", args...)
+	return strings.TrimSpace(out), err
+}
+
+// Run executes a command and returns its stdout. A failure is a *RunError with its stderr.
 func Run(stdin []byte, name string, args ...string) (string, error) {
 	cmd := exec.Command(name, args...)
 	if stdin != nil {
@@ -32,7 +48,7 @@ func Run(stdin []byte, name string, args ...string) (string, error) {
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
 	if err := cmd.Run(); err != nil {
-		return stdout.String(), fmt.Errorf("%s %s: %w: %s", name, strings.Join(args, " "), err, strings.TrimSpace(stderr.String()))
+		return stdout.String(), &RunError{Command: name + " " + strings.Join(args, " "), Err: err, Stderr: strings.TrimSpace(stderr.String())}
 	}
 	return stdout.String(), nil
 }

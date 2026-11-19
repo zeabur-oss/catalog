@@ -1,12 +1,11 @@
 package main
 
 import (
-	"bytes"
+	"cmp"
 	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,9 +14,9 @@ import (
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	utilyaml "k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
+	"github.com/zeabur-oss/catalog/tools/internal/kubeobj"
 	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
 
@@ -328,52 +327,50 @@ func renderFacts(cat *catalog.Catalog, c *catalog.Component, kubeVersion string)
 // readObjects adds the workloads and PersistentVolumeClaims of manifest, the objects of rel, to
 // profile.
 func readObjects(manifest []byte, rel catalog.Release, profile *RenderedProfile) error {
-	dec := utilyaml.NewYAMLOrJSONDecoder(bytes.NewReader(manifest), 4096)
-	for {
-		var obj struct {
-			Kind     string `json:"kind"`
-			Metadata struct {
-				Name      string `json:"name"`
-				Namespace string `json:"namespace"`
-			} `json:"metadata"`
-			Spec struct {
-				Replicas             *int32                            `json:"replicas"`
-				Template             corev1.PodTemplateSpec            `json:"template"`
-				VolumeClaimTemplates []corev1.PersistentVolumeClaim    `json:"volumeClaimTemplates"`
-				Resources            corev1.VolumeResourceRequirements `json:"resources"`
-			} `json:"spec"`
-		}
-		if err := dec.Decode(&obj); errors.Is(err, io.EOF) {
-			return nil
-		} else if err != nil {
-			return err
-		}
-		ns := obj.Metadata.Namespace
-		if ns == "" {
-			ns = rel.Namespace
-		}
-		switch obj.Kind {
+	objs, err := kubeobj.Decode(manifest)
+	if err != nil {
+		return err
+	}
+	for _, o := range objs {
+		ns := cmp.Or(o.GetNamespace(), rel.Namespace)
+		switch o.GetKind() {
 		case "Deployment", "StatefulSet", "DaemonSet":
-			w := RenderedWorkload{Release: rel.Name, Namespace: ns, Name: obj.Metadata.Name, Kind: obj.Kind,
-				Containers: containers(obj.Spec.Template.Spec.Containers), InitContainers: containers(obj.Spec.Template.Spec.InitContainers)}
-			if obj.Kind != "DaemonSet" {
+			var obj struct {
+				Spec struct {
+					Replicas             *int32                         `json:"replicas"`
+					Template             corev1.PodTemplateSpec         `json:"template"`
+					VolumeClaimTemplates []corev1.PersistentVolumeClaim `json:"volumeClaimTemplates"`
+				} `json:"spec"`
+			}
+			if err := kubeobj.Typed(o, &obj); err != nil {
+				return err
+			}
+			spec := obj.Spec
+			w := RenderedWorkload{Release: rel.Name, Namespace: ns, Name: o.GetName(), Kind: o.GetKind(),
+				Containers: containers(spec.Template.Spec.Containers), InitContainers: containers(spec.Template.Spec.InitContainers)}
+			if o.GetKind() != "DaemonSet" {
 				w.Replicas = new(int32(1))
-				if obj.Spec.Replicas != nil {
-					w.Replicas = obj.Spec.Replicas
+				if spec.Replicas != nil {
+					w.Replicas = spec.Replicas
 				}
 			}
-			if obj.Kind == "StatefulSet" {
-				for _, t := range obj.Spec.VolumeClaimTemplates {
+			if o.GetKind() == "StatefulSet" {
+				for _, t := range spec.VolumeClaimTemplates {
 					w.VolumeClaimTemplates = append(w.VolumeClaimTemplates,
 						RenderedClaim{Name: t.Name, Storage: t.Spec.Resources.Requests[corev1.ResourceStorage]})
 				}
 			}
 			profile.Workloads = append(profile.Workloads, w)
 		case "PersistentVolumeClaim":
+			var pvc corev1.PersistentVolumeClaim
+			if err := kubeobj.Typed(o, &pvc); err != nil {
+				return err
+			}
 			profile.PersistentVolumeClaims = append(profile.PersistentVolumeClaims, RenderedClaim{
-				Release: rel.Name, Namespace: ns, Name: obj.Metadata.Name, Storage: obj.Spec.Resources.Requests[corev1.ResourceStorage]})
+				Release: rel.Name, Namespace: ns, Name: o.GetName(), Storage: pvc.Spec.Resources.Requests[corev1.ResourceStorage]})
 		}
 	}
+	return nil
 }
 
 // containers returns the requests and limits of each container in list.

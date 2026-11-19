@@ -193,12 +193,13 @@ smoke:
         secretName: smoke-tls
         dnsNames: [smoke.example.test]
         issuerRef: {kind: Issuer, name: smoke}
-    wait: ["-n catalog-smoke certificate/smoke --for=condition=Ready"]
+    wait:
+      - {resource: certificate/smoke, namespace: catalog-smoke, condition: condition=Ready}
   # Ready means the ACME account is registered; it needs egress to Let's
   # Encrypt, not a reachable ingress. CI skips this check (config/e2e.yaml)
   # because it does not reach Let's Encrypt. They stay out of health, so
   # cert-manager installs on a cluster without outbound access.
   - name: acme-issuers
     wait:
-      - "clusterissuer/letsencrypt-staging --for=condition=Ready"
-      - "clusterissuer/letsencrypt --for=condition=Ready"
+      - {resource: clusterissuer/letsencrypt-staging, condition: condition=Ready}
+      - {resource: clusterissuer/letsencrypt, condition: condition=Ready}

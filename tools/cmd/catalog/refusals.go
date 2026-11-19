@@ -215,18 +215,21 @@ func refused(c *catalog.Component, from, to string) (map[string]string, error) {
 		}
 		for _, d := range oldDocs {
 			done = append(done, d)
-			if stderr, err := kubectl([]byte(namespaceDoc(d.namespace)), "apply", "-f", "-"); err != nil {
-				return nil, fmt.Errorf("namespace %s: %w: %s", d.namespace, err, strings.TrimSpace(stderr))
+			if _, err := catalog.Kubectl([]byte(namespaceDoc(d.namespace)), "apply", "-f", "-"); err != nil {
+				return nil, fmt.Errorf("namespace %s: %w", d.namespace, err)
 			}
-			if stderr, err := kubectl([]byte(d.docs), "apply", "--server-side", "--force-conflicts",
+			if _, err := catalog.Kubectl([]byte(d.docs), "apply", "--server-side", "--force-conflicts",
 				"--field-manager=catalog", "-n", d.namespace, "-f", "-"); err != nil {
-				return nil, fmt.Errorf("apply %s: %w: %s", rel.Name, err, strings.TrimSpace(stderr))
+				return nil, fmt.Errorf("apply %s: %w", rel.Name, err)
 			}
 		}
 		for _, d := range newDocs {
-			if stderr, err := kubectl([]byte(d.docs), "apply", "--server-side", "--force-conflicts", "--dry-run=server",
+			if _, err := catalog.Kubectl([]byte(d.docs), "apply", "--server-side", "--force-conflicts", "--dry-run=server",
 				"--field-manager=catalog", "-n", d.namespace, "-f", "-"); err != nil {
-				found[rel.Name] += stderr
+				var run *catalog.RunError
+				if errors.As(err, &run) {
+					found[rel.Name] += run.Stderr
+				}
 			}
 		}
 	}
@@ -260,21 +263,11 @@ func updatable(data []byte, defaultNamespace string) ([]nsDocs, error) {
 	return byNamespace(keep), nil
 }
 
-// kubectl runs kubectl and returns what it wrote to stderr.
-func kubectl(stdin []byte, args ...string) (string, error) {
-	cmd := exec.Command("kubectl", args...)
-	cmd.Stdin = bytes.NewReader(stdin)
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-	return stderr.String(), err
-}
-
 // removeApplied deletes the objects, so the next comparison starts empty.
 // The API server has no controller to clear finalizers, so it clears them.
 func removeApplied(done []nsDocs) {
 	for _, d := range slices.Backward(done) {
-		kubectl([]byte(d.docs), "delete", "--wait=false", "--ignore-not-found", "-n", d.namespace, "-f", "-")
-		kubectl([]byte(d.docs), "patch", "--type=merge", "-p", `{"metadata":{"finalizers":null}}`, "-n", d.namespace, "-f", "-")
+		catalog.Kubectl([]byte(d.docs), "delete", "--wait=false", "--ignore-not-found", "-n", d.namespace, "-f", "-")
+		catalog.Kubectl([]byte(d.docs), "patch", "--type=merge", "-p", `{"metadata":{"finalizers":null}}`, "-n", d.namespace, "-f", "-")
 	}
 }
