@@ -25,8 +25,8 @@ releases:
     namespace: vpa-system
     repo: https://kubernetes.github.io/autoscaler
     chart: vertical-pod-autoscaler
-    version: 0.15.0
-    chartDigest: sha256:dc9682d3d41a92b535e01d0fc2726e9d595eacd22f676ccc3f5333b4c6425624
+    version: 0.16.0
+    chartDigest: sha256:3c17a6ff4578499ee0fbac21dac2ed46b5bb0d11524672d3533c4d41a87472c6
     values: |
       # The chart sets no container context and no seccomp profile; the namespace enforces Pod Security restricted.
       podSecurityContext:
