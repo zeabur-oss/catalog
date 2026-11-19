@@ -63,17 +63,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1794927804,
-        "narHash": "sha256-rp9uLzCBs/MtS05kQdWwYUAxDQsGAkg6bJPIJfzXg6w=",
+        "lastModified": 1795066167,
+        "narHash": "sha256-miTU0l3bPr9HzMUH5fDYY3MfNoJHu2/6gt8hxVXmvBE=",
         "owner": "zeabur-oss",
         "repo": ".github",
-        "rev": "3e2e5ba4210b60c1e97fa53e2029e1ea9f5e468e",
+        "rev": "2d9e5e7eab9be03f9822ee9497639d4051f8b04d",
         "type": "github"
       },
       "original": {
         "owner": "zeabur-oss",
         "repo": ".github",
-        "rev": "3e2e5ba4210b60c1e97fa53e2029e1ea9f5e468e",
+        "rev": "2d9e5e7eab9be03f9822ee9497639d4051f8b04d",
         "type": "github"
       }
     },

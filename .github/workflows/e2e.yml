@@ -74,7 +74,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up Nix
-        uses: zeabur-oss/.github/actions/ci-setup@f3ae87d7ef3c37447432e398200d200b546dfa46 # main
+        uses: zeabur-oss/.github/actions/ci-setup@2d9e5e7eab9be03f9822ee9497639d4051f8b04d # main
       - name: Restore the downloads
         uses: ./.github/actions/downloads
       - name: iSCSI module for Longhorn
@@ -133,7 +133,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up Nix
-        uses: zeabur-oss/.github/actions/ci-setup@f3ae87d7ef3c37447432e398200d200b546dfa46 # main
+        uses: zeabur-oss/.github/actions/ci-setup@2d9e5e7eab9be03f9822ee9497639d4051f8b04d # main
       - name: Restore the downloads
         uses: ./.github/actions/downloads
       - name: Download the single-node amd64 measurements
