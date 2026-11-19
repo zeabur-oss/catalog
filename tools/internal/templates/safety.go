@@ -39,6 +39,9 @@ const (
 	ErrTraefikProvider       Rule = "Traefik Ingress requires exact traefik provider"
 	ErrClusterIssuerProvider Rule = "ClusterIssuer annotation requires exact cert-manager provider"
 	ErrCNPGProvider          Rule = "CNPG workload requires exact cloudnative-pg provider"
+	ErrCNPGResourceProvider  Rule = "CNPG/Barman custom resources require cloudnative-pg"
+	ErrPerconaProvider       Rule = "Percona operand requires exact percona-mongodb"
+	ErrMiddlewareProvider    Rule = "Middleware requires traefik"
 	ErrIngressPolicy         Rule = "a service listed in security.unauthenticated needs an ingress NetworkPolicy whose podSelector names it"
 	ErrUnknownService        Rule = "security.unauthenticated names a service the template does not declare"
 	ErrTemplateLabel         Rule = "pods must have the label " + TemplateLabel + " set to the template ID"
@@ -82,6 +85,15 @@ func ownPods(sel *metav1.LabelSelector, id string) bool {
 	return id != "" && sel != nil && sel.MatchLabels[TemplateLabel] == id
 }
 
+// coreKinds are the kinds that Kubernetes and cert-manager own, which a template may render.
+var coreKinds = map[string]bool{
+	"v1/Pod": true, "v1/Service": true, "v1/ConfigMap": true, "v1/Secret": true, "v1/ServiceAccount": true, "v1/PersistentVolumeClaim": true,
+	"apps/v1/Deployment": true, "apps/v1/StatefulSet": true, "apps/v1/DaemonSet": true, "apps/v1/ReplicaSet": true,
+	"batch/v1/Job": true, "batch/v1/CronJob": true,
+	"networking.k8s.io/v1/Ingress": true, "networking.k8s.io/v1/NetworkPolicy": true,
+	"policy/v1/PodDisruptionBudget": true, "autoscaling/v2/HorizontalPodAutoscaler": true, "cert-manager.io/v1/Certificate": true,
+}
+
 // Safety checks the rendered objects themselves.
 func Safety(r *Template, b []byte, namespace string) error {
 	docs, err := DecodeDocuments(b)
@@ -115,12 +127,7 @@ func Safety(r *Template, b []byte, namespace string) error {
 		case "Namespace", "Node", "PersistentVolume", "StorageClass", "CustomResourceDefinition", "ClusterRole", "ClusterRoleBinding", "MutatingWebhookConfiguration", "ValidatingWebhookConfiguration", "APIService", "PriorityClass", "CertificateSigningRequest":
 			fail(where, ErrClusterScoped)
 		}
-		switch api + "/" + k {
-		case "v1/Pod", "v1/Service", "v1/ConfigMap", "v1/Secret", "v1/ServiceAccount", "v1/PersistentVolumeClaim", "apps/v1/Deployment", "apps/v1/StatefulSet", "apps/v1/DaemonSet", "apps/v1/ReplicaSet", "batch/v1/Job", "batch/v1/CronJob", "networking.k8s.io/v1/Ingress", "networking.k8s.io/v1/NetworkPolicy", "policy/v1/PodDisruptionBudget", "autoscaling/v2/HorizontalPodAutoscaler", "cert-manager.io/v1/Certificate", "postgresql.cnpg.io/v1/Cluster", "postgresql.cnpg.io/v1/Backup", "postgresql.cnpg.io/v1/ScheduledBackup", "barmancloud.cnpg.io/v1/ObjectStore", "psmdb.percona.com/v1/PerconaServerMongoDB", "traefik.io/v1alpha1/Middleware":
-		case "psmdb.percona.com/v1/PerconaServerMongoDBBackup":
-		case "dragonflydb.io/v1alpha1/Dragonfly":
-		case "k8s.mariadb.com/v1alpha1/MariaDB", "k8s.mariadb.com/v1alpha1/Backup", "k8s.mariadb.com/v1alpha1/Database", "k8s.mariadb.com/v1alpha1/User", "k8s.mariadb.com/v1alpha1/Grant":
-		default:
+		if !coreKinds[api+"/"+k] && !operatorKind(api, k) {
 			fail(where, ErrUnsupportedKind)
 		}
 		if hasKey(d.Object, "storageClassName", "storageClass") {
@@ -130,7 +137,6 @@ func Safety(r *Template, b []byte, namespace string) error {
 			fail(where, "rendered Secrets forbidden; use explicit inputs and preexisting Secrets")
 		}
 		// Custom resources stay maps; core kinds are read as their Kubernetes types.
-		spec := object(d.Object["spec"])
 		switch api + "/" + k {
 		case "v1/ServiceAccount":
 			var sa corev1.ServiceAccount
@@ -176,60 +182,7 @@ func Safety(r *Template, b []byte, namespace string) error {
 			checkPodSecurity(tmpl.ObjectMeta, tmpl.Spec, profile, where, fail)
 			checkPod(&tmpl.Spec, where, k != "Job" && k != "CronJob", fail)
 		}
-		if k == "Cluster" && api == "postgresql.cnpg.io/v1" {
-			if !catalog.PinnedImage.MatchString(text(spec["imageName"])) {
-				fail(where, "CNPG imageName must use sha256 digest")
-			}
-			checkResources(object(spec["resources"]), where, fail)
-			if text(object(object(spec["inheritedMetadata"])["labels"])[TemplateLabel]) != r.ID {
-				fail(where+"/inheritedMetadata", ErrTemplateLabel)
-			}
-			if !hasProvider(r, "cloudnative-pg") {
-				fail(where, ErrCNPGProvider)
-			}
-			if len(r.Security.Risks) == 0 {
-				fail(where, "operator-managed workload must document generated pod and service-account trust")
-			}
-		}
-		if strings.HasPrefix(api, "postgresql.cnpg.io/") || strings.HasPrefix(api, "barmancloud.cnpg.io/") {
-			if !hasProvider(r, "cloudnative-pg") {
-				fail(where, "CNPG/Barman custom resources require cloudnative-pg")
-			}
-		}
-		if k == "Cluster" && api == "postgresql.cnpg.io/v1" {
-			sec := text(object(spec["seccompProfile"])["type"])
-			if sec != "RuntimeDefault" && sec != "Localhost" {
-				fail(where, "CNPG restricted seccomp required")
-			}
-			for _, key := range []string{"postgresUID", "postgresGID"} {
-				if v, ok := spec[key]; ok && fmt.Sprint(v) == "0" {
-					fail(where, "CNPG root identity forbidden")
-				}
-			}
-			for _, plugin := range array(spec["plugins"]) {
-				if text(object(plugin)["name"]) != "barman-cloud.cloudnative-pg.io" {
-					fail(where, "unsupported CNPG plugin forbidden")
-				}
-			}
-		}
-		if k == "ObjectStore" && api == "barmancloud.cnpg.io/v1" {
-			checkResources(object(object(spec["instanceSidecarConfiguration"])["resources"]), where+"/barman-sidecar", fail)
-		}
-		if k == "PerconaServerMongoDB" && api == "psmdb.percona.com/v1" {
-			checkPercona(r, d.Object, docs, where, fail)
-		}
-		if k == "PerconaServerMongoDBBackup" && api == "psmdb.percona.com/v1" {
-			checkPerconaBackup(r, d.Object, docs, where, fail)
-		}
-		if k == "Dragonfly" && api == "dragonflydb.io/v1alpha1" {
-			checkDragonfly(r, d.Object, docs, where, fail)
-		}
-		if api == "k8s.mariadb.com/v1alpha1" {
-			checkMariaDB(r, d.Object, docs, namespace, where, fail)
-		}
-		if k == "Middleware" && api == "traefik.io/v1alpha1" {
-			checkMiddleware(r, d.Object, where, fail)
-		}
+		checkKinds(kindContext{r: r, d: d.Object, docs: docs, namespace: namespace, where: where, fail: fail})
 		if api == "networking.k8s.io/v1" && k == "NetworkPolicy" {
 			var np networkingv1.NetworkPolicy
 			if err := kubeobj.Typed(d, &np); err != nil {

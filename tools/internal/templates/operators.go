@@ -18,6 +18,99 @@ func hasProvider(r *Template, id string) bool {
 	return slices.ContainsFunc(r.Requires, func(ref catalog.Ref) bool { return ref.Component == id })
 }
 
+// kindContext is one rendered object that a kindRule checks.
+type kindContext struct {
+	r         *Template
+	d         map[string]any
+	docs      []*unstructured.Unstructured
+	namespace string
+	where     string
+	fail      func(string, Rule, ...string)
+}
+
+// kindRule is what the linter knows about the kinds an operator owns: a
+// template may render them only when it requires the component that provides
+// the operator, and check holds the rest of the rules for them.
+type kindRule struct {
+	group    string   // apiVersion
+	kinds    []string // the kinds the rule covers, the ones the linter allows
+	provider string   // the component the template must require
+	missing  Rule     // the rule it breaks when it does not
+	check    func(kindContext)
+}
+
+// kindRules has one entry for each operator kind.
+var kindRules = []kindRule{
+	{"postgresql.cnpg.io/v1", []string{"Cluster"}, "cloudnative-pg", ErrCNPGProvider, checkCNPGCluster},
+	{"postgresql.cnpg.io/v1", []string{"Cluster", "Backup", "ScheduledBackup"}, "cloudnative-pg", ErrCNPGResourceProvider, nil},
+	{"barmancloud.cnpg.io/v1", []string{"ObjectStore"}, "cloudnative-pg", ErrCNPGResourceProvider, checkBarmanObjectStore},
+	{"psmdb.percona.com/v1", []string{"PerconaServerMongoDB"}, "percona-mongodb", ErrPerconaProvider, checkPercona},
+	{"psmdb.percona.com/v1", []string{"PerconaServerMongoDBBackup"}, "percona-mongodb", ErrPerconaBackupProvider, checkPerconaBackup},
+	{"dragonflydb.io/v1alpha1", []string{"Dragonfly"}, "dragonfly-operator", ErrDragonflyProvider, checkDragonfly},
+	{"k8s.mariadb.com/v1alpha1", []string{"MariaDB", "Backup", "Database", "User", "Grant"}, "mariadb-operator", ErrMariaDBProvider, checkMariaDB},
+	{"traefik.io/v1alpha1", []string{"Middleware"}, "traefik", ErrMiddlewareProvider, checkMiddleware},
+}
+
+func (k kindRule) covers(api, kind string) bool {
+	return k.group == api && slices.Contains(k.kinds, kind)
+}
+
+// operatorKind reports whether a kindRule covers the kind.
+func operatorKind(api, kind string) bool {
+	return slices.ContainsFunc(kindRules, func(k kindRule) bool { return k.covers(api, kind) })
+}
+
+// checkKinds applies the kindRules that cover the object.
+func checkKinds(c kindContext) {
+	api, _ := c.d["apiVersion"].(string)
+	kind, _ := c.d["kind"].(string)
+	for _, k := range kindRules {
+		if !k.covers(api, kind) {
+			continue
+		}
+		if !hasProvider(c.r, k.provider) {
+			c.fail(c.where, k.missing)
+		}
+		if k.check != nil {
+			k.check(c)
+		}
+	}
+}
+
+func checkCNPGCluster(c kindContext) {
+	r, w, fail := c.r, c.where, c.fail
+	spec := object(c.d["spec"])
+	if !catalog.PinnedImage.MatchString(text(spec["imageName"])) {
+		fail(w, "CNPG imageName must use sha256 digest")
+	}
+	checkResources(object(spec["resources"]), w, fail)
+	if text(object(object(spec["inheritedMetadata"])["labels"])[TemplateLabel]) != r.ID {
+		fail(w+"/inheritedMetadata", ErrTemplateLabel)
+	}
+	if len(r.Security.Risks) == 0 {
+		fail(w, "operator-managed workload must document generated pod and service-account trust")
+	}
+	sec := text(object(spec["seccompProfile"])["type"])
+	if sec != "RuntimeDefault" && sec != "Localhost" {
+		fail(w, "CNPG restricted seccomp required")
+	}
+	for _, key := range []string{"postgresUID", "postgresGID"} {
+		if v, ok := spec[key]; ok && fmt.Sprint(v) == "0" {
+			fail(w, "CNPG root identity forbidden")
+		}
+	}
+	for _, plugin := range array(spec["plugins"]) {
+		if text(object(plugin)["name"]) != "barman-cloud.cloudnative-pg.io" {
+			fail(w, "unsupported CNPG plugin forbidden")
+		}
+	}
+}
+
+func checkBarmanObjectStore(c kindContext) {
+	spec := object(c.d["spec"])
+	checkResources(object(object(spec["instanceSidecarConfiguration"])["resources"]), c.where+"/barman-sidecar", c.fail)
+}
+
 // safeOperandContext checks the security contexts that an operator copies
 // into the pods it creates.
 func safeOperandContext(p, c map[string]any, w string, fail func(string, Rule, ...string)) {
@@ -47,10 +140,8 @@ func safeOperandContext(p, c map[string]any, w string, fail func(string, Rule, .
 	checkPodSecurity(metav1.ObjectMeta{}, spec, "restricted", w, fail)
 }
 
-func checkPercona(r *Template, d map[string]any, docs []*unstructured.Unstructured, w string, fail func(string, Rule, ...string)) {
-	if !hasProvider(r, "percona-mongodb") {
-		fail(w, "Percona operand requires exact percona-mongodb")
-	}
+func checkPercona(c kindContext) {
+	r, d, docs, w, fail := c.r, c.d, c.docs, c.where, c.fail
 	if len(r.Security.Risks) == 0 {
 		fail(w, "security.risks must describe the operator-generated pods, service account and probes")
 	}
@@ -118,10 +209,8 @@ func checkPercona(r *Template, d map[string]any, docs []*unstructured.Unstructur
 	}
 }
 
-func checkPerconaBackup(r *Template, d map[string]any, docs []*unstructured.Unstructured, w string, fail func(string, Rule, ...string)) {
-	if !hasProvider(r, "percona-mongodb") {
-		fail(w, ErrPerconaBackupProvider)
-	}
+func checkPerconaBackup(c kindContext) {
+	d, docs, w, fail := c.d, c.docs, c.where, c.fail
 	spec := object(d["spec"])
 	for key := range spec {
 		switch key {
@@ -155,10 +244,8 @@ func perconaStorageSafe(storage map[string]any) bool {
 	s3 := object(storage["s3"])
 	return text(storage["type"]) == "s3" && text(s3["credentialsSecret"]) != "" && strings.HasPrefix(text(s3["endpointUrl"]), "https://") && !truth(s3["insecureSkipTLSVerify"])
 }
-func checkMiddleware(r *Template, d map[string]any, w string, fail func(string, Rule, ...string)) {
-	if !hasProvider(r, "traefik") {
-		fail(w, "Middleware requires traefik")
-	}
+func checkMiddleware(c kindContext) {
+	d, w, fail := c.d, c.where, c.fail
 	spec := object(d["spec"])
 	if len(spec) != 1 || spec["ipAllowList"] == nil {
 		fail(w, ErrIPAllowListOnly)
@@ -207,10 +294,8 @@ func declaredServiceAccount(docs []*unstructured.Unstructured, name string) bool
 	})
 }
 
-func checkDragonfly(r *Template, d map[string]any, docs []*unstructured.Unstructured, w string, fail func(string, Rule, ...string)) {
-	if !hasProvider(r, "dragonfly-operator") {
-		fail(w, ErrDragonflyProvider)
-	}
+func checkDragonfly(c kindContext) {
+	r, d, docs, w, fail := c.r, c.d, c.docs, c.where, c.fail
 	if len(r.Security.Risks) == 0 {
 		fail(w, "security.risks must describe the BUSL-1.1 licence and the operator-generated pods")
 	}
@@ -255,10 +340,8 @@ func checkMariaDBRef(spec map[string]any, docs []*unstructured.Unstructured, nam
 	fail(w, ErrMariaDBRefUndeclared)
 }
 
-func checkMariaDB(r *Template, d map[string]any, docs []*unstructured.Unstructured, namespace, w string, fail func(string, Rule, ...string)) {
-	if !hasProvider(r, "mariadb-operator") {
-		fail(w, ErrMariaDBProvider)
-	}
+func checkMariaDB(c kindContext) {
+	r, d, docs, namespace, w, fail := c.r, c.d, c.docs, c.namespace, c.where, c.fail
 	spec := object(d["spec"])
 	switch text(d["kind"]) {
 	case "MariaDB":
