@@ -344,9 +344,8 @@ func releaseURL(repo, tag, file string) string {
 	return "https://github.com/" + repo + "/releases/download/" + strings.ReplaceAll(tag, "+", "%2B") + "/" + file
 }
 
-// startK3s installs k3s with its install script, as the Zeabur installer
-// does: the script writes the systemd unit and the uninstall script, and
-// gets the checked binary. k3s's Traefik and metrics-server are off, since
+// startK3s installs k3s with its install script: the script writes the
+// systemd unit and the uninstall script, and gets the checked binary. k3s's Traefik and metrics-server are off, since
 // the catalog's components replace them.
 func (c *cluster) startK3s(k k3sConfig) error {
 	arch := runtime.GOARCH

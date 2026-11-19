@@ -144,7 +144,7 @@ health:
     resource: {kind: Node.longhorn.io, all: true, namespace: longhorn-system}
     condition: Ready
     timeout: 60s
-    advice: "A node that joined without Longhorn needs longhorn: true under join in its configuration. Add it, then run zeabur-installer apply on that node."
+    advice: "The message above names what the node lacks for Longhorn, such as open-iscsi, an NFS client or a kernel module. Install it on that node; the check passes once Longhorn finds it."
 ```
 
 `distributions` 列出组件支持的发行版，e2e 会在每个发行版上测试它。通过测试的环境是另一个列表，由安装工具根据 API 的测量数据算出，做法见[安装工具如何选择和安装组件](installers.mdx#通过测试的环境)。组件在某个发行版和平台上没有通过测试时，安装工具会提示用户。

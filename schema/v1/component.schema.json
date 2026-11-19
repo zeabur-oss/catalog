@@ -1115,7 +1115,7 @@
         "$ref": "#/$defs/health"
       },
       "type": "array",
-      "description": "Read-only checks that a tool such as zeabur-installer doctor runs on an installed cluster.\nEach is one `kubectl wait` and applies nothing. e2e runs them after install, before smoke."
+      "description": "Read-only checks that an installer runs on an installed cluster.\nEach is one `kubectl wait` and applies nothing. e2e runs them after install, before smoke."
     },
     "smoke": {
       "items": {

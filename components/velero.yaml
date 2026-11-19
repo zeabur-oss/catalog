@@ -57,8 +57,8 @@ inputs:
       Velero can copy volume files with Kopia. The agent runs as root, mounts
       host paths, holds Velero's cluster-admin token, and needs the velero
       namespace to allow the privileged Pod Security level. Each Backup and
-      Schedule must then set defaultVolumesToFsBackup to true. Zeabur's
-      schedule does. While the input is false, such a backup fails partly.
+      Schedule must then set defaultVolumesToFsBackup to true. While the input
+      is false, such a backup fails partly.
     path: deployNodeAgent
     default: false
 

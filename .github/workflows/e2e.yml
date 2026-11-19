@@ -80,8 +80,8 @@ jobs:
       - name: iSCSI module for Longhorn
         if: matrix.component == 'longhorn'
         run: sudo modprobe iscsi_tcp
-      # A distribution on the host runs without Docker, as on a server the
-      # Zeabur installer sets up; KubeSolo requires it. Stopping Docker leaves
+      # A distribution on the host runs without Docker, as on a server;
+      # KubeSolo requires it. Stopping Docker leaves
       # its netfilter rules behind, among them the FORWARD policy DROP: pod
       # traffic to the outside is forwarded without a mark that kube-proxy
       # accepts, so CoreDNS cannot reach its upstream and pods resolve no
