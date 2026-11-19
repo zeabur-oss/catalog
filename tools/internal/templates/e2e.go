@@ -142,6 +142,12 @@ func E2E(t *catalog.Tester, r *Template, values E2EValues, measure bool) (usage 
 			return nil, err
 		}
 	}
+	// The namespace controller waits half the longest grace period of a remaining pod before it
+	// looks again, and a CloudNativePG instance pod has 1800s. Foreground deletion waits for the pods.
+	defer func() {
+		_, e := catalog.Kubectl(manifest, "delete", "-n", ns, "-f", "-", "--ignore-not-found", "--cascade=foreground", "--wait", "--timeout=5m")
+		err = errors.Join(err, e)
+	}()
 	if _, err := catalog.Kubectl(manifest, "apply", "-n", ns, "-f", "-"); err != nil {
 		return nil, err
 	}
