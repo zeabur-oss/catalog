@@ -77,9 +77,13 @@ func runRender(t *testing.T, c map[string]any) {
 	} else if err != nil {
 		t.Fatal(err)
 	} else {
-		objects, err := templates.DecodeDocuments(out)
+		docs, err := templates.DecodeDocuments(out)
 		if err != nil {
 			t.Fatal(err)
+		}
+		objects := make([]map[string]any, len(docs))
+		for i, d := range docs {
+			objects[i] = d.Object
 		}
 		got = map[string]any{"objects": objects}
 	}

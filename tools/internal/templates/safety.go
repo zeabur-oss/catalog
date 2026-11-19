@@ -7,7 +7,8 @@ import (
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	networkingv1 "k8s.io/api/networking/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"github.com/zeabur-oss/catalog/tools/internal/kubeobj"
@@ -76,14 +77,9 @@ const (
 // rejects it in podMetadata.
 const TemplateLabel = "templates.zeabur.com/template"
 
-// podOf returns the pod template of a Pod or workload, and false for any other object.
-func podOf(d map[string]any) (*corev1.PodTemplateSpec, bool, error) {
-	return kubeobj.PodTemplate(&unstructured.Unstructured{Object: d})
-}
-
-// ownPods reports whether sel selects only the pods of template id.
-func ownPods(sel map[string]any, id string) bool {
-	return id != "" && text(object(sel["matchLabels"])[TemplateLabel]) == id
+// ownPods reports whether the selector selects only the pods of template id.
+func ownPods(sel *metav1.LabelSelector, id string) bool {
+	return id != "" && sel != nil && sel.MatchLabels[TemplateLabel] == id
 }
 
 // Safety checks the rendered objects themselves.
@@ -93,7 +89,7 @@ func Safety(r *Template, b []byte, namespace string) error {
 		return err
 	}
 	var errs []error
-	var ingressPolicies []map[string]any
+	var ingressPolicies []map[string]string
 	fail := func(where string, rule Rule, detail ...string) {
 		err := fmt.Errorf("%s: %w", where, rule)
 		if len(detail) > 0 {
@@ -103,18 +99,16 @@ func Safety(r *Template, b []byte, namespace string) error {
 	}
 	seen := map[string]bool{}
 	for _, d := range docs {
-		k := text(d["kind"])
-		api := text(d["apiVersion"])
-		meta := object(d["metadata"])
-		name := text(meta["name"])
+		k := d.GetKind()
+		api := d.GetAPIVersion()
+		name := d.GetName()
 		where := k + "/" + name
 		key := api + "/" + where
 		if seen[key] {
 			fail(where, "duplicate resource")
 		}
 		seen[key] = true
-		ns := text(meta["namespace"])
-		if ns != "" && ns != namespace {
+		if ns := d.GetNamespace(); ns != "" && ns != namespace {
 			fail(where, ErrNamespaceEscape)
 		}
 		switch k {
@@ -129,31 +123,43 @@ func Safety(r *Template, b []byte, namespace string) error {
 		default:
 			fail(where, ErrUnsupportedKind)
 		}
-		if hasKey(d, "storageClassName", "storageClass") {
+		if hasKey(d.Object, "storageClassName", "storageClass") {
 			fail(where, ErrStorageClass)
 		}
 		if k == "Secret" {
 			fail(where, "rendered Secrets forbidden; use explicit inputs and preexisting Secrets")
 		}
-		if k == "ServiceAccount" && d["automountServiceAccountToken"] != false {
-			fail(where, "ServiceAccount must disable token automount")
-		}
-		if k == "Service" {
-			s := object(d["spec"])
-			if text(s["type"]) == "NodePort" || text(s["type"]) == "LoadBalancer" || len(array(s["externalIPs"])) > 0 {
+		// Custom resources stay maps; core kinds are read as their Kubernetes types.
+		spec := object(d.Object["spec"])
+		switch api + "/" + k {
+		case "v1/ServiceAccount":
+			var sa corev1.ServiceAccount
+			if err := kubeobj.Typed(d, &sa); err != nil {
+				fail(where, "invalid ServiceAccount", err.Error())
+			} else if sa.AutomountServiceAccountToken == nil || *sa.AutomountServiceAccountToken {
+				fail(where, "ServiceAccount must disable token automount")
+			}
+		case "v1/Service":
+			var svc corev1.Service
+			if err := kubeobj.Typed(d, &svc); err != nil {
+				fail(where, "invalid Service", err.Error())
+			} else if t := svc.Spec.Type; t == corev1.ServiceTypeNodePort || t == corev1.ServiceTypeLoadBalancer || len(svc.Spec.ExternalIPs) > 0 {
 				fail(where, "externally exposed Service forbidden; use ingress")
 			}
-		}
-		spec := object(d["spec"])
-		if k == "Ingress" {
-			if text(spec["ingressClassName"]) == "traefik" && !hasProvider(r, "traefik") {
+		case "networking.k8s.io/v1/Ingress":
+			var ing networkingv1.Ingress
+			if err := kubeobj.Typed(d, &ing); err != nil {
+				fail(where, "invalid Ingress", err.Error())
+				break
+			}
+			if c := ing.Spec.IngressClassName; c != nil && *c == "traefik" && !hasProvider(r, "traefik") {
 				fail(where, ErrTraefikProvider)
 			}
-			if text(object(meta["annotations"])["cert-manager.io/cluster-issuer"]) != "" && !hasProvider(r, "cert-manager") {
+			if ing.Annotations["cert-manager.io/cluster-issuer"] != "" && !hasProvider(r, "cert-manager") {
 				fail(where, ErrClusterIssuerProvider)
 			}
 		}
-		tmpl, isPod, err := podOf(d)
+		tmpl, isPod, err := kubeobj.PodTemplate(d)
 		if err != nil {
 			fail(where, "invalid pod", err.Error())
 		}
@@ -210,29 +216,33 @@ func Safety(r *Template, b []byte, namespace string) error {
 			checkResources(object(object(spec["instanceSidecarConfiguration"])["resources"]), where+"/barman-sidecar", fail)
 		}
 		if k == "PerconaServerMongoDB" && api == "psmdb.percona.com/v1" {
-			checkPercona(r, d, docs, where, fail)
+			checkPercona(r, d.Object, docs, where, fail)
 		}
 		if k == "PerconaServerMongoDBBackup" && api == "psmdb.percona.com/v1" {
-			checkPerconaBackup(r, d, docs, where, fail)
+			checkPerconaBackup(r, d.Object, docs, where, fail)
 		}
 		if k == "Dragonfly" && api == "dragonflydb.io/v1alpha1" {
-			checkDragonfly(r, d, docs, where, fail)
+			checkDragonfly(r, d.Object, docs, where, fail)
 		}
 		if api == "k8s.mariadb.com/v1alpha1" {
-			checkMariaDB(r, d, docs, namespace, where, fail)
+			checkMariaDB(r, d.Object, docs, namespace, where, fail)
 		}
 		if k == "Middleware" && api == "traefik.io/v1alpha1" {
-			checkMiddleware(r, d, where, fail)
+			checkMiddleware(r, d.Object, where, fail)
 		}
-		if k == "NetworkPolicy" {
-			sel := object(spec["podSelector"])
-			if !ownPods(sel, r.ID) {
+		if api == "networking.k8s.io/v1" && k == "NetworkPolicy" {
+			var np networkingv1.NetworkPolicy
+			if err := kubeobj.Typed(d, &np); err != nil {
+				fail(where, "invalid NetworkPolicy", err.Error())
+				continue
+			}
+			if !ownPods(&np.Spec.PodSelector, r.ID) {
 				fail(where, ErrForeignPods, "podSelector")
 			}
-			if contains(array(spec["policyTypes"]), "Ingress") {
-				ingressPolicies = append(ingressPolicies, object(sel["matchLabels"]))
+			if slices.Contains(np.Spec.PolicyTypes, networkingv1.PolicyTypeIngress) {
+				ingressPolicies = append(ingressPolicies, np.Spec.PodSelector.MatchLabels)
 			}
-			checkPolicyRules(r, spec, namespace, where, fail)
+			checkPolicyRules(r, &np, namespace, where, fail)
 		}
 	}
 	for _, name := range r.Security.Unauthenticated {
@@ -240,9 +250,9 @@ func Safety(r *Template, b []byte, namespace string) error {
 			fail("security.unauthenticated", ErrUnknownService, name)
 			continue
 		}
-		named := slices.ContainsFunc(ingressPolicies, func(labels map[string]any) bool {
+		named := slices.ContainsFunc(ingressPolicies, func(labels map[string]string) bool {
 			for k, v := range labels {
-				if k != TemplateLabel && text(v) == name {
+				if k != TemplateLabel && v == name {
 					return true
 				}
 			}
@@ -258,36 +268,29 @@ func Safety(r *Template, b []byte, namespace string) error {
 // checkPolicyRules checks the peers of a NetworkPolicy. A rule with no peer or
 // an empty peer allows all traffic. A pod selector for the template's own
 // namespace selects only the template's pods.
-func checkPolicyRules(r *Template, spec map[string]any, namespace, where string, fail func(string, Rule, ...string)) {
-	for _, direction := range []string{"ingress", "egress"} {
-		peer := "from"
-		if direction == "egress" {
-			peer = "to"
+func checkPolicyRules(r *Template, np *networkingv1.NetworkPolicy, namespace, where string, fail func(string, Rule, ...string)) {
+	check := func(direction string, peers []networkingv1.NetworkPolicyPeer) {
+		if len(peers) == 0 {
+			fail(where, "unbounded rule forbidden", direction)
 		}
-		for _, rule := range array(spec[direction]) {
-			peers := array(object(rule)[peer])
-			if len(peers) == 0 {
-				fail(where, "unbounded rule forbidden", direction)
+		for _, v := range peers {
+			if v.NamespaceSelector == nil && v.PodSelector == nil && v.IPBlock == nil {
+				fail(where, "empty peer permits all traffic")
 			}
-			for _, raw := range peers {
-				v := object(raw)
-				if len(v) == 0 {
-					fail(where, "empty peer permits all traffic")
-				}
-				ns, hasNamespace := v["namespaceSelector"]
-				sel, hasPods := v["podSelector"]
-				own := !hasNamespace || text(object(object(ns)["matchLabels"])["kubernetes.io/metadata.name"]) == namespace
-				if own && (hasNamespace || hasPods) && !ownPods(object(sel), r.ID) {
-					fail(where, ErrForeignPods, direction)
-				}
-				ip := object(v["ipBlock"])
-				if text(ip["cidr"]) == "0.0.0.0/0" || text(ip["cidr"]) == "::/0" {
-					if len(r.Security.Risks) == 0 {
-						fail(where, "public network access requires risk documentation")
-					}
-				}
+			own := v.NamespaceSelector == nil || v.NamespaceSelector.MatchLabels["kubernetes.io/metadata.name"] == namespace
+			if own && (v.NamespaceSelector != nil || v.PodSelector != nil) && !ownPods(v.PodSelector, r.ID) {
+				fail(where, ErrForeignPods, direction)
+			}
+			if v.IPBlock != nil && (v.IPBlock.CIDR == "0.0.0.0/0" || v.IPBlock.CIDR == "::/0") && len(r.Security.Risks) == 0 {
+				fail(where, "public network access requires risk documentation")
 			}
 		}
+	}
+	for _, rule := range np.Spec.Ingress {
+		check("ingress", rule.From)
+	}
+	for _, rule := range np.Spec.Egress {
+		check("egress", rule.To)
 	}
 }
 

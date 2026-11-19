@@ -184,3 +184,13 @@ spec:
 		t.Fatalf("baseline pod rejected: %v", err)
 	}
 }
+
+func TestSafetyRejectsCoreObjectsThatDoNotParse(t *testing.T) {
+	r := &templates.Template{ID: "app"}
+	r.Services = []templates.Service{{Name: "app", PodSecurity: "restricted"}}
+	broken := "---\napiVersion: v1\nkind: Service\nmetadata: {name: web}\nspec: {ports: not-a-list}\n"
+	err := templates.Safety(r, []byte(safeManifest+broken), "test")
+	if err == nil || !strings.Contains(err.Error(), "invalid Service") {
+		t.Fatalf("got %v", err)
+	}
+}

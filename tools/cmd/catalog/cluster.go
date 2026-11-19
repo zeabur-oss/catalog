@@ -591,13 +591,18 @@ func writeMirrorHosts(dir, spec string) (string, error) {
 // template, and the image field of an operator's custom resource.
 func imagesOf(manifests ...[]byte) ([]string, error) {
 	seen := map[string]bool{}
+	add := func(image string) {
+		if image != "" && !strings.Contains(image, "{{") {
+			seen[image] = true
+		}
+	}
 	var walk func(any)
 	walk = func(n any) {
 		switch n := n.(type) {
 		case map[string]any:
 			for k, v := range n {
-				if s, ok := v.(string); ok && k == "image" && s != "" && !strings.Contains(s, "{{") {
-					seen[s] = true
+				if s, ok := v.(string); ok && k == "image" {
+					add(s)
 				}
 				walk(v)
 			}
@@ -613,7 +618,17 @@ func imagesOf(manifests ...[]byte) ([]string, error) {
 			return nil, err
 		}
 		for _, o := range objs {
-			walk(o.Object)
+			pod, ok, err := kubeobj.PodTemplate(o)
+			if err != nil {
+				return nil, fmt.Errorf("%s/%s: %w", o.GetKind(), o.GetName(), err)
+			}
+			if !ok {
+				walk(o.Object)
+				continue
+			}
+			for _, c := range kubeobj.Containers(&pod.Spec) {
+				add(c.Image)
+			}
 		}
 	}
 	return slices.Sorted(maps.Keys(seen)), nil

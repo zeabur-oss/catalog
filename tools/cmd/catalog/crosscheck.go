@@ -35,9 +35,13 @@ func crosscheck(fs *flag.FlagSet, r *repo) error {
 		if err != nil {
 			return fmt.Errorf("%s: %w", t.ID, err)
 		}
-		objects, err := templates.DecodeDocuments(manifest)
+		docs, err := templates.DecodeDocuments(manifest)
 		if err != nil {
 			return fmt.Errorf("%s: %w", t.ID, err)
+		}
+		objects := make([]map[string]any, len(docs))
+		for i, d := range docs {
+			objects[i] = d.Object
 		}
 		all[t.ID] = entry{opts.Namespace, opts.Domain, opts.ClusterIssuer, opts.Inputs, objects}
 	}
