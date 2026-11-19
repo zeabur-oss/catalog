@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"go.yaml.in/yaml/v4"
+	"github.com/zeabur-oss/catalog/tools/internal/kubeobj"
 )
 
 const smokeNamespace = "catalog-smoke"
@@ -438,20 +438,17 @@ func crdsExist(crds []string) bool {
 
 // waitReady waits for a manifest's CRDs and workloads.
 func waitReady(manifest []byte, defaultNS string) error {
-	for _, doc := range strings.Split(string(manifest), "\n---") {
-		var o struct {
-			Kind     string
-			Metadata struct{ Name, Namespace string }
-		}
-		if yaml.Unmarshal([]byte(doc), &o) != nil {
-			continue
-		}
+	objs, err := kubeobj.Decode(manifest)
+	if err != nil {
+		return err
+	}
+	for _, o := range objs {
 		var err error
-		switch o.Kind {
+		switch o.GetKind() {
 		case "CustomResourceDefinition":
-			_, err = kubectl("wait", "--for=condition=Established", "crd/"+o.Metadata.Name, "--timeout=2m")
+			_, err = kubectl("wait", "--for=condition=Established", "crd/"+o.GetName(), "--timeout=2m")
 		case "Deployment", "StatefulSet", "DaemonSet":
-			ns, obj := cmp.Or(o.Metadata.Namespace, defaultNS), strings.ToLower(o.Kind)+"/"+o.Metadata.Name
+			ns, obj := cmp.Or(o.GetNamespace(), defaultNS), strings.ToLower(o.GetKind())+"/"+o.GetName()
 			if _, err = kubectl("-n", ns, "rollout", "status", obj, "--timeout=10m"); err != nil {
 				err = fmt.Errorf("%w%s", err, Diagnose(kubectl, ns, "-n", ns, obj))
 			}

@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
+	"github.com/zeabur-oss/catalog/tools/internal/kubeobj"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -36,6 +37,25 @@ var nodeSetup = map[string]string{
 	"longhorn": "apt-get update -qq && apt-get install -y -qq open-iscsi nfs-common && systemctl enable --now iscsid",
 }
 
+// kindConfig is the part of a kind v1alpha4 cluster configuration that the tests set.
+type kindConfig struct {
+	Kind                    string     `yaml:"kind"`
+	APIVersion              string     `yaml:"apiVersion"`
+	Nodes                   []kindNode `yaml:"nodes"`
+	ContainerdConfigPatches []string   `yaml:"containerdConfigPatches,omitempty"`
+}
+
+type kindNode struct {
+	Role        string      `yaml:"role"`
+	ExtraMounts []kindMount `yaml:"extraMounts,omitempty"`
+}
+
+type kindMount struct {
+	HostPath      string `yaml:"hostPath"`
+	ContainerPath string `yaml:"containerPath"`
+	ReadOnly      bool   `yaml:"readOnly"`
+}
+
 // createCluster creates a kind cluster for profile and points KUBECONFIG at
 // it. needs is the install order of what the cluster tests.
 func createCluster(profile, version string, needs []*catalog.Component) (*cluster, error) {
@@ -45,24 +65,23 @@ func createCluster(profile, version string, needs []*catalog.Component) (*cluste
 	}
 	c := &cluster{name: "catalog-" + rand.Text()[:8], dir: dir}
 	c.name = strings.ToLower(c.name)
-	nodes := []map[string]any{{"role": "control-plane"}}
+	nodes := []kindNode{{Role: "control-plane"}}
 	if profile == "multi-node" {
-		nodes = append(nodes, map[string]any{"role": "worker"}, map[string]any{"role": "worker"})
+		nodes = append(nodes, kindNode{Role: "worker"}, kindNode{Role: "worker"})
 	}
+	cfg := kindConfig{Kind: "Cluster", APIVersion: "kind.x-k8s.io/v1alpha4"}
 	if mirror := os.Getenv("ZEABUR_REGISTRY_MIRRORS"); mirror != "" {
 		hosts, err := writeMirrorHosts(filepath.Join(dir, "certs.d"), mirror)
 		if err != nil {
 			return nil, err
 		}
-		for _, n := range nodes {
-			n["extraMounts"] = []map[string]any{{"hostPath": hosts, "containerPath": "/etc/containerd/certs.d", "readOnly": true}}
+		for i := range nodes {
+			nodes[i].ExtraMounts = []kindMount{{HostPath: hosts, ContainerPath: "/etc/containerd/certs.d", ReadOnly: true}}
 		}
-	}
-	cfg := map[string]any{"kind": "Cluster", "apiVersion": "kind.x-k8s.io/v1alpha4", "nodes": nodes}
-	if os.Getenv("ZEABUR_REGISTRY_MIRRORS") != "" {
 		// kind's containerd reads no hosts directory by default.
-		cfg["containerdConfigPatches"] = []string{"[plugins.\"io.containerd.grpc.v1.cri\".registry]\n  config_path = \"/etc/containerd/certs.d\"\n"}
+		cfg.ContainerdConfigPatches = []string{"[plugins.\"io.containerd.grpc.v1.cri\".registry]\n  config_path = \"/etc/containerd/certs.d\"\n"}
 	}
+	cfg.Nodes = nodes
 	config, err := yaml.Marshal(cfg)
 	if err != nil {
 		return nil, err
@@ -561,8 +580,9 @@ func writeMirrorHosts(dir, spec string) (string, error) {
 	return dir, nil
 }
 
-// imagesOf returns the images in the manifests, sorted and unique.
-func imagesOf(manifests ...[]byte) []string {
+// imagesOf returns the images in the manifests, sorted and unique: the containers of every pod
+// template, and the image field of an operator's custom resource.
+func imagesOf(manifests ...[]byte) ([]string, error) {
 	seen := map[string]bool{}
 	var walk func(any)
 	walk = func(n any) {
@@ -581,12 +601,13 @@ func imagesOf(manifests ...[]byte) []string {
 		}
 	}
 	for _, m := range manifests {
-		for _, doc := range strings.Split(string(m), "\n---") {
-			var o any
-			if yaml.Unmarshal([]byte(doc), &o) == nil {
-				walk(o)
-			}
+		objs, err := kubeobj.Decode(m)
+		if err != nil {
+			return nil, err
+		}
+		for _, o := range objs {
+			walk(o.Object)
 		}
 	}
-	return slices.Sorted(maps.Keys(seen))
+	return slices.Sorted(maps.Keys(seen)), nil
 }

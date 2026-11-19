@@ -4,9 +4,10 @@ import (
 	"cmp"
 	"maps"
 	"slices"
-	"strings"
 
-	"go.yaml.in/yaml/v4"
+	"sigs.k8s.io/yaml"
+
+	"github.com/zeabur-oss/catalog/tools/internal/kubeobj"
 )
 
 // manifestDoc is one object of a rendered release.
@@ -19,23 +20,24 @@ type manifestDoc struct {
 }
 
 // manifestDocs splits a rendered release into its objects.
-func manifestDocs(data []byte, defaultNamespace string) []manifestDoc {
+func manifestDocs(data []byte, defaultNamespace string) ([]manifestDoc, error) {
+	objs, err := kubeobj.Decode(data)
+	if err != nil {
+		return nil, err
+	}
 	var out []manifestDoc
-	for _, doc := range strings.Split(string(data), "\n---") {
-		var o struct {
-			Kind     string
-			Metadata struct {
-				Name, Namespace string
-				Annotations     map[string]string
-			}
-		}
-		if yaml.Unmarshal([]byte(doc), &o) != nil || o.Kind == "" {
+	for _, o := range objs {
+		if o.GetKind() == "" {
 			continue
 		}
-		_, hook := o.Metadata.Annotations["helm.sh/hook"]
-		out = append(out, manifestDoc{o.Kind, o.Metadata.Name, cmp.Or(o.Metadata.Namespace, defaultNamespace), hook, doc})
+		text, err := yaml.Marshal(o.Object)
+		if err != nil {
+			return nil, err
+		}
+		_, hook := o.GetAnnotations()["helm.sh/hook"]
+		out = append(out, manifestDoc{o.GetKind(), o.GetName(), cmp.Or(o.GetNamespace(), defaultNamespace), hook, string(text)})
 	}
-	return out
+	return out, nil
 }
 
 // nsDocs is manifest documents to apply in one namespace.

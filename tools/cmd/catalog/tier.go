@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
+	"github.com/zeabur-oss/catalog/tools/internal/kubeobj"
 	"github.com/zeabur-oss/catalog/tools/internal/templates"
 	"go.yaml.in/yaml/v4"
 )
@@ -385,7 +386,10 @@ func dryRun(r *repo, dir string) error {
 					return err
 				}
 				namespaces[rel.Namespace] = true
-				docs := manifestDocs(data, rel.Namespace)
+				docs, err := manifestDocs(data, rel.Namespace)
+				if err != nil {
+					return fmt.Errorf("%s/%s: %w", c.ID, rel.Name, err)
+				}
 				for _, d := range docs {
 					namespaces[d.Namespace] = true
 					switch d.Kind {
@@ -402,12 +406,16 @@ func dryRun(r *repo, dir string) error {
 		}
 	}
 	for _, c := range r.cat.Components {
-		for _, doc := range strings.Split(c.NetworkPolicies, "\n---") {
-			var o struct{ Metadata struct{ Namespace string } }
-			if strings.TrimSpace(doc) == "" || yaml.Unmarshal([]byte(doc), &o) != nil {
-				continue
+		policies, err := kubeobj.Decode([]byte(c.NetworkPolicies))
+		if err != nil {
+			return fmt.Errorf("%s networkPolicies: %w", c.ID, err)
+		}
+		for _, o := range policies {
+			doc, err := yaml.Marshal(o.Object)
+			if err != nil {
+				return err
 			}
-			files = append(files, file{c.ID + " networkPolicies", o.Metadata.Namespace, []byte(doc), false})
+			files = append(files, file{c.ID + " networkPolicies", o.GetNamespace(), doc, false})
 		}
 	}
 	var all strings.Builder
@@ -590,7 +598,11 @@ func testTemplate(r *repo, t *catalog.Tester, cfg config, id string, in Environm
 		if err != nil {
 			return "", err
 		}
-		if err := writeTemplateMeasurement(tmpl, env, in, usage, imagesOf(manifest)); err != nil {
+		images, err := imagesOf(manifest)
+		if err != nil {
+			return "", err
+		}
+		if err := writeTemplateMeasurement(tmpl, env, in, usage, images); err != nil {
 			return "", err
 		}
 	}

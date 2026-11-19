@@ -6,6 +6,9 @@ import (
 	"slices"
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 )
 
@@ -24,12 +27,24 @@ func safeOperandContext(p, c map[string]any, w string, fail func(string, Rule, .
 			fail(w, "operand SELinux overrides require separate review")
 		}
 	}
-	pod := map[string]any{"containers": []any{map[string]any{"name": "operand", "securityContext": c}}}
-	if p != nil {
-		pod["securityContext"] = p
+	var spec corev1.PodSpec
+	var sc corev1.SecurityContext
+	if err := convert(c, &sc); err != nil {
+		fail(w, ErrPodSecurity, err.Error())
+		return
 	}
-	checkPodSecurity(nil, pod, "restricted", w, fail)
+	spec.Containers = []corev1.Container{{Name: "operand", SecurityContext: &sc}}
+	if p != nil {
+		var psc corev1.PodSecurityContext
+		if err := convert(p, &psc); err != nil {
+			fail(w, ErrPodSecurity, err.Error())
+			return
+		}
+		spec.SecurityContext = &psc
+	}
+	checkPodSecurity(metav1.ObjectMeta{}, spec, "restricted", w, fail)
 }
+
 func checkPercona(r *Template, d map[string]any, docs []map[string]any, w string, fail func(string, Rule, ...string)) {
 	if !hasProvider(r, "percona-mongodb") {
 		fail(w, "Percona operand requires exact percona-mongodb")

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"slices"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -22,7 +23,7 @@ func CheckServices(r *Template, manifest []byte) error {
 		fail := func(format string, a ...any) {
 			errs = append(errs, fmt.Errorf("service %s: %s", s.Name, fmt.Sprintf(format, a...)))
 		}
-		var containers []any
+		var pod *corev1.PodTemplateSpec
 		var operand map[string]any
 		found := false
 		for _, d := range docs {
@@ -32,7 +33,12 @@ func CheckServices(r *Template, manifest []byte) error {
 			spec := object(d["spec"])
 			switch text(d["kind"]) {
 			case "Deployment", "StatefulSet", "DaemonSet":
-				containers = array(object(object(spec["template"])["spec"])["containers"])
+				t, _, err := podOf(d)
+				if err != nil {
+					fail("invalid pod: %v", err)
+					continue
+				}
+				pod = t
 			case "Cluster", "Dragonfly", "MariaDB":
 				operand = object(spec["resources"])
 			case "PerconaServerMongoDB":
@@ -48,18 +54,14 @@ func CheckServices(r *Template, manifest []byte) error {
 		}
 		var ports []Port
 		got := map[string]map[string]*resource.Quantity{}
-		add := func(res map[string]any) {
-			for _, level := range []string{"requests", "limits"} {
-				for _, key := range []string{"cpu", "memory"} {
-					v, ok := object(res[level])[key]
+		add := func(res corev1.ResourceRequirements) {
+			for level, list := range map[string]corev1.ResourceList{"requests": res.Requests, "limits": res.Limits} {
+				for _, name := range []corev1.ResourceName{corev1.ResourceCPU, corev1.ResourceMemory} {
+					q, ok := list[name]
 					if !ok {
 						continue
 					}
-					q, err := resource.ParseQuantity(fmt.Sprint(v))
-					if err != nil {
-						fail("%s.%s: %v", level, key, err)
-						continue
-					}
+					key := string(name)
 					if got[level] == nil {
 						got[level] = map[string]*resource.Quantity{}
 					}
@@ -71,14 +73,19 @@ func CheckServices(r *Template, manifest []byte) error {
 			}
 		}
 		if operand != nil {
-			add(operand)
+			var res corev1.ResourceRequirements
+			if err := convert(operand, &res); err != nil {
+				fail("resources: %v", err)
+			}
+			add(res)
 		}
-		for _, c := range containers {
-			add(object(object(c)["resources"]))
-			for _, p := range array(object(c)["ports"]) {
-				if name := text(object(p)["name"]); name != "" {
-					n, _ := object(p)["containerPort"].(int)
-					ports = append(ports, Port{Name: name, Port: n})
+		if pod != nil {
+			for _, c := range pod.Spec.Containers {
+				add(c.Resources)
+				for _, p := range c.Ports {
+					if p.Name != "" {
+						ports = append(ports, Port{Name: p.Name, Port: int(p.ContainerPort)})
+					}
 				}
 			}
 		}

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"golang.org/x/mod/sumdb/dirhash"
+	"k8s.io/apimachinery/pkg/version"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"github.com/zeabur-oss/catalog/tools/internal/templates"
@@ -122,7 +123,7 @@ func (m *measurement) put(e Environment) {
 // kubectl version -o json. profile is the -profile of the run.
 func environmentOf(cfg config, profile, kubectlVersion string) (Environment, error) {
 	var v struct {
-		ServerVersion struct{ GitVersion, Platform string }
+		ServerVersion version.Info `json:"serverVersion"`
 	}
 	if err := json.Unmarshal([]byte(kubectlVersion), &v); err != nil {
 		return Environment{}, err

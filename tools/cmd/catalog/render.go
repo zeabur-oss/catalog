@@ -58,7 +58,11 @@ func renderComponents(cat *catalog.Catalog, comps []*catalog.Component, out stri
 					}
 					// urlDigests pin a URL release. Its images are the upstream's choice.
 					if kv == versions[0] && rel.Type != "manifest" {
-						for _, u := range catalog.UnpinnedImages(manifest, rel.Unpinned) {
+						unpinned, err := catalog.UnpinnedImages(manifest, rel.Unpinned)
+						if err != nil {
+							errs = append(errs, fmt.Errorf("%s/%s %s: %w", c.ID, rel.Name, p, err))
+						}
+						for _, u := range unpinned {
 							errs = append(errs, fmt.Errorf("%s/%s %s: %s needs a sha256 digest (<tag>@sha256:<digest>)", c.ID, rel.Name, p, u))
 						}
 					}

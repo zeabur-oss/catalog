@@ -205,7 +205,15 @@ func refused(c *catalog.Component, from, to string) (map[string]string, error) {
 		if bytes.Equal(before, after) {
 			continue
 		}
-		for _, d := range updatable(before, rel.Namespace) {
+		oldDocs, err := updatable(before, rel.Namespace)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", rel.Name, err)
+		}
+		newDocs, err := updatable(after, rel.Namespace)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", rel.Name, err)
+		}
+		for _, d := range oldDocs {
 			done = append(done, d)
 			if stderr, err := kubectl([]byte(namespaceDoc(d.namespace)), "apply", "-f", "-"); err != nil {
 				return nil, fmt.Errorf("namespace %s: %w: %s", d.namespace, err, strings.TrimSpace(stderr))
@@ -215,7 +223,7 @@ func refused(c *catalog.Component, from, to string) (map[string]string, error) {
 				return nil, fmt.Errorf("apply %s: %w: %s", rel.Name, err, strings.TrimSpace(stderr))
 			}
 		}
-		for _, d := range updatable(after, rel.Namespace) {
+		for _, d := range newDocs {
 			if stderr, err := kubectl([]byte(d.docs), "apply", "--server-side", "--force-conflicts", "--dry-run=server",
 				"--field-manager=catalog", "-n", d.namespace, "-f", "-"); err != nil {
 				found[rel.Name] += stderr
@@ -234,9 +242,13 @@ func namespaceDoc(ns string) string {
 // step installed them), webhook configurations and APIServices (nothing
 // serves them here), and Helm hooks (Helm creates them again on every
 // upgrade).
-func updatable(data []byte, defaultNamespace string) []nsDocs {
+func updatable(data []byte, defaultNamespace string) ([]nsDocs, error) {
+	docs, err := manifestDocs(data, defaultNamespace)
+	if err != nil {
+		return nil, err
+	}
 	var keep []manifestDoc
-	for _, d := range manifestDocs(data, defaultNamespace) {
+	for _, d := range docs {
 		switch d.Kind {
 		case "CustomResourceDefinition", "Namespace", "ValidatingWebhookConfiguration", "MutatingWebhookConfiguration", "APIService":
 			continue
@@ -245,7 +257,7 @@ func updatable(data []byte, defaultNamespace string) []nsDocs {
 			keep = append(keep, d)
 		}
 	}
-	return byNamespace(keep)
+	return byNamespace(keep), nil
 }
 
 // kubectl runs kubectl and returns what it wrote to stderr.

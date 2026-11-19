@@ -15,6 +15,9 @@ import (
 	"strings"
 
 	"go.yaml.in/yaml/v4"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+
+	"github.com/zeabur-oss/catalog/tools/internal/kubeobj"
 )
 
 // CacheDir holds pulled charts and downloaded manifests.
@@ -199,27 +202,26 @@ func CRDSchemas(dir, out string) error {
 		if err != nil {
 			return err
 		}
-		for _, doc := range strings.Split(string(data), "\n---") {
-			var crd struct {
-				Kind string
-				Spec struct {
-					Group    string
-					Names    struct{ Kind string }
-					Versions []struct {
-						Name   string
-						Schema struct {
-							OpenAPIV3Schema map[string]any `yaml:"openAPIV3Schema"`
-						}
-					}
-				}
-			}
-			if yaml.Unmarshal([]byte(doc), &crd) != nil || crd.Kind != "CustomResourceDefinition" {
+		objs, err := kubeobj.Decode(data)
+		if err != nil {
+			return fmt.Errorf("%s: %w", path, err)
+		}
+		for _, o := range objs {
+			if o.GetKind() != "CustomResourceDefinition" {
 				continue
 			}
+			var crd apiextensionsv1.CustomResourceDefinition
+			if err := kubeobj.Typed(o, &crd); err != nil {
+				return fmt.Errorf("%s: %w", path, err)
+			}
 			for _, v := range crd.Spec.Versions {
+				if v.Schema == nil || v.Schema.OpenAPIV3Schema == nil {
+					continue
+				}
 				schema := v.Schema.OpenAPIV3Schema
-				for _, p := range schema["properties"].(map[string]any) {
-					strict(p)
+				for name, p := range schema.Properties {
+					strict(&p)
+					schema.Properties[name] = p
 				}
 				data, err := json.Marshal(schema)
 				if err != nil {
@@ -240,30 +242,33 @@ func CRDSchemas(dir, out string) error {
 
 // strict rejects unknown fields like the API server does, and maps
 // Kubernetes' int-or-string to JSON Schema.
-func strict(node any) {
-	s, ok := node.(map[string]any)
-	if !ok {
+func strict(s *apiextensionsv1.JSONSchemaProps) {
+	if s == nil {
 		return
 	}
-	if s["x-kubernetes-int-or-string"] == true {
-		delete(s, "type")
-		s["oneOf"] = []any{map[string]any{"type": "string"}, map[string]any{"type": "integer"}}
+	if s.XIntOrString {
+		s.Type = ""
+		s.OneOf = []apiextensionsv1.JSONSchemaProps{{Type: "string"}, {Type: "integer"}}
 	}
-	if props, ok := s["properties"].(map[string]any); ok {
-		if _, set := s["additionalProperties"]; !set && s["x-kubernetes-preserve-unknown-fields"] != true {
-			s["additionalProperties"] = false
-		}
-		for _, p := range props {
-			strict(p)
+	if len(s.Properties) > 0 && s.AdditionalProperties == nil && (s.XPreserveUnknownFields == nil || !*s.XPreserveUnknownFields) {
+		s.AdditionalProperties = &apiextensionsv1.JSONSchemaPropsOrBool{Allows: false}
+	}
+	for name, p := range s.Properties {
+		strict(&p)
+		s.Properties[name] = p
+	}
+	if s.Items != nil {
+		strict(s.Items.Schema)
+		for i := range s.Items.JSONSchemas {
+			strict(&s.Items.JSONSchemas[i])
 		}
 	}
-	strict(s["items"])
-	strict(s["additionalProperties"])
-	for _, k := range []string{"allOf", "anyOf", "oneOf"} {
-		if l, ok := s[k].([]any); ok {
-			for _, e := range l {
-				strict(e)
-			}
+	if s.AdditionalProperties != nil {
+		strict(s.AdditionalProperties.Schema)
+	}
+	for _, list := range [][]apiextensionsv1.JSONSchemaProps{s.AllOf, s.AnyOf, s.OneOf} {
+		for i := range list {
+			strict(&list[i])
 		}
 	}
 }
@@ -274,53 +279,32 @@ var PinnedImage = regexp.MustCompile(`^[^\s]+@sha256:[a-f0-9]{64}$`)
 // UnpinnedImages returns each container in manifest whose image has no digest,
 // as <kind>/<name> <container>: <image>. It skips images named in allowed, and
 // Helm test hooks, because only helm test creates them.
-func UnpinnedImages(manifest []byte, allowed []string) []string {
+func UnpinnedImages(manifest []byte, allowed []string) ([]string, error) {
+	objs, err := kubeobj.Decode(manifest)
+	if err != nil {
+		return nil, err
+	}
 	var out []string
-	for _, doc := range strings.Split(string(manifest), "\n---") {
-		var obj struct {
-			Kind     string
-			Metadata struct {
-				Name        string
-				Annotations map[string]string
-			}
-			Spec map[string]any
-		}
-		if yaml.Unmarshal([]byte(doc), &obj) != nil || strings.Contains(obj.Metadata.Annotations["helm.sh/hook"], "test") {
+	for _, o := range objs {
+		if strings.Contains(o.GetAnnotations()["helm.sh/hook"], "test") {
 			continue
 		}
-		var pod any
-		switch obj.Kind {
-		case "Pod":
-			pod = obj.Spec
-		case "Deployment", "StatefulSet", "DaemonSet", "ReplicaSet", "Job":
-			pod = dig(obj.Spec, "template", "spec")
-		case "CronJob":
-			pod = dig(obj.Spec, "jobTemplate", "spec", "template", "spec")
+		t, ok, err := kubeobj.PodTemplate(o)
+		if err != nil {
+			return nil, fmt.Errorf("%s/%s: %w", o.GetKind(), o.GetName(), err)
 		}
-		p, _ := pod.(map[string]any)
-		for _, k := range []string{"initContainers", "containers", "ephemeralContainers"} {
-			list, _ := p[k].([]any)
-			for _, v := range list {
-				c, _ := v.(map[string]any)
-				image, _ := c["image"].(string)
-				name := image
-				if i := strings.LastIndex(image, ":"); i > strings.LastIndex(image, "/") {
-					name = image[:i]
-				}
-				if !PinnedImage.MatchString(image) && !slices.Contains(allowed, name) {
-					out = append(out, fmt.Sprintf("%s/%s %v: %s", obj.Kind, obj.Metadata.Name, c["name"], image))
-				}
+		if !ok {
+			continue
+		}
+		for _, c := range kubeobj.Containers(&t.Spec) {
+			name := c.Image
+			if i := strings.LastIndex(c.Image, ":"); i > strings.LastIndex(c.Image, "/") {
+				name = c.Image[:i]
+			}
+			if !PinnedImage.MatchString(c.Image) && !slices.Contains(allowed, name) {
+				out = append(out, fmt.Sprintf("%s/%s %v: %s", o.GetKind(), o.GetName(), c.Name, c.Image))
 			}
 		}
 	}
-	return out
-}
-
-func dig(m map[string]any, path ...string) any {
-	var v any = m
-	for _, k := range path {
-		mm, _ := v.(map[string]any)
-		v = mm[k]
-	}
-	return v
+	return out, nil
 }

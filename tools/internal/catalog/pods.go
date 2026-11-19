@@ -1,15 +1,17 @@
 package catalog
 
 import (
-	"bytes"
 	"encoding/json"
-	"io"
+	"fmt"
 	"math"
 	"slices"
 	"strings"
 
-	"go.yaml.in/yaml/v4"
+	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/zeabur-oss/catalog/tools/internal/kubeobj"
 )
 
 // PodUsage is the idle usage of one pod of a workload: the median over the
@@ -40,27 +42,14 @@ type podSample struct{ mem, cpu float64 }
 // get pods,replicasets,jobs, to its top workload: a ReplicaSet or Job
 // resolves to its owner. A pod without a controller is its own workload.
 func Workloads(list []byte) (map[string]Workload, error) {
-	var l struct {
-		Items []struct {
-			Kind     string
-			Metadata struct {
-				Namespace, Name string
-				OwnerReferences []struct {
-					Kind, Name string
-					Controller bool
-				}
-			}
-		}
-	}
+	var l metav1.PartialObjectMetadataList
 	if err := json.Unmarshal(list, &l); err != nil {
 		return nil, err
 	}
 	owners := map[string]Workload{}
 	for _, o := range l.Items {
-		for _, ref := range o.Metadata.OwnerReferences {
-			if ref.Controller {
-				owners[o.Kind+" "+o.Metadata.Namespace+"/"+o.Metadata.Name] = Workload{ref.Kind, ref.Name}
-			}
+		if ref := metav1.GetControllerOf(&o); ref != nil {
+			owners[o.Kind+" "+o.Namespace+"/"+o.Name] = Workload{ref.Kind, ref.Name}
 		}
 	}
 	out := map[string]Workload{}
@@ -68,15 +57,14 @@ func Workloads(list []byte) (map[string]Workload, error) {
 		if o.Kind != "Pod" {
 			continue
 		}
-		ns := o.Metadata.Namespace
-		key := ns + "/" + o.Metadata.Name
+		key := o.Namespace + "/" + o.Name
 		w, ok := owners["Pod "+key]
 		if !ok {
-			out[key] = Workload{"Pod", o.Metadata.Name}
+			out[key] = Workload{"Pod", o.Name}
 			continue
 		}
 		for w.Kind == "ReplicaSet" || w.Kind == "Job" {
-			up, ok := owners[w.Kind+" "+ns+"/"+w.Name]
+			up, ok := owners[w.Kind+" "+o.Namespace+"/"+w.Name]
 			if !ok {
 				break
 			}
@@ -121,30 +109,39 @@ func foldPods(usage map[string]podSample, workloads map[string]Workload) []PodUs
 // nodes. A workload that manifest does not hold, such as one that an operator
 // creates, is missing.
 func Replicas(manifest []byte, nodes int) (map[string]int, error) {
+	objs, err := kubeobj.Decode(manifest)
+	if err != nil {
+		return nil, err
+	}
 	out := map[string]int{}
-	dec := yaml.NewDecoder(bytes.NewReader(manifest))
-	for {
-		var obj struct {
-			Kind     string
-			Metadata struct{ Name string }
-			Spec     struct{ Replicas *int }
-		}
-		if err := dec.Decode(&obj); err == io.EOF {
-			return out, nil
-		} else if err != nil {
-			return nil, err
-		}
-		key := obj.Kind + "/" + obj.Metadata.Name
-		switch obj.Kind {
-		case "Deployment", "StatefulSet":
-			out[key] = 1
-			if obj.Spec.Replicas != nil {
-				out[key] = *obj.Spec.Replicas
+	for _, o := range objs {
+		key := o.GetKind() + "/" + o.GetName()
+		switch o.GetKind() {
+		case "Deployment":
+			var d appsv1.Deployment
+			if err := kubeobj.Typed(o, &d); err != nil {
+				return nil, fmt.Errorf("%s: %w", key, err)
 			}
+			out[key] = replicas(d.Spec.Replicas)
+		case "StatefulSet":
+			var s appsv1.StatefulSet
+			if err := kubeobj.Typed(o, &s); err != nil {
+				return nil, fmt.Errorf("%s: %w", key, err)
+			}
+			out[key] = replicas(s.Spec.Replicas)
 		case "DaemonSet":
 			out[key] = nodes
 		}
 	}
+	return out, nil
+}
+
+// replicas is the replica count of a workload, which defaults to one.
+func replicas(n *int32) int {
+	if n == nil {
+		return 1
+	}
+	return int(*n)
 }
 
 // Total is the idle memory and CPU of all pods: each row times its
