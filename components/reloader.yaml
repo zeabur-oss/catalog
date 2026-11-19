@@ -26,8 +26,8 @@ releases:
     namespace: reloader
     repo: https://stakater.github.io/stakater-charts
     chart: reloader
-    version: 2.2.19
-    chartDigest: sha256:5ac13440bd6cceff9464f62e4b836374b88be12076bcd31da34dc9bcd345c0b5
+    version: 2.2.20
+    chartDigest: sha256:4d7f46ec0fe7357ada046ee65be465f13d12849731ce06d7914b922afacc1fe2
     values: |
       # Pinned by digest; a tag alone can move.
       image:
