@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/zeabur-oss/catalog/tools/internal/kubeobj"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 const smokeNamespace = "catalog-smoke"
@@ -417,6 +418,28 @@ func createSecrets(r *run, c *Component) error {
 	return nil
 }
 
+// DeleteNamespace deletes the objects of manifests in ns in the foreground, then ns. The namespace
+// controller waits half the longest grace period of a remaining pod before it looks again, and a
+// CloudNativePG instance pod has 1800s. Foreground deletion waits for the pods.
+func DeleteNamespace(ns string, manifests ...[]byte) error {
+	var items []*unstructured.Unstructured
+	var errs []error
+	for _, m := range manifests {
+		objs, err := kubeobj.Decode(m)
+		errs = append(errs, err)
+		items = append(items, slices.DeleteFunc(objs, func(o *unstructured.Unstructured) bool { return o.GetKind() == "Namespace" })...)
+	}
+	if len(items) > 0 {
+		list, err := json.Marshal(map[string]any{"apiVersion": "v1", "kind": "List", "items": items})
+		if err == nil {
+			_, err = Kubectl(list, "delete", "-n", ns, "-f", "-", "--ignore-not-found", "--cascade=foreground", "--wait", "--timeout=5m")
+		}
+		errs = append(errs, err)
+	}
+	_, err := kubectl("delete", "namespace", ns, "--ignore-not-found", "--wait", "--timeout=5m")
+	return errors.Join(append(errs, err)...)
+}
+
 func ensureNamespace(r *run, ns string) error {
 	if _, err := kubectl("get", "namespace", ns); err == nil {
 		return nil
@@ -479,7 +502,7 @@ func (t *Tester) CheckSkipSmoke() error {
 }
 
 // smoke runs the health checks of c, then its smoke checks.
-func (t *Tester) smoke(c *Component) error {
+func (t *Tester) smoke(c *Component) (err error) {
 	if len(c.Health) == 0 && len(c.Smoke) == 0 {
 		return nil
 	}
@@ -498,7 +521,8 @@ func (t *Tester) smoke(c *Component) error {
 	if _, err := kubectl("create", "namespace", smokeNamespace); err != nil {
 		return err
 	}
-	defer kubectl("delete", "namespace", smokeNamespace, "--wait", "--timeout=5m")
+	var applied [][]byte
+	defer func() { err = errors.Join(err, DeleteNamespace(smokeNamespace, applied...)) }()
 	for _, s := range c.Smoke {
 		if reason, ok := t.SkipSmoke[c.ID][s.Name]; ok {
 			slog.Warn("smoke skipped", "component", c.ID, "check", s.Name, "reason", reason)
@@ -506,6 +530,7 @@ func (t *Tester) smoke(c *Component) error {
 		}
 		slog.Info("smoke", "component", c.ID, "check", s.Name)
 		if s.Manifest != "" {
+			applied = append(applied, []byte(s.Manifest))
 			if err := retry(2*time.Minute, func() error {
 				_, err := Run([]byte(s.Manifest), "kubectl", "apply", "-f", "-")
 				return err

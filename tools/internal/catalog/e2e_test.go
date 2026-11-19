@@ -125,3 +125,31 @@ func TestInstallWaitsForWorkloadsAndCRDsOnly(t *testing.T) {
 		t.Errorf("the install waited for an issuer that needs Let's Encrypt: %v", err)
 	}
 }
+
+func TestSmokeDeletesItsObjectsBeforeTheNamespace(t *testing.T) {
+	dir := t.TempDir()
+	log := filepath.Join(dir, "calls")
+	script := "#!/bin/sh\necho \"$@\" >> " + log + "\n[ \"$1\" = delete ] && cat >> " + log + "\nexit 0\n"
+	if err := os.WriteFile(filepath.Join(dir, "kubectl"), []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir+":"+os.Getenv("PATH"))
+
+	manifest := "apiVersion: v1\nkind: Namespace\nmetadata: {name: catalog-smoke}\n---\n" +
+		"apiVersion: postgresql.cnpg.io/v1\nkind: Cluster\nmetadata: {name: smoke, namespace: catalog-smoke}\n"
+	c := &Component{ID: "cloudnative-pg", Smoke: []Smoke{{Name: "one-instance-cluster", Manifest: manifest}}}
+	if err := (&Tester{}).smoke(c); err != nil {
+		t.Fatal(err)
+	}
+	data, _ := os.ReadFile(log)
+	calls := string(data)
+	objects := strings.Index(calls, "delete -n catalog-smoke -f - --ignore-not-found --cascade=foreground")
+	namespace := strings.Index(calls, "delete namespace catalog-smoke")
+	if objects < 0 || namespace < objects {
+		t.Fatalf("want the objects deleted in the foreground before the namespace, got:\n%s", calls)
+	}
+	deleted := calls[objects:namespace]
+	if !strings.Contains(deleted, `"kind":"Cluster"`) || strings.Contains(deleted, `"kind":"Namespace"`) {
+		t.Errorf("want the Cluster deleted and the Namespace left to its own delete, got:\n%s", deleted)
+	}
+}
