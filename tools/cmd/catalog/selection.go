@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
-	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
 
 // reason is what a run was asked to test.
@@ -87,25 +86,18 @@ func stalePick(r *repo, profile, arch string) (pick, error) {
 	}
 	p := pick{deps: map[string]bool{}}
 	for _, s := range subs {
-		path := measurementPath(s.id)
-		if r.isComponent(s.id) {
-			if slices.Contains(e2e.Unready, s.id) {
-				continue
-			}
-		} else {
-			if arch != templateArch {
-				continue
-			}
-			path = templateMeasurementPath(s.id)
+		_, path := s.Measurement(arch)
+		if path == "" || slices.Contains(e2e.Unready, s.ID()) {
+			continue
 		}
-		want, err := inputs(r, cfg, s.id, profile, arch)
+		want, err := inputs(r, cfg, s.ID(), profile, arch)
 		if err != nil {
 			return pick{}, err
 		}
 		if !slices.ContainsFunc(readMeasurement(path).Environments, func(e Environment) bool {
 			return e.Result == resultPassed && e.sameInputs(want)
 		}) {
-			p.deps[s.id] = true
+			p.deps[s.ID()] = true
 		}
 	}
 	return p, nil
@@ -117,20 +109,16 @@ func stalePick(r *repo, profile, arch string) (pick, error) {
 // Kubernetes release of kind, or the release of a host distribution and of
 // its add-ons.
 func inputs(r *repo, cfg config, id, profile, arch string) (Environment, error) {
-	values, src := profile, ""
+	values := profile
 	if slices.Contains(hostProfiles, profile) {
 		values = templateProfile
 	}
-	if c, ok := r.cat.Get(id); ok {
-		src = c.Path
-	} else {
-		t, err := templates.Get(r.templates, id)
-		if err != nil {
-			return Environment{}, err
-		}
-		src = t.Dir
+	sub, ok := r.subjectOf(id)
+	if !ok {
+		return Environment{}, fmt.Errorf("unknown component or template %q", id)
 	}
-	order, err := installOrder(r, id, values)
+	src := sub.Source()
+	order, err := sub.Order(values)
 	if err != nil {
 		return Environment{}, err
 	}

@@ -11,8 +11,6 @@ import (
 	"reflect"
 	"slices"
 	"strings"
-
-	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
 
 // merge merges the measurements that CI jobs uploaded into measurements/, then
@@ -123,10 +121,10 @@ func dropOutdated(r *repo, cfg config, dst string) error {
 		}
 		for _, path := range files {
 			id := strings.TrimSuffix(filepath.Base(path), ".json")
-			known := r.isComponent(id)
-			if dir == "templates" {
-				_, err := templates.Get(r.templates, id)
-				known = err == nil
+			known := false
+			if s, ok := r.subjectOf(id); ok {
+				kind, _ := s.Measurement(templateArch)
+				known = kind == dir
 			}
 			if !known {
 				if err := os.Remove(path); err != nil {

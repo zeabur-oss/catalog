@@ -81,7 +81,7 @@ func smokeGroups(r *repo, p pick) ([]*group, error) {
 		return nil, err
 	}
 	// Place the items with the most dependencies first.
-	slices.SortStableFunc(items, func(a, b subject) int { return len(b.deps) - len(a.deps) })
+	slices.SortStableFunc(items, func(a, b candidate) int { return len(b.deps) - len(a.deps) })
 	var groups []*group
 	for _, it := range items {
 		var best *group
@@ -104,7 +104,7 @@ func smokeGroups(r *repo, p pick) ([]*group, error) {
 			best = &group{deps: map[string]bool{}}
 			groups = append(groups, best)
 		}
-		best.IDs = append(best.IDs, it.id)
+		best.IDs = append(best.IDs, it.ID())
 		best.cost += it.cost
 		for _, d := range it.deps {
 			best.deps[d] = true
@@ -135,18 +135,18 @@ func templateRefs(r *repo, t *templates.Template) ([]catalog.Ref, error) {
 	return refs, nil
 }
 
-// subject is one component or template test.
-type subject struct {
-	id    string
+// candidate is a subject that a run may test.
+type candidate struct {
+	subject
 	order []*catalog.Component // what the test installs, in order
-	deps  []string             // the IDs in order, without the component under test
+	deps  []string             // the IDs in order, without the subject
 	cost  int                  // see groupCost
 }
 
 // subjects returns every component that profile supports and, on
 // single-node, every template, that p selects.
-func subjects(r *repo, profile string, p pick) ([]subject, error) {
-	var out []subject
+func subjects(r *repo, profile string, p pick) ([]candidate, error) {
+	var out []candidate
 	for _, c := range r.cat.Components {
 		if c.Defaults[profile] == "unsupported" {
 			continue
@@ -156,19 +156,20 @@ func subjects(r *repo, profile string, p pick) ([]subject, error) {
 			return nil, err
 		}
 		if p.has(c.ID, order) {
-			out = append(out, subject{c.ID, order, ids(order[:len(order)-1]), 1})
+			out = append(out, candidate{componentSubject{r, c}, order, ids(order[:len(order)-1]), 1})
 		}
 	}
 	if profile != templateProfile {
 		return out, nil
 	}
 	for _, t := range r.templates {
-		order, err := installOrder(r, t.ID, profile)
+		sub := templateSubject{r, t}
+		order, err := sub.Order(profile)
 		if err != nil {
 			return nil, err
 		}
 		if p.has(t.ID, order) {
-			out = append(out, subject{t.ID, order, ids(order), len(t.Services) + len(t.Requires)})
+			out = append(out, candidate{sub, order, ids(order), len(t.Services) + len(t.Requires)})
 		}
 	}
 	return out, nil
@@ -182,7 +183,7 @@ func fullProfiles() []string { return append(slices.Clone(catalog.Profiles), hos
 
 // profileSubjects is subjects for a catalog profile or a host profile. A host
 // profile tests components only.
-func profileSubjects(r *repo, profile string, p pick) ([]subject, error) {
+func profileSubjects(r *repo, profile string, p pick) ([]candidate, error) {
 	if !slices.Contains(hostProfiles, profile) {
 		return subjects(r, profile, p)
 	}
@@ -190,33 +191,19 @@ func profileSubjects(r *repo, profile string, p pick) ([]subject, error) {
 	if err != nil {
 		return nil, err
 	}
-	return slices.DeleteFunc(subs, func(s subject) bool {
-		c, ok := r.cat.Get(s.id)
+	return slices.DeleteFunc(subs, func(s candidate) bool {
+		c, ok := r.cat.Get(s.ID())
 		return !ok || !hostRuns(profile, c)
 	}), nil
 }
 
-// isComponent reports whether id is a component's. Every other ID is a
-// template's; templates.Check keeps the two apart.
-func (r *repo) isComponent(id string) bool {
-	_, ok := r.cat.Get(id)
-	return ok
-}
-
 // installOrder returns what testing id installs.
 func installOrder(r *repo, id, profile string) ([]*catalog.Component, error) {
-	if r.isComponent(id) {
-		return r.cat.InstallOrder(catalog.ByID(id), profile)
-	}
-	t, err := templates.Get(r.templates, id)
-	if err != nil {
+	s, ok := r.subjectOf(id)
+	if !ok {
 		return nil, fmt.Errorf("unknown component or template %q", id)
 	}
-	refs, err := templateRefs(r, t)
-	if err != nil {
-		return nil, err
-	}
-	return r.cat.InstallOrder(refs, profile)
+	return s.Order(profile)
 }
 
 type tierOptions struct {
@@ -542,12 +529,12 @@ func smokeGroup(r *repo, cfg config, o tierOptions, g *group) []row {
 	t.Share()
 	for _, id := range g.IDs {
 		t.Timings = nil
+		sub, ok := r.subjectOf(id)
 		var err error
-		if r.isComponent(id) {
-			slog.Info("testing", "component", id)
-			err = t.Quick(id, g.deps[id])
+		if ok {
+			_, err = sub.Run(t, runSpec{smoke: true, keep: g.deps[id]})
 		} else {
-			_, err = runTemplate(r, t, id, false)
+			err = fmt.Errorf("unknown component or template %q", id)
 		}
 		rows = append(rows, row{subject: id, timings: t.Timings, err: err})
 	}
@@ -577,38 +564,6 @@ func runTemplate(r *repo, t *catalog.Tester, id string, measure bool) ([]catalog
 	return usage, err
 }
 
-// testTemplate runs the full template test on the current cluster and writes
-// the measurement, with the source digests of in, if write is set.
-func testTemplate(r *repo, t *catalog.Tester, cfg config, id string, in Environment, write bool) (status string, err error) {
-	env, err := currentEnvironment(cfg, t.Profile)
-	if err != nil {
-		return "", err
-	}
-	usage, err := runTemplate(r, t, id, true)
-	if err != nil {
-		return "", err
-	}
-	if write {
-		tmpl, _ := templates.Get(r.templates, id)
-		values, err := e2eValues(r.templates, tmpl)
-		if err != nil {
-			return "", err
-		}
-		manifest, err := templates.E2EManifest(tmpl, values)
-		if err != nil {
-			return "", err
-		}
-		images, err := imagesOf(manifest)
-		if err != nil {
-			return "", err
-		}
-		if err := writeTemplateMeasurement(tmpl, env, in, usage, images); err != nil {
-			return "", err
-		}
-	}
-	return podSummary(usage), nil
-}
-
 // runFull tests each component and template in a fresh cluster with the full
 // checks.
 func runFull(r *repo, cfg config, o tierOptions) error {
@@ -624,7 +579,7 @@ func runFull(r *repo, cfg config, o tierOptions) error {
 		return err
 	}
 	for _, id := range o.why.ids {
-		if !slices.ContainsFunc(subs, func(s subject) bool { return s.id == id }) {
+		if !slices.ContainsFunc(subs, func(s candidate) bool { return s.ID() == id }) {
 			return fmt.Errorf("%s is not tested on %s", id, o.profile)
 		}
 	}
@@ -639,11 +594,12 @@ func runFull(r *repo, cfg config, o tierOptions) error {
 	var rows []row
 	for _, s := range subs {
 		t.Timings = nil
-		in, err := inputs(r, cfg, s.id, o.profile, runtime.GOARCH)
+		in, err := inputs(r, cfg, s.ID(), o.profile, runtime.GOARCH)
 		if err != nil {
 			return err
 		}
 		var c *cluster
+		var setupErr error
 		if !o.current {
 			start := time.Now()
 			if slices.Contains(hostProfiles, o.profile) {
@@ -652,21 +608,10 @@ func runFull(r *repo, cfg config, o tierOptions) error {
 				c, err = createCluster(o.profile, cfg.E2E.Version, s.order)
 			}
 			t.Timings.Since("cluster", start)
-			if err != nil {
-				if o.write && r.isComponent(s.id) {
-					c, _ := r.cat.Get(s.id)
-					err = errors.Join(err, markFailed(cfg, o.profile, runtime.GOARCH, c, nil, in))
-				}
-				rows = append(rows, row{subject: s.id, timings: t.Timings, err: err})
-				continue
-			}
+			setupErr = err
 		}
-		rw := row{subject: s.id}
-		if r.isComponent(s.id) {
-			rw.status, rw.err = testComponent(t, cfg, o.profile, s.id, in, o.write)
-		} else {
-			rw.status, rw.err = testTemplate(r, t, cfg, s.id, in, o.write)
-		}
+		rw := row{subject: s.ID()}
+		rw.status, rw.err = s.Run(t, runSpec{cfg: cfg, profile: o.profile, in: in, write: o.write, setupErr: setupErr})
 		rw.timings = t.Timings
 		rows = append(rows, rw)
 		if c != nil && !o.keep {
@@ -674,37 +619,6 @@ func runFull(r *repo, cfg config, o tierOptions) error {
 		}
 	}
 	return report("full "+o.profile, rows)
-}
-
-// testComponent runs the full component test on the current cluster. If
-// write is set, it writes the measurement under profile with the source
-// digests of in, or marks the environment failed.
-func testComponent(t *catalog.Tester, cfg config, profile, id string, in Environment, write bool) (status string, err error) {
-	c, _ := t.Catalog.Get(id)
-	env, err := currentEnvironment(cfg, profile)
-	if err != nil {
-		if write {
-			err = errors.Join(err, markFailed(cfg, profile, runtime.GOARCH, c, nil, in))
-		}
-		return "", err
-	}
-	slog.Info("testing", "component", id, "distribution", env.Distribution, "platform", env.Platform.String(), "kubernetes", env.KubernetesVersion)
-	res := t.Test(id)
-	if res.Err != nil {
-		if write {
-			return "", errors.Join(res.Err, markFailed(cfg, profile, runtime.GOARCH, c, &env, in))
-		}
-		return "", res.Err
-	}
-	status = podSummary(res.Pods)
-	if res.Unmeasured {
-		status = "PASS (installed without credentials; not measured)"
-	} else if write {
-		if err := writeMeasurement(c, env, in, res); err != nil {
-			return "", err
-		}
-	}
-	return status, nil
 }
 
 // currentEnvironment returns the environment of the current cluster.
