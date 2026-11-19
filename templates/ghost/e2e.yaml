@@ -1,0 +1,12 @@
+# Test data for catalog e2e; never published.
+inputs:
+  smtpHost: smtp.example.test
+  smtpPort: "587"
+  smtpSecure: "false"
+  smtpFrom: ghost@example.test
+  smtpSecret: e2e-smtp
+setup: |
+  apiVersion: v1
+  kind: Secret
+  metadata: {name: e2e-smtp}
+  stringData: {username: e2e, password: e2e}

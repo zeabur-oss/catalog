@@ -106,25 +106,13 @@ func requiredSchemas(cat *catalog.Catalog, t *templates.Template, versions []str
 	return schemas, nil
 }
 
-// e2eValues reads the test values for t from config/e2e.yaml: the shared
-// inputs that t declares, then its own values.
-func e2eValues(all []*templates.Template, t *templates.Template) (templates.E2EValues, error) {
-	var cfg struct {
-		Inputs    map[string]string              `yaml:"templateInputs"`
-		Templates map[string]templates.E2EValues `yaml:"templates"`
-	}
-	if err := catalog.ReadYAML("config/e2e.yaml", &cfg); err != nil {
-		return templates.E2EValues{}, err
-	}
-	for id := range cfg.Templates {
-		if _, err := templates.Get(all, id); err != nil {
-			return templates.E2EValues{}, fmt.Errorf("config/e2e.yaml: %w", err)
-		}
-	}
-	v := cfg.Templates[t.ID]
+// e2eValues returns the test values for t: the shared inputs of
+// config/e2e.yaml that t declares, then t's own values from its e2e.yaml.
+func e2eValues(r *repo, t *templates.Template) (templates.E2EValues, error) {
+	v := t.E2E
 	inputs := map[string]string{}
 	for _, in := range t.Inputs {
-		if s, ok := cfg.Inputs[in.Name]; ok {
+		if s, ok := r.e2e.TemplateInputs[in.Name]; ok {
 			inputs[in.Name] = s
 		}
 	}

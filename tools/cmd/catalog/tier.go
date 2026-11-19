@@ -124,7 +124,7 @@ func ids(cs []*catalog.Component) []string {
 // templateRefs returns what a template's e2e installs: its requires, and the
 // SeaweedFS component when its test values use the S3 gateway.
 func templateRefs(r *repo, t *templates.Template) ([]catalog.Ref, error) {
-	values, err := e2eValues(r.templates, t)
+	values, err := e2eValues(r, t)
 	if err != nil {
 		return nil, err
 	}
@@ -314,7 +314,7 @@ func lintTemplates(r *repo, render string, versions []string) error {
 }
 
 func lintTemplate(r *repo, t *templates.Template, render string, versions []string) error {
-	v, err := e2eValues(r.templates, t)
+	v, err := e2eValues(r, t)
 	if err != nil {
 		return err
 	}
@@ -429,7 +429,7 @@ func dryRun(r *repo, dir string) error {
 			return err
 		}
 		namespaces[ns] = true
-		v, err := e2eValues(r.templates, t)
+		v, err := e2eValues(r, t)
 		if err != nil {
 			return err
 		}
@@ -522,7 +522,7 @@ func smokeGroup(r *repo, cfg config, o tierOptions, g *group) []row {
 			defer c.delete()
 		}
 	}
-	t, err := newTester(r.cat, templateProfile)
+	t, err := newTester(r, templateProfile)
 	if err != nil {
 		return append(rows, row{subject: g.IDs[0], err: err})
 	}
@@ -550,7 +550,7 @@ func runTemplate(r *repo, t *catalog.Tester, id string, measure bool) ([]catalog
 	if err != nil {
 		return nil, err
 	}
-	values, err := e2eValues(r.templates, tmpl)
+	values, err := e2eValues(r, tmpl)
 	if err != nil {
 		return nil, err
 	}
@@ -587,7 +587,7 @@ func runFull(r *repo, cfg config, o tierOptions) error {
 	if slices.Contains(hostProfiles, values) {
 		values = templateProfile
 	}
-	t, err := newTester(r.cat, values)
+	t, err := newTester(r, values)
 	if err != nil {
 		return err
 	}

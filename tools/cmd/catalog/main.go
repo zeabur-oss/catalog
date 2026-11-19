@@ -33,6 +33,7 @@ import (
 type repo struct {
 	cat       *catalog.Catalog
 	templates []*templates.Template
+	e2e       catalog.E2EConfig
 }
 
 var commands = map[string]func(*flag.FlagSet, *repo) error{
@@ -69,6 +70,9 @@ func main() {
 	r.cat, err = catalog.Load(".")
 	if err == nil {
 		r.templates, err = templates.Load(".")
+	}
+	if err == nil {
+		r.e2e, err = catalog.LoadE2EConfig("config/e2e.yaml")
 	}
 	if err == nil {
 		err = commands[name](fs, r)

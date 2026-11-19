@@ -70,12 +70,6 @@ func choose(r *repo, tier string, why reason, profile, arch string) (pick, error
 // installs it. A component in the unready list of config/e2e.yaml is never
 // measured, so it is not stale on its own.
 func stalePick(r *repo, profile, arch string) (pick, error) {
-	var e2e struct {
-		Unready []string `yaml:"unready"`
-	}
-	if err := catalog.ReadYAML("config/e2e.yaml", &e2e); err != nil {
-		return pick{}, err
-	}
 	cfg, err := loadConfig()
 	if err != nil {
 		return pick{}, err
@@ -87,7 +81,7 @@ func stalePick(r *repo, profile, arch string) (pick, error) {
 	p := pick{deps: map[string]bool{}}
 	for _, s := range subs {
 		_, path := s.Measurement(arch)
-		if path == "" || slices.Contains(e2e.Unready, s.ID()) {
+		if path == "" || slices.Contains(r.e2e.Unready, s.ID()) {
 			continue
 		}
 		want, err := inputs(r, cfg, s.ID(), profile, arch)
@@ -188,18 +182,12 @@ func filesPick(r *repo, files []string) (pick, error) {
 // representative returns the smokeRepresentative list of config/e2e.yaml and
 // fails on an ID that is no component or template.
 func representative(r *repo) ([]string, error) {
-	var cfg struct {
-		IDs []string `yaml:"smokeRepresentative"`
-	}
-	if err := catalog.ReadYAML("config/e2e.yaml", &cfg); err != nil {
-		return nil, err
-	}
-	for _, id := range cfg.IDs {
+	for _, id := range r.e2e.SmokeRepresentative {
 		if _, err := installOrder(r, id, templateProfile); err != nil {
 			return nil, fmt.Errorf("config/e2e.yaml: smokeRepresentative: %w", err)
 		}
 	}
-	return cfg.IDs, nil
+	return r.e2e.SmokeRepresentative, nil
 }
 
 // splitIDs returns the IDs in list, separated by commas.

@@ -149,7 +149,7 @@ func (s templateSubject) Run(t *catalog.Tester, o runSpec) (string, error) {
 		return "", err
 	}
 	if o.write {
-		values, err := e2eValues(s.r.templates, s.t)
+		values, err := e2eValues(s.r, s.t)
 		if err != nil {
 			return "", err
 		}

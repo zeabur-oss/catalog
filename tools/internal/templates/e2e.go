@@ -1,11 +1,13 @@
 package templates
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"log/slog"
 	"maps"
 	"net"
@@ -16,6 +18,8 @@ import (
 	"strings"
 	"text/template"
 	"time"
+
+	"go.yaml.in/yaml/v4"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 )
@@ -336,3 +340,22 @@ func ReadValues(path string) (map[string]string, error) {
 
 // wait is the Wait of the object of s.
 func (s Smoke) wait() catalog.Wait { return catalog.Wait{Resource: s.Resource, Condition: s.Condition} }
+
+// loadE2E reads a template's e2e.yaml, which is optional, and fails on a key it
+// does not know.
+func loadE2E(path string) (E2EValues, error) {
+	var v E2EValues
+	data, err := os.ReadFile(path)
+	if errors.Is(err, fs.ErrNotExist) {
+		return v, nil
+	}
+	if err != nil {
+		return v, err
+	}
+	dec := yaml.NewDecoder(bytes.NewReader(data))
+	dec.KnownFields(true)
+	if err := dec.Decode(&v); err != nil {
+		return E2EValues{}, fmt.Errorf("%s: %w", path, err)
+	}
+	return v, nil
+}

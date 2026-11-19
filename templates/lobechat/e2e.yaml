@@ -1,0 +1,6 @@
+# Test data for catalog e2e; never published.
+setup: |
+  apiVersion: v1
+  kind: Secret
+  metadata: {name: e2e-provider}
+  stringData: {api-key: e2e, OPENAI_API_KEY: e2e}

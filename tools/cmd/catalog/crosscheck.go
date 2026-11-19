@@ -23,7 +23,7 @@ func crosscheck(fs *flag.FlagSet, r *repo) error {
 	}
 	all := map[string]entry{}
 	for _, t := range r.templates {
-		values, err := e2eValues(r.templates, t)
+		values, err := e2eValues(r, t)
 		if err != nil {
 			return err
 		}

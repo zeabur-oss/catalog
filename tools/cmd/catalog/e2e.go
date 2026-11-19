@@ -26,21 +26,13 @@ func e2e(fs *flag.FlagSet, r *repo) error {
 		write: *write, keep: *keep, current: *cluster == "current"})
 }
 
-// newTester reads the test-only settings in config/e2e.yaml.
-func newTester(cat *catalog.Catalog, profile string) (*catalog.Tester, error) {
-	var cfg struct {
-		Overrides    map[string]map[string]string            `yaml:"overrides"`
-		Replacements map[string]map[string]map[string]string `yaml:"replacements"`
-		SkipSmoke    map[string]map[string]string            `yaml:"skipSmoke"`
-		Unready      []string                                `yaml:"unready"`
-	}
-	if err := catalog.ReadYAML("config/e2e.yaml", &cfg); err != nil {
-		return nil, err
-	}
-	t := &catalog.Tester{Catalog: cat, Profile: profile, Overrides: cfg.Overrides,
+// newTester returns a Tester with the test-only settings of config/e2e.yaml.
+func newTester(r *repo, profile string) (*catalog.Tester, error) {
+	cfg := r.e2e
+	t := &catalog.Tester{Catalog: r.cat, Profile: profile, Overrides: cfg.Overrides,
 		Replacements: cfg.Replacements, SkipSmoke: cfg.SkipSmoke, Unready: map[string]bool{}}
 	for _, id := range cfg.Unready {
-		if _, ok := cat.Get(id); !ok {
+		if _, ok := r.cat.Get(id); !ok {
 			return nil, fmt.Errorf("config/e2e.yaml: unready: unknown component %q", id)
 		}
 		t.Unready[id] = true

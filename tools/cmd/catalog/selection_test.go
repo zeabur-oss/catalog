@@ -19,9 +19,6 @@ func scopeRepo(t *testing.T) *repo {
 	if err := os.MkdirAll(filepath.Join(dir, "config"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, "config", "e2e.yaml"), []byte("templates: {}\nsmokeRepresentative: [traefik, local-storage, beta]\nunready: [postgres]\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
 	t.Chdir(dir)
 	comp := func(id, capability, def string, requires ...string) *catalog.Component {
 		c := &catalog.Component{ID: id, Provides: &catalog.Provides{Capability: capability}, Path: "components/" + id + ".yaml",
@@ -50,6 +47,7 @@ func scopeRepo(t *testing.T) *repo {
 			tmpl("beta", "traefik", "local-storage"),
 			tmpl("gamma", "traefik", "local-storage"),
 		},
+		e2e: catalog.E2EConfig{SmokeRepresentative: []string{"traefik", "local-storage", "beta"}, Unready: []string{"postgres"}},
 	}
 }
 
@@ -180,9 +178,7 @@ func TestOneReasonAtATime(t *testing.T) {
 
 func TestRepresentativeUnknownID(t *testing.T) {
 	r := scopeRepo(t)
-	if err := os.WriteFile(filepath.Join("config", "e2e.yaml"), []byte("smokeRepresentative: [nope]\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
+	r.e2e.SmokeRepresentative = []string{"nope"}
 	if _, err := representative(r); err == nil {
 		t.Error("representative accepted an unknown ID")
 	}
