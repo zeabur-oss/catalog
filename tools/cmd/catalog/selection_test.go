@@ -62,7 +62,7 @@ func selected(t *testing.T, r *repo, p pick) []string {
 	}
 	var ids []string
 	for _, s := range subs {
-		ids = append(ids, s.id)
+		ids = append(ids, s.ID())
 	}
 	slices.Sort(ids)
 	return ids
@@ -232,10 +232,8 @@ func record(t *testing.T, r *repo, id, profile, arch string, change func(*Enviro
 	if change != nil {
 		change(&env)
 	}
-	path := measurementPath(id)
-	if !r.isComponent(id) {
-		path = templateMeasurementPath(id)
-	}
+	sub, _ := r.subjectOf(id)
+	_, path := sub.Measurement(templateArch)
 	m := readMeasurement(path)
 	m.put(env)
 	if err := writeMeasurementFile(path, m); err != nil {
@@ -275,7 +273,7 @@ func staleOn(t *testing.T, r *repo, profile, arch string) []string {
 	}
 	var ids []string
 	for _, s := range subs {
-		ids = append(ids, s.id)
+		ids = append(ids, s.ID())
 	}
 	slices.Sort(ids)
 	return ids
@@ -431,10 +429,8 @@ func TestMergeDropsRunsOfOtherInputs(t *testing.T) {
 		{"beta", nil},
 		{"local-storage", []string{"amd64", "arm64"}},
 	} {
-		path := measurementPath(c.id)
-		if !r.isComponent(c.id) {
-			path = templateMeasurementPath(c.id)
-		}
+		sub, _ := r.subjectOf(c.id)
+		_, path := sub.Measurement(templateArch)
 		var archs []string
 		for _, e := range readMeasurement(path).Environments {
 			archs = append(archs, e.Platform.Architecture)

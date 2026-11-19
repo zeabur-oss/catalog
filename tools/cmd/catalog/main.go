@@ -146,11 +146,13 @@ func list(fs *flag.FlagSet, r *repo) error {
 					return err
 				}
 				for _, s := range subs {
+					dir, path := s.Measurement(arch)
 					switch {
-					case r.isComponent(s.id):
-						jobs = append(jobs, job{Profile: p, Arch: arch, Component: s.id})
-					case arch == templateArch:
-						jobs = append(jobs, job{Profile: p, Arch: arch, Template: s.id})
+					case path == "":
+					case dir == componentsDir:
+						jobs = append(jobs, job{Profile: p, Arch: arch, Component: s.ID()})
+					default:
+						jobs = append(jobs, job{Profile: p, Arch: arch, Template: s.ID()})
 					}
 				}
 			}
