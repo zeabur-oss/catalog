@@ -68,8 +68,8 @@ releases:
     namespace: velero
     repo: https://vmware-tanzu.github.io/helm-charts
     chart: velero
-    version: 12.2.3
-    chartDigest: sha256:81741f2ac7e6013663b5482e5cc6e2258e9f393d2d0eb982b1a278e52bfcd08b
+    version: 12.2.5
+    chartDigest: sha256:faf074aacc580ddffa63e85582cafd54b3dde018442af9623a710a3825f644b8
     values: |
       # Pinned by digest; a tag alone can move.
       image:
