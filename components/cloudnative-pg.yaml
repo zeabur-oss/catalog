@@ -65,8 +65,8 @@ releases:
     namespace: cnpg-system
     repo: https://cloudnative-pg.github.io/charts
     chart: plugin-barman-cloud
-    version: 0.8.1
-    chartDigest: sha256:9ad0b9e56da2777a1a0269feaf7215e18297e9c8b5730e04acb27b5d462e9456
+    version: 0.9.0
+    chartDigest: sha256:7fb78e89f25c18737e5649ae3c5e840065052f89757d541eaf310a1706ebd7dd
     values: |
       # Pinned by digest; a tag alone can move. The chart joins registry and
       # repository. registry comes second, so Renovate reads both.
