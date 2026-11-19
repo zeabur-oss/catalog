@@ -1,7 +1,7 @@
 {
   "catalog": {
-    "version": "0.5.4",
-    "commit": "62816907179dbee3096834ba867a3f1e8cec52f5"
+    "version": "0.5.5",
+    "commit": "0b98e340711c95a7592daae49bc40f058b4b6c66"
   },
   "profiles": [
     "single-node",
@@ -138,7 +138,7 @@
     },
     {
       "id": "zeabur-builder",
-      "sourceDigest": "h1:iy1SaUB0Cotb0AHVn9NVF5a7yInAA3VctgEYRpNtXU0="
+      "sourceDigest": "h1:+swLNPUkGnIgjj57nssn7rkdPOQSciUzG9yGrHmc4mA="
     }
   ],
   "templates": [
