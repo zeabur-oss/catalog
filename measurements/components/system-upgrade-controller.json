@@ -15,8 +15,8 @@
         {
           "workload": "system-upgrade-controller",
           "kind": "Deployment",
-          "memory": "15Mi",
-          "cpu": "1m"
+          "memory": "13Mi",
+          "cpu": "0"
         }
       ],
       "versions": [
@@ -29,8 +29,8 @@
           "version": "v0.20.2"
         }
       ],
-      "sourceDigest": "h1:2UB8iuYs0AO/PpHbLaua7asM4PoWxRLrmKOZqHcnt1Y=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:TChgTcBXKqJ8MNe8Q1O6waHGDbV6KU0hP9uCObGs46k=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "k3s",
@@ -46,7 +46,7 @@
         {
           "workload": "system-upgrade-controller",
           "kind": "Deployment",
-          "memory": "14Mi",
+          "memory": "15Mi",
           "cpu": "0"
         }
       ],
@@ -60,8 +60,8 @@
           "version": "v0.20.2"
         }
       ],
-      "sourceDigest": "h1:2UB8iuYs0AO/PpHbLaua7asM4PoWxRLrmKOZqHcnt1Y=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:TChgTcBXKqJ8MNe8Q1O6waHGDbV6KU0hP9uCObGs46k=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -76,7 +76,7 @@
         {
           "workload": "system-upgrade-controller",
           "kind": "Deployment",
-          "memory": "11Mi",
+          "memory": "12Mi",
           "cpu": "0"
         }
       ],
@@ -90,8 +90,8 @@
           "version": "v0.20.2"
         }
       ],
-      "sourceDigest": "h1:2UB8iuYs0AO/PpHbLaua7asM4PoWxRLrmKOZqHcnt1Y=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:TChgTcBXKqJ8MNe8Q1O6waHGDbV6KU0hP9uCObGs46k=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -107,7 +107,7 @@
           "workload": "system-upgrade-controller",
           "kind": "Deployment",
           "memory": "11Mi",
-          "cpu": "1m"
+          "cpu": "0"
         }
       ],
       "versions": [
@@ -120,8 +120,8 @@
           "version": "v0.20.2"
         }
       ],
-      "sourceDigest": "h1:2UB8iuYs0AO/PpHbLaua7asM4PoWxRLrmKOZqHcnt1Y=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:TChgTcBXKqJ8MNe8Q1O6waHGDbV6KU0hP9uCObGs46k=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -136,7 +136,7 @@
         {
           "workload": "system-upgrade-controller",
           "kind": "Deployment",
-          "memory": "11Mi",
+          "memory": "12Mi",
           "cpu": "0"
         }
       ],
@@ -150,8 +150,8 @@
           "version": "v0.20.2"
         }
       ],
-      "sourceDigest": "h1:2UB8iuYs0AO/PpHbLaua7asM4PoWxRLrmKOZqHcnt1Y=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:TChgTcBXKqJ8MNe8Q1O6waHGDbV6KU0hP9uCObGs46k=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -180,8 +180,8 @@
           "version": "v0.20.2"
         }
       ],
-      "sourceDigest": "h1:2UB8iuYs0AO/PpHbLaua7asM4PoWxRLrmKOZqHcnt1Y=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:TChgTcBXKqJ8MNe8Q1O6waHGDbV6KU0hP9uCObGs46k=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -198,7 +198,7 @@
           "workload": "system-upgrade-controller",
           "kind": "Deployment",
           "memory": "19Mi",
-          "cpu": "0"
+          "cpu": "1m"
         }
       ],
       "versions": [
@@ -211,11 +211,11 @@
           "version": "v0.20.2"
         }
       ],
-      "sourceDigest": "h1:2UB8iuYs0AO/PpHbLaua7asM4PoWxRLrmKOZqHcnt1Y=",
+      "sourceDigest": "h1:TChgTcBXKqJ8MNe8Q1O6waHGDbV6KU0hP9uCObGs46k=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -231,7 +231,7 @@
         {
           "workload": "system-upgrade-controller",
           "kind": "Deployment",
-          "memory": "13Mi",
+          "memory": "16Mi",
           "cpu": "0"
         }
       ],
@@ -245,11 +245,11 @@
           "version": "v0.20.2"
         }
       ],
-      "sourceDigest": "h1:2UB8iuYs0AO/PpHbLaua7asM4PoWxRLrmKOZqHcnt1Y=",
+      "sourceDigest": "h1:TChgTcBXKqJ8MNe8Q1O6waHGDbV6KU0hP9uCObGs46k=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     }
   ]
 }

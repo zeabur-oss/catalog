@@ -21,17 +21,17 @@
         {
           "workload": "vlsingle-victoria-logs",
           "kind": "Deployment",
-          "memory": "9Mi",
+          "memory": "8Mi",
           "cpu": "1m"
         }
       ],
-      "sourceDigest": "h1:BJGqTdn+MjaduoCkam733gPaPe8ZGuut9Et/w4NElcg=",
+      "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "k3s",
@@ -57,13 +57,13 @@
           "cpu": "1m"
         }
       ],
-      "sourceDigest": "h1:BJGqTdn+MjaduoCkam733gPaPe8ZGuut9Et/w4NElcg=",
+      "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -88,13 +88,13 @@
           "cpu": "1m"
         }
       ],
-      "sourceDigest": "h1:BJGqTdn+MjaduoCkam733gPaPe8ZGuut9Et/w4NElcg=",
+      "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -109,23 +109,23 @@
         {
           "workload": "vlagent-collector",
           "kind": "DaemonSet",
-          "memory": "6Mi",
+          "memory": "7Mi",
           "cpu": "1m"
         },
         {
           "workload": "vlsingle-victoria-logs",
           "kind": "Deployment",
-          "memory": "10Mi",
+          "memory": "9Mi",
           "cpu": "1m"
         }
       ],
-      "sourceDigest": "h1:BJGqTdn+MjaduoCkam733gPaPe8ZGuut9Et/w4NElcg=",
+      "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -146,17 +146,17 @@
         {
           "workload": "vlsingle-victoria-logs",
           "kind": "Deployment",
-          "memory": "8Mi",
+          "memory": "9Mi",
           "cpu": "1m"
         }
       ],
-      "sourceDigest": "h1:BJGqTdn+MjaduoCkam733gPaPe8ZGuut9Et/w4NElcg=",
+      "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -181,13 +181,13 @@
           "cpu": "1m"
         }
       ],
-      "sourceDigest": "h1:BJGqTdn+MjaduoCkam733gPaPe8ZGuut9Et/w4NElcg=",
+      "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -213,16 +213,16 @@
           "cpu": "1m"
         }
       ],
-      "sourceDigest": "h1:BJGqTdn+MjaduoCkam733gPaPe8ZGuut9Et/w4NElcg=",
+      "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -238,7 +238,7 @@
         {
           "workload": "vlagent-collector",
           "kind": "DaemonSet",
-          "memory": "7Mi",
+          "memory": "8Mi",
           "cpu": "1m"
         },
         {
@@ -248,16 +248,16 @@
           "cpu": "1m"
         }
       ],
-      "sourceDigest": "h1:BJGqTdn+MjaduoCkam733gPaPe8ZGuut9Et/w4NElcg=",
+      "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -273,26 +273,26 @@
         {
           "workload": "vlagent-collector",
           "kind": "DaemonSet",
-          "memory": "8Mi",
+          "memory": "7Mi",
           "cpu": "1m"
         },
         {
           "workload": "vlsingle-victoria-logs",
           "kind": "Deployment",
-          "memory": "9Mi",
+          "memory": "8Mi",
           "cpu": "1m"
         }
       ],
-      "sourceDigest": "h1:BJGqTdn+MjaduoCkam733gPaPe8ZGuut9Et/w4NElcg=",
+      "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -308,7 +308,7 @@
         {
           "workload": "vlagent-collector",
           "kind": "DaemonSet",
-          "memory": "8Mi",
+          "memory": "9Mi",
           "cpu": "1m"
         },
         {
@@ -318,16 +318,16 @@
           "cpu": "1m"
         }
       ],
-      "sourceDigest": "h1:BJGqTdn+MjaduoCkam733gPaPe8ZGuut9Et/w4NElcg=",
+      "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     }
   ]
 }

@@ -14,8 +14,8 @@
         {
           "workload": "uptime-kuma",
           "kind": "StatefulSet",
-          "memory": "119Mi",
-          "cpu": "2m"
+          "memory": "118Mi",
+          "cpu": "3m"
         }
       ],
       "versions": [
@@ -25,12 +25,12 @@
           "digest": "sha256:ea1b2ceb6ef710a3d0d994debcc8cded062e534fb901f6e895f59caad68e0a9e"
         }
       ],
-      "sourceDigest": "h1:JaiYSU6OVWfqAC902A7/mLUWaC/wfqKbcBgTqyvNpso=",
+      "sourceDigest": "h1:isozZeVc4DqPsbkziayzGy9RAafwIWhsebtpRKb7Xkg=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     }
   ]
 }

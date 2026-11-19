@@ -14,8 +14,8 @@
         {
           "workload": "openclaw-sandbox-browser",
           "kind": "Deployment",
-          "memory": "137Mi",
-          "cpu": "1m"
+          "memory": "179Mi",
+          "cpu": "0"
         }
       ],
       "versions": [
@@ -25,8 +25,8 @@
           "digest": "sha256:e6fcd2cb4272498709d16ad6a12526363559ed5846eb2ff0f775f15d62365ef7"
         }
       ],
-      "sourceDigest": "h1:dDcFgFeuPhE4hjR4nkZQfylKCCPV229YeKX10m9lIns=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:TMjGMo0Gmm5J1ZDWyIfU/lC7jmOQWQN3EJ6icojuPg8=",
+      "measuredAt": "2026-11-19"
     }
   ]
 }

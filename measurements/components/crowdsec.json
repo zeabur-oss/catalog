@@ -15,8 +15,8 @@
         {
           "workload": "crowdsec-agent",
           "kind": "DaemonSet",
-          "memory": "47Mi",
-          "cpu": "0"
+          "memory": "49Mi",
+          "cpu": "1m"
         },
         {
           "workload": "crowdsec-lapi",
@@ -31,12 +31,12 @@
           "version": "0.24.2"
         }
       ],
-      "sourceDigest": "h1:YfKtuySHUwjJIyMhtTcKN/Qo7KE8xV4dYOQ/Q0N4sf8=",
+      "sourceDigest": "h1:Ax9apjutlcXCemj0nBOeEtJ34aPycIxE63wv1//UyZE=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "k3s",
@@ -52,13 +52,13 @@
         {
           "workload": "crowdsec-agent",
           "kind": "DaemonSet",
-          "memory": "42Mi",
-          "cpu": "0"
+          "memory": "46Mi",
+          "cpu": "1m"
         },
         {
           "workload": "crowdsec-lapi",
           "kind": "Deployment",
-          "memory": "32Mi",
+          "memory": "37Mi",
           "cpu": "1m"
         }
       ],
@@ -68,12 +68,12 @@
           "version": "0.24.2"
         }
       ],
-      "sourceDigest": "h1:YfKtuySHUwjJIyMhtTcKN/Qo7KE8xV4dYOQ/Q0N4sf8=",
+      "sourceDigest": "h1:Ax9apjutlcXCemj0nBOeEtJ34aPycIxE63wv1//UyZE=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -88,7 +88,43 @@
         {
           "workload": "crowdsec-agent",
           "kind": "DaemonSet",
-          "memory": "47Mi",
+          "memory": "45Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "crowdsec-lapi",
+          "kind": "Deployment",
+          "memory": "39Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "crowdsec",
+          "version": "0.24.2"
+        }
+      ],
+      "sourceDigest": "h1:Ax9apjutlcXCemj0nBOeEtJ34aPycIxE63wv1//UyZE=",
+      "dependencies": {
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "measuredAt": "2026-11-19"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "crowdsec-agent",
+          "kind": "DaemonSet",
+          "memory": "41Mi",
           "cpu": "1m"
         },
         {
@@ -104,48 +140,12 @@
           "version": "0.24.2"
         }
       ],
-      "sourceDigest": "h1:YfKtuySHUwjJIyMhtTcKN/Qo7KE8xV4dYOQ/Q0N4sf8=",
+      "sourceDigest": "h1:Ax9apjutlcXCemj0nBOeEtJ34aPycIxE63wv1//UyZE=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
-      "measuredAt": "2026-11-12"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "crowdsec-agent",
-          "kind": "DaemonSet",
-          "memory": "44Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "crowdsec-lapi",
-          "kind": "Deployment",
-          "memory": "39Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "crowdsec",
-          "version": "0.24.2"
-        }
-      ],
-      "sourceDigest": "h1:YfKtuySHUwjJIyMhtTcKN/Qo7KE8xV4dYOQ/Q0N4sf8=",
-      "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
-      },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -160,13 +160,13 @@
         {
           "workload": "crowdsec-agent",
           "kind": "DaemonSet",
-          "memory": "43Mi",
+          "memory": "46Mi",
           "cpu": "1m"
         },
         {
           "workload": "crowdsec-lapi",
           "kind": "Deployment",
-          "memory": "39Mi",
+          "memory": "37Mi",
           "cpu": "1m"
         }
       ],
@@ -176,12 +176,12 @@
           "version": "0.24.2"
         }
       ],
-      "sourceDigest": "h1:YfKtuySHUwjJIyMhtTcKN/Qo7KE8xV4dYOQ/Q0N4sf8=",
+      "sourceDigest": "h1:Ax9apjutlcXCemj0nBOeEtJ34aPycIxE63wv1//UyZE=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -191,83 +191,6 @@
         "architecture": "arm64"
       },
       "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "crowdsec-agent",
-          "kind": "DaemonSet",
-          "memory": "43Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "crowdsec-lapi",
-          "kind": "Deployment",
-          "memory": "41Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "crowdsec",
-          "version": "0.24.2"
-        }
-      ],
-      "sourceDigest": "h1:YfKtuySHUwjJIyMhtTcKN/Qo7KE8xV4dYOQ/Q0N4sf8=",
-      "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
-      },
-      "measuredAt": "2026-11-12"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.6",
-      "distributionVersion": "v1.3.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "crowdsec-agent",
-          "kind": "DaemonSet",
-          "memory": "43Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "crowdsec-lapi",
-          "kind": "Deployment",
-          "memory": "44Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "crowdsec",
-          "version": "0.24.2"
-        }
-      ],
-      "sourceDigest": "h1:YfKtuySHUwjJIyMhtTcKN/Qo7KE8xV4dYOQ/Q0N4sf8=",
-      "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
-      },
-      "addOns": {
-        "helm-controller": "v0.17.9"
-      },
-      "measuredAt": "2026-11-12"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.6",
-      "distributionVersion": "v1.3.0",
       "result": "passed",
       "pods": [
         {
@@ -289,31 +212,28 @@
           "version": "0.24.2"
         }
       ],
-      "sourceDigest": "h1:YfKtuySHUwjJIyMhtTcKN/Qo7KE8xV4dYOQ/Q0N4sf8=",
+      "sourceDigest": "h1:Ax9apjutlcXCemj0nBOeEtJ34aPycIxE63wv1//UyZE=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
-      "addOns": {
-        "helm-controller": "v0.17.9"
-      },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
-      "distribution": "rke2",
+      "distribution": "kubesolo",
       "profile": "single-node",
       "platform": {
         "os": "linux",
         "architecture": "amd64"
       },
-      "kubernetesVersion": "v1.37.2",
-      "distributionVersion": "v1.37.2+rke2r1",
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
       "result": "passed",
       "pods": [
         {
           "workload": "crowdsec-agent",
           "kind": "DaemonSet",
-          "memory": "45Mi",
+          "memory": "39Mi",
           "cpu": "1m"
         },
         {
@@ -329,15 +249,95 @@
           "version": "0.24.2"
         }
       ],
-      "sourceDigest": "h1:YfKtuySHUwjJIyMhtTcKN/Qo7KE8xV4dYOQ/Q0N4sf8=",
+      "sourceDigest": "h1:Ax9apjutlcXCemj0nBOeEtJ34aPycIxE63wv1//UyZE=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-19"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "crowdsec-agent",
+          "kind": "DaemonSet",
+          "memory": "43Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "crowdsec-lapi",
+          "kind": "Deployment",
+          "memory": "36Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "crowdsec",
+          "version": "0.24.2"
+        }
+      ],
+      "sourceDigest": "h1:Ax9apjutlcXCemj0nBOeEtJ34aPycIxE63wv1//UyZE=",
+      "dependencies": {
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-19"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "crowdsec-agent",
+          "kind": "DaemonSet",
+          "memory": "44Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "crowdsec-lapi",
+          "kind": "Deployment",
+          "memory": "36Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "crowdsec",
+          "version": "0.24.2"
+        }
+      ],
+      "sourceDigest": "h1:Ax9apjutlcXCemj0nBOeEtJ34aPycIxE63wv1//UyZE=",
+      "dependencies": {
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -353,7 +353,7 @@
         {
           "workload": "crowdsec-agent",
           "kind": "DaemonSet",
-          "memory": "45Mi",
+          "memory": "41Mi",
           "cpu": "1m"
         },
         {
@@ -369,15 +369,15 @@
           "version": "0.24.2"
         }
       ],
-      "sourceDigest": "h1:YfKtuySHUwjJIyMhtTcKN/Qo7KE8xV4dYOQ/Q0N4sf8=",
+      "sourceDigest": "h1:Ax9apjutlcXCemj0nBOeEtJ34aPycIxE63wv1//UyZE=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     }
   ]
 }
