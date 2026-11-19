@@ -22,26 +22,20 @@ func CheckPodSecurity(manifest []byte, level string) error {
 		errs = append(errs, fmt.Errorf("%s: %w: %s", where, rule, strings.Join(detail, " ")))
 	}
 	for _, d := range docs {
-		k := text(d["kind"])
 		// helm test hooks run only on helm test, never at install.
 		if strings.Contains(text(object(object(d["metadata"])["annotations"])["helm.sh/hook"]), "test") {
 			continue
 		}
-		spec := object(d["spec"])
-		var pm, ps map[string]any
-		switch k {
-		case "Pod":
-			pm, ps = object(d["metadata"]), spec
-		case "Deployment", "StatefulSet", "DaemonSet", "ReplicaSet", "Job":
-			t := object(spec["template"])
-			pm, ps = object(t["metadata"]), object(t["spec"])
-		case "CronJob":
-			t := object(object(object(spec["jobTemplate"])["spec"])["template"])
-			pm, ps = object(t["metadata"]), object(t["spec"])
-		default:
+		t, ok, err := podOf(d)
+		where := text(d["kind"]) + "/" + text(object(d["metadata"])["name"])
+		if err != nil {
+			errs = append(errs, fmt.Errorf("%s: invalid pod: %w", where, err))
 			continue
 		}
-		checkPodSecurity(pm, ps, level, k+"/"+text(object(d["metadata"])["name"]), fail)
+		if !ok {
+			continue
+		}
+		checkPodSecurity(t.ObjectMeta, t.Spec, level, where, fail)
 	}
 	return errors.Join(errs...)
 }

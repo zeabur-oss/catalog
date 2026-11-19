@@ -41,7 +41,10 @@ spec:
   containers:
     - {name: wget, image: busybox}
 `)
-	got := UnpinnedImages(manifest, []string{"ghcr.io/a/sidecar"})
+	got, err := UnpinnedImages(manifest, []string{"ghcr.io/a/sidecar"})
+	if err != nil {
+		t.Fatal(err)
+	}
 	want := []string{
 		"Deployment/op op: ghcr.io/a/op:1.0",
 		"CronJob/clean clean: localhost:5000/clean:2",

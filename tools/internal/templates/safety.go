@@ -3,12 +3,14 @@ package templates
 import (
 	"errors"
 	"fmt"
-	"regexp"
 	"slices"
-	"strconv"
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
+	"github.com/zeabur-oss/catalog/tools/internal/kubeobj"
 )
 
 func object(v any) map[string]any { m, _ := v.(map[string]any); return m }
@@ -25,7 +27,6 @@ func contains(a []any, s string) bool {
 }
 
 var digestImage = catalog.PinnedImage
-var resourceQuantity = regexp.MustCompile(`^([0-9]+(?:\.[0-9]+)?)(?:m|[KMGTPE]i?|[kMGTPE]|[eE][+-]?[0-9]+)?$`)
 
 // Rule is a safety rule that a rendered object breaks. Safety wraps each one it finds.
 type Rule string
@@ -76,6 +77,11 @@ const (
 // app.kubernetes.io/part-of: the Dragonfly operator owns that label and
 // rejects it in podMetadata.
 const TemplateLabel = "templates.zeabur.com/template"
+
+// podOf returns the pod template of a Pod or workload, and false for any other object.
+func podOf(d map[string]any) (*corev1.PodTemplateSpec, bool, error) {
+	return kubeobj.PodTemplate(&unstructured.Unstructured{Object: d})
+}
 
 // ownPods reports whether sel selects only the pods of template id.
 func ownPods(sel map[string]any, id string) bool {
@@ -149,32 +155,22 @@ func Safety(r *Template, b []byte, namespace string) error {
 				fail(where, ErrClusterIssuerProvider)
 			}
 		}
-		var p, pm map[string]any
-		switch k {
-		case "Pod":
-			p = spec
-			pm = meta
-		case "Deployment", "StatefulSet", "DaemonSet", "ReplicaSet", "Job":
-			t := object(spec["template"])
-			p = object(t["spec"])
-			pm = object(t["metadata"])
-		case "CronJob":
-			t := object(object(object(spec["jobTemplate"])["spec"])["template"])
-			p = object(t["spec"])
-			pm = object(t["metadata"])
+		tmpl, isPod, err := podOf(d)
+		if err != nil {
+			fail(where, "invalid pod", err.Error())
 		}
-		if p != nil {
+		if isPod {
 			profile := "restricted"
 			for _, s := range r.Services {
-				if s.PodSecurity == "baseline" && (len(r.Services) == 1 || s.Name == name || s.Name == text(object(pm["labels"])["app.kubernetes.io/name"])) {
+				if s.PodSecurity == "baseline" && (len(r.Services) == 1 || s.Name == name || s.Name == tmpl.Labels["app.kubernetes.io/name"]) {
 					profile = "baseline"
 				}
 			}
-			if text(object(pm["labels"])[TemplateLabel]) != r.ID {
+			if tmpl.Labels[TemplateLabel] != r.ID {
 				fail(where, ErrTemplateLabel)
 			}
-			checkPodSecurity(pm, p, profile, where, fail)
-			checkPod(p, where, k != "Job" && k != "CronJob", fail)
+			checkPodSecurity(tmpl.ObjectMeta, tmpl.Spec, profile, where, fail)
+			checkPod(&tmpl.Spec, where, k != "Job" && k != "CronJob", fail)
 		}
 		if k == "Cluster" && api == "postgresql.cnpg.io/v1" {
 			if !digestImage.MatchString(text(spec["imageName"])) {
@@ -316,62 +312,67 @@ func hasKey(v any, keys ...string) bool {
 	return false
 }
 
+// checkResources checks the resources of a custom resource, which are a map in its object.
 func checkResources(r map[string]any, w string, fail func(string, Rule, ...string)) {
-	for _, level := range []string{"requests", "limits"} {
-		m := object(r[level])
-		for _, key := range []string{"cpu", "memory"} {
-			v := fmt.Sprint(m[key])
-			match := resourceQuantity.FindStringSubmatch(v)
-			positive := false
-			if match != nil {
-				n, e := strconv.ParseFloat(match[1], 64)
-				positive = e == nil && n > 0
-			}
-			if !positive {
-				fail(w, ErrPositiveResource, level+"."+key)
+	var req corev1.ResourceRequirements
+	if err := convert(r, &req); err != nil {
+		fail(w, ErrPositiveResource, err.Error())
+		return
+	}
+	checkRequirements(req, w, fail)
+}
+
+// checkRequirements fails unless the CPU and memory requests and limits are above zero.
+func checkRequirements(r corev1.ResourceRequirements, w string, fail func(string, Rule, ...string)) {
+	for _, level := range []struct {
+		name string
+		list corev1.ResourceList
+	}{{"requests", r.Requests}, {"limits", r.Limits}} {
+		for _, key := range []corev1.ResourceName{corev1.ResourceCPU, corev1.ResourceMemory} {
+			if q, ok := level.list[key]; !ok || q.Sign() <= 0 {
+				fail(w, ErrPositiveResource, level.name+"."+string(key))
 			}
 		}
 	}
 }
 
 // checkPod checks what Pod Security Admission does not.
-func checkPod(p map[string]any, w string, requireProbes bool, fail func(string, Rule, ...string)) {
-	if p["automountServiceAccountToken"] != false {
+func checkPod(p *corev1.PodSpec, w string, requireProbes bool, fail func(string, Rule, ...string)) {
+	if p.AutomountServiceAccountToken == nil || *p.AutomountServiceAccountToken {
 		fail(w, ErrPodTokenAutomount)
 	}
-	for _, v := range array(p["volumes"]) {
-		for _, source := range array(object(object(v)["projected"])["sources"]) {
-			if _, ok := object(source)["serviceAccountToken"]; ok {
+	for _, v := range p.Volumes {
+		if v.Projected == nil {
+			continue
+		}
+		for _, source := range v.Projected.Sources {
+			if source.ServiceAccountToken != nil {
 				fail(w, "projected service account tokens forbidden")
 			}
 		}
 	}
 	// Stricter than baseline, which also allows the kernel.shm_rmid_forced,
 	// net.ipv4.ip_local_port_range and net.ipv4.tcp_* sysctls.
-	for _, v := range array(object(p["securityContext"])["sysctls"]) {
-		n := text(object(v)["name"])
-		if n != "net.ipv4.ip_unprivileged_port_start" && n != "net.ipv4.ping_group_range" {
-			fail(w, ErrUnsafeSysctl, n)
+	if p.SecurityContext != nil {
+		for _, s := range p.SecurityContext.Sysctls {
+			if s.Name != "net.ipv4.ip_unprivileged_port_start" && s.Name != "net.ipv4.ping_group_range" {
+				fail(w, ErrUnsafeSysctl, s.Name)
+			}
 		}
 	}
-	for _, k := range []string{"containers", "initContainers", "ephemeralContainers"} {
-		for _, v := range array(p[k]) {
-			c := object(v)
-			cw := w + "/" + text(c["name"])
-			if !digestImage.MatchString(text(c["image"])) {
-				fail(cw, ErrImageDigest)
+	for _, c := range kubeobj.Containers(p) {
+		cw := w + "/" + c.Name
+		if !digestImage.MatchString(c.Image) {
+			fail(cw, ErrImageDigest)
+		}
+		for _, m := range c.VolumeMounts {
+			if m.MountPropagation != nil && *m.MountPropagation == corev1.MountPropagationBidirectional {
+				fail(cw, "bidirectional mount propagation forbidden")
 			}
-			for _, v := range array(c["volumeMounts"]) {
-				if text(object(v)["mountPropagation"]) == "Bidirectional" {
-					fail(cw, "bidirectional mount propagation forbidden")
-				}
-			}
-			checkResources(object(c["resources"]), cw, fail)
-			if k == "containers" && requireProbes {
-				if len(object(c["readinessProbe"])) == 0 || len(object(c["livenessProbe"])) == 0 {
-					fail(cw, ErrProbesRequired)
-				}
-			}
+		}
+		checkRequirements(c.Resources, cw, fail)
+		if c.List == "containers" && requireProbes && (c.ReadinessProbe == nil || c.LivenessProbe == nil) {
+			fail(cw, ErrProbesRequired)
 		}
 	}
 }

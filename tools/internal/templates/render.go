@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"maps"
 	"net"
 	"os"
@@ -14,7 +13,7 @@ import (
 	"slices"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
-	"go.yaml.in/yaml/v4"
+	"github.com/zeabur-oss/catalog/tools/internal/kubeobj"
 )
 
 type RenderOptions struct {
@@ -216,32 +215,16 @@ func validateInputs(inputs []Input) ([]*regexp.Regexp, error) {
 
 // DecodeDocuments splits a YAML stream into objects and expands Lists.
 func DecodeDocuments(b []byte) ([]map[string]any, error) {
-	d := yaml.NewDecoder(bytes.NewReader(b))
-	var out []map[string]any
-	for {
-		var v map[string]any
-		if err := d.Decode(&v); errors.Is(err, io.EOF) {
-			break
-		} else if err != nil {
-			return nil, err
-		}
-		if len(v) == 0 {
-			continue
-		}
-		if v["kind"] != "List" {
-			out = append(out, v)
-			continue
-		}
-		for _, item := range array(v["items"]) {
-			m, ok := item.(map[string]any)
-			if !ok {
-				return nil, errors.New("invalid List item")
-			}
-			out = append(out, m)
-		}
+	objs, err := kubeobj.Decode(b)
+	if err != nil {
+		return nil, err
 	}
-	if len(out) == 0 {
+	if len(objs) == 0 {
 		return nil, errors.New("no objects")
+	}
+	out := make([]map[string]any, len(objs))
+	for i, o := range objs {
+		out[i] = o.Object
 	}
 	return out, nil
 }

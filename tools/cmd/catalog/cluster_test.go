@@ -88,3 +88,35 @@ func TestContainerdProfileAllowsStackedPeer(t *testing.T) {
 		}
 	}
 }
+
+func TestImagesOfReadsPodsAndOperatorResources(t *testing.T) {
+	manifest := `
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: web}
+spec:
+  template:
+    spec:
+      initContainers: [{name: init, image: registry.example/init@sha256:aa}]
+      containers: [{name: web, image: registry.example/web@sha256:bb}]
+---
+apiVersion: dragonflydb.io/v1alpha1
+kind: Dragonfly
+metadata: {name: cache}
+spec:
+  image: registry.example/dragonfly@sha256:cc
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: skipped}
+data: {image: "{{ .Template }}"}
+`
+	got, err := imagesOf([]byte(manifest))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"registry.example/dragonfly@sha256:cc", "registry.example/init@sha256:aa", "registry.example/web@sha256:bb"}
+	if !slices.Equal(got, want) {
+		t.Errorf("images %v, want %v", got, want)
+	}
+}

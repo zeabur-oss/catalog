@@ -3,7 +3,6 @@ package catalog
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -12,6 +11,8 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"go.yaml.in/yaml/v4"
+
+	"github.com/zeabur-oss/catalog/tools/internal/kubeobj"
 )
 
 // Check validates every component without a cluster: schema, licenses,
@@ -187,20 +188,13 @@ func (c *Component) provisionProblems() []string {
 			out = append(out, fmt.Sprintf("input %s: generate clusterIP needs a path", in.Name))
 		}
 	}
-	dec := yaml.NewDecoder(strings.NewReader(c.NetworkPolicies))
-	for {
-		var o struct {
-			Kind     string `yaml:"kind"`
-			Metadata struct{ Name, Namespace string }
-		}
-		if err := dec.Decode(&o); err != nil {
-			if !errors.Is(err, io.EOF) {
-				out = append(out, "networkPolicies: "+err.Error())
-			}
-			break
-		}
-		if o.Kind != "NetworkPolicy" || !owns(o.Metadata.Namespace) {
-			out = append(out, fmt.Sprintf("networkPolicies: %s %s must be a NetworkPolicy in one of its namespaces", o.Kind, o.Metadata.Name))
+	policies, err := kubeobj.Decode([]byte(c.NetworkPolicies))
+	if err != nil {
+		out = append(out, "networkPolicies: "+err.Error())
+	}
+	for _, o := range policies {
+		if o.GetKind() != "NetworkPolicy" || !owns(o.GetNamespace()) {
+			out = append(out, fmt.Sprintf("networkPolicies: %s %s must be a NetworkPolicy in one of its namespaces", o.GetKind(), o.GetName()))
 		}
 	}
 	return out
