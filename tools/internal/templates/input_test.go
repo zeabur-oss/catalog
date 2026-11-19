@@ -28,7 +28,7 @@ func TestRenderRequiresValidDomainAndIssuer(t *testing.T) {
 	if _, err := templates.Render(r, templates.RenderOptions{Namespace: "test", ClusterIssuer: "issuer"}); !errors.Is(err, templates.ErrNoDomain) {
 		t.Errorf("no domain: got %v", err)
 	}
-	for _, domain := range []string{"example.test:443", "example.test#fragment", "example.test\t", "127.0.0.1", "UPPER.test", "-bad.test"} {
+	for _, domain := range []string{"example.test:443", "example.test#fragment", "example.test\t", "127.0.0.1", "UPPER.test", "-bad.test", strings.Repeat("a", 64) + ".example.test"} {
 		if _, err := templates.Render(r, templates.RenderOptions{Namespace: "test", Domain: domain, ClusterIssuer: "issuer"}); !errors.Is(err, templates.ErrDomain) {
 			t.Errorf("invalid domain %q: got %v", domain, err)
 		}

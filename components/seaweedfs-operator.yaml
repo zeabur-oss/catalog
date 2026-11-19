@@ -133,7 +133,6 @@ smoke:
           containerSecurityContext: *container
     wait:
       # The operator creates the S3 gateway after master, volume and filer.
-      - "-n catalog-smoke deployment/smoke-s3 --for=create"
-      - "-n catalog-smoke deployment/smoke-s3 --for=condition=Available"
+      - {resource: deployment/smoke-s3, namespace: catalog-smoke}
     # Pulls the SeaweedFS image and starts master, volume and filer in turn.
     timeout: 600s

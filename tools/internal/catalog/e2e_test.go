@@ -70,6 +70,7 @@ func TestSmokeFailureShowsWhyTheWaitedObjectIsNotReady(t *testing.T) {
 	script := `#!/bin/sh
 case "$*" in
 wait*) echo "timed out waiting for the condition" >&2; exit 1 ;;
+"get mariadb"*) echo '{"apiVersion": "v1", "kind": "ConfigMap", "metadata": {"name": "smoke"}}' ;;
 *describe*) echo "Warning  FailedMount  pvc smoke-storage not bound" ;;
 *"get pods"*) echo "smoke-0  0/1  Pending" ;;
 *"get events"*) echo "Warning  FailedScheduling  0/1 nodes are available" ;;
@@ -83,7 +84,7 @@ esac
 	tester := &Tester{}
 	c := &Component{ID: "databases/x", Smoke: []Smoke{{
 		Name: "standalone",
-		Wait: []string{"-n catalog-smoke mariadb/smoke --for=condition=Ready"},
+		Wait: []Wait{{Resource: "mariadb/smoke", Namespace: "catalog-smoke", Condition: "condition=Ready"}},
 	}}}
 	err := tester.smoke(c)
 	if err == nil {

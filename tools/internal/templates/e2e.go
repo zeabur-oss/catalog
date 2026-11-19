@@ -92,14 +92,14 @@ func E2E(t *catalog.Tester, r *Template, values E2EValues, measure bool) (usage 
 	}
 	if r.RequiresCertificates(t.Catalog) {
 		issuer := []byte(`{"apiVersion": "cert-manager.io/v1", "kind": "ClusterIssuer", "metadata": {"name": "` + selfSignedIssuer + `"}, "spec": {"selfSigned": {}}}`)
-		if _, err := kubectl(issuer, "apply", "-f", "-"); err != nil {
+		if _, err := catalog.Kubectl(issuer, "apply", "-f", "-"); err != nil {
 			return nil, err
 		}
 		defer func() {
-			_, e := kubectl(nil, "delete", "clusterissuer", selfSignedIssuer, "--wait", "--timeout=2m")
+			_, e := catalog.Kubectl(nil, "delete", "clusterissuer", selfSignedIssuer, "--wait", "--timeout=2m")
 			err = errors.Join(err, e)
 		}()
-		if _, err := kubectl(nil, "wait", "clusterissuer/"+selfSignedIssuer, "--for=condition=Ready", "--timeout=3m"); err != nil {
+		if _, err := catalog.Kubectl(nil, "wait", "clusterissuer/"+selfSignedIssuer, "--for=condition=Ready", "--timeout=3m"); err != nil {
 			return nil, err
 		}
 	}
@@ -119,16 +119,16 @@ func E2E(t *catalog.Tester, r *Template, values E2EValues, measure bool) (usage 
 		return nil, err
 	}
 	defer func() {
-		_, e := kubectl(nil, "delete", "namespace", ns, "--wait", "--timeout=5m")
+		_, e := catalog.Kubectl(nil, "delete", "namespace", ns, "--wait", "--timeout=5m")
 		err = errors.Join(err, e)
 	}()
 	if useS3 {
-		if _, err := kubectl(s3.secret(ns), "apply", "-f", "-"); err != nil {
+		if _, err := catalog.Kubectl(s3.secret(ns), "apply", "-f", "-"); err != nil {
 			return nil, err
 		}
 	}
 	if setup := strings.TrimSpace(values.Setup); setup != "" {
-		if _, err := kubectl([]byte(setup), "apply", "-n", ns, "-f", "-"); err != nil {
+		if _, err := catalog.Kubectl([]byte(setup), "apply", "-n", ns, "-f", "-"); err != nil {
 			return nil, fmt.Errorf("setup: %w", err)
 		}
 	}
@@ -138,11 +138,11 @@ func E2E(t *catalog.Tester, r *Template, values E2EValues, measure bool) (usage 
 	}
 	// kubectl refuses to apply an empty List.
 	if slices.ContainsFunc(r.Inputs, func(in Input) bool { return in.Generate != nil }) {
-		if _, err := kubectl(secrets, "apply", "-n", ns, "-f", "-"); err != nil {
+		if _, err := catalog.Kubectl(secrets, "apply", "-n", ns, "-f", "-"); err != nil {
 			return nil, err
 		}
 	}
-	if _, err := kubectl(manifest, "apply", "-n", ns, "-f", "-"); err != nil {
+	if _, err := catalog.Kubectl(manifest, "apply", "-n", ns, "-f", "-"); err != nil {
 		return nil, err
 	}
 	for _, s := range r.Smoke {
@@ -151,9 +151,10 @@ func E2E(t *catalog.Tester, r *Template, values E2EValues, measure bool) (usage 
 			continue
 		}
 		slog.Info("smoke", "template", r.ID, "check", s.Name)
-		if err := waitSmoke(ns, s); err != nil {
-			diag := catalog.Diagnose(func(a ...string) (string, error) { return kubectl(nil, a...) }, ns, "-n", ns, s.Resource)
-			return nil, fmt.Errorf("smoke %s: %w%s", s.Name, err, diag)
+		get := func(a ...string) (string, error) { return catalog.Kubectl(nil, a...) }
+		if err := s.wait().Run(get, ns, s.Timeout); err != nil {
+			object, _ := s.wait().Describe(ns)
+			return nil, fmt.Errorf("smoke %s: %w%s", s.Name, err, catalog.Diagnose(get, ns, object...))
 		}
 		if s.HTTP != nil {
 			err = httpSmoke(ns, s)
@@ -167,7 +168,7 @@ func E2E(t *catalog.Tester, r *Template, values E2EValues, measure bool) (usage 
 	}
 	// The NetworkPolicies select pods by TemplateLabel. A pod without it, such as
 	// an operator pod, has no default deny in a shared namespace.
-	if out, err := kubectl(nil, "get", "pods", "-n", ns, "-l", TemplateLabel+"!="+r.ID, "-o", "name"); err != nil {
+	if out, err := catalog.Kubectl(nil, "get", "pods", "-n", ns, "-l", TemplateLabel+"!="+r.ID, "-o", "name"); err != nil {
 		return nil, err
 	} else if out != "" {
 		return nil, fmt.Errorf("pods without %s=%s: %s", TemplateLabel, r.ID, strings.Join(strings.Fields(out), " "))
@@ -200,10 +201,10 @@ func CreateNamespace(r *Template, ns string) error {
 			profile = "baseline"
 		}
 	}
-	if _, err := kubectl(nil, "create", "namespace", ns); err != nil {
+	if _, err := catalog.Kubectl(nil, "create", "namespace", ns); err != nil {
 		return err
 	}
-	_, err := kubectl(nil, "label", "namespace", ns, "pod-security.kubernetes.io/enforce="+profile,
+	_, err := catalog.Kubectl(nil, "label", "namespace", ns, "pod-security.kubernetes.io/enforce="+profile,
 		"pod-security.kubernetes.io/audit=restricted", "pod-security.kubernetes.io/warn="+profile)
 	return err
 }
@@ -245,17 +246,12 @@ func expand(id string, inputs map[string]string, s3 *S3) (map[string]string, err
 	return out, nil
 }
 
-func kubectl(stdin []byte, args ...string) (string, error) {
-	out, err := catalog.Run(stdin, "kubectl", args...)
-	return strings.TrimSpace(out), err
-}
-
 func sqlSmoke(ns string, s Smoke) error {
 	query := strings.TrimSuffix(strings.TrimSpace(s.SQL.Query), ";")
 	if strings.Contains(query, ";") || strings.Contains(query, "--") || strings.Contains(query, "/*") {
 		return errors.New("SQL smoke takes one SELECT statement")
 	}
-	pods, err := kubectl(nil, "get", "pods", "-n", ns, "-l", "cnpg.io/cluster="+s.SQL.Cluster+",cnpg.io/instanceRole=primary",
+	pods, err := catalog.Kubectl(nil, "get", "pods", "-n", ns, "-l", "cnpg.io/cluster="+s.SQL.Cluster+",cnpg.io/instanceRole=primary",
 		"-o", "jsonpath={.items[*].metadata.name}")
 	if err != nil {
 		return err
@@ -268,7 +264,7 @@ func sqlSmoke(ns string, s Smoke) error {
 	if err != nil {
 		return err
 	}
-	got, err := kubectl(nil, "exec", "-n", ns, names[0], "-c", "postgres", "--", "psql", "-U", "postgres", "-d", s.SQL.Database,
+	got, err := catalog.Kubectl(nil, "exec", "-n", ns, names[0], "-c", "postgres", "--", "psql", "-U", "postgres", "-d", s.SQL.Database,
 		"-v", "ON_ERROR_STOP=1", "-qAtc", fmt.Sprintf("SET statement_timeout = %d; BEGIN READ ONLY; %s; COMMIT;", timeout.Milliseconds(), query))
 	if err != nil {
 		return err
@@ -338,17 +334,5 @@ func ReadValues(path string) (map[string]string, error) {
 	return values, nil
 }
 
-// waitSmoke waits for the object of s: a rollout for a workload, its condition for any other object.
-func waitSmoke(ns string, s Smoke) error {
-	get := func(a ...string) (string, error) { return kubectl(nil, a...) }
-	timeout, err := time.ParseDuration(s.Timeout)
-	if err != nil {
-		return err
-	}
-	resource, name, _ := strings.Cut(s.Resource, "/")
-	if s.Condition == "" {
-		return catalog.WaitReady(get, timeout, catalog.Target{Resource: resource, Namespace: ns, Name: name})
-	}
-	_, err = kubectl(nil, "wait", "-n", ns, s.Resource, "--for="+s.Condition, "--timeout="+s.Timeout)
-	return err
-}
+// wait is the Wait of the object of s.
+func (s Smoke) wait() catalog.Wait { return catalog.Wait{Resource: s.Resource, Condition: s.Condition} }

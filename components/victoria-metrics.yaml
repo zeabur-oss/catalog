@@ -708,4 +708,5 @@ leftovers: [persistentvolumeclaims]
 
 smoke:
   - name: vmsingle-operational
-    wait: ["-n observability vmsingle --all --for=jsonpath={.status.updateStatus}=operational"]
+    wait:
+      - {resource: vmsingle, namespace: observability, all: true, condition: "jsonpath={.status.updateStatus}=operational"}

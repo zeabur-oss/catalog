@@ -116,7 +116,8 @@ smoke:
       spec:
         instances: 1
         storage: {size: 1Gi}
-    wait: ["-n catalog-smoke cluster/smoke --for=condition=Ready"]
+    wait:
+      - {resource: cluster/smoke, namespace: catalog-smoke, condition: condition=Ready}
     # initdb pulls the PostgreSQL image first.
     timeout: 600s
   - name: object-store
@@ -132,4 +133,5 @@ smoke:
           s3Credentials:
             accessKeyId: {name: smoke-s3, key: ACCESS_KEY_ID}
             secretAccessKey: {name: smoke-s3, key: ACCESS_SECRET_KEY}
-    wait: ["-n cnpg-system deployment/plugin-barman-cloud --for=condition=Available"]
+    wait:
+      - {resource: deployment/plugin-barman-cloud, namespace: cnpg-system}

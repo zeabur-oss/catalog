@@ -150,6 +150,7 @@ smoke:
         securityContext:
           allowPrivilegeEscalation: false
           capabilities: {drop: [ALL]}
-    wait: ["-n catalog-smoke mariadb/smoke --for=condition=Ready"]
+    wait:
+      - {resource: mariadb/smoke, namespace: catalog-smoke, condition: condition=Ready}
     # Pulls the MariaDB image first.
     timeout: 600s

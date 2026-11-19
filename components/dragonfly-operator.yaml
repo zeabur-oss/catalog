@@ -121,6 +121,7 @@ smoke:
         containerSecurityContext:
           allowPrivilegeEscalation: false
           capabilities: {drop: [ALL]}
-    wait: ["-n catalog-smoke dragonfly/smoke --for=jsonpath={.status.phase}=Ready"]
+    wait:
+      - {resource: dragonfly/smoke, namespace: catalog-smoke, condition: "jsonpath={.status.phase}=Ready"}
     # Pulls the Dragonfly image first.
     timeout: 600s

@@ -95,6 +95,7 @@ smoke:
               persistentVolumeClaim:
                 resources: {requests: {storage: 1Gi}}
         sharding: {enabled: false}
-    wait: ["-n catalog-smoke psmdb/smoke --for=jsonpath={.status.state}=ready"]
+    wait:
+      - {resource: psmdb/smoke, namespace: catalog-smoke, condition: "jsonpath={.status.state}=ready"}
     # Pulls the MongoDB image first.
     timeout: 600s

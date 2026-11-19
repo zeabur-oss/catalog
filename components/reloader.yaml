@@ -112,7 +112,8 @@ smoke:
               - name: pause
                 image: registry.k8s.io/pause:3.10
                 envFrom: [{configMapRef: {name: smoke}}]
-    wait: ["-n catalog-smoke deployment/smoke --for=condition=Available"]
+    wait:
+      - {resource: deployment/smoke, namespace: catalog-smoke}
   - name: rolls-on-configmap-change
     manifest: |
       apiVersion: v1
@@ -120,9 +121,9 @@ smoke:
       metadata: {name: smoke, namespace: catalog-smoke}
       data: {revision: "2"}
     wait:
-      - "-n catalog-smoke deployment/smoke --for=jsonpath={.spec.template.metadata.annotations.reloader\\.stakater\\.com/last-reloaded-from}"
-      - "-n catalog-smoke deployment/smoke --for=jsonpath={.metadata.generation}=2"
-      - "-n catalog-smoke deployment/smoke --for=condition=Available"
+      - {resource: deployment/smoke, namespace: catalog-smoke, condition: "jsonpath={.spec.template.metadata.annotations.reloader\\.stakater\\.com/last-reloaded-from}"}
+      - {resource: deployment/smoke, namespace: catalog-smoke, condition: "jsonpath={.metadata.generation}=2"}
+      - {resource: deployment/smoke, namespace: catalog-smoke}
 
 # Reloader creates reloader-meta-info itself, without an owner, so helm
 # uninstall leaves it in the namespace.

@@ -11,6 +11,9 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strings"
+
+	"k8s.io/apimachinery/pkg/util/validation"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"github.com/zeabur-oss/catalog/tools/internal/kubeobj"
@@ -57,17 +60,21 @@ func refuseInput(code, input string, err error) error {
 	return &CheckError{Code: code, Input: input, Err: err}
 }
 
-var namespaceLabel = regexp.MustCompile(`^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`)
-var dnsSubdomain = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$`)
+func isLabel(s string) bool { return len(validation.IsDNS1123Label(s)) == 0 }
+
+// isSubdomain is a DNS name: a Kubernetes subdomain whose labels are each at most 63 characters.
+func isSubdomain(s string) bool {
+	return len(validation.IsDNS1123Subdomain(s)) == 0 && !slices.ContainsFunc(strings.Split(s, "."), func(l string) bool { return !isLabel(l) })
+}
 
 func (o RenderOptions) validate(r *Template) error {
-	if !namespaceLabel.MatchString(o.Namespace) || len(o.Namespace) > 63 {
+	if !isLabel(o.Namespace) {
 		return refuse("invalid-namespace", ErrNamespace)
 	}
-	if o.Domain != "" && (!dnsSubdomain.MatchString(o.Domain) || len(o.Domain) > 253 || net.ParseIP(o.Domain) != nil) {
+	if o.Domain != "" && (!isSubdomain(o.Domain) || net.ParseIP(o.Domain) != nil) {
 		return refuse("invalid-domain", ErrDomain)
 	}
-	if o.ClusterIssuer != "" && (!dnsSubdomain.MatchString(o.ClusterIssuer) || len(o.ClusterIssuer) > 253) {
+	if o.ClusterIssuer != "" && (!isSubdomain(o.ClusterIssuer)) {
 		return refuse("invalid-cluster-issuer", ErrClusterIssuer)
 	}
 	for _, s := range r.Services {
@@ -145,7 +152,7 @@ func Render(r *Template, o RenderOptions) ([]byte, error) {
 // GenerateInputs returns a List of the Secrets that hold generated inputs,
 // with Labels. The output holds credentials.
 func GenerateInputs(r *Template, namespace string) ([]byte, error) {
-	if !namespaceLabel.MatchString(namespace) || len(namespace) > 63 {
+	if !isLabel(namespace) {
 		return nil, ErrNamespace
 	}
 	patterns, err := validateInputs(r.Inputs)

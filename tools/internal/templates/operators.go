@@ -64,7 +64,7 @@ func checkPercona(r *Template, d map[string]any, docs []map[string]any, w string
 		}
 	}
 	for _, image := range images {
-		if !digestImage.MatchString(text(image[1])) {
+		if !catalog.PinnedImage.MatchString(text(image[1])) {
 			fail(w, "Percona image must use sha256 digest", text(image[0]))
 		}
 	}
@@ -213,7 +213,7 @@ func checkDragonfly(r *Template, d map[string]any, docs []map[string]any, w stri
 	}
 	spec := object(d["spec"])
 	onlyKeys(spec, []string{"replicas", "image", "imagePullPolicy", "imagePullSecrets", "serviceAccountName", "args", "authentication", "env", "podSecurityContext", "containerSecurityContext", "podMetadata", "resources", "snapshot", "tlsSecretRef", "affinity", "nodeSelector", "tolerations", "topologySpreadConstraints"}, "Dragonfly", w, fail)
-	if !digestImage.MatchString(text(spec["image"])) {
+	if !catalog.PinnedImage.MatchString(text(spec["image"])) {
 		fail(w, ErrDragonflyDigest)
 	}
 	checkPodMetadata(r, spec, w, fail)
@@ -263,7 +263,7 @@ func checkMariaDB(r *Template, d map[string]any, docs []map[string]any, namespac
 			fail(w, "security.risks must describe the operator-generated pods and helper images")
 		}
 		onlyKeys(spec, []string{"image", "imagePullPolicy", "imagePullSecrets", "replicas", "rootPasswordSecretKeyRef", "database", "username", "passwordSecretKeyRef", "serviceAccountName", "tls", "storage", "podMetadata", "podSecurityContext", "securityContext", "resources", "updateStrategy", "timeZone", "affinity", "nodeSelector", "tolerations", "topologySpreadConstraints"}, "MariaDB", w, fail)
-		if !digestImage.MatchString(text(spec["image"])) {
+		if !catalog.PinnedImage.MatchString(text(spec["image"])) {
 			fail(w, "MariaDB image must use sha256 digest")
 		}
 		checkPodMetadata(r, spec, w, fail)
