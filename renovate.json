@@ -115,7 +115,7 @@
   ],
   "packageRules": [
     {
-      "description": "The kind node, k3s and RKE2 follow the Kubernetes minor that the Zeabur installer pins; a minor bump changes them together",
+      "description": "The kind node, k3s and RKE2 follow one Kubernetes minor; a minor bump changes them together",
       "matchPackageNames": [
         "kindest/node",
         "k3s-io/k3s",

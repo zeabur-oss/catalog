@@ -58,7 +58,7 @@ type Component struct {
 	Contributes []Contribution `yaml:"contributes"`
 	Detection   Detection      `yaml:"detection" jsonschema:"required"`
 	Security    Security       `yaml:"security" jsonschema:"required"`
-	// Read-only checks that a tool such as zeabur-installer doctor runs on an installed cluster.
+	// Read-only checks that an installer runs on an installed cluster.
 	// Each is one `kubectl wait` and applies nothing. e2e runs them after install, before smoke.
 	Health []Health `yaml:"health"`
 	// Extra e2e checks after install. They may apply objects in catalog-smoke, so only e2e runs
