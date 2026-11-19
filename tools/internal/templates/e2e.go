@@ -47,9 +47,10 @@ const selfSignedIssuer = "ci-selfsigned"
 
 // E2EValues are the test values for one template: input values, objects to
 // apply first and the smoke checks to skip with the reason. An input value is
-// a text/template with .ID and .S3 (see S3). If a value uses .S3, the test
-// runs SeaweedFS.
+// a text/template with .ID and .S3 (see S3). S3 says the test runs SeaweedFS;
+// a value that uses .S3 needs it.
 type E2EValues struct {
+	S3        bool              `yaml:"s3"`
 	Inputs    map[string]string `yaml:"inputs"`
 	Setup     string            `yaml:"setup"`
 	SkipSmoke map[string]string `yaml:"skipSmoke"`
@@ -65,7 +66,10 @@ func E2E(t *catalog.Tester, r *Template, values E2EValues, measure bool) (usage 
 			return nil, fmt.Errorf("skipSmoke: unknown smoke check %q", name)
 		}
 	}
-	useS3 := slices.ContainsFunc(slices.Collect(maps.Values(values.Inputs)), func(v string) bool { return strings.Contains(v, ".S3") })
+	if !values.S3 && slices.ContainsFunc(slices.Collect(maps.Values(values.Inputs)), func(v string) bool { return strings.Contains(v, ".S3") }) {
+		return nil, fmt.Errorf("an input uses .S3, so e2e.yaml must set s3: true")
+	}
+	useS3 := values.S3
 	opts := RenderOptions{Namespace: ns, Domain: r.ID + ".example.test", ClusterIssuer: selfSignedIssuer}
 	// Check safety before the cluster work, with a placeholder for the gateway address.
 	s3 := &S3{Endpoint: "https://s3.example.test", Bucket: "e2e"}
