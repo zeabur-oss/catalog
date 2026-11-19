@@ -15,13 +15,13 @@
         {
           "workload": "zeabur-builder",
           "kind": "Deployment",
-          "memory": "3Mi",
+          "memory": "2Mi",
           "cpu": "0"
         },
         {
           "workload": "zot",
           "kind": "StatefulSet",
-          "memory": "47Mi",
+          "memory": "46Mi",
           "cpu": "2m"
         }
       ],
@@ -35,9 +35,9 @@
           "version": "0.2.3"
         }
       ],
-      "sourceDigest": "h1:+swLNPUkGnIgjj57nssn7rkdPOQSciUzG9yGrHmc4mA=",
+      "sourceDigest": "h1:90ZXOCazdIhQJYd+FhNvU2EgquGFkbz9IMnSKvK0/t4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
       "measuredAt": "2026-11-19"
@@ -62,7 +62,7 @@
         {
           "workload": "zot",
           "kind": "StatefulSet",
-          "memory": "47Mi",
+          "memory": "48Mi",
           "cpu": "2m"
         }
       ],
@@ -76,9 +76,9 @@
           "version": "0.2.3"
         }
       ],
-      "sourceDigest": "h1:+swLNPUkGnIgjj57nssn7rkdPOQSciUzG9yGrHmc4mA=",
+      "sourceDigest": "h1:90ZXOCazdIhQJYd+FhNvU2EgquGFkbz9IMnSKvK0/t4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
       "measuredAt": "2026-11-19"
@@ -89,6 +89,46 @@
       "platform": {
         "os": "linux",
         "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "zeabur-builder",
+          "kind": "Deployment",
+          "memory": "2Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "zot",
+          "kind": "StatefulSet",
+          "memory": "46Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "zot",
+          "version": "0.1.130"
+        },
+        {
+          "release": "builder",
+          "version": "0.2.3"
+        }
+      ],
+      "sourceDigest": "h1:90ZXOCazdIhQJYd+FhNvU2EgquGFkbz9IMnSKvK0/t4=",
+      "dependencies": {
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      },
+      "measuredAt": "2026-11-19"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
       },
       "kubernetesVersion": "v1.37.0",
       "result": "passed",
@@ -116,49 +156,9 @@
           "version": "0.2.3"
         }
       ],
-      "sourceDigest": "h1:+swLNPUkGnIgjj57nssn7rkdPOQSciUzG9yGrHmc4mA=",
+      "sourceDigest": "h1:90ZXOCazdIhQJYd+FhNvU2EgquGFkbz9IMnSKvK0/t4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
-      },
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "zeabur-builder",
-          "kind": "Deployment",
-          "memory": "2Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "zot",
-          "kind": "StatefulSet",
-          "memory": "47Mi",
-          "cpu": "2m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "zot",
-          "version": "0.1.130"
-        },
-        {
-          "release": "builder",
-          "version": "0.2.3"
-        }
-      ],
-      "sourceDigest": "h1:+swLNPUkGnIgjj57nssn7rkdPOQSciUzG9yGrHmc4mA=",
-      "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
       "measuredAt": "2026-11-19"
@@ -176,13 +176,13 @@
         {
           "workload": "zeabur-builder",
           "kind": "Deployment",
-          "memory": "3Mi",
+          "memory": "2Mi",
           "cpu": "0"
         },
         {
           "workload": "zot",
           "kind": "StatefulSet",
-          "memory": "47Mi",
+          "memory": "46Mi",
           "cpu": "2m"
         }
       ],
@@ -196,9 +196,9 @@
           "version": "0.2.3"
         }
       ],
-      "sourceDigest": "h1:+swLNPUkGnIgjj57nssn7rkdPOQSciUzG9yGrHmc4mA=",
+      "sourceDigest": "h1:90ZXOCazdIhQJYd+FhNvU2EgquGFkbz9IMnSKvK0/t4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
       "measuredAt": "2026-11-19"
@@ -236,9 +236,9 @@
           "version": "0.2.3"
         }
       ],
-      "sourceDigest": "h1:+swLNPUkGnIgjj57nssn7rkdPOQSciUzG9yGrHmc4mA=",
+      "sourceDigest": "h1:90ZXOCazdIhQJYd+FhNvU2EgquGFkbz9IMnSKvK0/t4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
       "measuredAt": "2026-11-19"
@@ -277,9 +277,9 @@
           "version": "0.2.3"
         }
       ],
-      "sourceDigest": "h1:+swLNPUkGnIgjj57nssn7rkdPOQSciUzG9yGrHmc4mA=",
+      "sourceDigest": "h1:90ZXOCazdIhQJYd+FhNvU2EgquGFkbz9IMnSKvK0/t4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
       "addOns": {
@@ -321,9 +321,9 @@
           "version": "0.2.3"
         }
       ],
-      "sourceDigest": "h1:+swLNPUkGnIgjj57nssn7rkdPOQSciUzG9yGrHmc4mA=",
+      "sourceDigest": "h1:90ZXOCazdIhQJYd+FhNvU2EgquGFkbz9IMnSKvK0/t4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
       "addOns": {
@@ -345,13 +345,13 @@
         {
           "workload": "zeabur-builder",
           "kind": "Deployment",
-          "memory": "3Mi",
+          "memory": "2Mi",
           "cpu": "0"
         },
         {
           "workload": "zot",
           "kind": "StatefulSet",
-          "memory": "46Mi",
+          "memory": "47Mi",
           "cpu": "2m"
         }
       ],
@@ -365,9 +365,9 @@
           "version": "0.2.3"
         }
       ],
-      "sourceDigest": "h1:+swLNPUkGnIgjj57nssn7rkdPOQSciUzG9yGrHmc4mA=",
+      "sourceDigest": "h1:90ZXOCazdIhQJYd+FhNvU2EgquGFkbz9IMnSKvK0/t4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
       "addOns": {
@@ -395,7 +395,7 @@
         {
           "workload": "zot",
           "kind": "StatefulSet",
-          "memory": "46Mi",
+          "memory": "47Mi",
           "cpu": "2m"
         }
       ],
@@ -409,9 +409,9 @@
           "version": "0.2.3"
         }
       ],
-      "sourceDigest": "h1:+swLNPUkGnIgjj57nssn7rkdPOQSciUzG9yGrHmc4mA=",
+      "sourceDigest": "h1:90ZXOCazdIhQJYd+FhNvU2EgquGFkbz9IMnSKvK0/t4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
       "addOns": {

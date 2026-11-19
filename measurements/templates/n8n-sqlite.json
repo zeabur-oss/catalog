@@ -14,8 +14,8 @@
         {
           "workload": "n8n",
           "kind": "Deployment",
-          "memory": "315Mi",
-          "cpu": "3m"
+          "memory": "321Mi",
+          "cpu": "2m"
         },
         {
           "workload": "task-runner",
@@ -36,12 +36,12 @@
           "digest": "sha256:730c78a31b9d5711319fff053a18e98ba5265f11769c88d1917506e9b33d2616"
         }
       ],
-      "sourceDigest": "h1:671G2eqriYmjID70LYU6JEjJ3R8KgIDVTlqcs+ipjug=",
+      "sourceDigest": "h1:+zJEhu9wC2nWeE+9hNMPzj22yzmxQKr3FdsH77lIKxc=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     }
   ]
 }

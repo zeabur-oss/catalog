@@ -14,14 +14,14 @@
         {
           "workload": "n8n-db",
           "kind": "Cluster",
-          "memory": "126Mi",
-          "cpu": "7m"
+          "memory": "82Mi",
+          "cpu": "6m"
         },
         {
           "workload": "n8n",
           "kind": "Deployment",
-          "memory": "301Mi",
-          "cpu": "4m"
+          "memory": "303Mi",
+          "cpu": "2m"
         },
         {
           "workload": "n8n-runners",
@@ -42,13 +42,13 @@
           "digest": "sha256:730c78a31b9d5711319fff053a18e98ba5265f11769c88d1917506e9b33d2616"
         }
       ],
-      "sourceDigest": "h1:t5CcoUiDQ5VSfYNTOGoQekdAbE0B99He7NSvbFO3FvU=",
+      "sourceDigest": "h1:3ON6hS7NKUn+zw8MMP0VhTPPEk1zzZ666FMOzL0cTZE=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "cloudnative-pg": "h1:sfHDjsosLaiS7MassT/Z6A/IareJUQk+yPcGhX2Yyis=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "cloudnative-pg": "h1:1LuNPnwMkpjrJDzuE4fGPIhAn+AS77RnuHBRPWb2FK8=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     }
   ]
 }

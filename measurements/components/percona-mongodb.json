@@ -15,7 +15,7 @@
         {
           "workload": "psmdb-operator",
           "kind": "Deployment",
-          "memory": "20Mi",
+          "memory": "22Mi",
           "cpu": "1m"
         }
       ],
@@ -25,8 +25,8 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "k3s",
@@ -52,8 +52,8 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -78,8 +78,8 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -104,8 +104,8 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -120,7 +120,7 @@
         {
           "workload": "psmdb-operator",
           "kind": "Deployment",
-          "memory": "17Mi",
+          "memory": "18Mi",
           "cpu": "1m"
         }
       ],
@@ -130,8 +130,8 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -156,8 +156,8 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -173,7 +173,7 @@
         {
           "workload": "psmdb-operator",
           "kind": "Deployment",
-          "memory": "18Mi",
+          "memory": "19Mi",
           "cpu": "1m"
         }
       ],
@@ -183,11 +183,11 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -213,11 +213,11 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -233,7 +233,7 @@
         {
           "workload": "psmdb-operator",
           "kind": "Deployment",
-          "memory": "23Mi",
+          "memory": "24Mi",
           "cpu": "1m"
         }
       ],
@@ -243,11 +243,11 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -273,11 +273,11 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     }
   ]
 }

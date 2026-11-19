@@ -25,8 +25,8 @@
           "version": "v1.2.3"
         }
       ],
-      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "k3s",
@@ -52,8 +52,8 @@
           "version": "v1.2.3"
         }
       ],
-      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -61,32 +61,6 @@
       "platform": {
         "os": "linux",
         "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "keel",
-          "kind": "Deployment",
-          "memory": "15Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "keel",
-          "version": "v1.2.3"
-        }
-      ],
-      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
-      "measuredAt": "2026-11-12"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
       },
       "kubernetesVersion": "v1.37.0",
       "result": "passed",
@@ -104,8 +78,34 @@
           "version": "v1.2.3"
         }
       ],
-      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4=",
+      "measuredAt": "2026-11-19"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "keel",
+          "kind": "Deployment",
+          "memory": "15Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "keel",
+          "version": "v1.2.3"
+        }
+      ],
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -130,8 +130,8 @@
           "version": "v1.2.3"
         }
       ],
-      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -156,8 +156,8 @@
           "version": "v1.2.3"
         }
       ],
-      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -183,11 +183,11 @@
           "version": "v1.2.3"
         }
       ],
-      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -203,7 +203,7 @@
         {
           "workload": "keel",
           "kind": "Deployment",
-          "memory": "14Mi",
+          "memory": "15Mi",
           "cpu": "0"
         }
       ],
@@ -213,11 +213,11 @@
           "version": "v1.2.3"
         }
       ],
-      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -243,11 +243,11 @@
           "version": "v1.2.3"
         }
       ],
-      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -273,11 +273,11 @@
           "version": "v1.2.3"
         }
       ],
-      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     }
   ]
 }

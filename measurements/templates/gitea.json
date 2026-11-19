@@ -14,13 +14,13 @@
         {
           "workload": "gitea-db",
           "kind": "Cluster",
-          "memory": "70Mi",
-          "cpu": "4m"
+          "memory": "64Mi",
+          "cpu": "7m"
         },
         {
           "workload": "gitea",
           "kind": "Deployment",
-          "memory": "93Mi",
+          "memory": "91Mi",
           "cpu": "1m"
         }
       ],
@@ -31,13 +31,13 @@
           "digest": "sha256:94807314454f6525994a3b76286ba12bc7e7f8cd14f61d9e67431767f8103306"
         }
       ],
-      "sourceDigest": "h1:ppceRqgquyR17BH4DE2b2vfgVnqDS3Gd6vZoIuoU81g=",
+      "sourceDigest": "h1:3s/IJNFEBs/Yx72MUi5YljEKwiVL6X4qm/fuwN6d/Tk=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "cloudnative-pg": "h1:sfHDjsosLaiS7MassT/Z6A/IareJUQk+yPcGhX2Yyis=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "cloudnative-pg": "h1:1LuNPnwMkpjrJDzuE4fGPIhAn+AS77RnuHBRPWb2FK8=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     }
   ]
 }

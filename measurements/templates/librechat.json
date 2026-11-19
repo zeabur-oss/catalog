@@ -14,32 +14,32 @@
         {
           "workload": "rag-db",
           "kind": "Cluster",
-          "memory": "90Mi",
+          "memory": "110Mi",
           "cpu": "4m"
         },
         {
           "workload": "librechat",
           "kind": "Deployment",
-          "memory": "250Mi",
-          "cpu": "2m"
+          "memory": "246Mi",
+          "cpu": "3m"
         },
         {
           "workload": "rag-api",
           "kind": "Deployment",
-          "memory": "217Mi",
+          "memory": "196Mi",
           "cpu": "2m"
         },
         {
           "workload": "meilisearch",
           "kind": "StatefulSet",
-          "memory": "16Mi",
+          "memory": "9Mi",
           "cpu": "0"
         },
         {
           "workload": "mongodb-rs0",
           "kind": "StatefulSet",
-          "memory": "181Mi",
-          "cpu": "32m"
+          "memory": "211Mi",
+          "cpu": "35m"
         }
       ],
       "versions": [
@@ -64,14 +64,14 @@
           "digest": "sha256:a62ce2221b43a9bb57fa6cb733e7047c80132960272c33d5704028f3071a1251"
         }
       ],
-      "sourceDigest": "h1:BxPKyrTwNW3m5XnvZUqmKT5SoLXg+9+ZmGQaO1hQjew=",
+      "sourceDigest": "h1:ELWCxtCpsJatgichsZ/c91WqqdggryxGNWlTXBHnl4I=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "cloudnative-pg": "h1:sfHDjsosLaiS7MassT/Z6A/IareJUQk+yPcGhX2Yyis=",
-        "percona-mongodb": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "cloudnative-pg": "h1:1LuNPnwMkpjrJDzuE4fGPIhAn+AS77RnuHBRPWb2FK8=",
+        "percona-mongodb": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     }
   ]
 }

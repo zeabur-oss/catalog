@@ -14,7 +14,7 @@
         {
           "workload": "sillytavern",
           "kind": "Deployment",
-          "memory": "137Mi",
+          "memory": "136Mi",
           "cpu": "0"
         }
       ],
@@ -25,12 +25,12 @@
           "digest": "sha256:eef27ff0c7961f1a2f488400f581f48ff38f8b910c5d3b8d389138d71791bb14"
         }
       ],
-      "sourceDigest": "h1:EUdS+TvH7ULnuqVriwI13+i6OjXqtKT1EWxraQoyRsQ=",
+      "sourceDigest": "h1:NDXUDoX6av0+6Nnw9v30SoaxoUVb8U+tQ3zzQzY5qeQ=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     }
   ]
 }

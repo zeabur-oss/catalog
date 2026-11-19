@@ -14,7 +14,7 @@
         {
           "workload": "cliproxyapi",
           "kind": "Deployment",
-          "memory": "17Mi",
+          "memory": "18Mi",
           "cpu": "0"
         }
       ],
@@ -25,12 +25,12 @@
           "digest": "sha256:873ec3df3b673a82f7d956d4636c7736b0c961dc6ee28f9fb403238b2898dc0d"
         }
       ],
-      "sourceDigest": "h1:vMlq9x6B9zDsqnhDsujjujm8edQjOC34l2YosblrJq4=",
+      "sourceDigest": "h1:sbEdTafJZhLeaPgOG+qVnENzWT3nXL1TCOX2c/aHKug=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
       },
-      "measuredAt": "2026-11-15"
+      "measuredAt": "2026-11-19"
     }
   ]
 }
