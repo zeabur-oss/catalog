@@ -44,6 +44,7 @@ catalog 本身是数据。CI 会安装并测试每个组件和模板。每次发
 components/<id>.yaml                      每个上游一个文件；provides 写明它提供的用途
 templates/<id>/template.yaml              一个应用：输入、服务、安全、冒烟测试
 templates/<id>/manifests.yaml             它的 Kubernetes 对象
+templates/<id>/e2e.yaml                       该模板仅测试使用的输入（可选）
 schema/v1/                                两种文件的 JSON Schema
 config/licenses.yaml                      OSI 批准的 SPDX 标识符，以及只能手动启用的例外
 config/kubernetes.yaml                    Kubernetes 版本；e2e 使用的 kind 节点版本

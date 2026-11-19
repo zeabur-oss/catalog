@@ -35,6 +35,8 @@ type Template struct {
 	Smoke []Smoke `yaml:"smoke" json:"smoke" jsonschema:"required,minItems=1"`
 
 	Dir string `yaml:"-" json:"-"` // holds template.yaml and manifests.yaml
+	// E2E is the template's e2e.yaml, which holds only test data.
+	E2E E2EValues `yaml:"-" json:"-"`
 	raw any
 }
 
@@ -218,6 +220,9 @@ func Load(root string) ([]*Template, error) {
 		}
 		if err := yaml.Unmarshal(data, t); err != nil {
 			return nil, fmt.Errorf("%s: %w", rel, err)
+		}
+		if t.E2E, err = loadE2E(filepath.Join(t.Dir, "e2e.yaml")); err != nil {
+			return nil, err
 		}
 		out = append(out, t)
 	}

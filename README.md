@@ -65,6 +65,7 @@ a cluster is missing; it never installs components itself.
 components/<id>.yaml                      one file per upstream; provides names its capability
 templates/<id>/template.yaml              one application: inputs, services, security, smoke checks
 templates/<id>/manifests.yaml             its Kubernetes objects
+templates/<id>/e2e.yaml                       test-only inputs of that template (optional)
 schema/v1/                                JSON Schemas for both
 config/licenses.yaml                      OSI-approved SPDX identifiers; opt-in-only exceptions
 config/kubernetes.yaml                    Kubernetes versions; kind node version for e2e

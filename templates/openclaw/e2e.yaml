@@ -1,0 +1,9 @@
+# Test data for catalog e2e; never published.
+inputs:
+  llmBaseUrl: https://llm.example.test/v1
+  llmModel: e2e-model
+setup: |
+  apiVersion: v1
+  kind: Secret
+  metadata: {name: e2e-provider}
+  stringData: {api-key: e2e, OPENAI_API_KEY: e2e}

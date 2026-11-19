@@ -170,14 +170,20 @@ func templateMeasurementPath(id string) string {
 }
 
 // sourceDigest returns the Go module hash (dirhash.Hash1, "h1:...") of the
-// file at path, or of every file under it when it is a directory.
+// file at path, or of every file under it when it is a directory, except the
+// e2e.yaml of a template, which holds test data and changes no measurement.
 func sourceDigest(path string) (string, error) {
 	info, err := os.Stat(path)
 	if err != nil {
 		return "", err
 	}
 	if info.IsDir() {
-		return dirhash.HashDir(path, "", dirhash.Hash1)
+		files, err := dirhash.DirFiles(path, "")
+		if err != nil {
+			return "", err
+		}
+		files = slices.DeleteFunc(files, func(f string) bool { return f == "e2e.yaml" })
+		return dirhash.Hash1(files, func(name string) (io.ReadCloser, error) { return os.Open(filepath.Join(path, name)) })
 	}
 	open := func(string) (io.ReadCloser, error) { return os.Open(path) }
 	return dirhash.Hash1([]string{filepath.Base(path)}, open)
