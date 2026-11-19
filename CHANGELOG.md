@@ -2,6 +2,14 @@
 
 All notable changes to this catalog are documented in this file; each section comes from the change files in `.changeset/` (CONTRIBUTING.md, "Releases").
 
+## 0.5.5 (2026-11-19)
+
+### Fixes
+
+#### Zeabur Builder 0.2.3
+
+The `builder` component installs chart 0.2.3. Builds can be capped per cluster, run on build nodes set aside by a taint, and record their steps and kstatus conditions. Build Jobs get a memory limit, and the images are signed by Builder's own release workflow.
+
 ## 0.5.4 (2026-11-18)
 
 ### Fixes
