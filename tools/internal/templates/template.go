@@ -165,9 +165,11 @@ func (InputLocales) JSONSchemaExtend(s *gen.Schema) { catalog.LocaleKeys(s) }
 
 // Smoke is an e2e check after install.
 type Smoke struct {
-	Name      string `yaml:"name" json:"name" jsonschema:"required,minLength=1"`
-	Resource  string `yaml:"resource" json:"resource" jsonschema:"required,pattern=^[a-zA-Z0-9.-]+/[a-z0-9][a-z0-9.-]*$"`
-	Condition string `yaml:"condition" json:"condition" jsonschema:"required,pattern=^(condition=[A-Za-z][A-Za-z0-9]*(=(True|False|Unknown))?|jsonpath=.+)$"`
+	Name     string `yaml:"name" json:"name" jsonschema:"required,minLength=1"`
+	Resource string `yaml:"resource" json:"resource" jsonschema:"required,pattern=^[a-zA-Z0-9.-]+/[a-z0-9][a-z0-9.-]*$"`
+	// What the object reaches, as a kubectl wait --for value. A deployment, statefulset or daemonset
+	// has none: it is ready when its rollout is complete.
+	Condition string `yaml:"condition" json:"condition,omitempty" jsonschema:"pattern=^(condition=[A-Za-z][A-Za-z0-9]*(=(True|False|Unknown))?|jsonpath=.+)$"`
 	Timeout   string `yaml:"timeout" json:"timeout" jsonschema:"required,pattern=^[1-9][0-9]*(s|m)$"`
 	// GET through a port-forward to the Service.
 	HTTP *struct {
@@ -184,6 +186,14 @@ type Smoke struct {
 		Query    string `yaml:"query" json:"query" jsonschema:"required,pattern=^[Ss][Ee][Ll][Ee][Cc][Tt] "`
 		Expect   string `yaml:"expect" json:"expect" jsonschema:"required"`
 	} `yaml:"sql" json:"sql,omitempty"`
+}
+
+func (Smoke) JSONSchemaExtend(s *gen.Schema) {
+	resource := gen.NewProperties()
+	resource.Set("resource", &gen.Schema{Pattern: "^(deployment|statefulset|daemonset)/"})
+	s.If = &gen.Schema{Properties: resource}
+	s.Then = &gen.Schema{Not: &gen.Schema{Required: []string{"condition"}}}
+	s.Else = &gen.Schema{Required: []string{"condition"}}
 }
 
 // Load reads templates/<id>/template.yaml under root, sorted by ID.

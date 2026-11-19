@@ -94,12 +94,10 @@ smoke:
     timeout: 900s
   - name: litellm-ready
     resource: deployment/litellm
-    condition: condition=Available
     timeout: 900s
     http: {service: litellm, port: 4000, path: /health/readiness, status: 200, contains: connected}
   - name: authentication-required
     resource: deployment/litellm
-    condition: condition=Available
     timeout: 120s
     http: {service: litellm, port: 4000, path: /key/list, status: 401}
   - name: migrations-applied

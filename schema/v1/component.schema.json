@@ -184,6 +184,42 @@
       "description": "Generate is how the installer makes the value instead of asking. A reader does not fill in an\ninput whose type it does not know."
     },
     "health": {
+      "if": {
+        "properties": {
+          "resource": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "DaemonSet",
+                  "Deployment",
+                  "StatefulSet"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "not": {
+          "required": [
+            "condition"
+          ]
+        },
+        "properties": {
+          "resource": {
+            "not": {
+              "required": [
+                "all"
+              ]
+            }
+          }
+        }
+      },
+      "else": {
+        "required": [
+          "condition"
+        ]
+      },
       "properties": {
         "name": {
           "type": "string",
@@ -196,7 +232,7 @@
         "condition": {
           "type": "string",
           "pattern": "^[A-Za-z]+$",
-          "description": "The condition the objects reach, such as Ready or Available."
+          "description": "The condition the objects reach, such as Ready. A Deployment, DaemonSet or StatefulSet has none:\nit is ready when its rollout is complete."
         },
         "timeout": {
           "type": "string",
@@ -213,7 +249,6 @@
       "required": [
         "name",
         "resource",
-        "condition",
         "timeout",
         "advice"
       ],

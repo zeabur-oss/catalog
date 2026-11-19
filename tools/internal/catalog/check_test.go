@@ -82,10 +82,14 @@ func TestHealthChecksNameTheirObjectsOneWay(t *testing.T) {
 	}
 	valid := func() map[string]any {
 		return map[string]any{"name": "controller",
-			"resource":  map[string]any{"kind": "Deployment", "name": "traefik", "namespace": "traefik"},
-			"condition": "Available", "timeout": "60s", "advice": "Check the pods."}
+			"resource": map[string]any{"kind": "Deployment", "name": "traefik", "namespace": "traefik"},
+			"timeout":  "60s", "advice": "Check the pods."}
 	}
 	resource := func(h map[string]any) map[string]any { return h["resource"].(map[string]any) }
+	pod := func(h map[string]any) {
+		resource(h)["kind"] = "Pod"
+		h["condition"] = "Ready"
+	}
 	for _, c := range []struct {
 		name string
 		ok   bool
@@ -96,12 +100,16 @@ func TestHealthChecksNameTheirObjectsOneWay(t *testing.T) {
 			delete(resource(h), "name")
 			resource(h)["selector"] = map[string]any{"app.kubernetes.io/name": "traefik"}
 		}},
-		{"all", true, func(h map[string]any) { delete(resource(h), "name"); resource(h)["all"] = true }},
+		{"all", true, func(h map[string]any) { pod(h); delete(resource(h), "name"); resource(h)["all"] = true }},
+		{"condition of a kind that is not a workload", true, pod},
+		{"workload with a condition", false, func(h map[string]any) { h["condition"] = "Available" }},
+		{"all of a workload", false, func(h map[string]any) { delete(resource(h), "name"); resource(h)["all"] = true }},
 		{"cluster-scoped kind", true, func(h map[string]any) {
 			h["resource"] = map[string]any{"kind": "GatewayClass", "name": "traefik"}
+			h["condition"] = "Accepted"
 		}},
 		{"unknown kind", false, func(h map[string]any) { resource(h)["kind"] = "ConfigMap" }},
-		{"no condition", false, func(h map[string]any) { delete(h, "condition") }},
+		{"no condition", false, func(h map[string]any) { pod(h); delete(h, "condition") }},
 		{"no advice", false, func(h map[string]any) { delete(h, "advice") }},
 		{"no timeout", false, func(h map[string]any) { delete(h, "timeout") }},
 		{"no object", false, func(h map[string]any) { delete(resource(h), "name") }},

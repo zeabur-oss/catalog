@@ -163,9 +163,7 @@ smoke:
     timeout: 600s
   - name: application-ready
     resource: statefulset/ghost
-    condition: jsonpath={.status.readyReplicas}=1
     timeout: 600s
   - name: mysql-ready
     resource: statefulset/ghost-mysql
-    condition: jsonpath={.status.readyReplicas}=1
     timeout: 600s

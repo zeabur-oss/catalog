@@ -312,11 +312,32 @@ type Health struct {
 	Name string `yaml:"name" jsonschema:"required,pattern=^[a-z0-9-]+$"`
 	// The objects to wait for.
 	Resource HealthResource `yaml:"resource" jsonschema:"required"`
-	// The condition the objects reach, such as Ready or Available.
-	Condition string `yaml:"condition" jsonschema:"required,pattern=^[A-Za-z]+$"`
+	// The condition the objects reach, such as Ready. A Deployment, DaemonSet or StatefulSet has none:
+	// it is ready when its rollout is complete.
+	Condition string `yaml:"condition" jsonschema:"pattern=^[A-Za-z]+$"`
 	Timeout   string `yaml:"timeout" jsonschema:"required,pattern=^[0-9]+(s|m)$"`
 	// What to do when the check fails, in English. An installer shows it to the reader.
 	Advice string `yaml:"advice" jsonschema:"required,minLength=1"`
+}
+
+// workloadKinds roll out their pods. Their readiness is the rollout, so a check of one names no condition.
+var workloadKinds = []string{"DaemonSet", "Deployment", "StatefulSet"}
+
+func (Health) JSONSchemaExtend(s *gen.Schema) {
+	resource := gen.NewProperties()
+	kind := gen.NewProperties()
+	var workloads []any
+	for _, k := range workloadKinds {
+		workloads = append(workloads, k)
+	}
+	kind.Set("kind", &gen.Schema{Enum: workloads})
+	resource.Set("resource", &gen.Schema{Properties: kind})
+	s.If = &gen.Schema{Properties: resource}
+	// kubectl rollout status takes a name or a selector, not every object.
+	noAll := gen.NewProperties()
+	noAll.Set("resource", &gen.Schema{Not: &gen.Schema{Required: []string{"all"}}})
+	s.Then = &gen.Schema{Not: &gen.Schema{Required: []string{"condition"}}, Properties: noAll}
+	s.Else = &gen.Schema{Required: []string{"condition"}}
 }
 
 // HealthResource names the objects of one kind by name, by labels, or all of them.
@@ -374,24 +395,31 @@ func (HealthResource) JSONSchemaExtend(s *gen.Schema) {
 	s.Else = &gen.Schema{Not: &gen.Schema{Required: []string{"namespace"}}}
 }
 
-// WaitArgs returns the arguments of the kubectl wait that runs h.
-func (h Health) WaitArgs() []string {
+// Target returns the objects that the check is about.
+func (h Health) Target() Target {
 	r := h.Resource
-	args := []string{"wait", "--for=condition=" + h.Condition}
-	switch {
-	case r.Name != "":
-		args = append(args, healthKinds[r.Kind].resource+"/"+r.Name)
-	case len(r.Selector) > 0:
-		var labels []string
-		for _, k := range slices.Sorted(maps.Keys(r.Selector)) {
-			labels = append(labels, k+"="+r.Selector[k])
-		}
-		args = append(args, healthKinds[r.Kind].resource, "-l", strings.Join(labels, ","))
-	default:
-		args = append(args, healthKinds[r.Kind].resource, "--all")
+	t := Target{Resource: healthKinds[r.Kind].resource, Namespace: r.Namespace, Name: r.Name}
+	for _, k := range slices.Sorted(maps.Keys(r.Selector)) {
+		t.Selector += "," + k + "=" + r.Selector[k]
 	}
-	if r.Namespace != "" {
-		args = append(args, "-n", r.Namespace)
+	t.Selector = strings.TrimPrefix(t.Selector, ",")
+	return t
+}
+
+// WaitArgs returns the arguments of the kubectl wait that runs h. A check without a condition
+// is run with WaitReady instead.
+func (h Health) WaitArgs() []string {
+	t, args := h.Target(), []string{"wait", "--for=condition=" + h.Condition}
+	switch {
+	case t.Name != "":
+		args = append(args, t.Resource+"/"+t.Name)
+	case t.Selector != "":
+		args = append(args, t.Resource, "-l", t.Selector)
+	default:
+		args = append(args, t.Resource, "--all")
+	}
+	if t.Namespace != "" {
+		args = append(args, "-n", t.Namespace)
 	}
 	return append(args, "--timeout="+h.Timeout)
 }

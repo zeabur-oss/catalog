@@ -117,5 +117,4 @@ security:
 smoke:
   - name: Application available
     resource: deployment/openclaw
-    condition: condition=Available
     timeout: 10m

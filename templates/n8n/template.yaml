@@ -154,11 +154,9 @@ security:
 smoke:
   - name: workload-ready
     resource: deployment/n8n
-    condition: condition=Available
     timeout: 900s
   - name: runner-ready
     resource: deployment/task-runner
-    condition: condition=Available
     timeout: 900s
   - name: postgresql-ready
     resource: cluster/n8n-db

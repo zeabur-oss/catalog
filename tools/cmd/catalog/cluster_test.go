@@ -46,14 +46,18 @@ func TestDownloadChecksum(t *testing.T) {
 }
 
 func TestHelmChartJobsWaitForEveryChartsJob(t *testing.T) {
-	jobs, err := helmChartJobs("kube-system rke2-canal helm-install-rke2-canal\nkube-system rke2-coredns helm-install-rke2-coredns\n")
+	const canal = `{"metadata": {"namespace": "kube-system", "name": "rke2-canal"}, "status": {"jobName": "helm-install-rke2-canal"}}`
+	const coredns = `{"metadata": {"namespace": "kube-system", "name": "rke2-coredns"}, "status": {"jobName": "helm-install-rke2-coredns"}}`
+	const snapshot = `{"metadata": {"namespace": "kube-system", "name": "rke2-snapshot-controller"}, "status": {}}`
+	list := func(items ...string) []byte { return []byte(`{"items": [` + strings.Join(items, ",") + `]}`) }
+	jobs, err := helmChartJobs(list(canal, coredns))
 	if err != nil || !slices.Equal(jobs, []string{"kube-system/helm-install-rke2-canal", "kube-system/helm-install-rke2-coredns"}) {
 		t.Errorf("helmChartJobs = %q, %v", jobs, err)
 	}
-	if _, err := helmChartJobs("kube-system rke2-canal helm-install-rke2-canal\nkube-system rke2-snapshot-controller\n"); err == nil {
+	if _, err := helmChartJobs(list(canal, snapshot)); err == nil {
 		t.Error("a HelmChart without its install Job counted as installed")
 	}
-	if jobs, err := helmChartJobs(""); err != nil || len(jobs) != 0 {
+	if jobs, err := helmChartJobs(list()); err != nil || len(jobs) != 0 {
 		t.Errorf("no HelmCharts: %q, %v", jobs, err)
 	}
 }

@@ -166,10 +166,8 @@ smoke:
     sql: {cluster: n8n-db, database: n8n, query: SELECT 1, expect: "1"}
   - name: n8n-ready
     resource: deployment/n8n
-    condition: condition=Available
     timeout: 600s
     http: {service: n8n, port: 5678, path: /healthz/readiness, status: 200}
   - name: runners-ready
     resource: deployment/n8n-runners
-    condition: condition=Available
     timeout: 600s

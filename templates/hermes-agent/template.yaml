@@ -143,6 +143,5 @@ security:
 smoke:
   - name: hermes-api-ready
     resource: deployment/hermes-agent
-    condition: condition=Available
     timeout: 600s
     http: {service: hermes-agent, port: 5000, path: /health, status: 200}

@@ -77,7 +77,6 @@ security:
 smoke:
   - name: application-ready
     resource: statefulset/halo
-    condition: jsonpath={.status.readyReplicas}=1
     timeout: 600s
   - name: postgresql-ready
     resource: cluster/halo-db

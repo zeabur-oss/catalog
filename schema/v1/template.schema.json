@@ -463,6 +463,25 @@
       ]
     },
     "smoke": {
+      "if": {
+        "properties": {
+          "resource": {
+            "pattern": "^(deployment|statefulset|daemonset)/"
+          }
+        }
+      },
+      "then": {
+        "not": {
+          "required": [
+            "condition"
+          ]
+        }
+      },
+      "else": {
+        "required": [
+          "condition"
+        ]
+      },
       "properties": {
         "name": {
           "type": "string",
@@ -474,7 +493,8 @@
         },
         "condition": {
           "type": "string",
-          "pattern": "^(condition=[A-Za-z][A-Za-z0-9]*(=(True|False|Unknown))?|jsonpath=.+)$"
+          "pattern": "^(condition=[A-Za-z][A-Za-z0-9]*(=(True|False|Unknown))?|jsonpath=.+)$",
+          "description": "What the object reaches, as a kubectl wait --for value. A deployment, statefulset or daemonset\nhas none: it is ready when its rollout is complete."
         },
         "timeout": {
           "type": "string",
@@ -548,7 +568,6 @@
       "required": [
         "name",
         "resource",
-        "condition",
         "timeout"
       ],
       "description": "Smoke is an e2e check after install."

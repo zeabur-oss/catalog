@@ -65,6 +65,5 @@ security:
 smoke:
   - name: ollama-ready
     resource: deployment/ollama
-    condition: condition=Available
     timeout: 600s
     http: {service: ollama, port: 11434, path: /api/tags, status: 200}

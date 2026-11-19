@@ -66,6 +66,5 @@ security:
 smoke:
   - name: cliproxyapi-ready
     resource: deployment/cliproxyapi
-    condition: condition=Available
     timeout: 300s
     http: {service: cliproxyapi, port: 8317, path: /v1/models, status: 401}

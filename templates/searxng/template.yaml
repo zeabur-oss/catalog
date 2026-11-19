@@ -83,6 +83,5 @@ security:
 smoke:
   - name: searxng-ready
     resource: deployment/searxng
-    condition: condition=Available
     timeout: 300s
     http: {service: searxng, port: 8080, path: /healthz, status: 200}

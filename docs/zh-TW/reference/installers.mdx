@@ -82,7 +82,7 @@ API 存放的是原始資料。安裝工具根據這些資料，替每個元件�
 
 依結果的順序安裝元件，並移除結果裡沒有的已裝元件。每個元件的 releases、固定內容的 digest，以及安裝工具會讀取的其他欄位，見[元件檔案格式](component-format.mdx)。
 
-元件裝好後，每項 `health` 檢查各執行一次 `kubectl wait`，引數依序是 `--for=condition=<condition>`、`resource` 指定的物件、`-n <namespace>`（有命名空間時才加上），最後是 `--timeout=<timeout>`。單一物件寫成 `<resource>/<name>`，用 `selector` 選取的物件寫成 `<resource> -l <key>=<value>,…`，`all: true` 則寫成 `<resource> --all`。`<resource>` 依 `kind` 查下表：
+元件裝好後，執行每項 `health` 檢查。有 `condition` 的檢查執行一次 `kubectl wait`，引數依序是 `--for=condition=<condition>`、`resource` 指定的物件、`-n <namespace>`（有命名空間時才加上），最後是 `--timeout=<timeout>`。單一物件寫成 `<resource>/<name>`，用 `selector` 選取的物件寫成 `<resource> -l <key>=<value>,…`，`all: true` 則寫成 `<resource> --all`。執行 `kubectl wait` 之前，先等物件出現，因為找不到物件時 `kubectl wait` 會立刻失敗。`Deployment`、`DaemonSet` 和 `StatefulSet` 的檢查沒有 `condition`，它們在 rollout 完成時才算就緒，所以改執行 `kubectl rollout status <resource>/<name>`，用 `selector` 選取時執行 `kubectl rollout status <resource> -l <key>=<value>,…`，並加上 `-n <namespace>` 和 `--timeout=<timeout>`。kubectl 會比對 `observedGeneration` 和 `generation`，所以舊一輪 rollout 的 Pod 不會讓新的 rollout 被當成就緒。`<resource>` 依 `kind` 查下表：
 
 | `kind` | `<resource>` |
 | --- | --- |
@@ -100,7 +100,7 @@ API 存放的是原始資料。安裝工具根據這些資料，替每個元件�
 kubectl wait --for=condition=Ready nodes.longhorn.io --all -n longhorn-system --timeout=60s
 ```
 
-安裝工具可以用自己的等待時間取代 `timeout`。檢查失敗時，顯示它的 `advice`。
+安裝工具可以用自己的等待時間取代 `timeout`。檢查失敗時，先顯示物件的原因和訊息（和 `kubectl describe` 顯示的相同），再顯示它的 `advice`。`advice` 說明該怎麼處理，不說明哪裡出錯。
 
 ## 測試案例
 

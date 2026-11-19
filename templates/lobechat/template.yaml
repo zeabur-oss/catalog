@@ -78,5 +78,4 @@ security:
 smoke:
   - name: Application available
     resource: deployment/lobechat
-    condition: condition=Available
     timeout: 10m
