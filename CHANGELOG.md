@@ -2,6 +2,41 @@
 
 All notable changes to this catalog are documented in this file; each section comes from the change files in `.changeset/` (CONTRIBUTING.md, "Releases").
 
+## 0.5.6 (2026-11-20)
+
+### Features
+
+#### Components have READMEs
+
+Each component has `components/<id>.README.md`, `.README.zh-TW.md` and `.README.zh-CN.md` with an Introduction, Use it and Remove it, and optional Before you install and Troubleshooting sections. Use it links to the Zeabur docs page where the component shows up. `catalog validate` checks the files and headings, and requires Before you install when an input needs a value from outside the cluster.
+
+#### Templates reach each other's private services through a client label
+
+A NetworkPolicy peer may now select the template's clients, Pods with the label `templates.zeabur.com/<id>-client: "true"`, as well as the template's own Pods. The OpenClaw Browser Sandbox lets in Pods with `templates.zeabur.com/openclaw-browser-sandbox-client: "true"` and drops the `clientApp` input. The OpenClaw template sets that label, so OpenClaw can now reach the sandbox. Ollama lets in any Pod with `templates.zeabur.com/ollama-client: "true"`, as its security notes say.
+
+#### Templates have READMEs and link their docs
+
+`metadata.docs` links the upstream usage docs. Each template has `README.md`, `README.zh-TW.md` and `README.zh-CN.md` with an Introduction, numbered Getting started steps (where to open the app, how the first person signs in, which Secret holds each generated value), and optional Configuration and Troubleshooting sections. `catalog validate` checks that the files and these headings exist and that Getting started names the Secret of every `generate` input.
+
+#### Velero trusts a store's own CA
+
+Velero has a new input, `caCert`, for the CA certificate of an S3 store that serves HTTPS with its own certificate, such as a self-hosted MinIO. Leave it empty for a store with a public certificate. The `s3Url` description now says the URL must use https, because the store encrypts each backup with the backup key and S3 servers refuse that encryption over plain HTTP.
+
+### Fixes
+
+#### Longhorn's node check names no installer
+
+When a node isn't ready for Longhorn, the advice says to install what the node lacks, such as open-iscsi, an NFS client or a kernel module. It no longer tells you to run zeabur-installer, which Zeabur removed.
+
+#### VictoriaMetrics and VictoriaLogs carry no Zeabur rules
+
+Zeabur's notification rules and its log access move to Zeabur, which applies them when it installs VictoriaMetrics and VictoriaLogs. They ship with the Zeabur version that uses them.
+
+- VictoriaMetrics no longer installs the `zeabur-notifications` VMRule. Zeabur applies a VMRule of the same name, so a cluster that Zeabur manages needs no step. Without Zeabur, delete the old one: `kubectl -n observability delete vmrule zeabur-notifications`.
+- The custom resource metrics are named `kube_customresource_*` instead of `zeabur_*`, such as `kube_customresource_cnpg_backup_created`.
+- kube-state-metrics exports every label of Jobs and namespaces, not only Zeabur's.
+- The VictoriaLogs NetworkPolicy no longer admits Zeabur Proxy. Zeabur adds its own policy for it.
+
 ## 0.5.5 (2026-11-19)
 
 ### Fixes
