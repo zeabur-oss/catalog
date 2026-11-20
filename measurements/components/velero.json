@@ -15,7 +15,7 @@
         {
           "workload": "velero",
           "kind": "Deployment",
-          "memory": "24Mi",
+          "memory": "25Mi",
           "cpu": "1m"
         }
       ],
@@ -25,8 +25,8 @@
           "version": "12.2.5"
         }
       ],
-      "sourceDigest": "h1:Cvnzws0//CAbPAsCqpG5aRI96l97tYoITH2jO5BTWUA=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:H87oUgBKqimcggxPoLONYoCPee0PwWYqTK8hwZloxWo=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "k3s",
@@ -42,6 +42,32 @@
         {
           "workload": "velero",
           "kind": "Deployment",
+          "memory": "25Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "velero",
+          "version": "12.2.5"
+        }
+      ],
+      "sourceDigest": "h1:H87oUgBKqimcggxPoLONYoCPee0PwWYqTK8hwZloxWo=",
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "velero",
+          "kind": "Deployment",
           "memory": "24Mi",
           "cpu": "1m"
         }
@@ -52,34 +78,8 @@
           "version": "12.2.5"
         }
       ],
-      "sourceDigest": "h1:Cvnzws0//CAbPAsCqpG5aRI96l97tYoITH2jO5BTWUA=",
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "velero",
-          "kind": "Deployment",
-          "memory": "23Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "velero",
-          "version": "12.2.5"
-        }
-      ],
-      "sourceDigest": "h1:Cvnzws0//CAbPAsCqpG5aRI96l97tYoITH2jO5BTWUA=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:H87oUgBKqimcggxPoLONYoCPee0PwWYqTK8hwZloxWo=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kind",
@@ -94,8 +94,8 @@
         {
           "workload": "velero",
           "kind": "Deployment",
-          "memory": "22Mi",
-          "cpu": "1m"
+          "memory": "23Mi",
+          "cpu": "0"
         }
       ],
       "versions": [
@@ -104,8 +104,8 @@
           "version": "12.2.5"
         }
       ],
-      "sourceDigest": "h1:Cvnzws0//CAbPAsCqpG5aRI96l97tYoITH2jO5BTWUA=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:H87oUgBKqimcggxPoLONYoCPee0PwWYqTK8hwZloxWo=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kind",
@@ -130,8 +130,8 @@
           "version": "12.2.5"
         }
       ],
-      "sourceDigest": "h1:Cvnzws0//CAbPAsCqpG5aRI96l97tYoITH2jO5BTWUA=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:H87oUgBKqimcggxPoLONYoCPee0PwWYqTK8hwZloxWo=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kind",
@@ -146,7 +146,7 @@
         {
           "workload": "velero",
           "kind": "Deployment",
-          "memory": "22Mi",
+          "memory": "23Mi",
           "cpu": "1m"
         }
       ],
@@ -156,8 +156,8 @@
           "version": "12.2.5"
         }
       ],
-      "sourceDigest": "h1:Cvnzws0//CAbPAsCqpG5aRI96l97tYoITH2jO5BTWUA=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:H87oUgBKqimcggxPoLONYoCPee0PwWYqTK8hwZloxWo=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kubesolo",
@@ -165,6 +165,36 @@
       "platform": {
         "os": "linux",
         "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "velero",
+          "kind": "Deployment",
+          "memory": "23Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "velero",
+          "version": "12.2.5"
+        }
+      ],
+      "sourceDigest": "h1:H87oUgBKqimcggxPoLONYoCPee0PwWYqTK8hwZloxWo=",
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
       },
       "kubernetesVersion": "v1.36.6",
       "distributionVersion": "v1.3.0",
@@ -183,41 +213,11 @@
           "version": "12.2.5"
         }
       ],
-      "sourceDigest": "h1:Cvnzws0//CAbPAsCqpG5aRI96l97tYoITH2jO5BTWUA=",
+      "sourceDigest": "h1:H87oUgBKqimcggxPoLONYoCPee0PwWYqTK8hwZloxWo=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.6",
-      "distributionVersion": "v1.3.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "velero",
-          "kind": "Deployment",
-          "memory": "23Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "velero",
-          "version": "12.2.5"
-        }
-      ],
-      "sourceDigest": "h1:Cvnzws0//CAbPAsCqpG5aRI96l97tYoITH2jO5BTWUA=",
-      "addOns": {
-        "helm-controller": "v0.17.9"
-      },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "rke2",
@@ -233,7 +233,7 @@
         {
           "workload": "velero",
           "kind": "Deployment",
-          "memory": "24Mi",
+          "memory": "25Mi",
           "cpu": "1m"
         }
       ],
@@ -243,11 +243,11 @@
           "version": "12.2.5"
         }
       ],
-      "sourceDigest": "h1:Cvnzws0//CAbPAsCqpG5aRI96l97tYoITH2jO5BTWUA=",
+      "sourceDigest": "h1:H87oUgBKqimcggxPoLONYoCPee0PwWYqTK8hwZloxWo=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "rke2",
@@ -263,7 +263,7 @@
         {
           "workload": "velero",
           "kind": "Deployment",
-          "memory": "24Mi",
+          "memory": "25Mi",
           "cpu": "1m"
         }
       ],
@@ -273,11 +273,11 @@
           "version": "12.2.5"
         }
       ],
-      "sourceDigest": "h1:Cvnzws0//CAbPAsCqpG5aRI96l97tYoITH2jO5BTWUA=",
+      "sourceDigest": "h1:H87oUgBKqimcggxPoLONYoCPee0PwWYqTK8hwZloxWo=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     }
   ]
 }
