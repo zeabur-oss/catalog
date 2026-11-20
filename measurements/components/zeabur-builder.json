@@ -15,13 +15,13 @@
         {
           "workload": "zeabur-builder",
           "kind": "Deployment",
-          "memory": "2Mi",
+          "memory": "3Mi",
           "cpu": "0"
         },
         {
           "workload": "zot",
           "kind": "StatefulSet",
-          "memory": "48Mi",
+          "memory": "47Mi",
           "cpu": "3m"
         }
       ],
@@ -35,12 +35,12 @@
           "version": "0.2.3"
         }
       ],
-      "sourceDigest": "h1:czIeNzfYZ2CCOihyWraL03B0gkFEgpHgmwTYHoXO75E=",
+      "sourceDigest": "h1:/0ncJ4dVdI6FOYFcaBphUyFwULpTOg438K2TcUBiJv4=",
       "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "k3s",
@@ -76,12 +76,12 @@
           "version": "0.2.3"
         }
       ],
-      "sourceDigest": "h1:czIeNzfYZ2CCOihyWraL03B0gkFEgpHgmwTYHoXO75E=",
+      "sourceDigest": "h1:/0ncJ4dVdI6FOYFcaBphUyFwULpTOg438K2TcUBiJv4=",
       "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kind",
@@ -116,12 +116,12 @@
           "version": "0.2.3"
         }
       ],
-      "sourceDigest": "h1:czIeNzfYZ2CCOihyWraL03B0gkFEgpHgmwTYHoXO75E=",
+      "sourceDigest": "h1:/0ncJ4dVdI6FOYFcaBphUyFwULpTOg438K2TcUBiJv4=",
       "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kind",
@@ -142,6 +142,46 @@
         {
           "workload": "zot",
           "kind": "StatefulSet",
+          "memory": "47Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "zot",
+          "version": "0.1.134"
+        },
+        {
+          "release": "builder",
+          "version": "0.2.3"
+        }
+      ],
+      "sourceDigest": "h1:/0ncJ4dVdI6FOYFcaBphUyFwULpTOg438K2TcUBiJv4=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "zeabur-builder",
+          "kind": "Deployment",
+          "memory": "2Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "zot",
+          "kind": "StatefulSet",
           "memory": "46Mi",
           "cpu": "3m"
         }
@@ -156,21 +196,62 @@
           "version": "0.2.3"
         }
       ],
-      "sourceDigest": "h1:czIeNzfYZ2CCOihyWraL03B0gkFEgpHgmwTYHoXO75E=",
+      "sourceDigest": "h1:/0ncJ4dVdI6FOYFcaBphUyFwULpTOg438K2TcUBiJv4=",
       "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kind",
       "profile": "single-node",
       "platform": {
         "os": "linux",
-        "architecture": "amd64"
+        "architecture": "arm64"
       },
       "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "zeabur-builder",
+          "kind": "Deployment",
+          "memory": "2Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "zot",
+          "kind": "StatefulSet",
+          "memory": "46Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "zot",
+          "version": "0.1.134"
+        },
+        {
+          "release": "builder",
+          "version": "0.2.3"
+        }
+      ],
+      "sourceDigest": "h1:/0ncJ4dVdI6FOYFcaBphUyFwULpTOg438K2TcUBiJv4=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
       "result": "passed",
       "pods": [
         {
@@ -196,21 +277,25 @@
           "version": "0.2.3"
         }
       ],
-      "sourceDigest": "h1:czIeNzfYZ2CCOihyWraL03B0gkFEgpHgmwTYHoXO75E=",
+      "sourceDigest": "h1:/0ncJ4dVdI6FOYFcaBphUyFwULpTOg438K2TcUBiJv4=",
       "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-19"
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-20"
     },
     {
-      "distribution": "kind",
+      "distribution": "kubesolo",
       "profile": "single-node",
       "platform": {
         "os": "linux",
         "architecture": "arm64"
       },
-      "kubernetesVersion": "v1.37.0",
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
       "result": "passed",
       "pods": [
         {
@@ -222,7 +307,7 @@
         {
           "workload": "zot",
           "kind": "StatefulSet",
-          "memory": "47Mi",
+          "memory": "49Mi",
           "cpu": "2m"
         }
       ],
@@ -236,100 +321,15 @@
           "version": "0.2.3"
         }
       ],
-      "sourceDigest": "h1:czIeNzfYZ2CCOihyWraL03B0gkFEgpHgmwTYHoXO75E=",
+      "sourceDigest": "h1:/0ncJ4dVdI6FOYFcaBphUyFwULpTOg438K2TcUBiJv4=",
       "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
-      },
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.6",
-      "distributionVersion": "v1.3.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "zeabur-builder",
-          "kind": "Deployment",
-          "memory": "2Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "zot",
-          "kind": "StatefulSet",
-          "memory": "47Mi",
-          "cpu": "3m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "zot",
-          "version": "0.1.134"
-        },
-        {
-          "release": "builder",
-          "version": "0.2.3"
-        }
-      ],
-      "sourceDigest": "h1:czIeNzfYZ2CCOihyWraL03B0gkFEgpHgmwTYHoXO75E=",
-      "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.6",
-      "distributionVersion": "v1.3.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "zeabur-builder",
-          "kind": "Deployment",
-          "memory": "2Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "zot",
-          "kind": "StatefulSet",
-          "memory": "47Mi",
-          "cpu": "3m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "zot",
-          "version": "0.1.134"
-        },
-        {
-          "release": "builder",
-          "version": "0.2.3"
-        }
-      ],
-      "sourceDigest": "h1:czIeNzfYZ2CCOihyWraL03B0gkFEgpHgmwTYHoXO75E=",
-      "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
-      },
-      "addOns": {
-        "helm-controller": "v0.17.9"
-      },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "rke2",
@@ -351,8 +351,8 @@
         {
           "workload": "zot",
           "kind": "StatefulSet",
-          "memory": "46Mi",
-          "cpu": "2m"
+          "memory": "47Mi",
+          "cpu": "3m"
         }
       ],
       "versions": [
@@ -365,15 +365,15 @@
           "version": "0.2.3"
         }
       ],
-      "sourceDigest": "h1:czIeNzfYZ2CCOihyWraL03B0gkFEgpHgmwTYHoXO75E=",
+      "sourceDigest": "h1:/0ncJ4dVdI6FOYFcaBphUyFwULpTOg438K2TcUBiJv4=",
       "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "rke2",
@@ -395,7 +395,7 @@
         {
           "workload": "zot",
           "kind": "StatefulSet",
-          "memory": "46Mi",
+          "memory": "47Mi",
           "cpu": "2m"
         }
       ],
@@ -409,15 +409,15 @@
           "version": "0.2.3"
         }
       ],
-      "sourceDigest": "h1:czIeNzfYZ2CCOihyWraL03B0gkFEgpHgmwTYHoXO75E=",
+      "sourceDigest": "h1:/0ncJ4dVdI6FOYFcaBphUyFwULpTOg438K2TcUBiJv4=",
       "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     }
   ]
 }

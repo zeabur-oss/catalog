@@ -15,7 +15,7 @@
         {
           "workload": "cert-manager",
           "kind": "Deployment",
-          "memory": "25Mi",
+          "memory": "26Mi",
           "cpu": "0"
         },
         {
@@ -37,11 +37,11 @@
           "version": "v1.21.3"
         }
       ],
-      "sourceDigest": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+      "sourceDigest": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
       "dependencies": {
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "k3s",
@@ -58,53 +58,263 @@
           "workload": "cert-manager",
           "kind": "Deployment",
           "memory": "26Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "cert-manager-cainjector",
+          "kind": "Deployment",
+          "memory": "18Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "cert-manager-webhook",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "cert-manager",
+          "version": "v1.21.3"
+        }
+      ],
+      "sourceDigest": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+      "dependencies": {
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "cert-manager",
+          "kind": "Deployment",
+          "memory": "25Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "cert-manager-cainjector",
+          "kind": "Deployment",
+          "memory": "18Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "cert-manager-webhook",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "cert-manager",
+          "version": "v1.21.3"
+        }
+      ],
+      "sourceDigest": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+      "dependencies": {
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "cert-manager",
+          "kind": "Deployment",
+          "memory": "25Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "cert-manager-cainjector",
+          "kind": "Deployment",
+          "memory": "18Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "cert-manager-webhook",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "cert-manager",
+          "version": "v1.21.3"
+        }
+      ],
+      "sourceDigest": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+      "dependencies": {
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "cert-manager",
+          "kind": "Deployment",
+          "memory": "26Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "cert-manager-cainjector",
+          "kind": "Deployment",
+          "memory": "17Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "cert-manager-webhook",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "cert-manager",
+          "version": "v1.21.3"
+        }
+      ],
+      "sourceDigest": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+      "dependencies": {
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "cert-manager",
+          "kind": "Deployment",
+          "memory": "26Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "cert-manager-cainjector",
+          "kind": "Deployment",
+          "memory": "18Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "cert-manager-webhook",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "cert-manager",
+          "version": "v1.21.3"
+        }
+      ],
+      "sourceDigest": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+      "dependencies": {
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "cert-manager",
+          "kind": "Deployment",
+          "memory": "26Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "cert-manager-cainjector",
+          "kind": "Deployment",
+          "memory": "18Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "cert-manager-webhook",
+          "kind": "Deployment",
+          "memory": "12Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "cert-manager",
+          "version": "v1.21.3"
+        }
+      ],
+      "sourceDigest": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+      "dependencies": {
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "cert-manager",
+          "kind": "Deployment",
+          "memory": "26Mi",
           "cpu": "0"
         },
         {
           "workload": "cert-manager-cainjector",
           "kind": "Deployment",
           "memory": "19Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "cert-manager-webhook",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "cert-manager",
-          "version": "v1.21.3"
-        }
-      ],
-      "sourceDigest": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-      "dependencies": {
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
-      },
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "cert-manager",
-          "kind": "Deployment",
-          "memory": "26Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "cert-manager-cainjector",
-          "kind": "Deployment",
-          "memory": "17Mi",
           "cpu": "1m"
         },
         {
@@ -120,224 +330,14 @@
           "version": "v1.21.3"
         }
       ],
-      "sourceDigest": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+      "sourceDigest": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
       "dependencies": {
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
-      },
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "cert-manager",
-          "kind": "Deployment",
-          "memory": "26Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "cert-manager-cainjector",
-          "kind": "Deployment",
-          "memory": "18Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "cert-manager-webhook",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "cert-manager",
-          "version": "v1.21.3"
-        }
-      ],
-      "sourceDigest": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-      "dependencies": {
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
-      },
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "cert-manager",
-          "kind": "Deployment",
-          "memory": "26Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "cert-manager-cainjector",
-          "kind": "Deployment",
-          "memory": "17Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "cert-manager-webhook",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "cert-manager",
-          "version": "v1.21.3"
-        }
-      ],
-      "sourceDigest": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-      "dependencies": {
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
-      },
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "cert-manager",
-          "kind": "Deployment",
-          "memory": "26Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "cert-manager-cainjector",
-          "kind": "Deployment",
-          "memory": "18Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "cert-manager-webhook",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "cert-manager",
-          "version": "v1.21.3"
-        }
-      ],
-      "sourceDigest": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-      "dependencies": {
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
-      },
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.6",
-      "distributionVersion": "v1.3.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "cert-manager",
-          "kind": "Deployment",
-          "memory": "26Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "cert-manager-cainjector",
-          "kind": "Deployment",
-          "memory": "17Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "cert-manager-webhook",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "cert-manager",
-          "version": "v1.21.3"
-        }
-      ],
-      "sourceDigest": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-      "dependencies": {
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.6",
-      "distributionVersion": "v1.3.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "cert-manager",
-          "kind": "Deployment",
-          "memory": "27Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "cert-manager-cainjector",
-          "kind": "Deployment",
-          "memory": "18Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "cert-manager-webhook",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "cert-manager",
-          "version": "v1.21.3"
-        }
-      ],
-      "sourceDigest": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-      "dependencies": {
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
-      },
-      "addOns": {
-        "helm-controller": "v0.17.9"
-      },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "rke2",
@@ -353,14 +353,14 @@
         {
           "workload": "cert-manager",
           "kind": "Deployment",
-          "memory": "27Mi",
+          "memory": "26Mi",
           "cpu": "0"
         },
         {
           "workload": "cert-manager-cainjector",
           "kind": "Deployment",
-          "memory": "20Mi",
-          "cpu": "1m"
+          "memory": "21Mi",
+          "cpu": "0"
         },
         {
           "workload": "cert-manager-webhook",
@@ -375,14 +375,14 @@
           "version": "v1.21.3"
         }
       ],
-      "sourceDigest": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+      "sourceDigest": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
       "dependencies": {
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "rke2",
@@ -398,7 +398,7 @@
         {
           "workload": "cert-manager",
           "kind": "Deployment",
-          "memory": "26Mi",
+          "memory": "25Mi",
           "cpu": "0"
         },
         {
@@ -420,14 +420,14 @@
           "version": "v1.21.3"
         }
       ],
-      "sourceDigest": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+      "sourceDigest": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
       "dependencies": {
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     }
   ]
 }

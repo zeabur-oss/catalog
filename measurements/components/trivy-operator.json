@@ -15,8 +15,8 @@
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "115Mi",
-          "cpu": "2m"
+          "memory": "124Mi",
+          "cpu": "4m"
         }
       ],
       "versions": [
@@ -25,8 +25,8 @@
           "version": "0.38.1"
         }
       ],
-      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "k3s",
@@ -42,144 +42,7 @@
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "113Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "trivy-operator",
-          "version": "0.38.1"
-        }
-      ],
-      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
-      "measuredAt": "2026-11-12"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "trivy-operator",
-          "kind": "Deployment",
-          "memory": "138Mi",
-          "cpu": "2m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "trivy-operator",
-          "version": "0.38.1"
-        }
-      ],
-      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
-      "measuredAt": "2026-11-12"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "trivy-operator",
-          "kind": "Deployment",
-          "memory": "125Mi",
-          "cpu": "2m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "trivy-operator",
-          "version": "0.38.1"
-        }
-      ],
-      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
-      "measuredAt": "2026-11-12"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "trivy-operator",
-          "kind": "Deployment",
-          "memory": "134Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "scan-vulnerabilityreport-67fd875dc",
-          "kind": "Job",
-          "memory": "0",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "trivy-operator",
-          "version": "0.38.1"
-        }
-      ],
-      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
-      "measuredAt": "2026-11-12"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "trivy-operator",
-          "kind": "Deployment",
-          "memory": "134Mi",
-          "cpu": "6m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "trivy-operator",
-          "version": "0.38.1"
-        }
-      ],
-      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
-      "measuredAt": "2026-11-12"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.6",
-      "distributionVersion": "v1.3.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "trivy-operator",
-          "kind": "Deployment",
-          "memory": "113Mi",
+          "memory": "123Mi",
           "cpu": "3m"
         }
       ],
@@ -189,11 +52,148 @@
           "version": "0.38.1"
         }
       ],
-      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
+      "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M=",
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "trivy-operator",
+          "kind": "Deployment",
+          "memory": "137Mi",
+          "cpu": "3m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.38.1"
+        }
+      ],
+      "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M=",
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "trivy-operator",
+          "kind": "Deployment",
+          "memory": "127Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.38.1"
+        }
+      ],
+      "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M=",
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "trivy-operator",
+          "kind": "Deployment",
+          "memory": "121Mi",
+          "cpu": "4m"
+        },
+        {
+          "workload": "scan-vulnerabilityreport-55bfb7cbb6",
+          "kind": "Job",
+          "memory": "0",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.38.1"
+        }
+      ],
+      "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M=",
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "trivy-operator",
+          "kind": "Deployment",
+          "memory": "133Mi",
+          "cpu": "3m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.38.1"
+        }
+      ],
+      "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M=",
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "trivy-operator",
+          "kind": "Deployment",
+          "memory": "128Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "trivy-operator",
+          "version": "0.38.1"
+        }
+      ],
+      "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kubesolo",
@@ -209,14 +209,8 @@
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "107Mi",
+          "memory": "121Mi",
           "cpu": "2m"
-        },
-        {
-          "workload": "scan-vulnerabilityreport-56948f96f6",
-          "kind": "Job",
-          "memory": "0",
-          "cpu": "0"
         }
       ],
       "versions": [
@@ -225,11 +219,11 @@
           "version": "0.38.1"
         }
       ],
-      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
+      "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "rke2",
@@ -245,14 +239,8 @@
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "155Mi",
+          "memory": "139Mi",
           "cpu": "3m"
-        },
-        {
-          "workload": "scan-vulnerabilityreport-84dfb5b8c7",
-          "kind": "Job",
-          "memory": "105Mi",
-          "cpu": "209m"
         }
       ],
       "versions": [
@@ -261,11 +249,11 @@
           "version": "0.38.1"
         }
       ],
-      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
+      "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "rke2",
@@ -282,13 +270,7 @@
           "workload": "trivy-operator",
           "kind": "Deployment",
           "memory": "142Mi",
-          "cpu": "3m"
-        },
-        {
-          "workload": "scan-vulnerabilityreport-5c478b6879",
-          "kind": "Job",
-          "memory": "0",
-          "cpu": "0"
+          "cpu": "1m"
         }
       ],
       "versions": [
@@ -297,11 +279,11 @@
           "version": "0.38.1"
         }
       ],
-      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
+      "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-20"
     }
   ]
 }

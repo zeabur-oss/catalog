@@ -21,14 +21,14 @@
       "versions": [
         {
           "image": "qdrant/qdrant",
-          "version": "v1.20.0-unprivileged",
-          "digest": "sha256:8c215051dc7bc15221b5f89c100a84a4b04d0dd8497fb73e6fa86fc948d1a41d"
+          "version": "v1.20.1-unprivileged",
+          "digest": "sha256:a5872d32bdeef0f7ed4c1115bfb66d688ecd037703288a2484ccb1d4e5016bb9"
         }
       ],
-      "sourceDigest": "h1:UKSK6YCMYcYnxjFAewGvoAoYvYZIHrwzp0On1UVDjfY=",
+      "sourceDigest": "h1:6rGn63MyGJ64CbzR5KPEB6zwPjsH3+erlrWcB5KiJJM=",
       "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
       "measuredAt": "2026-11-20"
     }

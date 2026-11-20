@@ -15,7 +15,7 @@
         {
           "workload": "k8up",
           "kind": "Deployment",
-          "memory": "12Mi",
+          "memory": "10Mi",
           "cpu": "1m"
         }
       ],
@@ -25,8 +25,8 @@
           "version": "4.10.1"
         }
       ],
-      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "k3s",
@@ -42,8 +42,8 @@
         {
           "workload": "k8up",
           "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "1m"
+          "memory": "12Mi",
+          "cpu": "0"
         }
       ],
       "versions": [
@@ -52,8 +52,8 @@
           "version": "4.10.1"
         }
       ],
-      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kind",
@@ -68,7 +68,7 @@
         {
           "workload": "k8up",
           "kind": "Deployment",
-          "memory": "12Mi",
+          "memory": "11Mi",
           "cpu": "1m"
         }
       ],
@@ -78,8 +78,8 @@
           "version": "4.10.1"
         }
       ],
-      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kind",
@@ -104,8 +104,8 @@
           "version": "4.10.1"
         }
       ],
-      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kind",
@@ -120,8 +120,8 @@
         {
           "workload": "k8up",
           "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "1m"
+          "memory": "10Mi",
+          "cpu": "0"
         }
       ],
       "versions": [
@@ -130,8 +130,8 @@
           "version": "4.10.1"
         }
       ],
-      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kind",
@@ -147,7 +147,7 @@
           "workload": "k8up",
           "kind": "Deployment",
           "memory": "10Mi",
-          "cpu": "1m"
+          "cpu": "0"
         }
       ],
       "versions": [
@@ -156,8 +156,8 @@
           "version": "4.10.1"
         }
       ],
-      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kubesolo",
@@ -183,11 +183,11 @@
           "version": "4.10.1"
         }
       ],
-      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
+      "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kubesolo",
@@ -213,11 +213,11 @@
           "version": "4.10.1"
         }
       ],
-      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
+      "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "rke2",
@@ -243,11 +243,11 @@
           "version": "4.10.1"
         }
       ],
-      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
+      "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "rke2",
@@ -264,7 +264,7 @@
           "workload": "k8up",
           "kind": "Deployment",
           "memory": "11Mi",
-          "cpu": "0"
+          "cpu": "1m"
         }
       ],
       "versions": [
@@ -273,11 +273,11 @@
           "version": "4.10.1"
         }
       ],
-      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
+      "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-20"
     }
   ]
 }
