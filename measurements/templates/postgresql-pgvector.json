@@ -14,17 +14,17 @@
         {
           "workload": "postgresql",
           "kind": "Cluster",
-          "memory": "50Mi",
-          "cpu": "6m"
+          "memory": "51Mi",
+          "cpu": "5m"
         }
       ],
-      "sourceDigest": "h1:vS4WSJf/6SPbGwa0g+gCm+mdsufnap22jFxd9ADBiSQ=",
+      "sourceDigest": "h1:wfaGhFQxpHahDsJB9A8bZAfSBqqCmLr9xQ38KA+dszc=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "cloudnative-pg": "h1:VlI7FbJq8eu7nUwyl03sJAPplBUBm53QJYGDhleao90=",
         "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     }
   ]
 }

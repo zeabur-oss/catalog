@@ -25,11 +25,11 @@
           "digest": "sha256:a8cb0f33d51fa107c96fd2bd3a71aaf564ec131e9d2bdf8700944f0ed8b170d7"
         }
       ],
-      "sourceDigest": "h1:JUvRb4FvosR59rFJrj8prtNPKA8Hn0lbJJDUeWl7NBA=",
+      "sourceDigest": "h1:H1Blslr/wlEFBaPrhu6J0Eu8rHZNczp6U3YBF0qZcww=",
       "dependencies": {
         "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     }
   ]
 }

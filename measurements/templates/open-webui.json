@@ -14,7 +14,7 @@
         {
           "workload": "open-webui",
           "kind": "Deployment",
-          "memory": "839Mi",
+          "memory": "855Mi",
           "cpu": "3m"
         },
         {
@@ -36,12 +36,12 @@
           "digest": "sha256:b48e9bc338ce2be0acfbeff01810db72408a12f07739f9e3879c1f2b00952d6e"
         }
       ],
-      "sourceDigest": "h1:jnzvlLRy+cywZbkSRGYIqlPZGf+gZqcufqA/IZO7kMk=",
+      "sourceDigest": "h1:1b5fNM85HWJafamWjnbrg3EkHr5fcsiriVOBSDFtO/g=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     }
   ]
 }

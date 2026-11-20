@@ -14,7 +14,7 @@
         {
           "workload": "memos",
           "kind": "StatefulSet",
-          "memory": "16Mi",
+          "memory": "17Mi",
           "cpu": "0"
         }
       ],
@@ -25,12 +25,12 @@
           "digest": "sha256:087e7dc6b76b31fcd1107a5767398b2a310ced209adb791efd8760c745dc8034"
         }
       ],
-      "sourceDigest": "h1:7TOFP7sk9TG+qpi53c/nnHIVkqwKMWTomSuXhkBkW/0=",
+      "sourceDigest": "h1:qwqajGrIsVCrAJ8bqeTI7wV3bneX4nR0JATC9yqMWQE=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     }
   ]
 }

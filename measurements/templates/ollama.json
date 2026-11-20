@@ -14,7 +14,7 @@
         {
           "workload": "ollama",
           "kind": "Deployment",
-          "memory": "112Mi",
+          "memory": "171Mi",
           "cpu": "0"
         }
       ],
@@ -25,8 +25,8 @@
           "digest": "sha256:910d0d8107b538fb0894e63163eb195de0cc7aefcbc666dc62d3b18f71124592"
         }
       ],
-      "sourceDigest": "h1:XrpW3yqigQf86Age8+NVKUg12woLIVZlwIw8DmniZOY=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:hOZBFOy4RLGAga3AO+VfK/PGK82xzxjiX1S0UIfgJcA=",
+      "measuredAt": "2026-11-20"
     }
   ]
 }

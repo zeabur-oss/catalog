@@ -14,14 +14,14 @@
         {
           "workload": "wordpress",
           "kind": "Deployment",
-          "memory": "62Mi",
-          "cpu": "1m"
+          "memory": "61Mi",
+          "cpu": "2m"
         },
         {
           "workload": "mariadb",
           "kind": "StatefulSet",
           "memory": "98Mi",
-          "cpu": "10m"
+          "cpu": "12m"
         }
       ],
       "versions": [
@@ -46,13 +46,13 @@
           "digest": "sha256:82d93a279778e5307902813c402b9118521e8104459a0e350ed719f6d6c4d1ab"
         }
       ],
-      "sourceDigest": "h1:SY+Z5dw2whTyDEOnbIbal6K+dye4Rl9DbVXbILQhbW0=",
+      "sourceDigest": "h1:Zt467KfVhyGnS6ZqnFAVyE4qzi9r0VsMW4Tv0QyWKj0=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "mariadb-operator": "h1:6Qb+uLZA0Z0tDiXxvRmz8IsqwKmqyQKX3+oZVUEqAsI=",
         "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     }
   ]
 }
