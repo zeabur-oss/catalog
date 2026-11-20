@@ -26,7 +26,10 @@ inputs:
     required: true
     testValue: catalog-ci
   - name: s3Url
-    description: Velero connects to this S3 endpoint URL; any S3-compatible service works.
+    description: >
+      Velero connects to this S3 endpoint URL; any S3-compatible service works.
+      Use https: the store encrypts each backup with the backupKey input, and
+      S3 servers refuse that encryption over plain HTTP.
     path: configuration.backupStorageLocation.0.config.s3Url
     required: true
     testValue: http://minio.invalid:9000
@@ -39,6 +42,15 @@ inputs:
     secret: {name: velero-credentials, key: cloud, namespace: velero}
     required: true
     testValue: "[default]\naws_access_key_id=ci\naws_secret_access_key=ci\n"
+  - name: caCert
+    description: >
+      The CA certificate, in PEM, that signs the S3 endpoint's certificate,
+      such as a self-hosted MinIO's own CA. Leave it empty for a store with a
+      public certificate.
+    secret: {name: velero-ca, key: ca.crt, namespace: velero}
+    # Velero fails when caCertRef names a missing Secret, so the Secret always
+    # exists; an empty CA keeps the system CAs.
+    default: ""
   - name: repositoryPassword
     description: >
       Kopia encrypts file-system backups with this password. Without the
@@ -106,6 +118,8 @@ releases:
           - name: default
             provider: aws
             default: true
+            # The caCert input; Velero checks the store's certificate with it.
+            caCertRef: {name: velero-ca, key: ca.crt}
             config:
               region: us-east-1
               s3ForcePathStyle: "true"
