@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
@@ -30,7 +31,18 @@ func e2e(fs *flag.FlagSet, r *repo) error {
 func newTester(r *repo, profile string) (*catalog.Tester, error) {
 	cfg := r.e2e
 	t := &catalog.Tester{Catalog: r.cat, Profile: profile, Overrides: cfg.Overrides,
-		Replacements: cfg.Replacements, SkipSmoke: cfg.SkipSmoke, Unready: map[string]bool{}}
+		Replacements: cfg.Replacements, SkipSmoke: cfg.SkipSmoke, Inputs: cfg.Inputs, Unready: map[string]bool{}}
+	for id, inputs := range cfg.Inputs {
+		c, ok := r.cat.Get(id)
+		if !ok {
+			return nil, fmt.Errorf("config/e2e.yaml: inputs: unknown component %q", id)
+		}
+		for name := range inputs {
+			if !slices.ContainsFunc(c.Inputs, func(in catalog.Input) bool { return in.Name == name }) {
+				return nil, fmt.Errorf("config/e2e.yaml: inputs: %s has no input %q", id, name)
+			}
+		}
+	}
 	for _, id := range cfg.Unready {
 		if _, ok := r.cat.Get(id); !ok {
 			return nil, fmt.Errorf("config/e2e.yaml: unready: unknown component %q", id)

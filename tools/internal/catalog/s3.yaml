@@ -1,0 +1,58 @@
+# SeaweedFS for component e2e: master, volume, filer and S3 in one Pod, with
+# the S3 API over HTTPS on port 443 of the Service.
+apiVersion: v1
+kind: Secret
+metadata: {name: s3, namespace: '{{ .Namespace }}'}
+stringData:
+  s3.json: '{{ .Config }}'
+  # JSON strings, which YAML reads as they are.
+  tls.crt: {{ .Cert }}
+  tls.key: {{ .Key }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: s3, namespace: '{{ .Namespace }}'}
+spec:
+  selector: {matchLabels: {app: s3}}
+  template:
+    metadata: {labels: {app: s3}}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: seaweedfs
+          image: chrislusf/seaweedfs:4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d
+          args:
+            - server
+            - -dir=/data
+            # Small volumes, so that the test disk has free volume slots.
+            - -master.volumeSizeLimitMB=64
+            - -volume.max=30
+            - -s3
+            - -s3.port=8333
+            - -s3.config=/etc/s3/s3.json
+            - -s3.cert.file=/etc/s3/tls.crt
+            - -s3.key.file=/etc/s3/tls.key
+          ports: [{name: s3, containerPort: 8333}]
+          readinessProbe:
+            tcpSocket: {port: 8333}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: data, mountPath: /data}
+            - {name: config, mountPath: /etc/s3, readOnly: true}
+      volumes:
+        - {name: data, emptyDir: {}}
+        - {name: config, secret: {secretName: s3}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: s3, namespace: '{{ .Namespace }}'}
+spec:
+  selector: {app: s3}
+  ports: [{name: https, port: 443, targetPort: s3}]
