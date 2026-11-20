@@ -6,8 +6,8 @@
 
 ## 开始使用
 
-1. 等服务显示为运行中，打开它的域名，例如 `https://sillytavern.example.com`。
-2. 浏览器会要求登录。用户名是 `user`。密码在机密 `app-secrets` 的 `basic-password` 字段：
+1. 在 Zeabur 打开 `sillytavern` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**，也就是你在安装表单填的域名。
+2. 浏览器会要求登录。用户名是 `user`。密码在机密变量 `app-secrets` 的 `basic-password`。打开**变量**，在**来自配置文件和机密变量**点 `app-secrets`，再点 `basic-password` 旁的眼睛图标。不用 Zeabur 时，用 kubectl 读取机密变量 `app-secrets` 的 `basic-password`：
 
    ```sh
    kubectl -n <namespace> get secret app-secrets -o jsonpath='{.data.basic-password}' | base64 -d
@@ -23,13 +23,7 @@
 
 ### 更改密码
 
-把新的值写进 `app-secrets` 的 `basic-password` 字段，再重启部署，让它读到新值：
-
-```sh
-kubectl -n <namespace> rollout restart deployment/sillytavern
-```
-
-下次打开页面时，浏览器会要求输入新密码。
+在服务的**变量**标签页点 `app-secrets`，填入新的 `basic-password`，检查后应用。运行中的副本会继续用旧值，直到你点服务页顶部的**重启**。下次打开页面时，浏览器会要求输入新密码。
 
 ## 故障排除
 

@@ -6,9 +6,9 @@ The database is called `zeabur` and is owned by the user `app`. There is one ins
 
 ## Getting started
 
-1. Wait until the cluster `postgresql` shows as ready. The database has no domain and no web page.
-2. Apps in the same project connect to Service `postgresql-rw` on port `5432`, with database `zeabur` and user `app`.
-3. The operator creates Secret `postgresql-app`. The password is in key `password`:
+1. In Zeabur, open the `postgresql` database in your project. When **Overview** shows it as ready, it is up. The database has no domain and no web page.
+2. Apps in the same project connect to Service `postgresql-rw` on port `5432`, with database `zeabur` and user `app`. Under **Overview**, the **Connections** section shows the **Host**, **Port**, **Database** and **Username**. Click **Show** next to the password to read it. To give an app these values as variables, click **Connect to a service** in the same section.
+3. The operator also creates Secret `postgresql-app`. No service in the project reads it as a variable, so read it with kubectl. The password is in key `password`:
 
    ```sh
    kubectl -n <namespace> get secret postgresql-app -o jsonpath='{.data.password}' | base64 -d

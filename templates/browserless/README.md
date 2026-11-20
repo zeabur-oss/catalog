@@ -6,8 +6,8 @@ This template runs one Browserless instance behind your domain. Every call needs
 
 ## Getting started
 
-1. Wait until the service shows as running, then note its domain, for example `https://browserless.example.com`.
-2. Get the token. It is in Secret `browserless-secrets`, key `token`:
+1. In Zeabur, open the `browserless` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**, for example `browserless.example.com`.
+2. Get the token. Open **Variables**, click `browserless-secrets` under **From config files and secrets**, and click the eye icon next to `token`. Without Zeabur, read Secret `browserless-secrets`, key `token`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret browserless-secrets -o jsonpath='{.data.token}' | base64 -d
@@ -31,13 +31,7 @@ Use `chromium.connectOverCDP("wss://<your domain>?token=<token>")`. See [Playwri
 
 ### Change the token
 
-Write a new value to `browserless-secrets`, key `token`, then restart the deployment so it reads the new value:
-
-```sh
-kubectl -n <namespace> rollout restart deployment/browserless
-```
-
-Update every client that uses the old token.
+On the service's **Variables** tab, click `browserless-secrets`, enter a new value for `token`, then review and apply. The running replica keeps the old token until you click **Restart** at the top of the service page. Update every client that uses the old token.
 
 ## Troubleshooting
 

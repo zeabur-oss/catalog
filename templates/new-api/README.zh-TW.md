@@ -6,15 +6,15 @@
 
 ## 開始使用
 
-1. 等服務顯示為執行中，開啟它的網域，例如 `https://newapi.example.com`。
-2. 以 `admin` 登入。密碼是 `Aa1-` 加上機密 `newapi-secrets` 的 `admin-password` 欄位的值。下面的指令會印出完整的密碼：
+1. 在 Zeabur 打開 `new-api` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，就是你在安裝表單填的網域，例如 `newapi.example.com`。
+2. 以 `admin` 登入。密碼是 `Aa1-` 加上 `admin-password` 的值。值從 `new-api` 服務取得：打開**環境變數**，在**來自設定檔和機密變數**點 `newapi-secrets`，再按 `admin-password` 旁的眼睛圖示，並在前面加上 `Aa1-`。不用 Zeabur 時，下面的 kubectl 指令會印出完整的密碼：
 
    ```sh
    echo "Aa1-$(kubectl -n <namespace> get secret newapi-secrets -o jsonpath='{.data.admin-password}' | base64 -d)"
    ```
 
 3. 把你的模型服務商加成管道（channel）。詳見「設定」。
-4. 機密 `newapi-secrets` 裡還有兩個日常使用不需要的欄位。`session-secret` 是工作階段機密，`crypto-secret` 是快取鍵用的 HMAC 機密：
+4. 機密 `newapi-secrets` 裡還有兩個日常使用不需要的欄位。`session-secret` 是工作階段機密，`crypto-secret` 是快取鍵用的 HMAC 機密。取得方式同上。不用 Zeabur 時，用 kubectl：
 
    ```sh
    kubectl -n <namespace> get secret newapi-secrets -o jsonpath='{.data.session-secret}' | base64 -d

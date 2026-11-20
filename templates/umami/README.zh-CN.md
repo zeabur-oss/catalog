@@ -2,12 +2,12 @@
 
 [Umami](https://umami.is/) 是网站流量分析的仪表盘。你在网页上加一小段跟踪脚本，就能在仪表盘看到访问数据。
 
-这个模板在你的域名后面运行一个 Umami，并附带它自己的 PostgreSQL 数据库（Service `umami-db-rw`，端口 `5432`），由 CloudNativePG 运算符管理。
+这个模板在你的域名后面运行一个 Umami，并附带它自己的 PostgreSQL 数据库（Service `umami-db-rw`，端口 `5432`），由 CloudNativePG 运算符管理。它在项目里显示为数据库 `umami-db`。
 
 ## 开始使用
 
-1. 等服务显示为运行中，打开它的域名，例如 `https://umami.example.com`。
-2. 用 `admin` 登录。密码在机密 `umami-secrets` 的 `admin-password` 字段：
+1. 在 Zeabur 打开 `umami` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**，也就是你在安装表单填的域名。
+2. 用 `admin` 登录。打开**变量**，在**来自配置文件和机密变量**点 `umami-secrets`，再点 `admin-password` 旁的眼睛图标。不用 Zeabur 时，用 kubectl 读取机密变量 `umami-secrets` 的 `admin-password`：
 
    ```sh
    kubectl -n <namespace> get secret umami-secrets -o jsonpath='{.data.admin-password}' | base64 -d
@@ -16,7 +16,7 @@
    模板在第一次启动时，已经替换掉公开的默认密码。登录后，请在 Umami 里更改这个密码。
 3. 添加你的网站，再把跟踪脚本放进网站的页面（见“配置”）。
 
-同一个机密还有 `app-secret` 字段，用来签署登录令牌和分享链接。使用 Umami 时用不到。
+同一个机密变量还有 `app-secret`，用来签署登录令牌和分享链接。使用 Umami 时用不到。
 
 ## 配置
 

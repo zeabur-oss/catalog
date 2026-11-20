@@ -6,8 +6,8 @@ This template runs one Vaultwarden server behind your domain. Sign-up is closed.
 
 ## Getting started
 
-1. Wait until the service shows as running, then note its domain, for example `https://vault.example.com`.
-2. Get the admin token. It is in Secret `vaultwarden-secrets`, key `admin-token`:
+1. In Zeabur, open the `vaultwarden` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**; it is the domain you entered in the install form.
+2. Get the admin token. Open **Variables**, click `vaultwarden-secrets` under **From config files and secrets**, and click the eye icon next to `admin-token`. Without Zeabur, read Secret `vaultwarden-secrets`, key `admin-token`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret vaultwarden-secrets -o jsonpath='{.data.admin-token}' | base64 -d
@@ -21,13 +21,7 @@ This template runs one Vaultwarden server behind your domain. Sign-up is closed.
 
 ### Change the admin token
 
-Write a new value to `vaultwarden-secrets`, key `admin-token`, then restart the StatefulSet so it reads the new value:
-
-```sh
-kubectl -n <namespace> rollout restart statefulset/vaultwarden
-```
-
-The token is the password of the admin page. See [Enabling admin page](https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page).
+On the service's **Variables** tab, click `vaultwarden-secrets`, enter a new value for `admin-token`, then review and apply. The running replica keeps the old value until you click **Restart** at the top of the service page. The token is the password of the admin page. See [Enabling admin page](https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page).
 
 ## Troubleshooting
 

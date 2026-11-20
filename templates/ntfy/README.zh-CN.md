@@ -6,8 +6,8 @@
 
 ## 开始使用
 
-1. 等服务显示为运行中，打开它的域名，例如 `https://ntfy.example.com`。
-2. 以 `admin` 登录。密码在机密 `ntfy-secrets` 的 `admin-password` 字段：
+1. 在 Zeabur 打开 `ntfy` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**中，就是你在安装表单填的域名，例如 `ntfy.example.com`。
+2. 以 `admin` 登录。密码从 `ntfy` 服务获取：打开**变量**，在**来自配置文件和机密变量**中点击 `ntfy-secrets`，再点击 `admin-password` 旁的眼睛图标。不用 Zeabur 时，用 kubectl 读取机密变量 `ntfy-secrets` 的 `admin-password`：
 
    ```sh
    kubectl -n <namespace> get secret ntfy-secrets -o jsonpath='{.data.admin-password}' | base64 -d
@@ -19,30 +19,25 @@
 
 ### 更换 admin 密码
 
-ntfy 每次启动都会应用这个机密。要换密码，把新的值写进 `ntfy-secrets` 的 `admin-password` 字段，再重启 StatefulSet：
-
-```sh
-kubectl -n <namespace> patch secret ntfy-secrets --type merge -p '{"stringData":{"admin-password":"<新密码>"}}'
-kubectl -n <namespace> rollout restart statefulset/ntfy
-```
+ntfy 每次启动都会应用这个机密变量。要换密码，在 `ntfy` 服务的**变量**中，于**来自配置文件和机密变量**点击 `ntfy-secrets`，填入新的 `admin-password`，检查后应用，再点击服务页面顶部的**重启**。
 
 ### 添加用户
 
-在 Pod 里运行 `ntfy user add`，再用 `ntfy access` 让用户能访问某个主题。`rw` 表示可以发送也可以订阅：
+点击 `ntfy` 服务页面顶部的**终端**。运行 `ntfy user add`，再用 `ntfy access` 让用户能访问某个主题。`rw` 表示可以发送也可以订阅：
 
 ```sh
-kubectl -n <namespace> exec -it statefulset/ntfy -- ntfy user add <用户名>
-kubectl -n <namespace> exec statefulset/ntfy -- ntfy access <用户名> <主题> rw
+ntfy user add <用户名>
+ntfy access <用户名> <主题> rw
 ```
 
 详见 ntfy 文档的 [Access control](https://docs.ntfy.sh/config/)。
 
 ### 创建访问令牌
 
-访问令牌让应用不用你的密码就能发送或订阅。登录网页版后，在 Account 区域就能创建。也可以在 Pod 里创建：
+访问令牌让应用不用你的密码就能发送或订阅。登录后在网页应用的 Account 区域创建。也可以点击 `ntfy` 服务页面顶部的**终端**，运行：
 
 ```sh
-kubectl -n <namespace> exec statefulset/ntfy -- ntfy token add --label=<标签> admin
+ntfy token add --label=<标签> admin
 ```
 
 把令牌当作 Bearer 令牌发送：

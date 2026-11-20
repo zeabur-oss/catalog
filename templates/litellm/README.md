@@ -6,8 +6,8 @@ This template runs LiteLLM behind your domain, with models, keys and spend store
 
 ## Getting started
 
-1. Wait until the service shows as running, then open `/ui` on its domain, for example `https://litellm.example.com/ui`.
-2. Get the master key. It is in Secret `litellm-secrets`, key `master-key`:
+1. In Zeabur, open the `litellm` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**, for example `litellm.example.com`. The admin page is at `/ui` on that domain.
+2. Get the master key. Open **Variables**, click `litellm-secrets` under **From config files and secrets**, and click the eye icon next to `master-key`. Without Zeabur, read Secret `litellm-secrets`, key `master-key`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret litellm-secrets -o jsonpath='{.data.master-key}' | base64 -d

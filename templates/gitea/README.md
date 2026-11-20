@@ -6,8 +6,8 @@ Public registration is off, and SSH is off. People use Gitea over HTTPS.
 
 ## Getting started
 
-1. Wait until the service shows as running, then open its domain, for example `https://git.example.com`. There is no install wizard.
-2. The first start creates the administrator `gitea_admin`. Get its password. It is in Secret `gitea-secrets`, key `admin-password`:
+1. In Zeabur, open the `gitea` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**, for example `git.example.com`. There is no install wizard.
+2. The first start creates the administrator `gitea_admin`. Get its password. Open **Variables**, click `gitea-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Without Zeabur, read Secret `gitea-secrets`, key `admin-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret gitea-secrets -o jsonpath='{.data.admin-password}' | base64 -d

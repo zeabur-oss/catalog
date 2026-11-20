@@ -6,8 +6,8 @@
 
 ## 开始使用
 
-1. 等服务显示为运行中，记下它的域名，例如 `https://search.example.com`。
-2. 获取主密钥。密钥在机密 `meilisearch-secrets` 的 `master-key` 字段：
+1. 在 Zeabur 打开 `meilisearch` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**中，例如 `search.example.com`。
+2. 获取主密钥。打开**变量**，在**来自配置文件和机密变量**中点击 `meilisearch-secrets`，再点击 `master-key` 旁的眼睛图标。不用 Zeabur 时，用 kubectl 读取机密变量 `meilisearch-secrets` 的 `master-key`：
 
    ```sh
    kubectl -n <namespace> get secret meilisearch-secrets -o jsonpath='{.data.master-key}' | base64 -d

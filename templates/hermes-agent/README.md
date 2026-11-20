@@ -6,15 +6,15 @@ This template runs Hermes Agent with two domains: one for the API and one for th
 
 ## Getting started
 
-1. Wait until the service shows as running, then note both domains, for example `https://hermes.example.com` for the API and `https://hermes-admin.example.com` for the dashboard.
-2. Get the dashboard password. It is in Secret `hermes-secrets`, key `dashboard-password`:
+1. In Zeabur, open the `hermes-agent` service. When **Overview** shows its replica as ready, the service is up. Both domains are on the **Networking** tab under **Public domains**, for example `hermes.example.com` for the API and `hermes-admin.example.com` for the dashboard.
+2. Get the dashboard password. Open **Variables**, click `hermes-secrets` under **From config files and secrets**, and click the eye icon next to `dashboard-password`. Without Zeabur, read Secret `hermes-secrets`, key `dashboard-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret hermes-secrets -o jsonpath='{.data.dashboard-password}' | base64 -d
    ```
 
 3. Open the dashboard domain and sign in as `admin` with that password.
-4. Get the API key. It is in Secret `hermes-secrets`, key `api-key`:
+4. Get the API key. In the same `hermes-secrets` list, click the eye icon next to `api-key`. With kubectl:
 
    ```sh
    kubectl -n <namespace> get secret hermes-secrets -o jsonpath='{.data.api-key}' | base64 -d
@@ -39,11 +39,7 @@ Open WebUI, LobeChat, LibreChat and other OpenAI-compatible clients can use the 
 
 ### Change the provider API key
 
-Write the new key to the Secret you chose in the install form, key `api-key`, then restart the deployment so it reads the new value:
-
-```sh
-kubectl -n <namespace> rollout restart deployment/hermes-agent
-```
+On the service's **Variables** tab, click the Secret you chose in the install form under **From config files and secrets**, enter a new value for `api-key`, then review and apply. The running replica keeps the old key until you click **Restart** at the top of the service page.
 
 The template writes the model, endpoint and key from the install form into the Hermes configuration on every start. A change of the model in the dashboard lasts only until the next restart.
 

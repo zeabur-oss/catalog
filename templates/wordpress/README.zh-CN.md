@@ -6,21 +6,21 @@
 
 ## 开始使用
 
-1. 等服务显示为运行中，打开 `https://<你的域名>/wp-admin`。
-2. 用 `admin` 登录。密码在机密 `wordpress-secrets` 的 `admin-password` 字段：
+1. 在 Zeabur 打开 `wordpress` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**，也就是你在安装表单填的域名。
+2. 在 `https://<你的域名>/wp-admin` 用 `admin` 登录。打开**变量**，在**来自配置文件和机密变量**点 `wordpress-secrets`，再点 `admin-password` 旁的眼睛图标。不用 Zeabur 时，用 kubectl 读取机密变量 `wordpress-secrets` 的 `admin-password`：
 
    ```sh
    kubectl -n <namespace> get secret wordpress-secrets -o jsonpath='{.data.admin-password}' | base64 -d
    ```
 
-3. 数据库是 MariaDB。WordPress 连到 Service `mariadb` 的 `3306` 端口，数据库是 `zeabur`，用户是 `wordpress`，连接使用 TLS。密码在同一个机密的 `database-password` 和 `database-root-password` 字段：
+3. 数据库是 MariaDB，在项目里是 `mariadb` 数据库。WordPress 连到 Service `mariadb` 的 `3306` 端口，数据库是 `zeabur`，用户是 `wordpress`，连接使用 TLS。密码在同一个机密变量的 `database-password` 和 `database-root-password`。用同样的方式打开，或用 kubectl 读取：
 
    ```sh
    kubectl -n <namespace> get secret wordpress-secrets -o jsonpath='{.data.database-password}' | base64 -d
    kubectl -n <namespace> get secret wordpress-secrets -o jsonpath='{.data.database-root-password}' | base64 -d
    ```
 
-4. 同一个机密还有 WordPress 用来签署登录 cookie 的密钥和 salt：`auth-key`、`secure-auth-key`、`logged-in-key`、`nonce-key`、`auth-salt`、`secure-auth-salt`、`logged-in-salt` 和 `nonce-salt`。使用网站时用不到。要读取时用同样的命令，例如 `{.data.auth-key}`。
+4. 同一个机密变量还有 WordPress 用来签署登录 cookie 的密钥和 salt：`auth-key`、`secure-auth-key`、`logged-in-key`、`nonce-key`、`auth-salt`、`secure-auth-salt`、`logged-in-salt` 和 `nonce-salt`。使用网站时用不到。要读取时用同样的命令，例如 `{.data.auth-key}`。
 
 ## 配置
 

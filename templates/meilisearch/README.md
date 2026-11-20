@@ -6,8 +6,8 @@ This template runs one Meilisearch instance behind your domain, with its indexes
 
 ## Getting started
 
-1. Wait until the service shows as running, then note its domain, for example `https://search.example.com`.
-2. Get the master key. It is in Secret `meilisearch-secrets`, key `master-key`:
+1. In Zeabur, open the `meilisearch` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**, for example `search.example.com`.
+2. Get the master key. Open **Variables**, click `meilisearch-secrets` under **From config files and secrets**, and click the eye icon next to `master-key`. Without Zeabur, read Secret `meilisearch-secrets`, key `master-key`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret meilisearch-secrets -o jsonpath='{.data.master-key}' | base64 -d

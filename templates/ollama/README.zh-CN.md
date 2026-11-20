@@ -6,23 +6,24 @@
 
 ## 开始使用
 
-1. 其他工作负载用 Service `ollama` 的 `11434` 端口连接 Ollama，例如 `http://ollama:11434`。模板只允许同一个命名空间里、同时带有下面两个标签的 Pod：
+1. 在 Zeabur 打开 `ollama` 服务。**概览**显示副本已就绪，服务就启动好了。它没有域名。
+2. 其他工作负载用 Service `ollama` 的 `11434` 端口连接 Ollama，例如 `http://ollama:11434`。模板只允许同一个命名空间里、同时带有下面两个标签的 Pod：
 
    ```yaml
    templates.zeabur.com/template: ollama
    templates.zeabur.com/ollama-client: "true"
    ```
 
-2. 要从你的电脑使用 API，先转发端口，再用 `http://localhost:11434`：
+3. 要从你的电脑使用 API，先转发端口，再用 `http://localhost:11434`。Zeabur 没有转发端口的界面，请用 kubectl：
 
    ```sh
    kubectl -n <namespace> port-forward service/ollama 11434
    ```
 
-3. 下载模型。请先看过模型的许可和大小。Pod 的内存上限是 8 GiB，所以放不下大模型：
+4. 下载模型。请先看过模型的许可和大小。Pod 的内存上限是 8 GiB，所以放不下大模型。点击 `ollama` 服务页面顶部的**终端**，运行：
 
    ```sh
-   kubectl -n <namespace> exec deployment/ollama -- ollama pull <模型>
+   ollama pull <模型>
    ```
 
 这个服务没有密码，所以模板不会创建机密。
@@ -35,9 +36,11 @@ Ollama 有兼容 OpenAI 的 API。把客户端的 base URL 设成 `http://ollama
 
 ### 列出和移除模型
 
+点击 `ollama` 服务页面顶部的**终端**，运行：
+
 ```sh
-kubectl -n <namespace> exec deployment/ollama -- ollama ls
-kubectl -n <namespace> exec deployment/ollama -- ollama rm <模型>
+ollama ls
+ollama rm <模型>
 ```
 
 详见 Ollama 文档的 [CLI reference](https://docs.ollama.com/cli)。
@@ -50,11 +53,10 @@ Pod 需要“开始使用”里的两个标签。请检查连不上的 Pod 的�
 
 ### 模型很慢或加载不了
 
-这个模板用 CPU 运行，内存上限是 8 GiB，一次只加载一个模型。运行 `ollama ps` 查看加载了什么，模型放不下时请改用较小的模型。原因可以看日志：
+这个模板用 CPU 运行，内存上限是 8 GiB，一次只加载一个模型。点击 `ollama` 服务页面顶部的**终端**，运行 `ollama ps` 查看加载了什么。模型放不下时，改选较小的模型。服务的**日志**标签页会显示原因。
 
 ```sh
-kubectl -n <namespace> exec deployment/ollama -- ollama ps
-kubectl -n <namespace> logs deployment/ollama
+ollama ps
 ```
 
 详见 Ollama 文档的 [FAQ](https://docs.ollama.com/faq) 和 [Troubleshooting](https://docs.ollama.com/troubleshooting)。

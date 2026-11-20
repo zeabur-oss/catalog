@@ -6,8 +6,8 @@
 
 ## 开始使用
 
-1. 等服务显示为运行中，记下它的域名，例如 `https://browserless.example.com`。
-2. 获取令牌。令牌在机密 `browserless-secrets` 的 `token` 字段：
+1. 在 Zeabur 打开 `browserless` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**中，例如 `browserless.example.com`。
+2. 获取令牌。打开**变量**，在**来自配置文件和机密变量**中点击 `browserless-secrets`，再点击 `token` 旁的眼睛图标。不用 Zeabur 时，用 kubectl 读取机密变量 `browserless-secrets` 的 `token`：
 
    ```sh
    kubectl -n <namespace> get secret browserless-secrets -o jsonpath='{.data.token}' | base64 -d
@@ -31,13 +31,7 @@
 
 ### 更换令牌
 
-把新的值写进 `browserless-secrets` 的 `token` 字段，再重启部署，让它读到新值：
-
-```sh
-kubectl -n <namespace> rollout restart deployment/browserless
-```
-
-所有用到旧令牌的客户端都要同步更新。
+在服务的**变量**标签页点击 `browserless-secrets`，填入新的 `token`，检查后应用。运行中的副本会继续使用旧令牌，直到你点击服务页面顶部的**重启**。所有用到旧令牌的客户端都要同步更新。
 
 ## 故障排除
 

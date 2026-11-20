@@ -6,8 +6,8 @@ This template runs one Memos instance behind your domain. It stores data in SQLi
 
 ## Getting started
 
-1. Wait until the service shows as running, then open its domain, for example `https://memos.example.com`.
-2. Sign in as `admin`. The password is in Secret `memos-secrets`, key `admin-password`:
+1. In Zeabur, open the `memos` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**. It is the domain you entered in the install form, for example `memos.example.com`.
+2. Sign in as `admin`. Get the password from the `memos` service: open **Variables**, click `memos-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Without Zeabur, read Secret `memos-secrets`, key `admin-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret memos-secrets -o jsonpath='{.data.admin-password}' | base64 -d
@@ -32,12 +32,7 @@ See [API Access](https://usememos.com/docs/integrations/api-access) in the Memos
 
 ### A setting is read-only or cannot be saved
 
-Memos makes every setting group that a configuration file declares read-only in the app and the API. The template declares the General group in ConfigMap `memos-config`, which includes the sign-up rule and the custom profile. Memos treats the file as the whole group, so a field you leave out returns to its default. To change these settings, edit the ConfigMap and restart the StatefulSet:
-
-```sh
-kubectl -n <namespace> edit configmap memos-config
-kubectl -n <namespace> rollout restart statefulset/memos
-```
+Memos makes every setting group that a configuration file declares read-only in the app and the API. The template declares the General group in ConfigMap `memos-config`, which includes the sign-up rule and the custom profile. Memos treats the file as the whole group, so a field you leave out returns to its default. To change these settings, open the project's **Objects** page, open ConfigMap `memos-config`, switch to the YAML view, click **Edit**, change the values, then review and apply. Memos reads the file at start, so click **Restart** at the top of the `memos` service page.
 
 See [Declarative configuration](https://usememos.com/docs/configuration/declarative-configuration) in the Memos docs.
 

@@ -6,8 +6,8 @@ This template runs one Miniflux behind your domain, with its own PostgreSQL data
 
 ## Getting started
 
-1. Wait until the service shows as running, then open its domain, for example `https://miniflux.example.com`.
-2. Sign in as `admin`. The password is in Secret `miniflux-secrets`, key `admin-password`:
+1. In Zeabur, open the `miniflux` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**. It is the domain you entered in the install form, for example `miniflux.example.com`.
+2. Sign in as `admin`. Get the password from the `miniflux` service: open **Variables**, click `miniflux-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Without Zeabur, read Secret `miniflux-secrets`, key `admin-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret miniflux-secrets -o jsonpath='{.data.admin-password}' | base64 -d

@@ -6,8 +6,8 @@ This template runs Open WebUI behind your domain, with a `pipeline` service for 
 
 ## Getting started
 
-1. Wait until the service shows as running, then open its domain, for example `https://chat.example.com`.
-2. Sign in with the administrator email you entered in the install form. The password is in Secret `app-secrets`, key `admin-password`:
+1. In Zeabur, open the `open-webui` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**. It is the domain you entered in the install form, for example `chat.example.com`.
+2. Sign in with the administrator email you entered in the install form. Get the password from the `open-webui` service: open **Variables**, click `app-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Without Zeabur, read Secret `app-secrets`, key `admin-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret app-secrets -o jsonpath='{.data.admin-password}' | base64 -d
@@ -16,7 +16,7 @@ This template runs Open WebUI behind your domain, with a `pipeline` service for 
 3. Open WebUI creates the administrator account at the first start, when no user exists. A later change to the Secret does not change the password, so change it in Open WebUI.
 4. Sign-up is off. The administrator creates other users.
 5. Add a model provider. See Configuration.
-6. Secret `app-secrets` also holds two keys that you do not need for daily use. `session-key` is the secret key of the web interface, and `pipeline-key` is the API key that the web interface uses to call the `pipeline` service:
+6. Secret `app-secrets` also holds two keys that you do not need for daily use. `session-key` is the secret key of the web interface, and `pipeline-key` is the API key that the web interface uses to call the `pipeline` service. Show them the same way on **Variables**. Without Zeabur, use kubectl:
 
    ```sh
    kubectl -n <namespace> get secret app-secrets -o jsonpath='{.data.session-key}' | base64 -d

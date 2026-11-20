@@ -6,8 +6,8 @@
 
 ## 开始使用
 
-1. 等服务显示为运行中，记下它的域名，例如 `https://vault.example.com`。
-2. 获取管理员令牌。令牌在机密 `vaultwarden-secrets` 的 `admin-token` 字段：
+1. 在 Zeabur 打开 `vaultwarden` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**，也就是你在安装表单填的域名。
+2. 获取管理员令牌。打开**变量**，在**来自配置文件和机密变量**点 `vaultwarden-secrets`，再点 `admin-token` 旁的眼睛图标。不用 Zeabur 时，用 kubectl 读取机密变量 `vaultwarden-secrets` 的 `admin-token`：
 
    ```sh
    kubectl -n <namespace> get secret vaultwarden-secrets -o jsonpath='{.data.admin-token}' | base64 -d
@@ -21,13 +21,7 @@
 
 ### 更换管理员令牌
 
-把新的值写进 `vaultwarden-secrets` 的 `admin-token` 字段，再重启 StatefulSet，让它读到新值：
-
-```sh
-kubectl -n <namespace> rollout restart statefulset/vaultwarden
-```
-
-这个令牌就是管理页面的密码。详见 [Enabling admin page](https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page)。
+在服务的**变量**标签页点 `vaultwarden-secrets`，填入新的 `admin-token`，检查后应用。运行中的副本会继续用旧值，直到你点服务页顶部的**重启**。这个令牌就是管理页面的密码。详见 [Enabling admin page](https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page)。
 
 ## 故障排除
 

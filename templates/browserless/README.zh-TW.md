@@ -6,8 +6,8 @@
 
 ## 開始使用
 
-1. 等服務顯示為執行中，記下它的網域，例如 `https://browserless.example.com`。
-2. 取得權杖。權杖在機密 `browserless-secrets` 的 `token` 欄位：
+1. 在 Zeabur 打開 `browserless` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，例如 `browserless.example.com`。
+2. 取得權杖。打開**環境變數**，在**來自設定檔和機密變數**點 `browserless-secrets`，再按 `token` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `browserless-secrets` 的 `token`：
 
    ```sh
    kubectl -n <namespace> get secret browserless-secrets -o jsonpath='{.data.token}' | base64 -d
@@ -31,13 +31,7 @@
 
 ### 更換權杖
 
-把新的值寫進 `browserless-secrets` 的 `token` 欄位，再重新啟動部署，讓它讀到新值：
-
-```sh
-kubectl -n <namespace> rollout restart deployment/browserless
-```
-
-所有用到舊權杖的用戶端都要跟著更新。
+在服務的**環境變數**分頁點 `browserless-secrets`，填入新的 `token`，檢查後套用。執行中的副本會繼續用舊權杖，直到你按服務頁上方的**重新啟動**。所有用到舊權杖的用戶端都要跟著更新。
 
 ## 疑難排解
 

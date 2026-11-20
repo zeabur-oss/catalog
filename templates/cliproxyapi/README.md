@@ -6,15 +6,15 @@ This template runs one CLIProxyAPI instance behind your domain. The API is prote
 
 ## Getting started
 
-1. Wait until the service shows as running, then note its domain, for example `https://cliproxyapi.example.com`.
-2. Get the API key. It is in Secret `app-secrets`, key `api-key`:
+1. In Zeabur, open the `cliproxyapi` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**, for example `cliproxyapi.example.com`.
+2. Get the API key. Open **Variables**, click `app-secrets` under **From config files and secrets**, and click the eye icon next to `api-key`. Without Zeabur, read Secret `app-secrets`, key `api-key`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret app-secrets -o jsonpath='{.data.api-key}' | base64 -d
    ```
 
 3. Point your client at `https://cliproxyapi.example.com/v1` (or `/v1beta` for Gemini-style clients) and send the key as a Bearer token. Calls without it get `401`.
-4. Get the management key when you need it. It is in Secret `app-secrets`, key `management-key`:
+4. Get the management key when you need it. It is the key `management-key` in the same `app-secrets` list, or with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret app-secrets -o jsonpath='{.data.management-key}' | base64 -d
@@ -26,7 +26,7 @@ The API key only lets clients in. Credentials for the model providers are separa
 
 ### Call the management API
 
-The management API only accepts calls from inside the pod. Open a tunnel with `kubectl`, then send the management key as a Bearer token:
+The management API only accepts calls from inside the pod. Zeabur has no screen for this, so open a tunnel with `kubectl`, then send the management key as a Bearer token:
 
 ```sh
 kubectl -n <namespace> port-forward deployment/cliproxyapi 8317:8317 --address 127.0.0.1

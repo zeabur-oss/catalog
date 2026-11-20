@@ -6,8 +6,8 @@
 
 ## 開始使用
 
-1. 等所有服務顯示為執行中，再開啟 `librechat` 服務的網域，例如 `https://chat.example.com`。
-2. 範本在部署時用你在安裝表單填的管理員 Email 建立管理員帳號。取得它的密碼。密碼在機密 `app-secrets` 的 `admin-password` 欄位：
+1. 在 Zeabur 打開 `librechat` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，例如 `chat.example.com`。
+2. 範本在部署時用你在安裝表單填的管理員 Email 建立管理員帳號。取得它的密碼。打開**環境變數**，在**來自設定檔和機密變數**點 `app-secrets`，再按 `admin-password` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `app-secrets` 的 `admin-password`：
 
    ```sh
    kubectl -n <namespace> get secret app-secrets -o jsonpath='{.data.admin-password}' | base64 -d
@@ -21,10 +21,6 @@
 
 ### 更換 OpenAI API 金鑰
 
-金鑰在你於安裝表單選的機密的 `OPENAI_API_KEY` 欄位。把新的值寫進去，再重新啟動用到它的兩個部署：
-
-```sh
-kubectl -n <namespace> rollout restart deployment/librechat deployment/rag-api
-```
+金鑰在你於安裝表單選的機密的 `OPENAI_API_KEY`。在 `librechat` 服務的**環境變數**分頁，於**來自設定檔和機密變數**點這個機密，填入新的值，檢查後套用。執行中的副本會繼續用舊金鑰，所以要分別按 `librechat` 和 `rag-api` 服務頁上方的**重新啟動**。
 
 詳見 [OpenAI](https://www.librechat.ai/docs/configuration/pre_configured_ai/openai)。

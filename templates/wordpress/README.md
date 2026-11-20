@@ -6,14 +6,14 @@ The site is already installed. The owner account `admin` is created for you, wit
 
 ## Getting started
 
-1. Wait until the service shows as running, then open `https://<your domain>/wp-admin`.
-2. Sign in as `admin`. The password is in Secret `wordpress-secrets`, key `admin-password`:
+1. In Zeabur, open the `wordpress` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**; it is the domain you entered in the install form.
+2. Sign in at `https://<your domain>/wp-admin` as `admin`. Open **Variables**, click `wordpress-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Without Zeabur, read Secret `wordpress-secrets`, key `admin-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret wordpress-secrets -o jsonpath='{.data.admin-password}' | base64 -d
    ```
 
-3. The database is MariaDB. WordPress reaches it at Service `mariadb`, port `3306`, with database `zeabur` and user `wordpress`. Connections use TLS. The passwords are in the same Secret, keys `database-password` and `database-root-password`:
+3. The database is MariaDB. In your project it is the `mariadb` database. WordPress reaches it at Service `mariadb`, port `3306`, with database `zeabur` and user `wordpress`. Connections use TLS. The passwords are in the same Secret, keys `database-password` and `database-root-password`. Open them the same way, or with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret wordpress-secrets -o jsonpath='{.data.database-password}' | base64 -d

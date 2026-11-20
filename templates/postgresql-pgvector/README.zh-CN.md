@@ -6,15 +6,15 @@
 
 ## 开始使用
 
-1. 等集群 `postgresql` 显示为就绪。数据库没有域名，也没有网页。
-2. 同一个项目里的应用连到 Service `postgresql-rw` 的 `5432` 端口，数据库用 `zeabur`，用户用 `app`。
-3. 运算符会创建机密 `postgresql-app`。密码在 `password` 字段：
+1. 在 Zeabur 的项目里打开 `postgresql` 数据库。**概览**显示它已就绪，就启动好了。数据库没有域名，也没有网页。
+2. 同一个项目里的应用连到 Service `postgresql-rw` 的 `5432` 端口，数据库用 `zeabur`，用户用 `app`。在**概览**的**连接**区块可以看到**主机**、**端口**、**数据库**和**用户名**，点密码旁的**显示**就能读取密码。要把这些值当成变量交给应用，点同一区块的**连接到服务**。
+3. 运算符还会创建机密变量 `postgresql-app`。项目里没有服务把它当成变量读取，所以用 kubectl 读取。密码在 `password`：
 
    ```sh
    kubectl -n <namespace> get secret postgresql-app -o jsonpath='{.data.password}' | base64 -d
    ```
 
-   `uri` 字段是现成的连接字符串：
+   `uri` 是现成的连接字符串：
 
    ```sh
    kubectl -n <namespace> get secret postgresql-app -o jsonpath='{.data.uri}' | base64 -d

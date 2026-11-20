@@ -6,8 +6,8 @@ This template runs one Qdrant instance behind your domain, with its data on a vo
 
 ## Getting started
 
-1. Wait until the service shows as running, then note its domain, for example `https://qdrant.example.com`.
-2. Get the API key. It is in Secret `qdrant-secrets`, key `api-key`:
+1. In Zeabur, open the `qdrant` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**; it is the domain you entered in the install form.
+2. Get the API key. Open **Variables**, click `qdrant-secrets` under **From config files and secrets**, and click the eye icon next to `api-key`. Without Zeabur, read Secret `qdrant-secrets`, key `api-key`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret qdrant-secrets -o jsonpath='{.data.api-key}' | base64 -d
@@ -38,10 +38,4 @@ See [Security](https://qdrant.tech/documentation/security/) in the Qdrant docs.
 
 ### Change the API key
 
-Write a new value to `qdrant-secrets`, key `api-key`, then restart the StatefulSet so it reads the new value:
-
-```sh
-kubectl -n <namespace> rollout restart statefulset/qdrant
-```
-
-Update every client that uses the old key.
+On the service's **Variables** tab, click `qdrant-secrets`, enter a new value for `api-key`, then review and apply. The running replica keeps the old value until you click **Restart** at the top of the service page. Update every client that uses the old key.

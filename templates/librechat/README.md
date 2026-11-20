@@ -6,8 +6,8 @@ This template runs LibreChat behind your domain, with MongoDB for data, Meilisea
 
 ## Getting started
 
-1. Wait until all services show as running, then open the domain of the `librechat` service, for example `https://chat.example.com`.
-2. The template creates the administrator account at deploy time, from the administrator email you entered in the install form. Get its password. It is in Secret `app-secrets`, key `admin-password`:
+1. In Zeabur, open the `librechat` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**, for example `chat.example.com`.
+2. The template creates the administrator account at deploy time, from the administrator email you entered in the install form. Get its password. Open **Variables**, click `app-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Without Zeabur, read Secret `app-secrets`, key `admin-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret app-secrets -o jsonpath='{.data.admin-password}' | base64 -d
@@ -21,10 +21,6 @@ The other keys in `app-secrets` (`mongo-password`, `jwt-secret`, `jwt-refresh-se
 
 ### Change the OpenAI API key
 
-The key is in the Secret you chose in the install form, key `OPENAI_API_KEY`. Write the new value there, then restart the two deployments that use it:
-
-```sh
-kubectl -n <namespace> rollout restart deployment/librechat deployment/rag-api
-```
+The key is in the Secret you chose in the install form, key `OPENAI_API_KEY`. On the `librechat` service's **Variables** tab, click that Secret under **From config files and secrets**, enter a new value, then review and apply. Running replicas keep the old key, so click **Restart** at the top of the `librechat` service page and of the `rag-api` service page.
 
 See [OpenAI](https://www.librechat.ai/docs/configuration/pre_configured_ai/openai).

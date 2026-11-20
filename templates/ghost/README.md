@@ -6,8 +6,8 @@ Ghost sends sign-in and system email through the SMTP server you entered in the 
 
 ## Getting started
 
-1. Wait until the setup job finishes and the service shows as running. Your site is at the domain you chose, and the admin is at `/ghost`, for example `https://blog.example.com/ghost`.
-2. The setup job creates the site owner from the owner email you entered in the install form, so there is no setup form. Get the owner password. It is in Secret `ghost-secrets`, key `admin-password`:
+1. In Zeabur, open the `ghost` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**, for example `blog.example.com`. The admin is at `/ghost` on that domain.
+2. A setup job creates the site owner from the owner email you entered in the install form, so there is no setup form. Get the owner password. On the `ghost` service, open **Variables**, click `ghost-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Without Zeabur, read Secret `ghost-secrets`, key `admin-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret ghost-secrets -o jsonpath='{.data.admin-password}' | base64 -d

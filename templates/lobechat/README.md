@@ -6,8 +6,8 @@ This template runs LobeChat behind your domain. An access code protects the page
 
 ## Getting started
 
-1. Wait until the service shows as running, then open its domain, for example `https://chat.example.com`.
-2. When LobeChat asks for the access code, enter it. The code is in Secret `lobechat-secrets`, key `access-code`:
+1. In Zeabur, open the `lobechat` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**, for example `chat.example.com`.
+2. When LobeChat asks for the access code, enter it. To read it, open **Variables**, click `lobechat-secrets` under **From config files and secrets**, and click the eye icon next to `access-code`. Without Zeabur, read Secret `lobechat-secrets`, key `access-code`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret lobechat-secrets -o jsonpath='{.data.access-code}' | base64 -d
@@ -19,20 +19,10 @@ This template runs LobeChat behind your domain. An access code protects the page
 
 ### Change the access code
 
-Write a new value to `lobechat-secrets`, key `access-code`, then restart the deployment so it reads the new value:
-
-```sh
-kubectl -n <namespace> rollout restart deployment/lobechat
-```
-
-Tell everyone who uses the page the new code. See [ACCESS_CODE](https://github.com/lobehub/lobe-chat/blob/v1.143.3/docs/self-hosting/environment-variables/basic.mdx).
+On the service's **Variables** tab, click `lobechat-secrets`, enter a new value for `access-code`, then review and apply. The running replica keeps the old code until you click **Restart** at the top of the service page. Tell everyone who uses the page the new code. See [ACCESS_CODE](https://github.com/lobehub/lobe-chat/blob/v1.143.3/docs/self-hosting/environment-variables/basic.mdx).
 
 ### Change the OpenAI API key
 
-Write the new key to the Secret you chose in the install form, key `api-key`, then restart the deployment:
-
-```sh
-kubectl -n <namespace> rollout restart deployment/lobechat
-```
+On the service's **Variables** tab, click the Secret you chose in the install form, enter a new value for `api-key`, then review and apply. Click **Restart** at the top of the service page so the replica reads it.
 
 See [OPENAI_API_KEY](https://github.com/lobehub/lobe-chat/blob/v1.143.3/docs/self-hosting/environment-variables/model-provider.mdx).

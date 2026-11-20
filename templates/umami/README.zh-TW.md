@@ -2,12 +2,12 @@
 
 [Umami](https://umami.is/) 是網站流量分析的儀表板。你在網頁上加一小段追蹤指令碼，就能在儀表板看到造訪數據。
 
-這個範本在你的網域後面跑一個 Umami，並附帶它自己的 PostgreSQL 資料庫（Service `umami-db-rw`，連接埠 `5432`），由 CloudNativePG 運算子管理。
+這個範本在你的網域後面跑一個 Umami，並附帶它自己的 PostgreSQL 資料庫（Service `umami-db-rw`，連接埠 `5432`），由 CloudNativePG 運算子管理。它在專案裡顯示為資料庫 `umami-db`。
 
 ## 開始使用
 
-1. 等服務顯示為執行中，開啟它的網域，例如 `https://umami.example.com`。
-2. 用 `admin` 登入。密碼在機密 `umami-secrets` 的 `admin-password` 欄位：
+1. 在 Zeabur 打開 `umami` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，也就是你在安裝表單填的網域。
+2. 用 `admin` 登入。打開**環境變數**，在**來自設定檔和機密變數**點 `umami-secrets`，再按 `admin-password` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `umami-secrets` 的 `admin-password`：
 
    ```sh
    kubectl -n <namespace> get secret umami-secrets -o jsonpath='{.data.admin-password}' | base64 -d
@@ -16,7 +16,7 @@
    範本在第一次啟動時，已經替換掉公開的預設密碼。登入後，請在 Umami 裡更改這個密碼。
 3. 新增你的網站，再把追蹤指令碼放進網站的頁面（見「設定」）。
 
-同一個機密還有 `app-secret` 欄位，用來簽署登入權杖和分享連結。使用 Umami 時用不到。
+同一個機密變數還有 `app-secret`，用來簽署登入權杖和分享連結。使用 Umami 時用不到。
 
 ## 設定
 

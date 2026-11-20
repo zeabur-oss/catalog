@@ -6,20 +6,20 @@
 
 ## 開始使用
 
-1. 等服務顯示為執行中，開啟它的網域，例如 `https://n8n.example.com`。
-2. 用你在安裝表單填的擁有者 Email 登入。密碼在機密 `n8n-secrets` 的 `owner-password` 欄位：
+1. 在 Zeabur 打開 `n8n` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，就是你在安裝表單填的網域，例如 `n8n.example.com`。
+2. 用你在安裝表單填的擁有者 Email 登入。密碼從 `n8n` 服務取得：打開**環境變數**，在**來自設定檔和機密變數**點 `n8n-secrets`，再按 `owner-password` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `n8n-secrets` 的 `owner-password`：
 
    ```sh
    kubectl -n <namespace> get secret n8n-secrets -o jsonpath='{.data.owner-password}' | base64 -d
    ```
 
-3. 把加密金鑰另外備份到安全的地方。n8n 用這把金鑰加密它儲存的憑證。金鑰在機密 `n8n-secrets` 的 `encryption-key` 欄位：
+3. 把加密金鑰另外備份到安全的地方。n8n 用這把金鑰加密它儲存的憑證。取得方式相同：在**環境變數**點 `n8n-secrets`，再按 `encryption-key` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `n8n-secrets` 的 `encryption-key`：
 
    ```sh
    kubectl -n <namespace> get secret n8n-secrets -o jsonpath='{.data.encryption-key}' | base64 -d
    ```
 
-4. 機密 `n8n-secrets` 裡還有 `runner-token`，這是 n8n 和 task runner 彼此信任用的共用機密。日常使用不需要它：
+4. 機密 `n8n-secrets` 裡還有 `runner-token`，這是 n8n 和 task runner 彼此信任用的共用機密。日常使用不需要它。取得方式同上。不用 Zeabur 時，用 kubectl：
 
    ```sh
    kubectl -n <namespace> get secret n8n-secrets -o jsonpath='{.data.runner-token}' | base64 -d
@@ -29,12 +29,7 @@
 
 ### 更換擁有者密碼
 
-n8n 每次啟動都會用安裝表單和機密設定擁有者帳號，並在介面裡把擁有者資料顯示為唯讀。要換密碼，把新的值寫進 `n8n-secrets` 的 `owner-password` 欄位，再重新啟動 Deployment：
-
-```sh
-kubectl -n <namespace> patch secret n8n-secrets --type merge -p '{"stringData":{"owner-password":"<新密碼>"}}'
-kubectl -n <namespace> rollout restart deployment/n8n
-```
+n8n 每次啟動都會用安裝表單和機密變數設定擁有者帳號，並在介面裡把擁有者資料顯示為唯讀。要換密碼，在 `n8n` 服務的**環境變數**，於**來自設定檔和機密變數**點 `n8n-secrets`，填入新的 `owner-password`，檢查後套用，再按服務頁上方的**重新啟動**。
 
 詳見 n8n 文件的 [Change the instance owner email](https://docs.n8n.io/deploy/host-n8n/configure-n8n/change-instance-owner-email)。
 
@@ -46,11 +41,6 @@ Webhook 節點有兩個網址。測試網址在你選 Listen for Test Event 時�
 
 ### Code 節點不執行
 
-Code 節點在 `task-runner` Pod 裡執行，這個 Pod 用 `runner-token` 連回 n8n。請確認 Pod 在執行中，並查看它的記錄：
-
-```sh
-kubectl -n <namespace> get pods
-kubectl -n <namespace> logs deployment/task-runner
-```
+Code 節點在 `task-runner` 服務裡執行，它用 `runner-token` 連到 n8n。在 Zeabur 打開 `task-runner` 服務，確認**概覽**顯示副本已就緒，再看**日誌**分頁。
 
 詳見 n8n 文件的 [Task runners](https://docs.n8n.io/deploy/host-n8n/configure-n8n/set-up-task-runners)。

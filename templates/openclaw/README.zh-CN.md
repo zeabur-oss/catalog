@@ -6,41 +6,37 @@
 
 ## 开始使用
 
-1. 等服务显示为运行中，打开它的域名，例如 `https://openclaw.example.com`。
-2. 登录界面有一个 Gateway secret 字段，把网关令牌粘贴进去。令牌在机密 `openclaw-secrets` 的 `gateway-token` 字段：
+1. 在 Zeabur 打开 `openclaw` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**中，就是你在安装表单填的域名，例如 `openclaw.example.com`。
+2. 登录界面有一个 Gateway secret 字段，把网关令牌粘贴进去。令牌从 `openclaw` 服务获取：打开**变量**，在**来自配置文件和机密变量**中点击 `openclaw-secrets`，再点击 `gateway-token` 旁的眼睛图标。不用 Zeabur 时，用 kubectl 读取机密变量 `openclaw-secrets` 的 `gateway-token`：
 
    ```sh
    kubectl -n <namespace> get secret openclaw-secrets -o jsonpath='{.data.gateway-token}' | base64 -d
    ```
 
-3. 新的浏览器在你放行一次之前，会显示 `disconnected (1008): pairing required`。请保持页面打开，列出请求，再放行你的那一条。放行后页面会自己连接：
+3. 新的浏览器在你放行一次之前，会显示 `disconnected (1008): pairing required`。请保持页面打开。点击 `openclaw` 服务页面顶部的**终端**，列出请求，再放行你的那一条。放行后页面会自己连接：
 
    ```sh
-   kubectl -n <namespace> exec deployment/openclaw -- node /app/openclaw.mjs devices list
-   kubectl -n <namespace> exec deployment/openclaw -- node /app/openclaw.mjs devices approve <requestId>
+   node /app/openclaw.mjs devices list
+   node /app/openclaw.mjs devices approve <requestId>
    ```
 
-4. 模型服务商就是你在安装表单填的 base URL、模型和 API 密钥。API 密钥在你于表单里指定的机密，字段是 `api-key`，不在 `openclaw-secrets` 里。
+4. 模型服务商就是你在安装表单填的 base URL、模型和 API 密钥。API 密钥在你于表单里指定的机密变量，字段是 `api-key`，不在 `openclaw-secrets` 里。要查看，打开 `openclaw` 服务的**变量**，点击那个机密变量。
 
 ## 配置
 
 ### 更换服务商的 API 密钥
 
-把新的密钥写进你在安装表单里指定的机密的 `api-key` 字段，再重启 Deployment，让它读到新值：
-
-```sh
-kubectl -n <namespace> rollout restart deployment/openclaw
-```
+在 `openclaw` 服务打开**变量**，点击你在安装表单指定的机密变量。填入新的 `api-key`，检查后应用，再点击服务页面顶部的**重启**，让 Gateway 读到新值。
 
 base URL 和模型只在第一次启动时写进 Gateway 的配置文件。之后再改安装表单，不会改变它们。
 
 ### 移除已配对的浏览器
 
-列出已配对的设备，再移除不用的那一个：
+点击 `openclaw` 服务页面顶部的**终端**。列出已配对的设备，再移除不用的那一个：
 
 ```sh
-kubectl -n <namespace> exec deployment/openclaw -- node /app/openclaw.mjs devices list
-kubectl -n <namespace> exec deployment/openclaw -- node /app/openclaw.mjs devices remove <deviceId>
+node /app/openclaw.mjs devices list
+node /app/openclaw.mjs devices remove <deviceId>
 ```
 
 详见 OpenClaw 文档的 [Connect and pair](https://docs.openclaw.ai/web/control-ui/connect-and-pair)。
@@ -49,4 +45,4 @@ kubectl -n <namespace> exec deployment/openclaw -- node /app/openclaw.mjs device
 
 ### 另一个浏览器要求配对
 
-每个浏览器配置文件各自配对，一个配置文件不能沿用另一个的放行。请对每个配置文件用 `devices approve` 放行一次，并用 `devices remove` 移除旧的条目。详见 OpenClaw 文档的 [Connect and pair](https://docs.openclaw.ai/web/control-ui/connect-and-pair)。
+每个浏览器配置文件各自配对，一个配置文件不能沿用另一个的放行。请在**终端**对每个配置文件用 `devices approve` 放行一次，并用 `devices remove` 移除旧的条目。详见 OpenClaw 文档的 [Connect and pair](https://docs.openclaw.ai/web/control-ui/connect-and-pair)。

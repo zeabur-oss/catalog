@@ -4,8 +4,8 @@
 
 ## 开始使用
 
-1. 等服务显示为运行中。访客在你选的域名看到站点，例如 `https://halo.example.com`。管理后台在 `/console`。
-2. 第一次启动时会创建超级管理员 `admin`，不会出现初始化向导。获取它的密码。密码在机密 `halo-secrets` 的 `admin-password` 字段：
+1. 在 Zeabur 打开 `halo` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**中，例如 `halo.example.com`。访客在这里看到站点，管理后台在 `/console`。
+2. 第一次启动时会创建超级管理员 `admin`，不会出现初始化向导。获取它的密码。打开**变量**，在**来自配置文件和机密变量**中点击 `halo-secrets`，再点击 `admin-password` 旁的眼睛图标。不用 Zeabur 时，用 kubectl 读取机密变量 `halo-secrets` 的 `admin-password`：
 
    ```sh
    kubectl -n <namespace> get secret halo-secrets -o jsonpath='{.data.admin-password}' | base64 -d

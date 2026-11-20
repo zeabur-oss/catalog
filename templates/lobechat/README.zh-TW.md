@@ -6,8 +6,8 @@
 
 ## 開始使用
 
-1. 等服務顯示為執行中，再開啟它的網域，例如 `https://chat.example.com`。
-2. LobeChat 要求輸入存取碼時，填入存取碼。存取碼在機密 `lobechat-secrets` 的 `access-code` 欄位：
+1. 在 Zeabur 打開 `lobechat` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，例如 `chat.example.com`。
+2. LobeChat 要求輸入存取碼時，填入存取碼。要讀取它，打開**環境變數**，在**來自設定檔和機密變數**點 `lobechat-secrets`，再按 `access-code` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `lobechat-secrets` 的 `access-code`：
 
    ```sh
    kubectl -n <namespace> get secret lobechat-secrets -o jsonpath='{.data.access-code}' | base64 -d
@@ -19,20 +19,10 @@
 
 ### 更換存取碼
 
-把新的值寫進 `lobechat-secrets` 的 `access-code` 欄位，再重新啟動部署，讓它讀到新值：
-
-```sh
-kubectl -n <namespace> rollout restart deployment/lobechat
-```
-
-請把新的存取碼告訴所有使用這個頁面的人。詳見 [ACCESS_CODE](https://github.com/lobehub/lobe-chat/blob/v1.143.3/docs/self-hosting/environment-variables/basic.mdx)。
+在服務的**環境變數**分頁點 `lobechat-secrets`，填入新的 `access-code`，檢查後套用。執行中的副本會繼續用舊的存取碼，直到你按服務頁上方的**重新啟動**。請把新的存取碼告訴所有使用這個頁面的人。詳見 [ACCESS_CODE](https://github.com/lobehub/lobe-chat/blob/v1.143.3/docs/self-hosting/environment-variables/basic.mdx)。
 
 ### 更換 OpenAI API 金鑰
 
-把新的金鑰寫進你在安裝表單選的機密的 `api-key` 欄位，再重新啟動部署：
-
-```sh
-kubectl -n <namespace> rollout restart deployment/lobechat
-```
+在服務的**環境變數**分頁點你在安裝表單選的機密，填入新的 `api-key`，檢查後套用，再按服務頁上方的**重新啟動**，讓副本讀到新值。
 
 詳見 [OPENAI_API_KEY](https://github.com/lobehub/lobe-chat/blob/v1.143.3/docs/self-hosting/environment-variables/model-provider.mdx)。

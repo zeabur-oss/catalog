@@ -6,15 +6,15 @@
 
 ## 开始使用
 
-1. 等服务显示为运行中，打开它的域名，例如 `https://newapi.example.com`。
-2. 以 `admin` 登录。密码是 `Aa1-` 加上机密 `newapi-secrets` 的 `admin-password` 字段的值。下面的命令会打印出完整的密码：
+1. 在 Zeabur 打开 `new-api` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**中，就是你在安装表单填的域名，例如 `newapi.example.com`。
+2. 以 `admin` 登录。密码是 `Aa1-` 加上 `admin-password` 的值。值从 `new-api` 服务获取：打开**变量**，在**来自配置文件和机密变量**中点击 `newapi-secrets`，再点击 `admin-password` 旁的眼睛图标，并在前面加上 `Aa1-`。不用 Zeabur 时，下面的 kubectl 命令会打印出完整的密码：
 
    ```sh
    echo "Aa1-$(kubectl -n <namespace> get secret newapi-secrets -o jsonpath='{.data.admin-password}' | base64 -d)"
    ```
 
 3. 把你的模型服务商添加为渠道（channel）。详见“配置”。
-4. 机密 `newapi-secrets` 里还有两个日常使用不需要的字段。`session-secret` 是会话机密，`crypto-secret` 是缓存键用的 HMAC 机密：
+4. 机密 `newapi-secrets` 里还有两个日常使用不需要的字段。`session-secret` 是会话机密，`crypto-secret` 是缓存键用的 HMAC 机密。获取方式同上。不用 Zeabur 时，用 kubectl：
 
    ```sh
    kubectl -n <namespace> get secret newapi-secrets -o jsonpath='{.data.session-secret}' | base64 -d

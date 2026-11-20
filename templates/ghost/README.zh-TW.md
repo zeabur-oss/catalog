@@ -6,8 +6,8 @@ Ghost 透過你在安裝表單填寫的 SMTP 伺服器寄出登入信和系統�
 
 ## 開始使用
 
-1. 等設定工作完成、服務顯示為執行中。網站在你選的網域，管理後台在 `/ghost`，例如 `https://blog.example.com/ghost`。
-2. 設定工作會用你在安裝表單填的擁有者 Email 建立網站擁有者，所以不用再填設定表單。取得擁有者密碼。密碼在機密 `ghost-secrets` 的 `admin-password` 欄位：
+1. 在 Zeabur 打開 `ghost` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，例如 `blog.example.com`。管理後台在這個網域的 `/ghost`。
+2. 設定工作會用你在安裝表單填的擁有者 Email 建立網站擁有者，所以不用再填設定表單。取得擁有者密碼。在 `ghost` 服務打開**環境變數**，在**來自設定檔和機密變數**點 `ghost-secrets`，再按 `admin-password` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `ghost-secrets` 的 `admin-password`：
 
    ```sh
    kubectl -n <namespace> get secret ghost-secrets -o jsonpath='{.data.admin-password}' | base64 -d

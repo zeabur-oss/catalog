@@ -6,15 +6,15 @@ This template runs one New API behind your domain, with its own PostgreSQL datab
 
 ## Getting started
 
-1. Wait until the service shows as running, then open its domain, for example `https://newapi.example.com`.
-2. Sign in as `admin`. The password is `Aa1-` followed by the value of Secret `newapi-secrets`, key `admin-password`. This command prints the whole password:
+1. In Zeabur, open the `new-api` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**. It is the domain you entered in the install form, for example `newapi.example.com`.
+2. Sign in as `admin`. The password is `Aa1-` followed by the value of key `admin-password`. Get the value from the `new-api` service: open **Variables**, click `newapi-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Add `Aa1-` in front of it. Without Zeabur, this kubectl command prints the whole password:
 
    ```sh
    echo "Aa1-$(kubectl -n <namespace> get secret newapi-secrets -o jsonpath='{.data.admin-password}' | base64 -d)"
    ```
 
 3. Add your model providers as channels. See Configuration.
-4. Secret `newapi-secrets` also holds two keys that you do not need for daily use. `session-secret` is the session secret, and `crypto-secret` is the HMAC secret for cache keys:
+4. Secret `newapi-secrets` also holds two keys that you do not need for daily use. `session-secret` is the session secret, and `crypto-secret` is the HMAC secret for cache keys. Show them the same way on **Variables**. Without Zeabur, use kubectl:
 
    ```sh
    kubectl -n <namespace> get secret newapi-secrets -o jsonpath='{.data.session-secret}' | base64 -d

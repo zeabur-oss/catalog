@@ -6,8 +6,8 @@ This template runs Dify behind your domain, with its API, worker, plugin daemon,
 
 ## Getting started
 
-1. Wait until all services show as running, then note the domain of the `dify` service, for example `https://dify.example.com`.
-2. Get the initialization password. It is in Secret `dify-secrets`, key `init-password`:
+1. In Zeabur, open the `dify` service. When **Overview** shows its replicas as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**, for example `dify.example.com`. Dify also needs its other services, such as `dify-api`, to be ready.
+2. Get the initialization password. Open the `dify-api` service, open **Variables**, click `dify-secrets` under **From config files and secrets**, and click the eye icon next to `init-password`. Without Zeabur, read Secret `dify-secrets`, key `init-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret dify-secrets -o jsonpath='{.data.init-password}' | base64 -d

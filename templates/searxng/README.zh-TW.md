@@ -6,9 +6,9 @@
 
 ## 開始使用
 
-1. 等服務顯示為執行中，開啟它的網域，例如 `https://searxng.example.com`。
+1. 在 Zeabur 打開 `searxng` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，也就是你在安裝表單填的網域。
 2. 直接搜尋。這裡沒有帳號，也不用登入，知道網址的人都能使用。
-3. 伺服器的簽章金鑰在機密 `app-secrets` 的 `signing-key` 欄位。搜尋時用不到：
+3. 伺服器的簽章金鑰在機密變數 `app-secrets` 的 `signing-key`。搜尋時用不到。打開**環境變數**，在**來自設定檔和機密變數**點 `app-secrets`，再按 `signing-key` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `app-secrets` 的 `signing-key`：
 
    ```sh
    kubectl -n <namespace> get secret app-secrets -o jsonpath='{.data.signing-key}' | base64 -d

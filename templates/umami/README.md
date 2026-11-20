@@ -2,12 +2,12 @@
 
 [Umami](https://umami.is/) is a website analytics dashboard. You add a small tracking script to your pages and read visits in the dashboard.
 
-This template runs one Umami instance behind your domain, with its own PostgreSQL database (Service `umami-db-rw`, port `5432`) managed by the CloudNativePG operator.
+This template runs one Umami instance behind your domain, with its own PostgreSQL database (Service `umami-db-rw`, port `5432`) managed by the CloudNativePG operator. It appears in your project as the database `umami-db`.
 
 ## Getting started
 
-1. Wait until the service shows as running, then open its domain, for example `https://umami.example.com`.
-2. Sign in as `admin`. The password is in Secret `umami-secrets`, key `admin-password`:
+1. In Zeabur, open the `umami` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**; it is the domain you entered in the install form.
+2. Sign in as `admin`. Open **Variables**, click `umami-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Without Zeabur, read Secret `umami-secrets`, key `admin-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret umami-secrets -o jsonpath='{.data.admin-password}' | base64 -d

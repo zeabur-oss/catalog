@@ -6,8 +6,8 @@
 
 ## 开始使用
 
-1. 等服务显示为运行中，记下它的域名，例如 `https://qdrant.example.com`。
-2. 获取 API 密钥。密钥在机密 `qdrant-secrets` 的 `api-key` 字段：
+1. 在 Zeabur 打开 `qdrant` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**，也就是你在安装表单填的域名。
+2. 获取 API 密钥。打开**变量**，在**来自配置文件和机密变量**点 `qdrant-secrets`，再点 `api-key` 旁的眼睛图标。不用 Zeabur 时，用 kubectl 读取机密变量 `qdrant-secrets` 的 `api-key`：
 
    ```sh
    kubectl -n <namespace> get secret qdrant-secrets -o jsonpath='{.data.api-key}' | base64 -d
@@ -38,10 +38,4 @@ client = QdrantClient(url="https://<你的域名>:443", api_key="<api-key>")
 
 ### 更换 API 密钥
 
-把新的值写进 `qdrant-secrets` 的 `api-key` 字段，再重启 StatefulSet，让它读到新值：
-
-```sh
-kubectl -n <namespace> rollout restart statefulset/qdrant
-```
-
-所有用到旧密钥的客户端都要同步更新。
+在服务的**变量**标签页点 `qdrant-secrets`，填入新的 `api-key`，检查后应用。运行中的副本会继续用旧值，直到你点服务页顶部的**重启**。所有用到旧密钥的客户端都要同步更新。

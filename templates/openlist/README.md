@@ -6,15 +6,15 @@ This template runs one OpenList instance behind your domain. The administrator p
 
 ## Getting started
 
-1. Wait until the service shows as running, then open its domain, for example `https://openlist.example.com`.
-2. Sign in as `admin`. The password is in Secret `openlist-secrets`, key `admin-password`:
+1. In Zeabur, open the `openlist` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**; it is the domain you entered in the install form.
+2. Sign in as `admin`. Open **Variables**, click `openlist-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Without Zeabur, read Secret `openlist-secrets`, key `admin-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret openlist-secrets -o jsonpath='{.data.admin-password}' | base64 -d
    ```
 
    OpenList sets this password again at every restart, so a password changed in the web page is lost. To change it, edit the Secret and restart (see Configuration).
-3. For offline downloads, the Aria2 token is in the same Secret, key `aria2-password`:
+3. For offline downloads, the Aria2 token is in the same Secret, key `aria2-password`. Open it the same way, or with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret openlist-secrets -o jsonpath='{.data.aria2-password}' | base64 -d
@@ -26,11 +26,7 @@ This template runs one OpenList instance behind your domain. The administrator p
 
 ### Change the administrator password
 
-Write a new value to `openlist-secrets`, key `admin-password`, then restart the StatefulSet so it reads the new value:
-
-```sh
-kubectl -n <namespace> rollout restart statefulset/openlist
-```
+On the service's **Variables** tab, click `openlist-secrets`, enter a new value for `admin-password`, then review and apply. Then click **Restart** at the top of the service page, so OpenList reads the new value.
 
 ### Use offline downloads
 

@@ -6,15 +6,15 @@
 
 ## 開始使用
 
-1. 等叢集 `postgresql` 顯示為就緒。資料庫沒有網域，也沒有網頁。
-2. 同一個專案裡的應用程式連到 Service `postgresql-rw` 的 `5432` 連接埠，資料庫用 `zeabur`，使用者用 `app`。
-3. 運算子會建立機密 `postgresql-app`。密碼在 `password` 欄位：
+1. 在 Zeabur 的專案裡打開 `postgresql` 資料庫。**概覽**顯示它已就緒，就啟動好了。資料庫沒有網域，也沒有網頁。
+2. 同一個專案裡的應用程式連到 Service `postgresql-rw` 的 `5432` 連接埠，資料庫用 `zeabur`，使用者用 `app`。在**概覽**的**連線**區塊可以看到**主機**、**連接埠**、**資料庫**和**使用者名稱**，按密碼旁的**顯示**就能讀取密碼。要把這些值當成變數交給應用程式，按同一區塊的**接到服務**。
+3. 運算子還會建立機密變數 `postgresql-app`。專案裡沒有服務把它當成變數讀取，所以用 kubectl 讀取。密碼在 `password`：
 
    ```sh
    kubectl -n <namespace> get secret postgresql-app -o jsonpath='{.data.password}' | base64 -d
    ```
 
-   `uri` 欄位是現成的連線字串：
+   `uri` 是現成的連線字串：
 
    ```sh
    kubectl -n <namespace> get secret postgresql-app -o jsonpath='{.data.uri}' | base64 -d

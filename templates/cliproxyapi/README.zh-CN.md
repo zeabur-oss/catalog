@@ -6,15 +6,15 @@
 
 ## 开始使用
 
-1. 等服务显示为运行中，记下它的域名，例如 `https://cliproxyapi.example.com`。
-2. 获取 API 密钥。密钥在机密 `app-secrets` 的 `api-key` 字段：
+1. 在 Zeabur 打开 `cliproxyapi` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**中，例如 `cliproxyapi.example.com`。
+2. 获取 API 密钥。打开**变量**，在**来自配置文件和机密变量**中点击 `app-secrets`，再点击 `api-key` 旁的眼睛图标。不用 Zeabur 时，用 kubectl 读取机密变量 `app-secrets` 的 `api-key`：
 
    ```sh
    kubectl -n <namespace> get secret app-secrets -o jsonpath='{.data.api-key}' | base64 -d
    ```
 
 3. 把客户端指向 `https://cliproxyapi.example.com/v1`（Gemini 格式的客户端用 `/v1beta`），并把密钥当作 Bearer 令牌发送。没带密钥的调用会得到 `401`。
-4. 需要管理密钥时再获取。它在机密 `app-secrets` 的 `management-key` 字段：
+4. 需要管理密钥时再获取。它是同一个 `app-secrets` 里的 `management-key`，也可以用 kubectl 读取：
 
    ```sh
    kubectl -n <namespace> get secret app-secrets -o jsonpath='{.data.management-key}' | base64 -d
@@ -26,7 +26,7 @@ API 密钥只管客户端接入。模型服务的凭证要另外配置，见“�
 
 ### 调用管理 API
 
-管理 API 只接受来自 Pod 内部的调用。先用 `kubectl` 开一条隧道，再把管理密钥当作 Bearer 令牌发送：
+管理 API 只接受来自 Pod 内部的调用。Zeabur 没有对应的界面，请先用 `kubectl` 开一条隧道，再把管理密钥当作 Bearer 令牌发送：
 
 ```sh
 kubectl -n <namespace> port-forward deployment/cliproxyapi 8317:8317 --address 127.0.0.1

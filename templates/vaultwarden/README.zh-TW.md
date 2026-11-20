@@ -6,8 +6,8 @@
 
 ## 開始使用
 
-1. 等服務顯示為執行中，記下它的網域，例如 `https://vault.example.com`。
-2. 取得管理員權杖。權杖在機密 `vaultwarden-secrets` 的 `admin-token` 欄位：
+1. 在 Zeabur 打開 `vaultwarden` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，也就是你在安裝表單填的網域。
+2. 取得管理員權杖。打開**環境變數**，在**來自設定檔和機密變數**點 `vaultwarden-secrets`，再按 `admin-token` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `vaultwarden-secrets` 的 `admin-token`：
 
    ```sh
    kubectl -n <namespace> get secret vaultwarden-secrets -o jsonpath='{.data.admin-token}' | base64 -d
@@ -21,13 +21,7 @@
 
 ### 更換管理員權杖
 
-把新的值寫進 `vaultwarden-secrets` 的 `admin-token` 欄位，再重新啟動 StatefulSet，讓它讀到新值：
-
-```sh
-kubectl -n <namespace> rollout restart statefulset/vaultwarden
-```
-
-這個權杖就是管理頁面的密碼。詳見 [Enabling admin page](https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page)。
+在服務的**環境變數**分頁點 `vaultwarden-secrets`，填入新的 `admin-token`，檢查後套用。執行中的副本會繼續用舊值，直到你按服務頁上方的**重新啟動**。這個權杖就是管理頁面的密碼。詳見 [Enabling admin page](https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page)。
 
 ## 疑難排解
 

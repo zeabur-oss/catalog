@@ -6,9 +6,9 @@
 
 ## 开始使用
 
-1. 等服务显示为运行中。
+1. 在 Zeabur 打开 `error-pages` 服务。**概览**显示副本已就绪，服务就启动好了。它没有公开域名，**网络**标签页会显示它的私有地址。
 2. 其他工作负载通过 Service `error-pages` 连接。端口 8080 在 `http://error-pages:8080/<状态码>.html` 提供各个页面，例如 `http://error-pages:8080/502.html`。端口 8081 对每个请求都返回维护页面和状态码 `503`。
-3. 想从自己的电脑查看页面，先开一条隧道再请求：
+3. 想从自己的电脑查看页面，先开一条隧道再请求。Zeabur 没有对应的界面，请用 kubectl：
 
    ```sh
    kubectl -n <namespace> port-forward service/error-pages 8080:8080
@@ -43,8 +43,4 @@ spec:
 
 ### 修改页面文字
 
-页面是 ConfigMap `error-pages` 的 `404.html`、`502.html`、`503.html`、`504.html` 和 `maintenance.html`。直接编辑这个 ConfigMap 即可。Kubernetes 大约一分钟内会更新挂载的文件，nginx 每次请求都会重新读取页面，所以不用重启任何东西：
-
-```sh
-kubectl -n <namespace> edit configmap error-pages
-```
+页面是 ConfigMap `error-pages` 的 `404.html`、`502.html`、`503.html`、`504.html` 和 `maintenance.html`。在项目的**对象**页面打开 ConfigMap `error-pages`，切到 YAML 视图，点击**编辑**，修改页面后检查并应用。Kubernetes 大约一分钟内会更新挂载的文件，nginx 每次请求都会重新读取页面，所以不用重启任何东西。

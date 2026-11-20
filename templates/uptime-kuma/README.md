@@ -6,8 +6,8 @@ This template runs one Uptime Kuma instance behind your domain. Its data is on a
 
 ## Getting started
 
-1. Wait until the service shows as running, then open its domain right after the deploy, for example `https://kuma.example.com`.
-2. The first visitor sees the setup page and creates the owner account. Do this before anyone else does, because whoever visits first becomes the owner.
+1. In Zeabur, open the `uptime-kuma` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**; it is the domain you entered in the install form.
+2. Open the domain right after the deploy. The first visitor sees the setup page and creates the owner account. Do this before anyone else does, because whoever visits first becomes the owner.
 3. Add your first monitor.
 
 ## Configuration
@@ -28,7 +28,13 @@ Ping monitors use unprivileged ICMP sockets, and the container has no `NET_RAW` 
 
 ### You forgot the password
 
-Run the reset command in the pod and follow the prompts:
+Click **Terminal** at the top of the service page and run the reset command, then follow the prompts:
+
+```sh
+npm run reset-password
+```
+
+Without Zeabur, run it with kubectl:
 
 ```sh
 kubectl -n <namespace> exec -it uptime-kuma-0 -- npm run reset-password

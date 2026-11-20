@@ -6,23 +6,24 @@ This template runs one Ollama on the CPU, with a 50 GiB volume for models. It ha
 
 ## Getting started
 
-1. Other workloads reach Ollama at Service `ollama`, port `11434`, for example `http://ollama:11434`. The template allows only Pods in the same namespace that carry both of these labels:
+1. In Zeabur, open the `ollama` service. When **Overview** shows its replica as ready, the service is up. It has no domain.
+2. Other workloads reach Ollama at Service `ollama`, port `11434`, for example `http://ollama:11434`. The template allows only Pods in the same namespace that carry both of these labels:
 
    ```yaml
    templates.zeabur.com/template: ollama
    templates.zeabur.com/ollama-client: "true"
    ```
 
-2. To use the API from your own computer, forward the port, then use `http://localhost:11434`:
+3. To use the API from your own computer, forward the port, then use `http://localhost:11434`. Zeabur has no UI for port forwarding, so use kubectl:
 
    ```sh
    kubectl -n <namespace> port-forward service/ollama 11434
    ```
 
-3. Pull a model. Read the model's license and check its size first. The Pod has an 8 GiB memory limit, so large models do not fit:
+4. Pull a model. Read the model's license and check its size first. The Pod has an 8 GiB memory limit, so large models do not fit. Click **Terminal** at the top of the `ollama` service page and run:
 
    ```sh
-   kubectl -n <namespace> exec deployment/ollama -- ollama pull <model>
+   ollama pull <model>
    ```
 
 There is no password, so the template creates no Secret.
@@ -35,9 +36,11 @@ Ollama has an OpenAI-compatible API. Set the client's base URL to `http://ollama
 
 ### List and remove models
 
+Click **Terminal** at the top of the `ollama` service page and run:
+
 ```sh
-kubectl -n <namespace> exec deployment/ollama -- ollama ls
-kubectl -n <namespace> exec deployment/ollama -- ollama rm <model>
+ollama ls
+ollama rm <model>
 ```
 
 See [CLI reference](https://docs.ollama.com/cli) in the Ollama docs.
@@ -50,11 +53,10 @@ The Pod needs both labels from Getting started. Check the labels of the Pod that
 
 ### A model is slow or does not load
 
-This template runs on the CPU, with an 8 GiB memory limit and one loaded model at a time. Run `ollama ps` to see what is loaded, and choose a smaller model if the model does not fit. Read the log for the reason:
+This template runs on the CPU, with an 8 GiB memory limit and one loaded model at a time. Click **Terminal** at the top of the `ollama` service page and run `ollama ps` to see what is loaded. Choose a smaller model if the model does not fit. The **Logs** tab of the service shows the reason.
 
 ```sh
-kubectl -n <namespace> exec deployment/ollama -- ollama ps
-kubectl -n <namespace> logs deployment/ollama
+ollama ps
 ```
 
 See [FAQ](https://docs.ollama.com/faq) and [Troubleshooting](https://docs.ollama.com/troubleshooting) in the Ollama docs.

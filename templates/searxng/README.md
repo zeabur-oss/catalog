@@ -6,9 +6,9 @@ This template runs one SearXNG instance behind your domain. HTML and JSON result
 
 ## Getting started
 
-1. Wait until the service shows as running, then open its domain, for example `https://searxng.example.com`.
+1. In Zeabur, open the `searxng` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**; it is the domain you entered in the install form.
 2. Search. There is no account and no sign-in, so anyone who knows the address can use it.
-3. The signing key of the server is in Secret `app-secrets`, key `signing-key`. You do not need it to search:
+3. The signing key of the server is in Secret `app-secrets`, key `signing-key`. You do not need it to search. Open **Variables**, click `app-secrets` under **From config files and secrets**, and click the eye icon next to `signing-key`. Without Zeabur, read Secret `app-secrets`, key `signing-key`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret app-secrets -o jsonpath='{.data.signing-key}' | base64 -d

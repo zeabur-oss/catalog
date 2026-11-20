@@ -6,8 +6,8 @@
 
 ## 開始使用
 
-1. 等服務顯示為執行中，開啟它的網域，例如 `https://memos.example.com`。
-2. 以 `admin` 登入。密碼在機密 `memos-secrets` 的 `admin-password` 欄位：
+1. 在 Zeabur 打開 `memos` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，就是你在安裝表單填的網域，例如 `memos.example.com`。
+2. 以 `admin` 登入。密碼從 `memos` 服務取得：打開**環境變數**，在**來自設定檔和機密變數**點 `memos-secrets`，再按 `admin-password` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `memos-secrets` 的 `admin-password`：
 
    ```sh
    kubectl -n <namespace> get secret memos-secrets -o jsonpath='{.data.admin-password}' | base64 -d
@@ -32,12 +32,7 @@ curl -H "Authorization: Bearer memos_pat_..." https://memos.example.com/api/memo
 
 ### 設定是唯讀的，或無法儲存
 
-設定檔宣告的每一組設定，Memos 都會在介面和 API 裡設為唯讀。範本在 ConfigMap `memos-config` 裡宣告了一般設定（General），其中包含註冊規則和自訂的個人檔案。Memos 把檔案當成整組設定，沒有寫的欄位會回到預設值。要修改這些設定，請編輯 ConfigMap，再重新啟動 StatefulSet：
-
-```sh
-kubectl -n <namespace> edit configmap memos-config
-kubectl -n <namespace> rollout restart statefulset/memos
-```
+設定檔宣告的每一組設定，Memos 都會在介面和 API 裡設為唯讀。範本在 ConfigMap `memos-config` 裡宣告了一般設定（General），其中包含註冊規則和自訂的個人檔案。Memos 把檔案當成整組設定，沒有寫的欄位會回到預設值。要修改這些設定，請打開專案的**物件**頁面，打開 ConfigMap `memos-config`，切換到 YAML 檢視，按**編輯**修改，檢查後套用。Memos 在啟動時讀取這個檔案，所以要按 `memos` 服務頁上方的**重新啟動**。
 
 詳見 Memos 文件的 [Declarative configuration](https://usememos.com/docs/configuration/declarative-configuration)。
 

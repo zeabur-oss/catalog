@@ -6,9 +6,9 @@ This template has no domain and no sign-in. Zeabur sends the maintenance and err
 
 ## Getting started
 
-1. Wait until the service shows as running.
+1. In Zeabur, open the `error-pages` service. When **Overview** shows its replica as ready, the service is up. It has no public domain. The **Networking** tab shows its private address.
 2. Other workloads reach it through the Service `error-pages`. Port 8080 serves each page at `http://error-pages:8080/<status>.html`, for example `http://error-pages:8080/502.html`. Port 8081 answers every request with the maintenance page and status `503`.
-3. To look at a page from your own machine, open a tunnel and request it:
+3. To look at a page from your own machine, open a tunnel and request it. Zeabur has no screen for this, so use kubectl:
 
    ```sh
    kubectl -n <namespace> port-forward service/error-pages 8080:8080
@@ -43,8 +43,4 @@ See [Errors](https://doc.traefik.io/traefik/reference/routing-configuration/http
 
 ### Change the text of a page
 
-The pages are the keys `404.html`, `502.html`, `503.html`, `504.html` and `maintenance.html` of the ConfigMap `error-pages`. Edit the ConfigMap. Kubernetes updates the mounted files within about a minute, and nginx reads each page on every request, so you do not need to restart anything:
-
-```sh
-kubectl -n <namespace> edit configmap error-pages
-```
+The pages are the keys `404.html`, `502.html`, `503.html`, `504.html` and `maintenance.html` of the ConfigMap `error-pages`. In the project, open the **Objects** page, open the ConfigMap `error-pages`, switch to the YAML view, click **Edit**, change the page, then review and apply. Kubernetes updates the mounted files within about a minute, and nginx reads each page on every request, so you do not need to restart anything.

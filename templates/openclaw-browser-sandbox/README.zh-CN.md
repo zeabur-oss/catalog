@@ -6,7 +6,7 @@
 
 ## 开始使用
 
-1. 等部署 `openclaw-sandbox-browser` 显示为运行中。它没有域名。
+1. 在 Zeabur 打开 `openclaw-sandbox-browser` 服务。**概览**显示副本已就绪，服务就启动好了。它没有域名。
 2. 确认你的客户端 Pod 带有标签 `app.kubernetes.io/name`，值要和你在安装表单填的信任调用方相同。搭配 OpenClaw 时，这个值是 `openclaw`。
 3. 在该 Pod 里，把下面的地址当成 CDP 端点：
 
@@ -14,7 +14,7 @@
    http://openclaw-sandbox-browser:9222
    ```
 
-   没有这个标签的 Pod 会被挡掉。这里没有自动生成的机密，所以能连进来的对象都能完全控制浏览器。
+   没有这个标签的 Pod 会被挡掉。这里没有自动生成的机密变量，所以能连进来的对象都能完全控制浏览器。
 
 ## 配置
 

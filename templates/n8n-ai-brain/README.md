@@ -6,20 +6,20 @@ This template runs one n8n behind your domain, with its own PostgreSQL database.
 
 ## Getting started
 
-1. Wait until the service shows as running, then open its domain, for example `https://n8n.example.com`.
-2. Sign in with the owner email you entered in the install form. The password is in Secret `app-secrets`, key `owner-password`:
+1. In Zeabur, open the `n8n` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**. It is the domain you entered in the install form, for example `n8n.example.com`.
+2. Sign in with the owner email you entered in the install form. Get the password from the `n8n` service: open **Variables**, click `app-secrets` under **From config files and secrets**, and click the eye icon next to `owner-password`. Without Zeabur, read Secret `app-secrets`, key `owner-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret app-secrets -o jsonpath='{.data.owner-password}' | base64 -d
    ```
 
-3. Keep a copy of the encryption key in a safe place. n8n encrypts the credentials it saves with this key. It is in Secret `app-secrets`, key `encryption-key`:
+3. Keep a copy of the encryption key in a safe place. n8n encrypts the credentials it saves with this key. Find it the same way: on **Variables**, click `app-secrets`, then the eye icon next to `encryption-key`. Without Zeabur, read Secret `app-secrets`, key `encryption-key`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret app-secrets -o jsonpath='{.data.encryption-key}' | base64 -d
    ```
 
-4. Secret `app-secrets` also holds two keys that you do not need for daily use. `runner-token` is the shared secret that n8n and the code runner use to trust each other. `jwt-key` is the secret for user management:
+4. Secret `app-secrets` also holds two keys that you do not need for daily use. `runner-token` is the shared secret that n8n and the code runner use to trust each other. `jwt-key` is the secret for user management. Show them the same way on **Variables**. Without Zeabur, use kubectl:
 
    ```sh
    kubectl -n <namespace> get secret app-secrets -o jsonpath='{.data.runner-token}' | base64 -d
@@ -30,12 +30,7 @@ This template runs one n8n behind your domain, with its own PostgreSQL database.
 
 ### Change the owner password
 
-n8n sets the owner account from the install form and the Secret at every start, and shows the owner details as read-only in its interface. To change the password, write a new value to `app-secrets`, key `owner-password`, then restart the Deployment:
-
-```sh
-kubectl -n <namespace> patch secret app-secrets --type merge -p '{"stringData":{"owner-password":"<new password>"}}'
-kubectl -n <namespace> rollout restart deployment/n8n
-```
+n8n sets the owner account from the install form and the Secret at every start, and shows the owner details as read-only in its interface. To change the password, open **Variables** on the `n8n` service, click `app-secrets` under **From config files and secrets**, and enter a new value for `owner-password`. Review and apply, then click **Restart** at the top of the service page.
 
 See [Change the instance owner email](https://docs.n8n.io/deploy/host-n8n/configure-n8n/change-instance-owner-email) in the n8n docs.
 
@@ -47,12 +42,7 @@ The Webhook node has two URLs. The test URL works while you select Listen for Te
 
 ### A Code node does not run
 
-Code nodes run in the `n8n-runners` Pod, which connects to n8n with `runner-token`. Check that the Pod is running and read its log:
-
-```sh
-kubectl -n <namespace> get pods
-kubectl -n <namespace> logs deployment/n8n-runners
-```
+Code nodes run in the `n8n-runners` service, which connects to n8n with `runner-token`. Open the `n8n-runners` service in Zeabur, check that **Overview** shows its replica as ready, and read the **Logs** tab.
 
 See [Task runners](https://docs.n8n.io/deploy/host-n8n/configure-n8n/set-up-task-runners) in the n8n docs.
 

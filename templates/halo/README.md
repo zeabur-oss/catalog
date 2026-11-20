@@ -4,8 +4,8 @@
 
 ## Getting started
 
-1. Wait until the service shows as running. Visitors see the site at the domain you chose, for example `https://halo.example.com`. The console is at `/console`.
-2. The first start creates the super administrator `admin`. There is no setup wizard. Get its password. It is in Secret `halo-secrets`, key `admin-password`:
+1. In Zeabur, open the `halo` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**, for example `halo.example.com`. Visitors see the site there, and the console is at `/console`.
+2. The first start creates the super administrator `admin`. There is no setup wizard. Get its password. Open **Variables**, click `halo-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Without Zeabur, read Secret `halo-secrets`, key `admin-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret halo-secrets -o jsonpath='{.data.admin-password}' | base64 -d

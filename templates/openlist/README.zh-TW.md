@@ -6,15 +6,15 @@
 
 ## 開始使用
 
-1. 等服務顯示為執行中，開啟它的網域，例如 `https://openlist.example.com`。
-2. 用 `admin` 登入。密碼在機密 `openlist-secrets` 的 `admin-password` 欄位：
+1. 在 Zeabur 打開 `openlist` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，也就是你在安裝表單填的網域。
+2. 用 `admin` 登入。打開**環境變數**，在**來自設定檔和機密變數**點 `openlist-secrets`，再按 `admin-password` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `openlist-secrets` 的 `admin-password`：
 
    ```sh
    kubectl -n <namespace> get secret openlist-secrets -o jsonpath='{.data.admin-password}' | base64 -d
    ```
 
-   OpenList 每次重新啟動都會重設一次這個密碼，所以在網頁裡改的密碼會失效。要改密碼，請改機密再重新啟動（見「設定」）。
-3. 要用離線下載時，Aria2 權杖在同一個機密的 `aria2-password` 欄位：
+   OpenList 每次重新啟動都會重設一次這個密碼，所以在網頁裡改的密碼會失效。要改密碼，請改機密變數再重新啟動（見「設定」）。
+3. 要用離線下載時，Aria2 權杖在同一個機密變數的 `aria2-password`。用同樣的方式打開，或用 kubectl 讀取：
 
    ```sh
    kubectl -n <namespace> get secret openlist-secrets -o jsonpath='{.data.aria2-password}' | base64 -d
@@ -26,11 +26,7 @@
 
 ### 更改管理員密碼
 
-把新的值寫進 `openlist-secrets` 的 `admin-password` 欄位，再重新啟動 StatefulSet，讓它讀到新值：
-
-```sh
-kubectl -n <namespace> rollout restart statefulset/openlist
-```
+在服務的**環境變數**分頁點 `openlist-secrets`，填入新的 `admin-password`，檢查後套用。再按服務頁上方的**重新啟動**，讓 OpenList 讀到新值。
 
 ### 使用離線下載
 

@@ -6,8 +6,8 @@ This template runs one ntfy server behind your domain. Every topic needs an acco
 
 ## Getting started
 
-1. Wait until the service shows as running, then open its domain, for example `https://ntfy.example.com`.
-2. Sign in as `admin`. The password is in Secret `ntfy-secrets`, key `admin-password`:
+1. In Zeabur, open the `ntfy` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**. It is the domain you entered in the install form, for example `ntfy.example.com`.
+2. Sign in as `admin`. Get the password from the `ntfy` service: open **Variables**, click `ntfy-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Without Zeabur, read Secret `ntfy-secrets`, key `admin-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret ntfy-secrets -o jsonpath='{.data.admin-password}' | base64 -d
@@ -19,30 +19,25 @@ This template runs one ntfy server behind your domain. Every topic needs an acco
 
 ### Change the admin password
 
-ntfy applies the Secret at every start. To change the password, write a new value to `ntfy-secrets`, key `admin-password`, then restart the StatefulSet:
-
-```sh
-kubectl -n <namespace> patch secret ntfy-secrets --type merge -p '{"stringData":{"admin-password":"<new password>"}}'
-kubectl -n <namespace> rollout restart statefulset/ntfy
-```
+ntfy applies the Secret at every start. To change the password, open **Variables** on the `ntfy` service, click `ntfy-secrets` under **From config files and secrets**, and enter a new value for `admin-password`. Review and apply, then click **Restart** at the top of the service page.
 
 ### Add a user
 
-Run `ntfy user add` in the Pod, then give the user access to a topic with `ntfy access`. `rw` means the user can publish and subscribe:
+Click **Terminal** at the top of the `ntfy` service page. Run `ntfy user add`, then give the user access to a topic with `ntfy access`. `rw` means the user can publish and subscribe:
 
 ```sh
-kubectl -n <namespace> exec -it statefulset/ntfy -- ntfy user add <username>
-kubectl -n <namespace> exec statefulset/ntfy -- ntfy access <username> <topic> rw
+ntfy user add <username>
+ntfy access <username> <topic> rw
 ```
 
 See [Access control](https://docs.ntfy.sh/config/) in the ntfy docs.
 
 ### Create an access token
 
-An access token lets an app publish or subscribe without your password. Create one in the web app, in the Account section after you sign in. You can also create one in the Pod:
+An access token lets an app publish or subscribe without your password. Create one in the web app, in the Account section after you sign in. You can also click **Terminal** at the top of the `ntfy` service page and run:
 
 ```sh
-kubectl -n <namespace> exec statefulset/ntfy -- ntfy token add --label=<label> admin
+ntfy token add --label=<label> admin
 ```
 
 Send the token as a Bearer token:

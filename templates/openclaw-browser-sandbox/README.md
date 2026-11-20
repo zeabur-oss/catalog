@@ -6,7 +6,7 @@ The browser is for one trusted owner. It has no web page, no sign-in and no toke
 
 ## Getting started
 
-1. Wait until the deployment `openclaw-sandbox-browser` shows as running. It has no domain.
+1. In Zeabur, open the `openclaw-sandbox-browser` service. When **Overview** shows its replica as ready, the service is up. It has no domain.
 2. Make sure your client pod carries the label `app.kubernetes.io/name` with the value you entered as the trusted caller in the install form. For OpenClaw, that value is `openclaw`.
 3. From that pod, use this address as the CDP endpoint:
 

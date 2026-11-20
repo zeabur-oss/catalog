@@ -6,8 +6,8 @@
 
 ## 开始使用
 
-1. 等服务显示为运行中，部署完成后马上打开它的域名，例如 `https://kuma.example.com`。
-2. 第一个进来的人会看到设置页面并创建所有者账号。请抢在别人之前完成，因为谁先进来谁就是所有者。
+1. 在 Zeabur 打开 `uptime-kuma` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**，也就是你在安装表单填的域名。
+2. 部署完成后马上打开这个域名。第一个进来的人会看到设置页面并创建所有者账号。请抢在别人之前完成，因为谁先进来谁就是所有者。
 3. 添加你的第一个监控项。
 
 ## 配置
@@ -28,10 +28,16 @@ Ping 监控用的是不需特权的 ICMP socket，容器没有 `NET_RAW` 权限�
 
 ### 忘记密码
 
-在 Pod 里运行重置命令，再按提示操作：
+点服务页顶部的**终端**，运行重置命令，再按提示操作：
+
+```sh
+npm run reset-password
+```
+
+不用 Zeabur 时，用 kubectl 运行：
 
 ```sh
 kubectl -n <namespace> exec -it uptime-kuma-0 -- npm run reset-password
 ```
 
-详见 [Reset Password via CLI](https://uptime.kuma.pet/docs/Reset-Password-via-CLI)。
+详见[Reset Password via CLI](https://uptime.kuma.pet/docs/Reset-Password-via-CLI)。

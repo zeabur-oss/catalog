@@ -6,8 +6,8 @@
 
 ## 開始使用
 
-1. 等所有服務顯示為執行中，記下 `dify` 服務的網域，例如 `https://dify.example.com`。
-2. 取得初始化密碼。密碼在機密 `dify-secrets` 的 `init-password` 欄位：
+1. 在 Zeabur 打開 `dify` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，例如 `dify.example.com`。Dify 的其他服務（例如 `dify-api`）也要就緒。
+2. 取得初始化密碼。打開 `dify-api` 服務的**環境變數**，在**來自設定檔和機密變數**點 `dify-secrets`，再按 `init-password` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `dify-secrets` 的 `init-password`：
 
    ```sh
    kubectl -n <namespace> get secret dify-secrets -o jsonpath='{.data.init-password}' | base64 -d

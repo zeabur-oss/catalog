@@ -6,8 +6,8 @@ This template runs one SillyTavern instance behind your domain. Access is protec
 
 ## Getting started
 
-1. Wait until the service shows as running, then open its domain, for example `https://sillytavern.example.com`.
-2. Your browser asks for a login. The user name is `user`. The password is in Secret `app-secrets`, key `basic-password`:
+1. In Zeabur, open the `sillytavern` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**; it is the domain you entered in the install form.
+2. Your browser asks for a login. The user name is `user`. The password is in Secret `app-secrets`, key `basic-password`. Open **Variables**, click `app-secrets` under **From config files and secrets**, and click the eye icon next to `basic-password`. Without Zeabur, read Secret `app-secrets`, key `basic-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret app-secrets -o jsonpath='{.data.basic-password}' | base64 -d
@@ -23,13 +23,7 @@ In the top bar, click API Connections, choose the API type and source, enter you
 
 ### Change the password
 
-Write a new value to `app-secrets`, key `basic-password`, then restart the deployment so it reads the new value:
-
-```sh
-kubectl -n <namespace> rollout restart deployment/sillytavern
-```
-
-Your browser asks for the new password the next time you open the page.
+On the service's **Variables** tab, click `app-secrets`, enter a new value for `basic-password`, then review and apply. The running replica keeps the old value until you click **Restart** at the top of the service page. Your browser asks for the new password the next time you open the page.
 
 ## Troubleshooting
 

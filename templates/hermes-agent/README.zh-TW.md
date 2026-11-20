@@ -6,15 +6,15 @@
 
 ## 開始使用
 
-1. 等服務顯示為執行中，記下兩個網域，例如 API 用 `https://hermes.example.com`，管理面板用 `https://hermes-admin.example.com`。
-2. 取得管理面板密碼。密碼在機密 `hermes-secrets` 的 `dashboard-password` 欄位：
+1. 在 Zeabur 打開 `hermes-agent` 服務。**概覽**顯示副本已就緒，服務就啟動好了。兩個網域都在**網路**分頁的**公開網域**，例如 API 用 `hermes.example.com`，管理面板用 `hermes-admin.example.com`。
+2. 取得管理面板密碼。打開**環境變數**，在**來自設定檔和機密變數**點 `hermes-secrets`，再按 `dashboard-password` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `hermes-secrets` 的 `dashboard-password`：
 
    ```sh
    kubectl -n <namespace> get secret hermes-secrets -o jsonpath='{.data.dashboard-password}' | base64 -d
    ```
 
 3. 開啟管理面板的網域，用 `admin` 和這組密碼登入。
-4. 取得 API 金鑰。金鑰在機密 `hermes-secrets` 的 `api-key` 欄位：
+4. 取得 API 金鑰。在同一個 `hermes-secrets` 列表按 `api-key` 旁的眼睛圖示。用 kubectl 的做法：
 
    ```sh
    kubectl -n <namespace> get secret hermes-secrets -o jsonpath='{.data.api-key}' | base64 -d
@@ -39,11 +39,7 @@ Open WebUI、LobeChat、LibreChat 等相容 OpenAI 的用戶端都能使用這�
 
 ### 更換模型服務的 API 金鑰
 
-把新的金鑰寫進你在安裝表單選的機密的 `api-key` 欄位，再重新啟動部署，讓它讀到新值：
-
-```sh
-kubectl -n <namespace> rollout restart deployment/hermes-agent
-```
+在服務的**環境變數**分頁，於**來自設定檔和機密變數**點你在安裝表單選的機密，填入新的 `api-key`，檢查後套用。執行中的副本會繼續用舊金鑰，直到你按服務頁上方的**重新啟動**。
 
 範本每次啟動都會把安裝表單填的模型、端點和金鑰寫進 Hermes 的設定。在管理面板更改模型，只會維持到下次重新啟動。
 

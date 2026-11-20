@@ -6,8 +6,8 @@
 
 ## 開始使用
 
-1. 等服務顯示為執行中，再開啟網域的 `/ui`，例如 `https://litellm.example.com/ui`。
-2. 取得主金鑰。金鑰在機密 `litellm-secrets` 的 `master-key` 欄位：
+1. 在 Zeabur 打開 `litellm` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，例如 `litellm.example.com`。管理頁面在這個網域的 `/ui`。
+2. 取得主金鑰。打開**環境變數**，在**來自設定檔和機密變數**點 `litellm-secrets`，再按 `master-key` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `litellm-secrets` 的 `master-key`：
 
    ```sh
    kubectl -n <namespace> get secret litellm-secrets -o jsonpath='{.data.master-key}' | base64 -d
