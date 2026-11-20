@@ -14,8 +14,8 @@
         {
           "workload": "browserless",
           "kind": "Deployment",
-          "memory": "302Mi",
-          "cpu": "11m"
+          "memory": "239Mi",
+          "cpu": "8m"
         }
       ],
       "versions": [
@@ -25,12 +25,12 @@
           "digest": "sha256:3231c6747363e1214b7d674e2945606bb68b629a10ae59a489dc44d99572a022"
         }
       ],
-      "sourceDigest": "h1:yOqjRL8E7ld3Hzxte7kRgeMeYTjYNktWpJs2DHYxzWA=",
+      "sourceDigest": "h1:nxTUnJEWoJ27W22OZluSecRT5R0vyJNq/kgro+6+574=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     }
   ]
 }

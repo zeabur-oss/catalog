@@ -15,7 +15,7 @@
           "workload": "miniflux-db",
           "kind": "Cluster",
           "memory": "59Mi",
-          "cpu": "5m"
+          "cpu": "6m"
         },
         {
           "workload": "miniflux",
@@ -31,13 +31,13 @@
           "digest": "sha256:8fd6c3c434ecc3d4083306f83e03c0bb74c632e0f8378da5ead7e1773b0b89c9"
         }
       ],
-      "sourceDigest": "h1:jhfIq96pQ2L32G+LJ6qDHmg1JkzG27nQ3xt2aLP74K0=",
+      "sourceDigest": "h1:1tBafOhPlr9SLsqWgsDgCZHKZ10slcroIDoYKTqEoZM=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "cloudnative-pg": "h1:VlI7FbJq8eu7nUwyl03sJAPplBUBm53QJYGDhleao90=",
         "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     }
   ]
 }

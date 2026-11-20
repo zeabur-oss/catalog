@@ -14,14 +14,14 @@
         {
           "workload": "umami-db",
           "kind": "Cluster",
-          "memory": "55Mi",
+          "memory": "54Mi",
           "cpu": "5m"
         },
         {
           "workload": "umami",
           "kind": "Deployment",
-          "memory": "146Mi",
-          "cpu": "2m"
+          "memory": "145Mi",
+          "cpu": "1m"
         }
       ],
       "versions": [
@@ -31,13 +31,13 @@
           "digest": "sha256:e69d1a7932e9dab0fc523edc7be1f3a53f3c261f57856fc2167ae74a8fc022e8"
         }
       ],
-      "sourceDigest": "h1:5DfJ2h0QM0aV6Fud7z8Ngae2wMJrXcbAtB9KW0uRlS0=",
+      "sourceDigest": "h1:bCGVu36fmwsre3wnvSZRI/mxOrnAb05/FYDHBVBNhuc=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "cloudnative-pg": "h1:VlI7FbJq8eu7nUwyl03sJAPplBUBm53QJYGDhleao90=",
         "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     }
   ]
 }
