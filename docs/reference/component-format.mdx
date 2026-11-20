@@ -167,7 +167,7 @@ health:
 
 A release with `skipIfPresent` is skipped when every CRD it lists already exists, such as Gateway API CRDs that another installation put on the cluster. `releaseName` sets the Helm release name when it differs from `name`.
 
-`contributes` adds values to a release of another component. `target` names the component and its release, and `values` holds the values.
+`contributes` adds values to a release of another component. `target` names the component and its release, and `values` holds the values. The component needs a `helm` release of its own: an installer finds the components it installed by their Helm releases, and adds their values again each time it writes the target.
 
 ```yaml
 contributes:

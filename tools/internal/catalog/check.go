@@ -104,6 +104,10 @@ func Check(root string, cat *Catalog) error {
 				fail(c.Path, "%v", err)
 			}
 		}
+		if len(c.Contributes) > 0 && !slices.ContainsFunc(c.Releases, func(r Release) bool { return r.Type == "helm" }) {
+			// An installer finds the contributors it installed by their Helm releases.
+			fail(c.Path, "contributes: needs a helm release of its own")
+		}
 		for _, ct := range c.Contributes {
 			t, ok := cat.Get(ct.Target.Component)
 			if !ok {
