@@ -25,6 +25,9 @@ type E2EConfig struct {
 	// NodeSetup maps a component to a shell script that runs in every node
 	// before the component installs.
 	NodeSetup map[string]string `yaml:"nodeSetup"`
+	// Inputs are input values per component that replace its test values. A value is a
+	// text/template with .S3, the S3 store the run starts when a value uses it.
+	Inputs map[string]map[string]string `yaml:"inputs"`
 	// TemplateInputs are input values for every template that declares the input.
 	TemplateInputs map[string]string `yaml:"templateInputs"`
 }

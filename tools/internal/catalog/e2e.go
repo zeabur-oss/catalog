@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"text/template"
 	"time"
 
 	"github.com/zeabur-oss/catalog/tools/internal/kubeobj"
@@ -28,6 +29,9 @@ type Tester struct {
 	Replacements map[string]map[string]map[string]string
 	// SkipSmoke maps a component and a smoke check to the reason e2e skips it.
 	SkipSmoke map[string]map[string]string
+	// Inputs are input values per component that replace its test values, as text/templates
+	// with .S3.
+	Inputs map[string]map[string]string
 	// Timings collects the phases of every Test, Quick and Install call.
 	Timings Timings
 	// shared is set by Share: Quick and Install keep components installed for later calls.
@@ -73,10 +77,13 @@ type run struct {
 	installed     map[string]bool     // component IDs
 	releases      map[string]bool     // component/release with an undo step
 	contributions map[string][]string // component/release -> extra values
+	inputs        map[string]map[string]any
+	s3            *S3 // started for the first component whose inputs use it
 }
 
 func newRun() *run {
-	return &run{installed: map[string]bool{}, releases: map[string]bool{}, contributions: map[string][]string{}}
+	return &run{installed: map[string]bool{}, releases: map[string]bool{}, contributions: map[string][]string{},
+		inputs: map[string]map[string]any{}}
 }
 
 func kubectl(args ...string) (string, error) { return Kubectl(nil, args...) }
@@ -268,7 +275,12 @@ func (t *Tester) Install(refs []Ref) (uninstall func() error, err error) {
 // install installs a component's secrets and releases, then re-applies the
 // releases it contributes values to.
 func (t *Tester) install(r *run, c *Component) error {
-	if err := createSecrets(r, c); err != nil {
+	inputs, err := t.inputs(r, c)
+	if err != nil {
+		return err
+	}
+	r.inputs[c.ID] = inputs
+	if err := createSecrets(r, c, inputs); err != nil {
 		return err
 	}
 	for _, rel := range c.Releases {
@@ -333,7 +345,11 @@ func (t *Tester) installRelease(r *run, c *Component, rel Release) error {
 	if err != nil {
 		return err
 	}
-	vals, err := c.values(rel, t.Profile, c.testInputs())
+	inputs := r.inputs[c.ID]
+	if inputs == nil {
+		inputs = c.testInputs()
+	}
+	vals, err := c.values(rel, t.Profile, inputs)
 	if err != nil {
 		return err
 	}
@@ -382,10 +398,42 @@ func replace(manifest []byte, replacements map[string]string) ([]byte, error) {
 	return []byte(out), nil
 }
 
+// inputs returns the test values of c with t.Inputs over them.
+func (t *Tester) inputs(r *run, c *Component) (map[string]any, error) {
+	out := c.testInputs()
+	for name, text := range t.Inputs[c.ID] {
+		var b strings.Builder
+		tmpl, err := template.New(name).Option("missingkey=error").Parse(text)
+		if err != nil {
+			return nil, fmt.Errorf("input %s: %w", name, err)
+		}
+		if err := tmpl.Execute(&b, inputData{r}); err != nil {
+			return nil, fmt.Errorf("input %s: %w", name, err)
+		}
+		out[name] = b.String()
+	}
+	return out, nil
+}
+
+// inputData is what the t.Inputs templates see.
+type inputData struct{ r *run }
+
+// S3 starts the run's S3 store the first time a template uses it.
+func (d inputData) S3() (*S3, error) {
+	if d.r.s3 == nil {
+		s3, stop, err := StartS3()
+		if err != nil {
+			return nil, fmt.Errorf("start the S3 store: %w", err)
+		}
+		d.r.s3 = s3
+		d.r.undo = append(d.r.undo, stop)
+	}
+	return d.r.s3, nil
+}
+
 // createSecrets creates the Secrets that inputs live in, one per name, with
 // every key. Existing Secrets are kept.
-func createSecrets(r *run, c *Component) error {
-	inputs := c.testInputs()
+func createSecrets(r *run, c *Component, inputs map[string]any) error {
 	keys := map[SecretRef][]string{} // Key unset: one entry per Secret
 	for _, in := range c.Inputs {
 		if in.Secret == nil {

@@ -161,3 +161,83 @@ security:
 
 # The chart's crds/ directory: Helm never deletes it.
 leftovers: [customresourcedefinitions]
+
+# e2e runs these against an HTTPS S3 store with a test CA (config/e2e.yaml).
+smoke:
+  - name: store
+    wait:
+      - {resource: backupstoragelocation/default, namespace: velero, condition: "jsonpath={.status.phase}=Available"}
+  - name: backup
+    manifest: |
+      apiVersion: velero.io/v1
+      kind: Backup
+      metadata: {name: smoke, namespace: velero}
+      spec:
+        includedNamespaces: [catalog-smoke]
+        ttl: 1h0m0s
+    wait:
+      - {resource: backup/smoke, namespace: velero, condition: "jsonpath={.status.phase}=Completed"}
+  # The same store and credentials as default, without caCertRef: only the
+  # certificate check can fail.
+  - name: store-without-ca
+    manifest: |
+      apiVersion: velero.io/v1
+      kind: BackupStorageLocation
+      metadata: {name: smoke-without-ca, namespace: velero}
+      spec:
+        provider: aws
+        objectStorage: {bucket: e2e}
+        config: {region: us-east-1, s3ForcePathStyle: "true", s3Url: "https://s3.catalog-e2e-s3.svc"}
+    wait:
+      - {resource: backupstoragelocation/smoke-without-ca, namespace: velero, condition: "jsonpath={.status.phase}=Unavailable"}
+  # The store refuses to read the backup without the SSE-C key and returns it
+  # with the key.
+  - name: backup-key
+    manifest: |
+      apiVersion: batch/v1
+      kind: Job
+      metadata: {name: smoke-backup-key, namespace: velero}
+      spec:
+        backoffLimit: 0
+        template:
+          spec:
+            restartPolicy: Never
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: 100
+              seccompProfile: {type: RuntimeDefault}
+            containers:
+              - name: curl
+                image: curlimages/curl:8.17.0@sha256:935d9100e9ba842cdb060de42472c7ca90cfe9a7c96e4dacb55e79e560b3ff40
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities: {drop: [ALL]}
+                command:
+                  - sh
+                  - -euc
+                  - |
+                    id=$(sed -n 's/^aws_access_key_id=//p' /credentials/cloud)
+                    secret=$(sed -n 's/^aws_secret_access_key=//p' /credentials/cloud)
+                    key=$(cat /backup-key/key)
+                    md5=$(printf '%s' "$key" | md5sum | cut -c1-32 | sed 's/../\\x&/g')
+                    get() {
+                      curl -sS -o /dev/null -w '%{http_code}' --cacert /ca/ca.crt \
+                        --aws-sigv4 aws:amz:us-east-1:s3 -u "$id:$secret" "$@" \
+                        https://s3.catalog-e2e-s3.svc/e2e/backups/smoke/smoke.tar.gz
+                    }
+                    without=$(get)
+                    with=$(get -H 'x-amz-server-side-encryption-customer-algorithm: AES256' \
+                      -H "x-amz-server-side-encryption-customer-key: $(printf '%s' "$key" | base64)" \
+                      -H "x-amz-server-side-encryption-customer-key-MD5: $(printf "$md5" | base64)")
+                    echo "without the key: $without, with it: $with"
+                    [ "$without" = 400 ] && [ "$with" = 200 ]
+                volumeMounts:
+                  - {name: credentials, mountPath: /credentials, readOnly: true}
+                  - {name: ca, mountPath: /ca, readOnly: true}
+                  - {name: backup-key, mountPath: /backup-key, readOnly: true}
+            volumes:
+              - {name: credentials, secret: {secretName: velero-credentials}}
+              - {name: ca, secret: {secretName: velero-ca}}
+              - {name: backup-key, secret: {secretName: velero-backup-key}}
+    wait:
+      - {resource: job/smoke-backup-key, namespace: velero, condition: condition=Complete}

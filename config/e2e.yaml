@@ -17,6 +17,25 @@ overrides:
       defaultSettings:
         # e2e uninstalls after every test; the chart refuses to without it.
         deletingConfirmationFlag: true
+  velero:
+    velero: |
+      configuration:
+        # Otherwise Velero copies the smoke Backup back from the store after
+        # the smoke checks delete it.
+        backupSyncPeriod: 0s
+
+# Input values per component that replace its test values. A value is a
+# text/template with .S3, an S3 store the run starts when a value uses it:
+# SeaweedFS in one Pod, with its S3 API over HTTPS at .S3.Endpoint
+# (https://s3.catalog-e2e-s3.svc) and a certificate from a test CA. .S3.CA is
+# that CA as PEM, .S3.Bucket is e2e, and .S3.AccessKey and .S3.SecretKey are
+# its credentials. Every value is disposable test data.
+inputs:
+  velero:
+    bucket: "{{.S3.Bucket}}"
+    s3Url: "{{.S3.Endpoint}}"
+    credentials: "[default]\naws_access_key_id={{.S3.AccessKey}}\naws_secret_access_key={{.S3.SecretKey}}\n"
+    caCert: "{{.S3.CA}}"
 
 # Components whose workloads cannot become ready without external credentials
 # CI does not have. e2e installs them without waiting for their workloads, runs
