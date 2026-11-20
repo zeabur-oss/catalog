@@ -13,7 +13,7 @@
       "result": "passed",
       "pods": [
         {
-          "workload": "svclb-traefik-ec66927e",
+          "workload": "svclb-traefik-c915a43d",
           "kind": "DaemonSet",
           "memory": "1Mi",
           "cpu": "0"
@@ -21,7 +21,7 @@
         {
           "workload": "traefik",
           "kind": "Deployment",
-          "memory": "23Mi",
+          "memory": "26Mi",
           "cpu": "0"
         }
       ],
@@ -35,8 +35,8 @@
           "version": "42.1.3"
         }
       ],
-      "sourceDigest": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "k3s",
@@ -50,7 +50,7 @@
       "result": "passed",
       "pods": [
         {
-          "workload": "svclb-traefik-73a7a7d5",
+          "workload": "svclb-traefik-1bf652b2",
           "kind": "DaemonSet",
           "memory": "1Mi",
           "cpu": "0"
@@ -58,7 +58,7 @@
         {
           "workload": "traefik",
           "kind": "Deployment",
-          "memory": "23Mi",
+          "memory": "24Mi",
           "cpu": "0"
         }
       ],
@@ -72,8 +72,8 @@
           "version": "42.1.3"
         }
       ],
-      "sourceDigest": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -88,7 +88,7 @@
         {
           "workload": "traefik",
           "kind": "DaemonSet",
-          "memory": "23Mi",
+          "memory": "25Mi",
           "cpu": "0"
         }
       ],
@@ -102,8 +102,8 @@
           "version": "42.1.3"
         }
       ],
-      "sourceDigest": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -118,7 +118,7 @@
         {
           "workload": "traefik",
           "kind": "DaemonSet",
-          "memory": "22Mi",
+          "memory": "25Mi",
           "cpu": "0"
         }
       ],
@@ -132,8 +132,8 @@
           "version": "42.1.3"
         }
       ],
-      "sourceDigest": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -148,7 +148,7 @@
         {
           "workload": "traefik",
           "kind": "Deployment",
-          "memory": "22Mi",
+          "memory": "25Mi",
           "cpu": "0"
         }
       ],
@@ -162,8 +162,8 @@
           "version": "42.1.3"
         }
       ],
-      "sourceDigest": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -178,7 +178,7 @@
         {
           "workload": "traefik",
           "kind": "Deployment",
-          "memory": "22Mi",
+          "memory": "24Mi",
           "cpu": "0"
         }
       ],
@@ -192,8 +192,8 @@
           "version": "42.1.3"
         }
       ],
-      "sourceDigest": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -201,6 +201,40 @@
       "platform": {
         "os": "linux",
         "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "traefik",
+          "kind": "Deployment",
+          "memory": "26Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "gateway-api-crds",
+          "version": "v1.6.3"
+        },
+        {
+          "release": "traefik",
+          "version": "42.1.3"
+        }
+      ],
+      "sourceDigest": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-19"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
       },
       "kubernetesVersion": "v1.36.6",
       "distributionVersion": "v1.3.0",
@@ -223,45 +257,11 @@
           "version": "42.1.3"
         }
       ],
-      "sourceDigest": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+      "sourceDigest": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.6",
-      "distributionVersion": "v1.3.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "traefik",
-          "kind": "Deployment",
-          "memory": "24Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "gateway-api-crds",
-          "version": "v1.6.3"
-        },
-        {
-          "release": "traefik",
-          "version": "42.1.3"
-        }
-      ],
-      "sourceDigest": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
-      "addOns": {
-        "helm-controller": "v0.17.9"
-      },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -277,7 +277,7 @@
         {
           "workload": "traefik",
           "kind": "Deployment",
-          "memory": "24Mi",
+          "memory": "28Mi",
           "cpu": "0"
         }
       ],
@@ -291,11 +291,11 @@
           "version": "42.1.3"
         }
       ],
-      "sourceDigest": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+      "sourceDigest": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -325,11 +325,11 @@
           "version": "42.1.3"
         }
       ],
-      "sourceDigest": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+      "sourceDigest": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     }
   ]
 }

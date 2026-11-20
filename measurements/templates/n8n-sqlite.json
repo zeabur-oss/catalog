@@ -14,8 +14,8 @@
         {
           "workload": "n8n",
           "kind": "Deployment",
-          "memory": "321Mi",
-          "cpu": "2m"
+          "memory": "329Mi",
+          "cpu": "3m"
         },
         {
           "workload": "task-runner",
@@ -27,19 +27,19 @@
       "versions": [
         {
           "image": "docker.io/n8nio/n8n",
-          "version": "3.1.0",
-          "digest": "sha256:6e9f220e9cf0d2f17d3c2371c8d8a6fe6720f99b82a9672afb96bf068cfd04a5"
+          "version": "3.2.0",
+          "digest": "sha256:9e67c2627d3c30dbb0d51f5da83d4499ac7913f6b4f358a900a58026a832ba12"
         },
         {
           "image": "docker.io/n8nio/runners",
-          "version": "3.1.0",
-          "digest": "sha256:730c78a31b9d5711319fff053a18e98ba5265f11769c88d1917506e9b33d2616"
+          "version": "3.2.0",
+          "digest": "sha256:121b0ae16e397b31dca8c9f188f44a611d75ed46bcda16bacc42381a4ea1ae90"
         }
       ],
-      "sourceDigest": "h1:+zJEhu9wC2nWeE+9hNMPzj22yzmxQKr3FdsH77lIKxc=",
+      "sourceDigest": "h1:5FcpWD9w+VkCI7TztfEMVpv7owHP/AZHMQbs1CJPNLE=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     }

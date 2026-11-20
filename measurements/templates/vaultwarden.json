@@ -28,7 +28,7 @@
       "sourceDigest": "h1:kAX9c2m/w4WVLHJgCMl9Dg5bGJiy0Bn6xG0LDAZ4mvc=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     }

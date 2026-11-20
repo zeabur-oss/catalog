@@ -22,10 +22,10 @@
       "versions": [
         {
           "release": "velero",
-          "version": "12.2.3"
+          "version": "12.2.5"
         }
       ],
-      "sourceDigest": "h1:+MbIpwe//vfaUygrnDUOSRZpZLDK2sCUEVWrzaAKp/o=",
+      "sourceDigest": "h1:Cvnzws0//CAbPAsCqpG5aRI96l97tYoITH2jO5BTWUA=",
       "measuredAt": "2026-11-19"
     },
     {
@@ -42,17 +42,17 @@
         {
           "workload": "velero",
           "kind": "Deployment",
-          "memory": "23Mi",
+          "memory": "24Mi",
           "cpu": "1m"
         }
       ],
       "versions": [
         {
           "release": "velero",
-          "version": "12.2.3"
+          "version": "12.2.5"
         }
       ],
-      "sourceDigest": "h1:+MbIpwe//vfaUygrnDUOSRZpZLDK2sCUEVWrzaAKp/o=",
+      "sourceDigest": "h1:Cvnzws0//CAbPAsCqpG5aRI96l97tYoITH2jO5BTWUA=",
       "measuredAt": "2026-11-19"
     },
     {
@@ -75,10 +75,10 @@
       "versions": [
         {
           "release": "velero",
-          "version": "12.2.3"
+          "version": "12.2.5"
         }
       ],
-      "sourceDigest": "h1:+MbIpwe//vfaUygrnDUOSRZpZLDK2sCUEVWrzaAKp/o=",
+      "sourceDigest": "h1:Cvnzws0//CAbPAsCqpG5aRI96l97tYoITH2jO5BTWUA=",
       "measuredAt": "2026-11-19"
     },
     {
@@ -101,10 +101,10 @@
       "versions": [
         {
           "release": "velero",
-          "version": "12.2.3"
+          "version": "12.2.5"
         }
       ],
-      "sourceDigest": "h1:+MbIpwe//vfaUygrnDUOSRZpZLDK2sCUEVWrzaAKp/o=",
+      "sourceDigest": "h1:Cvnzws0//CAbPAsCqpG5aRI96l97tYoITH2jO5BTWUA=",
       "measuredAt": "2026-11-19"
     },
     {
@@ -120,17 +120,17 @@
         {
           "workload": "velero",
           "kind": "Deployment",
-          "memory": "22Mi",
+          "memory": "23Mi",
           "cpu": "1m"
         }
       ],
       "versions": [
         {
           "release": "velero",
-          "version": "12.2.3"
+          "version": "12.2.5"
         }
       ],
-      "sourceDigest": "h1:+MbIpwe//vfaUygrnDUOSRZpZLDK2sCUEVWrzaAKp/o=",
+      "sourceDigest": "h1:Cvnzws0//CAbPAsCqpG5aRI96l97tYoITH2jO5BTWUA=",
       "measuredAt": "2026-11-19"
     },
     {
@@ -153,10 +153,10 @@
       "versions": [
         {
           "release": "velero",
-          "version": "12.2.3"
+          "version": "12.2.5"
         }
       ],
-      "sourceDigest": "h1:+MbIpwe//vfaUygrnDUOSRZpZLDK2sCUEVWrzaAKp/o=",
+      "sourceDigest": "h1:Cvnzws0//CAbPAsCqpG5aRI96l97tYoITH2jO5BTWUA=",
       "measuredAt": "2026-11-19"
     },
     {
@@ -173,17 +173,17 @@
         {
           "workload": "velero",
           "kind": "Deployment",
-          "memory": "22Mi",
+          "memory": "23Mi",
           "cpu": "1m"
         }
       ],
       "versions": [
         {
           "release": "velero",
-          "version": "12.2.3"
+          "version": "12.2.5"
         }
       ],
-      "sourceDigest": "h1:+MbIpwe//vfaUygrnDUOSRZpZLDK2sCUEVWrzaAKp/o=",
+      "sourceDigest": "h1:Cvnzws0//CAbPAsCqpG5aRI96l97tYoITH2jO5BTWUA=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
@@ -210,10 +210,10 @@
       "versions": [
         {
           "release": "velero",
-          "version": "12.2.3"
+          "version": "12.2.5"
         }
       ],
-      "sourceDigest": "h1:+MbIpwe//vfaUygrnDUOSRZpZLDK2sCUEVWrzaAKp/o=",
+      "sourceDigest": "h1:Cvnzws0//CAbPAsCqpG5aRI96l97tYoITH2jO5BTWUA=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
@@ -233,17 +233,17 @@
         {
           "workload": "velero",
           "kind": "Deployment",
-          "memory": "25Mi",
+          "memory": "24Mi",
           "cpu": "1m"
         }
       ],
       "versions": [
         {
           "release": "velero",
-          "version": "12.2.3"
+          "version": "12.2.5"
         }
       ],
-      "sourceDigest": "h1:+MbIpwe//vfaUygrnDUOSRZpZLDK2sCUEVWrzaAKp/o=",
+      "sourceDigest": "h1:Cvnzws0//CAbPAsCqpG5aRI96l97tYoITH2jO5BTWUA=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
@@ -263,17 +263,17 @@
         {
           "workload": "velero",
           "kind": "Deployment",
-          "memory": "23Mi",
+          "memory": "24Mi",
           "cpu": "1m"
         }
       ],
       "versions": [
         {
           "release": "velero",
-          "version": "12.2.3"
+          "version": "12.2.5"
         }
       ],
-      "sourceDigest": "h1:+MbIpwe//vfaUygrnDUOSRZpZLDK2sCUEVWrzaAKp/o=",
+      "sourceDigest": "h1:Cvnzws0//CAbPAsCqpG5aRI96l97tYoITH2jO5BTWUA=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },

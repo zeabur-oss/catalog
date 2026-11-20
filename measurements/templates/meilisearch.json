@@ -21,14 +21,14 @@
       "versions": [
         {
           "image": "getmeili/meilisearch",
-          "version": "v1.56.1",
-          "digest": "sha256:b7ba431bf6f9b26cc86132798f3640964147a699cf23f026b74c6c05dbb1d60d"
+          "version": "v1.56.2",
+          "digest": "sha256:9600db22be3fcbf3d506176d3a73dd70a65c5719d9aa1d2837355b75afb8f4fb"
         }
       ],
-      "sourceDigest": "h1:3UH2TKnx4N+bmf+8rtHCHinGgYXaQUi3Gs8feThccBs=",
+      "sourceDigest": "h1:oBkZLEx+qX49ARsaZ4VDNPZ6cLg9+miZgn6XuikCU08=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     }

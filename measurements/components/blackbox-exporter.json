@@ -28,7 +28,7 @@
       "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
@@ -61,7 +61,7 @@
       "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
@@ -93,7 +93,7 @@
       "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
@@ -125,7 +125,7 @@
       "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
@@ -157,7 +157,7 @@
       "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
@@ -189,7 +189,7 @@
       "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
@@ -222,7 +222,7 @@
       "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
@@ -258,7 +258,7 @@
       "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
@@ -294,7 +294,7 @@
       "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
@@ -330,7 +330,7 @@
       "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },

@@ -15,21 +15,21 @@
         {
           "workload": "system-upgrade-controller",
           "kind": "Deployment",
-          "memory": "13Mi",
+          "memory": "17Mi",
           "cpu": "0"
         }
       ],
       "versions": [
         {
           "release": "crds",
-          "version": "v0.20.2"
+          "version": "v0.21.0"
         },
         {
           "release": "controller",
-          "version": "v0.20.2"
+          "version": "v0.21.0"
         }
       ],
-      "sourceDigest": "h1:TChgTcBXKqJ8MNe8Q1O6waHGDbV6KU0hP9uCObGs46k=",
+      "sourceDigest": "h1:RIEE7m8qS9pCIYJ9gvNd7AX3EN4s4s1NKE9S4GjmIDE=",
       "measuredAt": "2026-11-19"
     },
     {
@@ -46,21 +46,21 @@
         {
           "workload": "system-upgrade-controller",
           "kind": "Deployment",
-          "memory": "15Mi",
-          "cpu": "0"
+          "memory": "14Mi",
+          "cpu": "1m"
         }
       ],
       "versions": [
         {
           "release": "crds",
-          "version": "v0.20.2"
+          "version": "v0.21.0"
         },
         {
           "release": "controller",
-          "version": "v0.20.2"
+          "version": "v0.21.0"
         }
       ],
-      "sourceDigest": "h1:TChgTcBXKqJ8MNe8Q1O6waHGDbV6KU0hP9uCObGs46k=",
+      "sourceDigest": "h1:RIEE7m8qS9pCIYJ9gvNd7AX3EN4s4s1NKE9S4GjmIDE=",
       "measuredAt": "2026-11-19"
     },
     {
@@ -76,21 +76,21 @@
         {
           "workload": "system-upgrade-controller",
           "kind": "Deployment",
-          "memory": "12Mi",
+          "memory": "11Mi",
           "cpu": "0"
         }
       ],
       "versions": [
         {
           "release": "crds",
-          "version": "v0.20.2"
+          "version": "v0.21.0"
         },
         {
           "release": "controller",
-          "version": "v0.20.2"
+          "version": "v0.21.0"
         }
       ],
-      "sourceDigest": "h1:TChgTcBXKqJ8MNe8Q1O6waHGDbV6KU0hP9uCObGs46k=",
+      "sourceDigest": "h1:RIEE7m8qS9pCIYJ9gvNd7AX3EN4s4s1NKE9S4GjmIDE=",
       "measuredAt": "2026-11-19"
     },
     {
@@ -113,14 +113,14 @@
       "versions": [
         {
           "release": "crds",
-          "version": "v0.20.2"
+          "version": "v0.21.0"
         },
         {
           "release": "controller",
-          "version": "v0.20.2"
+          "version": "v0.21.0"
         }
       ],
-      "sourceDigest": "h1:TChgTcBXKqJ8MNe8Q1O6waHGDbV6KU0hP9uCObGs46k=",
+      "sourceDigest": "h1:RIEE7m8qS9pCIYJ9gvNd7AX3EN4s4s1NKE9S4GjmIDE=",
       "measuredAt": "2026-11-19"
     },
     {
@@ -136,21 +136,21 @@
         {
           "workload": "system-upgrade-controller",
           "kind": "Deployment",
-          "memory": "12Mi",
+          "memory": "11Mi",
           "cpu": "0"
         }
       ],
       "versions": [
         {
           "release": "crds",
-          "version": "v0.20.2"
+          "version": "v0.21.0"
         },
         {
           "release": "controller",
-          "version": "v0.20.2"
+          "version": "v0.21.0"
         }
       ],
-      "sourceDigest": "h1:TChgTcBXKqJ8MNe8Q1O6waHGDbV6KU0hP9uCObGs46k=",
+      "sourceDigest": "h1:RIEE7m8qS9pCIYJ9gvNd7AX3EN4s4s1NKE9S4GjmIDE=",
       "measuredAt": "2026-11-19"
     },
     {
@@ -173,14 +173,14 @@
       "versions": [
         {
           "release": "crds",
-          "version": "v0.20.2"
+          "version": "v0.21.0"
         },
         {
           "release": "controller",
-          "version": "v0.20.2"
+          "version": "v0.21.0"
         }
       ],
-      "sourceDigest": "h1:TChgTcBXKqJ8MNe8Q1O6waHGDbV6KU0hP9uCObGs46k=",
+      "sourceDigest": "h1:RIEE7m8qS9pCIYJ9gvNd7AX3EN4s4s1NKE9S4GjmIDE=",
       "measuredAt": "2026-11-19"
     },
     {
@@ -197,21 +197,21 @@
         {
           "workload": "system-upgrade-controller",
           "kind": "Deployment",
-          "memory": "19Mi",
-          "cpu": "1m"
+          "memory": "16Mi",
+          "cpu": "0"
         }
       ],
       "versions": [
         {
           "release": "crds",
-          "version": "v0.20.2"
+          "version": "v0.21.0"
         },
         {
           "release": "controller",
-          "version": "v0.20.2"
+          "version": "v0.21.0"
         }
       ],
-      "sourceDigest": "h1:TChgTcBXKqJ8MNe8Q1O6waHGDbV6KU0hP9uCObGs46k=",
+      "sourceDigest": "h1:RIEE7m8qS9pCIYJ9gvNd7AX3EN4s4s1NKE9S4GjmIDE=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
@@ -231,21 +231,21 @@
         {
           "workload": "system-upgrade-controller",
           "kind": "Deployment",
-          "memory": "16Mi",
+          "memory": "15Mi",
           "cpu": "0"
         }
       ],
       "versions": [
         {
           "release": "crds",
-          "version": "v0.20.2"
+          "version": "v0.21.0"
         },
         {
           "release": "controller",
-          "version": "v0.20.2"
+          "version": "v0.21.0"
         }
       ],
-      "sourceDigest": "h1:TChgTcBXKqJ8MNe8Q1O6waHGDbV6KU0hP9uCObGs46k=",
+      "sourceDigest": "h1:RIEE7m8qS9pCIYJ9gvNd7AX3EN4s4s1NKE9S4GjmIDE=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },

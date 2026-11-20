@@ -21,11 +21,11 @@
       "versions": [
         {
           "image": "docker.io/ollama/ollama",
-          "version": "0.40.15",
-          "digest": "sha256:0e59999e0e8f9fd4e704bd788a89b7e4cad399367fb1365f8c102ac662288761"
+          "version": "0.40.16",
+          "digest": "sha256:910d0d8107b538fb0894e63163eb195de0cc7aefcbc666dc62d3b18f71124592"
         }
       ],
-      "sourceDigest": "h1:fOWu3Uo7sKQ5K2XLy7RL80GILtMwmV6MuGlw5aoH6cQ=",
+      "sourceDigest": "h1:XrpW3yqigQf86Age8+NVKUg12woLIVZlwIw8DmniZOY=",
       "measuredAt": "2026-11-19"
     }
   ]

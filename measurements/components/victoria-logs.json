@@ -28,7 +28,7 @@
       "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "measuredAt": "2026-11-19"
@@ -60,7 +60,7 @@
       "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "measuredAt": "2026-11-19"
@@ -91,7 +91,7 @@
       "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "measuredAt": "2026-11-19"
@@ -122,7 +122,7 @@
       "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "measuredAt": "2026-11-19"
@@ -153,7 +153,7 @@
       "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "measuredAt": "2026-11-19"
@@ -177,14 +177,14 @@
         {
           "workload": "vlsingle-victoria-logs",
           "kind": "Deployment",
-          "memory": "8Mi",
+          "memory": "9Mi",
           "cpu": "1m"
         }
       ],
       "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "measuredAt": "2026-11-19"
@@ -216,7 +216,7 @@
       "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "addOns": {
@@ -244,14 +244,14 @@
         {
           "workload": "vlsingle-victoria-logs",
           "kind": "Deployment",
-          "memory": "9Mi",
+          "memory": "10Mi",
           "cpu": "1m"
         }
       ],
       "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "addOns": {
@@ -273,20 +273,20 @@
         {
           "workload": "vlagent-collector",
           "kind": "DaemonSet",
-          "memory": "7Mi",
+          "memory": "8Mi",
           "cpu": "1m"
         },
         {
           "workload": "vlsingle-victoria-logs",
           "kind": "Deployment",
-          "memory": "8Mi",
+          "memory": "9Mi",
           "cpu": "1m"
         }
       ],
       "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "addOns": {
@@ -308,7 +308,7 @@
         {
           "workload": "vlagent-collector",
           "kind": "DaemonSet",
-          "memory": "9Mi",
+          "memory": "7Mi",
           "cpu": "1m"
         },
         {
@@ -321,7 +321,7 @@
       "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "addOns": {

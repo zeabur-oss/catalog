@@ -15,7 +15,7 @@
         {
           "workload": "moco-controller",
           "kind": "Deployment",
-          "memory": "22Mi",
+          "memory": "21Mi",
           "cpu": "1m"
         }
       ],
@@ -28,7 +28,7 @@
       "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     },
@@ -59,7 +59,7 @@
       "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     },
@@ -89,7 +89,7 @@
       "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     },
@@ -119,7 +119,7 @@
       "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     },
@@ -149,7 +149,7 @@
       "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     },
@@ -179,7 +179,7 @@
       "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     },
@@ -210,7 +210,7 @@
       "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "helm-controller": "v0.17.9"
@@ -231,7 +231,7 @@
         {
           "workload": "moco-controller",
           "kind": "Deployment",
-          "memory": "19Mi",
+          "memory": "18Mi",
           "cpu": "1m"
         }
       ],
@@ -244,7 +244,7 @@
       "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "helm-controller": "v0.17.9"
@@ -278,7 +278,7 @@
       "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
@@ -299,7 +299,7 @@
         {
           "workload": "moco-controller",
           "kind": "Deployment",
-          "memory": "24Mi",
+          "memory": "23Mi",
           "cpu": "1m"
         }
       ],
@@ -312,7 +312,7 @@
       "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"

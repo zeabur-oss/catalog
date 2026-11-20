@@ -14,7 +14,7 @@
         {
           "workload": "lobechat",
           "kind": "Deployment",
-          "memory": "180Mi",
+          "memory": "175Mi",
           "cpu": "0"
         }
       ],
@@ -28,7 +28,7 @@
       "sourceDigest": "h1:s4W8cvNnn/ZdF2t2fpsfcs/H5fG++pH4xy4ZwcPXed0=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     }

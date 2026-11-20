@@ -14,21 +14,21 @@
         {
           "workload": "wordpress",
           "kind": "Deployment",
-          "memory": "61Mi",
+          "memory": "62Mi",
           "cpu": "1m"
         },
         {
           "workload": "mariadb",
           "kind": "StatefulSet",
           "memory": "98Mi",
-          "cpu": "7m"
+          "cpu": "10m"
         }
       ],
       "versions": [
         {
           "image": "docker.io/mariadb",
           "version": "12.3.3",
-          "digest": "sha256:d46e102fa8b9b72bfcdeb56f9dd538742092119dc8b11f31fe662605cd234cd9"
+          "digest": "sha256:4ebbcf100a3ba320766dfa0e1af008df12261301db6ef72798c7650f70794aed"
         },
         {
           "image": "docker.io/nginxinc/nginx-unprivileged",
@@ -46,11 +46,11 @@
           "digest": "sha256:82d93a279778e5307902813c402b9118521e8104459a0e350ed719f6d6c4d1ab"
         }
       ],
-      "sourceDigest": "h1:E+RFcZAkjVKueNeehewqGCO8n84Yzt5/Vfnq6qpOpa8=",
+      "sourceDigest": "h1:SY+Z5dw2whTyDEOnbIbal6K+dye4Rl9DbVXbILQhbW0=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "mariadb-operator": "h1:6Qb+uLZA0Z0tDiXxvRmz8IsqwKmqyQKX3+oZVUEqAsI=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "measuredAt": "2026-11-19"
     }
