@@ -22,7 +22,7 @@ func TestTemplateIDMustNotBeAComponentID(t *testing.T) {
 	}
 	all[0].ID = "traefik"
 	err = templates.Check(root, cat, all[:1])
-	if err == nil || !strings.Contains(err.Error(), "components/traefik.yaml has the same ID") {
+	if err == nil || !strings.Contains(err.Error(), "components/traefik has the same ID") {
 		t.Errorf("got %v", err)
 	}
 }

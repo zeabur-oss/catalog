@@ -28,11 +28,11 @@
         "id": {
           "type": "string",
           "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
-          "description": "The file name of the component without .yaml."
+          "description": "The directory name of the component under components/."
         },
         "sourceDigest": {
           "type": "string",
-          "description": "The Go module hash (h1:) of components/\u003cid\u003e.yaml. A measurement with another sourceDigest\ntested an older file."
+          "description": "The Go module hash (h1:) of the directory components/\u003cid\u003e/, without its READMEs. A\nmeasurement with another sourceDigest tested older files."
         }
       },
       "additionalProperties": false,
@@ -70,7 +70,7 @@
         },
         "sourceDigest": {
           "type": "string",
-          "description": "The Go module hash (h1:) of the directory templates/\u003cid\u003e/. A measurement with another\nsourceDigest tested older files."
+          "description": "The Go module hash (h1:) of the directory templates/\u003cid\u003e/, without its READMEs and e2e.yaml.\nA measurement with another sourceDigest tested older files."
         }
       },
       "additionalProperties": false,

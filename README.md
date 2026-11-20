@@ -62,7 +62,8 @@ a cluster is missing; it never installs components itself.
 ### Layout
 
 ```text
-components/<id>.yaml                      one file per upstream; provides names its capability
+components/<id>/component.yaml            One upstream; provides names its capability
+components/<id>/README*.md                Its READMEs: README.md, README.zh-TW.md, README.zh-CN.md
 templates/<id>/template.yaml              one application: inputs, services, security, smoke checks
 templates/<id>/manifests.yaml             its Kubernetes objects
 templates/<id>/e2e.yaml                       test-only inputs of that template (optional)
@@ -89,7 +90,7 @@ metadata:
 requires: [{capability: certificates}]   # or {component: <id>}
 ```
 
-The path is the ID: `components/traefik.yaml` is `traefik`, `templates/n8n/` is
+The directory name is the ID: `components/traefik/` is `traefik`, `templates/n8n/` is
 `n8n`. A component names the capability it offers in `provides`, such as
 `provides: {capability: ingress}`. No component ID is also a template ID.
 

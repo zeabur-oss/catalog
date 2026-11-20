@@ -6,9 +6,12 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"io/fs"
 	"maps"
 	"os"
+	"path"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -21,7 +24,7 @@ import (
 // Profiles every component describes.
 var Profiles = []string{"single-node", "multi-node"}
 
-// Component is one upstream, at components/<id>.yaml. A cluster administrator installs it.
+// Component is one upstream, at components/<id>/component.yaml. A cluster administrator installs it.
 type Component struct {
 	ID         string   `yaml:"-" json:"-"`
 	APIVersion string   `yaml:"apiVersion" jsonschema:"required"`
@@ -68,8 +71,11 @@ type Component struct {
 	// <resource>/<name>.
 	Leftovers []string `yaml:"leftovers"`
 
-	Path string `yaml:"-" json:"-"` // relative to the repository root
+	Path string `yaml:"-" json:"-"` // components/<id>/component.yaml, relative to the repository root
 }
+
+// Dir is the directory of c: its component.yaml and READMEs.
+func (c *Component) Dir() string { return path.Dir(c.Path) }
 
 func (Component) JSONSchemaExtend(s *gen.Schema) {
 	constant(s, "apiVersion", "catalog.zeabur.com/v1")
@@ -444,26 +450,34 @@ type Catalog struct {
 	Raw map[string]any
 }
 
-// Load reads components/<id>.yaml under root.
+// Load reads components/<id>/component.yaml under root. It fails on any other file in
+// components/, except the READMEs of a component, because the sourceDigest of a component covers
+// its whole directory.
 func Load(root string) (*Catalog, error) {
-	nested, err := filepath.Glob(filepath.Join(root, "components", "*", "*.yaml"))
-	if err != nil {
-		return nil, err
-	}
-	if len(nested) > 0 {
-		return nil, fmt.Errorf("%s: a component is components/<id>.yaml, with its capability in provides", nested[0])
-	}
-	files, err := filepath.Glob(filepath.Join(root, "components", "*.yaml"))
-	if err != nil {
+	dirs, err := os.ReadDir(filepath.Join(root, "components"))
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, err
 	}
 	cat := &Catalog{Raw: map[string]any{}}
-	for _, f := range files {
-		data, err := os.ReadFile(f)
+	for _, d := range dirs {
+		dir := path.Join("components", d.Name())
+		if !d.IsDir() {
+			return nil, fmt.Errorf("%s: a component is components/<id>/component.yaml", dir)
+		}
+		files, err := os.ReadDir(filepath.Join(root, dir))
 		if err != nil {
 			return nil, err
 		}
-		rel, _ := filepath.Rel(root, f)
+		for _, f := range files {
+			if f.Name() != "component.yaml" && !IsReadme(f.Name()) {
+				return nil, fmt.Errorf("%s/%s: a component directory holds component.yaml and its READMEs only", dir, f.Name())
+			}
+		}
+		rel := path.Join(dir, "component.yaml")
+		data, err := os.ReadFile(filepath.Join(root, rel))
+		if err != nil {
+			return nil, err
+		}
 		var raw any
 		if err := yaml.Unmarshal(data, &raw); err != nil {
 			return nil, fmt.Errorf("%s: %w", rel, err)
@@ -473,7 +487,7 @@ func Load(root string) (*Catalog, error) {
 		if err := yaml.Unmarshal(data, c); err != nil {
 			return nil, fmt.Errorf("%s: %w", rel, err)
 		}
-		c.ID = strings.TrimSuffix(filepath.Base(f), ".yaml")
+		c.ID = d.Name()
 		c.addDefaultAccounts()
 		cat.Components = append(cat.Components, c)
 	}

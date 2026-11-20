@@ -21,7 +21,7 @@ func scopeRepo(t *testing.T) *repo {
 	}
 	t.Chdir(dir)
 	comp := func(id, capability, def string, requires ...string) *catalog.Component {
-		c := &catalog.Component{ID: id, Provides: &catalog.Provides{Capability: capability}, Path: "components/" + id + ".yaml",
+		c := &catalog.Component{ID: id, Provides: &catalog.Provides{Capability: capability}, Path: "components/" + id + "/component.yaml",
 			Defaults: map[string]string{"single-node": def}}
 		for _, r := range requires {
 			c.Requires = append(c.Requires, catalog.Ref{Component: r})
@@ -83,7 +83,8 @@ func TestSharedChange(t *testing.T) {
 		{"workflow", []string{".github/workflows/ci.yml"}, representative},
 		{"kubernetes versions", []string{"config/kubernetes.yaml"}, everything},
 		{"documentation", []string{"README.md"}, nil},
-		{"template documentation", []string{"templates/blog/README.zh-TW.md"}, nil},
+		{"template documentation", []string{"templates/gamma/README.zh-TW.md"}, nil},
+		{"component documentation", []string{"components/traefik/README.zh-TW.md"}, nil},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			p, err := filesPick(r, c.files)
@@ -99,7 +100,7 @@ func TestSharedChange(t *testing.T) {
 
 func TestChangeSelectsWhatInstallsIt(t *testing.T) {
 	r := scopeRepo(t)
-	p, err := filesPick(r, []string{"components/traefik.yaml"})
+	p, err := filesPick(r, []string{"components/traefik/component.yaml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,7 +123,7 @@ func TestTemplateChangeSelectsTheTemplate(t *testing.T) {
 
 func TestSharedChangeKeepsOwnChange(t *testing.T) {
 	r := scopeRepo(t)
-	p, err := filesPick(r, []string{"config/e2e.yaml", "components/postgres.yaml"})
+	p, err := filesPick(r, []string{"config/e2e.yaml", "components/postgres/component.yaml"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -310,7 +311,7 @@ func TestChangedFileIsStale(t *testing.T) {
 func TestChangedDependencyIsStale(t *testing.T) {
 	r := staleRepo(t)
 	recordAll(t, r)
-	if err := os.WriteFile(filepath.Join("components", "traefik.yaml"), []byte("id: traefik\nport: 80\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join("components", "traefik", "component.yaml"), []byte("id: traefik\nport: 80\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	record(t, r, "traefik", templateProfile, "amd64", nil)
@@ -404,7 +405,7 @@ func TestPinnedAddOnChangeIsStale(t *testing.T) {
 func TestMergeDropsRunsOfOtherInputs(t *testing.T) {
 	r := staleRepo(t)
 	recordAll(t, r)
-	if err := os.WriteFile(filepath.Join("components", "traefik.yaml"), []byte("id: traefik\nport: 80\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join("components", "traefik", "component.yaml"), []byte("id: traefik\nport: 80\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	// A result of the new traefik, from a run older than the one that

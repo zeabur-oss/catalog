@@ -53,7 +53,8 @@ curl -s https://oss-catalog.zeabur.com/v1/catalog.json | jq -r .catalog.version
 ### 檔案配置
 
 ```text
-components/<id>.yaml                      一個上游一個檔案，用途寫在 provides
+components/<id>/component.yaml            一個上游；用途寫在 provides
+components/<id>/README*.md                它的 README：README.md、README.zh-TW.md、README.zh-CN.md
 templates/<id>/template.yaml              一個應用程式：輸入、服務、安全性、煙霧測試
 templates/<id>/manifests.yaml             它的 Kubernetes 物件
 schema/v1/                                兩種檔案的 JSON Schema
@@ -67,4 +68,4 @@ tools/                                    `catalog` 指令（Go）
 docs/                                     這份文件
 ```
 
-路徑就是 ID：`components/traefik.yaml` 的 ID 是 `traefik`，`templates/n8n/` 的 ID 是 `n8n`。元件在 `provides` 寫出自己提供的 capability，例如 `provides: {capability: ingress}`。元件和範本不會用同一個 ID。
+目錄名稱就是 ID：`components/traefik/` 的 ID 是 `traefik`，`templates/n8n/` 的 ID 是 `n8n`。元件在 `provides` 寫出自己提供的 capability，例如 `provides: {capability: ingress}`。元件和範本不會用同一個 ID。

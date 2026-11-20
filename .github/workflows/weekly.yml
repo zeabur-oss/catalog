@@ -1,6 +1,6 @@
-# The full tier, the e2e matrix. A push to main that changes components/ or templates/, every
-# Saturday at 13:00 UTC and a manual run test what is stale: what has no passing run of its current
-# inputs (see catalog list -stale). Opens or updates a pull request with the idle memory and CPU it
+# The full tier, the e2e matrix. A push to main that changes components/ or templates/ outside the
+# READMEs, every Saturday at 13:00 UTC and a manual run test what is stale: what has no passing run
+# of its current inputs (see catalog list -stale). Opens or updates a pull request with the idle memory and CPU it
 # measured, so measurements/ is only ever written by CI. The pull request is zeabur-oss-bot's:
 # GitHub signs its commit, and CI runs on it, which it would not for GITHUB_TOKEN.
 name: weekly
@@ -8,7 +8,7 @@ name: weekly
 on:
   push:
     branches: [main]
-    paths: ["components/**", "templates/**"]
+    paths: ["components/**", "templates/**", "!components/*/README*.md", "!templates/*/README*.md"]
   schedule:
     - cron: "0 13 * * 6"
   workflow_dispatch:

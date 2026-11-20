@@ -5,7 +5,7 @@ description: Write YAML with the shared envelope and component fields, and pin i
 
 A component is installed once for the whole cluster and used by every project. A template, in contrast, is installed per project and can be installed many times.
 
-Place component files in `components/<id>.yaml`, with one file for each upstream. Each YAML file contains the shared envelope, installation content, and configuration. The file name is the ID. For example, `components/traefik.yaml` has the ID `traefik`. An ID is lowercase letters, digits and single hyphens, and no template has the same ID.
+Place each component in its own directory, `components/<id>/component.yaml`, with one directory for each upstream. The directory holds only `component.yaml` and the component's READMEs. The YAML file contains the shared envelope, installation content, and configuration. The directory name is the ID. For example, `components/traefik/component.yaml` has the ID `traefik`. An ID is lowercase letters, digits and single hyphens, and no template has the same ID.
 
 ## Shared envelope
 
@@ -35,7 +35,7 @@ The keys of `locales` are BCP 47 tags. `config/locales.yaml` lists the tags that
 
 ## README
 
-Each component has `components/<id>.README.md`, `components/<id>.README.zh-TW.md` and `components/<id>.README.zh-CN.md` for the administrator who decides whether to install it. They use only these level-2 headings, in this order: `## Introduction`, `## Before you install`, `## Use it`, `## Remove it` and `## Troubleshooting` (`簡介`, `安裝前準備`, `使用方式`, `移除`, `疑難排解` in zh-TW; `简介`, `安装前准备`, `使用方法`, `移除`, `故障排除` in zh-CN).
+Each component has `README.md`, `README.zh-TW.md` and `README.zh-CN.md` in its directory for the administrator who decides whether to install it. They use only these level-2 headings, in this order: `## Introduction`, `## Before you install`, `## Use it`, `## Remove it` and `## Troubleshooting` (`簡介`, `安裝前準備`, `使用方式`, `移除`, `疑難排解` in zh-TW; `简介`, `安装前准备`, `使用方法`, `移除`, `故障排除` in zh-CN).
 
 - **Introduction** (required) says what the component does, when a cluster needs it, and how far its rights reach.
 - **Before you install** says what to prepare outside the cluster, such as a bucket and its keys. It is required when an input is `required` and has no `default` and no `generate`.

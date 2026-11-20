@@ -112,7 +112,7 @@ metadata:
   namespace: '{{ .Namespace }}'
 `
 
-// writeTestAPI writes the API of a catalog with components/web.yaml and one measurement of it
+// writeTestAPI writes the API of a catalog with components/web/component.yaml and one measurement of it
 // to out/v1 in a new working directory.
 func writeTestAPI(t *testing.T) {
 	t.Helper()
@@ -124,10 +124,10 @@ func writeTestAPI(t *testing.T) {
 	if err := os.CopyFS("schema/v1", os.DirFS(schemas)); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll("components", 0o755); err != nil {
+	if err := os.MkdirAll("components/web", 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile("components/web.yaml", []byte(webComponent), 0o644); err != nil {
+	if err := os.WriteFile("components/web/component.yaml", []byte(webComponent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	writeFile(t, "measurements/components/web.json", measurement{Component: "web", Environments: []Environment{k3sEnv("amd64", 30, "2026-11-01")}})
@@ -173,14 +173,14 @@ func TestAPIPublishesTheDeclarationRenderAndMeasurements(t *testing.T) {
 	}
 
 	var written any
-	if err := catalog.ReadYAML("components/web.yaml", &written); err != nil {
+	if err := catalog.ReadYAML("components/web/component.yaml", &written); err != nil {
 		t.Fatal(err)
 	}
 	if err := remarshal(written, &written); err != nil {
 		t.Fatal(err)
 	}
 	if !reflect.DeepEqual(got.Declaration, written) {
-		t.Errorf("declaration = %v, want components/web.yaml as written", got.Declaration)
+		t.Errorf("declaration = %v, want components/web/component.yaml as written", got.Declaration)
 	}
 
 	if _, ok := got.Render.Profiles["multi-node"]; ok {
@@ -312,4 +312,28 @@ func remarshal(in, out any) error {
 		return err
 	}
 	return json.Unmarshal(b, out)
+}
+
+func TestReadmeEditKeepsSourceDigest(t *testing.T) {
+	t.Chdir(t.TempDir())
+	for _, c := range []struct{ dir, source string }{
+		{"components/web", "component.yaml"},
+		{"templates/blog", "manifests.yaml"},
+	} {
+		writeFile(t, c.dir+"/"+c.source, "kind: Service\n")
+		writeFile(t, c.dir+"/README.md", "## Introduction\n")
+		before, err := sourceDigest(c.dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		writeFile(t, c.dir+"/README.md", "## Introduction\n\nNew text.\n")
+		writeFile(t, c.dir+"/README.zh-TW.md", "## 簡介\n")
+		if got, err := sourceDigest(c.dir); err != nil || got != before {
+			t.Errorf("%s: sourceDigest after a README edit = %q, %v, want %q", c.dir, got, err, before)
+		}
+		writeFile(t, c.dir+"/"+c.source, "kind: ConfigMap\n")
+		if got, err := sourceDigest(c.dir); err != nil || got == before {
+			t.Errorf("%s: sourceDigest after a %s edit = %q, %v, want a new digest", c.dir, c.source, got, err)
+		}
+	}
 }

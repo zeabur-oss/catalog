@@ -14,7 +14,7 @@
     },
     "sourceDigest": {
       "type": "string",
-      "description": "The Go module hash (h1:) of the directory templates/\u003cid\u003e/. A measurement with another\nsourceDigest tested older files."
+      "description": "The Go module hash (h1:) of the directory templates/\u003cid\u003e/, without its READMEs and e2e.yaml.\nA measurement with another sourceDigest tested older files."
     },
     "template": {
       "$ref": "#/$defs/writtenTemplate",

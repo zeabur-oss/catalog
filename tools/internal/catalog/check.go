@@ -51,7 +51,7 @@ func Check(root string, cat *Catalog) error {
 
 	for _, c := range cat.Components {
 		if !ValidID(c.ID) {
-			fail(c.Path, "the file name must be lowercase letters, digits and single hyphens")
+			fail(c.Path, "the directory name must be lowercase letters, digits and single hyphens")
 		}
 		// An installer reads a name in enable or disable as a component ID
 		// first, so that ID must not hide another component's capability.

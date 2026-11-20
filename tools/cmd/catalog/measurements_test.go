@@ -325,7 +325,10 @@ func TestMeasuredPodsRoundTripWithoutTotals(t *testing.T) {
 		catalog.NewPodUsage("traefik", "Deployment", 31, 4),
 		catalog.NewPodUsage("agent", "DaemonSet", 12, 1),
 	}
-	comp := &catalog.Component{ID: "traefik", Path: "traefik.yaml"}
+	comp := &catalog.Component{ID: "traefik", Path: "components/traefik/component.yaml"}
+	if err := os.MkdirAll(comp.Dir(), 0o755); err != nil {
+		t.Fatal(err)
+	}
 	if err := os.WriteFile(comp.Path, []byte("releases: []\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}

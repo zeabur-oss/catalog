@@ -11,5 +11,5 @@ runs:
           ~/.cache/catalog
           ~/.cache/go-build
           ~/go/pkg/mod
-        key: downloads-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('go.sum', 'components/**') }}
+        key: downloads-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('go.sum', 'components/*/component.yaml') }}
         restore-keys: downloads-${{ runner.os }}-${{ runner.arch }}-

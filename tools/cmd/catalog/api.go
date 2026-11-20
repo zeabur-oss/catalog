@@ -59,10 +59,10 @@ type PinnedDistribution struct {
 
 // ComponentEntry names a component. components/<id>.json holds the rest.
 type ComponentEntry struct {
-	// The file name of the component without .yaml.
+	// The directory name of the component under components/.
 	ID string `json:"id" jsonschema:"pattern=^[a-z0-9]+(-[a-z0-9]+)*$"`
-	// The Go module hash (h1:) of components/<id>.yaml. A measurement with another sourceDigest
-	// tested an older file.
+	// The Go module hash (h1:) of the directory components/<id>/, without its READMEs. A
+	// measurement with another sourceDigest tested older files.
 	SourceDigest string `json:"sourceDigest"`
 }
 
@@ -70,8 +70,8 @@ type ComponentEntry struct {
 type TemplateEntry struct {
 	// The directory name of the template under templates/.
 	ID string `json:"id" jsonschema:"pattern=^[a-z0-9]+(-[a-z0-9]+)*$"`
-	// The Go module hash (h1:) of the directory templates/<id>/. A measurement with another
-	// sourceDigest tested older files.
+	// The Go module hash (h1:) of the directory templates/<id>/, without its READMEs and e2e.yaml.
+	// A measurement with another sourceDigest tested older files.
 	SourceDigest string `json:"sourceDigest"`
 }
 
@@ -96,7 +96,7 @@ func (WrittenTemplate) JSONSchema() *gen.Schema { return &gen.Schema{Ref: "templ
 // and the runs of its e2e test.
 type ComponentFile struct {
 	ComponentEntry
-	// components/<id>.yaml as written.
+	// components/<id>/component.yaml as written.
 	Declaration Declaration `json:"declaration"`
 	Render      Render      `json:"render"`
 	// Every recorded run of the component's e2e test, passed or failed.
@@ -200,7 +200,7 @@ func writeAPI(cat *catalog.Catalog, ts []*templates.Template, cfg config, dir, v
 		index.Distributions = append(index.Distributions, PinnedDistribution{Name: p, Version: cfg.pinnedVersion(p)})
 	}
 	for _, c := range cat.Components {
-		digest, err := sourceDigest(c.Path)
+		digest, err := sourceDigest(c.Dir())
 		if err != nil {
 			return err
 		}

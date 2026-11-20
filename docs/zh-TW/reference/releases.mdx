@@ -30,12 +30,12 @@ API 是一組靜態 JSON 檔案，存放各元件的宣告、渲染結果、e2e 
 Schema 定義資料格式，由 catalog 工具的 Go 型別產生。每個版本的所有檔案都通過對應 schema 的檢查。
 
 - `declaration` 是[元件檔案](component-format.mdx)原有的內容，改用 JSON 表示。
-- `sourceDigest` 是元件檔案的雜湊值。量測紀錄的 `sourceDigest` 相同，就表示量測的是這個檔案。
+- `sourceDigest` 是元件目錄除了 README 以外的雜湊值，也就是 `component.yaml` 的雜湊值。量測紀錄的 `sourceDigest` 相同，就表示量測的是這個檔案。
 - `render` 是 `helm template` 在元件支援的各個 profile 下渲染出的內容，使用的 `kubernetesVersion` 是 catalog 測試的最新 Kubernetes 版本。每個 profile 的 `workloads` 列出各 Deployment、StatefulSet 和 DaemonSet 的 `release`、`namespace`、`name`、`kind`、`replicas`，以及 `containers` 和 `initContainers` 的 `requests` 與 `limits`。StatefulSet 另有 `volumeClaimTemplates` 的 `storage`。DaemonSet 沒有 `replicas`，在每個節點上各執行一個 Pod。`persistentVolumeClaims` 列出元件渲染出的 PVC 及其 `storage`。
 - `measurements` 列出 e2e 執行這個元件的每個環境。
 - `template` 是 `template.yaml` 原有的內容，改用 JSON 表示。見[範本檔案格式](template-format.mdx)。
 - `manifests` 是 `manifests.yaml` 原有的文字，整份放在一個字串裡。裡面有 `{{ .Namespace }}` 這類欄位，要等安裝工具展開後才是 YAML；JSON 物件留不住這些欄位和註解。
-- 範本的 `sourceDigest` 是整個範本目錄的雜湊值，包含 `template.yaml` 和 `manifests.yaml`。
+- 範本的 `sourceDigest` 是整個範本目錄的雜湊值，包含 `template.yaml` 和 `manifests.yaml`，不含 README 和 `e2e.yaml`，所以只改 README 不會改變雜湊值。
 
 `https://oss-catalog.zeabur.com/v1/` 永遠提供 API 主版本 1 的最新版本。如果變更會讓讀取 `v1` 的工具無法繼續使用，就會在另一個路徑發布 `v2`，`v1` 則保留最後一個提供它的版本。新版本可以新增欄位或值，不必更換主版本。讀取工具略過不認得的欄位，遇到不認得的值則照下表處理：
 

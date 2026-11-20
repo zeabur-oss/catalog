@@ -275,7 +275,7 @@ func Check(root string, cat *catalog.Catalog, all []*Template) error {
 			fail("directory name must be a DNS label of at most 49 characters")
 		}
 		if _, ok := cat.Get(t.ID); ok {
-			fail("components/%s.yaml has the same ID", t.ID)
+			fail("components/%s has the same ID", t.ID)
 		}
 		names := map[string]bool{}
 		for _, s := range t.Services {

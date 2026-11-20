@@ -73,7 +73,7 @@ func TestProvisionProblems(t *testing.T) {
 
 func TestHealthChecksNameTheirObjectsOneWay(t *testing.T) {
 	const root = "../../.."
-	const path = "components/traefik.yaml"
+	const path = "components/traefik/component.yaml"
 	cat, err := Load(root)
 	if err != nil {
 		t.Fatal(err)
@@ -207,28 +207,42 @@ func TestContributorNeedsAHelmRelease(t *testing.T) {
 	}
 	crowdsec, _ := cat.Get("crowdsec")
 	crowdsec.Releases = slices.DeleteFunc(crowdsec.Releases, func(r Release) bool { return r.Type == "helm" })
-	if err := Check(root, cat); err == nil || !strings.Contains(err.Error(), "crowdsec.yaml: contributes: needs a helm release") {
+	if err := Check(root, cat); err == nil || !strings.Contains(err.Error(), "crowdsec/component.yaml: contributes: needs a helm release") {
 		t.Errorf("Check accepted contributes from a component without a helm release: %v", err)
 	}
 }
 
-func TestLoadRefusesCapabilityFolders(t *testing.T) {
-	root := t.TempDir()
-	dir := filepath.Join(root, "components", "ingress")
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(filepath.Join(dir, "traefik.yaml"), []byte("kind: Component\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := Load(root); err == nil {
-		t.Error("Load accepted components/ingress/traefik.yaml")
+func TestLoadRefusesAComponentFileOutsideItsDirectory(t *testing.T) {
+	for _, c := range []struct {
+		files []string
+		ok    bool
+	}{
+		{[]string{"traefik/component.yaml", "traefik/README.md", "traefik/README.zh-TW.md"}, true},
+		{[]string{"traefik.yaml"}, false},
+		{[]string{"traefik/component.yaml", "traefik.README.md"}, false},
+		{[]string{"ingress/traefik.yaml"}, false},
+		{[]string{"traefik/component.yaml", "traefik/values.yaml"}, false},
+		{[]string{"traefik/component.yaml", "traefik/charts/values.yaml"}, false},
+	} {
+		root := t.TempDir()
+		for _, f := range c.files {
+			path := filepath.Join(root, "components", f)
+			if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(path, []byte("kind: Component\n"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if _, err := Load(root); (err == nil) != c.ok {
+			t.Errorf("Load of %v: error %v, want ok %v", c.files, err, c.ok)
+		}
 	}
 }
 
 func TestSmokeWaitsNeedAConditionExceptForWorkloads(t *testing.T) {
 	const root = "../../.."
-	const path = "components/cert-manager.yaml"
+	const path = "components/cert-manager/component.yaml"
 	cat, err := Load(root)
 	if err != nil {
 		t.Fatal(err)
