@@ -167,7 +167,7 @@ health:
 
 有 `skipIfPresent` 的 release，在列出的 CRD 全都已經存在時會略過，例如叢集上已經有別的安裝裝好的 Gateway API CRD。`releaseName` 用在 Helm release 名稱和 `name` 不同的時候。
 
-`contributes` 會把設定值加到另一個元件的 release。`target` 寫出元件和它的 release，`values` 放設定值。
+`contributes` 會把設定值加到另一個元件的 release。`target` 寫出元件和它的 release，`values` 放設定值。元件本身要有一個 `helm` release：安裝工具靠 Helm release 找出自己裝過的元件，每次寫入目標時再把它們的設定值加回去。
 
 ```yaml
 contributes:

@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -195,6 +196,19 @@ func TestCapabilityMustNotBeAnotherComponentsID(t *testing.T) {
 	traefik.Provides.Capability = "cert-manager"
 	if err := Check(root, cat); err == nil {
 		t.Error("Check accepted a capability that is the ID of another component")
+	}
+}
+
+func TestContributorNeedsAHelmRelease(t *testing.T) {
+	const root = "../../.."
+	cat, err := Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	crowdsec, _ := cat.Get("crowdsec")
+	crowdsec.Releases = slices.DeleteFunc(crowdsec.Releases, func(r Release) bool { return r.Type == "helm" })
+	if err := Check(root, cat); err == nil || !strings.Contains(err.Error(), "crowdsec.yaml: contributes: needs a helm release") {
+		t.Errorf("Check accepted contributes from a component without a helm release: %v", err)
 	}
 }
 
