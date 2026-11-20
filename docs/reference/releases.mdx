@@ -30,12 +30,12 @@ The API is static JSON files. It holds facts: what each component declares, what
 The schemas are the contract, and the Go types of the catalog's tools generate them. Each file of a release passes its schema.
 
 - `declaration` is the [component file](component-format.mdx) as written, as JSON.
-- `sourceDigest` is the digest of the component file. A measurement with the same `sourceDigest` measured this file.
+- `sourceDigest` is the digest of the component's directory without its READMEs, which is `component.yaml`. A measurement with the same `sourceDigest` measured this file.
 - `render` is what `helm template` renders for each profile the component supports, at `kubernetesVersion`, the newest Kubernetes version the catalog tests. For each profile, `workloads` lists each Deployment, StatefulSet and DaemonSet with its `release`, `namespace`, `name`, `kind`, `replicas`, and the `requests` and `limits` of its `containers` and `initContainers`. A StatefulSet also has the `storage` of its `volumeClaimTemplates`. A DaemonSet has no `replicas`; it runs one pod on each node. `persistentVolumeClaims` lists the claims the component renders with their `storage`.
 - `measurements` lists each environment where e2e ran the component.
 - `template` is `template.yaml` as written, as JSON. See [Template format](template-format.mdx).
 - `manifests` is the text of `manifests.yaml` as written, as one string. It has `{{ .Namespace }}` fields, so it isn't YAML until the installer expands it, and a JSON object couldn't keep its comments or those fields.
-- A template's `sourceDigest` is the digest of its directory, `template.yaml` and `manifests.yaml` together.
+- A template's `sourceDigest` is the digest of its directory, `template.yaml` and `manifests.yaml` together. The READMEs and `e2e.yaml` are left out, so editing a README keeps the digest.
 
 `https://oss-catalog.zeabur.com/v1/` always holds the latest release of API major version 1. A change that would break a reader of `v1` comes with `v2`, at its own path, and `v1` then keeps the last release that had it. A newer release can add a field or a value without a new major version. A reader ignores a field it doesn't know, and handles a value it doesn't know as follows:
 

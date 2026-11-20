@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
-	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
 
 // reason is what a run was asked to test.
@@ -129,7 +128,7 @@ func inputs(r *repo, cfg config, id, profile, arch string) (Environment, error) 
 		if c.ID == id {
 			continue
 		}
-		digest, err := sourceDigest(c.Path)
+		digest, err := sourceDigest(c.Dir())
 		if err != nil {
 			return Environment{}, err
 		}
@@ -156,16 +155,11 @@ func filesPick(r *repo, files []string) (pick, error) {
 		case strings.HasPrefix(f, "config/"), strings.HasPrefix(f, "tools/"), strings.HasPrefix(f, "go."),
 			strings.HasPrefix(f, "flake."), strings.HasPrefix(f, ".github/workflows/"):
 			shared = true
-		case strings.HasPrefix(f, "templates/"):
-			id, file, _ := strings.Cut(strings.TrimPrefix(f, "templates/"), "/")
-			if !templates.IsReadme(file) {
+		case strings.HasPrefix(f, "components/"), strings.HasPrefix(f, "templates/"):
+			_, rest, _ := strings.Cut(f, "/")
+			id, file, _ := strings.Cut(rest, "/")
+			if _, ok := r.subjectOf(id); ok && !catalog.IsReadme(file) {
 				p.deps[id] = true
-			}
-		default:
-			for _, c := range r.cat.Components {
-				if c.Path == f {
-					p.deps[c.ID] = true
-				}
 			}
 		}
 	}

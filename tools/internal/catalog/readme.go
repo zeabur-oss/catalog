@@ -3,6 +3,7 @@ package catalog
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -16,13 +17,24 @@ var componentSections = map[string][]string{
 	"zh-CN": {"简介", "安装前准备", "使用方法", "移除", "故障排除"},
 }
 
-// ReadmePath is the README of component c in lang: components/<id>.README.md in English, else
-// components/<id>.README.<lang>.md.
-func (c *Component) ReadmePath(lang string) string {
+// ReadmeFile is the README of a component or template in lang: README.md in English, else
+// README.<lang>.md.
+func ReadmeFile(lang string) string {
 	if lang == "" {
-		return "components/" + c.ID + ".README.md"
+		return "README.md"
 	}
-	return "components/" + c.ID + ".README." + lang + ".md"
+	return "README." + lang + ".md"
+}
+
+// IsReadme reports whether name, a file in a component or template directory, is one of its
+// READMEs. They are docs: they change no install and no measurement.
+func IsReadme(name string) bool {
+	return strings.HasPrefix(name, "README") && strings.HasSuffix(name, ".md")
+}
+
+// ReadmePath is the README of component c in lang, relative to the repository root.
+func (c *Component) ReadmePath(lang string) string {
+	return path.Join(c.Dir(), ReadmeFile(lang))
 }
 
 // needsSetup reports whether an input of c must get a value from outside: it is required and has

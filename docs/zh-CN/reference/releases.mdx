@@ -30,12 +30,12 @@ API 是一组静态 JSON 文件，保存各组件的声明、渲染结果、e2e 
 Schema 定义数据格式，由 catalog 工具的 Go 类型生成。每个版本的所有文件都通过对应 schema 的检查。
 
 - `declaration` 是[组件文件](component-format.mdx)原有的内容，改用 JSON 表示。
-- `sourceDigest` 是组件文件的哈希值。测量记录的 `sourceDigest` 相同，就表示测量的是这个文件。
+- `sourceDigest` 是组件目录除了 README 以外的哈希值，也就是 `component.yaml` 的哈希值。测量记录的 `sourceDigest` 相同，就表示测量的是这个文件。
 - `render` 是 `helm template` 在组件支持的各个 profile 下渲染出的内容，使用的 `kubernetesVersion` 是 catalog 测试的最新 Kubernetes 版本。每个 profile 的 `workloads` 列出各 Deployment、StatefulSet 和 DaemonSet 的 `release`、`namespace`、`name`、`kind`、`replicas`，以及 `containers` 和 `initContainers` 的 `requests` 与 `limits`。StatefulSet 另有 `volumeClaimTemplates` 的 `storage`。DaemonSet 没有 `replicas`，在每个节点上各运行一个 Pod。`persistentVolumeClaims` 列出组件渲染出的 PVC 及其 `storage`。
 - `measurements` 列出 e2e 运行这个组件的每个环境。
 - `template` 是 `template.yaml` 原有的内容，改用 JSON 表示。见[模板文件格式](template-format.mdx)。
 - `manifests` 是 `manifests.yaml` 原有的文本，整份放在一个字符串里。里面有 `{{ .Namespace }}` 这类字段，要等安装工具展开后才是 YAML；JSON 对象留不住这些字段和注释。
-- 模板的 `sourceDigest` 是整个模板目录的哈希值，包含 `template.yaml` 和 `manifests.yaml`。
+- 模板的 `sourceDigest` 是整个模板目录的哈希值，包含 `template.yaml` 和 `manifests.yaml`，不含 README 和 `e2e.yaml`，所以只改 README 不会改变哈希值。
 
 `https://oss-catalog.zeabur.com/v1/` 始终提供 API 主版本 1 的最新版本。如果变更会让读取 `v1` 的工具无法继续使用，就会在另一个路径发布 `v2`，`v1` 则保留最后一个提供它的版本。新版本可以新增字段或值，不必更换主版本。读取工具跳过不认识的字段，遇到不认识的值则按下表处理：
 

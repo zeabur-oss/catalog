@@ -18,7 +18,7 @@ const (
 // subject is what a test runs on: a component or a template.
 type subject interface {
 	ID() string
-	// Source is the file or directory whose digest is the subject's input.
+	// Source is the directory whose digest is the subject's input.
 	Source() string
 	// Order is what testing the subject installs on profile, in order.
 	Order(profile string) ([]*catalog.Component, error)
@@ -60,7 +60,7 @@ type componentSubject struct {
 }
 
 func (s componentSubject) ID() string     { return s.c.ID }
-func (s componentSubject) Source() string { return s.c.Path }
+func (s componentSubject) Source() string { return s.c.Dir() }
 
 func (s componentSubject) Order(profile string) ([]*catalog.Component, error) {
 	return s.r.cat.InstallOrder(catalog.ByID(s.c.ID), profile)

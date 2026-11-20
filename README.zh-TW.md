@@ -41,7 +41,8 @@ catalog 本身是資料。CI 會安裝並測試每個元件和範本。每次發
 ### 檔案配置
 
 ```text
-components/<id>.yaml                      每個上游一個檔案；provides 寫明它提供的用途
+components/<id>/component.yaml            一個上游；用途寫在 provides
+components/<id>/README*.md                它的 README：README.md、README.zh-TW.md、README.zh-CN.md
 templates/<id>/template.yaml              一個應用程式：輸入、服務、安全性、煙霧測試
 templates/<id>/manifests.yaml             它的 Kubernetes 物件
 templates/<id>/e2e.yaml                       該範本只在測試使用的輸入（選用）
@@ -68,7 +69,7 @@ metadata:
 requires: [{capability: certificates}]   # 或 {component: <id>}
 ```
 
-路徑就是 ID：`components/traefik.yaml` 的 ID 是 `traefik`，`templates/n8n/` 的 ID 是 `n8n`。元件在 `provides` 寫明它提供的用途，例如 `provides: {capability: ingress}`。元件 ID 不會和範本 ID 重複。
+目錄名稱就是 ID：`components/traefik/` 的 ID 是 `traefik`，`templates/n8n/` 的 ID 是 `n8n`。元件在 `provides` 寫明它提供的用途，例如 `provides: {capability: ingress}`。元件 ID 不會和範本 ID 重複。
 
 ## 文件
 

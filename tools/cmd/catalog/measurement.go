@@ -169,24 +169,16 @@ func templateMeasurementPath(id string) string {
 	return filepath.Join("measurements", "templates", id+".json")
 }
 
-// sourceDigest returns the Go module hash (dirhash.Hash1, "h1:...") of the
-// file at path, or of every file under it when it is a directory, except the
-// e2e.yaml and READMEs of a template, which hold test data and docs and change no measurement.
-func sourceDigest(path string) (string, error) {
-	info, err := os.Stat(path)
+// sourceDigest returns the Go module hash (dirhash.Hash1, "h1:...") of every
+// file in dir, the directory of a component or template, except e2e.yaml and
+// the READMEs, which hold test data and docs and change no measurement.
+func sourceDigest(dir string) (string, error) {
+	files, err := dirhash.DirFiles(dir, "")
 	if err != nil {
 		return "", err
 	}
-	if info.IsDir() {
-		files, err := dirhash.DirFiles(path, "")
-		if err != nil {
-			return "", err
-		}
-		files = slices.DeleteFunc(files, func(f string) bool { return f == "e2e.yaml" || templates.IsReadme(f) })
-		return dirhash.Hash1(files, func(name string) (io.ReadCloser, error) { return os.Open(filepath.Join(path, name)) })
-	}
-	open := func(string) (io.ReadCloser, error) { return os.Open(path) }
-	return dirhash.Hash1([]string{filepath.Base(path)}, open)
+	files = slices.DeleteFunc(files, func(f string) bool { return f == "e2e.yaml" || catalog.IsReadme(f) })
+	return dirhash.Hash1(files, func(name string) (io.ReadCloser, error) { return os.Open(filepath.Join(dir, name)) })
 }
 
 func today() string { return time.Now().UTC().Format(time.DateOnly) }

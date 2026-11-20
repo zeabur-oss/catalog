@@ -17,27 +17,13 @@ var readmeSections = map[string][]string{
 	"zh-CN": {"简介", "开始使用", "配置", "故障排除"},
 }
 
-// ReadmeFile is the README of a template in lang: README.md in English, else README.<lang>.md.
-func ReadmeFile(lang string) string {
-	if lang == "" {
-		return "README.md"
-	}
-	return "README." + lang + ".md"
-}
-
-// IsReadme reports whether name, a file in a template directory, is one of its READMEs. They are
-// docs: they change no install and no measurement.
-func IsReadme(name string) bool {
-	return strings.HasPrefix(name, "README") && strings.HasSuffix(name, ".md")
-}
-
 // checkReadmes returns a problem for each README of t that is missing, has other level-1 or
 // level-2 headings than readmeSections, or whose Getting started does not name the Secret of a
 // generated input.
 func checkReadmes(t *Template, locales []string) []string {
 	var out []string
 	for _, lang := range append([]string{""}, locales...) {
-		name := ReadmeFile(lang)
+		name := catalog.ReadmeFile(lang)
 		want, ok := readmeSections[lang]
 		if !ok {
 			out = append(out, fmt.Sprintf("%s: no README headings for %s", name, lang))
