@@ -33,6 +33,18 @@ metadata:
 
 The keys of `locales` are BCP 47 tags. `config/locales.yaml` lists the tags that every `locales` map in components and templates must have, and `catalog validate` checks them. A map may have other tags too.
 
+## README
+
+Each component has `components/<id>.README.md`, `components/<id>.README.zh-TW.md` and `components/<id>.README.zh-CN.md` for the administrator who decides whether to install it. They use only these level-2 headings, in this order: `## Introduction`, `## Before you install`, `## Use it`, `## Remove it` and `## Troubleshooting` (`簡介`, `安裝前準備`, `使用方式`, `移除`, `疑難排解` in zh-TW; `简介`, `安装前准备`, `使用方法`, `移除`, `故障排除` in zh-CN).
+
+- **Introduction** (required) says what the component does, when a cluster needs it, and how far its rights reach.
+- **Before you install** says what to prepare outside the cluster, such as a bucket and its keys. It is required when an input is `required` and has no `default` and no `generate`.
+- **Use it** (required) links to the Zeabur docs page where the component shows up, without repeating that page. A component without a Zeabur screen gives its first step and links to the upstream docs.
+- **Remove it** (required) says what removal deletes, what stays, and what to check first.
+- **Troubleshooting** (optional) has one `###` per problem.
+
+`catalog validate` checks the files and the headings.
+
 ## Component fields
 
 The following example shows a minimal component. `defaults` specifies whether to enable the component for each profile (the `single-node` or `multi-node` configuration), and `recommended` means enabled by default (recommended). `releases` lists the content to install in order. Settings in `profiles` merge into the shared `values`.

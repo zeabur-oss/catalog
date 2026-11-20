@@ -16,7 +16,7 @@ import (
 )
 
 // Check validates every component without a cluster: schema, licenses,
-// references and value comments. Each problem is one joined error.
+// references, value comments and READMEs. Each problem is one joined error.
 func Check(root string, cat *Catalog) error {
 	var errs []error
 	fail := func(path, format string, a ...any) {
@@ -62,6 +62,9 @@ func Check(root string, cat *Catalog) error {
 			fail(c.Path, "%s", p)
 		}
 		for _, p := range MissingLocales(cat.Raw[c.Path], locales) {
+			fail(c.Path, "%s", p)
+		}
+		for _, p := range c.readmeProblems(root, locales) {
 			fail(c.Path, "%s", p)
 		}
 		for _, r := range c.Releases {
