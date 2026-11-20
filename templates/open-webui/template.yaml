@@ -8,14 +8,11 @@ metadata:
   # renovate: depName=ghcr.io/open-webui/open-webui
   version: "main"
   summary: A chat interface for LLMs with sign-in; its licence asks you to keep its branding.
-  readme: "After deploy, open https://<your domain> and sign in with the administrator email you entered at install and the password from Secret app-secrets, key admin-password. Sign-up is off, so the admin creates other users. No model provider is connected yet; add yours in the admin settings."
   locales:
     zh-TW:
       summary: "需要登入的 LLM 聊天介面，授權要求保留它的品牌標示。"
-      readme: "部署後開啟 https://<你的網域>，用安裝時填的管理員 Email，和 Secret app-secrets 裡 admin-password 的密碼登入。註冊功能已關閉，其他使用者由管理員建立。目前還沒有連接任何模型服務商，請到管理員設定裡自己加。"
     zh-CN:
       summary: "需要登录的 LLM 聊天界面，许可要求保留其品牌标识。"
-      readme: "部署后打开 https://<你的域名>，用安装时填的管理员邮箱，和 Secret app-secrets 里 admin-password 的密码登录。注册功能已关闭，其他用户由管理员创建。目前还没有连接任何模型服务商，请到管理员设置里自己添加。"
   license: LicenseRef-Open-WebUI AND MIT
   # Also: https://github.com/open-webui/pipelines
   homepage: https://github.com/open-webui/open-webui

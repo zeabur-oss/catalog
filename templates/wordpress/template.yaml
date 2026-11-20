@@ -6,14 +6,11 @@ metadata:
   # renovate: depName=docker.io/wordpress
   version: "php8.3-fpm-alpine"
   summary: WordPress, with MariaDB and an owner account ready.
-  readme: "WordPress is a website and blog with its own MariaDB database. Open https://<your domain>/wp-admin and sign in as admin. The password is in Secret wordpress-secrets, key admin-password. The site is already installed, and the administrator email is the one you entered at deploy. The other keys in that Secret are for the database and the site itself."
   locales:
     zh-TW:
       summary: "WordPress 網站，搭配 MariaDB，並先建好擁有者帳號。"
-      readme: "WordPress 是網站和部落格，自帶 MariaDB 資料庫。開啟 https://<你的網域>/wp-admin，用 admin 登入，密碼在機密 wordpress-secrets 的 admin-password 鍵。網站已經安裝好，管理員 Email 就是你部署時填的那一個。這個機密裡的其他鍵是給資料庫和網站本身用的。"
     zh-CN:
       summary: "WordPress 网站，搭配 MariaDB，并预先建好所有者账号。"
-      readme: "WordPress 是网站和博客，自带 MariaDB 数据库。打开 https://<你的域名>/wp-admin，用 admin 登录，密码在机密 wordpress-secrets 的 admin-password 键。网站已经安装好，管理员邮箱就是你部署时填的那一个。这个机密里的其他键是给数据库和网站本身用的。"
   license: GPL-2.0-or-later AND GPL-2.0-only AND BSD-2-Clause AND MIT
   # Also: https://github.com/docker-library/wordpress, https://mariadb.org/, https://github.com/nginx/docker-nginx-unprivileged, https://github.com/mariadb-operator/mariadb-operator
   homepage: https://wordpress.org/

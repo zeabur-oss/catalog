@@ -9,14 +9,11 @@ metadata:
   # renovate: depName=ghcr.io/browserless/chromium
   version: "latest"
   summary: A headless Chrome that your automation tools drive with a token.
-  readme: "Browserless is an API with no web page and no login. Point your Puppeteer or Playwright client at https://<your domain> and send the token from Secret browserless-secrets, key token, in an Authorization Bearer header, or in the token query parameter if your client cannot set headers. Calls without the token get 401."
   locales:
     zh-TW:
       summary: "讓自動化工具用權杖操作的無頭 Chrome 瀏覽器。"
-      readme: "Browserless 是 API，沒有網頁，也不用登入。把 Puppeteer 或 Playwright 的連線位址設成 https://<你的網域>，並帶上機密 browserless-secrets 裡 token 的值，放在 Authorization Bearer 標頭；用戶端不能設標頭時，改用 token 查詢參數。沒帶權杖的呼叫會得到 401。"
     zh-CN:
       summary: "让自动化工具用令牌操作的无头 Chrome 浏览器。"
-      readme: "Browserless 是 API，没有网页，也不用登录。把 Puppeteer 或 Playwright 的连接地址设成 https://<你的域名>，并带上机密 browserless-secrets 里 token 的值，放在 Authorization Bearer 请求头；客户端不能设请求头时，改用 token 查询参数。没带令牌的调用会得到 401。"
   license: SSPL-1.0 OR LicenseRef-Browserless-Commercial
   # Also: https://docs.browserless.io/
   homepage: https://github.com/browserless/browserless

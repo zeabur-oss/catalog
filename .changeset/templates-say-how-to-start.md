@@ -2,6 +2,6 @@
 default: minor
 ---
 
-# Templates say how to start using them and link their docs
+# Templates have READMEs and link their docs
 
-`metadata.docs` links the upstream usage docs, and `metadata.readme` is one short paragraph on what you get, where to open it, how the first person signs in and which Secret holds each generated value, with `zh-TW` and `zh-CN` text in `metadata.locales`. Both are required: a template without them fails `catalog validate`, which also checks that `readme` names the Secret of every `generate` input.
+`metadata.docs` links the upstream usage docs. Each template has `README.md`, `README.zh-TW.md` and `README.zh-CN.md` with an Introduction, numbered Getting started steps (where to open the app, how the first person signs in, which Secret holds each generated value), and optional Configuration and Troubleshooting sections. `catalog validate` checks that the files and these headings exist and that Getting started names the Secret of every `generate` input.

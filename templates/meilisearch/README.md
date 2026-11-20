@@ -1,0 +1,44 @@
+## Introduction
+
+[Meilisearch](https://www.meilisearch.com/) is a search engine with a REST API. You send it documents, and it answers search requests in milliseconds.
+
+This template runs one Meilisearch instance behind your domain, with its indexes on a volume. Every request needs a key. There is no web page and no sign-in.
+
+## Getting started
+
+1. Wait until the service shows as running, then note its domain, for example `https://search.example.com`.
+2. Get the master key. It is in Secret `meilisearch-secrets`, key `master-key`:
+
+   ```sh
+   kubectl -n <namespace> get secret meilisearch-secrets -o jsonpath='{.data.master-key}' | base64 -d
+   ```
+
+3. Send requests to the domain with the header `Authorization: Bearer <key>`. For example, list the API keys:
+
+   ```sh
+   curl https://search.example.com/keys -H 'Authorization: Bearer <master key>'
+   ```
+
+Use the master key only to manage API keys. Give clients a search key.
+
+## Configuration
+
+### Get a key for your clients
+
+Meilisearch creates a Default Search API Key and a Default Admin API Key for you. The `GET /keys` request above lists them. Use the search key in your web or mobile app, and the admin key on your server to add documents. See [Basic security](https://www.meilisearch.com/docs/learn/security/basic_security).
+
+### Create a dump
+
+A dump is a backup of all data of the instance. Create one with an API key that is allowed to do it:
+
+```sh
+curl -X POST https://search.example.com/dumps -H 'Authorization: Bearer <key>'
+```
+
+Meilisearch writes the dump to `/meili_data/dumps` on the volume. See [Dumps](https://www.meilisearch.com/docs/learn/data_backup/dumps).
+
+## Troubleshooting
+
+### Requests return 401
+
+Meilisearch rejects requests without a valid key. Send the key in the `Authorization: Bearer` header, and check that you use a key of this instance. See [Basic security](https://www.meilisearch.com/docs/learn/security/basic_security).

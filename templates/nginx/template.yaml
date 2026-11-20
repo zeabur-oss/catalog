@@ -5,14 +5,11 @@ metadata:
   # renovate: depName=nginxinc/nginx-unprivileged
   version: "1.31-alpine"
   summary: An NGINX web server over HTTPS.
-  readme: "After deploy, open https://<your domain>. It shows the plain text Hello from Nginx deployed on Zeabur! and needs no login. To serve your own site, edit ConfigMap nginx and restart the Deployment."
   locales:
     zh-TW:
       summary: "透過 HTTPS 提供服務的 NGINX 網頁伺服器。"
-      readme: "部署後開啟 https://<你的網域>，會看到純文字 Hello from Nginx deployed on Zeabur!，不需要登入。要放自己的網站，請編輯 ConfigMap nginx，再重新啟動 Deployment。"
     zh-CN:
       summary: "通过 HTTPS 提供服务的 NGINX 网页服务器。"
-      readme: "部署后打开 https://<你的域名>，会看到纯文本 Hello from Nginx deployed on Zeabur!，不需要登录。要放自己的网站，请编辑 ConfigMap nginx，再重启 Deployment。"
   license: BSD-2-Clause AND Apache-2.0
   # Also: https://github.com/nginx/docker-nginx-unprivileged
   homepage: https://nginx.org/

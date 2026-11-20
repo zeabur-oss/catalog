@@ -1,0 +1,53 @@
+## 简介
+
+这个模板运行一个由 CloudNativePG 运算符管理的 PostgreSQL 18 数据库。扩展 [pgvector](https://github.com/pgvector/pgvector) 已经启用，你可以用 SQL 存储向量，并搜索最近的向量。
+
+数据库名称是 `zeabur`，所有者是用户 `app`。只有一个实例，卷为 10Gi。
+
+## 开始使用
+
+1. 等集群 `postgresql` 显示为就绪。数据库没有域名，也没有网页。
+2. 同一个项目里的应用连到 Service `postgresql-rw` 的 `5432` 端口，数据库用 `zeabur`，用户用 `app`。
+3. 运算符会创建机密 `postgresql-app`。密码在 `password` 字段：
+
+   ```sh
+   kubectl -n <namespace> get secret postgresql-app -o jsonpath='{.data.password}' | base64 -d
+   ```
+
+   `uri` 字段是现成的连接字符串：
+
+   ```sh
+   kubectl -n <namespace> get secret postgresql-app -o jsonpath='{.data.uri}' | base64 -d
+   ```
+
+   这里不能用超级用户登录。请在项目内的应用或客户端 Pod 里使用这个连接字符串。
+
+## 配置
+
+### 创建向量列并搜索
+
+创建带向量列的表，写入数据，再用距离运算符排序：
+
+```sql
+CREATE TABLE items (id bigserial PRIMARY KEY, embedding vector(3));
+INSERT INTO items (embedding) VALUES ('[1,2,3]'), ('[4,5,6]');
+SELECT * FROM items ORDER BY embedding <-> '[3,1,2]' LIMIT 5;
+```
+
+`<->` 是 L2 距离。pgvector 也有内积的 `<#>` 和余弦距离的 `<=>`。详见 pgvector 文档的 [Getting started](https://github.com/pgvector/pgvector#getting-started)。
+
+### 添加索引
+
+没有索引时，pgvector 做的是精确搜索。表很大时，添加和你所用距离相符的 HNSW 索引：
+
+```sql
+CREATE INDEX ON items USING hnsw (embedding vector_l2_ops);
+```
+
+`<=>` 用 `vector_cosine_ops`，`<#>` 用 `vector_ip_ops`。详见 [HNSW](https://github.com/pgvector/pgvector#hnsw)。
+
+## 故障排除
+
+### 查询没有用到索引
+
+查询要用 `ORDER BY` 搭配升序的距离运算符，并加上 `LIMIT`。像 `1 - (embedding <=> '[3,1,2]')` 这样的表达式会让规划器不使用索引。表很小时，全表扫描可能更快。详见 [Troubleshooting](https://github.com/pgvector/pgvector#troubleshooting)。

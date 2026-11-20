@@ -8,14 +8,11 @@ metadata:
   # renovate: depName=ghcr.io/berriai/litellm-non_root
   version: "v1.106.3"
   summary: One proxy for many LLM providers, with keys, models and spend kept in PostgreSQL.
-  readme: "LiteLLM is an LLM proxy with an admin page. Open https://<your domain>/ui and sign in as admin. The password is sk- followed by the value of Secret litellm-secrets, key master-key. That sk- key is also the admin API key for requests to https://<your domain>. Add models and client keys in the UI. Never change salt-key after you add a model."
   locales:
     zh-TW:
       summary: "用一個代理串接多家 LLM 服務，金鑰、模型和花費存在 PostgreSQL。"
-      readme: "LiteLLM 是附管理頁面的 LLM 代理。開啟 https://<你的網域>/ui，用 admin 登入，密碼是 sk- 加上機密 litellm-secrets 裡 master-key 的值。這把 sk- 開頭的金鑰同時也是呼叫 https://<你的網域> 的管理員 API 金鑰。模型和給用戶端的金鑰都在管理頁面裡設定。加入模型後，salt-key 就不能再改。"
     zh-CN:
       summary: "用一个代理接入多家 LLM 服务，密钥、模型和花费存在 PostgreSQL。"
-      readme: "LiteLLM 是带管理页面的 LLM 代理。打开 https://<你的域名>/ui，用 admin 登录，密码是 sk- 加上机密 litellm-secrets 里 master-key 的值。这把 sk- 开头的密钥同时也是调用 https://<你的域名> 的管理员 API 密钥。模型和给客户端的密钥都在管理页面里设置。添加模型后，salt-key 就不能再改。"
   # enterprise/ and the bundled litellm_enterprise package use the BerriAI
   # Enterprise license; the rest of LiteLLM is MIT.
   license: MIT AND LicenseRef-LiteLLM-Enterprise AND PostgreSQL AND Apache-2.0

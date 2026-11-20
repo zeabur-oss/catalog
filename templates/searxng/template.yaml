@@ -6,14 +6,11 @@ metadata:
   # renovate: depName=searxng/searxng
   version: "2026.10.24-ef0ec03da"
   summary: A private metasearch engine.
-  readme: "SearXNG is a metasearch engine with no account and no login. Open https://<your domain> and search. Add format=json to a search URL to get JSON results. Anyone who knows the address can use it. Secret app-secrets, key signing-key, is the server's signing key, and you do not need it to search."
   locales:
     zh-TW:
       summary: "注重隱私的整合搜尋引擎。"
-      readme: "SearXNG 是整合搜尋引擎，沒有帳號，也不用登入。開啟 https://<你的網域> 就能搜尋，在搜尋網址加上 format=json 可以取得 JSON 結果。知道網址的人都能使用。機密 app-secrets 的 signing-key 鍵是伺服器的簽章金鑰，搜尋時用不到。"
     zh-CN:
       summary: "注重隐私的元搜索引擎。"
-      readme: "SearXNG 是元搜索引擎，没有账号，也不用登录。打开 https://<你的域名> 就能搜索，在搜索网址加上 format=json 可以拿到 JSON 结果。知道网址的人都能使用。机密 app-secrets 的 signing-key 键是服务器的签名密钥，搜索时用不到。"
   license: AGPL-3.0-or-later
   homepage: https://github.com/searxng/searxng
   docs: https://docs.searxng.org/dev/search_api.html

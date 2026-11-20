@@ -1,0 +1,50 @@
+## 簡介
+
+[Hermes Agent](https://github.com/NousResearch/hermes-agent) 是透過 API 和網頁管理面板運作的 AI 代理。API 採用 OpenAI 格式，所以相容 OpenAI 的用戶端都能把這個代理當後端。
+
+這個範本用兩個網域執行 Hermes Agent，一個給 API，一個給管理面板。代理透過 OpenRouter，或你在安裝表單填的 OpenAI 相容端點呼叫模型。
+
+## 開始使用
+
+1. 等服務顯示為執行中，記下兩個網域，例如 API 用 `https://hermes.example.com`，管理面板用 `https://hermes-admin.example.com`。
+2. 取得管理面板密碼。密碼在機密 `hermes-secrets` 的 `dashboard-password` 欄位：
+
+   ```sh
+   kubectl -n <namespace> get secret hermes-secrets -o jsonpath='{.data.dashboard-password}' | base64 -d
+   ```
+
+3. 開啟管理面板的網域，用 `admin` 和這組密碼登入。
+4. 取得 API 金鑰。金鑰在機密 `hermes-secrets` 的 `api-key` 欄位：
+
+   ```sh
+   kubectl -n <namespace> get secret hermes-secrets -o jsonpath='{.data.api-key}' | base64 -d
+   ```
+
+5. 在 `https://hermes.example.com/v1` 呼叫 API，並把金鑰當作 Bearer 權杖送出：
+
+   ```sh
+   curl https://hermes.example.com/v1/chat/completions \
+     -H "Authorization: Bearer <API 金鑰>" \
+     -H "Content-Type: application/json" \
+     -d '{"model": "hermes-agent", "messages": [{"role": "user", "content": "Hello!"}]}'
+   ```
+
+模型服務的 API 金鑰不在 `hermes-secrets`，而是在你於安裝表單選的機密的 `api-key` 欄位。`hermes-secrets` 的 `dashboard-session-key` 用來簽署管理面板的工作階段。
+
+## 設定
+
+### 連接用戶端
+
+Open WebUI、LobeChat、LibreChat 等相容 OpenAI 的用戶端都能使用這個代理。把 API 基礎網址設為 `https://hermes.example.com/v1`，API 金鑰填 `hermes-secrets` 裡 `api-key` 的值。詳見 [API Server](https://hermes-agent.nousresearch.com/docs/user-guide/features/api-server)。
+
+### 更換模型服務的 API 金鑰
+
+把新的金鑰寫進你在安裝表單選的機密的 `api-key` 欄位，再重新啟動部署，讓它讀到新值：
+
+```sh
+kubectl -n <namespace> rollout restart deployment/hermes-agent
+```
+
+範本每次啟動都會把安裝表單填的模型、端點和金鑰寫進 Hermes 的設定。在管理面板更改模型，只會維持到下次重新啟動。
+
+管理面板能管理哪些項目，詳見 [Web Dashboard](https://hermes-agent.nousresearch.com/docs/user-guide/features/web-dashboard)。

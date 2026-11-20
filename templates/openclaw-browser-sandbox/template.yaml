@@ -8,14 +8,11 @@ metadata:
   # renovate: depName=ghcr.io/canyugs/openclaw-sandbox-browser
   version: "edcc8e5"
   summary: A headless Chrome that OpenClaw or other services drive through the DevTools protocol.
-  readme: "This is a headless Chrome with no web page and no login. Pods in the same project that carry the trusted caller label reach it at http://openclaw-sandbox-browser:9222. Other pods are blocked. In OpenClaw, set browser.profiles.<name>.cdpUrl to that address. There is no token and no generated Secret, so anything allowed to connect controls the browser."
   locales:
     zh-TW:
       summary: "無頭 Chrome 沙箱，讓 OpenClaw 或其他服務透過 DevTools 協定操作。"
-      readme: "這是沒有網頁、也不用登入的無頭 Chrome。同一個專案裡帶有信任呼叫端標籤的 Pod，可以連到 http://openclaw-sandbox-browser:9222，其他 Pod 會被擋下來。在 OpenClaw 裡，把 browser.profiles.<name>.cdpUrl 設成這個位址。這裡沒有權杖，也沒有自動產生的機密，所以能連進來的對象都能完全控制瀏覽器。"
     zh-CN:
       summary: "无头 Chrome 沙箱，供 OpenClaw 或其他服务通过 DevTools 协议操作。"
-      readme: "这是没有网页、也不用登录的无头 Chrome。同一个项目里带有信任调用方标签的 Pod，可以连到 http://openclaw-sandbox-browser:9222，其他 Pod 会被挡掉。在 OpenClaw 里，把 browser.profiles.<name>.cdpUrl 设成这个地址。这里没有令牌，也没有自动生成的机密，所以能连进来的对象都能完全控制浏览器。"
   license: MIT
   # Also: https://docs.openclaw.ai/tools/browser
   homepage: https://github.com/canyugs/openclaw-sandbox-browser

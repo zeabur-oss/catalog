@@ -7,14 +7,11 @@ metadata:
   # renovate: depName=ghcr.io/openclaw/openclaw
   version: "2026.10.7"
   summary: A personal AI assistant that connects to WhatsApp, Telegram, Slack, Discord and more.
-  readme: "OpenClaw is an AI assistant gateway with a web Control UI. Open https://<your domain>. On the sign-in screen, paste the gateway token into the Gateway secret field. Find it in Secret openclaw-secrets, key gateway-token. A new browser may show pairing required. In the pod, run openclaw devices list, then openclaw devices approve <requestId>."
   locales:
     zh-TW:
       summary: "個人 AI 助理，可以串接 WhatsApp、Telegram、Slack、Discord 等通訊軟體。"
-      readme: "OpenClaw 是 AI 助理閘道，附網頁控制介面。開啟 https://<你的網域>，在登入畫面的 Gateway secret 欄位貼上閘道權杖。權杖在機密 openclaw-secrets 的 gateway-token 鍵。新的瀏覽器可能顯示 pairing required，這時在 Pod 裡執行 openclaw devices list，再執行 openclaw devices approve <requestId> 放行。"
     zh-CN:
       summary: "个人 AI 助手，可以连接 WhatsApp、Telegram、Slack、Discord 等通讯软件。"
-      readme: "OpenClaw 是 AI 助手网关，带网页控制界面。打开 https://<你的域名>，在登录界面的 Gateway secret 字段粘贴网关令牌。令牌在机密 openclaw-secrets 的 gateway-token 键。新的浏览器可能显示 pairing required，这时在 Pod 里运行 openclaw devices list，再运行 openclaw devices approve <requestId> 放行。"
   license: MIT
   # Also: https://docs.openclaw.ai/gateway/security
   homepage: https://github.com/openclaw/openclaw

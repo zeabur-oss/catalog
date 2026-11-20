@@ -1,6 +1,8 @@
 package templates_test
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -45,7 +47,7 @@ func TestRequiresCertificatesByComponentOrCapability(t *testing.T) {
 	}
 }
 
-func TestReadmeNamesTheSecretOfEachGeneratedInput(t *testing.T) {
+func TestReadmesHaveTheSectionsAndNameGeneratedSecrets(t *testing.T) {
 	const root = "../../.."
 	cat, err := catalog.Load(root)
 	if err != nil {
@@ -62,11 +64,26 @@ func TestReadmeNamesTheSecretOfEachGeneratedInput(t *testing.T) {
 	if err := templates.Check(root, cat, []*templates.Template{tmpl}); err != nil {
 		t.Fatalf("as written: %v", err)
 	}
-	l := tmpl.Metadata.Locales["zh-TW"]
-	l.Readme = "部署後就能使用。"
-	tmpl.Metadata.Locales["zh-TW"] = l
+	tmpl.Dir = filepath.Join(t.TempDir(), "browserless")
+	if err := os.CopyFS(tmpl.Dir, os.DirFS(filepath.Join(root, "templates", "browserless"))); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(tmpl.Dir, "README.md"), []byte("# Browserless\n\n## Introduction\n\nHeadless Chrome.\n\n## Usage\n\nConnect.\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	readme := "## 簡介\n\n無頭 Chrome。\n\n## 開始使用\n\n部署後就能使用。\n\n## 設定\n\n權杖在 Secret browserless-secrets。\n"
+	if err := os.WriteFile(filepath.Join(tmpl.Dir, "README.zh-TW.md"), []byte(readme), 0o644); err != nil {
+		t.Fatal(err)
+	}
 	err = templates.Check(root, cat, []*templates.Template{tmpl})
-	if err == nil || !strings.Contains(err.Error(), "metadata.locales.zh-TW.readme does not name Secret browserless-secrets") {
-		t.Errorf("got %v", err)
+	for _, want := range []string{
+		`README.md: level-1 heading "# Browserless"`,
+		`README.md: heading "## Usage"`,
+		"README.md: no ## Getting started",
+		"README.zh-TW.md: 開始使用 does not name Secret browserless-secrets",
+	} {
+		if err == nil || !strings.Contains(err.Error(), want) {
+			t.Errorf("want %q, got %v", want, err)
+		}
 	}
 }

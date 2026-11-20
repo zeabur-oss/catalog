@@ -5,14 +5,11 @@ metadata:
   # renovate: depName=ghost
   version: "6-alpine"
   summary: Ghost 6 for blogs and newsletters, with MySQL and your own SMTP server.
-  readme: "Ghost is a blog and newsletter site. Open https://<your domain> for the site and https://<your domain>/ghost for the admin. At deploy, a setup Job creates the owner from the Owner email you entered, so there is no setup form. Sign in with that email and the password from Secret ghost-secrets, key admin-password."
   locales:
     zh-TW:
       summary: "Ghost 6 部落格與電子報，搭配 MySQL 和你自己的 SMTP 伺服器。"
-      readme: "Ghost 是部落格與電子報網站。https://<你的網域> 是網站首頁，管理後台在 https://<你的網域>/ghost。部署時會用你填的擁有者 Email 自動建立擁有者帳號，所以不用再填設定表單。用那個 Email 和機密 ghost-secrets 裡 admin-password 的值登入。"
     zh-CN:
       summary: "Ghost 6 博客与邮件通讯，搭配 MySQL 和你自己的 SMTP 服务器。"
-      readme: "Ghost 是博客与邮件通讯站点。https://<你的域名> 是站点首页，管理后台在 https://<你的域名>/ghost。部署时会用你填的所有者邮箱自动创建所有者账号，所以不用再填设置表单。用这个邮箱和机密 ghost-secrets 里 admin-password 的值登录。"
   license: MIT AND GPL-2.0-only
   # Also: https://github.com/docker-library/mysql, https://github.com/TryGhost/ghost-docker
   homepage: https://github.com/TryGhost/Ghost

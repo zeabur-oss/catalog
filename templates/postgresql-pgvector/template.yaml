@@ -5,14 +5,11 @@ metadata:
   # renovate: depName=ghcr.io/cloudnative-pg/postgresql
   version: "18-standard-trixie"
   summary: A PostgreSQL 18 database with pgvector.
-  readme: "You get a PostgreSQL 18 database named zeabur with pgvector already enabled. It has no public address and no login page. From another app in the same project, connect to postgresql-rw:5432 as user app. The operator creates Secret postgresql-app, which holds the password and a ready connection string in key uri."
   locales:
     zh-TW:
       summary: "已啟用 pgvector 的 PostgreSQL 18 資料庫。"
-      readme: "你會得到一個名為 zeabur 的 PostgreSQL 18 資料庫，pgvector 已經啟用。它沒有對外位址，也沒有登入頁面。同一個專案裡的其他應用程式，用使用者 app 連到 postgresql-rw:5432 即可。運算子會建立機密 postgresql-app，密碼和現成的連線字串（uri 鍵）都在裡面。"
     zh-CN:
       summary: "已启用 pgvector 的 PostgreSQL 18 数据库。"
-      readme: "你会得到一个名为 zeabur 的 PostgreSQL 18 数据库，pgvector 已经启用。它没有对外地址，也没有登录页面。同一个项目里的其他应用，用用户 app 连到 postgresql-rw:5432 即可。运算符会创建机密 postgresql-app，密码和现成的连接字符串（uri 键）都在里面。"
   license: PostgreSQL AND Apache-2.0
   # Also: https://github.com/cloudnative-pg/postgres-containers, https://cloudnative-pg.io/
   homepage: https://github.com/pgvector/pgvector
