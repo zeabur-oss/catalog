@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
+
+	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 )
 
 // readmeSections are the level-2 headings of a template README, in order, by language ("" is
@@ -47,7 +48,7 @@ func checkReadmes(t *Template, locales []string) []string {
 			out = append(out, fmt.Sprintf("%s is missing", name))
 			continue
 		}
-		sections, problems := readmeBody(string(data), want)
+		sections, problems := catalog.ReadmeSections(string(data), want, want[:2])
 		for _, p := range problems {
 			out = append(out, name+": "+p)
 		}
@@ -58,41 +59,4 @@ func checkReadmes(t *Template, locales []string) []string {
 		}
 	}
 	return out
-}
-
-// readmeBody returns the text of each level-2 section of a Markdown file, and a problem for each
-// heading outside want, out of its order, or missing from the first two of want.
-func readmeBody(text string, want []string) (map[string]string, []string) {
-	sections := map[string]string{}
-	var problems []string
-	current, last, fenced := "", -1, false
-	for line := range strings.SplitSeq(text, "\n") {
-		if strings.HasPrefix(line, "```") {
-			fenced = !fenced
-		}
-		switch {
-		case fenced:
-		case strings.HasPrefix(line, "# "):
-			problems = append(problems, fmt.Sprintf("level-1 heading %q; start with ## %s", line, want[0]))
-			continue
-		case strings.HasPrefix(line, "## "):
-			current = strings.TrimSpace(line[3:])
-			i := slices.Index(want, current)
-			if i <= last {
-				problems = append(problems, fmt.Sprintf("heading %q; the level-2 headings are %s, in that order", line, strings.Join(want, ", ")))
-			}
-			last = max(last, i)
-			sections[current] = ""
-			continue
-		}
-		if current != "" {
-			sections[current] += line + "\n"
-		}
-	}
-	for _, h := range want[:2] {
-		if _, ok := sections[h]; !ok {
-			problems = append(problems, "no ## "+h)
-		}
-	}
-	return sections, problems
 }
