@@ -7,10 +7,9 @@
 ## 开始使用
 
 1. 在 Zeabur 打开 `ollama` 服务。**概览**显示副本已就绪，服务就启动好了。它没有域名。
-2. 其他工作负载用 Service `ollama` 的 `11434` 端口连接 Ollama，例如 `http://ollama:11434`。模板只允许同一个命名空间里、同时带有下面两个标签的 Pod：
+2. 其他工作负载用 Service `ollama` 的 `11434` 端口连接 Ollama，例如 `http://ollama:11434`。模板只允许同一个命名空间里、带有下面这个标签的 Pod：
 
    ```yaml
-   templates.zeabur.com/template: ollama
    templates.zeabur.com/ollama-client: "true"
    ```
 

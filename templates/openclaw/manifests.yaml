@@ -48,6 +48,7 @@ spec:
       labels:
         templates.zeabur.com/template: openclaw
         app.kubernetes.io/name: openclaw
+        templates.zeabur.com/openclaw-browser-sandbox-client: 'true'
     spec:
       automountServiceAccountToken: false
       securityContext:

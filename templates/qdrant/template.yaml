@@ -57,16 +57,15 @@ security:
           mitigation: "除了健康检查端点，每个请求都要带自动生成的 API 密钥。密钥只放在你的服务器上，要给其他客户端使用时，另外创建 JWT 或只读密钥。"
     - risk: The gRPC port is not exposed through the Ingress.
       mitigation: >-
-        Pods in the same namespace with the label
-        templates.zeabur.com/qdrant-client=true can reach REST on port 6333 and
-        gRPC on port 6334. From outside the cluster, use REST over the Ingress.
+        Pods in the same namespace can reach REST on port 6333 and gRPC on
+        port 6334, with the API key. From outside the cluster, use REST over the Ingress.
       locales:
         zh-TW:
           risk: "gRPC 連接埠不會透過 Ingress 對外開放。"
-          mitigation: "同一個命名空間裡，帶有標籤 templates.zeabur.com/qdrant-client=true 的 Pod 可以連 6333 的 REST 和 6334 的 gRPC。從叢集外面連線時，請經由 Ingress 使用 REST。"
+          mitigation: "同一個命名空間裡的 Pod 可以帶 API 金鑰連 6333 的 REST 和 6334 的 gRPC。從叢集外面連線時，請經由 Ingress 使用 REST。"
         zh-CN:
           risk: "gRPC 端口不会通过 Ingress 对外开放。"
-          mitigation: "同一个命名空间里，带有标签 templates.zeabur.com/qdrant-client=true 的 Pod 可以连 6333 的 REST 和 6334 的 gRPC。从集群外面连接时，请通过 Ingress 使用 REST。"
+          mitigation: "同一个命名空间里的 Pod 可以带 API 密钥连 6333 的 REST 和 6334 的 gRPC。从集群外面连接时，请通过 Ingress 使用 REST。"
     - risk: >-
         Outbound traffic is not limited, so a snapshot URL can point at
         private addresses.

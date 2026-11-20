@@ -20,7 +20,7 @@ This template runs one Qdrant instance behind your domain, with its data on a vo
    curl https://<your domain>/collections --header 'api-key: <api-key>'
    ```
 
-5. The gRPC port (`6334`) is not behind the domain. Pods in the same project that carry the label `templates.zeabur.com/qdrant-client=true` reach REST at `qdrant:6333` and gRPC at `qdrant:6334`.
+5. The gRPC port (`6334`) is not behind the domain. Pods in the same project reach REST at `qdrant:6333` and gRPC at `qdrant:6334`.
 
 ## Configuration
 

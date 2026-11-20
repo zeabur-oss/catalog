@@ -20,7 +20,7 @@
    curl https://<你的域名>/collections --header 'api-key: <api-key>'
    ```
 
-5. gRPC 端口（`6334`）不在域名后面。同一个项目里带有标签 `templates.zeabur.com/qdrant-client=true` 的 Pod，可以用 `qdrant:6333` 连 REST，用 `qdrant:6334` 连 gRPC。
+5. gRPC 端口（`6334`）不在域名后面。同一个项目里的 Pod 可以用 `qdrant:6333` 连 REST，用 `qdrant:6334` 连 gRPC。
 
 ## 配置
 
