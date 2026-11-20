@@ -5,13 +5,17 @@ metadata:
   # renovate: depName=binwiederhier/ntfy
   version: "v2.37.2"
   summary: A push notification server where topics need an account and messages stay on a volume.
+  firstUse: "After deploy, open https://<your domain> and sign in as admin with the password from Secret ntfy-secrets, key admin-password. Every topic needs a login, so apps that publish or subscribe must use this account or an access token."
   locales:
     zh-TW:
       summary: "推播通知伺服器，主題需要帳號，訊息存在磁碟區。"
+      firstUse: "部署後開啟 https://<你的網域>，用帳號 admin 和 Secret ntfy-secrets 裡 admin-password 的密碼登入。所有主題都要登入才能存取，發送或訂閱的程式要用這個帳號或存取權杖。"
     zh-CN:
       summary: "推送通知服务器，主题需要账号，消息存在卷上。"
+      firstUse: "部署后打开 https://<你的域名>，用账号 admin 和 Secret ntfy-secrets 里 admin-password 的密码登录。所有主题都要登录才能访问，发送或订阅的程序要用这个账号或访问令牌。"
   license: Apache-2.0 OR GPL-2.0-only
   homepage: https://ntfy.sh/
+  docs: https://docs.ntfy.sh/config/
 
 requires: [{component: traefik}, {component: cert-manager}]
 

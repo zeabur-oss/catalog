@@ -5,14 +5,18 @@ metadata:
   # renovate: depName=ghcr.io/umami-software/umami
   version: "3.4.1"
   summary: Website analytics, with PostgreSQL.
+  firstUse: "Umami is a website analytics dashboard. Open https://<your domain> and sign in as admin. The password is in Secret umami-secrets, key admin-password. The template replaces Umami's published default password at first start. Then add your website and put the tracking script on its pages."
   locales:
     zh-TW:
       summary: "網站流量分析，搭配 PostgreSQL。"
+      firstUse: "Umami 是網站流量分析的儀表板。開啟 https://<你的網域>，用 admin 登入，密碼在機密 umami-secrets 的 admin-password 鍵。範本在第一次啟動時，已經替換掉 Umami 公開的預設密碼。登入後新增你的網站，再把追蹤指令碼放進網站的頁面。"
     zh-CN:
       summary: "网站流量分析，搭配 PostgreSQL。"
+      firstUse: "Umami 是网站流量分析的仪表盘。打开 https://<你的域名>，用 admin 登录，密码在机密 umami-secrets 的 admin-password 键。模板在第一次启动时，已经替换掉 Umami 公开的默认密码。登录后添加你的网站，再把跟踪脚本放进网站的页面。"
   license: MIT AND PostgreSQL AND Apache-2.0
   # Also: https://cloudnative-pg.io/
   homepage: https://umami.is/
+  docs: https://docs.umami.is/docs/login
 
 requires:
   - {component: traefik}

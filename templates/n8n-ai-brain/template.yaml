@@ -8,14 +8,18 @@ metadata:
   # renovate: depName=n8nio/n8n
   version: "3.2.0"
   summary: Workflow automation for AI, with PostgreSQL and isolated code runners.
+  firstUse: "After deploy, open https://<your domain> and sign in with the owner email you entered at install and the password from Secret app-secrets, key owner-password. n8n sets the owner account from these values at every start, so change the Secret to change the password. Back up key encryption-key: n8n uses it to encrypt saved credentials."
   locales:
     zh-TW:
       summary: "為 AI 準備的工作流程自動化，搭配 PostgreSQL 和隔離的程式碼執行器。"
+      firstUse: "部署後開啟 https://<你的網域>，用安裝時填的擁有者 Email，和 Secret app-secrets 裡 owner-password 的密碼登入。n8n 每次啟動都會用這些值設定擁有者帳號，要換密碼請改 Secret。encryption-key 用來加密已儲存的憑證，請妥善備份。"
     zh-CN:
       summary: "面向 AI 的工作流自动化，搭配 PostgreSQL 和隔离的代码执行器。"
+      firstUse: "部署后打开 https://<你的域名>，用安装时填的所有者邮箱，和 Secret app-secrets 里 owner-password 的密码登录。n8n 每次启动都会用这些值设置所有者账号，要换密码请改 Secret。encryption-key 用来加密已保存的凭据，请妥善备份。"
   license: LicenseRef-n8n-Sustainable-Use AND PostgreSQL AND Apache-2.0
   # Also: https://cloudnative-pg.io/
   homepage: https://github.com/n8n-io/n8n
+  docs: https://docs.n8n.io/hosting/configuration/environment-variables/user-management-smtp-2fa/
 
 requires:
   - {component: traefik}

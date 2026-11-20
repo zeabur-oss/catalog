@@ -89,9 +89,11 @@ metadata:
   name: Blog
   version: "1.0.0"
   summary: A blog.
+  firstUse: Open https://<your domain>.
   locales: {}
   license: MIT
   homepage: https://example.com
+  docs: https://example.com/docs
 services:
   - name: blog
     podSecurity: restricted

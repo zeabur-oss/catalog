@@ -217,7 +217,7 @@
           "description": "What the application is, in one plain sentence for people choosing a template."
         },
         "locales": {
-          "$ref": "#/$defs/summaryLocales"
+          "$ref": "#/$defs/metadataLocales"
         },
         "license": {
           "type": "string",
@@ -227,7 +227,21 @@
         "homepage": {
           "type": "string",
           "pattern": "^https?://",
-          "format": "uri"
+          "format": "uri",
+          "description": "The application's home page or source repository."
+        },
+        "docs": {
+          "type": "string",
+          "pattern": "^https://",
+          "format": "uri",
+          "description": "The upstream docs on how to use the application, not the repository root."
+        },
+        "firstUse": {
+          "type": "string",
+          "maxLength": 600,
+          "minLength": 1,
+          "pattern": "^[^\\n]+$",
+          "description": "One short paragraph for the person who just deployed: what they get, where to open it, how\nthe first person signs in and which Secret holds each generated value."
         },
         "version": {
           "type": "string",
@@ -242,9 +256,43 @@
         "locales",
         "license",
         "homepage",
+        "docs",
+        "firstUse",
         "version"
       ],
-      "description": "Metadata is a template's name, summary and version."
+      "description": "Metadata is a template's name, summary, version and how to start using it."
+    },
+    "metadataLocale": {
+      "properties": {
+        "summary": {
+          "type": "string",
+          "pattern": "^[^\\n]+$"
+        },
+        "firstUse": {
+          "type": "string",
+          "maxLength": 600,
+          "minLength": 1,
+          "pattern": "^[^\\n]+$"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "summary",
+        "firstUse"
+      ],
+      "description": "MetadataLocale is the summary and first use in one language."
+    },
+    "metadataLocales": {
+      "additionalProperties": {
+        "$ref": "#/$defs/metadataLocale"
+      },
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^([a-z]{2,3}(-[a-z]{3}){0,3}|[a-z]{4,8})(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?(-([a-z0-9]{5,8}|[0-9][a-z0-9]{3}))*(-[a-wyz0-9](-[a-z0-9]{2,8})+)*(-x(-[a-z0-9]{1,8})+)?$"
+      },
+      "type": "object",
+      "description": "MetadataLocales is the summary and first use in other languages, by BCP 47 tag.\nconfig/locales.yaml lists the tags each needs."
     },
     "port": {
       "properties": {

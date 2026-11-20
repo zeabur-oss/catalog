@@ -5,13 +5,17 @@ metadata:
   # renovate: depName=openlistteam/openlist
   version: "latest-aio"
   summary: File listing and WebDAV, with FFmpeg and Aria2 downloads.
+  firstUse: "OpenList is a file list with WebDAV. Open https://<your domain> and sign in as admin. The password is in Secret openlist-secrets, key admin-password. It is set again at every restart, so change it in the Secret, not in the UI. For offline downloads, enter http://127.0.0.1:6800/jsonrpc and the token from key aria2-password in the Aria2 settings."
   locales:
     zh-TW:
       summary: "檔案列表與 WebDAV，內含 FFmpeg 和 Aria2 下載。"
+      firstUse: "OpenList 是附 WebDAV 的檔案列表。開啟 https://<你的網域>，用 admin 登入。密碼在機密 openlist-secrets 的 admin-password 鍵。每次重啟都會重設一次，要改密碼請改機密，不要改介面裡的。離線下載請在 Aria2 設定填入 http://127.0.0.1:6800/jsonrpc，以及 aria2-password 鍵的權杖。"
     zh-CN:
       summary: "文件列表与 WebDAV，内含 FFmpeg 和 Aria2 下载。"
+      firstUse: "OpenList 是带 WebDAV 的文件列表。打开 https://<你的域名>，用 admin 登录。密码在机密 openlist-secrets 的 admin-password 键。每次重启都会重置一次，要改密码请改机密，不要改界面里的。离线下载请在 Aria2 设置填入 http://127.0.0.1:6800/jsonrpc，以及 aria2-password 键的令牌。"
   license: AGPL-3.0-only
   homepage: https://github.com/OpenListTeam/OpenList
+  docs: https://doc.oplist.org/faq/howto
 
 requires: [{component: traefik}, {component: cert-manager}]
 

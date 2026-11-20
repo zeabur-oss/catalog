@@ -5,14 +5,18 @@ metadata:
   # renovate: depName=docker.gitea.com/gitea
   version: "28.2.0-rootless"
   summary: Git hosting, with repositories on a volume and PostgreSQL.
+  firstUse: "Gitea is Git hosting. Open https://<your domain>. There is no install wizard. The first start creates the administrator gitea_admin, so sign in as gitea_admin with the password from Secret gitea-secrets, key admin-password. Public registration is off, so the administrator creates other users. SSH is off, so clone and push over HTTPS."
   locales:
     zh-TW:
       summary: "Git 代管服務，儲存庫放在磁碟區，搭配 PostgreSQL。"
+      firstUse: "Gitea 是 Git 代管服務。開啟 https://<你的網域>，不會出現安裝精靈。第一次啟動時會建立管理員 gitea_admin，用它和機密 gitea-secrets 裡 admin-password 的值登入。公開註冊已關閉，其他使用者由管理員建立。SSH 也關閉了，請用 HTTPS 來 clone 和 push。"
     zh-CN:
       summary: "Git 托管服务，仓库放在卷上，搭配 PostgreSQL。"
+      firstUse: "Gitea 是 Git 托管服务。打开 https://<你的域名>，不会出现安装向导。第一次启动时会创建管理员 gitea_admin，用它和机密 gitea-secrets 里 admin-password 的值登录。公开注册已关闭，其他用户由管理员创建。SSH 也关闭了，请用 HTTPS 来 clone 和 push。"
   license: MIT AND PostgreSQL AND Apache-2.0
   # Also: https://cloudnative-pg.io/
   homepage: https://about.gitea.com/
+  docs: https://docs.gitea.com/installation/install-with-docker-rootless
 
 requires:
   - {component: traefik}

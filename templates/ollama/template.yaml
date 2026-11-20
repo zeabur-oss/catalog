@@ -5,13 +5,17 @@ metadata:
   # renovate: depName=docker.io/ollama/ollama
   version: "0.40.16"
   summary: Runs local models on the CPU; its API is reachable only inside the cluster.
+  firstUse: "Ollama has no web page and no login. Pods in the same namespace that carry the label templates.zeabur.com/ollama-client=true reach it at http://ollama:11434. From your computer, run kubectl port-forward service/ollama 11434. No model is preloaded, so run ollama pull MODEL in the Pod first."
   locales:
     zh-TW:
       summary: "在 CPU 上執行本機模型，API 只能從叢集內連線。"
+      firstUse: "Ollama 沒有網頁，也不用登入。同一個命名空間裡、帶有標籤 templates.zeabur.com/ollama-client=true 的 Pod，可以用 http://ollama:11434 連線。從你的電腦連線，請執行 kubectl port-forward service/ollama 11434。不會預先載入模型，請先在 Pod 裡執行 ollama pull MODEL。"
     zh-CN:
       summary: "在 CPU 上运行本地模型，API 只能从集群内访问。"
+      firstUse: "Ollama 没有网页，也不用登录。同一个命名空间里、带有标签 templates.zeabur.com/ollama-client=true 的 Pod，可以用 http://ollama:11434 访问。从你的电脑访问，请运行 kubectl port-forward service/ollama 11434。不会预先加载模型，请先在 Pod 里运行 ollama pull MODEL。"
   license: MIT
   homepage: https://github.com/ollama/ollama
+  docs: https://docs.ollama.com/api/introduction
 
 services:
   - name: ollama

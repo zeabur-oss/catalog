@@ -5,10 +5,12 @@ package templates
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strings"
 	"text/template"
 	"text/template/parse"
 
@@ -45,9 +47,19 @@ func (Template) JSONSchemaExtend(s *gen.Schema) {
 	s.Properties.Set("kind", &gen.Schema{Const: "Template"})
 }
 
-// Metadata is a template's name, summary and version.
+// Metadata is a template's name, summary, version and how to start using it.
 type Metadata struct {
-	catalog.Metadata `yaml:",inline"`
+	Name    string          `yaml:"name" json:"name" jsonschema:"required"`
+	Summary string          `yaml:"summary" json:"summary" jsonschema:"required,pattern=^[^\\n]+$"`
+	Locales MetadataLocales `yaml:"locales" json:"locales" jsonschema:"required"`
+	License string          `yaml:"license" json:"license" jsonschema:"required"`
+	// The application's home page or source repository.
+	Homepage string `yaml:"homepage" json:"homepage" jsonschema:"required,format=uri,pattern=^https?://"`
+	// The upstream docs on how to use the application, not the repository root.
+	Docs string `yaml:"docs" json:"docs" jsonschema:"required,format=uri,pattern=^https://"`
+	// One short paragraph for the person who just deployed: what they get, where to open it, how
+	// the first person signs in and which Secret holds each generated value.
+	FirstUse string `yaml:"firstUse" json:"firstUse" jsonschema:"required"`
 	// The application version: the tag of its main image. Objects get it as the label
 	// app.kubernetes.io/version.
 	Version string `yaml:"version" json:"version" jsonschema:"required"`
@@ -58,8 +70,35 @@ func (Metadata) JSONSchemaExtend(s *gen.Schema) {
 	nonEmpty(s, "license", "SPDX expression for the application, its images and charts.")
 	summary, _ := s.Properties.Get("summary")
 	summary.Description = "What the application is, in one plain sentence for people choosing a template."
-	homepage, _ := s.Properties.Get("homepage")
-	homepage.Pattern = "^https?://"
+	firstUse, _ := s.Properties.Get("firstUse")
+	firstUseText(firstUse)
+}
+
+// firstUseMax is the most characters a firstUse paragraph has, in any language.
+const firstUseMax = 600
+
+// firstUseText makes s one paragraph of at most firstUseMax characters.
+func firstUseText(s *gen.Schema) {
+	s.MinLength = new(uint64(1))
+	s.MaxLength = new(uint64(firstUseMax))
+	s.Pattern = `^[^\n]+$`
+}
+
+// MetadataLocales is the summary and first use in other languages, by BCP 47 tag.
+// config/locales.yaml lists the tags each needs.
+type MetadataLocales map[catalog.Locale]MetadataLocale
+
+func (MetadataLocales) JSONSchemaExtend(s *gen.Schema) { catalog.LocaleKeys(s) }
+
+// MetadataLocale is the summary and first use in one language.
+type MetadataLocale struct {
+	Summary  string `yaml:"summary" json:"summary" jsonschema:"required,pattern=^[^\\n]+$"`
+	FirstUse string `yaml:"firstUse" json:"firstUse" jsonschema:"required"`
+}
+
+func (MetadataLocale) JSONSchemaExtend(s *gen.Schema) {
+	firstUse, _ := s.Properties.Get("firstUse")
+	firstUseText(firstUse)
 }
 
 // nonEmpty makes property name a string of at least one character.
@@ -265,6 +304,9 @@ func Check(root string, cat *catalog.Catalog, all []*Template) error {
 		for _, p := range catalog.MissingLocales(t.raw, locales) {
 			fail("%s", p)
 		}
+		for _, p := range unnamedSecrets(t) {
+			fail("%s", p)
+		}
 		// The e2e namespace templates-e2e-<id> must be a DNS label.
 		if !catalog.ValidID(t.ID) || len(t.ID) > 49 {
 			fail("directory name must be a DNS label of at most 49 characters")
@@ -298,6 +340,27 @@ func Check(root string, cat *catalog.Catalog, all []*Template) error {
 		}
 	}
 	return errors.Join(errs...)
+}
+
+// unnamedSecrets returns a problem for each firstUse text that does not name the Secret of a
+// generated input, so people know where to read the value.
+func unnamedSecrets(t *Template) []string {
+	texts := map[string]string{"metadata.firstUse": t.Metadata.FirstUse}
+	for lang, l := range t.Metadata.Locales {
+		texts["metadata.locales."+string(lang)+".firstUse"] = l.FirstUse
+	}
+	var out []string
+	for _, in := range t.Inputs {
+		if in.Generate == nil || in.Secret == nil {
+			continue
+		}
+		for _, path := range slices.Sorted(maps.Keys(texts)) {
+			if !strings.Contains(texts[path], in.Secret.Name) {
+				out = append(out, fmt.Sprintf("%s does not name Secret %s of input %s", path, in.Secret.Name, in.Name))
+			}
+		}
+	}
+	return out
 }
 
 // versionImage is the line above metadata.version that names the image whose tag it is, so that

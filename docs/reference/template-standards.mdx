@@ -7,8 +7,9 @@ Every template in Zeabur Catalog must follow these rules. When you add or update
 
 ## `template.yaml`
 
-- `metadata` must list the application name, license, and homepage.
+- `metadata` must list the application name, license, homepage, and `docs`. `docs` is an https link to the upstream usage docs, not to the source repository.
 - `metadata.summary` says what the application is in one plain sentence, for people choosing a template. Provide `zh-TW` and `zh-CN` summaries in `metadata.locales`.
+- `metadata.firstUse` is one short paragraph of at most 600 characters for the person who just deployed. It says what they get, where to open it, how the first person signs in, and which Secret holds each generated value. Check the sign-in steps against the upstream docs and the template's manifests. `catalog validate` checks that the text names the Secret of every `generate` input. Provide `zh-TW` and `zh-CN` text in `metadata.locales`.
 - Every service must specify a security profile (`restricted` or `baseline`), resource requests and limits, and ports. The service name must match the corresponding Deployment, StatefulSet, or database object name. The service's CPU and memory values must equal the totals across all containers in that object, and its ports must match the containers' named ports. `catalog template lint` checks resource totals and ports.
 - `security` must cover the risks administrators need to know before deployment, each with its mitigation.
 - `smoke` must include smoke checks that prove the application works, including resource status conditions and HTTP or SQL checks against the running service.
@@ -35,7 +36,7 @@ Every template in Zeabur Catalog must follow these rules. When you add or update
 - Rendered resources must reference Secrets and must not contain passwords, keys, or tokens directly. `catalog template lint` rejects any Secret in `manifests.yaml`. Declare automatically generated values as `generate` inputs and existing credentials as required inputs.
 - Every input that users must fill in must have a short `label`, with `zh-TW` and `zh-CN` labels and descriptions in `locales`. Write for the person deploying the application, and use everyday language.
 - The `security` summary and each risk must use language that first-time self-hosters can understand. Explain what can go wrong and who it affects. Provide `zh-TW` and `zh-CN` content for the summary and each risk in `locales`.
-- You must disable management and debug endpoints that permit unauthenticated access, along with insecure first-start defaults. The template must explain how the first administrator signs in.
+- You must disable management and debug endpoints that permit unauthenticated access, along with insecure first-start defaults. `metadata.firstUse` must explain how the first administrator signs in.
 
 ## Networking
 

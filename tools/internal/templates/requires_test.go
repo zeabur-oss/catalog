@@ -44,3 +44,29 @@ func TestRequiresCertificatesByComponentOrCapability(t *testing.T) {
 		}
 	}
 }
+
+func TestFirstUseNamesTheSecretOfEachGeneratedInput(t *testing.T) {
+	const root = "../../.."
+	cat, err := catalog.Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	all, err := templates.Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tmpl, err := templates.Get(all, "browserless")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := templates.Check(root, cat, []*templates.Template{tmpl}); err != nil {
+		t.Fatalf("as written: %v", err)
+	}
+	l := tmpl.Metadata.Locales["zh-TW"]
+	l.FirstUse = "部署後就能使用。"
+	tmpl.Metadata.Locales["zh-TW"] = l
+	err = templates.Check(root, cat, []*templates.Template{tmpl})
+	if err == nil || !strings.Contains(err.Error(), "metadata.locales.zh-TW.firstUse does not name Secret browserless-secrets") {
+		t.Errorf("got %v", err)
+	}
+}

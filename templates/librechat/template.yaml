@@ -9,14 +9,18 @@ metadata:
   # renovate: depName=ghcr.io/danny-avila/librechat-dev
   version: "latest"
   summary: An AI chat app with sign-in, MongoDB, PostgreSQL for document search and Meilisearch.
+  firstUse: "LibreChat is an AI chat app. Open https://<your domain> and sign in with the Administrator email you entered and the password from Secret app-secrets, key admin-password. The template creates this account at deploy, and public registration is off. The other keys in app-secrets are internal."
   locales:
     zh-TW:
       summary: "需要登入的 AI 聊天應用程式，搭配 MongoDB、用來搜尋文件的 PostgreSQL 和 Meilisearch。"
+      firstUse: "LibreChat 是 AI 聊天應用程式。開啟 https://<你的網域>，用你填的管理員 Email 和機密 app-secrets 裡 admin-password 的值登入。這個帳號在部署時就建好了，公開註冊已關閉。app-secrets 裡其他的鍵都是內部使用。"
     zh-CN:
       summary: "需要登录的 AI 聊天应用，搭配 MongoDB、用于文档检索的 PostgreSQL 和 Meilisearch。"
+      firstUse: "LibreChat 是 AI 聊天应用。打开 https://<你的域名>，用你填的管理员邮箱和机密 app-secrets 里 admin-password 的值登录。这个账号在部署时就创建好了，公开注册已关闭。app-secrets 里其他的键都是内部使用。"
   license: MIT AND SSPL-1.0 AND PostgreSQL AND Apache-2.0
   # Also: https://github.com/danny-avila/rag_api, https://github.com/percona/percona-server-mongodb-operator, https://cloudnative-pg.io/, https://github.com/meilisearch/meilisearch
   homepage: https://github.com/danny-avila/LibreChat
+  docs: https://www.librechat.ai/docs/configuration/authentication
 
 requires:
   - {component: percona-mongodb}

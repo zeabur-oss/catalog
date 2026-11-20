@@ -5,13 +5,17 @@ metadata:
   # renovate: depName=neosmemo/memos
   version: "26.11.0"
   summary: A note-taking app with SQLite on a volume and an admin account ready.
+  firstUse: "After deploy, open https://<your domain> and sign in as admin with the password from Secret memos-secrets, key admin-password. Sign-up is off, so the admin creates other accounts in the settings."
   locales:
     zh-TW:
       summary: "筆記服務，資料用 SQLite 存在磁碟區，並先建好管理員帳號。"
+      firstUse: "部署後開啟 https://<你的網域>，用帳號 admin 和 Secret memos-secrets 裡 admin-password 的密碼登入。註冊功能已關閉，其他帳號由管理員在設定裡建立。"
     zh-CN:
       summary: "笔记服务，数据用 SQLite 存在卷上，并预先建好管理员账号。"
+      firstUse: "部署后打开 https://<你的域名>，用账号 admin 和 Secret memos-secrets 里 admin-password 的密码登录。注册功能已关闭，其他账号由管理员在设置里创建。"
   license: MIT
   homepage: https://usememos.com/
+  docs: https://usememos.com/docs/configuration/declarative-configuration
 
 requires: [{component: traefik}, {component: cert-manager}]
 
