@@ -58,10 +58,7 @@ func startS3() (_ *S3, stop func() error, err error) {
 	if _, err := catalog.Kubectl(nil, "create", "namespace", s3Namespace); err != nil {
 		return nil, nil, err
 	}
-	del := func() error {
-		_, err := catalog.Kubectl(nil, "delete", "namespace", s3Namespace, "--wait", "--timeout=5m")
-		return err
-	}
+	del := func() error { return catalog.DeleteNamespace(s3Namespace, manifest.Bytes()) }
 	defer func() {
 		if err != nil {
 			err = errors.Join(err, del())

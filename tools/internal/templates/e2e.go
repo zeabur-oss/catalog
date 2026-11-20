@@ -126,10 +126,7 @@ func E2E(t *catalog.Tester, r *Template, values E2EValues, measure bool) (usage 
 	if err := CreateNamespace(r, ns); err != nil {
 		return nil, err
 	}
-	defer func() {
-		_, e := catalog.Kubectl(nil, "delete", "namespace", ns, "--wait", "--timeout=5m")
-		err = errors.Join(err, e)
-	}()
+	defer func() { err = errors.Join(err, catalog.DeleteNamespace(ns, manifest)) }()
 	if useS3 {
 		if _, err := catalog.Kubectl(s3.secret(ns), "apply", "-f", "-"); err != nil {
 			return nil, err
@@ -150,12 +147,6 @@ func E2E(t *catalog.Tester, r *Template, values E2EValues, measure bool) (usage 
 			return nil, err
 		}
 	}
-	// The namespace controller waits half the longest grace period of a remaining pod before it
-	// looks again, and a CloudNativePG instance pod has 1800s. Foreground deletion waits for the pods.
-	defer func() {
-		_, e := catalog.Kubectl(manifest, "delete", "-n", ns, "-f", "-", "--ignore-not-found", "--cascade=foreground", "--wait", "--timeout=5m")
-		err = errors.Join(err, e)
-	}()
 	if _, err := catalog.Kubectl(manifest, "apply", "-n", ns, "-f", "-"); err != nil {
 		return nil, err
 	}
