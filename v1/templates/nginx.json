@@ -1,10 +1,11 @@
 {
   "id": "nginx",
-  "sourceDigest": "h1:hBka5vJqt4I3fzrpURbfeENlDoJaHDIPF/X4CYp4vuo=",
+  "sourceDigest": "h1:U+XTKtfJYegsB1Xtn8VpeYBY9LzwRh6mO9c2o37DUhU=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "kind": "Template",
     "metadata": {
+      "docs": "https://nginx.org/en/docs/beginners_guide.html",
       "homepage": "https://nginx.org/",
       "license": "BSD-2-Clause AND Apache-2.0",
       "locales": {
@@ -66,7 +67,6 @@
     ],
     "smoke": [
       {
-        "condition": "condition=Available",
         "http": {
           "contains": "Hello from Nginx deployed on Zeabur!",
           "path": "/",

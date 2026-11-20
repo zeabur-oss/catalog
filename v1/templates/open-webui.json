@@ -1,6 +1,6 @@
 {
   "id": "open-webui",
-  "sourceDigest": "h1:qEcH4M7Wic8FapF2sfKymipckGZ7iol3ND3uGMZw6P4=",
+  "sourceDigest": "h1:1b5fNM85HWJafamWjnbrg3EkHr5fcsiriVOBSDFtO/g=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -74,6 +74,7 @@
     ],
     "kind": "Template",
     "metadata": {
+      "docs": "https://docs.openwebui.com/reference/env-configuration",
       "homepage": "https://github.com/open-webui/open-webui",
       "license": "LicenseRef-Open-WebUI AND MIT",
       "locales": {
@@ -198,7 +199,6 @@
     ],
     "smoke": [
       {
-        "condition": "condition=Available",
         "http": {
           "path": "/health",
           "port": 8080,
@@ -210,7 +210,6 @@
         "timeout": "600s"
       },
       {
-        "condition": "condition=Available",
         "http": {
           "path": "/",
           "port": 9099,

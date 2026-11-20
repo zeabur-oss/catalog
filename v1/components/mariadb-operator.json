@@ -1,6 +1,6 @@
 {
   "id": "mariadb-operator",
-  "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
+  "sourceDigest": "h1:6Qb+uLZA0Z0tDiXxvRmz8IsqwKmqyQKX3+oZVUEqAsI=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -91,7 +91,11 @@
         "name": "standalone",
         "timeout": "600s",
         "wait": [
-          "-n catalog-smoke mariadb/smoke --for=condition=Ready"
+          {
+            "condition": "condition=Ready",
+            "namespace": "catalog-smoke",
+            "resource": "mariadb/smoke"
+          }
         ]
       }
     ]
@@ -202,7 +206,7 @@
         {
           "workload": "mariadb-operator",
           "kind": "Deployment",
-          "memory": "30Mi",
+          "memory": "31Mi",
           "cpu": "1m"
         },
         {
@@ -222,12 +226,12 @@
           "version": "26.10.2"
         }
       ],
-      "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
+      "sourceDigest": "h1:6Qb+uLZA0Z0tDiXxvRmz8IsqwKmqyQKX3+oZVUEqAsI=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "k3s",
@@ -263,12 +267,12 @@
           "version": "26.10.2"
         }
       ],
-      "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
+      "sourceDigest": "h1:6Qb+uLZA0Z0tDiXxvRmz8IsqwKmqyQKX3+oZVUEqAsI=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -283,8 +287,8 @@
         {
           "workload": "mariadb-operator",
           "kind": "Deployment",
-          "memory": "28Mi",
-          "cpu": "1m"
+          "memory": "29Mi",
+          "cpu": "2m"
         },
         {
           "workload": "mariadb-operator-webhook",
@@ -303,12 +307,12 @@
           "version": "26.10.2"
         }
       ],
-      "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
+      "sourceDigest": "h1:6Qb+uLZA0Z0tDiXxvRmz8IsqwKmqyQKX3+oZVUEqAsI=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -323,8 +327,8 @@
         {
           "workload": "mariadb-operator",
           "kind": "Deployment",
-          "memory": "28Mi",
-          "cpu": "1m"
+          "memory": "27Mi",
+          "cpu": "2m"
         },
         {
           "workload": "mariadb-operator-webhook",
@@ -343,12 +347,12 @@
           "version": "26.10.2"
         }
       ],
-      "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
+      "sourceDigest": "h1:6Qb+uLZA0Z0tDiXxvRmz8IsqwKmqyQKX3+oZVUEqAsI=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -363,7 +367,47 @@
         {
           "workload": "mariadb-operator",
           "kind": "Deployment",
-          "memory": "28Mi",
+          "memory": "27Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "mariadb-operator-webhook",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "mariadb-operator-crds",
+          "version": "26.10.2"
+        },
+        {
+          "release": "mariadb-operator",
+          "version": "26.10.2"
+        }
+      ],
+      "sourceDigest": "h1:6Qb+uLZA0Z0tDiXxvRmz8IsqwKmqyQKX3+oZVUEqAsI=",
+      "dependencies": {
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+      },
+      "measuredAt": "2026-11-19"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "mariadb-operator",
+          "kind": "Deployment",
+          "memory": "27Mi",
           "cpu": "1m"
         },
         {
@@ -383,21 +427,66 @@
           "version": "26.10.2"
         }
       ],
-      "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
+      "sourceDigest": "h1:6Qb+uLZA0Z0tDiXxvRmz8IsqwKmqyQKX3+oZVUEqAsI=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
-      "distribution": "kind",
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "mariadb-operator",
+          "kind": "Deployment",
+          "memory": "27Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "mariadb-operator-webhook",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "mariadb-operator-crds",
+          "version": "26.10.2"
+        },
+        {
+          "release": "mariadb-operator",
+          "version": "26.10.2"
+        }
+      ],
+      "sourceDigest": "h1:6Qb+uLZA0Z0tDiXxvRmz8IsqwKmqyQKX3+oZVUEqAsI=",
+      "dependencies": {
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+      },
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-19"
+    },
+    {
+      "distribution": "kubesolo",
       "profile": "single-node",
       "platform": {
         "os": "linux",
         "architecture": "arm64"
       },
-      "kubernetesVersion": "v1.37.0",
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
       "result": "passed",
       "pods": [
         {
@@ -423,100 +512,15 @@
           "version": "26.10.2"
         }
       ],
-      "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
+      "sourceDigest": "h1:6Qb+uLZA0Z0tDiXxvRmz8IsqwKmqyQKX3+oZVUEqAsI=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
-      },
-      "measuredAt": "2026-11-12"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.6",
-      "distributionVersion": "v1.3.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "mariadb-operator",
-          "kind": "Deployment",
-          "memory": "27Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "mariadb-operator-webhook",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "mariadb-operator-crds",
-          "version": "26.10.2"
-        },
-        {
-          "release": "mariadb-operator",
-          "version": "26.10.2"
-        }
-      ],
-      "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
-      "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.6",
-      "distributionVersion": "v1.3.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "mariadb-operator",
-          "kind": "Deployment",
-          "memory": "27Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "mariadb-operator-webhook",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "mariadb-operator-crds",
-          "version": "26.10.2"
-        },
-        {
-          "release": "mariadb-operator",
-          "version": "26.10.2"
-        }
-      ],
-      "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
-      "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
-      },
-      "addOns": {
-        "helm-controller": "v0.17.9"
-      },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -532,51 +536,7 @@
         {
           "workload": "mariadb-operator",
           "kind": "Deployment",
-          "memory": "34Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "mariadb-operator-webhook",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "mariadb-operator-crds",
-          "version": "26.10.2"
-        },
-        {
-          "release": "mariadb-operator",
-          "version": "26.10.2"
-        }
-      ],
-      "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
-      "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
-      },
-      "addOns": {
-        "local-path-provisioner": "v0.0.37"
-      },
-      "measuredAt": "2026-11-12"
-    },
-    {
-      "distribution": "rke2",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.37.2",
-      "distributionVersion": "v1.37.2+rke2r1",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "mariadb-operator",
-          "kind": "Deployment",
-          "memory": "32Mi",
+          "memory": "33Mi",
           "cpu": "1m"
         },
         {
@@ -596,15 +556,59 @@
           "version": "26.10.2"
         }
       ],
-      "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4=",
+      "sourceDigest": "h1:6Qb+uLZA0Z0tDiXxvRmz8IsqwKmqyQKX3+oZVUEqAsI=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "mariadb-operator",
+          "kind": "Deployment",
+          "memory": "29Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "mariadb-operator-webhook",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "mariadb-operator-crds",
+          "version": "26.10.2"
+        },
+        {
+          "release": "mariadb-operator",
+          "version": "26.10.2"
+        }
+      ],
+      "sourceDigest": "h1:6Qb+uLZA0Z0tDiXxvRmz8IsqwKmqyQKX3+oZVUEqAsI=",
+      "dependencies": {
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+      },
+      "addOns": {
+        "local-path-provisioner": "v0.0.37"
+      },
+      "measuredAt": "2026-11-19"
     }
   ]
 }

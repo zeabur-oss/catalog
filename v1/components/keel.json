@@ -1,6 +1,6 @@
 {
   "id": "keel",
-  "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
+  "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -75,8 +75,15 @@
         "manifest": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: smoke\n  namespace: catalog-smoke\n  annotations: {keel.sh/policy: force}\nspec:\n  selector: {matchLabels: {app: smoke}}\n  template:\n    metadata: {labels: {app: smoke}}\n    spec:\n      containers:\n        - name: pause\n          image: registry.k8s.io/pause:3.9\n---\n# Retries until Keel has seen the Deployment; a repeated event is a no-op.\n# In Keel's namespace: the NetworkPolicy refuses catalog-smoke.\napiVersion: batch/v1\nkind: Job\nmetadata: {name: webhook, namespace: keel}\nspec:\n  template:\n    spec:\n      restartPolicy: Never\n      containers:\n        - name: curl\n          image: curlimages/curl:8.23.0@sha256:3fb7e13e5d179a845c97d78204f3f1064d1907037f26a3ebf91710571151fd93\n          command: [sh, -c]\n          args:\n            - for i in 1 2 3 4 5 6; do curl -sSf -d '{\"name\":\"registry.k8s.io/pause\",\"tag\":\"3.10\"}' http://keel.keel.svc:9300/v1/webhooks/native; sleep 10; done\n",
         "name": "rolls-on-native-webhook",
         "wait": [
-          "-n catalog-smoke deployment/smoke --for=jsonpath={.spec.template.spec.containers[0].image}=registry.k8s.io/pause:3.10",
-          "-n catalog-smoke deployment/smoke --for=condition=Available"
+          {
+            "condition": "jsonpath={.spec.template.spec.containers[0].image}=registry.k8s.io/pause:3.10",
+            "namespace": "catalog-smoke",
+            "resource": "deployment/smoke"
+          },
+          {
+            "namespace": "catalog-smoke",
+            "resource": "deployment/smoke"
+          }
         ]
       }
     ]
@@ -161,8 +168,8 @@
           "version": "v1.2.3"
         }
       ],
-      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "k3s",
@@ -188,8 +195,8 @@
           "version": "v1.2.3"
         }
       ],
-      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -197,32 +204,6 @@
       "platform": {
         "os": "linux",
         "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "keel",
-          "kind": "Deployment",
-          "memory": "15Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "keel",
-          "version": "v1.2.3"
-        }
-      ],
-      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
-      "measuredAt": "2026-11-12"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
       },
       "kubernetesVersion": "v1.37.0",
       "result": "passed",
@@ -240,8 +221,34 @@
           "version": "v1.2.3"
         }
       ],
-      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4=",
+      "measuredAt": "2026-11-19"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "keel",
+          "kind": "Deployment",
+          "memory": "15Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "keel",
+          "version": "v1.2.3"
+        }
+      ],
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -266,8 +273,8 @@
           "version": "v1.2.3"
         }
       ],
-      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -292,8 +299,8 @@
           "version": "v1.2.3"
         }
       ],
-      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -319,11 +326,11 @@
           "version": "v1.2.3"
         }
       ],
-      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -339,7 +346,7 @@
         {
           "workload": "keel",
           "kind": "Deployment",
-          "memory": "14Mi",
+          "memory": "15Mi",
           "cpu": "0"
         }
       ],
@@ -349,11 +356,11 @@
           "version": "v1.2.3"
         }
       ],
-      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -379,11 +386,11 @@
           "version": "v1.2.3"
         }
       ],
-      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -409,11 +416,11 @@
           "version": "v1.2.3"
         }
       ],
-      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs=",
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     }
   ]
 }

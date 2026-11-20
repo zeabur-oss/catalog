@@ -1,6 +1,6 @@
 {
   "id": "tailscale-operator",
-  "sourceDigest": "h1:1Vio02sPXLqIiV9uBsAU8KetuhapDN/s7bAFcrXtcgc=",
+  "sourceDigest": "h1:uSw+pSxEiYolm+OUFVEOKFV2lpBFXuu/H0Fsu7vgWWE=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -91,8 +91,14 @@
       {
         "name": "crds-established",
         "wait": [
-          "crd/proxyclasses.tailscale.com --for=condition=Established",
-          "crd/connectors.tailscale.com --for=condition=Established"
+          {
+            "condition": "condition=Established",
+            "resource": "crd/proxyclasses.tailscale.com"
+          },
+          {
+            "condition": "condition=Established",
+            "resource": "crd/connectors.tailscale.com"
+          }
         ]
       }
     ]

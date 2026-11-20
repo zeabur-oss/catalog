@@ -1,6 +1,6 @@
 {
   "id": "gitea",
-  "sourceDigest": "h1:ppceRqgquyR17BH4DE2b2vfgVnqDS3Gd6vZoIuoU81g=",
+  "sourceDigest": "h1:YI9tP2udmN6kN6sIZtX5X0xh2G0EOcyB1Z0F9dAHKno=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -87,6 +87,7 @@
     ],
     "kind": "Template",
     "metadata": {
+      "docs": "https://docs.gitea.com/installation/install-with-docker-rootless",
       "homepage": "https://about.gitea.com/",
       "license": "MIT AND PostgreSQL AND Apache-2.0",
       "locales": {
@@ -262,7 +263,6 @@
         "timeout": "900s"
       },
       {
-        "condition": "condition=Available",
         "http": {
           "contains": "pass",
           "path": "/api/healthz",
@@ -275,7 +275,6 @@
         "timeout": "900s"
       },
       {
-        "condition": "condition=Available",
         "http": {
           "path": "/api/v1/user",
           "port": 3000,

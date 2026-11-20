@@ -1,6 +1,6 @@
 {
   "id": "searxng",
-  "sourceDigest": "h1:D7W8I2Ijiw8FF7PyidsMUpJuP/mHRDbJ2oNPx0EByIo=",
+  "sourceDigest": "h1:mcVtBa0sLe/ut5xTvaUQWBGIPhrLfWwVhz70ikMMCxU=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -23,6 +23,7 @@
     ],
     "kind": "Template",
     "metadata": {
+      "docs": "https://docs.searxng.org/dev/search_api.html",
       "homepage": "https://github.com/searxng/searxng",
       "license": "AGPL-3.0-or-later",
       "locales": {
@@ -127,7 +128,6 @@
     ],
     "smoke": [
       {
-        "condition": "condition=Available",
         "http": {
           "path": "/healthz",
           "port": 8080,

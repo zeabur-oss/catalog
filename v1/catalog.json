@@ -1,7 +1,7 @@
 {
   "catalog": {
-    "version": "0.5.5",
-    "commit": "0b98e340711c95a7592daae49bc40f058b4b6c66"
+    "version": "0.5.6",
+    "commit": "5d38a79f36e2c47a4de42796107ea8bf49cad70f"
   },
   "profiles": [
     "single-node",
@@ -34,23 +34,23 @@
     },
     {
       "id": "cert-manager",
-      "sourceDigest": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I="
+      "sourceDigest": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58="
     },
     {
       "id": "cloudnative-pg",
-      "sourceDigest": "h1:sfHDjsosLaiS7MassT/Z6A/IareJUQk+yPcGhX2Yyis="
+      "sourceDigest": "h1:VlI7FbJq8eu7nUwyl03sJAPplBUBm53QJYGDhleao90="
     },
     {
       "id": "crowdsec",
-      "sourceDigest": "h1:YfKtuySHUwjJIyMhtTcKN/Qo7KE8xV4dYOQ/Q0N4sf8="
+      "sourceDigest": "h1:Ax9apjutlcXCemj0nBOeEtJ34aPycIxE63wv1//UyZE="
     },
     {
       "id": "dragonfly-operator",
-      "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0="
+      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM="
     },
     {
       "id": "external-secrets",
-      "sourceDigest": "h1:777w7FTmVTZ2IPTh8Ouc6EzPR78lz1a1ur8er3+7Icc="
+      "sourceDigest": "h1:atRm4CCvXCUh/WW3VQnXfsdDjdMfMfqmmkR2J3OOxkE="
     },
     {
       "id": "falco",
@@ -70,15 +70,15 @@
     },
     {
       "id": "keel",
-      "sourceDigest": "h1:etxLvTMpsGvJpFX2wMst5J1xWwGYPACG653kkmG4eRs="
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4="
     },
     {
       "id": "longhorn",
-      "sourceDigest": "h1:dbHxkgp4bBAWzBYzZPMQzErg9i2qzg4SaKy8hERvFPc="
+      "sourceDigest": "h1:OYFtbIcjc70GEfUXHnTi9jGQHO2rNGNf/ONLf8Gnv5Y="
     },
     {
       "id": "mariadb-operator",
-      "sourceDigest": "h1:g5i2foI9DydYzucx0R/5GV+uUx944TM4GEG4cdxwaq4="
+      "sourceDigest": "h1:6Qb+uLZA0Z0tDiXxvRmz8IsqwKmqyQKX3+oZVUEqAsI="
     },
     {
       "id": "metrics-server",
@@ -86,31 +86,31 @@
     },
     {
       "id": "moco",
-      "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY="
+      "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4="
     },
     {
       "id": "percona-mongodb",
-      "sourceDigest": "h1:3p3Rn1YcHBXk9QzsQm+sbQz7x48Mu6otWqZum24SlSk="
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA="
     },
     {
       "id": "reloader",
-      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4="
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o="
     },
     {
       "id": "seaweedfs-operator",
-      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os="
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4="
     },
     {
       "id": "system-upgrade-controller",
-      "sourceDigest": "h1:2UB8iuYs0AO/PpHbLaua7asM4PoWxRLrmKOZqHcnt1Y="
+      "sourceDigest": "h1:RIEE7m8qS9pCIYJ9gvNd7AX3EN4s4s1NKE9S4GjmIDE="
     },
     {
       "id": "tailscale-operator",
-      "sourceDigest": "h1:1Vio02sPXLqIiV9uBsAU8KetuhapDN/s7bAFcrXtcgc="
+      "sourceDigest": "h1:uSw+pSxEiYolm+OUFVEOKFV2lpBFXuu/H0Fsu7vgWWE="
     },
     {
       "id": "traefik",
-      "sourceDigest": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+      "sourceDigest": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
     },
     {
       "id": "trivy-operator",
@@ -118,19 +118,19 @@
     },
     {
       "id": "velero",
-      "sourceDigest": "h1:ZAjeSquGs4bcSfoRXKPFWK0DGEjiR+ObqEC6oRmDBjs="
+      "sourceDigest": "h1:t0msgY7HGOlvyKFzmJnIEdw03SjhRPd6ngFwRgeKjW4="
     },
     {
       "id": "vertical-pod-autoscaler",
-      "sourceDigest": "h1:RPKQNgEn7wJPaqSAAop+6x0OYV2Ep5+QaSy2SSipeXI="
+      "sourceDigest": "h1:o3cZY06zmuC0FGPbrPv9L+jO4+1CVawaeCDCDVIf2Kw="
     },
     {
       "id": "victoria-logs",
-      "sourceDigest": "h1:BJGqTdn+MjaduoCkam733gPaPe8ZGuut9Et/w4NElcg="
+      "sourceDigest": "h1:Ni/403qeeWZrM9Iv1EmEtCASjlCB+q0YCS9+/5YuXo4="
     },
     {
       "id": "victoria-metrics",
-      "sourceDigest": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg="
+      "sourceDigest": "h1:IdDj4vI8qKyJ7B1MlUs4/+QkdId/JEA8MVl4UYjgbq0="
     },
     {
       "id": "victoria-metrics-operator",
@@ -138,141 +138,141 @@
     },
     {
       "id": "zeabur-builder",
-      "sourceDigest": "h1:+swLNPUkGnIgjj57nssn7rkdPOQSciUzG9yGrHmc4mA="
+      "sourceDigest": "h1:czIeNzfYZ2CCOihyWraL03B0gkFEgpHgmwTYHoXO75E="
     }
   ],
   "templates": [
     {
       "id": "browserless",
-      "sourceDigest": "h1:zQMAApDw/2VLL+JXNmfVqbO9rqEzSAwmna5s2OABrmw="
+      "sourceDigest": "h1:nxTUnJEWoJ27W22OZluSecRT5R0vyJNq/kgro+6+574="
     },
     {
       "id": "cliproxyapi",
-      "sourceDigest": "h1:vMlq9x6B9zDsqnhDsujjujm8edQjOC34l2YosblrJq4="
+      "sourceDigest": "h1:e7kaV9Du9x616O8CBpwdvfaU/XUUCp1H4Ga709wfgkI="
     },
     {
       "id": "dify",
-      "sourceDigest": "h1:riTAR9aVyJh7fTkuiACCxBmBTRE8R3tLxYnfoP8655w="
+      "sourceDigest": "h1:zo1obwcPt62TGSsz3tqzOtTaww/Z4iAPb4nOFVZ5+1E="
     },
     {
       "id": "error-pages",
-      "sourceDigest": "h1:HwFBcyt6Elx5r5PWvPIyLr0IjTcqNQIN4a8LLwnU03o="
+      "sourceDigest": "h1:H1Blslr/wlEFBaPrhu6J0Eu8rHZNczp6U3YBF0qZcww="
     },
     {
       "id": "ghost",
-      "sourceDigest": "h1:5ge9dj+2MplYinmLF0LNViIXD1kljQUHoyfhy+sTYGw="
+      "sourceDigest": "h1:ttkOF8Lm4VUdWunhz6X9uyGN2DM7A5uZ9CaSMTERkZA="
     },
     {
       "id": "gitea",
-      "sourceDigest": "h1:ppceRqgquyR17BH4DE2b2vfgVnqDS3Gd6vZoIuoU81g="
+      "sourceDigest": "h1:YI9tP2udmN6kN6sIZtX5X0xh2G0EOcyB1Z0F9dAHKno="
     },
     {
       "id": "halo",
-      "sourceDigest": "h1:+TFzWFjN56MrY9/uwNmuYuXBbYNw2N5B/Hdh4AemUM8="
+      "sourceDigest": "h1:Aera9HSNes6zHhbDvHVqPJ/dXEZy5yzyZZZ3QRvJtLI="
     },
     {
       "id": "hermes-agent",
-      "sourceDigest": "h1:OfEER9hGcps//6avwav/+7HaX7+wbeJxZPmFyrng1Js="
+      "sourceDigest": "h1:iO1cEZmUN7Bp/XyJJ5OBvQRzFeIBzqd3eIJ2joymZb8="
     },
     {
       "id": "librechat",
-      "sourceDigest": "h1:BxPKyrTwNW3m5XnvZUqmKT5SoLXg+9+ZmGQaO1hQjew="
+      "sourceDigest": "h1:oZbdgY0U78F+8HhZNyB2fQT7DKDCA4t611EtJwkw4Pg="
     },
     {
       "id": "litellm",
-      "sourceDigest": "h1:na8IJpVmi3wzd/mfWGh9sLozjljx6QTbp+3nm7TG64w="
+      "sourceDigest": "h1:rcgfGzSZz0FswE995RkKa0PzW2h1iYjS39kIz4P5fs4="
     },
     {
       "id": "lobechat",
-      "sourceDigest": "h1:FINp6qJvqzij5SlUidPC/TTnrVQFvG7sxg3BT/TJfag="
+      "sourceDigest": "h1:GDRO7oMuDplsrSlvxcY7TyCC5prOu7FaDcEu2K8VU+0="
     },
     {
       "id": "meilisearch",
-      "sourceDigest": "h1:jcfNKTBoS7QYSG37wLH62UkzJV6Kr4R1rYHPxfY8Ar4="
+      "sourceDigest": "h1:gizzOjWkLQ2b61MfuBhw0ubEcQzLnDEh5Fx4lvXUpjg="
     },
     {
       "id": "memos",
-      "sourceDigest": "h1:MXKE83llG/8VmruWQa3uKOZqvpeUlQGWa1CPqa56vHY="
+      "sourceDigest": "h1:qwqajGrIsVCrAJ8bqeTI7wV3bneX4nR0JATC9yqMWQE="
     },
     {
       "id": "miniflux",
-      "sourceDigest": "h1:q3v6Nm7KFobn+blakE/PBfDyhV7zdcDOH6f3yLjL27Q="
+      "sourceDigest": "h1:1tBafOhPlr9SLsqWgsDgCZHKZ10slcroIDoYKTqEoZM="
     },
     {
       "id": "n8n",
-      "sourceDigest": "h1:rb+d142CX/kKh6+Y6f7toE48l8RG+D/yGR1xsH1Z0Eo="
+      "sourceDigest": "h1:fNLhOdcC64ZfliekQs1V7JFRWu7hCKWcp2eqP08Ncg4="
     },
     {
       "id": "n8n-ai-brain",
-      "sourceDigest": "h1:t5CcoUiDQ5VSfYNTOGoQekdAbE0B99He7NSvbFO3FvU="
+      "sourceDigest": "h1:ifUr4ceKjM6Mp3QlDQ3vWeucljceeRb/E0536Eb48wg="
     },
     {
       "id": "n8n-sqlite",
-      "sourceDigest": "h1:671G2eqriYmjID70LYU6JEjJ3R8KgIDVTlqcs+ipjug="
+      "sourceDigest": "h1:kO12grVrsW3sC+zGsBfFN8cGyLaS18g9vpmdXMICtZg="
     },
     {
       "id": "new-api",
-      "sourceDigest": "h1:gCNp7dz/hQHKJZfY8WJP/V1WlTwjke3mHSHU+awbC8A="
+      "sourceDigest": "h1:zBf/6eTyo23RRJYdl1FTtAM0Fs2BBEQL9MmZTvikISQ="
     },
     {
       "id": "nginx",
-      "sourceDigest": "h1:hBka5vJqt4I3fzrpURbfeENlDoJaHDIPF/X4CYp4vuo="
+      "sourceDigest": "h1:U+XTKtfJYegsB1Xtn8VpeYBY9LzwRh6mO9c2o37DUhU="
     },
     {
       "id": "ntfy",
-      "sourceDigest": "h1:UlBTExBoffgyPtESG07SlzePnA9T/Ll2UzLKNq8uj6E="
+      "sourceDigest": "h1:yOLQxjKCQZs9qTj0RfL+SPDgEwI/YqEOFb9XK4TlVEQ="
     },
     {
       "id": "ollama",
-      "sourceDigest": "h1:Hem9jYN+NXQCeOCYGOINFRcowurogbpyYLkDVwMv1b4="
+      "sourceDigest": "h1:ovtpEdAcRTZb26pEf9AWs3jtjpyfSf+COsgjsLUMBPo="
     },
     {
       "id": "open-webui",
-      "sourceDigest": "h1:qEcH4M7Wic8FapF2sfKymipckGZ7iol3ND3uGMZw6P4="
+      "sourceDigest": "h1:1b5fNM85HWJafamWjnbrg3EkHr5fcsiriVOBSDFtO/g="
     },
     {
       "id": "openclaw",
-      "sourceDigest": "h1:FewoXYJlO0kaEIR1ZZpC1pBZjAqibDwtohFo5F/ec2w="
+      "sourceDigest": "h1:oqp6VtnfCCv4Y9lG5hMCZmE27mW07EQXEK3PVIYQtxM="
     },
     {
       "id": "openclaw-browser-sandbox",
-      "sourceDigest": "h1:dDcFgFeuPhE4hjR4nkZQfylKCCPV229YeKX10m9lIns="
+      "sourceDigest": "h1:AILr7F7ks/+CiHt7TWE4v7eStXUgQDXxZmlnWVsncUU="
     },
     {
       "id": "openlist",
-      "sourceDigest": "h1:MCDfwHjf5onDLHkCG2x64/H2zYQqNRZ344nxMYgkm7c="
+      "sourceDigest": "h1:z1Wh2dVc7KrqUnChkJT30oU1e4LTEKVD0Na+G5z1uwY="
     },
     {
       "id": "postgresql-pgvector",
-      "sourceDigest": "h1:vS4WSJf/6SPbGwa0g+gCm+mdsufnap22jFxd9ADBiSQ="
+      "sourceDigest": "h1:wfaGhFQxpHahDsJB9A8bZAfSBqqCmLr9xQ38KA+dszc="
     },
     {
       "id": "qdrant",
-      "sourceDigest": "h1:sMICSSKVeLH1FQZzIiT7M/wTlTasdJ/MmDEJnj1tPmo="
+      "sourceDigest": "h1:UKSK6YCMYcYnxjFAewGvoAoYvYZIHrwzp0On1UVDjfY="
     },
     {
       "id": "searxng",
-      "sourceDigest": "h1:D7W8I2Ijiw8FF7PyidsMUpJuP/mHRDbJ2oNPx0EByIo="
+      "sourceDigest": "h1:mcVtBa0sLe/ut5xTvaUQWBGIPhrLfWwVhz70ikMMCxU="
     },
     {
       "id": "sillytavern",
-      "sourceDigest": "h1:EUdS+TvH7ULnuqVriwI13+i6OjXqtKT1EWxraQoyRsQ="
+      "sourceDigest": "h1:WWGtD6j6ZiXA34gYUSUJOJvc7nlnPrFwO27yckZZ/70="
     },
     {
       "id": "umami",
-      "sourceDigest": "h1:af54U8FWasEmkiUuSYiWrWs8Q00fieG0W2VXWVHHx50="
+      "sourceDigest": "h1:bCGVu36fmwsre3wnvSZRI/mxOrnAb05/FYDHBVBNhuc="
     },
     {
       "id": "uptime-kuma",
-      "sourceDigest": "h1:JaiYSU6OVWfqAC902A7/mLUWaC/wfqKbcBgTqyvNpso="
+      "sourceDigest": "h1:7xoPlgggle2jBnu3u7Fc5eRAABj37uQvDo4vAtKY9ew="
     },
     {
       "id": "vaultwarden",
-      "sourceDigest": "h1:ey1+aG8LRNcO96EQxRJ6SnFPk9kGGnWx2KhrDcQF/dw="
+      "sourceDigest": "h1:EMWUjaWRSlFs6FkvuDiyp2CRa1Tph6W4vx4invRUEz8="
     },
     {
       "id": "wordpress",
-      "sourceDigest": "h1:zySgBQQAn1xxEhh+1s0COEx85yarCBQnfdqWCZaac+8="
+      "sourceDigest": "h1:Zt467KfVhyGnS6ZqnFAVyE4qzi9r0VsMW4Tv0QyWKj0="
     }
   ]
 }

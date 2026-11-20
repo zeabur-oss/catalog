@@ -1,6 +1,6 @@
 {
   "id": "dify",
-  "sourceDigest": "h1:riTAR9aVyJh7fTkuiACCxBmBTRE8R3tLxYnfoP8655w=",
+  "sourceDigest": "h1:zo1obwcPt62TGSsz3tqzOtTaww/Z4iAPb4nOFVZ5+1E=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -187,6 +187,7 @@
     ],
     "kind": "Template",
     "metadata": {
+      "docs": "https://docs.dify.ai/en/self-host/quick-start/docker-compose",
       "homepage": "https://github.com/langgenius/dify",
       "license": "LicenseRef-Dify-Modified-Apache-2.0 AND BUSL-1.1 AND Apache-2.0 AND PostgreSQL",
       "locales": {
@@ -567,49 +568,41 @@
     ],
     "smoke": [
       {
-        "condition": "condition=Available",
         "name": "dify available",
         "resource": "deployment/dify",
         "timeout": "15m"
       },
       {
-        "condition": "condition=Available",
         "name": "dify-api available",
         "resource": "deployment/dify-api",
         "timeout": "15m"
       },
       {
-        "condition": "condition=Available",
         "name": "dify-worker available",
         "resource": "deployment/dify-worker",
         "timeout": "15m"
       },
       {
-        "condition": "condition=Available",
         "name": "dify-beat available",
         "resource": "deployment/dify-beat",
         "timeout": "15m"
       },
       {
-        "condition": "condition=Available",
         "name": "dify-web available",
         "resource": "deployment/dify-web",
         "timeout": "15m"
       },
       {
-        "condition": "condition=Available",
         "name": "dify-plugin available",
         "resource": "deployment/dify-plugin",
         "timeout": "15m"
       },
       {
-        "condition": "condition=Available",
         "name": "dify-sandbox available",
         "resource": "deployment/dify-sandbox",
         "timeout": "15m"
       },
       {
-        "condition": "condition=Available",
         "http": {
           "contains": "sso_enforced_for_signin",
           "path": "/signin",
@@ -622,7 +615,6 @@
         "timeout": "15m"
       },
       {
-        "condition": "condition=Available",
         "name": "dify-proxy available",
         "resource": "deployment/dify-proxy",
         "timeout": "15m"

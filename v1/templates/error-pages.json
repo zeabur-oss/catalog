@@ -1,10 +1,11 @@
 {
   "id": "error-pages",
-  "sourceDigest": "h1:HwFBcyt6Elx5r5PWvPIyLr0IjTcqNQIN4a8LLwnU03o=",
+  "sourceDigest": "h1:H1Blslr/wlEFBaPrhu6J0Eu8rHZNczp6U3YBF0qZcww=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "kind": "Template",
     "metadata": {
+      "docs": "https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/errorpages/",
       "homepage": "https://nginx.org/",
       "license": "BSD-2-Clause AND Apache-2.0",
       "locales": {
@@ -79,7 +80,6 @@
     ],
     "smoke": [
       {
-        "condition": "condition=Available",
         "http": {
           "contains": "Bad gateway",
           "path": "/502.html",
@@ -92,7 +92,6 @@
         "timeout": "180s"
       },
       {
-        "condition": "condition=Available",
         "http": {
           "contains": "Down for maintenance",
           "path": "/any/path",

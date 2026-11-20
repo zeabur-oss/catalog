@@ -1,6 +1,6 @@
 {
   "id": "openlist",
-  "sourceDigest": "h1:MCDfwHjf5onDLHkCG2x64/H2zYQqNRZ344nxMYgkm7c=",
+  "sourceDigest": "h1:z1Wh2dVc7KrqUnChkJT30oU1e4LTEKVD0Na+G5z1uwY=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -39,6 +39,7 @@
     ],
     "kind": "Template",
     "metadata": {
+      "docs": "https://doc.oplist.org/faq/howto",
       "homepage": "https://github.com/OpenListTeam/OpenList",
       "license": "AGPL-3.0-only",
       "locales": {
@@ -140,7 +141,6 @@
     ],
     "smoke": [
       {
-        "condition": "jsonpath={.status.readyReplicas}=1",
         "name": "application-ready",
         "resource": "statefulset/openlist",
         "timeout": "600s"

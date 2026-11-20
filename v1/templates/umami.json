@@ -1,6 +1,6 @@
 {
   "id": "umami",
-  "sourceDigest": "h1:af54U8FWasEmkiUuSYiWrWs8Q00fieG0W2VXWVHHx50=",
+  "sourceDigest": "h1:bCGVu36fmwsre3wnvSZRI/mxOrnAb05/FYDHBVBNhuc=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -39,6 +39,7 @@
     ],
     "kind": "Template",
     "metadata": {
+      "docs": "https://docs.umami.is/docs/login",
       "homepage": "https://umami.is/",
       "license": "MIT AND PostgreSQL AND Apache-2.0",
       "locales": {
@@ -172,7 +173,6 @@
         "timeout": "900s"
       },
       {
-        "condition": "condition=Available",
         "http": {
           "contains": "\"ok\":true",
           "path": "/api/heartbeat",
@@ -185,7 +185,6 @@
         "timeout": "600s"
       },
       {
-        "condition": "condition=Available",
         "http": {
           "path": "/api/websites",
           "port": 3000,

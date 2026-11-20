@@ -1,6 +1,6 @@
 {
   "id": "ghost",
-  "sourceDigest": "h1:5ge9dj+2MplYinmLF0LNViIXD1kljQUHoyfhy+sTYGw=",
+  "sourceDigest": "h1:ttkOF8Lm4VUdWunhz6X9uyGN2DM7A5uZ9CaSMTERkZA=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -170,6 +170,7 @@
     ],
     "kind": "Template",
     "metadata": {
+      "docs": "https://docs.ghost.org/install/docker",
       "homepage": "https://github.com/TryGhost/Ghost",
       "license": "MIT AND GPL-2.0-only",
       "locales": {
@@ -297,13 +298,11 @@
         "timeout": "600s"
       },
       {
-        "condition": "jsonpath={.status.readyReplicas}=1",
         "name": "application-ready",
         "resource": "statefulset/ghost",
         "timeout": "600s"
       },
       {
-        "condition": "jsonpath={.status.readyReplicas}=1",
         "name": "mysql-ready",
         "resource": "statefulset/ghost-mysql",
         "timeout": "600s"

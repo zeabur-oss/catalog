@@ -1,6 +1,6 @@
 {
   "id": "dragonfly-operator",
-  "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
+  "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -76,7 +76,11 @@
         "name": "one-instance",
         "timeout": "600s",
         "wait": [
-          "-n catalog-smoke dragonfly/smoke --for=jsonpath={.status.phase}=Ready"
+          {
+            "condition": "jsonpath={.status.phase}=Ready",
+            "namespace": "catalog-smoke",
+            "resource": "dragonfly/smoke"
+          }
         ]
       }
     ]
@@ -181,8 +185,8 @@
           "version": "v1.7.1"
         }
       ],
-      "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "k3s",
@@ -208,64 +212,12 @@
           "version": "v1.7.1"
         }
       ],
-      "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
       "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "dragonfly-operator",
-          "kind": "Deployment",
-          "memory": "20Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "dragonfly-operator",
-          "version": "v1.7.1"
-        }
-      ],
-      "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
-      "measuredAt": "2026-11-12"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "dragonfly-operator",
-          "kind": "Deployment",
-          "memory": "20Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "dragonfly-operator",
-          "version": "v1.7.1"
-        }
-      ],
-      "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
-      "measuredAt": "2026-11-12"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
       "platform": {
         "os": "linux",
         "architecture": "amd64"
@@ -286,8 +238,60 @@
           "version": "v1.7.1"
         }
       ],
-      "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
+      "measuredAt": "2026-11-19"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "dragonfly-operator",
+          "kind": "Deployment",
+          "memory": "20Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "dragonfly-operator",
+          "version": "v1.7.1"
+        }
+      ],
+      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
+      "measuredAt": "2026-11-19"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "dragonfly-operator",
+          "kind": "Deployment",
+          "memory": "20Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "dragonfly-operator",
+          "version": "v1.7.1"
+        }
+      ],
+      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -312,8 +316,8 @@
           "version": "v1.7.1"
         }
       ],
-      "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -329,7 +333,7 @@
         {
           "workload": "dragonfly-operator",
           "kind": "Deployment",
-          "memory": "21Mi",
+          "memory": "20Mi",
           "cpu": "1m"
         }
       ],
@@ -339,11 +343,11 @@
           "version": "v1.7.1"
         }
       ],
-      "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
+      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -359,7 +363,7 @@
         {
           "workload": "dragonfly-operator",
           "kind": "Deployment",
-          "memory": "19Mi",
+          "memory": "20Mi",
           "cpu": "1m"
         }
       ],
@@ -369,11 +373,11 @@
           "version": "v1.7.1"
         }
       ],
-      "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
+      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -399,11 +403,11 @@
           "version": "v1.7.1"
         }
       ],
-      "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
+      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -429,11 +433,11 @@
           "version": "v1.7.1"
         }
       ],
-      "sourceDigest": "h1:+zRSOL7sENNw5nUrmZSX8vqNRm3FY7F64ky3a8lLrJ0=",
+      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     }
   ]
 }

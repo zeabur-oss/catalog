@@ -1,6 +1,6 @@
 {
   "id": "ntfy",
-  "sourceDigest": "h1:UlBTExBoffgyPtESG07SlzePnA9T/Ll2UzLKNq8uj6E=",
+  "sourceDigest": "h1:yOLQxjKCQZs9qTj0RfL+SPDgEwI/YqEOFb9XK4TlVEQ=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -23,6 +23,7 @@
     ],
     "kind": "Template",
     "metadata": {
+      "docs": "https://docs.ntfy.sh/config/",
       "homepage": "https://ntfy.sh/",
       "license": "Apache-2.0 OR GPL-2.0-only",
       "locales": {
@@ -127,7 +128,6 @@
     ],
     "smoke": [
       {
-        "condition": "jsonpath={.status.readyReplicas}=1",
         "http": {
           "contains": "\"healthy\":true",
           "path": "/v1/health",
@@ -140,7 +140,6 @@
         "timeout": "600s"
       },
       {
-        "condition": "jsonpath={.status.readyReplicas}=1",
         "http": {
           "path": "/test/json?poll=1",
           "port": 8080,

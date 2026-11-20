@@ -1,6 +1,6 @@
 {
   "id": "reloader",
-  "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
+  "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -50,7 +50,7 @@
     "releases": [
       {
         "chart": "reloader",
-        "chartDigest": "sha256:5ac13440bd6cceff9464f62e4b836374b88be12076bcd31da34dc9bcd345c0b5",
+        "chartDigest": "sha256:4d7f46ec0fe7357ada046ee65be465f13d12849731ce06d7914b922afacc1fe2",
         "name": "reloader",
         "namespace": "reloader",
         "profiles": {
@@ -60,7 +60,7 @@
         "repo": "https://stakater.github.io/stakater-charts",
         "type": "helm",
         "values": "# Pinned by digest; a tag alone can move.\nimage:\n  repository: ghcr.io/stakater/reloader\n  tag: v1.4.22@sha256:def2480040adc164b3a57340e77674eadfd88fb7f0593df25e93297f29c7fd7c\nreloader:\n  # Only workloads annotated reloader.stakater.com/auto or */reload restart.\n  autoReloadAll: false\n  # Marks the pod template with an annotation instead of adding an\n  # environment variable, which the upstream README prefers for Flux and Argo CD.\n  reloadStrategy: annotations\n  # Leave Jobs alone and never create Jobs from CronJobs; this also drops\n  # the chart's batch RBAC rules.\n  ignoreJobs: true\n  ignoreCronJobs: true\n  # Tenants opt in per workload; a namespace list would differ per cluster.\n  watchGlobally: true\n  deployment:\n    # The namespace enforces Pod Security restricted.\n    containerSecurityContext:\n      allowPrivilegeEscalation: false\n      capabilities: {drop: [ALL]}\n",
-        "version": "2.2.19"
+        "version": "2.2.20"
       }
     ],
     "security": {
@@ -72,16 +72,30 @@
         "manifest": "apiVersion: v1\nkind: ConfigMap\nmetadata: {name: smoke, namespace: catalog-smoke}\ndata: {revision: \"1\"}\n---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: smoke\n  namespace: catalog-smoke\n  annotations: {reloader.stakater.com/auto: \"true\"}\nspec:\n  selector: {matchLabels: {app: smoke}}\n  template:\n    metadata: {labels: {app: smoke}}\n    spec:\n      containers:\n        - name: pause\n          image: registry.k8s.io/pause:3.10\n          envFrom: [{configMapRef: {name: smoke}}]\n",
         "name": "deployment-ready",
         "wait": [
-          "-n catalog-smoke deployment/smoke --for=condition=Available"
+          {
+            "namespace": "catalog-smoke",
+            "resource": "deployment/smoke"
+          }
         ]
       },
       {
         "manifest": "apiVersion: v1\nkind: ConfigMap\nmetadata: {name: smoke, namespace: catalog-smoke}\ndata: {revision: \"2\"}\n",
         "name": "rolls-on-configmap-change",
         "wait": [
-          "-n catalog-smoke deployment/smoke --for=jsonpath={.spec.template.metadata.annotations.reloader\\.stakater\\.com/last-reloaded-from}",
-          "-n catalog-smoke deployment/smoke --for=jsonpath={.metadata.generation}=2",
-          "-n catalog-smoke deployment/smoke --for=condition=Available"
+          {
+            "condition": "jsonpath={.spec.template.metadata.annotations.reloader\\.stakater\\.com/last-reloaded-from}",
+            "namespace": "catalog-smoke",
+            "resource": "deployment/smoke"
+          },
+          {
+            "condition": "jsonpath={.metadata.generation}=2",
+            "namespace": "catalog-smoke",
+            "resource": "deployment/smoke"
+          },
+          {
+            "namespace": "catalog-smoke",
+            "resource": "deployment/smoke"
+          }
         ]
       }
     ]
@@ -161,11 +175,11 @@
       "versions": [
         {
           "release": "reloader",
-          "version": "2.2.19"
+          "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "k3s",
@@ -181,18 +195,18 @@
         {
           "workload": "reloader-reloader",
           "kind": "Deployment",
-          "memory": "14Mi",
+          "memory": "15Mi",
           "cpu": "0"
         }
       ],
       "versions": [
         {
           "release": "reloader",
-          "version": "2.2.19"
+          "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -207,18 +221,18 @@
         {
           "workload": "reloader-reloader",
           "kind": "Deployment",
-          "memory": "10Mi",
+          "memory": "9Mi",
           "cpu": "1m"
         }
       ],
       "versions": [
         {
           "release": "reloader",
-          "version": "2.2.19"
+          "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -233,18 +247,18 @@
         {
           "workload": "reloader-reloader",
           "kind": "Deployment",
-          "memory": "10Mi",
+          "memory": "9Mi",
           "cpu": "1m"
         }
       ],
       "versions": [
         {
           "release": "reloader",
-          "version": "2.2.19"
+          "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -259,18 +273,18 @@
         {
           "workload": "reloader-reloader",
           "kind": "Deployment",
-          "memory": "8Mi",
+          "memory": "9Mi",
           "cpu": "0"
         }
       ],
       "versions": [
         {
           "release": "reloader",
-          "version": "2.2.19"
+          "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -285,18 +299,18 @@
         {
           "workload": "reloader-reloader",
           "kind": "Deployment",
-          "memory": "10Mi",
+          "memory": "9Mi",
           "cpu": "0"
         }
       ],
       "versions": [
         {
           "release": "reloader",
-          "version": "2.2.19"
+          "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
-      "measuredAt": "2026-11-12"
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -312,21 +326,21 @@
         {
           "workload": "reloader-reloader",
           "kind": "Deployment",
-          "memory": "10Mi",
+          "memory": "9Mi",
           "cpu": "0"
         }
       ],
       "versions": [
         {
           "release": "reloader",
-          "version": "2.2.19"
+          "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -342,21 +356,21 @@
         {
           "workload": "reloader-reloader",
           "kind": "Deployment",
-          "memory": "10Mi",
+          "memory": "9Mi",
           "cpu": "0"
         }
       ],
       "versions": [
         {
           "release": "reloader",
-          "version": "2.2.19"
+          "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -379,14 +393,14 @@
       "versions": [
         {
           "release": "reloader",
-          "version": "2.2.19"
+          "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -402,21 +416,21 @@
         {
           "workload": "reloader-reloader",
           "kind": "Deployment",
-          "memory": "17Mi",
+          "memory": "16Mi",
           "cpu": "0"
         }
       ],
       "versions": [
         {
           "release": "reloader",
-          "version": "2.2.19"
+          "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:weX79sDkHlmzvIXizddEYVrskyT8GiLxfzjxicpUVi4=",
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     }
   ]
 }

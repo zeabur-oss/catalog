@@ -229,6 +229,12 @@
           "pattern": "^https?://",
           "format": "uri"
         },
+        "docs": {
+          "type": "string",
+          "pattern": "^https://",
+          "format": "uri",
+          "description": "The upstream docs on how to use the application, not the repository root."
+        },
         "version": {
           "type": "string",
           "description": "The application version: the tag of its main image. Objects get it as the label\napp.kubernetes.io/version."
@@ -242,9 +248,10 @@
         "locales",
         "license",
         "homepage",
+        "docs",
         "version"
       ],
-      "description": "Metadata is a template's name, summary and version."
+      "description": "Metadata is a template's name, summary, version and docs."
     },
     "port": {
       "properties": {
@@ -463,6 +470,25 @@
       ]
     },
     "smoke": {
+      "if": {
+        "properties": {
+          "resource": {
+            "pattern": "^([Dd]aemon[Ss]et|[Dd]eployment|[Ss]tateful[Ss]et)(/|$)"
+          }
+        }
+      },
+      "then": {
+        "not": {
+          "required": [
+            "condition"
+          ]
+        }
+      },
+      "else": {
+        "required": [
+          "condition"
+        ]
+      },
       "properties": {
         "name": {
           "type": "string",
@@ -474,7 +500,8 @@
         },
         "condition": {
           "type": "string",
-          "pattern": "^(condition=[A-Za-z][A-Za-z0-9]*(=(True|False|Unknown))?|jsonpath=.+)$"
+          "pattern": "^(condition=[A-Za-z][A-Za-z0-9]*(=(True|False|Unknown))?|jsonpath=.+)$",
+          "description": "What the object reaches, as a kubectl wait --for value. A deployment, statefulset or daemonset\nhas none: it is ready when its rollout is complete."
         },
         "timeout": {
           "type": "string",
@@ -548,7 +575,6 @@
       "required": [
         "name",
         "resource",
-        "condition",
         "timeout"
       ],
       "description": "Smoke is an e2e check after install."

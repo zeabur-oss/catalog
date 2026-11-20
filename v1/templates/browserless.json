@@ -1,6 +1,6 @@
 {
   "id": "browserless",
-  "sourceDigest": "h1:zQMAApDw/2VLL+JXNmfVqbO9rqEzSAwmna5s2OABrmw=",
+  "sourceDigest": "h1:nxTUnJEWoJ27W22OZluSecRT5R0vyJNq/kgro+6+574=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -23,6 +23,7 @@
     ],
     "kind": "Template",
     "metadata": {
+      "docs": "https://docs.browserless.io/baas/docker/quickstart",
       "homepage": "https://github.com/browserless/browserless",
       "license": "SSPL-1.0 OR LicenseRef-Browserless-Commercial",
       "locales": {
@@ -141,13 +142,11 @@
     ],
     "smoke": [
       {
-        "condition": "condition=Available",
         "name": "browserless-ready",
         "resource": "deployment/browserless",
         "timeout": "300s"
       },
       {
-        "condition": "condition=Available",
         "http": {
           "path": "/pressure",
           "port": 3000,

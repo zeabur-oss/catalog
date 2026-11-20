@@ -1,6 +1,6 @@
 {
   "id": "meilisearch",
-  "sourceDigest": "h1:jcfNKTBoS7QYSG37wLH62UkzJV6Kr4R1rYHPxfY8Ar4=",
+  "sourceDigest": "h1:gizzOjWkLQ2b61MfuBhw0ubEcQzLnDEh5Fx4lvXUpjg=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -23,6 +23,7 @@
     ],
     "kind": "Template",
     "metadata": {
+      "docs": "https://www.meilisearch.com/docs/learn/self_hosted/getting_started_with_self_hosted_meilisearch",
       "homepage": "https://www.meilisearch.com/",
       "license": "MIT",
       "locales": {
@@ -35,7 +36,7 @@
       },
       "name": "Meilisearch",
       "summary": "A fast search engine with a master key and indexes on a volume.",
-      "version": "v1.56.1"
+      "version": "v1.56.2"
     },
     "requires": [
       {
@@ -127,7 +128,6 @@
     ],
     "smoke": [
       {
-        "condition": "jsonpath={.status.readyReplicas}=1",
         "http": {
           "contains": "available",
           "path": "/health",
@@ -140,7 +140,6 @@
         "timeout": "600s"
       },
       {
-        "condition": "jsonpath={.status.readyReplicas}=1",
         "http": {
           "path": "/keys",
           "port": 7700,
@@ -153,5 +152,5 @@
       }
     ]
   },
-  "manifests": "apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: meilisearch-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 20Gi\n---\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: meilisearch\n  namespace: '{{ .Namespace }}'\nspec:\n  serviceName: meilisearch\n  replicas: 1\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: meilisearch\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: meilisearch\n        app.kubernetes.io/name: meilisearch\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: meilisearch\n        image: getmeili/meilisearch:v1.56.1@sha256:b7ba431bf6f9b26cc86132798f3640964147a699cf23f026b74c6c05dbb1d60d\n        ports:\n        - name: http\n          containerPort: 7700\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop: [ALL]\n        resources:\n          requests:\n            cpu: 200m\n            memory: 512Mi\n          limits:\n            cpu: '2'\n            memory: 2Gi\n        env:\n        - name: MEILI_ENV\n          value: production\n        - name: MEILI_MASTER_KEY\n          valueFrom:\n            secretKeyRef:\n              name: meilisearch-secrets\n              key: master-key\n        - name: MEILI_NO_ANALYTICS\n          value: 'true'\n        - name: MEILI_DB_PATH\n          value: /meili_data/data.ms\n        - name: MEILI_DUMP_DIR\n          value: /meili_data/dumps\n        - name: MEILI_SNAPSHOT_DIR\n          value: /meili_data/snapshots\n        - name: MEILI_MAX_INDEXING_MEMORY\n          value: '1073741824'\n        volumeMounts:\n        - name: data\n          mountPath: /meili_data\n        - name: tmp\n          mountPath: /tmp\n        startupProbe:\n          httpGet:\n            path: /health\n            port: http\n          periodSeconds: 5\n          failureThreshold: 120\n        readinessProbe:\n          httpGet:\n            path: /health\n            port: http\n          periodSeconds: 10\n        livenessProbe:\n          httpGet:\n            path: /health\n            port: http\n          periodSeconds: 20\n          failureThreshold: 6\n      volumes:\n      - name: data\n        persistentVolumeClaim:\n          claimName: meilisearch-data\n      - name: tmp\n        emptyDir:\n          sizeLimit: 2Gi\n      terminationGracePeriodSeconds: 60\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: meilisearch\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: meilisearch\n  ports:\n  - name: http\n    port: 7700\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: meilisearch\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts: ['{{ .Domain }}']\n    secretName: meilisearch-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: meilisearch\n            port:\n              number: 7700\n"
+  "manifests": "apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: meilisearch-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 20Gi\n---\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: meilisearch\n  namespace: '{{ .Namespace }}'\nspec:\n  serviceName: meilisearch\n  replicas: 1\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: meilisearch\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: meilisearch\n        app.kubernetes.io/name: meilisearch\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: meilisearch\n        image: getmeili/meilisearch:v1.56.2@sha256:9600db22be3fcbf3d506176d3a73dd70a65c5719d9aa1d2837355b75afb8f4fb\n        ports:\n        - name: http\n          containerPort: 7700\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop: [ALL]\n        resources:\n          requests:\n            cpu: 200m\n            memory: 512Mi\n          limits:\n            cpu: '2'\n            memory: 2Gi\n        env:\n        - name: MEILI_ENV\n          value: production\n        - name: MEILI_MASTER_KEY\n          valueFrom:\n            secretKeyRef:\n              name: meilisearch-secrets\n              key: master-key\n        - name: MEILI_NO_ANALYTICS\n          value: 'true'\n        - name: MEILI_DB_PATH\n          value: /meili_data/data.ms\n        - name: MEILI_DUMP_DIR\n          value: /meili_data/dumps\n        - name: MEILI_SNAPSHOT_DIR\n          value: /meili_data/snapshots\n        - name: MEILI_MAX_INDEXING_MEMORY\n          value: '1073741824'\n        volumeMounts:\n        - name: data\n          mountPath: /meili_data\n        - name: tmp\n          mountPath: /tmp\n        startupProbe:\n          httpGet:\n            path: /health\n            port: http\n          periodSeconds: 5\n          failureThreshold: 120\n        readinessProbe:\n          httpGet:\n            path: /health\n            port: http\n          periodSeconds: 10\n        livenessProbe:\n          httpGet:\n            path: /health\n            port: http\n          periodSeconds: 20\n          failureThreshold: 6\n      volumes:\n      - name: data\n        persistentVolumeClaim:\n          claimName: meilisearch-data\n      - name: tmp\n        emptyDir:\n          sizeLimit: 2Gi\n      terminationGracePeriodSeconds: 60\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: meilisearch\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: meilisearch\n  ports:\n  - name: http\n    port: 7700\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: meilisearch\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts: ['{{ .Domain }}']\n    secretName: meilisearch-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: meilisearch\n            port:\n              number: 7700\n"
 }

@@ -1,6 +1,6 @@
 {
   "id": "vaultwarden",
-  "sourceDigest": "h1:ey1+aG8LRNcO96EQxRJ6SnFPk9kGGnWx2KhrDcQF/dw=",
+  "sourceDigest": "h1:EMWUjaWRSlFs6FkvuDiyp2CRa1Tph6W4vx4invRUEz8=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -23,6 +23,7 @@
     ],
     "kind": "Template",
     "metadata": {
+      "docs": "https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page",
       "homepage": "https://github.com/dani-garcia/vaultwarden",
       "license": "AGPL-3.0-only AND GPL-3.0-only",
       "locales": {
@@ -155,7 +156,6 @@
     ],
     "smoke": [
       {
-        "condition": "jsonpath={.status.readyReplicas}=1",
         "http": {
           "contains": "Vaultwarden",
           "path": "/api/config",
@@ -168,7 +168,6 @@
         "timeout": "600s"
       },
       {
-        "condition": "jsonpath={.status.readyReplicas}=1",
         "http": {
           "path": "/api/accounts/profile",
           "port": 8080,

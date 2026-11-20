@@ -1,6 +1,6 @@
 {
   "id": "new-api",
-  "sourceDigest": "h1:gCNp7dz/hQHKJZfY8WJP/V1WlTwjke3mHSHU+awbC8A=",
+  "sourceDigest": "h1:zBf/6eTyo23RRJYdl1FTtAM0Fs2BBEQL9MmZTvikISQ=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -55,6 +55,7 @@
     ],
     "kind": "Template",
     "metadata": {
+      "docs": "https://docs.newapi.ai/en/docs/installation/deployment-methods/docker-compose-installation",
       "homepage": "https://github.com/QuantumNous/new-api",
       "license": "AGPL-3.0-only AND PostgreSQL AND Apache-2.0",
       "locales": {
@@ -182,7 +183,6 @@
     ],
     "smoke": [
       {
-        "condition": "condition=Available",
         "name": "workload-ready",
         "resource": "deployment/new-api",
         "timeout": "900s"

@@ -1,6 +1,6 @@
 {
   "id": "lobechat",
-  "sourceDigest": "h1:FINp6qJvqzij5SlUidPC/TTnrVQFvG7sxg3BT/TJfag=",
+  "sourceDigest": "h1:GDRO7oMuDplsrSlvxcY7TyCC5prOu7FaDcEu2K8VU+0=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -42,6 +42,7 @@
     ],
     "kind": "Template",
     "metadata": {
+      "docs": "https://github.com/lobehub/lobe-chat/blob/v1.143.3/docs/self-hosting/environment-variables/basic.mdx",
       "homepage": "https://github.com/lobehub/lobe-chat",
       "license": "LicenseRef-LobeHub-Community",
       "locales": {
@@ -132,7 +133,6 @@
     ],
     "smoke": [
       {
-        "condition": "condition=Available",
         "name": "Application available",
         "resource": "deployment/lobechat",
         "timeout": "10m"

@@ -1,6 +1,6 @@
 {
   "id": "memos",
-  "sourceDigest": "h1:MXKE83llG/8VmruWQa3uKOZqvpeUlQGWa1CPqa56vHY=",
+  "sourceDigest": "h1:qwqajGrIsVCrAJ8bqeTI7wV3bneX4nR0JATC9yqMWQE=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -23,6 +23,7 @@
     ],
     "kind": "Template",
     "metadata": {
+      "docs": "https://usememos.com/docs/configuration/declarative-configuration",
       "homepage": "https://usememos.com/",
       "license": "MIT",
       "locales": {
@@ -127,7 +128,6 @@
     ],
     "smoke": [
       {
-        "condition": "jsonpath={.status.readyReplicas}=1",
         "http": {
           "path": "/healthz",
           "port": 5230,
@@ -139,7 +139,6 @@
         "timeout": "600s"
       },
       {
-        "condition": "jsonpath={.status.readyReplicas}=1",
         "http": {
           "contains": "\"needsSetup\":false",
           "path": "/api/instance/profile",

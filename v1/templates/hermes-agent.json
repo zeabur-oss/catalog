@@ -1,6 +1,6 @@
 {
   "id": "hermes-agent",
-  "sourceDigest": "h1:OfEER9hGcps//6avwav/+7HaX7+wbeJxZPmFyrng1Js=",
+  "sourceDigest": "h1:iO1cEZmUN7Bp/XyJJ5OBvQRzFeIBzqd3eIJ2joymZb8=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -132,6 +132,7 @@
     ],
     "kind": "Template",
     "metadata": {
+      "docs": "https://hermes-agent.nousresearch.com/docs/user-guide/features/web-dashboard",
       "homepage": "https://github.com/NousResearch/hermes-agent",
       "license": "MIT",
       "locales": {
@@ -255,7 +256,6 @@
     ],
     "smoke": [
       {
-        "condition": "condition=Available",
         "http": {
           "path": "/health",
           "port": 5000,

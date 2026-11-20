@@ -149,12 +149,12 @@
       ],
       "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
-        "victoria-metrics": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
+        "victoria-metrics": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "k3s",
@@ -182,12 +182,12 @@
       ],
       "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
-        "victoria-metrics": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
+        "victoria-metrics": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -214,12 +214,12 @@
       ],
       "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
-        "victoria-metrics": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
+        "victoria-metrics": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -246,12 +246,12 @@
       ],
       "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
-        "victoria-metrics": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
+        "victoria-metrics": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -278,12 +278,12 @@
       ],
       "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
-        "victoria-metrics": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
+        "victoria-metrics": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -310,12 +310,12 @@
       ],
       "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
-        "victoria-metrics": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
+        "victoria-metrics": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -343,15 +343,15 @@
       ],
       "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
-        "victoria-metrics": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
+        "victoria-metrics": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -379,15 +379,15 @@
       ],
       "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
-        "victoria-metrics": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
+        "victoria-metrics": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -415,15 +415,15 @@
       ],
       "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
-        "victoria-metrics": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
+        "victoria-metrics": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -451,15 +451,15 @@
       ],
       "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk=",
-        "victoria-metrics": "h1:dzNWeoZUuF997sBDay16MuEjR3NTDDfCaWIY/14i+Jg=",
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
+        "victoria-metrics": "h1:7i46XbV9CLijUw6+d/+m0Jy7Wd5YbKCumb/Wrigmhgk=",
         "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     }
   ]
 }

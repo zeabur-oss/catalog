@@ -1,6 +1,6 @@
 {
   "id": "seaweedfs-operator",
-  "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+  "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -55,7 +55,7 @@
     "releases": [
       {
         "chart": "seaweedfs-operator",
-        "chartDigest": "sha256:713909bbe0ea6d7afb9790ca353d9cca25186d54d3fada20b9b7a0da6adbae64",
+        "chartDigest": "sha256:fe16b903e5a06f8d9fba6a7822362fc0bb1262e641c284453a5747126fd22815",
         "name": "seaweedfs-operator",
         "namespace": "seaweedfs-operator",
         "profiles": {
@@ -64,8 +64,8 @@
         },
         "repo": "https://seaweedfs.github.io/seaweedfs-operator/",
         "type": "helm",
-        "values": "# Pinned by digest; a tag alone can move. An empty registry lets\n# repository hold the full name, which Renovate looks up.\nimage:\n  registry: \"\"\n  repository: chrislusf/seaweedfs-operator\n  tag: 1.0.43@sha256:d17e9a623d9e19812e1533c9ab63bb1535bd21a50367c6e9e6830f14a52610d9\nwebhook:\n  certManager:\n    # cert-manager issues the webhook certificate instead of the chart's\n    # certgen hook Job.\n    enabled: true\n  # Restricted Pod Security; the chart's default.\n  podSecurityContext:\n    runAsNonRoot: true\n    runAsUser: 65532\n    fsGroup: 65532\n    seccompProfile: {type: RuntimeDefault}\ngrafanaDashboard:\n  # On by default; no Grafana assumed.\n  enabled: false\n# Restricted Pod Security; the chart leaves out the seccomp profile.\npodSecurityContext:\n  runAsNonRoot: true\n  runAsUser: 65532\n  fsGroup: 65532\n  seccompProfile: {type: RuntimeDefault}\n",
-        "version": "0.1.46"
+        "values": "# Pinned by digest; a tag alone can move. An empty registry lets\n# repository hold the full name, which Renovate looks up.\nimage:\n  registry: \"\"\n  repository: chrislusf/seaweedfs-operator\n  tag: 1.0.44@sha256:c5614e3ddff68a4b7a82defa6bf56536f2ff3f320185b07c86e2b869072ba829\nwebhook:\n  certManager:\n    # cert-manager issues the webhook certificate instead of the chart's\n    # certgen hook Job.\n    enabled: true\n  # Restricted Pod Security; the chart's default.\n  podSecurityContext:\n    runAsNonRoot: true\n    runAsUser: 65532\n    fsGroup: 65532\n    seccompProfile: {type: RuntimeDefault}\ngrafanaDashboard:\n  # On by default; no Grafana assumed.\n  enabled: false\n# Restricted Pod Security; the chart leaves out the seccomp profile.\npodSecurityContext:\n  runAsNonRoot: true\n  runAsUser: 65532\n  fsGroup: 65532\n  seccompProfile: {type: RuntimeDefault}\n",
+        "version": "0.1.47"
       }
     ],
     "requires": [
@@ -79,12 +79,14 @@
     },
     "smoke": [
       {
-        "manifest": "# Proves SeaweedFS runs under restricted Pod Security.\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: catalog-smoke\n  labels: {pod-security.kubernetes.io/enforce: restricted}\n---\napiVersion: seaweed.seaweedfs.com/v1\nkind: Seaweed\nmetadata: {name: smoke, namespace: catalog-smoke}\nspec:\n  image: chrislusf/seaweedfs:4.52\n  volumeServerDiskCount: 1\n  master:\n    replicas: 1\n    podSecurityContext: \u0026pod\n      runAsNonRoot: true\n      runAsUser: 1000\n      runAsGroup: 1000\n      fsGroup: 1000\n      seccompProfile: {type: RuntimeDefault}\n    containerSecurityContext: \u0026container\n      allowPrivilegeEscalation: false\n      capabilities: {drop: [ALL]}\n  volume:\n    replicas: 1\n    requests: {storage: 1Gi}\n    podSecurityContext: *pod\n    containerSecurityContext: *container\n  filer:\n    replicas: 1\n    podSecurityContext: *pod\n    containerSecurityContext: *container\n  s3:\n    replicas: 1\n    podSecurityContext: *pod\n    containerSecurityContext: *container\n",
+        "manifest": "# Proves SeaweedFS runs under restricted Pod Security.\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: catalog-smoke\n  labels: {pod-security.kubernetes.io/enforce: restricted}\n---\napiVersion: seaweed.seaweedfs.com/v1\nkind: Seaweed\nmetadata: {name: smoke, namespace: catalog-smoke}\nspec:\n  image: chrislusf/seaweedfs:4.53\n  volumeServerDiskCount: 1\n  master:\n    replicas: 1\n    podSecurityContext: \u0026pod\n      runAsNonRoot: true\n      runAsUser: 1000\n      runAsGroup: 1000\n      fsGroup: 1000\n      seccompProfile: {type: RuntimeDefault}\n    containerSecurityContext: \u0026container\n      allowPrivilegeEscalation: false\n      capabilities: {drop: [ALL]}\n  volume:\n    replicas: 1\n    requests: {storage: 1Gi}\n    podSecurityContext: *pod\n    containerSecurityContext: *container\n  filer:\n    replicas: 1\n    podSecurityContext: *pod\n    containerSecurityContext: *container\n  s3:\n    replicas: 1\n    podSecurityContext: *pod\n    containerSecurityContext: *container\n",
         "name": "one-node-s3",
         "timeout": "600s",
         "wait": [
-          "-n catalog-smoke deployment/smoke-s3 --for=create",
-          "-n catalog-smoke deployment/smoke-s3 --for=condition=Available"
+          {
+            "namespace": "catalog-smoke",
+            "resource": "deployment/smoke-s3"
+          }
         ]
       }
     ]
@@ -166,15 +168,15 @@
       "versions": [
         {
           "release": "seaweedfs-operator",
-          "version": "0.1.46"
+          "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "k3s",
@@ -190,22 +192,22 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "28Mi",
+          "memory": "27Mi",
           "cpu": "1m"
         }
       ],
       "versions": [
         {
           "release": "seaweedfs-operator",
-          "version": "0.1.46"
+          "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -227,15 +229,15 @@
       "versions": [
         {
           "release": "seaweedfs-operator",
-          "version": "0.1.46"
+          "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -243,6 +245,36 @@
       "platform": {
         "os": "linux",
         "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "26Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.47"
+        }
+      ],
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
+      "dependencies": {
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+      },
+      "measuredAt": "2026-11-19"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
       },
       "kubernetesVersion": "v1.37.0",
       "result": "passed",
@@ -257,45 +289,15 @@
       "versions": [
         {
           "release": "seaweedfs-operator",
-          "version": "0.1.46"
+          "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-12"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "seaweedfs-operator",
-          "kind": "Deployment",
-          "memory": "26Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "seaweedfs-operator",
-          "version": "0.1.46"
-        }
-      ],
-      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
-      "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
-      },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -317,15 +319,15 @@
       "versions": [
         {
           "release": "seaweedfs-operator",
-          "version": "0.1.46"
+          "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -341,25 +343,25 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "24Mi",
-          "cpu": "1m"
+          "memory": "27Mi",
+          "cpu": "2m"
         }
       ],
       "versions": [
         {
           "release": "seaweedfs-operator",
-          "version": "0.1.46"
+          "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -375,25 +377,25 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "24Mi",
+          "memory": "23Mi",
           "cpu": "1m"
         }
       ],
       "versions": [
         {
           "release": "seaweedfs-operator",
-          "version": "0.1.46"
+          "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -401,6 +403,40 @@
       "platform": {
         "os": "linux",
         "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "28Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.47"
+        }
+      ],
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
+      "dependencies": {
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+      },
+      "addOns": {
+        "local-path-provisioner": "v0.0.37"
+      },
+      "measuredAt": "2026-11-19"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
       },
       "kubernetesVersion": "v1.37.2",
       "distributionVersion": "v1.37.2+rke2r1",
@@ -416,52 +452,18 @@
       "versions": [
         {
           "release": "seaweedfs-operator",
-          "version": "0.1.46"
+          "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
-    },
-    {
-      "distribution": "rke2",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.37.2",
-      "distributionVersion": "v1.37.2+rke2r1",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "seaweedfs-operator",
-          "kind": "Deployment",
-          "memory": "28Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "seaweedfs-operator",
-          "version": "0.1.46"
-        }
-      ],
-      "sourceDigest": "h1:VGIsKPZiWyJ8xq0vYdG/DywtdpT7R8R7qGIWtnzz3os=",
-      "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
-      },
-      "addOns": {
-        "local-path-provisioner": "v0.0.37"
-      },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     }
   ]
 }

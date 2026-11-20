@@ -1,6 +1,6 @@
 {
   "id": "sillytavern",
-  "sourceDigest": "h1:EUdS+TvH7ULnuqVriwI13+i6OjXqtKT1EWxraQoyRsQ=",
+  "sourceDigest": "h1:WWGtD6j6ZiXA34gYUSUJOJvc7nlnPrFwO27yckZZ/70=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -23,6 +23,7 @@
     ],
     "kind": "Template",
     "metadata": {
+      "docs": "https://docs.sillytavern.app/usage/quick-start/",
       "homepage": "https://github.com/SillyTavern/SillyTavern",
       "license": "AGPL-3.0-only",
       "locales": {
@@ -113,7 +114,6 @@
     ],
     "smoke": [
       {
-        "condition": "condition=Available",
         "http": {
           "path": "/",
           "port": 8000,

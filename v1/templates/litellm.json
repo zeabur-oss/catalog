@@ -1,6 +1,6 @@
 {
   "id": "litellm",
-  "sourceDigest": "h1:na8IJpVmi3wzd/mfWGh9sLozjljx6QTbp+3nm7TG64w=",
+  "sourceDigest": "h1:rcgfGzSZz0FswE995RkKa0PzW2h1iYjS39kIz4P5fs4=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -39,6 +39,7 @@
     ],
     "kind": "Template",
     "metadata": {
+      "docs": "https://docs.litellm.ai/docs/proxy/ui",
       "homepage": "https://www.litellm.ai/",
       "license": "MIT AND LicenseRef-LiteLLM-Enterprise AND PostgreSQL AND Apache-2.0",
       "locales": {
@@ -172,7 +173,6 @@
         "timeout": "900s"
       },
       {
-        "condition": "condition=Available",
         "http": {
           "contains": "connected",
           "path": "/health/readiness",
@@ -185,7 +185,6 @@
         "timeout": "900s"
       },
       {
-        "condition": "condition=Available",
         "http": {
           "path": "/key/list",
           "port": 4000,

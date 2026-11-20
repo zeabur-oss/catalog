@@ -1,10 +1,11 @@
 {
   "id": "postgresql-pgvector",
-  "sourceDigest": "h1:vS4WSJf/6SPbGwa0g+gCm+mdsufnap22jFxd9ADBiSQ=",
+  "sourceDigest": "h1:wfaGhFQxpHahDsJB9A8bZAfSBqqCmLr9xQ38KA+dszc=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "kind": "Template",
     "metadata": {
+      "docs": "https://github.com/pgvector/pgvector#getting-started",
       "homepage": "https://github.com/pgvector/pgvector",
       "license": "PostgreSQL AND Apache-2.0",
       "locales": {

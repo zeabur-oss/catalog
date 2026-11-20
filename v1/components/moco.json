@@ -1,6 +1,6 @@
 {
   "id": "moco",
-  "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
+  "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -83,7 +83,11 @@
         "name": "one-instance",
         "timeout": "600s",
         "wait": [
-          "-n catalog-smoke mysqlcluster/smoke --for=condition=Healthy"
+          {
+            "condition": "condition=Healthy",
+            "namespace": "catalog-smoke",
+            "resource": "mysqlcluster/smoke"
+          }
         ]
       }
     ]
@@ -166,12 +170,12 @@
           "version": "0.28.0"
         }
       ],
-      "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
+      "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "k3s",
@@ -187,7 +191,7 @@
         {
           "workload": "moco-controller",
           "kind": "Deployment",
-          "memory": "20Mi",
+          "memory": "21Mi",
           "cpu": "1m"
         }
       ],
@@ -197,12 +201,12 @@
           "version": "0.28.0"
         }
       ],
-      "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
+      "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -227,12 +231,12 @@
           "version": "0.28.0"
         }
       ],
-      "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
+      "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -257,12 +261,12 @@
           "version": "0.28.0"
         }
       ],
-      "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
+      "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -287,12 +291,12 @@
           "version": "0.28.0"
         }
       ],
-      "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
+      "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -317,12 +321,12 @@
           "version": "0.28.0"
         }
       ],
-      "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
+      "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -330,40 +334,6 @@
       "platform": {
         "os": "linux",
         "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.6",
-      "distributionVersion": "v1.3.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "moco-controller",
-          "kind": "Deployment",
-          "memory": "19Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "moco",
-          "version": "0.28.0"
-        }
-      ],
-      "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
-      "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
-      },
-      "addOns": {
-        "helm-controller": "v0.17.9"
-      },
-      "measuredAt": "2026-11-12"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
       },
       "kubernetesVersion": "v1.36.6",
       "distributionVersion": "v1.3.0",
@@ -382,15 +352,49 @@
           "version": "0.28.0"
         }
       ],
-      "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
+      "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "moco-controller",
+          "kind": "Deployment",
+          "memory": "18Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "moco",
+          "version": "0.28.0"
+        }
+      ],
+      "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4=",
+      "dependencies": {
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+      },
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -416,15 +420,15 @@
           "version": "0.28.0"
         }
       ],
-      "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
+      "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -440,7 +444,7 @@
         {
           "workload": "moco-controller",
           "kind": "Deployment",
-          "memory": "24Mi",
+          "memory": "23Mi",
           "cpu": "1m"
         }
       ],
@@ -450,15 +454,15 @@
           "version": "0.28.0"
         }
       ],
-      "sourceDigest": "h1:lSDBRJJvPZRZQOUqYiGR3XBPb2H0VToxJYZKttPcahY=",
+      "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4=",
       "dependencies": {
-        "cert-manager": "h1:w94jTQBx7HiT9H6Ej7rgk61WgdTJLM+URsT9tn59m4I=",
-        "traefik": "h1:+8iwlP8LmLeCUMGNTldXjp+XugWenxgqsasxzYs0fxk="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-12"
+      "measuredAt": "2026-11-19"
     }
   ]
 }
