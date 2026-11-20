@@ -5,14 +5,14 @@ metadata:
   # renovate: depName=docker.io/calciumion/new-api
   version: "v1.0.0-rc.46"
   summary: An OpenAI-compatible model gateway with PostgreSQL and an owner account ready.
-  firstUse: "After deploy, open https://<your domain> and sign in as admin. The password is Aa1- followed by the value of Secret newapi-secrets, key admin-password. The template finishes the first-time setup for you, so no setup page appears. Then add your model providers."
+  readme: "After deploy, open https://<your domain> and sign in as admin. The password is Aa1- followed by the value of Secret newapi-secrets, key admin-password. The template finishes the first-time setup for you, so no setup page appears. Then add your model providers."
   locales:
     zh-TW:
       summary: "相容 OpenAI 的模型閘道，搭配 PostgreSQL，並先建好擁有者帳號。"
-      firstUse: "部署後開啟 https://<你的網域>，用帳號 admin 登入。密碼是 Aa1- 加上 Secret newapi-secrets 裡 admin-password 的值。範本已經替你完成初始設定，不會出現設定頁面。接著新增你的模型服務商。"
+      readme: "部署後開啟 https://<你的網域>，用帳號 admin 登入。密碼是 Aa1- 加上 Secret newapi-secrets 裡 admin-password 的值。範本已經替你完成初始設定，不會出現設定頁面。接著新增你的模型服務商。"
     zh-CN:
       summary: "兼容 OpenAI 的模型网关，搭配 PostgreSQL，并预先建好所有者账号。"
-      firstUse: "部署后打开 https://<你的域名>，用账号 admin 登录。密码是 Aa1- 加上 Secret newapi-secrets 里 admin-password 的值。模板已经替你完成初始设置，不会出现设置页面。接着添加你的模型服务商。"
+      readme: "部署后打开 https://<你的域名>，用账号 admin 登录。密码是 Aa1- 加上 Secret newapi-secrets 里 admin-password 的值。模板已经替你完成初始设置，不会出现设置页面。接着添加你的模型服务商。"
   license: AGPL-3.0-only AND PostgreSQL AND Apache-2.0
   # Also: https://docs.newapi.pro/
   homepage: https://github.com/QuantumNous/new-api

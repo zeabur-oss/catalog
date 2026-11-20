@@ -5,14 +5,14 @@ metadata:
   # renovate: depName=miniflux/miniflux
   version: "2.3.5"
   summary: A feed reader, with PostgreSQL.
-  firstUse: "After deploy, open https://<your domain> and sign in as admin with the password from Secret miniflux-secrets, key admin-password. Then add your first feed. You can change the password in Miniflux; the Secret is not applied again."
+  readme: "After deploy, open https://<your domain> and sign in as admin with the password from Secret miniflux-secrets, key admin-password. Then add your first feed. You can change the password in Miniflux; the Secret is not applied again."
   locales:
     zh-TW:
       summary: "RSS 閱讀器，搭配 PostgreSQL。"
-      firstUse: "部署後開啟 https://<你的網域>，用帳號 admin 和 Secret miniflux-secrets 裡 admin-password 的密碼登入，再新增第一個訂閱來源。登入後可以自己改密碼，Secret 不會再次套用。"
+      readme: "部署後開啟 https://<你的網域>，用帳號 admin 和 Secret miniflux-secrets 裡 admin-password 的密碼登入，再新增第一個訂閱來源。登入後可以自己改密碼，Secret 不會再次套用。"
     zh-CN:
       summary: "RSS 阅读器，搭配 PostgreSQL。"
-      firstUse: "部署后打开 https://<你的域名>，用账号 admin 和 Secret miniflux-secrets 里 admin-password 的密码登录，再添加第一个订阅源。登录后可以自己改密码，Secret 不会再次应用。"
+      readme: "部署后打开 https://<你的域名>，用账号 admin 和 Secret miniflux-secrets 里 admin-password 的密码登录，再添加第一个订阅源。登录后可以自己改密码，Secret 不会再次应用。"
   license: Apache-2.0 AND PostgreSQL
   # Also: https://cloudnative-pg.io/
   homepage: https://miniflux.app/

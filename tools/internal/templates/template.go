@@ -59,7 +59,7 @@ type Metadata struct {
 	Docs string `yaml:"docs" json:"docs" jsonschema:"required,format=uri,pattern=^https://"`
 	// One short paragraph for the person who just deployed: what they get, where to open it, how
 	// the first person signs in and which Secret holds each generated value.
-	FirstUse string `yaml:"firstUse" json:"firstUse" jsonschema:"required"`
+	Readme string `yaml:"readme" json:"readme" jsonschema:"required"`
 	// The application version: the tag of its main image. Objects get it as the label
 	// app.kubernetes.io/version.
 	Version string `yaml:"version" json:"version" jsonschema:"required"`
@@ -70,35 +70,35 @@ func (Metadata) JSONSchemaExtend(s *gen.Schema) {
 	nonEmpty(s, "license", "SPDX expression for the application, its images and charts.")
 	summary, _ := s.Properties.Get("summary")
 	summary.Description = "What the application is, in one plain sentence for people choosing a template."
-	firstUse, _ := s.Properties.Get("firstUse")
-	firstUseText(firstUse)
+	readme, _ := s.Properties.Get("readme")
+	readmeText(readme)
 }
 
-// firstUseMax is the most characters a firstUse paragraph has, in any language.
-const firstUseMax = 600
+// readmeMax is the most characters a readme paragraph has, in any language.
+const readmeMax = 600
 
-// firstUseText makes s one paragraph of at most firstUseMax characters.
-func firstUseText(s *gen.Schema) {
+// readmeText makes s one paragraph of at most readmeMax characters.
+func readmeText(s *gen.Schema) {
 	s.MinLength = new(uint64(1))
-	s.MaxLength = new(uint64(firstUseMax))
+	s.MaxLength = new(uint64(readmeMax))
 	s.Pattern = `^[^\n]+$`
 }
 
-// MetadataLocales is the summary and first use in other languages, by BCP 47 tag.
+// MetadataLocales is the summary and readme in other languages, by BCP 47 tag.
 // config/locales.yaml lists the tags each needs.
 type MetadataLocales map[catalog.Locale]MetadataLocale
 
 func (MetadataLocales) JSONSchemaExtend(s *gen.Schema) { catalog.LocaleKeys(s) }
 
-// MetadataLocale is the summary and first use in one language.
+// MetadataLocale is the summary and readme in one language.
 type MetadataLocale struct {
-	Summary  string `yaml:"summary" json:"summary" jsonschema:"required,pattern=^[^\\n]+$"`
-	FirstUse string `yaml:"firstUse" json:"firstUse" jsonschema:"required"`
+	Summary string `yaml:"summary" json:"summary" jsonschema:"required,pattern=^[^\\n]+$"`
+	Readme  string `yaml:"readme" json:"readme" jsonschema:"required"`
 }
 
 func (MetadataLocale) JSONSchemaExtend(s *gen.Schema) {
-	firstUse, _ := s.Properties.Get("firstUse")
-	firstUseText(firstUse)
+	readme, _ := s.Properties.Get("readme")
+	readmeText(readme)
 }
 
 // nonEmpty makes property name a string of at least one character.
@@ -342,12 +342,12 @@ func Check(root string, cat *catalog.Catalog, all []*Template) error {
 	return errors.Join(errs...)
 }
 
-// unnamedSecrets returns a problem for each firstUse text that does not name the Secret of a
+// unnamedSecrets returns a problem for each readme text that does not name the Secret of a
 // generated input, so people know where to read the value.
 func unnamedSecrets(t *Template) []string {
-	texts := map[string]string{"metadata.firstUse": t.Metadata.FirstUse}
+	texts := map[string]string{"metadata.readme": t.Metadata.Readme}
 	for lang, l := range t.Metadata.Locales {
-		texts["metadata.locales."+string(lang)+".firstUse"] = l.FirstUse
+		texts["metadata.locales."+string(lang)+".readme"] = l.Readme
 	}
 	var out []string
 	for _, in := range t.Inputs {

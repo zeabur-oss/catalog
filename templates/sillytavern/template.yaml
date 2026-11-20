@@ -5,14 +5,14 @@ metadata:
   # renovate: depName=ghcr.io/sillytavern/sillytavern
   version: "1.19.0"
   summary: An LLM chat frontend behind a password, with conversations kept on a volume.
-  firstUse: "SillyTavern is a chat front end for language models. Open https://<your domain>. The browser asks for a Basic auth login: user name user, password from Secret app-secrets, key basic-password. There are no separate user accounts. After you sign in, add your model API connection in the app."
+  readme: "SillyTavern is a chat front end for language models. Open https://<your domain>. The browser asks for a Basic auth login: user name user, password from Secret app-secrets, key basic-password. There are no separate user accounts. After you sign in, add your model API connection in the app."
   locales:
     zh-TW:
       summary: "用密碼保護的 LLM 聊天前端，對話存在磁碟區。"
-      firstUse: "SillyTavern 是語言模型的聊天前端。開啟 https://<你的網域>，瀏覽器會跳出 Basic auth 登入視窗，使用者名稱是 user，密碼在機密 app-secrets 的 basic-password 鍵。沒有另外的使用者帳號。登入後，在應用程式裡設定你的模型 API 連線。"
+      readme: "SillyTavern 是語言模型的聊天前端。開啟 https://<你的網域>，瀏覽器會跳出 Basic auth 登入視窗，使用者名稱是 user，密碼在機密 app-secrets 的 basic-password 鍵。沒有另外的使用者帳號。登入後，在應用程式裡設定你的模型 API 連線。"
     zh-CN:
       summary: "用密码保护的 LLM 聊天前端，对话存在卷上。"
-      firstUse: "SillyTavern 是语言模型的聊天前端。打开 https://<你的域名>，浏览器会弹出 Basic auth 登录窗口，用户名是 user，密码在机密 app-secrets 的 basic-password 键。没有另外的用户账号。登录后，在应用里配置你的模型 API 连接。"
+      readme: "SillyTavern 是语言模型的聊天前端。打开 https://<你的域名>，浏览器会弹出 Basic auth 登录窗口，用户名是 user，密码在机密 app-secrets 的 basic-password 键。没有另外的用户账号。登录后，在应用里配置你的模型 API 连接。"
   license: AGPL-3.0-only
   homepage: https://github.com/SillyTavern/SillyTavern
   docs: https://docs.sillytavern.app/usage/quick-start/

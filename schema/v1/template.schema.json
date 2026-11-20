@@ -236,7 +236,7 @@
           "format": "uri",
           "description": "The upstream docs on how to use the application, not the repository root."
         },
-        "firstUse": {
+        "readme": {
           "type": "string",
           "maxLength": 600,
           "minLength": 1,
@@ -257,7 +257,7 @@
         "license",
         "homepage",
         "docs",
-        "firstUse",
+        "readme",
         "version"
       ],
       "description": "Metadata is a template's name, summary, version and how to start using it."
@@ -268,7 +268,7 @@
           "type": "string",
           "pattern": "^[^\\n]+$"
         },
-        "firstUse": {
+        "readme": {
           "type": "string",
           "maxLength": 600,
           "minLength": 1,
@@ -279,9 +279,9 @@
       "type": "object",
       "required": [
         "summary",
-        "firstUse"
+        "readme"
       ],
-      "description": "MetadataLocale is the summary and first use in one language."
+      "description": "MetadataLocale is the summary and readme in one language."
     },
     "metadataLocales": {
       "additionalProperties": {
@@ -292,7 +292,7 @@
         "pattern": "^([a-z]{2,3}(-[a-z]{3}){0,3}|[a-z]{4,8})(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?(-([a-z0-9]{5,8}|[0-9][a-z0-9]{3}))*(-[a-wyz0-9](-[a-z0-9]{2,8})+)*(-x(-[a-z0-9]{1,8})+)?$"
       },
       "type": "object",
-      "description": "MetadataLocales is the summary and first use in other languages, by BCP 47 tag.\nconfig/locales.yaml lists the tags each needs."
+      "description": "MetadataLocales is the summary and readme in other languages, by BCP 47 tag.\nconfig/locales.yaml lists the tags each needs."
     },
     "port": {
       "properties": {

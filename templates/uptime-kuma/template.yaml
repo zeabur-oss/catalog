@@ -5,14 +5,14 @@ metadata:
   # renovate: depName=louislam/uptime-kuma
   version: "2.5.11-rootless"
   summary: Uptime monitoring, with its data on a volume.
-  firstUse: "Uptime Kuma is a monitoring dashboard with status pages. Open https://<your domain> right after the deploy. The first visitor sees the setup page and creates the owner account, so do it before anyone else does. There is no generated password and no Secret. After that, add your first monitor."
+  readme: "Uptime Kuma is a monitoring dashboard with status pages. Open https://<your domain> right after the deploy. The first visitor sees the setup page and creates the owner account, so do it before anyone else does. There is no generated password and no Secret. After that, add your first monitor."
   locales:
     zh-TW:
       summary: "監控服務是否正常上線，資料存在磁碟區。"
-      firstUse: "Uptime Kuma 是附狀態頁面的監控儀表板。部署完成後馬上開啟 https://<你的網域>。第一個進來的人會看到設定頁面並建立擁有者帳號，請搶在別人之前完成。這裡沒有自動產生的密碼，也沒有機密。完成後，新增你的第一個監控項目。"
+      readme: "Uptime Kuma 是附狀態頁面的監控儀表板。部署完成後馬上開啟 https://<你的網域>。第一個進來的人會看到設定頁面並建立擁有者帳號，請搶在別人之前完成。這裡沒有自動產生的密碼，也沒有機密。完成後，新增你的第一個監控項目。"
     zh-CN:
       summary: "监控服务是否正常在线，数据存在卷上。"
-      firstUse: "Uptime Kuma 是带状态页面的监控仪表盘。部署完成后马上打开 https://<你的域名>。第一个进来的人会看到设置页面并创建所有者账号，请抢在别人之前完成。这里没有自动生成的密码，也没有机密。完成后，添加你的第一个监控项。"
+      readme: "Uptime Kuma 是带状态页面的监控仪表盘。部署完成后马上打开 https://<你的域名>。第一个进来的人会看到设置页面并创建所有者账号，请抢在别人之前完成。这里没有自动生成的密码，也没有机密。完成后，添加你的第一个监控项。"
   license: MIT
   homepage: https://github.com/louislam/uptime-kuma
   docs: https://uptime.kuma.pet/docs/How-to-Install

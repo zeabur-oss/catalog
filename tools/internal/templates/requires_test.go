@@ -45,7 +45,7 @@ func TestRequiresCertificatesByComponentOrCapability(t *testing.T) {
 	}
 }
 
-func TestFirstUseNamesTheSecretOfEachGeneratedInput(t *testing.T) {
+func TestReadmeNamesTheSecretOfEachGeneratedInput(t *testing.T) {
 	const root = "../../.."
 	cat, err := catalog.Load(root)
 	if err != nil {
@@ -63,10 +63,10 @@ func TestFirstUseNamesTheSecretOfEachGeneratedInput(t *testing.T) {
 		t.Fatalf("as written: %v", err)
 	}
 	l := tmpl.Metadata.Locales["zh-TW"]
-	l.FirstUse = "部署後就能使用。"
+	l.Readme = "部署後就能使用。"
 	tmpl.Metadata.Locales["zh-TW"] = l
 	err = templates.Check(root, cat, []*templates.Template{tmpl})
-	if err == nil || !strings.Contains(err.Error(), "metadata.locales.zh-TW.firstUse does not name Secret browserless-secrets") {
+	if err == nil || !strings.Contains(err.Error(), "metadata.locales.zh-TW.readme does not name Secret browserless-secrets") {
 		t.Errorf("got %v", err)
 	}
 }

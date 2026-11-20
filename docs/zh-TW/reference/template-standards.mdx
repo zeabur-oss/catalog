@@ -9,7 +9,7 @@ Zeabur Catalog 的每個範本都必須符合以下規則。新增或修改範�
 
 - `metadata` 必須列出應用程式名稱、授權、首頁與 `docs`。`docs` 是上游使用說明的 https 連結，不是原始碼儲存庫。
 - `metadata.summary` 用一句白話說明這是什麼應用程式，給挑選範本的人看。`zh-TW` 與 `zh-CN` 的摘要寫在 `metadata.locales`。
-- `metadata.firstUse` 是寫給剛部署完的人看的一小段話，最多 600 個字元。內容要說明部署後得到什麼、從哪裡打開、第一個人怎麼登入，以及自動產生的值放在哪個 Secret。登入步驟要對照上游文件和範本的 manifests 確認。`catalog validate` 會檢查這段話有沒有寫出每個 `generate` 輸入的 Secret。`zh-TW` 與 `zh-CN` 的內容寫在 `metadata.locales`。
+- `metadata.readme` 是寫給剛部署完的人看的一小段話，最多 600 個字元。內容要說明部署後得到什麼、從哪裡打開、第一個人怎麼登入，以及自動產生的值放在哪個 Secret。登入步驟要對照上游文件和範本的 manifests 確認。`catalog validate` 會檢查這段話有沒有寫出每個 `generate` 輸入的 Secret。`zh-TW` 與 `zh-CN` 的內容寫在 `metadata.locales`。
 - 每個服務都必須指定安全性 profile（`restricted` 或 `baseline`）、資源請求與上限，以及連接埠。服務名稱必須與對應的 Deployment、StatefulSet 或資料庫物件名稱相同。服務的 CPU 與記憶體數值必須是該物件所有容器的總和，連接埠則必須對應容器的具名連接埠。`catalog template lint` 會檢查資源總和與連接埠。
 - `security` 必須列出管理者在部署前需要知道的風險，每個風險都附上降低風險的措施。
 - `smoke` 必須包含能證明應用程式正常運作的煙霧測試（smoke check），包括資源狀態條件，以及對執行中服務的 HTTP 或 SQL 檢查。
@@ -36,7 +36,7 @@ Zeabur Catalog 的每個範本都必須符合以下規則。新增或修改範�
 - 渲染後的資源必須引用 Secret，不得直接包含密碼、金鑰或權杖。`catalog template lint` 會拒絕 `manifests.yaml` 裡的任何 Secret。自動產生的值必須宣告為 `generate` 輸入，既有認證資訊則必須宣告為必填輸入。
 - 每個需要使用者填寫的輸入都必須有簡短的 `label`，並在 `locales` 中提供 `zh-TW` 與 `zh-CN` 的標籤和描述。文字必須寫給部署者看，並使用日常用語。
 - `security` 摘要與每項風險的說明，都必須讓第一次自行架設服務的人看得懂。請說清楚會出什麼問題，以及誰會受影響。摘要與每項風險都必須在 `locales` 中提供 `zh-TW` 與 `zh-CN` 內容。
-- 必須關閉未經驗證就能存取的管理與除錯端點，以及不安全的首次啟動預設設定。`metadata.firstUse` 必須說明第一位管理員如何登入。
+- 必須關閉未經驗證就能存取的管理與除錯端點，以及不安全的首次啟動預設設定。`metadata.readme` 必須說明第一位管理員如何登入。
 
 ## 網路
 

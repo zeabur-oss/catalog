@@ -5,14 +5,14 @@ metadata:
   # renovate: depName=eceasy/cli-proxy-api
   version: "v8.0.69"
   summary: An OpenAI- and Gemini-compatible API proxy, with keys and a management page.
-  firstUse: "CLIProxyAPI is an API proxy with no web login. Send OpenAI or Gemini style requests to https://<your domain>/v1 (or /v1beta) with the key from Secret app-secrets, key api-key, as a Bearer token. That key only lets clients in. Provider credentials are separate. The management API is not on the domain. Reach it with kubectl port-forward and the key from Secret app-secrets, key management-key."
+  readme: "CLIProxyAPI is an API proxy with no web login. Send OpenAI or Gemini style requests to https://<your domain>/v1 (or /v1beta) with the key from Secret app-secrets, key api-key, as a Bearer token. That key only lets clients in. Provider credentials are separate. The management API is not on the domain. Reach it with kubectl port-forward and the key from Secret app-secrets, key management-key."
   locales:
     zh-TW:
       summary: "相容 OpenAI 與 Gemini 的 API 代理，附金鑰和管理頁面。"
-      firstUse: "CLIProxyAPI 是 API 代理，沒有網頁登入。用 https://<你的網域>/v1（或 /v1beta）送出 OpenAI 或 Gemini 格式的請求，並把機密 app-secrets 裡 api-key 的值當作 Bearer 權杖。這把金鑰只管用戶端進來，模型服務的認證資訊要另外設定。管理 API 不在網域上，請用 kubectl port-forward 連線，金鑰在機密 app-secrets 的 management-key。"
+      readme: "CLIProxyAPI 是 API 代理，沒有網頁登入。用 https://<你的網域>/v1（或 /v1beta）送出 OpenAI 或 Gemini 格式的請求，並把機密 app-secrets 裡 api-key 的值當作 Bearer 權杖。這把金鑰只管用戶端進來，模型服務的認證資訊要另外設定。管理 API 不在網域上，請用 kubectl port-forward 連線，金鑰在機密 app-secrets 的 management-key。"
     zh-CN:
       summary: "兼容 OpenAI 与 Gemini 的 API 代理，附密钥和管理页面。"
-      firstUse: "CLIProxyAPI 是 API 代理，没有网页登录。用 https://<你的域名>/v1（或 /v1beta）发送 OpenAI 或 Gemini 格式的请求，并把机密 app-secrets 里 api-key 的值当作 Bearer 令牌。这把密钥只管客户端接入，模型服务的凭证要另外配置。管理 API 不在域名上，请用 kubectl port-forward 连接，密钥在机密 app-secrets 的 management-key。"
+      readme: "CLIProxyAPI 是 API 代理，没有网页登录。用 https://<你的域名>/v1（或 /v1beta）发送 OpenAI 或 Gemini 格式的请求，并把机密 app-secrets 里 api-key 的值当作 Bearer 令牌。这把密钥只管客户端接入，模型服务的凭证要另外配置。管理 API 不在域名上，请用 kubectl port-forward 连接，密钥在机密 app-secrets 的 management-key。"
   license: MIT
   homepage: https://github.com/router-for-me/CLIProxyAPI
   docs: https://help.router-for.me/configuration/basic.html

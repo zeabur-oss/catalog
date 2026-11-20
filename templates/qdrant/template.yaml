@@ -5,14 +5,14 @@ metadata:
   # renovate: depName=qdrant/qdrant
   version: "v1.20.0-unprivileged"
   summary: A vector database with an API key and data on a volume.
-  firstUse: "Qdrant is a vector database with a REST and gRPC API and a web dashboard. Open https://<your domain>/dashboard and use the API key from Secret qdrant-secrets, key api-key. Send the same key in the api-key header on every REST call. Port 6334 (gRPC) is only for pods in the same project with the label templates.zeabur.com/qdrant-client=true."
+  readme: "Qdrant is a vector database with a REST and gRPC API and a web dashboard. Open https://<your domain>/dashboard and use the API key from Secret qdrant-secrets, key api-key. Send the same key in the api-key header on every REST call. Port 6334 (gRPC) is only for pods in the same project with the label templates.zeabur.com/qdrant-client=true."
   locales:
     zh-TW:
       summary: "向量資料庫，用 API 金鑰保護，資料存在磁碟區。"
-      firstUse: "Qdrant 是向量資料庫，有 REST 和 gRPC API，也有網頁管理介面。開啟 https://<你的網域>/dashboard，使用機密 qdrant-secrets 的 api-key 鍵裡的 API 金鑰。每個 REST 請求都要在 api-key 標頭帶上同一把金鑰。6334 連接埠（gRPC）只開給同一個專案裡、帶有標籤 templates.zeabur.com/qdrant-client=true 的 Pod。"
+      readme: "Qdrant 是向量資料庫，有 REST 和 gRPC API，也有網頁管理介面。開啟 https://<你的網域>/dashboard，使用機密 qdrant-secrets 的 api-key 鍵裡的 API 金鑰。每個 REST 請求都要在 api-key 標頭帶上同一把金鑰。6334 連接埠（gRPC）只開給同一個專案裡、帶有標籤 templates.zeabur.com/qdrant-client=true 的 Pod。"
     zh-CN:
       summary: "向量数据库，用 API 密钥保护，数据存在卷上。"
-      firstUse: "Qdrant 是向量数据库，有 REST 和 gRPC API，也有网页管理界面。打开 https://<你的域名>/dashboard，使用机密 qdrant-secrets 的 api-key 键里的 API 密钥。每个 REST 请求都要在 api-key 请求头带上同一把密钥。6334 端口（gRPC）只开给同一个项目里、带有标签 templates.zeabur.com/qdrant-client=true 的 Pod。"
+      readme: "Qdrant 是向量数据库，有 REST 和 gRPC API，也有网页管理界面。打开 https://<你的域名>/dashboard，使用机密 qdrant-secrets 的 api-key 键里的 API 密钥。每个 REST 请求都要在 api-key 请求头带上同一把密钥。6334 端口（gRPC）只开给同一个项目里、带有标签 templates.zeabur.com/qdrant-client=true 的 Pod。"
   license: Apache-2.0
   homepage: https://qdrant.tech/
   docs: https://qdrant.tech/documentation/quickstart/

@@ -12,14 +12,14 @@ metadata:
   # renovate: depName=docker.io/langgenius/dify-api
   version: "1.19.0"
   summary: A platform for building LLM apps, with PostgreSQL, a queue, a code sandbox and S3 storage.
-  firstUse: "Dify is a web app for building LLM apps. Open https://<your domain>/install first. Before Dify lets you create the administrator account, it asks for the password from Secret dify-secrets, key init-password, so a stranger cannot claim the instance. After that, sign in at https://<your domain> with your new account. The other keys in dify-secrets are internal."
+  readme: "Dify is a web app for building LLM apps. Open https://<your domain>/install first. Before Dify lets you create the administrator account, it asks for the password from Secret dify-secrets, key init-password, so a stranger cannot claim the instance. After that, sign in at https://<your domain> with your new account. The other keys in dify-secrets are internal."
   locales:
     zh-TW:
       summary: "開發 LLM 應用程式的平台，內含 PostgreSQL、佇列、程式碼沙箱和 S3 儲存空間。"
-      firstUse: "Dify 是用來開發 LLM 應用程式的網頁應用。部署後先開啟 https://<你的網域>/install。建立管理員帳號之前，Dify 會先要求輸入機密 dify-secrets 裡 init-password 的值，所以別人無法搶先佔用這個實例。建好帳號後，用它登入 https://<你的網域>。dify-secrets 裡其他的鍵都是內部使用。"
+      readme: "Dify 是用來開發 LLM 應用程式的網頁應用。部署後先開啟 https://<你的網域>/install。建立管理員帳號之前，Dify 會先要求輸入機密 dify-secrets 裡 init-password 的值，所以別人無法搶先佔用這個實例。建好帳號後，用它登入 https://<你的網域>。dify-secrets 裡其他的鍵都是內部使用。"
     zh-CN:
       summary: "构建 LLM 应用的平台，内含 PostgreSQL、队列、代码沙箱和 S3 存储。"
-      firstUse: "Dify 是用来构建 LLM 应用的网页应用。部署后先打开 https://<你的域名>/install。创建管理员账号之前，Dify 会先要求输入机密 dify-secrets 里 init-password 的值，所以别人无法抢先占用这个实例。建好账号后，用它登录 https://<你的域名>。dify-secrets 里其他的键都是内部使用。"
+      readme: "Dify 是用来构建 LLM 应用的网页应用。部署后先打开 https://<你的域名>/install。创建管理员账号之前，Dify 会先要求输入机密 dify-secrets 里 init-password 的值，所以别人无法抢先占用这个实例。建好账号后，用它登录 https://<你的域名>。dify-secrets 里其他的键都是内部使用。"
   license: LicenseRef-Dify-Modified-Apache-2.0 AND BUSL-1.1 AND Apache-2.0 AND PostgreSQL
   # Also: https://github.com/langgenius/dify-sandbox, https://cloudnative-pg.io/docs/, https://github.com/dragonflydb/dragonfly, https://github.com/dragonflydb/dragonfly-operator
   homepage: https://github.com/langgenius/dify

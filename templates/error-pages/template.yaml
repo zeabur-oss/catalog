@@ -7,14 +7,14 @@ metadata:
   # renovate: depName=docker.io/nginxinc/nginx-unprivileged
   version: "1.31.7-alpine-slim"
   summary: Shows a maintenance page and error pages for the project's domains.
-  firstUse: "Error pages serves a maintenance page and the 404, 502, 503 and 504 pages. It has no domain and no login. Zeabur sends the maintenance and error pages of the project's domains to this service. Other apps in the same project can reach it at http://error-pages:8080/<status>.html, for example from a Traefik errors middleware. Port 8081 answers every request with the maintenance page and status 503."
+  readme: "Error pages serves a maintenance page and the 404, 502, 503 and 504 pages. It has no domain and no login. Zeabur sends the maintenance and error pages of the project's domains to this service. Other apps in the same project can reach it at http://error-pages:8080/<status>.html, for example from a Traefik errors middleware. Port 8081 answers every request with the maintenance page and status 503."
   locales:
     zh-TW:
       summary: "為專案的網域顯示維護頁面和錯誤頁面。"
-      firstUse: "錯誤頁面提供維護頁面，以及 404、502、503、504 的錯誤頁面。它沒有網域，也不用登入。Zeabur 會把專案網域的維護頁面和錯誤頁面導向這個服務。同專案的其他應用程式可以用 http://error-pages:8080/<狀態碼>.html 取得頁面，例如給 Traefik 的 errors 中介軟體用。連接埠 8081 對每個請求都回傳維護頁面和狀態碼 503。"
+      readme: "錯誤頁面提供維護頁面，以及 404、502、503、504 的錯誤頁面。它沒有網域，也不用登入。Zeabur 會把專案網域的維護頁面和錯誤頁面導向這個服務。同專案的其他應用程式可以用 http://error-pages:8080/<狀態碼>.html 取得頁面，例如給 Traefik 的 errors 中介軟體用。連接埠 8081 對每個請求都回傳維護頁面和狀態碼 503。"
     zh-CN:
       summary: "为项目的域名显示维护页面和错误页面。"
-      firstUse: "错误页面提供维护页面，以及 404、502、503、504 的错误页面。它没有域名，也不用登录。Zeabur 会把项目域名的维护页面和错误页面指向这个服务。同项目的其他应用可以用 http://error-pages:8080/<状态码>.html 获取页面，例如给 Traefik 的 errors 中间件用。端口 8081 对每个请求都返回维护页面和状态码 503。"
+      readme: "错误页面提供维护页面，以及 404、502、503、504 的错误页面。它没有域名，也不用登录。Zeabur 会把项目域名的维护页面和错误页面指向这个服务。同项目的其他应用可以用 http://error-pages:8080/<状态码>.html 获取页面，例如给 Traefik 的 errors 中间件用。端口 8081 对每个请求都返回维护页面和状态码 503。"
   license: BSD-2-Clause AND Apache-2.0
   # Also: https://github.com/nginx/docker-nginx-unprivileged
   homepage: https://nginx.org/

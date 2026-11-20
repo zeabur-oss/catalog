@@ -5,14 +5,14 @@ metadata:
   # renovate: depName=nousresearch/hermes-agent
   version: "v2026.8.16.2"
   summary: The Hermes AI agent with an API and a dashboard, using OpenRouter or another OpenAI-compatible provider.
-  firstUse: "Hermes Agent gives you a dashboard and an OpenAI-compatible API. Open the dashboard at https://<your dashboard domain> and sign in as admin with the password from Secret hermes-secrets, key dashboard-password. Call the API at https://<your domain>/v1 with the key from Secret hermes-secrets, key api-key, as a Bearer token. Your model provider key comes from the Secret you chose at deploy."
+  readme: "Hermes Agent gives you a dashboard and an OpenAI-compatible API. Open the dashboard at https://<your dashboard domain> and sign in as admin with the password from Secret hermes-secrets, key dashboard-password. Call the API at https://<your domain>/v1 with the key from Secret hermes-secrets, key api-key, as a Bearer token. Your model provider key comes from the Secret you chose at deploy."
   locales:
     zh-TW:
       summary: "Hermes AI 代理，附 API 和管理面板，可接 OpenRouter 或其他相容 OpenAI 的服務。"
-      firstUse: "Hermes Agent 提供管理面板和相容 OpenAI 的 API。管理面板在 https://<你的管理介面網域>，用 admin 和機密 hermes-secrets 裡 dashboard-password 的值登入。API 在 https://<你的網域>/v1，用機密 hermes-secrets 裡 api-key 的值當作 Bearer 權杖。模型服務的 API 金鑰則來自你部署時選的機密。"
+      readme: "Hermes Agent 提供管理面板和相容 OpenAI 的 API。管理面板在 https://<你的管理介面網域>，用 admin 和機密 hermes-secrets 裡 dashboard-password 的值登入。API 在 https://<你的網域>/v1，用機密 hermes-secrets 裡 api-key 的值當作 Bearer 權杖。模型服務的 API 金鑰則來自你部署時選的機密。"
     zh-CN:
       summary: "Hermes AI 智能体，附 API 和管理面板，可接 OpenRouter 或其他兼容 OpenAI 的服务。"
-      firstUse: "Hermes Agent 提供管理面板和兼容 OpenAI 的 API。管理面板在 https://<你的管理界面域名>，用 admin 和机密 hermes-secrets 里 dashboard-password 的值登录。API 在 https://<你的域名>/v1，用机密 hermes-secrets 里 api-key 的值当作 Bearer 令牌。模型服务的 API 密钥则来自你部署时选的机密。"
+      readme: "Hermes Agent 提供管理面板和兼容 OpenAI 的 API。管理面板在 https://<你的管理界面域名>，用 admin 和机密 hermes-secrets 里 dashboard-password 的值登录。API 在 https://<你的域名>/v1，用机密 hermes-secrets 里 api-key 的值当作 Bearer 令牌。模型服务的 API 密钥则来自你部署时选的机密。"
   license: MIT
   homepage: https://github.com/NousResearch/hermes-agent
   docs: https://hermes-agent.nousresearch.com/docs/user-guide/features/web-dashboard

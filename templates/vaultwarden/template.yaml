@@ -6,14 +6,14 @@ metadata:
   # renovate: depName=vaultwarden/server
   version: "1.37.5"
   summary: A Bitwarden-compatible password manager; sign-up is closed and the admin invites people.
-  firstUse: "Vaultwarden is a Bitwarden-compatible password manager. Open https://<your domain>/admin and enter the admin token from Secret vaultwarden-secrets, key admin-token. Sign-up is closed, so invite each person by email on that page. They then open https://<your domain> and register with the invited email."
+  readme: "Vaultwarden is a Bitwarden-compatible password manager. Open https://<your domain>/admin and enter the admin token from Secret vaultwarden-secrets, key admin-token. Sign-up is closed, so invite each person by email on that page. They then open https://<your domain> and register with the invited email."
   locales:
     zh-TW:
       summary: "相容 Bitwarden 的密碼管理器，不開放註冊，由管理員邀請使用者。"
-      firstUse: "Vaultwarden 是相容 Bitwarden 的密碼管理器。開啟 https://<你的網域>/admin，輸入機密 vaultwarden-secrets 的 admin-token 鍵裡的管理員權杖。註冊功能是關閉的，請在這個頁面用 Email 逐一邀請使用者。受邀的人再開啟 https://<你的網域>，用受邀的 Email 註冊。"
+      readme: "Vaultwarden 是相容 Bitwarden 的密碼管理器。開啟 https://<你的網域>/admin，輸入機密 vaultwarden-secrets 的 admin-token 鍵裡的管理員權杖。註冊功能是關閉的，請在這個頁面用 Email 逐一邀請使用者。受邀的人再開啟 https://<你的網域>，用受邀的 Email 註冊。"
     zh-CN:
       summary: "兼容 Bitwarden 的密码管理器，不开放注册，由管理员邀请用户。"
-      firstUse: "Vaultwarden 是兼容 Bitwarden 的密码管理器。打开 https://<你的域名>/admin，输入机密 vaultwarden-secrets 的 admin-token 键里的管理员令牌。注册功能是关闭的，请在这个页面用邮箱逐一邀请用户。受邀的人再打开 https://<你的域名>，用受邀的邮箱注册。"
+      readme: "Vaultwarden 是兼容 Bitwarden 的密码管理器。打开 https://<你的域名>/admin，输入机密 vaultwarden-secrets 的 admin-token 键里的管理员令牌。注册功能是关闭的，请在这个页面用邮箱逐一邀请用户。受邀的人再打开 https://<你的域名>，用受邀的邮箱注册。"
   # Server AGPL-3.0-only; the bundled web vault (dani-garcia/bw_web_builds,
   # built from the Bitwarden clients) GPL-3.0-only.
   license: AGPL-3.0-only AND GPL-3.0-only

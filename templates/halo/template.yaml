@@ -5,14 +5,14 @@ metadata:
   # renovate: depName=halohub/halo
   version: "2.27.2"
   summary: Halo for websites and blogs, with PostgreSQL.
-  firstUse: "Halo is a website and blog system. Open the console at https://<your domain>/console. There is no setup wizard. The first start creates the super administrator admin, so sign in as admin with the password from Secret halo-secrets, key admin-password, then change the password in the console. Visitors see the site at https://<your domain>."
+  readme: "Halo is a website and blog system. Open the console at https://<your domain>/console. There is no setup wizard. The first start creates the super administrator admin, so sign in as admin with the password from Secret halo-secrets, key admin-password, then change the password in the console. Visitors see the site at https://<your domain>."
   locales:
     zh-TW:
       summary: "Halo 網站與部落格系統，搭配 PostgreSQL。"
-      firstUse: "Halo 是網站與部落格系統。管理後台在 https://<你的網域>/console，不會出現初始化精靈。第一次啟動時會建立超級管理員 admin，用它和機密 halo-secrets 裡 admin-password 的值登入，之後在後台改掉密碼。訪客看到的網站在 https://<你的網域>。"
+      readme: "Halo 是網站與部落格系統。管理後台在 https://<你的網域>/console，不會出現初始化精靈。第一次啟動時會建立超級管理員 admin，用它和機密 halo-secrets 裡 admin-password 的值登入，之後在後台改掉密碼。訪客看到的網站在 https://<你的網域>。"
     zh-CN:
       summary: "Halo 建站与博客系统，搭配 PostgreSQL。"
-      firstUse: "Halo 是建站与博客系统。管理后台在 https://<你的域名>/console，不会出现初始化向导。第一次启动时会创建超级管理员 admin，用它和机密 halo-secrets 里 admin-password 的值登录，之后在后台修改密码。访客看到的站点在 https://<你的域名>。"
+      readme: "Halo 是建站与博客系统。管理后台在 https://<你的域名>/console，不会出现初始化向导。第一次启动时会创建超级管理员 admin，用它和机密 halo-secrets 里 admin-password 的值登录，之后在后台修改密码。访客看到的站点在 https://<你的域名>。"
   license: GPL-3.0-only AND PostgreSQL
   # Also: https://cloudnative-pg.io/
   homepage: https://github.com/halo-dev/halo
