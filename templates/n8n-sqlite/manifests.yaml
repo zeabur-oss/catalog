@@ -39,7 +39,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: n8n
-        image: docker.io/n8nio/n8n:3.2.0@sha256:9e67c2627d3c30dbb0d51f5da83d4499ac7913f6b4f358a900a58026a832ba12
+        image: docker.io/n8nio/n8n:3.2.2@sha256:c5d94cb443ff3d7b3abd65927fd8c9af1281f026ebfed9b208cf8d0f6b199a94
         securityContext:
           runAsNonRoot: true
           allowPrivilegeEscalation: false
@@ -240,7 +240,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: task-runner
-        image: docker.io/n8nio/runners:3.2.0@sha256:121b0ae16e397b31dca8c9f188f44a611d75ed46bcda16bacc42381a4ea1ae90
+        image: docker.io/n8nio/runners:3.2.2@sha256:7e64bb2cbcfddf644dbb1f6ef703ce6e70adf8880f6494c870dcc54aa976f099
         securityContext:
           runAsNonRoot: true
           allowPrivilegeEscalation: false
