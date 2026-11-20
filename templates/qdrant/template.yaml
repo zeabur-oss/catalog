@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: Qdrant
   # renovate: depName=qdrant/qdrant
-  version: "v1.20.0-unprivileged"
+  version: "v1.20.1-unprivileged"
   summary: A vector database with an API key and data on a volume.
   locales:
     zh-TW:
