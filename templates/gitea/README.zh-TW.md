@@ -33,8 +33,26 @@ git clone https://git.example.com/<使用者>/<儲存庫>.git
 
 詳見 [API Usage](https://docs.gitea.com/development/api-usage)。
 
+### 備份資料
+
+Gitea 把帳號、議題和設定存在 `gitea-db` 資料庫。在專案打開 `gitea-db`，到**備份**設定 S3 備份。想直接拿到檔案，按**更多** → **匯出**。儲存庫和上傳的檔案放在磁碟區 `gitea-data`，掛載在 `/var/lib/gitea`。用 `gitea` 服務的**檔案**分頁複製。資料夾很大時，改用 kubectl。`kubectl -n <namespace> get pods` 會列出副本名稱：
+
+```sh
+kubectl -n <namespace> cp <replica>:/var/lib/gitea ./gitea-data
+```
+
+Gitea 也有 `gitea dump` 指令，把儲存庫、資料庫和資料打包成一個 ZIP 檔。Gitea 建議備份期間先停止執行個體，讓檔案和資料庫保持一致。詳見 Zeabur 文件的[設定 S3 備份](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/#設定-s3-備份)、[下載資料庫傾印檔](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/#下載資料庫傾印檔)，以及 Gitea 文件的 [Backup and Restore](https://docs.gitea.com/administration/backup-and-restore)。
+
 ## 疑難排解
 
 ### 用 SSH 複製儲存庫失敗
 
 這個範本關閉了 SSH。請使用儲存庫的 HTTPS 複製網址。詳見 [Config Cheat Sheet](https://docs.gitea.com/administration/config-cheat-sheet)。
+
+### 頁面顯示 502 或打不開
+
+在 Zeabur 打開 `gitea` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
+
+不用 Zeabur 時，用 `kubectl -n <namespace> logs deployment/gitea` 看日誌，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 看事件。
+
+詳見 Zeabur 文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。

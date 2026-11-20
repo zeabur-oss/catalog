@@ -30,6 +30,12 @@ See [API Access](https://usememos.com/docs/integrations/api-access) in the Memos
 
 ## Troubleshooting
 
+### The page shows 502 or does not load
+
+Open the `memos` service in Zeabur. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
+
+See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur docs.
+
 ### A setting is read-only or cannot be saved
 
 Memos makes every setting group that a configuration file declares read-only in the app and the API. The template declares the General group in ConfigMap `memos-config`, which includes the sign-up rule and the custom profile. Memos treats the file as the whole group, so a field you leave out returns to its default. To change these settings, open the project's **Objects** page, open ConfigMap `memos-config`, switch to the YAML view, click **Edit**, change the values, then review and apply. Memos reads the file at start, so click **Restart** at the top of the `memos` service page.

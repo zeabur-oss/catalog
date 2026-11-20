@@ -33,6 +33,12 @@
 
 ## 疑難排解
 
+### 頁面顯示 502、打不開或一直重新連線
+
+在 Zeabur 打開 `open-webui` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。服務很慢或一直重新連線，也常是記憶體不夠，同樣檢查**事件**和**記憶體上限**。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
+
+詳見 Zeabur 文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
+
 ### 在管理員設定裡改的設定，重新啟動後不見了
 
 `ENABLE_PERSISTENT_CONFIG` 設為 `false` 時，Open WebUI 每次啟動都讀取環境變數裡的設定。你可以在管理員設定裡編輯，但改動不會被儲存。重新啟動後請再改一次。詳見 Open WebUI 文件的 [Environment variable configuration](https://docs.openwebui.com/reference/env-configuration)。

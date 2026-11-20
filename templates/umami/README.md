@@ -28,7 +28,19 @@ Click Websites in the sidebar, then Add website, enter a name and the domain, an
 
 Click the profile button in the side navigation, then Settings, then Security, then Change password. Before Umami 3.5.0, the button is on the Profile page instead of Security. See [Login](https://docs.umami.is/docs/login).
 
+### Back up the data
+
+In Zeabur, open the `umami-db` database and go to **Backups** → **Set up backups** to back up on a schedule to an S3 bucket. PostgreSQL backups need the Barman Cloud plugin. To get a copy now, click **More** at the top right of the database page, then **Export**. The browser downloads a `.dump` file made by `pg_dump --format=custom`. See [Set up S3 backups](https://oss.zeabur.com/docs/zeabur/deploy/databases/#set-up-s3-backups) and [Download a database dump](https://oss.zeabur.com/docs/zeabur/deploy/databases/#download-a-database-dump).
+
+Umami keeps all its data in this database, so the dump is the whole backup.
+
 ## Troubleshooting
+
+### The page shows 502 or does not load
+
+In Zeabur, open the `umami` service. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica keeps restarting, open **Deployments**, then **Events**. If the events show `OOMKilled`, raise **Maximum memory** in **Settings** → **Compute**. See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/).
+
+If the domain or its certificate stays pending, see [Add public domains and HTTPS](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting).
 
 ### Data does not appear
 

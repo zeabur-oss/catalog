@@ -27,6 +27,12 @@
 
 ## 疑難排解
 
+### 頁面顯示 502 或打不開
+
+在 Zeabur 打開 `sillytavern` 服務，確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本一直重新啟動時，打開**部署紀錄**，切到**事件**。如果事件寫著 `OOMKilled`，到**設定** → **運算資源**調高**記憶體上限**。詳見[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
+
+網域或憑證一直停在等待中時，看[加上公開網域與 HTTPS](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)的「遇到問題」。
+
 ### 瀏覽器一直要求登入
 
 使用者名稱用 `user`，密碼用 `app-secrets` 的 `basic-password` 欄位。更改密碼之後，瀏覽器儲存的舊密碼就不能用了。

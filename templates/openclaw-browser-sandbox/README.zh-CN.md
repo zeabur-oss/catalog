@@ -45,6 +45,10 @@
 
 ## 故障排除
 
+### 浏览器一直重启或没有响应
+
+在 Zeabur 打开 `openclaw-sandbox-browser` 服务，确认**概览**显示副本已就绪，再看**日志**选项卡。打开**部署记录**，切换到**事件**。如果事件显示 `OOMKilled`，到**设置** → **计算资源**调高**内存上限**。详见[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
+
 ### 客户端连不上
 
 网络策略只放行带有信任调用方标签的 Pod，而且只开 9222 端口。确认客户端在同一个项目里，并且带有开始使用里的两个标签。详见 [Remote and hosted browsers](https://docs.openclaw.ai/tools/browser/remote)。

@@ -35,3 +35,21 @@ Go to Appearance, Themes to change the look of your site, and to Plugins to add 
 ### Set the address format of your pages
 
 Go to Settings, Permalinks, pick a structure and click Save Changes. See [Settings Permalinks screen](https://wordpress.org/documentation/article/settings-permalinks-screen/).
+
+### Back up the data
+
+In Zeabur, open the `mariadb` database and go to **Backups** → **Set up backups** to back up on a schedule to an S3 bucket. To get a copy now, click **More** at the top right of the database page, then **Export**. The browser downloads gzip-compressed SQL made by `mariadb-dump --single-transaction`. See [Set up S3 backups](https://oss.zeabur.com/docs/zeabur/deploy/databases/#set-up-s3-backups) and [Download a database dump](https://oss.zeabur.com/docs/zeabur/deploy/databases/#download-a-database-dump).
+
+The uploads, themes and plugins are not in the database. They are in the `wordpress-data` volume, mounted at `/var/www/html` in the `wordpress` service. Back up `wp-content` together with the database dump. In Zeabur, the **Files** tab can download a folder, but a big folder can time out. For a big `wp-content`, stream it out with kubectl:
+
+```sh
+kubectl -n <namespace> exec deploy/wordpress -c wordpress -- tar czf - -C /var/www/html wp-content > wp-content.tar.gz
+```
+
+## Troubleshooting
+
+### The page shows 502 or does not load
+
+In Zeabur, open the `wordpress` service. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica keeps restarting, open **Deployments**, then **Events**. If the events show `OOMKilled`, raise **Maximum memory** in **Settings** → **Compute**. See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/).
+
+If the domain or its certificate stays pending, see [Add public domains and HTTPS](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting).

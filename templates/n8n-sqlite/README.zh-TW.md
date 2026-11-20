@@ -37,7 +37,38 @@ n8n 每次啟動都會用安裝表單和機密變數設定擁有者帳號，並�
 
 Webhook 節點有兩個網址。測試網址在你選 Listen for Test Event 時有效，並會在編輯器顯示收到的資料。正式網址在你發布工作流程後有效。兩個網址都以你的網域開頭。詳見 n8n 文件的 [Webhook node](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook/)。
 
+### 備份或搬移資料
+
+n8n 把 SQLite 資料庫和檔案放在 `n8n-data` 磁碟區，掛載在 `/home/node/.n8n`。n8n 建議先停掉它再複製 SQLite 檔，所以請改用 n8n 的命令列匯出工作流程和憑證。
+
+1. 留好「開始使用」裡的加密金鑰。沒有它，n8n 讀不了已儲存的憑證。
+2. 匯出工作流程和憑證。按 `n8n` 服務頁上方的**終端機**，執行：
+
+   ```sh
+   n8n export:workflow --backup --output=/home/node/.n8n/backups/workflows/
+   n8n export:credentials --backup --output=/home/node/.n8n/backups/credentials/
+   ```
+
+   接著到 `n8n` 服務的**檔案**分頁，下載這兩個資料夾。不要下載整個磁碟區，資料夾太大會逾時。
+
+要搬到另一個 n8n，先在新 `n8n` 服務的**檔案**分頁上傳這兩個資料夾，再用**終端機**匯入：
+
+```sh
+n8n import:workflow --separate --input=<workflows folder>
+n8n import:credentials --separate --input=<credentials folder>
+```
+
+新的 n8n 必須用同一把加密金鑰，否則讀不了憑證。做不到時，在 `n8n export:credentials` 加上 `--decrypted`。這個檔案裡的憑證是明文，匯入後要刪掉。匯出的內容不含使用者、執行紀錄、變數和實例設定。
+
+詳見 n8n 文件的 [Back up and restore](https://docs.n8n.io/deploy/host-n8n/keep-n8n-running/backup-and-restore) 和 [Use the command line](https://docs.n8n.io/deploy/host-n8n/configure-n8n/use-the-command-line)。
+
 ## 疑難排解
+
+### 頁面顯示 502、打不開或一直重新連線
+
+在 Zeabur 打開 `n8n` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。服務很慢或一直重新連線，也常是記憶體不夠，同樣檢查**事件**和**記憶體上限**。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
+
+詳見 Zeabur 文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
 
 ### Code 節點不執行
 

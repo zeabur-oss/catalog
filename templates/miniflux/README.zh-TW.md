@@ -32,7 +32,17 @@ curl -H "X-Auth-Token: <key>" https://miniflux.example.com/v1/me
 
 許多閱讀器 App 可以透過 Google Reader API 或 Fever API 連上 Miniflux。在 Miniflux 裡開啟 Settings，再到 Integrations，為 API 選一組使用者名稱和密碼。在 App 裡填入這組使用者名稱和密碼。支援的 App 請見 Miniflux 文件的 [Google Reader API](https://miniflux.app/docs/google_reader.html) 和 [Fever API](https://miniflux.app/docs/fever.html)。
 
+### 備份資料
+
+Miniflux 把訂閱來源、文章和設定存在 `miniflux-db` 資料庫，沒有放任何東西在磁碟區。在專案打開 `miniflux-db` 資料庫。到**備份**設定 S3 備份。想直接拿到檔案，按**更多** → **匯出**。詳見 Zeabur 文件的[設定 S3 備份](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/#設定-s3-備份)和[下載資料庫傾印檔](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/#下載資料庫傾印檔)。
+
 ## 疑難排解
+
+### 頁面顯示 502 或打不開
+
+在 Zeabur 打開 `miniflux` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
+
+詳見 Zeabur 文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
 
 ### 私有位址的訂閱來源被拒絕
 

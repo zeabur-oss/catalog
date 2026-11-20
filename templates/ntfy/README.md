@@ -50,6 +50,12 @@ See [Publishing](https://docs.ntfy.sh/publish/) in the ntfy docs.
 
 ## Troubleshooting
 
+### The page shows 502 or does not load
+
+Open the `ntfy` service in Zeabur. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
+
+See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur docs.
+
 ### A client cannot publish or subscribe
 
 The template denies access to every topic by default. Make the client sign in with a user name and password or an access token. For a user other than `admin`, also run `ntfy access` to give it access to the topic. See [Access control](https://docs.ntfy.sh/config/) in the ntfy docs.

@@ -28,7 +28,19 @@
 
 點側邊導覽列的個人檔案按鈕，依序進入 Settings、Security，再點 Change password。Umami 3.5.0 之前，這個按鈕在 Profile 頁面，不在 Security。詳見 [Login](https://docs.umami.is/docs/login)。
 
+### 備份資料
+
+在 Zeabur 打開 `umami-db` 資料庫，到**備份** → **設定備份**，就能依排程備份到 S3 儲存貯體。PostgreSQL 備份需要 Barman Cloud 外掛。要現在就拿一份資料，在資料庫頁面右上角按**更多** → **匯出**，瀏覽器會下載 `pg_dump --format=custom` 產生的 `.dump` 檔。詳見[設定 S3 備份](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/#設定-s3-備份)和[下載資料庫傾印檔](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/#下載資料庫傾印檔)。
+
+Umami 的資料都在這個資料庫裡，所以傾印檔就是完整備份。
+
 ## 疑難排解
+
+### 頁面顯示 502 或打不開
+
+在 Zeabur 打開 `umami` 服務，確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本一直重新啟動時，打開**部署紀錄**，切到**事件**。如果事件寫著 `OOMKilled`，到**設定** → **運算資源**調高**記憶體上限**。詳見[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
+
+網域或憑證一直停在等待中時，看[加上公開網域與 HTTPS](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)的「遇到問題」。
 
 ### 資料沒有出現
 

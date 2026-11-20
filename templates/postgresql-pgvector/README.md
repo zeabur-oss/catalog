@@ -46,6 +46,10 @@ CREATE INDEX ON items USING hnsw (embedding vector_l2_ops);
 
 Use `vector_cosine_ops` for `<=>` and `vector_ip_ops` for `<#>`. See [HNSW](https://github.com/pgvector/pgvector#hnsw).
 
+### Back up the data
+
+In Zeabur, open the `postgresql` database and go to **Backups** → **Set up backups** to back up on a schedule to an S3 bucket. PostgreSQL backups need the Barman Cloud plugin. To get a copy now, click **More** at the top right of the database page, then **Export**. The browser downloads a `.dump` file made by `pg_dump --format=custom`. See [Set up S3 backups](https://oss.zeabur.com/docs/zeabur/deploy/databases/#set-up-s3-backups) and [Download a database dump](https://oss.zeabur.com/docs/zeabur/deploy/databases/#download-a-database-dump).
+
 ## Troubleshooting
 
 ### A query does not use the index

@@ -28,3 +28,21 @@ In the admin page, open Models + Endpoints and add the model with your provider 
 ### Create a key for a client
 
 Do not give the master key to applications. Create a virtual key for each client in the admin page, then point the client at `https://litellm.example.com/v1` and use that key. See [Virtual Keys](https://docs.litellm.ai/docs/proxy/virtual_keys) and [Langchain, OpenAI SDK and other clients](https://docs.litellm.ai/docs/proxy/user_keys).
+
+### Back up the data
+
+LiteLLM keeps models, keys and spend in the `litellm-db` database. It keeps nothing on a volume. In the project, open `litellm-db`. Under **Backups**, set up S3 backups. To get a file instead, click **More** → **Export**. Keep the Secret `litellm-secrets` with the backup, because `salt-key` decrypts the provider credentials in the database. See [Create, back up, and restore databases](https://oss.zeabur.com/docs/zeabur/deploy/databases/#set-up-s3-backups) and [Download a database dump](https://oss.zeabur.com/docs/zeabur/deploy/databases/#download-a-database-dump) in the Zeabur docs.
+
+## Troubleshooting
+
+### The page shows 502 or does not load
+
+Open the `litellm` service in Zeabur. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
+
+Without Zeabur, read the logs with `kubectl -n <namespace> logs deployment/litellm` and the events with `kubectl -n <namespace> get events --sort-by=.lastTimestamp`.
+
+See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur docs.
+
+### Requests fail with a provider error
+
+Read the **Logs** tab of the `litellm` service first. Then, in the admin page, open Models + Endpoints and check the model that fails. The model name must be the one your provider expects. The API key and the endpoint of that model must be valid. And your account must not be over its rate limit or quota at the provider. See [AI Providers](https://docs.litellm.ai/docs/providers) in the LiteLLM docs.

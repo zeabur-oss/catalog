@@ -54,3 +54,15 @@ curl -X POST -H 'Authorization: Bearer <管理金鑰>' \
 ### 管理 API 回傳 401 或不再回應
 
 同一個位址連續送錯五次金鑰，會被封鎖約 30 分鐘。請確認用的是 `management-key` 的值，不是 `api-key`，並等封鎖結束。詳見 [Management API v8](https://help.router-for.me/management/apiv8.html)。
+
+### 頁面顯示 502 或打不開
+
+在 Zeabur 打開 `cliproxyapi` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
+
+不用 Zeabur 時，用 `kubectl -n <namespace> logs deployment/cliproxyapi` 看日誌，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 看事件。
+
+詳見 Zeabur 文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
+
+### 請求失敗，出現模型服務商的錯誤
+
+`api-key` 只負責讓你的用戶端進來，模型服務商要另外有自己的認證檔，見「加入模型服務的認證檔」。請求失敗時，先看 `cliproxyapi` 服務的**日誌**分頁，再確認三件事。請求裡的模型名稱要是你加進去的某個認證檔能用的模型。那個認證檔要還有效。它的帳號在服務商那裡也不能超過頻率限制或額度。詳見 CLIProxyAPI 文件的 [Authentication Directory](https://help.router-for.me/configuration/auth-dir.html)。

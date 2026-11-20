@@ -28,6 +28,12 @@ See [Search API](https://docs.searxng.org/dev/search_api.html).
 
 ## Troubleshooting
 
+### The page shows 502 or does not load
+
+In Zeabur, open the `searxng` service. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica keeps restarting, open **Deployments**, then **Events**. If the events show `OOMKilled`, raise **Maximum memory** in **Settings** → **Compute**. See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/).
+
+If the domain or its certificate stays pending, see [Add public domains and HTTPS](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting).
+
 ### A request with format=csv or format=rss returns 403
 
 This template turns on only the `html` and `json` formats. A format that is not turned on returns `403 Forbidden`. See [Search API](https://docs.searxng.org/dev/search_api.html).

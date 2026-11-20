@@ -33,8 +33,26 @@ git clone https://git.example.com/<用户>/<仓库>.git
 
 详见 [API Usage](https://docs.gitea.com/development/api-usage)。
 
+### 备份数据
+
+Gitea 把账号、议题和设置存在 `gitea-db` 数据库。在项目中打开 `gitea-db`，到**备份**配置 S3 备份。想直接拿到文件，点击**更多** → **导出**。仓库和上传的文件放在卷 `gitea-data` 上，挂载在 `/var/lib/gitea`。用 `gitea` 服务的**文件**标签页复制。文件夹很大时，改用 kubectl。`kubectl -n <namespace> get pods` 会列出副本名称：
+
+```sh
+kubectl -n <namespace> cp <replica>:/var/lib/gitea ./gitea-data
+```
+
+Gitea 也有 `gitea dump` 命令，把仓库、数据库和数据打包成一个 ZIP 文件。Gitea 建议备份期间先停止实例，让文件和数据库保持一致。详见 Zeabur 文档的[配置 S3 备份](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#配置-s3-备份)、[下载数据库转储文件](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#下载数据库转储文件)，以及 Gitea 文档的 [Backup and Restore](https://docs.gitea.com/administration/backup-and-restore)。
+
 ## 故障排除
 
 ### 用 SSH 克隆仓库失败
 
 这个模板关闭了 SSH。请使用仓库的 HTTPS 克隆地址。详见 [Config Cheat Sheet](https://docs.gitea.com/administration/config-cheat-sheet)。
+
+### 页面显示 502 或打不开
+
+在 Zeabur 打开 `gitea` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
+
+不用 Zeabur 时，用 `kubectl -n <namespace> logs deployment/gitea` 查看日志，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 查看事件。
+
+详见 Zeabur 文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。

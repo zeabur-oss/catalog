@@ -44,3 +44,17 @@ Open WebUI、LobeChat、LibreChat 等相容 OpenAI 的用戶端都能使用這�
 範本每次啟動都會把安裝表單填的模型、端點和金鑰寫進 Hermes 的設定。在管理面板更改模型，只會維持到下次重新啟動。
 
 管理面板能管理哪些項目，詳見 [Web Dashboard](https://hermes-agent.nousresearch.com/docs/user-guide/features/web-dashboard)。
+
+## 疑難排解
+
+### 頁面顯示 502 或打不開
+
+在 Zeabur 打開 `hermes-agent` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
+
+不用 Zeabur 時，用 `kubectl -n <namespace> logs deployment/hermes-agent` 看日誌，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 看事件。
+
+詳見 Zeabur 文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
+
+### 請求失敗，出現模型服務商的錯誤
+
+Hermes 用安裝表單填的模型名稱、端點和金鑰呼叫模型。呼叫失敗時，先看 `hermes-agent` 服務的**日誌**分頁，再確認三件事。模型名稱要存在於你的服務商。你在安裝表單選的機密變數裡，`api-key` 要有效。你的帳號在服務商那裡也不能超過頻率限制或額度。詳見 Hermes 文件的 [AI Providers](https://hermes-agent.nousresearch.com/docs/integrations/providers)。

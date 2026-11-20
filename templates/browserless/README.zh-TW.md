@@ -38,3 +38,11 @@
 ### 工作階段在排隊或逾時
 
 範本限制同時開啟的瀏覽器數量（`CONCURRENT`），其餘的會排隊（`QUEUED`）。先關掉用戶端不再需要的瀏覽器；要調高這兩個值之前，先調高服務的記憶體上限。詳見 [Docker configuration](https://docs.browserless.io/baas/docker/config)。
+
+### 頁面顯示 502 或打不開
+
+在 Zeabur 打開 `browserless` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。服務變慢或一直重新連線時，打開**用量**分頁，出現**接近記憶體上限**就用同樣的方式調高上限。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
+
+不用 Zeabur 時，用 `kubectl -n <namespace> logs deployment/browserless` 看日誌，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 看事件。
+
+詳見 Zeabur 文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。

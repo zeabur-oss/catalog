@@ -35,3 +35,21 @@
 ### 设置页面的网址格式
 
 进入 Settings、Permalinks，选一种结构，再点 Save Changes。详见 [Settings Permalinks screen](https://wordpress.org/documentation/article/settings-permalinks-screen/)。
+
+### 备份数据
+
+在 Zeabur 打开 `mariadb` 数据库，到**备份** → **设置备份**，就能按计划备份到 S3 存储桶。要现在就拿一份数据，在数据库页面右上角点击**更多** → **导出**，浏览器会下载 `mariadb-dump --single-transaction` 生成、gzip 压缩的 SQL。详见[配置 S3 备份](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#配置-s3-备份)和[下载数据库转储文件](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#下载数据库转储文件)。
+
+上传的文件、主题和插件不在数据库里，而是在 `wordpress-data` 卷上，挂载在 `wordpress` 服务的 `/var/www/html`。请把 `wp-content` 和数据库转储文件一起备份。在 Zeabur 可以用**文件**选项卡下载文件夹，但文件夹很大时可能超时。`wp-content` 很大时，改用 kubectl 流式输出：
+
+```sh
+kubectl -n <namespace> exec deploy/wordpress -c wordpress -- tar czf - -C /var/www/html wp-content > wp-content.tar.gz
+```
+
+## 故障排除
+
+### 页面显示 502 或打不开
+
+在 Zeabur 打开 `wordpress` 服务，确认**概览**显示副本已就绪，再看**日志**选项卡。副本一直重启时，打开**部署记录**，切换到**事件**。如果事件显示 `OOMKilled`，到**设置** → **计算资源**调高**内存上限**。详见[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
+
+域名或证书一直处于等待中时，看[添加公开域名与 HTTPS](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)的“遇到问题”。

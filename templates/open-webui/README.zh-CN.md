@@ -33,6 +33,12 @@
 
 ## 故障排除
 
+### 页面显示 502、打不开或一直重新连接
+
+在 Zeabur 打开 `open-webui` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。服务很慢或一直重新连接，也常是内存不够，同样检查**事件**和**内存上限**。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
+
+详见 Zeabur 文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
+
 ### 在管理员设置里改的设置，重启后不见了
 
 `ENABLE_PERSISTENT_CONFIG` 设为 `false` 时，Open WebUI 每次启动都读取环境变量里的设置。你可以在管理员设置里编辑，但改动不会被保存。重启后请再改一次。详见 Open WebUI 文档的 [Environment variable configuration](https://docs.openwebui.com/reference/env-configuration)。

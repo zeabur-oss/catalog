@@ -54,3 +54,15 @@ Provider keys that you write through `/config` are kept only until the pod resta
 ### The management API returns 401 or stops answering
 
 Five wrong keys in a row from one address ban that address for about 30 minutes. Check that you use the value of `management-key`, not `api-key`, and wait for the ban to end. See [Management API v8](https://help.router-for.me/management/apiv8.html).
+
+### The page shows 502 or does not load
+
+Open the `cliproxyapi` service in Zeabur. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
+
+Without Zeabur, read the logs with `kubectl -n <namespace> logs deployment/cliproxyapi` and the events with `kubectl -n <namespace> get events --sort-by=.lastTimestamp`.
+
+See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur docs.
+
+### Requests fail with a model provider error
+
+The `api-key` only lets your client in. The provider needs its own credential, as in Add a provider credential. When a request fails, read the **Logs** tab of the `cliproxyapi` service, then check three things. The model name in the request must be one that a credential you added can use. That credential must still be valid. And its account must not be over its rate limit or quota at the provider. See [Authentication Directory](https://help.router-for.me/configuration/auth-dir.html) in the CLIProxyAPI docs.

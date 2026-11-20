@@ -19,6 +19,26 @@
 
 在後台開啟「主題」，再點右上角的「主題管理」。你可以從內建的應用市場安裝主題、上傳主題壓縮檔，或用網址下載。安裝後選取主題，再點「啟用」。詳見 [主題](https://docs.halo.run/guide/use/themes)。
 
-### 備份網站
+### 備份資料
 
-在後台開啟「備份」，點「建立備份」。Halo 會在背景進行備份。備份檔放在 Halo 工作目錄的 `backups` 資料夾，也就是磁碟區 `halo-data` 上。請另外在別處保留一份。詳見 [備份與恢復](https://docs.halo.run/guide/use/backup)。
+Halo 有內建的備份。在後台開啟「備份」，點「建立備份」。Halo 會在背景進行備份。備份檔放在 Halo 工作目錄的 `backups` 資料夾，也就是磁碟區 `halo-data`（`/var/lib/halo`）上。請另外在別處保留一份。
+
+Halo 把內容存在 `halo-db` 資料庫。在專案打開 `halo-db`，到**備份**設定 S3 備份。想直接拿到檔案，按**更多** → **匯出**。
+
+很大的備份檔在瀏覽器裡可能上傳失敗。改用 kubectl 複製到 `backups` 資料夾，再從後台的備份檔還原：
+
+```sh
+kubectl -n <namespace> cp ./<backup file> halo-0:/var/lib/halo/backups/
+```
+
+詳見 Halo 文件的[備份與恢復](https://docs.halo.run/guide/use/backup)。詳見 Zeabur 文件的[設定 S3 備份](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/#設定-s3-備份)和[下載資料庫傾印檔](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/#下載資料庫傾印檔)。
+
+## 疑難排解
+
+### 頁面顯示 502 或打不開
+
+在 Zeabur 打開 `halo` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
+
+不用 Zeabur 時，用 `kubectl -n <namespace> logs statefulset/halo` 看日誌，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 看事件。
+
+詳見 Zeabur 文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。

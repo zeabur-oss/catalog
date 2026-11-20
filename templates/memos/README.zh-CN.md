@@ -30,6 +30,12 @@ curl -H "Authorization: Bearer memos_pat_..." https://memos.example.com/api/memo
 
 ## 故障排除
 
+### 页面显示 502 或打不开
+
+在 Zeabur 打开 `memos` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
+
+详见 Zeabur 文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
+
 ### 设置是只读的，或无法保存
 
 配置文件声明的每一组设置，Memos 都会在界面和 API 里设为只读。模板在 ConfigMap `memos-config` 里声明了常规设置（General），其中包含注册规则和自定义的个人资料。Memos 把文件当成整组设置，没有写的字段会回到默认值。要修改这些设置，请打开项目的**对象**页面，打开 ConfigMap `memos-config`，切换到 YAML 视图，点击**编辑**修改，检查后应用。Memos 在启动时读取这个文件，所以要点击 `memos` 服务页面顶部的**重启**。

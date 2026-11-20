@@ -32,7 +32,17 @@ curl -H "X-Auth-Token: <key>" https://miniflux.example.com/v1/me
 
 许多阅读器应用可以通过 Google Reader API 或 Fever API 连接 Miniflux。在 Miniflux 里打开 Settings，再到 Integrations，为 API 选一组用户名和密码。在应用里填入这组用户名和密码。支持的应用请见 Miniflux 文档的 [Google Reader API](https://miniflux.app/docs/google_reader.html) 和 [Fever API](https://miniflux.app/docs/fever.html)。
 
+### 备份数据
+
+Miniflux 把订阅源、文章和设置存在 `miniflux-db` 数据库，没有往卷里放任何东西。在项目中打开 `miniflux-db` 数据库。到**备份**配置 S3 备份。想直接拿到文件，点击**更多** → **导出**。详见 Zeabur 文档的[配置 S3 备份](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#配置-s3-备份)和[下载数据库转储文件](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#下载数据库转储文件)。
+
 ## 故障排除
+
+### 页面显示 502 或打不开
+
+在 Zeabur 打开 `miniflux` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
+
+详见 Zeabur 文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
 
 ### 私有地址的订阅源被拒绝
 

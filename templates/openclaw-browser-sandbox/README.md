@@ -45,6 +45,10 @@ With an `http://` address, OpenClaw finds the WebSocket endpoint through `/json/
 
 ## Troubleshooting
 
+### The browser restarts or stops answering
+
+In Zeabur, open the `openclaw-sandbox-browser` service. Check that **Overview** shows its replica as ready, then read the **Logs** tab. Open **Deployments**, then **Events**. If the events show `OOMKilled`, raise **Maximum memory** in **Settings** → **Compute**. See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/).
+
 ### The client cannot connect
 
 A network policy lets in only pods with the trusted caller label, and only on port 9222. Check that the client runs in the same project and carries both labels from Getting started. See [Remote and hosted browsers](https://docs.openclaw.ai/tools/browser/remote).

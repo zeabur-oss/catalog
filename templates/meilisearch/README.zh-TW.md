@@ -39,6 +39,12 @@ Meilisearch 會把傾印檔寫到磁碟區上的 `/meili_data/dumps`。詳見 [D
 
 ## 疑難排解
 
+### 請求回應 502 或逾時
+
+在 Zeabur 打開 `meilisearch` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
+
+詳見 Zeabur 文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
+
 ### 請求回傳 401
 
 Meilisearch 會拒絕沒有有效金鑰的請求。請在 `Authorization: Bearer` 標頭帶上金鑰，並確認用的是這個實例的金鑰。詳見 [Basic security](https://www.meilisearch.com/docs/learn/security/basic_security)。

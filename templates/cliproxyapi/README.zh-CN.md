@@ -54,3 +54,15 @@ curl -X POST -H 'Authorization: Bearer <管理密钥>' \
 ### 管理 API 返回 401 或不再响应
 
 同一个地址连续发错五次密钥，会被封禁约 30 分钟。请确认用的是 `management-key` 的值，不是 `api-key`，并等封禁结束。详见 [Management API v8](https://help.router-for.me/management/apiv8.html)。
+
+### 页面显示 502 或打不开
+
+在 Zeabur 打开 `cliproxyapi` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
+
+不用 Zeabur 时，用 `kubectl -n <namespace> logs deployment/cliproxyapi` 查看日志，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 查看事件。
+
+详见 Zeabur 文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
+
+### 请求失败，出现模型服务商的错误
+
+`api-key` 只负责让你的客户端进来，模型服务商要另外有自己的凭证，见“添加模型服务的凭证文件”。请求失败时，先看 `cliproxyapi` 服务的**日志**标签页，再确认三件事。请求里的模型名称要是你添加的某个凭证能用的模型。那个凭证要还有效。它的账号在服务商那里也不能超过频率限制或额度。详见 CLIProxyAPI 文档的 [Authentication Directory](https://help.router-for.me/configuration/auth-dir.html)。

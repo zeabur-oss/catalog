@@ -38,3 +38,11 @@ On the service's **Variables** tab, click `browserless-secrets`, enter a new val
 ### Sessions wait in a queue or time out
 
 The template allows a limited number of browser sessions at once (`CONCURRENT`) and queues the rest (`QUEUED`). Close browsers your client no longer needs, or raise the memory limit of the service before you raise these values. See [Docker configuration](https://docs.browserless.io/baas/docker/config).
+
+### The page shows 502 or does not load
+
+Open the `browserless` service in Zeabur. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the service is slow or keeps reconnecting, open the **Usage** tab. **Near memory max** means the memory is close to the limit. Raise **Maximum memory** the same way. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
+
+Without Zeabur, read the logs with `kubectl -n <namespace> logs deployment/browserless` and the events with `kubectl -n <namespace> get events --sort-by=.lastTimestamp`.
+
+See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur docs.

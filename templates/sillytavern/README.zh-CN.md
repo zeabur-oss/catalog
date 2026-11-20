@@ -27,6 +27,12 @@
 
 ## 故障排除
 
+### 页面显示 502 或打不开
+
+在 Zeabur 打开 `sillytavern` 服务，确认**概览**显示副本已就绪，再看**日志**选项卡。副本一直重启时，打开**部署记录**，切换到**事件**。如果事件显示 `OOMKilled`，到**设置** → **计算资源**调高**内存上限**。详见[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
+
+域名或证书一直处于等待中时，看[添加公开域名与 HTTPS](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)的“遇到问题”。
+
 ### 浏览器一直要求登录
 
 用户名用 `user`，密码用 `app-secrets` 的 `basic-password` 字段。更改密码之后，浏览器保存的旧密码就不能用了。

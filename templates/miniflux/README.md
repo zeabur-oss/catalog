@@ -32,7 +32,17 @@ See [API](https://miniflux.app/docs/api.html) in the Miniflux docs.
 
 Many reader apps can connect to Miniflux through the Google Reader API or the Fever API. In Miniflux, open Settings, then Integrations, and choose a user name and password for the API. Use that user name and password in the app. See [Google Reader API](https://miniflux.app/docs/google_reader.html) and [Fever API](https://miniflux.app/docs/fever.html) in the Miniflux docs for the apps that work.
 
+### Back up the data
+
+Miniflux keeps feeds, articles and settings in the `miniflux-db` database. It keeps nothing on a volume. In the project, open the `miniflux-db` database. Under **Backups**, set up S3 backups. To get a file instead, click **More** → **Export**. See [Create, back up, and restore databases](https://oss.zeabur.com/docs/zeabur/deploy/databases/#set-up-s3-backups) and [Download a database dump](https://oss.zeabur.com/docs/zeabur/deploy/databases/#download-a-database-dump) in the Zeabur docs.
+
 ## Troubleshooting
+
+### The page shows 502 or does not load
+
+Open the `miniflux` service in Zeabur. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
+
+See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur docs.
 
 ### A feed on a private address is refused
 

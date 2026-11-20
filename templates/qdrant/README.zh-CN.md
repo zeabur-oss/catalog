@@ -39,3 +39,13 @@ client = QdrantClient(url="https://<你的域名>:443", api_key="<api-key>")
 ### 更换 API 密钥
 
 在服务的**变量**标签页点 `qdrant-secrets`，填入新的 `api-key`，检查后应用。运行中的副本会继续用旧值，直到你点服务页顶部的**重启**。所有用到旧密钥的客户端都要同步更新。
+
+## 故障排除
+
+### 页面显示 502 或打不开
+
+在 Zeabur 打开 `qdrant` 服务，确认**概览**显示副本已就绪，再看**日志**选项卡。副本一直重启时，打开**部署记录**，切换到**事件**。如果事件显示 `OOMKilled`，到**设置** → **计算资源**调高**内存上限**。详见[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
+
+服务变慢或一直重新连接时，也按这些步骤检查。
+
+域名或证书一直处于等待中时，看[添加公开域名与 HTTPS](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)的“遇到问题”。

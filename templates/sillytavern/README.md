@@ -27,6 +27,12 @@ On the service's **Variables** tab, click `app-secrets`, enter a new value for `
 
 ## Troubleshooting
 
+### The page shows 502 or does not load
+
+In Zeabur, open the `sillytavern` service. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica keeps restarting, open **Deployments**, then **Events**. If the events show `OOMKilled`, raise **Maximum memory** in **Settings** → **Compute**. See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/).
+
+If the domain or its certificate stays pending, see [Add public domains and HTTPS](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting).
+
 ### The browser keeps asking for a login
 
 Use `user` as the user name, and the password from `app-secrets`, key `basic-password`. After a password change, the old saved password no longer works.

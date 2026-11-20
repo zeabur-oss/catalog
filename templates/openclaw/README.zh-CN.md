@@ -43,6 +43,24 @@ node /app/openclaw.mjs devices remove <deviceId>
 
 ## 故障排除
 
+### 页面显示 502 或打不开
+
+在 Zeabur 打开 `openclaw` 服务，确认**概览**显示副本已就绪，再看**日志**选项卡。副本一直重启时，打开**部署记录**，切换到**事件**。如果事件显示 `OOMKilled`，到**设置** → **计算资源**调高**内存上限**。详见[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
+
+服务变慢或一直重新连接时，也按这些步骤检查。
+
+域名或证书一直处于等待中时，看[添加公开域名与 HTTPS](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)的“遇到问题”。
+
 ### 另一个浏览器要求配对
 
 每个浏览器配置文件各自配对，一个配置文件不能沿用另一个的放行。请在**终端**对每个配置文件用 `devices approve` 放行一次，并用 `devices remove` 移除旧的条目。详见 OpenClaw 文档的 [Connect and pair](https://docs.openclaw.ai/web/control-ui/connect-and-pair)。
+
+### 显示 All models failed 或模型服务返回错误
+
+OpenClaw 用安装表单填写的 API 地址和模型发送模型请求。依次检查：
+
+- 模型名称在你的模型服务上确实存在。名称填错很常见。
+- 你在安装表单指定的机密变量里，键 `api-key` 的 API 密钥有效，也没有超过模型服务的速率限制或额度。
+- API 地址是 OpenAI 兼容 API 的 HTTPS 地址。
+
+打开 `openclaw` 服务的**日志**选项卡，查看模型服务返回的错误。API 地址和模型只在第一次启动时从安装表单读取。之后要改，用控制界面的 **Config** 选项卡。API 地址是 `models.providers.custom.baseUrl`，模型名称要在 `models.providers.custom.models` 和 `agents.defaults.model.primary` 两处都改。详见 OpenClaw 文档的 [Model providers](https://docs.openclaw.ai/concepts/model-providers) 和 [Configuration](https://docs.openclaw.ai/gateway/configuration)。

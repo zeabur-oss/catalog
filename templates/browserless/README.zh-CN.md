@@ -38,3 +38,11 @@
 ### 会话在排队或超时
 
 模板限制同时打开的浏览器数量（`CONCURRENT`），其余的会排队（`QUEUED`）。先关掉客户端不再需要的浏览器；要调高这两个值之前，先调高服务的内存上限。详见 [Docker configuration](https://docs.browserless.io/baas/docker/config)。
+
+### 页面显示 502 或打不开
+
+在 Zeabur 打开 `browserless` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。服务变慢或一直重新连接时，打开**用量**标签页，出现**接近内存上限**就用同样的方式调高上限。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
+
+不用 Zeabur 时，用 `kubectl -n <namespace> logs deployment/browserless` 查看日志，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 查看事件。
+
+详见 Zeabur 文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。

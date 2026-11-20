@@ -28,6 +28,12 @@ curl 'https://<你的網域>/search?q=searxng&format=json'
 
 ## 疑難排解
 
+### 頁面顯示 502 或打不開
+
+在 Zeabur 打開 `searxng` 服務，確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本一直重新啟動時，打開**部署紀錄**，切到**事件**。如果事件寫著 `OOMKilled`，到**設定** → **運算資源**調高**記憶體上限**。詳見[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
+
+網域或憑證一直停在等待中時，看[加上公開網域與 HTTPS](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)的「遇到問題」。
+
 ### 使用 format=csv 或 format=rss 的請求得到 403
 
 這個範本只開啟 `html` 和 `json` 兩種格式。沒開啟的格式會得到 `403 Forbidden`。詳見 [Search API](https://docs.searxng.org/dev/search_api.html)。

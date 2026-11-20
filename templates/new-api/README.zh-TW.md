@@ -40,8 +40,26 @@ curl https://newapi.example.com/v1/chat/completions \
 
 詳見 New API 文件的 [Using API and Playground](https://docs.newapi.ai/en/docs/guide/feature-guide/user/api)。
 
+### 更改管理員密碼
+
+New API 只在第一次啟動、建立管理員時讀取 `admin-password`。之後改機密變數不會改變密碼。請登入 New API 後在裡面更改。
+
+### 備份資料
+
+New API 把存下來的東西都放在 `newapi-db` 資料庫。範本只把日誌檔寫到 `/data`，那是暫存空間，替換副本時會被刪除，所以沒有磁碟區要備份。在專案打開 `newapi-db` 資料庫。到**備份**設定 S3 備份。想直接拿到檔案，按**更多** → **匯出**。詳見 Zeabur 文件的[設定 S3 備份](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/#設定-s3-備份)和[下載資料庫傾印檔](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/#下載資料庫傾印檔)。
+
 ## 疑難排解
+
+### 頁面顯示 502 或打不開
+
+在 Zeabur 打開 `new-api` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
+
+詳見 Zeabur 文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
 
 ### 用自動產生的密碼登入失敗
 
 密碼不只是機密的值，它是以 `Aa1-` 開頭的。請用「開始使用」裡的指令印出完整的密碼。
+
+### 請求出現服務商的錯誤
+
+New API 會把服務商的錯誤傳回來。以 `admin` 開啟 Channels，檢查三件事。請求裡的模型名稱必須是管道列出的模型，也必須是服務商有的模型。管道的 API 金鑰必須有效，可用管道上的 Test 確認。服務商的速率限制或額度不能已經用完。接著在 Zeabur 打開 `new-api` 服務的**日誌**分頁，讀錯誤訊息。詳見 New API 文件的 [Channel Management](https://docs.newapi.ai/en/docs/guide/feature-guide/admin/channel)。

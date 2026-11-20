@@ -40,8 +40,26 @@ curl https://newapi.example.com/v1/chat/completions \
 
 See [Using API and Playground](https://docs.newapi.ai/en/docs/guide/feature-guide/user/api) in the New API docs.
 
+### Change the admin password
+
+New API reads `admin-password` only at the first start, when it creates the administrator. A later change to the Secret does not change the password. Change it in New API after you sign in.
+
+### Back up the data
+
+New API keeps everything it saves in the `newapi-db` database. The template writes only log files to `/data`, on scratch space that Kubernetes deletes when the replica is replaced, so there is no volume to back up. In the project, open the `newapi-db` database. Under **Backups**, set up S3 backups. To get a file instead, click **More** → **Export**. See [Create, back up, and restore databases](https://oss.zeabur.com/docs/zeabur/deploy/databases/#set-up-s3-backups) and [Download a database dump](https://oss.zeabur.com/docs/zeabur/deploy/databases/#download-a-database-dump) in the Zeabur docs.
+
 ## Troubleshooting
+
+### The page shows 502 or does not load
+
+Open the `new-api` service in Zeabur. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
+
+See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur docs.
 
 ### Sign-in fails with the generated password
 
 The password is not the Secret value alone. It starts with `Aa1-`. Use the command in Getting started to print it.
+
+### A request fails with a provider error
+
+New API passes the provider's error on. Open **Channels** as `admin` and check three things. The model name in your request must be one the channel lists, and it must exist at the provider. The API key of the channel must be valid, so select Test on the channel. The provider's rate limit or quota must not be used up. Then open the **Logs** tab of the `new-api` service in Zeabur and read the error. See [Channel Management](https://docs.newapi.ai/en/docs/guide/feature-guide/admin/channel) in the New API docs.

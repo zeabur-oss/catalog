@@ -35,3 +35,11 @@
 ### 用密碼保護資料夾
 
 為路徑新增一筆 meta 記錄，並設定密碼。密碼要涵蓋子資料夾時，勾選密碼後面的 Apply to sub folder。透過 WebDAV 存取時，這個密碼不會生效。詳見 [Meta](https://doc.oplist.org/guide/advanced/meta)。
+
+## 疑難排解
+
+### 頁面顯示 502 或打不開
+
+在 Zeabur 打開 `openlist` 服務，確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本一直重新啟動時，打開**部署紀錄**，切到**事件**。如果事件寫著 `OOMKilled`，到**設定** → **運算資源**調高**記憶體上限**。詳見[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
+
+網域或憑證一直停在等待中時，看[加上公開網域與 HTTPS](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)的「遇到問題」。

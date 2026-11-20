@@ -44,3 +44,17 @@ On the service's **Variables** tab, click the Secret you chose in the install fo
 The template writes the model, endpoint and key from the install form into the Hermes configuration on every start. A change of the model in the dashboard lasts only until the next restart.
 
 See [Web Dashboard](https://hermes-agent.nousresearch.com/docs/user-guide/features/web-dashboard) for what the dashboard manages.
+
+## Troubleshooting
+
+### The page shows 502 or does not load
+
+Open the `hermes-agent` service in Zeabur. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
+
+Without Zeabur, read the logs with `kubectl -n <namespace> logs deployment/hermes-agent` and the events with `kubectl -n <namespace> get events --sort-by=.lastTimestamp`.
+
+See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur docs.
+
+### Requests fail with a model provider error
+
+Hermes calls the model with the model name, endpoint and key from the install form. When a call fails, read the **Logs** tab of the `hermes-agent` service, then check three things. The model name must exist at your provider. The key `api-key` in the Secret you chose in the install form must be valid. And your account must not be over its rate limit or quota at the provider. See [AI Providers](https://hermes-agent.nousresearch.com/docs/integrations/providers) in the Hermes docs.

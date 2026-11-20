@@ -32,6 +32,12 @@ location / {
 
 ## 疑難排解
 
+### 頁面顯示 502 或打不開
+
+在 Zeabur 打開 `nginx` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
+
+詳見 Zeabur 文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
+
 ### 編輯後新的 Pod 起不來
 
 設定有錯時，NGINX 不會啟動。新的 Pod 就緒之前，舊的 Pod 會繼續提供服務，所以網站不會中斷。打開 `nginx` 服務的**日誌**分頁，用上方的選擇器選新的副本，看 NGINX 拒絕的那一行。在**物件**頁面修正 ConfigMap，再按一次**重新啟動**。

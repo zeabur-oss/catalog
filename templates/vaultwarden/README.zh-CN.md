@@ -25,6 +25,12 @@
 
 ## 故障排除
 
+### 页面显示 502 或打不开
+
+在 Zeabur 打开 `vaultwarden` 服务，确认**概览**显示副本已就绪，再看**日志**选项卡。副本一直重启时，打开**部署记录**，切换到**事件**。如果事件显示 `OOMKilled`，到**设置** → **计算资源**调高**内存上限**。详见[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
+
+域名或证书一直处于等待中时，看[添加公开域名与 HTTPS](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)的“遇到问题”。
+
 ### 管理页面又要求输入令牌
 
 管理员会话默认只有 20 分钟，请重新输入令牌。详见 [Enabling admin page](https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page)。

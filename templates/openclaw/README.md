@@ -43,6 +43,24 @@ See [Connect and pair](https://docs.openclaw.ai/web/control-ui/connect-and-pair)
 
 ## Troubleshooting
 
+### The page shows 502 or does not load
+
+In Zeabur, open the `openclaw` service. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica keeps restarting, open **Deployments**, then **Events**. If the events show `OOMKilled`, raise **Maximum memory** in **Settings** → **Compute**. See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/).
+
+If the service is slow or keeps reconnecting, check the same things.
+
+If the domain or its certificate stays pending, see [Add public domains and HTTPS](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting).
+
 ### Another browser asks for pairing
 
 Each browser profile pairs on its own, and one profile cannot reuse the approval of another. Approve each profile once with `devices approve` in the **Terminal**, and remove old entries with `devices remove`. See [Connect and pair](https://docs.openclaw.ai/web/control-ui/connect-and-pair) in the OpenClaw docs.
+
+### All models failed or the provider returns an error
+
+OpenClaw sends model requests to the base URL and model from the install form. Check these:
+
+- The model name exists at your provider. A wrong name is a common cause.
+- The API key in the Secret you named in the install form (key `api-key`) is valid and has not hit a rate limit or a quota at the provider.
+- The base URL is the HTTPS address of an OpenAI-compatible API.
+
+Open the **Logs** tab of the `openclaw` service to read the error that the provider returned. The base URL and the model are read from the install form on the first start only. To change them later, use the **Config** tab of the Control UI. The base URL is `models.providers.custom.baseUrl`. The model name is set in `models.providers.custom.models` and in `agents.defaults.model.primary`. See [Model providers](https://docs.openclaw.ai/concepts/model-providers) and [Configuration](https://docs.openclaw.ai/gateway/configuration) in the OpenClaw docs.

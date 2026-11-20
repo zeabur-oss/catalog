@@ -25,6 +25,12 @@ On the service's **Variables** tab, click `vaultwarden-secrets`, enter a new val
 
 ## Troubleshooting
 
+### The page shows 502 or does not load
+
+In Zeabur, open the `vaultwarden` service. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica keeps restarting, open **Deployments**, then **Events**. If the events show `OOMKilled`, raise **Maximum memory** in **Settings** → **Compute**. See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/).
+
+If the domain or its certificate stays pending, see [Add public domains and HTTPS](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting).
+
 ### The admin page asks for the token again
 
 An admin session lasts 20 minutes by default. Enter the token again. See [Enabling admin page](https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page).

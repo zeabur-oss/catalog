@@ -50,6 +50,12 @@ curl -H "Authorization: Bearer tk_..." -d "Hello" https://ntfy.example.com/mytop
 
 ## 故障排除
 
+### 页面显示 502 或打不开
+
+在 Zeabur 打开 `ntfy` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
+
+详见 Zeabur 文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
+
 ### 客户端无法发送或订阅
 
 模板默认拒绝访问每个主题。请让客户端用用户名和密码，或访问令牌登录。`admin` 以外的用户，还要用 `ntfy access` 让它能访问该主题。详见 ntfy 文档的 [Access control](https://docs.ntfy.sh/config/)。

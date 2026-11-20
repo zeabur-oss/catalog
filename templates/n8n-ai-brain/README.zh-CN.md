@@ -38,7 +38,39 @@ n8n 每次启动都会用安装表单和机密变量设置所有者账号，并�
 
 Webhook 节点有两个 URL。测试 URL 在你选 Listen for Test Event 时有效，并会在编辑器显示收到的数据。生产 URL 在你发布工作流后有效。两个 URL 都以你的域名开头。详见 n8n 文档的 [Webhook node](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook/)。
 
+### 备份或迁移数据
+
+n8n 把工作流、凭证和执行记录存在 `n8n-db` 数据库。`n8n-data` 卷挂载在 `/home/node/.n8n`，放二进制数据之类的文件。备份要有数据库和加密密钥，要迁到另一个 n8n 时，还要导出工作流和凭证。
+
+1. 备份数据库。在项目中打开 `n8n-db` 数据库。到**备份**配置 S3 备份。想直接拿到文件，点击**更多** → **导出**。详见 Zeabur 文档的[配置 S3 备份](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#配置-s3-备份)和[下载数据库转储文件](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#下载数据库转储文件)。
+2. 留好“开始使用”里的加密密钥。没有它，n8n 读不了已保存的凭证。
+3. 导出工作流和凭证。点击 `n8n` 服务页面顶部的**终端**，运行：
+
+   ```sh
+   n8n export:workflow --backup --output=/home/node/.n8n/backups/workflows/
+   n8n export:credentials --backup --output=/home/node/.n8n/backups/credentials/
+   ```
+
+   接着到 `n8n` 服务的**文件**标签页，下载这两个文件夹。不要下载整个卷，文件夹太大会超时。
+
+要迁到另一个 n8n，先在新 `n8n` 服务的**文件**标签页上传这两个文件夹，再用**终端**导入：
+
+```sh
+n8n import:workflow --separate --input=<workflows folder>
+n8n import:credentials --separate --input=<credentials folder>
+```
+
+新的 n8n 必须用同一个加密密钥，否则读不了凭证。做不到时，在 `n8n export:credentials` 加上 `--decrypted`。这个文件里的凭证是明文，导入后要删掉。导出的内容不含用户、执行记录、变量和实例设置。
+
+详见 n8n 文档的 [Back up and restore](https://docs.n8n.io/deploy/host-n8n/keep-n8n-running/backup-and-restore) 和 [Use the command line](https://docs.n8n.io/deploy/host-n8n/configure-n8n/use-the-command-line)。
+
 ## 故障排除
+
+### 页面显示 502、打不开或一直重新连接
+
+在 Zeabur 打开 `n8n` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。服务很慢或一直重新连接，也常是内存不够，同样检查**事件**和**内存上限**。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
+
+详见 Zeabur 文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
 
 ### Code 节点不运行
 

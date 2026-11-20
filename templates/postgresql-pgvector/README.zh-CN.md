@@ -46,6 +46,10 @@ CREATE INDEX ON items USING hnsw (embedding vector_l2_ops);
 
 `<=>` 用 `vector_cosine_ops`，`<#>` 用 `vector_ip_ops`。详见 [HNSW](https://github.com/pgvector/pgvector#hnsw)。
 
+### 备份数据
+
+在 Zeabur 打开 `postgresql` 数据库，到**备份** → **设置备份**，就能按计划备份到 S3 存储桶。PostgreSQL 备份需要 Barman Cloud 插件。要现在就拿一份数据，在数据库页面右上角点击**更多** → **导出**，浏览器会下载 `pg_dump --format=custom` 生成的 `.dump` 文件。详见[配置 S3 备份](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#配置-s3-备份)和[下载数据库转储文件](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#下载数据库转储文件)。
+
 ## 故障排除
 
 ### 查询没有用到索引
