@@ -418,21 +418,31 @@ func createSecrets(r *run, c *Component) error {
 	return nil
 }
 
-// DeleteNamespace deletes the objects of manifests in ns in the foreground, then ns. The namespace
-// controller waits half the longest grace period of a remaining pod before it looks again, and a
-// CloudNativePG instance pod has 1800s. Foreground deletion waits for the pods.
+// DeleteNamespace deletes the objects of manifests in the foreground, then ns. An object without a
+// namespace is in ns. The namespace controller waits half the longest grace period of a remaining
+// pod before it looks again, and a CloudNativePG instance pod has 1800s. Foreground deletion waits
+// for the pods.
 func DeleteNamespace(ns string, manifests ...[]byte) error {
 	var items []*unstructured.Unstructured
 	var errs []error
 	for _, m := range manifests {
 		objs, err := kubeobj.Decode(m)
 		errs = append(errs, err)
-		items = append(items, slices.DeleteFunc(objs, func(o *unstructured.Unstructured) bool { return o.GetKind() == "Namespace" })...)
+		for _, o := range objs {
+			if o.GetKind() == "Namespace" {
+				continue
+			}
+			// kubectl refuses an object in another namespace than -n, so each object names its own.
+			if o.GetNamespace() == "" {
+				o.SetNamespace(ns)
+			}
+			items = append(items, o)
+		}
 	}
 	if len(items) > 0 {
 		list, err := json.Marshal(map[string]any{"apiVersion": "v1", "kind": "List", "items": items})
 		if err == nil {
-			_, err = Kubectl(list, "delete", "-n", ns, "-f", "-", "--ignore-not-found", "--cascade=foreground", "--wait", "--timeout=5m")
+			_, err = Kubectl(list, "delete", "-f", "-", "--ignore-not-found", "--cascade=foreground", "--wait", "--timeout=5m")
 		}
 		errs = append(errs, err)
 	}

@@ -137,13 +137,19 @@ func TestSmokeDeletesItsObjectsBeforeTheNamespace(t *testing.T) {
 
 	manifest := "apiVersion: v1\nkind: Namespace\nmetadata: {name: catalog-smoke}\n---\n" +
 		"apiVersion: postgresql.cnpg.io/v1\nkind: Cluster\nmetadata: {name: smoke, namespace: catalog-smoke}\n"
-	c := &Component{ID: "cloudnative-pg", Smoke: []Smoke{{Name: "one-instance-cluster", Manifest: manifest}}}
+	// keel's smoke check runs its Job in the release namespace.
+	other := "apiVersion: batch/v1\nkind: Job\nmetadata: {name: webhook, namespace: keel}\n---\n" +
+		"apiVersion: v1\nkind: ConfigMap\nmetadata: {name: unnamed}\n"
+	c := &Component{ID: "cloudnative-pg", Smoke: []Smoke{
+		{Name: "one-instance-cluster", Manifest: manifest},
+		{Name: "other-namespace", Manifest: other},
+	}}
 	if err := (&Tester{}).smoke(c); err != nil {
 		t.Fatal(err)
 	}
 	data, _ := os.ReadFile(log)
 	calls := string(data)
-	objects := strings.Index(calls, "delete -n catalog-smoke -f - --ignore-not-found --cascade=foreground")
+	objects := strings.Index(calls, "delete -f - --ignore-not-found --cascade=foreground")
 	namespace := strings.Index(calls, "delete namespace catalog-smoke")
 	if objects < 0 || namespace < objects {
 		t.Fatalf("want the objects deleted in the foreground before the namespace, got:\n%s", calls)
@@ -151,5 +157,10 @@ func TestSmokeDeletesItsObjectsBeforeTheNamespace(t *testing.T) {
 	deleted := calls[objects:namespace]
 	if !strings.Contains(deleted, `"kind":"Cluster"`) || strings.Contains(deleted, `"kind":"Namespace"`) {
 		t.Errorf("want the Cluster deleted and the Namespace left to its own delete, got:\n%s", deleted)
+	}
+	for _, want := range []string{`"name":"webhook","namespace":"keel"`, `"name":"unnamed","namespace":"catalog-smoke"`} {
+		if !strings.Contains(deleted, want) {
+			t.Errorf("want %s in the delete, got:\n%s", want, deleted)
+		}
 	}
 }
