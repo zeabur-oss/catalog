@@ -17,6 +17,7 @@ metadata:
   license: SSPL-1.0 OR LicenseRef-Browserless-Commercial
   # Also: https://docs.browserless.io/
   homepage: https://github.com/browserless/browserless
+  docs: https://docs.browserless.io/baas/docker/quickstart
 
 requires: [{component: traefik}, {component: cert-manager}]
 

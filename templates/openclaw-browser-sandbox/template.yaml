@@ -16,6 +16,7 @@ metadata:
   license: MIT
   # Also: https://docs.openclaw.ai/tools/browser
   homepage: https://github.com/canyugs/openclaw-sandbox-browser
+  docs: https://docs.openclaw.ai/tools/browser/remote
 
 services:
   - name: openclaw-sandbox-browser

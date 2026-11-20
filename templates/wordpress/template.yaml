@@ -14,6 +14,7 @@ metadata:
   license: GPL-2.0-or-later AND GPL-2.0-only AND BSD-2-Clause AND MIT
   # Also: https://github.com/docker-library/wordpress, https://mariadb.org/, https://github.com/nginx/docker-nginx-unprivileged, https://github.com/mariadb-operator/mariadb-operator
   homepage: https://wordpress.org/
+  docs: https://wordpress.org/documentation/article/first-steps-with-wordpress/
 
 requires:
   - {component: traefik}

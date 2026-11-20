@@ -12,6 +12,7 @@ metadata:
       summary: "Hermes AI 智能体，附 API 和管理面板，可接 OpenRouter 或其他兼容 OpenAI 的服务。"
   license: MIT
   homepage: https://github.com/NousResearch/hermes-agent
+  docs: https://hermes-agent.nousresearch.com/docs/user-guide/features/web-dashboard
 
 requires: [{component: traefik}, {component: cert-manager}]
 

@@ -13,6 +13,7 @@ metadata:
   license: PostgreSQL AND Apache-2.0
   # Also: https://github.com/cloudnative-pg/postgres-containers, https://cloudnative-pg.io/
   homepage: https://github.com/pgvector/pgvector
+  docs: https://github.com/pgvector/pgvector#getting-started
 
 requires: [{component: cloudnative-pg}]
 

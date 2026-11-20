@@ -16,6 +16,7 @@ metadata:
   license: LicenseRef-Open-WebUI AND MIT
   # Also: https://github.com/open-webui/pipelines
   homepage: https://github.com/open-webui/open-webui
+  docs: https://docs.openwebui.com/reference/env-configuration
 
 requires: [{component: traefik}, {component: cert-manager}]
 

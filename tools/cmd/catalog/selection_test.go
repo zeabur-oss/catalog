@@ -83,6 +83,7 @@ func TestSharedChange(t *testing.T) {
 		{"workflow", []string{".github/workflows/ci.yml"}, representative},
 		{"kubernetes versions", []string{"config/kubernetes.yaml"}, everything},
 		{"documentation", []string{"README.md"}, nil},
+		{"template documentation", []string{"templates/blog/README.zh-TW.md"}, nil},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			p, err := filesPick(r, c.files)

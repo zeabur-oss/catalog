@@ -15,6 +15,7 @@ metadata:
   # built from the Bitwarden clients) GPL-3.0-only.
   license: AGPL-3.0-only AND GPL-3.0-only
   homepage: https://github.com/dani-garcia/vaultwarden
+  docs: https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page
 
 requires: [{component: traefik}, {component: cert-manager}]
 

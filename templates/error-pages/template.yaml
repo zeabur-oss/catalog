@@ -15,6 +15,7 @@ metadata:
   license: BSD-2-Clause AND Apache-2.0
   # Also: https://github.com/nginx/docker-nginx-unprivileged
   homepage: https://nginx.org/
+  docs: https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/errorpages/
 
 requires: [{component: traefik}]
 

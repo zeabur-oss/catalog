@@ -17,6 +17,7 @@ metadata:
   license: MIT AND SSPL-1.0 AND PostgreSQL AND Apache-2.0
   # Also: https://github.com/danny-avila/rag_api, https://github.com/percona/percona-server-mongodb-operator, https://cloudnative-pg.io/, https://github.com/meilisearch/meilisearch
   homepage: https://github.com/danny-avila/LibreChat
+  docs: https://www.librechat.ai/docs/configuration/authentication
 
 requires:
   - {component: percona-mongodb}

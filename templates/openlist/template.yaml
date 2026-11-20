@@ -12,6 +12,7 @@ metadata:
       summary: "文件列表与 WebDAV，内含 FFmpeg 和 Aria2 下载。"
   license: AGPL-3.0-only
   homepage: https://github.com/OpenListTeam/OpenList
+  docs: https://doc.oplist.org/faq/howto
 
 requires: [{component: traefik}, {component: cert-manager}]
 

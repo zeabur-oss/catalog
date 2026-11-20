@@ -12,6 +12,7 @@ metadata:
       summary: "笔记服务，数据用 SQLite 存在卷上，并预先建好管理员账号。"
   license: MIT
   homepage: https://usememos.com/
+  docs: https://usememos.com/docs/configuration/declarative-configuration
 
 requires: [{component: traefik}, {component: cert-manager}]
 

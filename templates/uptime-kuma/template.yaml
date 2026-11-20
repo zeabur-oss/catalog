@@ -12,6 +12,7 @@ metadata:
       summary: "监控服务是否正常在线，数据存在卷上。"
   license: MIT
   homepage: https://github.com/louislam/uptime-kuma
+  docs: https://uptime.kuma.pet/docs/How-to-Install
 
 requires: [{component: traefik}, {component: cert-manager}]
 

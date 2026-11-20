@@ -13,6 +13,7 @@ metadata:
   license: GPL-3.0-only AND PostgreSQL
   # Also: https://cloudnative-pg.io/
   homepage: https://github.com/halo-dev/halo
+  docs: https://docs.halo.run/guide/setup
 
 requires:
   - {component: cloudnative-pg}

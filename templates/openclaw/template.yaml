@@ -15,6 +15,7 @@ metadata:
   license: MIT
   # Also: https://docs.openclaw.ai/gateway/security
   homepage: https://github.com/openclaw/openclaw
+  docs: https://docs.openclaw.ai/web/control-ui
 
 requires: [{component: traefik}, {component: cert-manager}]
 

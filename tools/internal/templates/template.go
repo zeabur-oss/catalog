@@ -45,9 +45,11 @@ func (Template) JSONSchemaExtend(s *gen.Schema) {
 	s.Properties.Set("kind", &gen.Schema{Const: "Template"})
 }
 
-// Metadata is a template's name, summary and version.
+// Metadata is a template's name, summary, version and docs.
 type Metadata struct {
 	catalog.Metadata `yaml:",inline"`
+	// The upstream docs on how to use the application, not the repository root.
+	Docs string `yaml:"docs" json:"docs" jsonschema:"required,format=uri,pattern=^https://"`
 	// The application version: the tag of its main image. Objects get it as the label
 	// app.kubernetes.io/version.
 	Version string `yaml:"version" json:"version" jsonschema:"required"`
@@ -263,6 +265,9 @@ func Check(root string, cat *catalog.Catalog, all []*Template) error {
 			continue
 		}
 		for _, p := range catalog.MissingLocales(t.raw, locales) {
+			fail("%s", p)
+		}
+		for _, p := range checkReadmes(t, locales) {
 			fail("%s", p)
 		}
 		// The e2e namespace templates-e2e-<id> must be a DNS label.

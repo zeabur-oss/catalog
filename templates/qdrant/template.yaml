@@ -12,6 +12,7 @@ metadata:
       summary: "向量数据库，用 API 密钥保护，数据存在卷上。"
   license: Apache-2.0
   homepage: https://qdrant.tech/
+  docs: https://qdrant.tech/documentation/quickstart/
 
 requires: [{component: traefik}, {component: cert-manager}]
 

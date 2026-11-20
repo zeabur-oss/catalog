@@ -13,6 +13,7 @@ metadata:
   license: Apache-2.0 AND PostgreSQL
   # Also: https://cloudnative-pg.io/
   homepage: https://miniflux.app/
+  docs: https://miniflux.app/docs/configuration.html
 
 requires:
   - {component: traefik}

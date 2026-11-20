@@ -13,6 +13,7 @@ metadata:
   license: MIT AND PostgreSQL AND Apache-2.0
   # Also: https://cloudnative-pg.io/
   homepage: https://about.gitea.com/
+  docs: https://docs.gitea.com/installation/install-with-docker-rootless
 
 requires:
   - {component: traefik}

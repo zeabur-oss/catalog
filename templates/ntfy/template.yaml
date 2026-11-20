@@ -12,6 +12,7 @@ metadata:
       summary: "推送通知服务器，主题需要账号，消息存在卷上。"
   license: Apache-2.0 OR GPL-2.0-only
   homepage: https://ntfy.sh/
+  docs: https://docs.ntfy.sh/config/
 
 requires: [{component: traefik}, {component: cert-manager}]
 

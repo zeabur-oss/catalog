@@ -12,6 +12,7 @@ metadata:
       summary: "用密码保护的 LLM 聊天前端，对话存在卷上。"
   license: AGPL-3.0-only
   homepage: https://github.com/SillyTavern/SillyTavern
+  docs: https://docs.sillytavern.app/usage/quick-start/
 
 requires: [{component: traefik}, {component: cert-manager}]
 

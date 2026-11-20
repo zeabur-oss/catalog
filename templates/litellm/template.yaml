@@ -18,6 +18,7 @@ metadata:
   license: MIT AND LicenseRef-LiteLLM-Enterprise AND PostgreSQL AND Apache-2.0
   # Also: https://github.com/BerriAI/litellm/blob/main/enterprise/LICENSE.md, https://cloudnative-pg.io/
   homepage: https://www.litellm.ai/
+  docs: https://docs.litellm.ai/docs/proxy/ui
 
 requires:
   - {component: traefik}

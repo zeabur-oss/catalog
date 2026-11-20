@@ -171,7 +171,7 @@ func templateMeasurementPath(id string) string {
 
 // sourceDigest returns the Go module hash (dirhash.Hash1, "h1:...") of the
 // file at path, or of every file under it when it is a directory, except the
-// e2e.yaml of a template, which holds test data and changes no measurement.
+// e2e.yaml and READMEs of a template, which hold test data and docs and change no measurement.
 func sourceDigest(path string) (string, error) {
 	info, err := os.Stat(path)
 	if err != nil {
@@ -182,7 +182,7 @@ func sourceDigest(path string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		files = slices.DeleteFunc(files, func(f string) bool { return f == "e2e.yaml" })
+		files = slices.DeleteFunc(files, func(f string) bool { return f == "e2e.yaml" || templates.IsReadme(f) })
 		return dirhash.Hash1(files, func(name string) (io.ReadCloser, error) { return os.Open(filepath.Join(path, name)) })
 	}
 	open := func(string) (io.ReadCloser, error) { return os.Open(path) }

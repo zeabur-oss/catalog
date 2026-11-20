@@ -229,6 +229,12 @@
           "pattern": "^https?://",
           "format": "uri"
         },
+        "docs": {
+          "type": "string",
+          "pattern": "^https://",
+          "format": "uri",
+          "description": "The upstream docs on how to use the application, not the repository root."
+        },
         "version": {
           "type": "string",
           "description": "The application version: the tag of its main image. Objects get it as the label\napp.kubernetes.io/version."
@@ -242,9 +248,10 @@
         "locales",
         "license",
         "homepage",
+        "docs",
         "version"
       ],
-      "description": "Metadata is a template's name, summary and version."
+      "description": "Metadata is a template's name, summary, version and docs."
     },
     "port": {
       "properties": {

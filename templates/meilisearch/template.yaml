@@ -15,6 +15,7 @@ metadata:
   # in getmeili/meilisearch-enterprise.
   license: MIT
   homepage: https://www.meilisearch.com/
+  docs: https://www.meilisearch.com/docs/learn/self_hosted/getting_started_with_self_hosted_meilisearch
 
 requires: [{component: traefik}, {component: cert-manager}]
 

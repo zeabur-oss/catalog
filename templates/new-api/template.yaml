@@ -13,6 +13,7 @@ metadata:
   license: AGPL-3.0-only AND PostgreSQL AND Apache-2.0
   # Also: https://docs.newapi.pro/
   homepage: https://github.com/QuantumNous/new-api
+  docs: https://docs.newapi.ai/en/docs/installation/deployment-methods/docker-compose-installation
 
 requires:
   - {component: traefik}

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
+	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
 
 // reason is what a run was asked to test.
@@ -156,8 +157,10 @@ func filesPick(r *repo, files []string) (pick, error) {
 			strings.HasPrefix(f, "flake."), strings.HasPrefix(f, ".github/workflows/"):
 			shared = true
 		case strings.HasPrefix(f, "templates/"):
-			id, _, _ := strings.Cut(strings.TrimPrefix(f, "templates/"), "/")
-			p.deps[id] = true
+			id, file, _ := strings.Cut(strings.TrimPrefix(f, "templates/"), "/")
+			if !templates.IsReadme(file) {
+				p.deps[id] = true
+			}
 		default:
 			for _, c := range r.cat.Components {
 				if c.Path == f {

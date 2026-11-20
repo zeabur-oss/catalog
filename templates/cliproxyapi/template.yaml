@@ -12,6 +12,7 @@ metadata:
       summary: "兼容 OpenAI 与 Gemini 的 API 代理，附密钥和管理页面。"
   license: MIT
   homepage: https://github.com/router-for-me/CLIProxyAPI
+  docs: https://help.router-for.me/configuration/basic.html
 
 requires: [{component: traefik}, {component: cert-manager}]
 

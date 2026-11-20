@@ -1,0 +1,50 @@
+## 简介
+
+[Meilisearch](https://www.meilisearch.com/) 是有 REST API 的搜索引擎。你把文档发给它，它在几毫秒内响应搜索请求。
+
+这个模板在你的域名后面运行一个 Meilisearch，索引存在卷上。每个请求都要带密钥。它没有网页，也不用登录。
+
+## 开始使用
+
+1. 在 Zeabur 打开 `meilisearch` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**中，例如 `search.example.com`。
+2. 获取主密钥。打开**变量**，在**来自配置文件和机密变量**中点击 `meilisearch-secrets`，再点击 `master-key` 旁的眼睛图标。不用 Zeabur 时，用 kubectl 读取机密变量 `meilisearch-secrets` 的 `master-key`：
+
+   ```sh
+   kubectl -n <namespace> get secret meilisearch-secrets -o jsonpath='{.data.master-key}' | base64 -d
+   ```
+
+3. 对这个域名发送请求，并带上请求头 `Authorization: Bearer <密钥>`。例如列出 API 密钥：
+
+   ```sh
+   curl https://search.example.com/keys -H 'Authorization: Bearer <主密钥>'
+   ```
+
+主密钥只用来管理 API 密钥。给客户端的要用搜索密钥。
+
+## 配置
+
+### 获取给客户端的密钥
+
+Meilisearch 会替你创建 Default Search API Key 和 Default Admin API Key，上面的 `GET /keys` 请求可以列出它们。网页或移动应用用搜索密钥，你的服务器用管理密钥添加文档。详见 [Basic security](https://www.meilisearch.com/docs/learn/security/basic_security)。
+
+### 创建转储文件
+
+转储文件（dump）是整个实例数据的备份。用有权限的 API 密钥创建：
+
+```sh
+curl -X POST https://search.example.com/dumps -H 'Authorization: Bearer <密钥>'
+```
+
+Meilisearch 会把转储文件写到卷上的 `/meili_data/dumps`。详见 [Dumps](https://www.meilisearch.com/docs/learn/data_backup/dumps)。
+
+## 故障排除
+
+### 请求返回 502 或超时
+
+在 Zeabur 打开 `meilisearch` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
+
+详见 Zeabur 文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
+
+### 请求返回 401
+
+Meilisearch 会拒绝没有有效密钥的请求。请在 `Authorization: Bearer` 请求头带上密钥，并确认用的是这个实例的密钥。详见 [Basic security](https://www.meilisearch.com/docs/learn/security/basic_security)。

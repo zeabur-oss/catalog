@@ -13,6 +13,7 @@ metadata:
   license: MIT AND GPL-2.0-only
   # Also: https://github.com/docker-library/mysql, https://github.com/TryGhost/ghost-docker
   homepage: https://github.com/TryGhost/Ghost
+  docs: https://docs.ghost.org/install/docker
 
 requires: [{component: traefik}, {component: cert-manager}]
 
