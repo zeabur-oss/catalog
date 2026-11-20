@@ -2,19 +2,16 @@
 
 这个模板运行一个无头 Chrome，供 [OpenClaw](https://docs.openclaw.ai/tools/browser/remote) 或其他服务通过 Chrome DevTools 协议（CDP）操作。
 
-这个浏览器只给单个可信任的所有者使用。它没有网页，不用登录，也没有令牌。只有同一个项目里带有信任调用方标签的 Pod 连得进来。
+这个浏览器只给单个可信任的所有者使用。它没有网页，不用登录，也没有令牌。只有同一个项目里带有标签 `templates.zeabur.com/openclaw-browser-sandbox-client: "true"` 的 Pod 连得进来。
 
 ## 开始使用
 
 1. 在 Zeabur 打开 `openclaw-sandbox-browser` 服务。**概览**显示副本已就绪，服务就启动好了。它没有域名。
-2. 确认你的客户端 Pod 同时带有下面两个标签。第一个的值是你在安装表单填的信任调用方：
+2. OpenClaw 模板的 Pod 已经带有客户端标签。其他客户端 Pod 要在 Pod 模板加上：
 
    ```yaml
-   app.kubernetes.io/name: <信任调用方>
-   templates.zeabur.com/template: openclaw-browser-sandbox
+   templates.zeabur.com/openclaw-browser-sandbox-client: "true"
    ```
-
-   OpenClaw 模板的 Pod 带的是 `templates.zeabur.com/template: openclaw`，所以目前连不上（[#392](https://github.com/zeabur-oss/catalog/issues/392)）。
 3. 在该 Pod 里，把下面的地址当成 CDP 端点：
 
    ```text
@@ -51,4 +48,4 @@
 
 ### 客户端连不上
 
-网络策略只放行带有信任调用方标签的 Pod，而且只开 9222 端口。确认客户端在同一个项目里，并且带有开始使用里的两个标签。详见 [Remote and hosted browsers](https://docs.openclaw.ai/tools/browser/remote)。
+网络策略只放行带有客户端标签的 Pod，而且只开 9222 端口。确认客户端在同一个项目里，并且带有开始使用里的标签。详见 [Remote and hosted browsers](https://docs.openclaw.ai/tools/browser/remote)。

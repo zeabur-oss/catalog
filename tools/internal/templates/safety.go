@@ -45,7 +45,7 @@ const (
 	ErrIngressPolicy         Rule = "a service listed in security.unauthenticated needs an ingress NetworkPolicy whose podSelector names it"
 	ErrUnknownService        Rule = "security.unauthenticated names a service the template does not declare"
 	ErrTemplateLabel         Rule = "pods must have the label " + TemplateLabel + " set to the template ID"
-	ErrForeignPods           Rule = "NetworkPolicy selectors must select only pods with the label " + TemplateLabel + " set to the template ID"
+	ErrForeignPods           Rule = "NetworkPolicy selectors must select the template's own pods, or in a peer its clients, by label"
 	ErrPositiveResource      Rule = "positive resource required"
 	ErrPodTokenAutomount     Rule = "automountServiceAccountToken must explicitly be false"
 	ErrPodSecurity           Rule = "pod breaks the Pod Security Standard of its service"
@@ -83,6 +83,17 @@ const TemplateLabel = "templates.zeabur.com/template"
 // ownPods reports whether the selector selects only the pods of template id.
 func ownPods(sel *metav1.LabelSelector, id string) bool {
 	return id != "" && sel != nil && sel.MatchLabels[TemplateLabel] == id
+}
+
+// clientLabel is the label that lets pods of other templates reach a template's
+// unauthenticated services, set to "true", such as templates.zeabur.com/ollama-client.
+func clientLabel(id string) string {
+	return "templates.zeabur.com/" + id + "-client"
+}
+
+// clientPods reports whether sel selects the pods that carry the client label of template id.
+func clientPods(sel *metav1.LabelSelector, id string) bool {
+	return id != "" && sel != nil && sel.MatchLabels[clientLabel(id)] == "true"
 }
 
 // coreKinds are the kinds that Kubernetes and cert-manager own, which a template may render.
@@ -220,7 +231,7 @@ func Safety(r *Template, b []byte, namespace string) error {
 
 // checkPolicyRules checks the peers of a NetworkPolicy. A rule with no peer or
 // an empty peer allows all traffic. A pod selector for the template's own
-// namespace selects only the template's pods.
+// namespace selects only the template's pods or its clients.
 func checkPolicyRules(r *Template, np *networkingv1.NetworkPolicy, namespace, where string, fail func(string, Rule, ...string)) {
 	check := func(direction string, peers []networkingv1.NetworkPolicyPeer) {
 		if len(peers) == 0 {
@@ -231,7 +242,7 @@ func checkPolicyRules(r *Template, np *networkingv1.NetworkPolicy, namespace, wh
 				fail(where, "empty peer permits all traffic")
 			}
 			own := v.NamespaceSelector == nil || v.NamespaceSelector.MatchLabels["kubernetes.io/metadata.name"] == namespace
-			if own && (v.NamespaceSelector != nil || v.PodSelector != nil) && !ownPods(v.PodSelector, r.ID) {
+			if own && (v.NamespaceSelector != nil || v.PodSelector != nil) && !ownPods(v.PodSelector, r.ID) && !clientPods(v.PodSelector, r.ID) {
 				fail(where, ErrForeignPods, direction)
 			}
 			if v.IPBlock != nil && (v.IPBlock.CIDR == "0.0.0.0/0" || v.IPBlock.CIDR == "::/0") && len(r.Security.Risks) == 0 {

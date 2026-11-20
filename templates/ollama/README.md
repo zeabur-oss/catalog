@@ -7,10 +7,9 @@ This template runs one Ollama on the CPU, with a 50 GiB volume for models. It ha
 ## Getting started
 
 1. In Zeabur, open the `ollama` service. When **Overview** shows its replica as ready, the service is up. It has no domain.
-2. Other workloads reach Ollama at Service `ollama`, port `11434`, for example `http://ollama:11434`. The template allows only Pods in the same namespace that carry both of these labels:
+2. Other workloads reach Ollama at Service `ollama`, port `11434`, for example `http://ollama:11434`. The template allows only Pods in the same namespace that carry this label:
 
    ```yaml
-   templates.zeabur.com/template: ollama
    templates.zeabur.com/ollama-client: "true"
    ```
 

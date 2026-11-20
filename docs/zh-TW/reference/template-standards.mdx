@@ -44,7 +44,7 @@ Zeabur Catalog 的每個範本都必須符合以下規則。新增或修改範�
 - 範本不得附帶預設拒絕流量或針對個別 Pod 的 NetworkPolicy。安裝程式會使用基礎政策隔離不同專案的 Namespace，這就是預設的隔離邊界。
 - 沒有登入機制或自身金鑰的元件屬於例外，必須設定 ingress NetworkPolicy，只允許所屬應用程式連入。例如未設定密碼的 Redis 或 Dragonfly、未設定金鑰的 Meilisearch 或 Qdrant，以及執行他人程式碼的沙盒。必須將該服務列在 `security.unauthenticated` 中。`catalog template lint` 會要求提供 ingress NetworkPolicy，且其 `podSelector` 必須指定該服務。`security` 的風險說明必須交代為什麼需要這項政策。執行不受信任程式碼的元件也可以限制對外流量，只允許連往 DNS 與自身的對等服務。
 - 除了上述情況，不得限制對外流量。
-- 每個 NetworkPolicy，以及其中位於範本 Namespace 內的每個對等端，都必須使用上述標籤選取 Pod。
+- 每個 NetworkPolicy 都必須用上述標籤選取 Pod。範本 Namespace 內的每個對等端，要選取這些 Pod，或選取範本的用戶端，也就是帶有標籤 `templates.zeabur.com/<id>-client: "true"` 的 Pod。呼叫這個範本的其他範本，要在自己的 Pod 加上這個標籤。例如 OpenClaw 範本加上了 `templates.zeabur.com/openclaw-browser-sandbox-client: "true"`。
 - 需要在 Namespace 內加強隔離的使用者可以自行新增 NetworkPolicy。例如，下列設定只允許標示 `role=frontend` 的 Pod 連入指定範本的 Pod：
 
   ```yaml

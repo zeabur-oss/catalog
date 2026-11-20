@@ -44,7 +44,7 @@ Every template in Zeabur Catalog must follow these rules. When you add or update
 - Templates must not include default-deny or per-Pod NetworkPolicies. The installer uses base policies to isolate project Namespaces from one another. This is the default isolation boundary.
 - Components without a login mechanism or their own key are exceptions. They must have an ingress NetworkPolicy that permits connections only from their application. Examples include Redis or Dragonfly without a password, Meilisearch or Qdrant without a key, and sandboxes that execute other people's code. List the service in `security.unauthenticated`; `catalog template lint` requires an ingress NetworkPolicy whose `podSelector` selects that service. The risk description in `security` must explain why this policy exists. Components that execute untrusted code can also restrict outbound traffic to DNS and their own peers.
 - Don't restrict outbound traffic outside the cases above.
-- Every NetworkPolicy, and every peer within it that resides in the template's Namespace, must select Pods with the label above.
+- Every NetworkPolicy must select Pods with the label above. Each peer in the template's Namespace selects either those Pods or the template's clients: Pods with the label `templates.zeabur.com/<id>-client: "true"`. Another template that calls this one sets that label on its Pods. For example, the OpenClaw template sets `templates.zeabur.com/openclaw-browser-sandbox-client: "true"`.
 - Users who need stronger isolation within a Namespace can add their own NetworkPolicies. For example, the following configuration permits only Pods labeled `role=frontend` to connect to the specified template's Pods:
 
   ```yaml

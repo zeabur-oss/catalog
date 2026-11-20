@@ -20,7 +20,7 @@
    curl https://<你的網域>/collections --header 'api-key: <api-key>'
    ```
 
-5. gRPC 連接埠（`6334`）不在網域後面。同一個專案裡帶有標籤 `templates.zeabur.com/qdrant-client=true` 的 Pod，可以用 `qdrant:6333` 連 REST，用 `qdrant:6334` 連 gRPC。
+5. gRPC 連接埠（`6334`）不在網域後面。同一個專案裡的 Pod 可以用 `qdrant:6333` 連 REST，用 `qdrant:6334` 連 gRPC。
 
 ## 設定
 

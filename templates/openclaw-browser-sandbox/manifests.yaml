@@ -101,8 +101,7 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          templates.zeabur.com/template: openclaw-browser-sandbox
-          app.kubernetes.io/name: '{{ .Inputs.clientApp }}'
+          templates.zeabur.com/openclaw-browser-sandbox-client: 'true'
     ports:
     - protocol: TCP
       port: 9222

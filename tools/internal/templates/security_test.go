@@ -58,6 +58,9 @@ func TestSafetyRejectsPrivilegeAndNetworkEscapes(t *testing.T) {
 	if err := templates.Safety(r, []byte(safeManifest+allow("{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: traefik}}, podSelector: {matchLabels: {app: traefik}}}")), "test"); err != nil {
 		t.Fatal(err)
 	}
+	if err := templates.Safety(r, []byte(safeManifest+allow("{podSelector: {matchLabels: {templates.zeabur.com/app-client: 'true'}}}")), "test"); err != nil {
+		t.Fatalf("a peer that selects the client label of the template: %v", err)
+	}
 	cases := map[string]struct {
 		manifest string
 		rule     templates.Rule
@@ -72,6 +75,7 @@ func TestSafetyRejectsPrivilegeAndNetworkEscapes(t *testing.T) {
 		"namespace":                       {strings.Replace(safeManifest, "name: app\nspec:", "name: app\n  namespace: kube-system\nspec:", 1), templates.ErrNamespaceEscape},
 		"pod-label":                       {strings.Replace(safeManifest, "labels: {app: app, templates.zeabur.com/template: app}", "labels: {app: app}", 1), templates.ErrTemplateLabel},
 		"peer-without-label":              {safeManifest + allow("{podSelector: {matchLabels: {app: other}}}"), templates.ErrForeignPods},
+		"peer-other-client":               {safeManifest + allow("{podSelector: {matchLabels: {templates.zeabur.com/other-client: 'true'}}}"), templates.ErrForeignPods},
 		"peer-whole-namespace":            {safeManifest + allow("{namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: test}}}"), templates.ErrForeignPods},
 		"storage-class":                   {safeManifest + "---\napiVersion: v1\nkind: PersistentVolumeClaim\nmetadata: {name: data}\nspec: {storageClassName: local-path}\n", templates.ErrStorageClass},
 		"rbac":                            {safeManifest + "---\napiVersion: rbac.authorization.k8s.io/v1\nkind: RoleBinding\nmetadata: {name: escape}\n", templates.ErrUnsupportedKind},
