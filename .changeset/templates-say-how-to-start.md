@@ -1,5 +1,5 @@
 ---
-default: major
+default: minor
 ---
 
 # Templates say how to start using them and link their docs
