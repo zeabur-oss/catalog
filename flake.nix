@@ -6,7 +6,7 @@
     flake-utils.url = "github:numtide/flake-utils";
     # The base shell of every zeabur-oss repository: Bun, the release tools and the shared linters.
     oss = {
-      url = "github:zeabur-oss/.github/2d9e5e7eab9be03f9822ee9497639d4051f8b04d";
+      url = "github:zeabur-oss/.github/993db7daf21a752dc7d3940f227e03478ee613cc";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
