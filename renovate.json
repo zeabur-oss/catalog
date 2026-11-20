@@ -6,6 +6,7 @@
   "gitIgnoredAuthors": [
     "349476329+zeabur-oss-bot[bot]@users.noreply.github.com"
   ],
+  "automerge": true,
   "nix": {
     "enabled": true
   },
@@ -178,13 +179,12 @@
       "enabled": false
     },
     {
-      "description": "Each template gets its own pull request, with its images and metadata.version together, and a person reviews every image change",
+      "description": "Each template gets its own pull request, with its images and metadata.version together",
       "matchFileNames": [
         "templates/**"
       ],
       "groupName": "{{{packageFileDir}}}",
-      "pinDigests": true,
-      "automerge": false
+      "pinDigests": true
     },
     {
       "description": "metadata.version is a tag alone; its digest is on the image in manifests.yaml",
