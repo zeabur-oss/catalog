@@ -7,7 +7,14 @@
 ## 開始使用
 
 1. 在 Zeabur 打開 `openclaw-sandbox-browser` 服務。**概覽**顯示副本已就緒，服務就啟動好了。它沒有網域。
-2. 確認你的用戶端 Pod 帶有標籤 `app.kubernetes.io/name`，值要和你在安裝表單填的信任呼叫端相同。搭配 OpenClaw 時，這個值是 `openclaw`。
+2. 確認你的用戶端 Pod 同時帶有下面兩個標籤。第一個的值是你在安裝表單填的信任呼叫端：
+
+   ```yaml
+   app.kubernetes.io/name: <信任呼叫端>
+   templates.zeabur.com/template: openclaw-browser-sandbox
+   ```
+
+   OpenClaw 範本的 Pod 帶的是 `templates.zeabur.com/template: openclaw`，所以目前連不上（[#392](https://github.com/zeabur-oss/catalog/issues/392)）。
 3. 在該 Pod 裡，把下面的位址當成 CDP 端點：
 
    ```text
@@ -40,4 +47,4 @@
 
 ### 用戶端連不上
 
-網路政策只放行帶有信任呼叫端標籤的 Pod，而且只開 9222 連接埠。確認用戶端在同一個專案裡，且它的 `app.kubernetes.io/name` 標籤和你在安裝表單填的值相同。詳見 [Remote and hosted browsers](https://docs.openclaw.ai/tools/browser/remote)。
+網路政策只放行帶有信任呼叫端標籤的 Pod，而且只開 9222 連接埠。確認用戶端在同一個專案裡，而且帶有開始使用裡的兩個標籤。詳見 [Remote and hosted browsers](https://docs.openclaw.ai/tools/browser/remote)。
