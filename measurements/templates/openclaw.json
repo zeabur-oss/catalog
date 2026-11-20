@@ -14,8 +14,8 @@
         {
           "workload": "openclaw",
           "kind": "Deployment",
-          "memory": "954Mi",
-          "cpu": "9m"
+          "memory": "946Mi",
+          "cpu": "14m"
         }
       ],
       "versions": [
@@ -25,7 +25,7 @@
           "digest": "sha256:fb26f0841659dc757f23feec9adeab51f11d76779a409db5d22e191b43841afa"
         }
       ],
-      "sourceDigest": "h1:Di3jQumos3HbhvPa46dJ5Z5CRnzClxDOaKDSU6zWZq0=",
+      "sourceDigest": "h1:oqp6VtnfCCv4Y9lG5hMCZmE27mW07EQXEK3PVIYQtxM=",
       "dependencies": {
         "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
         "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
