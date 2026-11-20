@@ -39,7 +39,7 @@ The Webhook node has two URLs. The test URL works while you select Listen for Te
 
 ### Back up or move the data
 
-n8n keeps workflows, credentials and execution history in the `n8n-db` database. The `n8n-data` volume, mounted at `/home/node/.n8n`, holds files such as binary data. A backup needs the database, the encryption key and, to move to another n8n, an export of your workflows and credentials.
+n8n keeps workflows, credentials and execution history in the `n8n-db` database. The `n8n-data` volume, mounted at `/home/node/.n8n`, holds files such as binary data. A backup needs the database, the encryption key, the workflow files and, to move to another n8n, an export of your workflows and credentials.
 
 1. Back up the database. In the project, open the `n8n-db` database. Under **Backups**, set up S3 backups. To get a file instead, click **More** → **Export**. See [Create, back up, and restore databases](https://oss.zeabur.com/docs/zeabur/deploy/databases/#set-up-s3-backups) and [Download a database dump](https://oss.zeabur.com/docs/zeabur/deploy/databases/#download-a-database-dump) in the Zeabur docs.
 2. Keep the encryption key from Getting started. Without it, n8n cannot read the saved credentials.
@@ -51,6 +51,14 @@ n8n keeps workflows, credentials and execution history in the `n8n-db` database.
    ```
 
    Then open the **Files** tab of the `n8n` service and download these two folders. Do not download the whole volume. A big folder can time out.
+
+4. Copy the files that workflows saved. This template stores them on the volume, in `/home/node/.n8n/binaryData`, and neither the database nor the export holds them. The folder can be big, so stream it to your machine with kubectl instead of the **Files** tab:
+
+   ```sh
+   kubectl -n <namespace> exec deploy/n8n -c n8n -- busybox tar czf - -C /home/node/.n8n binaryData > n8n-binary-data.tgz
+   ```
+
+   To put it back on a new `n8n`, run `kubectl -n <namespace> exec -i deploy/n8n -c n8n -- busybox tar xzf - -C /home/node/.n8n < n8n-binary-data.tgz`. See [Binary data environment variables](https://docs.n8n.io/hosting/configuration/environment-variables/binary-data/) in the n8n docs.
 
 To move to another n8n, upload the two folders on the **Files** tab of the new `n8n` service and run the import with **Terminal**:
 

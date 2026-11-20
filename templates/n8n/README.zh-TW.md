@@ -39,7 +39,7 @@ Webhook 節點有兩個網址。測試網址在你選 Listen for Test Event 時�
 
 ### 備份或搬移資料
 
-n8n 把工作流程、憑證和執行紀錄存在 `n8n-db` 資料庫。`n8n-data` 磁碟區掛載在 `/home/node/.n8n`，放二進位資料之類的檔案。備份要有資料庫和加密金鑰，要搬到另一個 n8n 時，還要匯出工作流程和憑證。
+n8n 把工作流程、憑證和執行紀錄存在 `n8n-db` 資料庫。`n8n-data` 磁碟區掛載在 `/home/node/.n8n`，放二進位資料之類的檔案。備份要有資料庫、加密金鑰和工作流程存下的檔案，要搬到另一個 n8n 時，還要匯出工作流程和憑證。
 
 1. 備份資料庫。在專案打開 `n8n-db` 資料庫。到**備份**設定 S3 備份。想直接拿到檔案，按**更多** → **匯出**。詳見 Zeabur 文件的[設定 S3 備份](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/#設定-s3-備份)和[下載資料庫傾印檔](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/#下載資料庫傾印檔)。
 2. 留好「開始使用」裡的加密金鑰。沒有它，n8n 讀不了已儲存的憑證。
@@ -51,6 +51,14 @@ n8n 把工作流程、憑證和執行紀錄存在 `n8n-db` 資料庫。`n8n-data
    ```
 
    接著到 `n8n` 服務的**檔案**分頁，下載這兩個資料夾。不要下載整個磁碟區，資料夾太大會逾時。
+
+4. 複製工作流程存下的檔案。這個模板把它們放在磁碟區的 `/home/node/.n8n/binaryData`，資料庫和匯出都不包含它們。這個資料夾可能很大，所以用 kubectl 直接傳到你的電腦，不要用**檔案**分頁：
+
+   ```sh
+   kubectl -n <namespace> exec deploy/n8n -c n8n -- busybox tar czf - -C /home/node/.n8n binaryData > n8n-binary-data.tgz
+   ```
+
+   要放回新的 `n8n`，執行 `kubectl -n <namespace> exec -i deploy/n8n -c n8n -- busybox tar xzf - -C /home/node/.n8n < n8n-binary-data.tgz`。詳見 n8n 文件的 [Binary data environment variables](https://docs.n8n.io/hosting/configuration/environment-variables/binary-data/)。
 
 要搬到另一個 n8n，先在新 `n8n` 服務的**檔案**分頁上傳這兩個資料夾，再用**終端機**匯入：
 

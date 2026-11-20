@@ -51,6 +51,14 @@ n8n 把 SQLite 数据库和文件放在 `n8n-data` 卷上，挂载在 `/home/nod
 
    接着到 `n8n` 服务的**文件**标签页，下载这两个文件夹。不要下载整个卷，文件夹太大会超时。
 
+3. 复制工作流保存的文件。这个模板把它们放在卷的 `/home/node/.n8n/binaryData`，数据库和导出都不包含它们。这个文件夹可能很大，所以用 kubectl 直接传到你的电脑，不要用**文件**标签页：
+
+   ```sh
+   kubectl -n <namespace> exec deploy/n8n -c n8n -- busybox tar czf - -C /home/node/.n8n binaryData > n8n-binary-data.tgz
+   ```
+
+   要放回新的 `n8n`，运行 `kubectl -n <namespace> exec -i deploy/n8n -c n8n -- busybox tar xzf - -C /home/node/.n8n < n8n-binary-data.tgz`。详见 n8n 文档的 [Binary data environment variables](https://docs.n8n.io/hosting/configuration/environment-variables/binary-data/)。
+
 要迁到另一个 n8n，先在新 `n8n` 服务的**文件**标签页上传这两个文件夹，再用**终端**导入：
 
 ```sh

@@ -51,6 +51,14 @@ n8n keeps its SQLite database and its files on the `n8n-data` volume, mounted at
 
    Then open the **Files** tab of the `n8n` service and download these two folders. Do not download the whole volume. A big folder can time out.
 
+3. Copy the files that workflows saved. This template stores them on the volume, in `/home/node/.n8n/binaryData`, and neither the database nor the export holds them. The folder can be big, so stream it to your machine with kubectl instead of the **Files** tab:
+
+   ```sh
+   kubectl -n <namespace> exec deploy/n8n -c n8n -- busybox tar czf - -C /home/node/.n8n binaryData > n8n-binary-data.tgz
+   ```
+
+   To put it back on a new `n8n`, run `kubectl -n <namespace> exec -i deploy/n8n -c n8n -- busybox tar xzf - -C /home/node/.n8n < n8n-binary-data.tgz`. See [Binary data environment variables](https://docs.n8n.io/hosting/configuration/environment-variables/binary-data/) in the n8n docs.
+
 To move to another n8n, upload the two folders on the **Files** tab of the new `n8n` service and run the import with **Terminal**:
 
 ```sh

@@ -39,7 +39,7 @@ Webhook 节点有两个 URL。测试 URL 在你选 Listen for Test Event 时有�
 
 ### 备份或迁移数据
 
-n8n 把工作流、凭证和执行记录存在 `n8n-db` 数据库。`n8n-data` 卷挂载在 `/home/node/.n8n`，放二进制数据之类的文件。备份要有数据库和加密密钥，要迁到另一个 n8n 时，还要导出工作流和凭证。
+n8n 把工作流、凭证和执行记录存在 `n8n-db` 数据库。`n8n-data` 卷挂载在 `/home/node/.n8n`，放二进制数据之类的文件。备份要有数据库、加密密钥和工作流保存的文件，要迁到另一个 n8n 时，还要导出工作流和凭证。
 
 1. 备份数据库。在项目中打开 `n8n-db` 数据库。到**备份**配置 S3 备份。想直接拿到文件，点击**更多** → **导出**。详见 Zeabur 文档的[配置 S3 备份](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#配置-s3-备份)和[下载数据库转储文件](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#下载数据库转储文件)。
 2. 留好“开始使用”里的加密密钥。没有它，n8n 读不了已保存的凭证。
@@ -51,6 +51,14 @@ n8n 把工作流、凭证和执行记录存在 `n8n-db` 数据库。`n8n-data` �
    ```
 
    接着到 `n8n` 服务的**文件**标签页，下载这两个文件夹。不要下载整个卷，文件夹太大会超时。
+
+4. 复制工作流保存的文件。这个模板把它们放在卷的 `/home/node/.n8n/binaryData`，数据库和导出都不包含它们。这个文件夹可能很大，所以用 kubectl 直接传到你的电脑，不要用**文件**标签页：
+
+   ```sh
+   kubectl -n <namespace> exec deploy/n8n -c n8n -- busybox tar czf - -C /home/node/.n8n binaryData > n8n-binary-data.tgz
+   ```
+
+   要放回新的 `n8n`，运行 `kubectl -n <namespace> exec -i deploy/n8n -c n8n -- busybox tar xzf - -C /home/node/.n8n < n8n-binary-data.tgz`。详见 n8n 文档的 [Binary data environment variables](https://docs.n8n.io/hosting/configuration/environment-variables/binary-data/)。
 
 要迁到另一个 n8n，先在新 `n8n` 服务的**文件**标签页上传这两个文件夹，再用**终端**导入：
 
