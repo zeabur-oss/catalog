@@ -25,12 +25,12 @@
           "digest": "sha256:b5047b9b76845eac124358373c6852377c52e4b05834a47647e955dd91cb8f1e"
         }
       ],
-      "sourceDigest": "h1:U+XTKtfJYegsB1Xtn8VpeYBY9LzwRh6mO9c2o37DUhU=",
+      "sourceDigest": "h1:+U3VdJZt7jGXY8GpvbZxIwLfY6TfpVxsZ4fO2GcAu4A=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-21"
     }
   ]
 }
