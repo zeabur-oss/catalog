@@ -43,32 +43,40 @@ pub struct Component {
     pub kube_version: String,
     /// It keeps state in volumes, so uninstalling it loses data.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub persists_data: bool,
     /// The components installed before it.
     #[serde(default)]
     #[schemars(extend("uniqueItems" = true))]
+    #[ts(as = "Option<_>", optional)]
     pub requires: Vec<Reference>,
     /// Values an installer asks for or generates.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub inputs: Vec<Input>,
     /// What it installs, in order.
     #[schemars(length(min = 1))]
     pub releases: Vec<Release>,
     /// What it offers other software in the cluster.
     #[serde(default)]
+    #[ts(optional)]
     pub provides: Option<Provides>,
     /// The CRDs of `detection.crds` whose objects it writes itself, so they do not mean anyone
     /// uses it.
     #[serde(default, rename = "internalCRDs")]
+    #[ts(as = "Option<_>", optional)]
     pub internal_crds: Vec<String>,
     /// What it needs beyond its measured idle use.
     #[serde(default)]
+    #[ts(optional)]
     pub resources: Option<Resources>,
     /// `NetworkPolicy` objects for its namespaces, applied before the releases.
     #[serde(default)]
+    #[ts(optional)]
     pub network_policies: Option<String>,
     /// Values it adds to releases of other components.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub contributes: Vec<Contribution>,
     /// How to recognise an existing installation.
     pub detection: Detection,
@@ -76,12 +84,15 @@ pub struct Component {
     pub security: Security,
     /// Read-only checks of an installed component.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub health: Vec<Health>,
     /// Extra e2e checks after install.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub smoke: Vec<Smoke>,
     /// What the upstream keeps on uninstall.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub leftovers: Vec<String>,
 }
 
@@ -174,9 +185,11 @@ pub struct Provides {
     /// The capability it offers, such as `logs`.
     #[serde(default)]
     #[schemars(regex(pattern = crate::schema::pattern::NAME))]
+    #[ts(optional)]
     pub capability: Option<String>,
     /// An OCI registry in the cluster that nodes pull from.
     #[serde(default)]
+    #[ts(optional)]
     pub registry: Option<Registry>,
 }
 
@@ -213,12 +226,15 @@ pub struct Work {
     pub name: String,
     /// The requests of each pod doing one unit of work.
     #[serde(default)]
+    #[ts(optional)]
     pub requests: Option<Quantities>,
     /// The limits of each pod doing one unit of work.
     #[serde(default)]
+    #[ts(optional)]
     pub limits: Option<Quantities>,
     /// What one unit of work uses on top of the idle use.
     #[serde(default, rename = "use")]
+    #[ts(optional)]
     pub uses: Option<Quantities>,
 }
 
@@ -231,10 +247,12 @@ pub struct Quantities {
     /// CPU, such as `100m`.
     #[serde(default)]
     #[schemars(length(min = 1))]
+    #[ts(optional)]
     pub cpu: Option<String>,
     /// Memory, such as `256Mi`.
     #[serde(default)]
     #[schemars(length(min = 1))]
+    #[ts(optional)]
     pub memory: Option<String>,
 }
 
@@ -312,15 +330,18 @@ pub struct HelmRelease {
     pub namespace: String,
     /// The Helm release name, when it is not `name`.
     #[serde(default)]
+    #[ts(optional)]
     pub release_name: Option<String>,
     /// Skip it when these CRDs exist.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub skip_if_present: Vec<String>,
     /// `oci://registry/path/chart`, or a chart name in `repo`.
     pub chart: String,
     /// The HTTP chart repository.
     #[serde(default)]
     #[schemars(regex(pattern = crate::schema::pattern::HTTPS))]
+    #[ts(optional)]
     pub repo: Option<String>,
     /// The chart version.
     pub version: String,
@@ -329,12 +350,15 @@ pub struct HelmRelease {
     pub chart_digest: String,
     /// Images, without tag, that the chart cannot pin by digest.
     #[serde(default, rename = "unpinnedImages")]
+    #[ts(as = "Option<_>", optional)]
     pub unpinned_images: Vec<String>,
     /// Values for every profile, as YAML.
     #[serde(default)]
+    #[ts(optional)]
     pub values: Option<String>,
     /// Values merged over `values` on each profile, as YAML.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub profiles: ProfileValues,
 }
 
@@ -353,9 +377,11 @@ impl HelmRelease {
 pub struct ProfileValues {
     /// On `single-node`.
     #[serde(default)]
+    #[ts(optional)]
     pub single_node: Option<String>,
     /// On `multi-node`.
     #[serde(default)]
+    #[ts(optional)]
     pub multi_node: Option<String>,
 }
 
@@ -382,6 +408,7 @@ pub struct ManifestRelease {
     pub namespace: String,
     /// Skip it when these CRDs exist.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub skip_if_present: Vec<String>,
     /// The URLs, with `{version}` for `version`.
     #[schemars(inner(regex(pattern = crate::schema::pattern::VERSION_FIELD)))]
@@ -416,6 +443,7 @@ pub struct InlineRelease {
     pub namespace: String,
     /// Skip it when these CRDs exist.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub skip_if_present: Vec<String>,
     /// The objects, as YAML.
     pub manifests: String,
@@ -434,24 +462,31 @@ pub struct Input {
     pub description: String,
     /// The release whose values take a `path` input; the first chart release when absent.
     #[serde(default)]
+    #[ts(optional)]
     pub release: Option<String>,
     /// Where it goes in the release's values: a dotted path, where a number indexes a list.
     #[serde(default)]
+    #[ts(optional)]
     pub path: Option<String>,
     /// The Secret key it is stored in, created before install.
     #[serde(default)]
+    #[ts(optional)]
     pub secret: Option<SecretRef>,
     /// How an installer makes it when it is not given.
     #[serde(default)]
+    #[ts(optional)]
     pub generate: Option<Generate>,
     /// An install needs a value.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub required: bool,
     /// The value when none is given.
     #[serde(default)]
+    #[ts(optional)]
     pub default: Option<InputValue>,
     /// The value CI installs with.
     #[serde(default)]
+    #[ts(optional)]
     pub test_value: Option<InputValue>,
 }
 
@@ -463,7 +498,7 @@ pub enum InputValue {
     /// `true` or `false`.
     Flag(bool),
     /// A whole number.
-    Integer(i64),
+    Integer(#[ts(type = "number")] i64),
     /// Text.
     Text(String),
 }
@@ -521,27 +556,35 @@ pub struct ReleaseRef {
 pub struct Detection {
     /// `CustomResourceDefinition` names.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub crds: Vec<String>,
     /// `APIService` names.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub api_services: Vec<String>,
     /// `GatewayClass` controller names.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub gateway_controllers: Vec<String>,
     /// `IngressClass` controller names.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub ingress_controllers: Vec<String>,
     /// CSI drivers of the `PersistentVolumes` it provides.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub csi_drivers: Vec<String>,
     /// Helm chart names.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub helm_charts: Vec<String>,
     /// Add-ons of a distribution that install the same upstream.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub addons: Vec<Addon>,
     /// Workloads whose labels show the upstream.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub workloads: Vec<DetectedWorkload>,
 }
 
@@ -592,6 +635,7 @@ pub struct Health {
     /// is complete.
     #[serde(default)]
     #[schemars(regex(pattern = crate::schema::pattern::CONDITION_NAME))]
+    #[ts(optional)]
     pub condition: Option<String>,
     /// How long to wait, such as `60s`.
     #[schemars(regex(pattern = crate::schema::pattern::TIMEOUT))]
@@ -612,18 +656,22 @@ pub struct HealthResource {
     /// The name of one object.
     #[serde(default)]
     #[schemars(length(min = 1))]
+    #[ts(optional)]
     pub name: Option<String>,
     /// The labels of the objects.
     #[serde(default)]
     #[schemars(extend("minProperties" = 1))]
+    #[ts(optional)]
     pub selector: Option<BTreeMap<String, String>>,
     /// Every object of the kind.
     #[serde(default)]
     #[schemars(extend("const" = true))]
+    #[ts(as = "Option<_>", optional)]
     pub all: bool,
     /// Their namespace, for a namespaced kind.
     #[serde(default)]
     #[schemars(length(min = 1))]
+    #[ts(optional)]
     pub namespace: Option<String>,
 }
 
@@ -698,12 +746,14 @@ pub struct Smoke {
     pub name: String,
     /// Objects to apply first, in the namespace `catalog-smoke`.
     #[serde(default)]
+    #[ts(optional)]
     pub manifest: Option<String>,
     /// What to wait for after the objects are applied.
     pub wait: Vec<Wait>,
     /// How long to wait; 180 seconds when absent.
     #[serde(default)]
     #[schemars(regex(pattern = crate::schema::pattern::TIMEOUT))]
+    #[ts(optional)]
     pub timeout: Option<String>,
 }
 
@@ -719,18 +769,22 @@ pub struct Wait {
     /// The namespace of the objects.
     #[serde(default)]
     #[schemars(length(min = 1))]
+    #[ts(optional)]
     pub namespace: Option<String>,
     /// The labels of the objects.
     #[serde(default)]
     #[schemars(extend("minProperties" = 1))]
+    #[ts(optional)]
     pub selector: Option<BTreeMap<String, String>>,
     /// Every object of the kind.
     #[serde(default)]
     #[schemars(extend("const" = true))]
+    #[ts(as = "Option<_>", optional)]
     pub all: bool,
     /// What the objects reach, as a `kubectl wait --for` value.
     #[serde(default)]
     #[schemars(regex(pattern = crate::schema::pattern::CONDITION))]
+    #[ts(optional)]
     pub condition: Option<String>,
 }
 

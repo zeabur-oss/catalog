@@ -45,7 +45,7 @@ testedOn: Array<TestedOn>,
 /**
  * What installing it installs; a profile left out means the component alone.
  */
-installOrder: InstallOrders, };
+installOrder?: InstallOrders, };
 
 /**
  * The catalog release an API was built from.
@@ -104,15 +104,15 @@ kubeVersion: string,
 /**
  * It keeps state in volumes, so uninstalling it loses data.
  */
-persistsData: boolean, 
+persistsData?: boolean, 
 /**
  * The components installed before it.
  */
-requires: Array<Reference>, 
+requires?: Array<Reference>, 
 /**
  * Values an installer asks for or generates.
  */
-inputs: Array<Input>, 
+inputs?: Array<Input>, 
 /**
  * What it installs, in order.
  */
@@ -120,24 +120,24 @@ releases: Array<Release>,
 /**
  * What it offers other software in the cluster.
  */
-provides: Provides | null, 
+provides?: Provides, 
 /**
  * The CRDs of `detection.crds` whose objects it writes itself, so they do not mean anyone
  * uses it.
  */
-internalCRDs: Array<string>, 
+internalCRDs?: Array<string>, 
 /**
  * What it needs beyond its measured idle use.
  */
-resources: Resources | null, 
+resources?: Resources, 
 /**
  * `NetworkPolicy` objects for its namespaces, applied before the releases.
  */
-networkPolicies: string | null, 
+networkPolicies?: string, 
 /**
  * Values it adds to releases of other components.
  */
-contributes: Array<Contribution>, 
+contributes?: Array<Contribution>, 
 /**
  * How to recognise an existing installation.
  */
@@ -149,15 +149,15 @@ security: Security,
 /**
  * Read-only checks of an installed component.
  */
-health: Array<Health>, 
+health?: Array<Health>, 
 /**
  * Extra e2e checks after install.
  */
-smoke: Array<Smoke>, 
+smoke?: Array<Smoke>, 
 /**
  * What the upstream keeps on uninstall.
  */
-leftovers: Array<string>, };
+leftovers?: Array<string>, };
 
 /**
  * `components/<id>.json`.
@@ -208,15 +208,15 @@ platform: string,
 /**
  * What the installer adds to the defaults.
  */
-add: Array<string>, 
+add?: Array<string>, 
 /**
  * What the person turns on, by id or capability.
  */
-enable: Array<string>, 
+enable?: Array<string>, 
 /**
  * What the person turns off, by id or capability.
  */
-disable: Array<string>, };
+disable?: Array<string>, };
 
 /**
  * Values a component adds to a release of another component.
@@ -264,35 +264,35 @@ export type Detection = {
 /**
  * `CustomResourceDefinition` names.
  */
-crds: Array<string>, 
+crds?: Array<string>, 
 /**
  * `APIService` names.
  */
-apiServices: Array<string>, 
+apiServices?: Array<string>, 
 /**
  * `GatewayClass` controller names.
  */
-gatewayControllers: Array<string>, 
+gatewayControllers?: Array<string>, 
 /**
  * `IngressClass` controller names.
  */
-ingressControllers: Array<string>, 
+ingressControllers?: Array<string>, 
 /**
  * CSI drivers of the `PersistentVolumes` it provides.
  */
-csiDrivers: Array<string>, 
+csiDrivers?: Array<string>, 
 /**
  * Helm chart names.
  */
-helmCharts: Array<string>, 
+helmCharts?: Array<string>, 
 /**
  * Add-ons of a distribution that install the same upstream.
  */
-addons: Array<Addon>, 
+addons?: Array<Addon>, 
 /**
  * Workloads whose labels show the upstream.
  */
-workloads: Array<DetectedWorkload>, };
+workloads?: Array<DetectedWorkload>, };
 
 /**
  * A host distribution of Kubernetes that a component runs on.
@@ -377,19 +377,19 @@ export type Expected = {
 /**
  * In install order.
  */
-components: Array<Chosen>, 
+components?: Array<Chosen>, 
 /**
  * By id.
  */
-leftOut: { [key in string]: LeftOut }, 
+leftOut?: { [key in string]: LeftOut }, 
 /**
  * In any order.
  */
-warnings: Array<Warning>, 
+warnings?: Array<Warning>, 
 /**
  * The error, instead of a selection.
  */
-error: SelectError | null, };
+error?: SelectError, };
 
 /**
  * How an installer makes a value instead of asking for it.
@@ -420,7 +420,7 @@ resource: HealthResource,
  * The condition the objects reach. A workload kind has none: it is ready when its rollout
  * is complete.
  */
-condition: string | null, 
+condition?: string, 
 /**
  * How long to wait, such as `60s`.
  */
@@ -446,19 +446,19 @@ kind: HealthKind,
 /**
  * The name of one object.
  */
-name: string | null, 
+name?: string, 
 /**
  * The labels of the objects.
  */
-selector: { [key in string]: string } | null, 
+selector?: { [key in string]: string }, 
 /**
  * Every object of the kind.
  */
-all: boolean, 
+all?: boolean, 
 /**
  * Their namespace, for a namespaced kind.
  */
-namespace: string | null, };
+namespace?: string, };
 
 /**
  * A release of a Helm chart.
@@ -475,11 +475,11 @@ namespace: string,
 /**
  * The Helm release name, when it is not `name`.
  */
-releaseName: string | null, 
+releaseName?: string, 
 /**
  * Skip it when these CRDs exist.
  */
-skipIfPresent: Array<string>, 
+skipIfPresent?: Array<string>, 
 /**
  * `oci://registry/path/chart`, or a chart name in `repo`.
  */
@@ -487,7 +487,7 @@ chart: string,
 /**
  * The HTTP chart repository.
  */
-repo: string | null, 
+repo?: string, 
 /**
  * The chart version.
  */
@@ -499,15 +499,15 @@ chartDigest: string,
 /**
  * Images, without tag, that the chart cannot pin by digest.
  */
-unpinnedImages: Array<string>, 
+unpinnedImages?: Array<string>, 
 /**
  * Values for every profile, as YAML.
  */
-values: string | null, 
+values?: string, 
 /**
  * Values merged over `values` on each profile, as YAML.
  */
-profiles: ProfileValues, };
+profiles?: ProfileValues, };
 
 /**
  * A GET through a port-forward to a Service.
@@ -532,7 +532,7 @@ status: number,
 /**
  * Text the body contains.
  */
-contains: string | null, };
+contains?: string, };
 
 /**
  * `catalog.json`: the release, its test environments, its components and its templates.
@@ -578,7 +578,7 @@ namespace: string,
 /**
  * Skip it when these CRDs exist.
  */
-skipIfPresent: Array<string>, 
+skipIfPresent?: Array<string>, 
 /**
  * The objects, as YAML.
  */
@@ -599,31 +599,31 @@ description: string,
 /**
  * The release whose values take a `path` input; the first chart release when absent.
  */
-release: string | null, 
+release?: string, 
 /**
  * Where it goes in the release's values: a dotted path, where a number indexes a list.
  */
-path: string | null, 
+path?: string, 
 /**
  * The Secret key it is stored in, created before install.
  */
-secret: SecretRef | null, 
+secret?: SecretRef, 
 /**
  * How an installer makes it when it is not given.
  */
-generate: Generate | null, 
+generate?: Generate, 
 /**
  * An install needs a value.
  */
-required: boolean, 
+required?: boolean, 
 /**
  * The value when none is given.
  */
-default: InputValue | null, 
+default?: InputValue, 
 /**
  * The value CI installs with.
  */
-testValue: InputValue | null, };
+testValue?: InputValue, };
 
 /**
  * An input's label and description in one language.
@@ -654,7 +654,7 @@ key: string, };
 /**
  * The value of an input.
  */
-export type InputValue = boolean | bigint | string;
+export type InputValue = boolean | number | string;
 
 /**
  * The install order on each profile.
@@ -702,7 +702,7 @@ namespace: string,
 /**
  * Skip it when these CRDs exist.
  */
-skipIfPresent: Array<string>, 
+skipIfPresent?: Array<string>, 
 /**
  * The URLs, with `{version}` for `version`.
  */
@@ -862,11 +862,11 @@ export type ProfileValues = {
 /**
  * On `single-node`.
  */
-"single-node": string | null, 
+"single-node"?: string, 
 /**
  * On `multi-node`.
  */
-"multi-node": string | null, };
+"multi-node"?: string, };
 
 /**
  * What a component offers other software in the cluster.
@@ -875,11 +875,11 @@ export type Provides = {
 /**
  * The capability it offers, such as `logs`.
  */
-capability: string | null, 
+capability?: string, 
 /**
  * An OCI registry in the cluster that nodes pull from.
  */
-registry: Registry | null, };
+registry?: Registry, };
 
 /**
  * Kubernetes quantities by resource name.
@@ -888,11 +888,11 @@ export type Quantities = {
 /**
  * CPU, such as `100m`.
  */
-cpu: string | null, 
+cpu?: string, 
 /**
  * Memory, such as `256Mi`.
  */
-memory: string | null, };
+memory?: string, };
 
 /**
  * A component by id, or a capability: one component that provides it.
@@ -1159,7 +1159,7 @@ podSecurity: PodSecurity,
 /**
  * Its named ports.
  */
-ports: Array<Port>, 
+ports?: Array<Port>, 
 /**
  * Its requests and limits.
  */
@@ -1167,7 +1167,7 @@ resources: ServiceResources,
 /**
  * Public hostnames; rendering then needs a domain and a `ClusterIssuer`.
  */
-domains: Array<string>, };
+domains?: Array<string>, };
 
 /**
  * The requests and limits of a service.
@@ -1193,7 +1193,7 @@ name: string,
 /**
  * Objects to apply first, in the namespace `catalog-smoke`.
  */
-manifest: string | null, 
+manifest?: string, 
 /**
  * What to wait for after the objects are applied.
  */
@@ -1201,7 +1201,7 @@ wait: Array<Wait>,
 /**
  * How long to wait; 180 seconds when absent.
  */
-timeout: string | null, };
+timeout?: string, };
 
 /**
  * One read-only `SELECT` on a `CloudNativePG` primary.
@@ -1252,7 +1252,7 @@ metadata: TemplateMetadata,
 /**
  * The components the cluster must have.
  */
-requires: Array<Reference>, 
+requires?: Array<Reference>, 
 /**
  * The workloads in `manifests.yaml`.
  */
@@ -1260,7 +1260,7 @@ services: Array<Service>,
 /**
  * Values a person gives or the installer generates.
  */
-inputs: Array<TemplateInput>, 
+inputs?: Array<TemplateInput>, 
 /**
  * What it exposes and how its risks are mitigated.
  */
@@ -1306,27 +1306,27 @@ description: string,
 /**
  * A short name for the field, in English.
  */
-label: string | null, 
+label?: string, 
 /**
  * The label and description in other languages.
  */
-locales: { [key in string]: InputLocale }, 
+locales?: { [key in string]: InputLocale }, 
 /**
  * How the installer makes it.
  */
-generate: Generate | null, 
+generate?: Generate, 
 /**
  * A deploy needs a value.
  */
-required: boolean, 
+required?: boolean, 
 /**
  * The value when a deploy does not give it.
  */
-default: string | null, 
+default?: string, 
 /**
  * The Secret key a generated value is stored in.
  */
-secret: InputSecret | null, 
+secret?: InputSecret, 
 /**
  * What the value must match.
  */
@@ -1381,7 +1381,7 @@ summary: string,
 /**
  * The summary in other languages.
  */
-locales: { [key in string]: Summary }, 
+locales?: { [key in string]: Summary }, 
 /**
  * Its risks.
  */
@@ -1389,7 +1389,7 @@ risks: Array<Risk>,
 /**
  * Services with no sign-in or key of their own.
  */
-unauthenticated: Array<string>, };
+unauthenticated?: Array<string>, };
 
 /**
  * An e2e check after install.
@@ -1406,7 +1406,7 @@ resource: string,
 /**
  * What it reaches, as a `kubectl wait --for` value.
  */
-condition: string | null, 
+condition?: string, 
 /**
  * How long to wait.
  */
@@ -1414,11 +1414,11 @@ timeout: string,
 /**
  * A GET through a port-forward to a Service.
  */
-http: HttpCheck | null, 
+http?: HttpCheck, 
 /**
  * One read-only `SELECT` on a `CloudNativePG` primary.
  */
-sql: SqlCheck | null, };
+sql?: SqlCheck, };
 
 /**
  * A distribution where a component passed its test, with the platforms it passed on.
@@ -1453,19 +1453,19 @@ resource: string,
 /**
  * The namespace of the objects.
  */
-namespace: string | null, 
+namespace?: string, 
 /**
  * The labels of the objects.
  */
-selector: { [key in string]: string } | null, 
+selector?: { [key in string]: string }, 
 /**
  * Every object of the kind.
  */
-all: boolean, 
+all?: boolean, 
 /**
  * What the objects reach, as a `kubectl wait --for` value.
  */
-condition: string | null, };
+condition?: string, };
 
 /**
  * Something the person should know about the selection.
@@ -1500,15 +1500,15 @@ name: string,
 /**
  * The requests of each pod doing one unit of work.
  */
-requests: Quantities | null, 
+requests?: Quantities, 
 /**
  * The limits of each pod doing one unit of work.
  */
-limits: Quantities | null, 
+limits?: Quantities, 
 /**
  * What one unit of work uses on top of the idle use.
  */
-use: Quantities | null, };
+use?: Quantities, };
 
 /**
  * A workload kind that the catalog recognises by its labels or its rollout.

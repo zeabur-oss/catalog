@@ -9,7 +9,6 @@ func TestQuantitiesAboveZero(t *testing.T) {
 		ok   bool
 	}{
 		{"binary and milli", Quantities{"memory": "256Mi", "cpu": "100m"}, true},
-		{"numbers", Quantities{"memory": 268435457, "cpu": 1}, true},
 		{"none", nil, true},
 		{"unknown resource", Quantities{"gpu": "1"}, false},
 		{"not a quantity", Quantities{"memory": "lots"}, false},

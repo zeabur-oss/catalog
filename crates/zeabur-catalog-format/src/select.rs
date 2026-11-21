@@ -34,6 +34,7 @@ pub struct Candidate {
     pub tested_on: Vec<TestedOn>,
     /// What installing it installs; a profile left out means the component alone.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub install_order: InstallOrders,
 }
 
@@ -136,16 +137,19 @@ pub struct Config {
     #[serde(default)]
     #[schemars(extend("uniqueItems" = true))]
     #[schemars(inner(regex(pattern = crate::schema::pattern::NAME)))]
+    #[ts(as = "Option<_>", optional)]
     pub add: Vec<String>,
     /// What the person turns on, by id or capability.
     #[serde(default)]
     #[schemars(extend("uniqueItems" = true))]
     #[schemars(inner(regex(pattern = crate::schema::pattern::NAME)))]
+    #[ts(as = "Option<_>", optional)]
     pub enable: Vec<String>,
     /// What the person turns off, by id or capability.
     #[serde(default)]
     #[schemars(extend("uniqueItems" = true))]
     #[schemars(inner(regex(pattern = crate::schema::pattern::NAME)))]
+    #[ts(as = "Option<_>", optional)]
     pub disable: Vec<String>,
 }
 
@@ -156,12 +160,15 @@ pub struct Config {
 pub struct Selection {
     /// In install order.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub components: Vec<Chosen>,
     /// Each component taken out because it cannot run here, by id.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub left_out: BTreeMap<String, LeftOut>,
     /// In any order.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub warnings: Vec<Warning>,
 }
 
@@ -418,15 +425,19 @@ pub struct SelectCase {
 pub struct Expected {
     /// In install order.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub components: Vec<Chosen>,
     /// By id.
     #[serde(default)]
     #[schemars(extend("propertyNames" = {"pattern": crate::schema::pattern::ID}))]
+    #[ts(as = "Option<_>", optional)]
     pub left_out: BTreeMap<String, LeftOut>,
     /// In any order.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub warnings: Vec<Warning>,
     /// The error, instead of a selection.
     #[serde(default)]
+    #[ts(optional)]
     pub error: Option<SelectError>,
 }
