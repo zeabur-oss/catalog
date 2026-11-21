@@ -2,7 +2,8 @@
 # Railpack, and keeps them in zot, an OCI registry installed with it, so builds
 # need no external registry account. Zeabur OSS needs it to deploy services from
 # Git. Optional: without it, services deploy from images only. Nodes pull from
-# zot at the fixed address of the clusterIp input, and must trust its CA.
+# zot at the fixed address of the clusterIp input; the zot-node DaemonSet points
+# each node there and gives it zot's CA.
 apiVersion: catalog.zeabur.com/v1
 kind: Component
 metadata:
@@ -36,13 +37,13 @@ resources:
 
 inputs:
   # A node's container runtime cannot resolve zot.zot.svc. With a fixed
-  # ClusterIP, a registry mirror on each node (k3s and RKE2 registries.yaml)
-  # sends zot.zot.svc:5000 there, and the certificate names that address.
+  # ClusterIP, the zot-node DaemonSet sends zot.zot.svc:5000 there on each
+  # node, and the certificate names that address.
   - name: clusterIp
     description: >
-      A free address in the cluster's Service CIDR for the registry's Service,
-      such as 10.43.0.50 on k3s and RKE2. Nodes pull through a registry mirror
-      to it. Left out: an address is assigned and only pods reach the registry.
+      A free address in the cluster's Service CIDR for the registry's Service.
+      Zeabur picks one when you leave it empty. Nodes pull built images from
+      this address.
     release: zot
     path: service.clusterIP
     generate: {type: clusterIP}
@@ -224,6 +225,86 @@ releases:
             issuerRef:
               kind: Issuer
               name: zot-ca
+        # A node's container runtime cannot resolve zot.zot.svc. On each node,
+        # this points it at the fixed ClusterIP, which kube-proxy routes and
+        # the certificate above names, with zot's CA: a hosts.toml in the
+        # registry directory of K3s, RKE2 or KubeSolo. containerd reads the
+        # file at each pull, so no restart is needed, and the distributions
+        # keep it when they restart. Without a fixed ClusterIP it writes
+        # nothing. The file and the CA stay on the node when zot goes.
+        - apiVersion: apps/v1
+          kind: DaemonSet
+          metadata:
+            name: zot-node
+            namespace: zot
+          spec:
+            selector:
+              matchLabels: {app.kubernetes.io/name: zot-node}
+            template:
+              metadata:
+                labels: {app.kubernetes.io/name: zot-node}
+              spec:
+                automountServiceAccountToken: false
+                # Every node pulls built images, the control plane too.
+                tolerations: [{operator: Exists}]
+                containers:
+                  - name: registry-host
+                    image: docker.io/library/busybox:1.37.0@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec
+                    env:
+                      - name: ADDRESS
+                        value: '{{ .Values.service.clusterIP }}'
+                    command: [sh, -c]
+                    args:
+                      - |
+                        set -eu
+                        [ -n "$ADDRESS" ] || exec sleep 2147483647
+                        case "$ADDRESS" in
+                          *:*) at="[$ADDRESS]:5000" ;;
+                          *) at="$ADDRESS:5000" ;;
+                        esac
+                        put() { cmp -s "$1" "$2" && rm "$1" || mv "$1" "$2"; }
+                        while :; do
+                          for d in rancher/k3s/agent/etc/containerd/certs.d \
+                                   rancher/rke2/agent/etc/containerd/certs.d \
+                                   kubesolo/containerd/registry; do
+                            [ -d "/host/${d%/*}" ] || continue
+                            dir="$d/zot.zot.svc:5000"
+                            mkdir -p "/host/$dir"
+                            cp /ca/ca.crt "/host/$dir/.ca.crt"
+                            put "/host/$dir/.ca.crt" "/host/$dir/ca.crt"
+                            printf '%s\n' \
+                              "server = \"https://$at\"" "" \
+                              "[host.\"https://$at\"]" \
+                              '  capabilities = ["pull", "resolve"]' \
+                              "  ca = \"/var/lib/$dir/ca.crt\"" \
+                              > "/host/$dir/.hosts.toml"
+                            put "/host/$dir/.hosts.toml" "/host/$dir/hosts.toml"
+                          done
+                          # Picks up a new CA after cert-manager issues one.
+                          sleep 60
+                        done
+                    securityContext:
+                      # Root owns the registry directories on the node; no
+                      # capability is needed to write as their owner.
+                      runAsUser: 0
+                      allowPrivilegeEscalation: false
+                      readOnlyRootFilesystem: true
+                      capabilities: {drop: [ALL]}
+                      seccompProfile: {type: RuntimeDefault}
+                    resources:
+                      requests: {cpu: 1m, memory: 4Mi}
+                      limits: {memory: 16Mi}
+                    volumeMounts:
+                      - {name: ca, mountPath: /ca, readOnly: true}
+                      - {name: var-lib, mountPath: /host}
+                volumes:
+                  - name: ca
+                    secret:
+                      secretName: zot-tls
+                      items: [{key: ca.crt, path: ca.crt}]
+                  # The registry directories of the three distributions.
+                  - name: var-lib
+                    hostPath: {path: /var/lib, type: Directory}
       # The chart stores config in a Secret named zot-config and mounts it at
       # /etc/zot. configFiles stays empty: the chart refuses both.
       configFiles:
@@ -374,7 +455,9 @@ security:
     with a user namespace and an egress policy. An admission policy limits the
     Jobs and StatefulSets it can create. zot: no RBAC, a ServiceAccount without
     roles; serves the OCI registry API over TLS on port 5000 inside the
-    cluster.
+    cluster. zot-node: a DaemonSet that runs as root on every node, without
+    capabilities, and writes zot's address and CA into the container
+    runtime's registry directory under /var/lib.
   podSecurity: privileged
 
 smoke:

@@ -9,7 +9,7 @@ Builder reads, creates, updates and deletes Secrets in every namespace (Git cred
 ## Before you install
 
 - Install cert-manager first. It issues zot's certificates.
-- Nodes pull images from zot at the fixed address of the `clusterIp` input, a free address in the cluster's Service CIDR, such as `10.43.0.50` on K3s and RKE2. Nodes need a registry mirror to it (`registries.yaml` on K3s and RKE2) and must trust the CA in the `zot-tls` Secret of the `zot` namespace. Without `clusterIp`, only pods reach the registry.
+- Nodes pull images from zot at the fixed address of the `clusterIp` input, a free address in the cluster's Service CIDR. Zeabur picks one when you leave it empty. On K3s, RKE2 and KubeSolo, the `zot-node` DaemonSet points each node at that address and gives it the CA from the `zot-tls` Secret. On other distributions, set up a registry mirror for `zot.zot.svc:5000` to that address on each node, and trust that CA.
 
 ## Use it
 
@@ -29,4 +29,4 @@ zot waits for the Secrets `zot-tls` and `zot-token-signer`. Run `kubectl -n zot 
 
 ### A service cannot pull its image
 
-Pods stay in `ImagePullBackOff`. Run `kubectl describe pod <name>` and read the event. Check that the node has the registry mirror for the `clusterIp` address and trusts the CA from `zot-tls`.
+Pods stay in `ImagePullBackOff`. Run `kubectl describe pod <name>` and read the event. On K3s, RKE2 and KubeSolo, check that a `zot-node` pod runs on that node and that `/var/lib/rancher/k3s/agent/etc/containerd/certs.d/zot.zot.svc:5000/hosts.toml` (RKE2: `rancher/rke2`, KubeSolo: `/var/lib/kubesolo/containerd/registry/`) names the `clusterIp` address.

@@ -109,7 +109,7 @@ These fields tell an installer what a component offers, so the installer never n
 
 `provides.registry` is an OCI registry in the cluster: `host` is the `host:port` images name, and `ca` is the Secret key with the CA that signs its certificate. Removing the component waits until no Pod outside its namespaces runs an image from the host.
 
-An input with `generate: {type: clusterIP}` takes a fixed ClusterIP for a Service of the component. A node's container runtime cannot resolve the registry host, so an installer fills the input with a free address in the Service CIDR and points a registry mirror on each node there. Left empty, as in CI, Kubernetes assigns an address and only Pods reach the registry.
+An input with `generate: {type: clusterIP}` takes a fixed ClusterIP for a Service of the component. A node's container runtime cannot resolve the registry host, so Zeabur fills an empty input with a free address in the Service CIDR when it installs the component. The component then points each node there itself; Zeabur Builder does this with a DaemonSet. Without Zeabur, as in CI, the input stays empty, Kubernetes assigns an address and only Pods reach the registry.
 
 ```yaml
 inputs:

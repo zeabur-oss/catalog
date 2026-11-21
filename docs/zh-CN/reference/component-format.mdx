@@ -109,7 +109,7 @@ leftovers: []     # what the upstream keeps on uninstall (e.g. CRDs)
 
 `provides.registry` 是集群里的 OCI registry：`host` 是镜像名称里的 `host:port`，`ca` 是 Secret key，存放为 registry 签发证书的 CA。移除组件前，会等到其命名空间以外没有 Pod 在运行这个 host 的镜像。
 
-输入设成 `generate: {type: clusterIP}`，就是给组件的某个 Service 指定固定的 ClusterIP。节点的容器运行时解析不了 registry 的 host，所以安装工具会从 Service CIDR 挑一个空闲地址填进去，并在每个节点配置 registry mirror 指过去。留空时（CI 就是这样），Kubernetes 会自动分配地址，只有 Pod 能访问 registry。
+输入设成 `generate: {type: clusterIP}`，就是给组件的某个 Service 指定固定的 ClusterIP。节点的容器运行时解析不了 registry 的 host，所以输入留空时，Zeabur 安装组件时会从 Service CIDR 选一个空闲地址填进去。让每个节点连到这个地址由组件自己负责，Zeabur Builder 用一个 DaemonSet 处理。不经过 Zeabur 安装时（CI 就是这样），输入保持为空，Kubernetes 会自动分配地址，只有 Pod 能访问 registry。
 
 ```yaml
 inputs:
