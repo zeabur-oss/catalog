@@ -1,6 +1,6 @@
 ## 简介
 
-Zeabur Builder 用 Dockerfile 或 Railpack，从 Git 仓库和上传的文件夹构建容器镜像，并把镜像存在 zot 里。zot 是随组件一起安装的 OCI 镜像仓库，所以构建不需要外部仓库的账号。Zeabur 要从 Git 部署服务，就需要它；没有它，服务只能从镜像部署。
+Zeabur Builder 用 Dockerfile 或 Railpack，从 Git 仓库和上传的文件夹构建容器镜像，并把镜像存在 zot 里。zot 是随组件一起安装的 OCI 镜像仓库，所以构建不需要外部仓库的账号。Zeabur 开源版要从 Git 部署服务，就需要它；没有它，服务只能从镜像部署。
 
 Builder 会为每个要构建的 Namespace 运行一个 buildkitd。组件用 cert-manager 创建一个 CA，为 zot 签发证书。推送镜像需要 Builder 签发的短期 token。NetworkPolicy 只让 Builder、buildkitd 和构建 Pod 访问 zot。zot 每个仓库保留最近的 20 个 tag，镜像存在 20Gi 的卷上。
 
@@ -13,7 +13,7 @@ Builder 会读取、创建、更新和删除每个 Namespace 的 Secret（Git �
 
 ## 使用方法
 
-在 Zeabur 项目里选择**新建** → **从 Git 部署**，输入仓库。详见[从 Git 构建并部署服务](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/git/)，同一页也说明上传文件夹。构建完成的镜像由 Keel 部署，所以也要安装 Keel。
+在 Zeabur 开源版项目里选择**新建** → **从 Git 部署**，输入仓库。详见[从 Git 构建并部署服务](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/git/)，同一页也说明上传文件夹。构建完成的镜像由 Keel 部署，所以也要安装 Keel。
 
 ## 移除
 

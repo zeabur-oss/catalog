@@ -6,8 +6,8 @@ This template runs one Umami instance behind your domain, with its own PostgreSQ
 
 ## Getting started
 
-1. In Zeabur, open the `umami` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**; it is the domain you entered in the install form.
-2. Sign in as `admin`. Open **Variables**, click `umami-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Without Zeabur, read Secret `umami-secrets`, key `admin-password`, with kubectl:
+1. In Zeabur OSS, open the `umami` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**; it is the domain you entered in the install form.
+2. Sign in as `admin`. Open **Variables**, click `umami-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Without Zeabur OSS, read Secret `umami-secrets`, key `admin-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret umami-secrets -o jsonpath='{.data.admin-password}' | base64 -d
@@ -30,7 +30,7 @@ Click the profile button in the side navigation, then Settings, then Security, t
 
 ### Back up the data
 
-In Zeabur, open the `umami-db` database and go to **Backups** → **Set up backups** to back up on a schedule to an S3 bucket. PostgreSQL backups need the Barman Cloud plugin. To get a copy now, click **More** at the top right of the database page, then **Export**. The browser downloads a `.dump` file made by `pg_dump --format=custom`. See [Set up S3 backups](https://oss.zeabur.com/docs/zeabur/deploy/databases/#set-up-s3-backups) and [Download a database dump](https://oss.zeabur.com/docs/zeabur/deploy/databases/#download-a-database-dump).
+In Zeabur OSS, open the `umami-db` database and go to **Backups** → **Set up backups** to back up on a schedule to an S3 bucket. PostgreSQL backups need the Barman Cloud plugin. To get a copy now, click **More** at the top right of the database page, then **Export**. The browser downloads a `.dump` file made by `pg_dump --format=custom`. See [Set up S3 backups](https://oss.zeabur.com/docs/zeabur/deploy/databases/#set-up-s3-backups) and [Download a database dump](https://oss.zeabur.com/docs/zeabur/deploy/databases/#download-a-database-dump).
 
 Umami keeps all its data in this database, so the dump is the whole backup.
 
@@ -38,7 +38,7 @@ Umami keeps all its data in this database, so the dump is the whole backup.
 
 ### The page shows 502 or does not load
 
-In Zeabur, open the `umami` service. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica keeps restarting, open **Deployments**, then **Events**. If the events show `OOMKilled`, raise **Maximum memory** in **Settings** → **Compute**. See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/).
+In Zeabur OSS, open the `umami` service. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica keeps restarting, open **Deployments**, then **Events**. If the events show `OOMKilled`, raise **Maximum memory** in **Settings** → **Compute**. See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/).
 
 If the domain or its certificate stays pending, see [Add public domains and HTTPS](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting).
 

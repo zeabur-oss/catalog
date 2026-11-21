@@ -6,8 +6,8 @@
 
 ## 開始使用
 
-1. 在 Zeabur 打開 `lobechat` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，例如 `chat.example.com`。
-2. LobeChat 要求輸入存取碼時，填入存取碼。要讀取它，打開**環境變數**，在**來自設定檔和機密變數**點 `lobechat-secrets`，再按 `access-code` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `lobechat-secrets` 的 `access-code`：
+1. 在 Zeabur 開源版打開 `lobechat` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，例如 `chat.example.com`。
+2. LobeChat 要求輸入存取碼時，填入存取碼。要讀取它，打開**環境變數**，在**來自設定檔和機密變數**點 `lobechat-secrets`，再按 `access-code` 旁的眼睛圖示。不用 Zeabur 開源版時，用 kubectl 讀取機密變數 `lobechat-secrets` 的 `access-code`：
 
    ```sh
    kubectl -n <namespace> get secret lobechat-secrets -o jsonpath='{.data.access-code}' | base64 -d
@@ -31,11 +31,11 @@
 
 ### 頁面顯示 502 或打不開
 
-在 Zeabur 打開 `lobechat` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
+在 Zeabur 開源版打開 `lobechat` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
 
-不用 Zeabur 時，用 `kubectl -n <namespace> logs deployment/lobechat` 看日誌，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 看事件。
+不用 Zeabur 開源版時，用 `kubectl -n <namespace> logs deployment/lobechat` 看日誌，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 看事件。
 
-詳見 Zeabur 文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
+詳見 Zeabur 開源版文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
 
 ### 對話失敗，出現模型服務商的錯誤
 

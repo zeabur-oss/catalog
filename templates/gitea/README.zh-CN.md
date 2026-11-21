@@ -6,8 +6,8 @@
 
 ## 开始使用
 
-1. 在 Zeabur 打开 `gitea` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**中，例如 `git.example.com`。不会出现安装向导。
-2. 第一次启动时会创建管理员 `gitea_admin`。获取它的密码。打开**变量**，在**来自配置文件和机密变量**中点击 `gitea-secrets`，再点击 `admin-password` 旁的眼睛图标。不用 Zeabur 时，用 kubectl 读取机密变量 `gitea-secrets` 的 `admin-password`：
+1. 在 Zeabur 开源版打开 `gitea` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**中，例如 `git.example.com`。不会出现安装向导。
+2. 第一次启动时会创建管理员 `gitea_admin`。获取它的密码。打开**变量**，在**来自配置文件和机密变量**中点击 `gitea-secrets`，再点击 `admin-password` 旁的眼睛图标。不用 Zeabur 开源版时，用 kubectl 读取机密变量 `gitea-secrets` 的 `admin-password`：
 
    ```sh
    kubectl -n <namespace> get secret gitea-secrets -o jsonpath='{.data.admin-password}' | base64 -d
@@ -41,7 +41,7 @@ Gitea 把账号、议题和设置存在 `gitea-db` 数据库。在项目中打�
 kubectl -n <namespace> cp <replica>:/var/lib/gitea ./gitea-data
 ```
 
-Gitea 也有 `gitea dump` 命令，把仓库、数据库和数据打包成一个 ZIP 文件。Gitea 建议备份期间先停止实例，让文件和数据库保持一致。详见 Zeabur 文档的[配置 S3 备份](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#配置-s3-备份)、[下载数据库转储文件](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#下载数据库转储文件)，以及 Gitea 文档的 [Backup and Restore](https://docs.gitea.com/administration/backup-and-restore)。
+Gitea 也有 `gitea dump` 命令，把仓库、数据库和数据打包成一个 ZIP 文件。Gitea 建议备份期间先停止实例，让文件和数据库保持一致。详见 Zeabur 开源版文档的[配置 S3 备份](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#配置-s3-备份)、[下载数据库转储文件](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#下载数据库转储文件)，以及 Gitea 文档的 [Backup and Restore](https://docs.gitea.com/administration/backup-and-restore)。
 
 ## 故障排除
 
@@ -51,8 +51,8 @@ Gitea 也有 `gitea dump` 命令，把仓库、数据库和数据打包成一个
 
 ### 页面显示 502 或打不开
 
-在 Zeabur 打开 `gitea` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
+在 Zeabur 开源版打开 `gitea` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
 
-不用 Zeabur 时，用 `kubectl -n <namespace> logs deployment/gitea` 查看日志，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 查看事件。
+不用 Zeabur 开源版时，用 `kubectl -n <namespace> logs deployment/gitea` 查看日志，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 查看事件。
 
-详见 Zeabur 文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
+详见 Zeabur 开源版文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。

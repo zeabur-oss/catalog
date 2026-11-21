@@ -6,20 +6,20 @@ This template runs one n8n behind your domain, with SQLite on a volume. Code nod
 
 ## Getting started
 
-1. In Zeabur, open the `n8n` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**. It is the domain you entered in the install form, for example `n8n.example.com`.
-2. Sign in with the owner email you entered in the install form. Get the password from the `n8n` service: open **Variables**, click `n8n-secrets` under **From config files and secrets**, and click the eye icon next to `owner-password`. Without Zeabur, read Secret `n8n-secrets`, key `owner-password`, with kubectl:
+1. In Zeabur OSS, open the `n8n` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**. It is the domain you entered in the install form, for example `n8n.example.com`.
+2. Sign in with the owner email you entered in the install form. Get the password from the `n8n` service: open **Variables**, click `n8n-secrets` under **From config files and secrets**, and click the eye icon next to `owner-password`. Without Zeabur OSS, read Secret `n8n-secrets`, key `owner-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret n8n-secrets -o jsonpath='{.data.owner-password}' | base64 -d
    ```
 
-3. Keep a copy of the encryption key in a safe place. n8n encrypts the credentials it saves with this key. Find it the same way: on **Variables**, click `n8n-secrets`, then the eye icon next to `encryption-key`. Without Zeabur, read Secret `n8n-secrets`, key `encryption-key`, with kubectl:
+3. Keep a copy of the encryption key in a safe place. n8n encrypts the credentials it saves with this key. Find it the same way: on **Variables**, click `n8n-secrets`, then the eye icon next to `encryption-key`. Without Zeabur OSS, read Secret `n8n-secrets`, key `encryption-key`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret n8n-secrets -o jsonpath='{.data.encryption-key}' | base64 -d
    ```
 
-4. Secret `n8n-secrets` also holds `runner-token`, the shared secret that n8n and the task runner use to trust each other. You do not need it for daily use. Show it the same way on **Variables**. Without Zeabur, use kubectl:
+4. Secret `n8n-secrets` also holds `runner-token`, the shared secret that n8n and the task runner use to trust each other. You do not need it for daily use. Show it the same way on **Variables**. Without Zeabur OSS, use kubectl:
 
    ```sh
    kubectl -n <namespace> get secret n8n-secrets -o jsonpath='{.data.runner-token}' | base64 -d
@@ -74,12 +74,12 @@ See [Back up and restore](https://docs.n8n.io/deploy/host-n8n/keep-n8n-running/b
 
 ### The page shows 502, does not load or keeps reconnecting
 
-Open the `n8n` service in Zeabur. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. A service that is slow or keeps reconnecting is often short of memory too, so check **Events** and **Maximum memory** for it as well. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
+Open the `n8n` service in Zeabur OSS. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. A service that is slow or keeps reconnecting is often short of memory too, so check **Events** and **Maximum memory** for it as well. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
 
-See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur docs.
+See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur OSS docs.
 
 ### A Code node does not run
 
-Code nodes run in the `task-runner` service, which connects to n8n with `runner-token`. Open the `task-runner` service in Zeabur, check that **Overview** shows its replica as ready, and read the **Logs** tab.
+Code nodes run in the `task-runner` service, which connects to n8n with `runner-token`. Open the `task-runner` service in Zeabur OSS, check that **Overview** shows its replica as ready, and read the **Logs** tab.
 
 See [Task runners](https://docs.n8n.io/deploy/host-n8n/configure-n8n/set-up-task-runners) in the n8n docs.

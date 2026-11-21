@@ -6,8 +6,8 @@
 
 ## 開始使用
 
-1. 在 Zeabur 打開 `ntfy` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，就是你在安裝表單填的網域，例如 `ntfy.example.com`。
-2. 以 `admin` 登入。密碼從 `ntfy` 服務取得：打開**環境變數**，在**來自設定檔和機密變數**點 `ntfy-secrets`，再按 `admin-password` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `ntfy-secrets` 的 `admin-password`：
+1. 在 Zeabur 開源版打開 `ntfy` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，就是你在安裝表單填的網域，例如 `ntfy.example.com`。
+2. 以 `admin` 登入。密碼從 `ntfy` 服務取得：打開**環境變數**，在**來自設定檔和機密變數**點 `ntfy-secrets`，再按 `admin-password` 旁的眼睛圖示。不用 Zeabur 開源版時，用 kubectl 讀取機密變數 `ntfy-secrets` 的 `admin-password`：
 
    ```sh
    kubectl -n <namespace> get secret ntfy-secrets -o jsonpath='{.data.admin-password}' | base64 -d
@@ -52,9 +52,9 @@ curl -H "Authorization: Bearer tk_..." -d "Hello" https://ntfy.example.com/mytop
 
 ### 頁面顯示 502 或打不開
 
-在 Zeabur 打開 `ntfy` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
+在 Zeabur 開源版打開 `ntfy` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
 
-詳見 Zeabur 文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
+詳見 Zeabur 開源版文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
 
 ### 用戶端無法發送或訂閱
 

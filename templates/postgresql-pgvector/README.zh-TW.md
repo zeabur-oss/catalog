@@ -6,7 +6,7 @@
 
 ## 開始使用
 
-1. 在 Zeabur 的專案裡打開 `postgresql` 資料庫。**概覽**顯示它已就緒，就啟動好了。資料庫沒有網域，也沒有網頁。
+1. 在 Zeabur 開源版的專案裡打開 `postgresql` 資料庫。**概覽**顯示它已就緒，就啟動好了。資料庫沒有網域，也沒有網頁。
 2. 同一個專案裡的應用程式連到 Service `postgresql-rw` 的 `5432` 連接埠，資料庫用 `zeabur`，使用者用 `app`。在**概覽**的**連線**區塊可以看到**主機**、**連接埠**、**資料庫**和**使用者名稱**，按密碼旁的**顯示**就能讀取密碼。要把這些值當成變數交給應用程式，按同一區塊的**接到服務**。
 3. 運算子還會建立機密變數 `postgresql-app`。專案裡沒有服務把它當成變數讀取，所以用 kubectl 讀取。密碼在 `password`：
 
@@ -48,7 +48,7 @@ CREATE INDEX ON items USING hnsw (embedding vector_l2_ops);
 
 ### 備份資料
 
-在 Zeabur 打開 `postgresql` 資料庫，到**備份** → **設定備份**，就能依排程備份到 S3 儲存貯體。PostgreSQL 備份需要 Barman Cloud 外掛。要現在就拿一份資料，在資料庫頁面右上角按**更多** → **匯出**，瀏覽器會下載 `pg_dump --format=custom` 產生的 `.dump` 檔。詳見[設定 S3 備份](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/#設定-s3-備份)和[下載資料庫傾印檔](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/#下載資料庫傾印檔)。
+在 Zeabur 開源版打開 `postgresql` 資料庫，到**備份** → **設定備份**，就能依排程備份到 S3 儲存貯體。PostgreSQL 備份需要 Barman Cloud 外掛。要現在就拿一份資料，在資料庫頁面右上角按**更多** → **匯出**，瀏覽器會下載 `pg_dump --format=custom` 產生的 `.dump` 檔。詳見[設定 S3 備份](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/#設定-s3-備份)和[下載資料庫傾印檔](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/#下載資料庫傾印檔)。
 
 ## 疑難排解
 

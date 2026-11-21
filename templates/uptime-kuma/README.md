@@ -6,7 +6,7 @@ This template runs one Uptime Kuma instance behind your domain. Its data is on a
 
 ## Getting started
 
-1. In Zeabur, open the `uptime-kuma` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**; it is the domain you entered in the install form.
+1. In Zeabur OSS, open the `uptime-kuma` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**; it is the domain you entered in the install form.
 2. Open the domain right after the deploy. The first visitor sees the setup page and creates the owner account. Do this before anyone else does, because whoever visits first becomes the owner.
 3. Add your first monitor.
 
@@ -24,7 +24,7 @@ A status page is meant for public users. It caches results for 5 minutes, so it 
 
 ### The page shows 502 or does not load
 
-In Zeabur, open the `uptime-kuma` service. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica keeps restarting, open **Deployments**, then **Events**. If the events show `OOMKilled`, raise **Maximum memory** in **Settings** → **Compute**. See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/).
+In Zeabur OSS, open the `uptime-kuma` service. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica keeps restarting, open **Deployments**, then **Events**. If the events show `OOMKilled`, raise **Maximum memory** in **Settings** → **Compute**. See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/).
 
 If the domain or its certificate stays pending, see [Add public domains and HTTPS](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting).
 
@@ -40,7 +40,7 @@ Click **Terminal** at the top of the service page and run the reset command, the
 npm run reset-password
 ```
 
-Without Zeabur, run it with kubectl:
+Without Zeabur OSS, run it with kubectl:
 
 ```sh
 kubectl -n <namespace> exec -it uptime-kuma-0 -- npm run reset-password

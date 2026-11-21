@@ -8,7 +8,7 @@ The collector skips the `kube-system`, `kube-public`, `kube-node-lease` and `obs
 
 ## Use it
 
-In Zeabur, open a service's **Logs** tab and use **History**. A cluster administrator must also enable `proxy.enabled` in Zeabur's Helm chart. See [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/#history).
+In Zeabur OSS, open a service's **Logs** tab and use **History**. A cluster administrator must also enable `proxy.enabled` in Zeabur OSS's Helm chart. See [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/#history).
 
 To search by hand, forward the store's port and query it. A NetworkPolicy does not stop `kubectl port-forward`:
 

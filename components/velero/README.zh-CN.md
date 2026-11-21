@@ -16,7 +16,7 @@ Velero 绑定 `cluster-admin`，能读取并还原集群里所有的对象，所
 
 ## 使用方法
 
-在 Zeabur 打开**集群** → **备份**，配置备份存放位置和定时、运行备份与还原。详见[备份集群并从备份还原](https://oss.zeabur.com/zh-CN/docs/zeabur/cluster/backups/)。
+在 Zeabur 开源版打开**集群** → **备份**，配置备份存放位置和定时、运行备份与还原。详见[备份集群并从备份还原](https://oss.zeabur.com/zh-CN/docs/zeabur/cluster/backups/)。
 
 这两个密钥也存在它们保护的备份里。现在就复制到集群外。没有密钥，就没有人能读取备份。
 

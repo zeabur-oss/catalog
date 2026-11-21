@@ -6,7 +6,7 @@ K8up 只备份带有 `k8up.io/backup=true` 注解的 PVC，所以装好后不会
 
 ## 使用方法
 
-在 Zeabur 打开服务的**设置** → **存储**，在下方的**备份**中找到卷，点击**备份这个卷**。先备好 S3 存储桶和密钥，或请管理员登记 S3 目的地。Zeabur 会创建 K8up Schedule，以及存放 restic 密码的 Secret。详见[配置卷备份](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/volumes/#配置卷备份)。
+在 Zeabur 开源版打开服务的**设置** → **存储**，在下方的**备份**中找到卷，点击**备份这个卷**。先备好 S3 存储桶和密钥，或请管理员登记 S3 目的地。Zeabur 开源版会创建 K8up Schedule，以及存放 restic 密码的 Secret。详见[配置卷备份](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/volumes/#配置卷备份)。
 
 把备份 Secret 里的 `RESTIC_PASSWORD` 另外保存到安全的地方。没有它，就读不了 S3 里的备份。
 

@@ -16,7 +16,7 @@ Prepare an S3 bucket outside this cluster. If you store backups in the cluster, 
 
 ## Use it
 
-In Zeabur, open **Cluster** → **Backups** to set the backup location and schedule, run a backup, and restore. See [Back up a cluster and restore from a backup](https://oss.zeabur.com/docs/zeabur/cluster/backups/).
+In Zeabur OSS, open **Cluster** → **Backups** to set the backup location and schedule, run a backup, and restore. See [Back up a cluster and restore from a backup](https://oss.zeabur.com/docs/zeabur/cluster/backups/).
 
 The two generated keys are also inside the backups they protect. Copy them out of the cluster now. Without them, no one can read your backups.
 

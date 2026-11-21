@@ -6,8 +6,8 @@ Ghost sends sign-in and system email through the SMTP server you entered in the 
 
 ## Getting started
 
-1. In Zeabur, open the `ghost` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**, for example `blog.example.com`. The admin is at `/ghost` on that domain.
-2. A setup job creates the site owner from the owner email you entered in the install form, so there is no setup form. Get the owner password. On the `ghost` service, open **Variables**, click `ghost-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Without Zeabur, read Secret `ghost-secrets`, key `admin-password`, with kubectl:
+1. In Zeabur OSS, open the `ghost` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**, for example `blog.example.com`. The admin is at `/ghost` on that domain.
+2. A setup job creates the site owner from the owner email you entered in the install form, so there is no setup form. Get the owner password. On the `ghost` service, open **Variables**, click `ghost-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Without Zeabur OSS, read Secret `ghost-secrets`, key `admin-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret ghost-secrets -o jsonpath='{.data.admin-password}' | base64 -d
@@ -25,7 +25,7 @@ SMTP only sends system email. To send a post as a newsletter, Ghost needs a bulk
 
 ### Back up the data
 
-Ghost keeps posts, members and settings in MySQL, on the volume `ghost-mysql-data`. Images, themes and other uploads are on the volume `ghost-data`, mounted at `/var/lib/ghost/content`. `ghost-mysql` is a plain MySQL container, not a Zeabur database, so it has no **Backups** tab. Dump it to a file on your machine with kubectl:
+Ghost keeps posts, members and settings in MySQL, on the volume `ghost-mysql-data`. Images, themes and other uploads are on the volume `ghost-data`, mounted at `/var/lib/ghost/content`. `ghost-mysql` is a plain MySQL container, not a Zeabur OSS database, so it has no **Backups** tab. Dump it to a file on your machine with kubectl:
 
 ```sh
 kubectl -n <namespace> exec statefulset/ghost-mysql -- sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysqldump --single-transaction --no-tablespaces -h127.0.0.1 -ughost ghost' > ghost.sql
@@ -57,8 +57,8 @@ Some hosts block outbound SMTP ports. Use the SMTP port that your provider and y
 
 ### The page shows 502 or does not load
 
-Open the `ghost` service in Zeabur. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the service is slow or keeps reconnecting, open the **Usage** tab. **Near memory max** means the memory is close to the limit. Raise **Maximum memory** the same way. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
+Open the `ghost` service in Zeabur OSS. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the service is slow or keeps reconnecting, open the **Usage** tab. **Near memory max** means the memory is close to the limit. Raise **Maximum memory** the same way. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
 
-Without Zeabur, read the logs with `kubectl -n <namespace> logs statefulset/ghost` and the events with `kubectl -n <namespace> get events --sort-by=.lastTimestamp`.
+Without Zeabur OSS, read the logs with `kubectl -n <namespace> logs statefulset/ghost` and the events with `kubectl -n <namespace> get events --sort-by=.lastTimestamp`.
 
-See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur docs.
+See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur OSS docs.

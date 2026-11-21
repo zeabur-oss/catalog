@@ -6,8 +6,8 @@
 
 ## 开始使用
 
-1. 在 Zeabur 打开 `browserless` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**中，例如 `browserless.example.com`。
-2. 获取令牌。打开**变量**，在**来自配置文件和机密变量**中点击 `browserless-secrets`，再点击 `token` 旁的眼睛图标。不用 Zeabur 时，用 kubectl 读取机密变量 `browserless-secrets` 的 `token`：
+1. 在 Zeabur 开源版打开 `browserless` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**中，例如 `browserless.example.com`。
+2. 获取令牌。打开**变量**，在**来自配置文件和机密变量**中点击 `browserless-secrets`，再点击 `token` 旁的眼睛图标。不用 Zeabur 开源版时，用 kubectl 读取机密变量 `browserless-secrets` 的 `token`：
 
    ```sh
    kubectl -n <namespace> get secret browserless-secrets -o jsonpath='{.data.token}' | base64 -d
@@ -41,8 +41,8 @@
 
 ### 页面显示 502 或打不开
 
-在 Zeabur 打开 `browserless` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。服务变慢或一直重新连接时，打开**用量**标签页，出现**接近内存上限**就用同样的方式调高上限。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
+在 Zeabur 开源版打开 `browserless` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。服务变慢或一直重新连接时，打开**用量**标签页，出现**接近内存上限**就用同样的方式调高上限。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
 
-不用 Zeabur 时，用 `kubectl -n <namespace> logs deployment/browserless` 查看日志，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 查看事件。
+不用 Zeabur 开源版时，用 `kubectl -n <namespace> logs deployment/browserless` 查看日志，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 查看事件。
 
-详见 Zeabur 文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
+详见 Zeabur 开源版文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。

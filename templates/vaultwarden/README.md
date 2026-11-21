@@ -6,8 +6,8 @@ This template runs one Vaultwarden server behind your domain. Sign-up is closed.
 
 ## Getting started
 
-1. In Zeabur, open the `vaultwarden` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**; it is the domain you entered in the install form.
-2. Get the admin token. Open **Variables**, click `vaultwarden-secrets` under **From config files and secrets**, and click the eye icon next to `admin-token`. Without Zeabur, read Secret `vaultwarden-secrets`, key `admin-token`, with kubectl:
+1. In Zeabur OSS, open the `vaultwarden` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**; it is the domain you entered in the install form.
+2. Get the admin token. Open **Variables**, click `vaultwarden-secrets` under **From config files and secrets**, and click the eye icon next to `admin-token`. Without Zeabur OSS, read Secret `vaultwarden-secrets`, key `admin-token`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret vaultwarden-secrets -o jsonpath='{.data.admin-token}' | base64 -d
@@ -27,7 +27,7 @@ On the service's **Variables** tab, click `vaultwarden-secrets`, enter a new val
 
 ### The page shows 502 or does not load
 
-In Zeabur, open the `vaultwarden` service. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica keeps restarting, open **Deployments**, then **Events**. If the events show `OOMKilled`, raise **Maximum memory** in **Settings** → **Compute**. See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/).
+In Zeabur OSS, open the `vaultwarden` service. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica keeps restarting, open **Deployments**, then **Events**. If the events show `OOMKilled`, raise **Maximum memory** in **Settings** → **Compute**. See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/).
 
 If the domain or its certificate stays pending, see [Add public domains and HTTPS](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting).
 

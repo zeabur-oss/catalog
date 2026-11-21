@@ -1,6 +1,6 @@
 ## 簡介
 
-cert-manager 會向簽發者申請 TLS 憑證，並在到期前續期。叢集要讓 Zeabur 的公開網域使用 HTTPS，就需要它。
+cert-manager 會向簽發者申請 TLS 憑證，並在到期前續期。叢集要讓 Zeabur 開源版的公開網域使用 HTTPS，就需要它。
 
 這個元件會建立兩個 Let's Encrypt 的 ClusterIssuer：`letsencrypt` 和 `letsencrypt-staging`。兩者都透過 Traefik 做 HTTP-01 驗證，也都沒有設定電子郵件。建議先試 `letsencrypt-staging`：頻率限制寬鬆得多，但瀏覽器不信任它簽發的憑證。元件也開啟了 Gateway API 支援，cert-manager 可以替 Gateway 的 listener 簽發憑證，刪除 Certificate 時也會一併刪除對應的 TLS Secret。
 
@@ -14,13 +14,13 @@ cert-manager 會讀寫每個 Namespace 的 Secret，也會更新 webhook 的 CA 
 
 ## 使用方式
 
-在 Zeabur 的服務**網路**分頁加上公開網域。叢集有多個簽發者時，表單會出現**簽發者**欄位。詳見[加上公開網域與 HTTPS](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/)。同一頁也說明如何為萬用字元網域建立 DNS-01 簽發者。
+在 Zeabur 開源版的服務**網路**分頁加上公開網域。叢集有多個簽發者時，表單會出現**簽發者**欄位。詳見[加上公開網域與 HTTPS](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/)。同一頁也說明如何為萬用字元網域建立 DNS-01 簽發者。
 
 ## 移除
 
 移除 cert-manager 後，就不會再簽發或續期。既有的 Certificate、TLS Secret 和 CRD 都會留著，但沒人續期，憑證到期就失效。兩個 ClusterIssuer 會被刪除。帳號金鑰 Secret `letsencrypt-account-key` 和 `letsencrypt-staging-account-key` 會留在 `cert-manager` Namespace。
 
-Zeabur Builder 和 External Secrets Operator 需要它，只要其中一個還裝著，Zeabur 就會拒絕移除 cert-manager。詳見[移除元件](https://oss.zeabur.com/zh-TW/docs/zeabur/cluster/components/#移除元件)。
+Zeabur Builder 和 External Secrets Operator 需要它，只要其中一個還裝著，Zeabur 開源版就會拒絕移除 cert-manager。詳見[移除元件](https://oss.zeabur.com/zh-TW/docs/zeabur/cluster/components/#移除元件)。
 
 ## 疑難排解
 

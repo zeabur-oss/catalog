@@ -16,7 +16,7 @@ Velero 綁定 `cluster-admin`，能讀取並還原叢集裡所有的物件，所
 
 ## 使用方式
 
-在 Zeabur 打開**叢集** → **備份**，設定備份存放位置和排程、執行備份與還原。詳見[備份叢集並從備份還原](https://oss.zeabur.com/zh-TW/docs/zeabur/cluster/backups/)。
+在 Zeabur 開源版打開**叢集** → **備份**，設定備份存放位置和排程、執行備份與還原。詳見[備份叢集並從備份還原](https://oss.zeabur.com/zh-TW/docs/zeabur/cluster/backups/)。
 
 這兩把金鑰也存在它們保護的備份裡。現在就複製到叢集外。沒有金鑰，就沒有人能讀取備份。
 

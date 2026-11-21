@@ -3,7 +3,7 @@ title: How clients render templates
 description: The checks a client runs before it renders a template, how it tells whether what the template requires is installed and which language it shows, with cases to test a client against.
 ---
 
-A client installs a [template](template-format.mdx) into one namespace: it checks the options, renders `manifests.yaml` and applies the objects. This page gives the rules. `catalog template render` follows them with `tools/internal/templates/render.go`, and Zeabur follows them too. Each rule has a case in [`conformance/template/`](#test-cases) to test against.
+A client installs a [template](template-format.mdx) into one namespace: it checks the options, renders `manifests.yaml` and applies the objects. This page gives the rules. `catalog template render` follows them with `tools/internal/templates/render.go`, and Zeabur OSS follows them too. Each rule has a case in [`conformance/template/`](#test-cases) to test against.
 
 ## What a render takes
 
@@ -50,7 +50,7 @@ Then add these labels to the metadata of every object:
 
 The objects keep the order of `manifests.yaml`. An empty YAML document isn't an object.
 
-`crosscheck.json` in `bundle.tar.gz` holds full renders of the real templates. For each template id, it records one set of options (`namespace`, `domain`, `clusterIssuer`, `inputs`) and the `objects` that `render.go` renders. A client renders each template with those options and compares the objects. Zeabur's tests do this.
+`crosscheck.json` in `bundle.tar.gz` holds full renders of the real templates. For each template id, it records one set of options (`namespace`, `domain`, `clusterIssuer`, `inputs`) and the `objects` that `render.go` renders. A client renders each template with those options and compares the objects. Zeabur OSS's tests do this.
 
 ## What a template requires
 

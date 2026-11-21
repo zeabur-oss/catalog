@@ -201,10 +201,10 @@ security:
       locales:
         zh-TW:
           risk: "Dragonfly 的資料只放在記憶體裡，除非你開啟快照。重新啟動後，排隊中或還沒確認的任務、鎖和快取都會不見。"
-          mitigation: "在 Zeabur 開啟 Dragonfly 備份。DB0（快取）和 DB1（Celery）是分開的，cache_mode=false 可以避免佇列被清掉。重新啟動前，先停掉 beat 和產生任務的程式，讓 worker 把手上的工作做完。重新啟動後，要檢查任務有沒有漏掉或重複執行。舊的 Valkey AOF、RDB 或 PVC 資料不會匯入。"
+          mitigation: "在 Zeabur 開源版開啟 Dragonfly 備份。DB0（快取）和 DB1（Celery）是分開的，cache_mode=false 可以避免佇列被清掉。重新啟動前，先停掉 beat 和產生任務的程式，讓 worker 把手上的工作做完。重新啟動後，要檢查任務有沒有漏掉或重複執行。舊的 Valkey AOF、RDB 或 PVC 資料不會匯入。"
         zh-CN:
           risk: "Dragonfly 的数据只放在内存里，除非你开启快照。重启后，排队中或还没确认的任务、锁和缓存都会丢失。"
-          mitigation: "在 Zeabur 开启 Dragonfly 备份。DB0（缓存）和 DB1（Celery）是分开的，cache_mode=false 可以避免队列被清掉。重启前，先停掉 beat 和产生任务的程序，让 worker 把手上的工作做完。重启后，要检查任务有没有漏掉或重复执行。旧的 Valkey AOF、RDB 或 PVC 数据不会导入。"
+          mitigation: "在 Zeabur 开源版开启 Dragonfly 备份。DB0（缓存）和 DB1（Celery）是分开的，cache_mode=false 可以避免队列被清掉。重启前，先停掉 beat 和产生任务的程序，让 worker 把手上的工作做完。重启后，要检查任务有没有漏掉或重复执行。旧的 Valkey AOF、RDB 或 PVC 数据不会导入。"
     - risk: "The sandbox container has CAP_CHOWN and CAP_DAC_OVERRIDE. Dify's sandbox hands each Python script to its run user and then opens it as root. With DAC_OVERRIDE, root inside the sandbox can read and write files it does not own in the container."
       mitigation: "Only the sandbox gets these two, next to SYS_CHROOT, SETUID and SETGID. It still drops all other capabilities, allows no privilege escalation, and runs user code as a separate user under the upstream seccomp filter."
       locales:

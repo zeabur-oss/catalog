@@ -6,8 +6,8 @@
 
 ## 开始使用
 
-1. 在 Zeabur 打开 `cliproxyapi` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**中，例如 `cliproxyapi.example.com`。
-2. 获取 API 密钥。打开**变量**，在**来自配置文件和机密变量**中点击 `app-secrets`，再点击 `api-key` 旁的眼睛图标。不用 Zeabur 时，用 kubectl 读取机密变量 `app-secrets` 的 `api-key`：
+1. 在 Zeabur 开源版打开 `cliproxyapi` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**中，例如 `cliproxyapi.example.com`。
+2. 获取 API 密钥。打开**变量**，在**来自配置文件和机密变量**中点击 `app-secrets`，再点击 `api-key` 旁的眼睛图标。不用 Zeabur 开源版时，用 kubectl 读取机密变量 `app-secrets` 的 `api-key`：
 
    ```sh
    kubectl -n <namespace> get secret app-secrets -o jsonpath='{.data.api-key}' | base64 -d
@@ -26,7 +26,7 @@ API 密钥只管客户端接入。模型服务的凭证要另外配置，见“�
 
 ### 调用管理 API
 
-管理 API 只接受来自 Pod 内部的调用。Zeabur 没有对应的界面，请先用 `kubectl` 开一条隧道，再把管理密钥当作 Bearer 令牌发送：
+管理 API 只接受来自 Pod 内部的调用。Zeabur 开源版没有对应的界面，请先用 `kubectl` 开一条隧道，再把管理密钥当作 Bearer 令牌发送：
 
 ```sh
 kubectl -n <namespace> port-forward deployment/cliproxyapi 8317:8317 --address 127.0.0.1
@@ -57,11 +57,11 @@ curl -X POST -H 'Authorization: Bearer <管理密钥>' \
 
 ### 页面显示 502 或打不开
 
-在 Zeabur 打开 `cliproxyapi` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
+在 Zeabur 开源版打开 `cliproxyapi` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
 
-不用 Zeabur 时，用 `kubectl -n <namespace> logs deployment/cliproxyapi` 查看日志，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 查看事件。
+不用 Zeabur 开源版时，用 `kubectl -n <namespace> logs deployment/cliproxyapi` 查看日志，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 查看事件。
 
-详见 Zeabur 文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
+详见 Zeabur 开源版文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
 
 ### 请求失败，出现模型服务商的错误
 

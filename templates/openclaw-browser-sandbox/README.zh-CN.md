@@ -6,7 +6,7 @@
 
 ## 开始使用
 
-1. 在 Zeabur 打开 `openclaw-sandbox-browser` 服务。**概览**显示副本已就绪，服务就启动好了。它没有域名。
+1. 在 Zeabur 开源版打开 `openclaw-sandbox-browser` 服务。**概览**显示副本已就绪，服务就启动好了。它没有域名。
 2. OpenClaw 模板的 Pod 已经带有客户端标签。其他客户端 Pod 要在 Pod 模板加上：
 
    ```yaml
@@ -44,7 +44,7 @@
 
 ### 浏览器一直重启或没有响应
 
-在 Zeabur 打开 `openclaw-sandbox-browser` 服务，确认**概览**显示副本已就绪，再看**日志**选项卡。打开**部署记录**，切换到**事件**。如果事件显示 `OOMKilled`，到**设置** → **计算资源**调高**内存上限**。详见[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
+在 Zeabur 开源版打开 `openclaw-sandbox-browser` 服务，确认**概览**显示副本已就绪，再看**日志**选项卡。打开**部署记录**，切换到**事件**。如果事件显示 `OOMKilled`，到**设置** → **计算资源**调高**内存上限**。详见[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
 
 ### 客户端连不上
 

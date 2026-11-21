@@ -6,20 +6,20 @@
 
 ## 開始使用
 
-1. 在 Zeabur 打開 `n8n` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，就是你在安裝表單填的網域，例如 `n8n.example.com`。
-2. 用你在安裝表單填的擁有者 Email 登入。密碼從 `n8n` 服務取得：打開**環境變數**，在**來自設定檔和機密變數**點 `n8n-secrets`，再按 `owner-password` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `n8n-secrets` 的 `owner-password`：
+1. 在 Zeabur 開源版打開 `n8n` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，就是你在安裝表單填的網域，例如 `n8n.example.com`。
+2. 用你在安裝表單填的擁有者 Email 登入。密碼從 `n8n` 服務取得：打開**環境變數**，在**來自設定檔和機密變數**點 `n8n-secrets`，再按 `owner-password` 旁的眼睛圖示。不用 Zeabur 開源版時，用 kubectl 讀取機密變數 `n8n-secrets` 的 `owner-password`：
 
    ```sh
    kubectl -n <namespace> get secret n8n-secrets -o jsonpath='{.data.owner-password}' | base64 -d
    ```
 
-3. 把加密金鑰另外備份到安全的地方。n8n 用這把金鑰加密它儲存的憑證。取得方式相同：在**環境變數**點 `n8n-secrets`，再按 `encryption-key` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `n8n-secrets` 的 `encryption-key`：
+3. 把加密金鑰另外備份到安全的地方。n8n 用這把金鑰加密它儲存的憑證。取得方式相同：在**環境變數**點 `n8n-secrets`，再按 `encryption-key` 旁的眼睛圖示。不用 Zeabur 開源版時，用 kubectl 讀取機密變數 `n8n-secrets` 的 `encryption-key`：
 
    ```sh
    kubectl -n <namespace> get secret n8n-secrets -o jsonpath='{.data.encryption-key}' | base64 -d
    ```
 
-4. 機密 `n8n-secrets` 裡還有 `runner-token`，這是 n8n 和 task runner 彼此信任用的共用機密。日常使用不需要它。取得方式同上。不用 Zeabur 時，用 kubectl：
+4. 機密 `n8n-secrets` 裡還有 `runner-token`，這是 n8n 和 task runner 彼此信任用的共用機密。日常使用不需要它。取得方式同上。不用 Zeabur 開源版時，用 kubectl：
 
    ```sh
    kubectl -n <namespace> get secret n8n-secrets -o jsonpath='{.data.runner-token}' | base64 -d
@@ -74,12 +74,12 @@ n8n import:credentials --separate --input=<credentials folder>
 
 ### 頁面顯示 502、打不開或一直重新連線
 
-在 Zeabur 打開 `n8n` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。服務很慢或一直重新連線，也常是記憶體不夠，同樣檢查**事件**和**記憶體上限**。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
+在 Zeabur 開源版打開 `n8n` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。服務很慢或一直重新連線，也常是記憶體不夠，同樣檢查**事件**和**記憶體上限**。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
 
-詳見 Zeabur 文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
+詳見 Zeabur 開源版文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
 
 ### Code 節點不執行
 
-Code 節點在 `task-runner` 服務裡執行，它用 `runner-token` 連到 n8n。在 Zeabur 打開 `task-runner` 服務，確認**概覽**顯示副本已就緒，再看**日誌**分頁。
+Code 節點在 `task-runner` 服務裡執行，它用 `runner-token` 連到 n8n。在 Zeabur 開源版打開 `task-runner` 服務，確認**概覽**顯示副本已就緒，再看**日誌**分頁。
 
 詳見 n8n 文件的 [Task runners](https://docs.n8n.io/deploy/host-n8n/configure-n8n/set-up-task-runners)。

@@ -8,28 +8,29 @@ English | [繁體中文](README.zh-TW.md) | [简体中文](README.zh-CN.md)
 # Zeabur Catalog
 
 One-click templates for your own server: n8n, WordPress, Dify, OpenClaw and more, each installed
-and tested before it ships. It is the open-source counterpart of zeabur.com's template
+and tested before it ships. It is the open-source counterpart of Zeabur's template
 marketplace.
 
-## Using Zeabur?
+## Using Zeabur OSS?
 
-The catalog is already built into Zeabur. In a project, select **Add** → **App template**, pick an
-application and deploy it. See
+The catalog is already built into Zeabur OSS. In a project, select **Add** → **App template**, pick
+an application and deploy it. See
 [Deploy from an application template](https://oss.zeabur.com/docs/zeabur/deploy/templates/) in
-the Zeabur docs.
+the Zeabur OSS docs.
 
-Coming from zeabur.com? [Templates from zeabur.com](docs/get-started/zeabur-com-templates.mdx)
-lists the catalog template for each popular zeabur.com template. The
-[Zeabur docs](https://oss.zeabur.com/docs/zeabur/) cover moving your services to your own server.
+Coming from Zeabur? [Templates from Zeabur](docs/get-started/zeabur-com-templates.mdx)
+lists the catalog template for each popular Zeabur template. The
+[Zeabur OSS docs](https://oss.zeabur.com/docs/zeabur/) cover moving your services to your own
+server.
 
-If you use Zeabur, you can stop reading here.
+If you use Zeabur OSS, you can stop reading here.
 
 ## What it does for you
 
 - **Tested before it ships.** Before any change to a template is merged, CI installs it on a
   Kubernetes cluster and checks that the application answers.
 - **Fixed versions.** Each template pins its images, so the same template installs the same
-  application every time. A new version arrives when you upgrade Zeabur.
+  application every time. A new version arrives when you upgrade Zeabur OSS.
 - **Passwords generated for you.** Passwords and keys are generated when you deploy and stored as
   Kubernetes Secrets, never written into the template.
 - **Known resource needs.** Each template states the CPU and memory it needs, and runs without
@@ -37,7 +38,7 @@ If you use Zeabur, you can stop reading here.
 
 ## Use it on its own
 
-Without Zeabur, the catalog is tested component and template data for Kubernetes clusters, with
+Without Zeabur OSS, the catalog is tested component and template data for Kubernetes clusters, with
 one signed bundle and a static API per release. A component is installed once for the whole
 cluster and used by every project; a template is installed per project and can be installed many
 times.
@@ -56,7 +57,7 @@ each release publishes one signed bundle and a static API that any tool can read
 `helm install` commands, Flux or Argo CD manifests, k3s `HelmChart` objects or
 template installs.
 
-[Zeabur](https://github.com/zeabur-oss/zeabur) reads this catalog to suggest what
+[Zeabur OSS](https://github.com/zeabur-oss/zeabur) reads this catalog to suggest what
 a cluster is missing; it never installs components itself.
 
 ### Layout
@@ -96,10 +97,11 @@ The directory name is the ID: `components/traefik/` is `traefik`, `templates/n8n
 
 ## Documentation
 
-For Zeabur users:
+For Zeabur OSS users:
 
-- [Deploy from an application template](https://oss.zeabur.com/docs/zeabur/deploy/templates/) and [view and install cluster components](https://oss.zeabur.com/docs/zeabur/cluster/components/), in the Zeabur docs
-- [Templates from zeabur.com](docs/get-started/zeabur-com-templates.mdx)
+- [Deploy from an application template](https://oss.zeabur.com/docs/zeabur/deploy/templates/) and
+  [view and install cluster components](https://oss.zeabur.com/docs/zeabur/cluster/components/), in the Zeabur OSS docs
+- [Templates from Zeabur](docs/get-started/zeabur-com-templates.mdx)
 - [Template list](docs/reference/templates.mdx)
 
 For using the catalog on its own:

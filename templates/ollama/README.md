@@ -6,14 +6,14 @@ This template runs one Ollama on the CPU, with a 50 GiB volume for models. It ha
 
 ## Getting started
 
-1. In Zeabur, open the `ollama` service. When **Overview** shows its replica as ready, the service is up. It has no domain.
+1. In Zeabur OSS, open the `ollama` service. When **Overview** shows its replica as ready, the service is up. It has no domain.
 2. Other workloads reach Ollama at Service `ollama`, port `11434`, for example `http://ollama:11434`. The template allows only Pods in the same namespace that carry this label:
 
    ```yaml
    templates.zeabur.com/ollama-client: "true"
    ```
 
-3. To use the API from your own computer, forward the port, then use `http://localhost:11434`. Zeabur has no UI for port forwarding, so use kubectl:
+3. To use the API from your own computer, forward the port, then use `http://localhost:11434`. Zeabur OSS has no UI for port forwarding, so use kubectl:
 
    ```sh
    kubectl -n <namespace> port-forward service/ollama 11434

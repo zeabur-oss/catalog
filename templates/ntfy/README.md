@@ -6,8 +6,8 @@ This template runs one ntfy server behind your domain. Every topic needs an acco
 
 ## Getting started
 
-1. In Zeabur, open the `ntfy` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**. It is the domain you entered in the install form, for example `ntfy.example.com`.
-2. Sign in as `admin`. Get the password from the `ntfy` service: open **Variables**, click `ntfy-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Without Zeabur, read Secret `ntfy-secrets`, key `admin-password`, with kubectl:
+1. In Zeabur OSS, open the `ntfy` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**. It is the domain you entered in the install form, for example `ntfy.example.com`.
+2. Sign in as `admin`. Get the password from the `ntfy` service: open **Variables**, click `ntfy-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Without Zeabur OSS, read Secret `ntfy-secrets`, key `admin-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret ntfy-secrets -o jsonpath='{.data.admin-password}' | base64 -d
@@ -52,9 +52,9 @@ See [Publishing](https://docs.ntfy.sh/publish/) in the ntfy docs.
 
 ### The page shows 502 or does not load
 
-Open the `ntfy` service in Zeabur. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
+Open the `ntfy` service in Zeabur OSS. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
 
-See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur docs.
+See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur OSS docs.
 
 ### A client cannot publish or subscribe
 

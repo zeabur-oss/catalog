@@ -6,8 +6,8 @@
 
 ## 開始使用
 
-1. 在 Zeabur 打開 `openclaw` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，就是你在安裝表單填的網域，例如 `openclaw.example.com`。
-2. 登入畫面有一個 Gateway secret 欄位，把閘道權杖貼進去。權杖從 `openclaw` 服務取得：打開**環境變數**，在**來自設定檔和機密變數**點 `openclaw-secrets`，再按 `gateway-token` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `openclaw-secrets` 的 `gateway-token`：
+1. 在 Zeabur 開源版打開 `openclaw` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，就是你在安裝表單填的網域，例如 `openclaw.example.com`。
+2. 登入畫面有一個 Gateway secret 欄位，把閘道權杖貼進去。權杖從 `openclaw` 服務取得：打開**環境變數**，在**來自設定檔和機密變數**點 `openclaw-secrets`，再按 `gateway-token` 旁的眼睛圖示。不用 Zeabur 開源版時，用 kubectl 讀取機密變數 `openclaw-secrets` 的 `gateway-token`：
 
    ```sh
    kubectl -n <namespace> get secret openclaw-secrets -o jsonpath='{.data.gateway-token}' | base64 -d
@@ -45,7 +45,7 @@ node /app/openclaw.mjs devices remove <deviceId>
 
 ### 頁面顯示 502 或打不開
 
-在 Zeabur 打開 `openclaw` 服務，確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本一直重新啟動時，打開**部署紀錄**，切到**事件**。如果事件寫著 `OOMKilled`，到**設定** → **運算資源**調高**記憶體上限**。詳見[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
+在 Zeabur 開源版打開 `openclaw` 服務，確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本一直重新啟動時，打開**部署紀錄**，切到**事件**。如果事件寫著 `OOMKilled`，到**設定** → **運算資源**調高**記憶體上限**。詳見[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
 
 服務變慢或一直重新連線時，也照這些步驟檢查。
 

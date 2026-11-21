@@ -2,13 +2,13 @@
 
 System Upgrade Controller upgrades K3s or RKE2 on the nodes from Plans. A Plan names the nodes and the target version. The controller then upgrades one node at a time (or as many as `concurrency` allows), with cordon and drain, by running a privileged Job on each node.
 
-The component is optional. Install it for Plans that do not change the Kubernetes version, such as OS package upgrades, or when nothing else upgrades your nodes. Do not install it when a node tool pins the K3s or RKE2 version, such as the Zeabur installer. That tool puts the pinned version back on a node that a Plan upgraded. The component works on K3s and RKE2 only, because its Plans replace the K3s or RKE2 binary.
+The component is optional. Install it for Plans that do not change the Kubernetes version, such as OS package upgrades, or when nothing else upgrades your nodes. Do not install it when a node tool pins the K3s or RKE2 version, such as the Zeabur OSS installer. That tool puts the pinned version back on a node that a Plan upgraded. The component works on K3s and RKE2 only, because its Plans replace the K3s or RKE2 binary.
 
 The controller cordons and drains nodes. Its Jobs are privileged and run Plan images on the host.
 
 ## Use it
 
-Zeabur has no screen for it. Create a Plan in the `system-upgrade` namespace. This Plan upgrades the server nodes of a K3s cluster to a version you choose:
+Zeabur OSS has no screen for it. Create a Plan in the `system-upgrade` namespace. This Plan upgrades the server nodes of a K3s cluster to a version you choose:
 
 ```yaml
 apiVersion: upgrade.cattle.io/v1

@@ -6,7 +6,7 @@ Prometheus Blackbox Exporter 从集群内部检查网站或端口有没有响应
 
 ## 使用方法
 
-Blackbox Exporter 没有 Zeabur 界面。用 `VMProbe` 告诉指标代理要探测什么。这个示例每分钟检查一个网站：
+Blackbox Exporter 没有 Zeabur 开源版界面。用 `VMProbe` 告诉指标代理要探测什么。这个示例每分钟检查一个网站：
 
 ```yaml
 apiVersion: operator.victoriametrics.com/v1beta1

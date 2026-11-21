@@ -2,11 +2,11 @@
 
 Vertical Pod Autoscaler（VPA）的 recommender 會觀察工作負載實際用了多少 CPU 和記憶體，並建議資源保留量。這個元件只安裝 recommender。updater 和 admission controller 都是關閉的，所以不會驅逐或改寫任何 Pod。建議在你套用之前不會改變任何東西。
 
-想依實際用量調整保留量時，就裝它。VPA 需要 Metrics Server，Zeabur 會先裝好。recommender 讀取每個 Namespace 的 Pod、工作負載和指標，並寫入 `VerticalPodAutoscaler` 物件的狀態和檢查點，並在 restricted 的 Pod Security 層級下執行。
+想依實際用量調整保留量時，就裝它。VPA 需要 Metrics Server，Zeabur 開源版會先裝好。recommender 讀取每個 Namespace 的 Pod、工作負載和指標，並寫入 `VerticalPodAutoscaler` 物件的狀態和檢查點，並在 restricted 的 Pod Security 層級下執行。
 
 ## 使用方式
 
-VPA 沒有 Zeabur 畫面。替工作負載建立 `VerticalPodAutoscaler`，並設定 `updateMode: "Off"`：
+VPA 沒有 Zeabur 開源版畫面。替工作負載建立 `VerticalPodAutoscaler`，並設定 `updateMode: "Off"`：
 
 ```yaml
 apiVersion: autoscaling.k8s.io/v1

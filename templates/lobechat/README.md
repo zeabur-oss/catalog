@@ -6,8 +6,8 @@ This template runs LobeChat behind your domain. An access code protects the page
 
 ## Getting started
 
-1. In Zeabur, open the `lobechat` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**, for example `chat.example.com`.
-2. When LobeChat asks for the access code, enter it. To read it, open **Variables**, click `lobechat-secrets` under **From config files and secrets**, and click the eye icon next to `access-code`. Without Zeabur, read Secret `lobechat-secrets`, key `access-code`, with kubectl:
+1. In Zeabur OSS, open the `lobechat` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**, for example `chat.example.com`.
+2. When LobeChat asks for the access code, enter it. To read it, open **Variables**, click `lobechat-secrets` under **From config files and secrets**, and click the eye icon next to `access-code`. Without Zeabur OSS, read Secret `lobechat-secrets`, key `access-code`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret lobechat-secrets -o jsonpath='{.data.access-code}' | base64 -d
@@ -31,11 +31,11 @@ See [OPENAI_API_KEY](https://github.com/lobehub/lobe-chat/blob/v1.143.3/docs/sel
 
 ### The page shows 502 or does not load
 
-Open the `lobechat` service in Zeabur. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
+Open the `lobechat` service in Zeabur OSS. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
 
-Without Zeabur, read the logs with `kubectl -n <namespace> logs deployment/lobechat` and the events with `kubectl -n <namespace> get events --sort-by=.lastTimestamp`.
+Without Zeabur OSS, read the logs with `kubectl -n <namespace> logs deployment/lobechat` and the events with `kubectl -n <namespace> get events --sort-by=.lastTimestamp`.
 
-See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur docs.
+See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur OSS docs.
 
 ### A chat fails with a model provider error
 

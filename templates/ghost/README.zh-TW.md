@@ -6,8 +6,8 @@ Ghost 透過你在安裝表單填寫的 SMTP 伺服器寄出登入信和系統�
 
 ## 開始使用
 
-1. 在 Zeabur 打開 `ghost` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，例如 `blog.example.com`。管理後台在這個網域的 `/ghost`。
-2. 設定工作會用你在安裝表單填的擁有者 Email 建立網站擁有者，所以不用再填設定表單。取得擁有者密碼。在 `ghost` 服務打開**環境變數**，在**來自設定檔和機密變數**點 `ghost-secrets`，再按 `admin-password` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `ghost-secrets` 的 `admin-password`：
+1. 在 Zeabur 開源版打開 `ghost` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，例如 `blog.example.com`。管理後台在這個網域的 `/ghost`。
+2. 設定工作會用你在安裝表單填的擁有者 Email 建立網站擁有者，所以不用再填設定表單。取得擁有者密碼。在 `ghost` 服務打開**環境變數**，在**來自設定檔和機密變數**點 `ghost-secrets`，再按 `admin-password` 旁的眼睛圖示。不用 Zeabur 開源版時，用 kubectl 讀取機密變數 `ghost-secrets` 的 `admin-password`：
 
    ```sh
    kubectl -n <namespace> get secret ghost-secrets -o jsonpath='{.data.admin-password}' | base64 -d
@@ -25,7 +25,7 @@ SMTP 只負責系統信件。要把文章寄成電子報，Ghost 需要大量寄
 
 ### 備份資料
 
-Ghost 把文章、會員和設定存在 MySQL，放在磁碟區 `ghost-mysql-data`。圖片、佈景主題和其他上傳的檔案放在磁碟區 `ghost-data`，掛載在 `/var/lib/ghost/content`。`ghost-mysql` 是單純的 MySQL 容器，不是 Zeabur 資料庫，所以沒有**備份**分頁。用 kubectl 把它傾印成你電腦上的檔案：
+Ghost 把文章、會員和設定存在 MySQL，放在磁碟區 `ghost-mysql-data`。圖片、佈景主題和其他上傳的檔案放在磁碟區 `ghost-data`，掛載在 `/var/lib/ghost/content`。`ghost-mysql` 是單純的 MySQL 容器，不是 Zeabur 開源版資料庫，所以沒有**備份**分頁。用 kubectl 把它傾印成你電腦上的檔案：
 
 ```sh
 kubectl -n <namespace> exec statefulset/ghost-mysql -- sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysqldump --single-transaction --no-tablespaces -h127.0.0.1 -ughost ghost' > ghost.sql
@@ -57,8 +57,8 @@ mysql --socket=/var/run/mysqld/mysqld.sock -uroot -p"$MYSQL_ROOT_PASSWORD" -e "A
 
 ### 頁面顯示 502 或打不開
 
-在 Zeabur 打開 `ghost` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。服務變慢或一直重新連線時，打開**用量**分頁，出現**接近記憶體上限**就用同樣的方式調高上限。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
+在 Zeabur 開源版打開 `ghost` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。服務變慢或一直重新連線時，打開**用量**分頁，出現**接近記憶體上限**就用同樣的方式調高上限。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
 
-不用 Zeabur 時，用 `kubectl -n <namespace> logs statefulset/ghost` 看日誌，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 看事件。
+不用 Zeabur 開源版時，用 `kubectl -n <namespace> logs statefulset/ghost` 看日誌，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 看事件。
 
-詳見 Zeabur 文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
+詳見 Zeabur 開源版文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。

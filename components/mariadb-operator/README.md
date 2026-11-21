@@ -6,11 +6,11 @@ The component installs two releases in the `mariadb-operator` namespace. One hol
 
 ## Use it
 
-In Zeabur, open a project's **Add** menu and choose **MariaDB**. Set the version and storage, then connect services and set up S3 backups in the database's **Backups** tab. See [Create, back up, and restore databases](https://oss.zeabur.com/docs/zeabur/deploy/databases/).
+In Zeabur OSS, open a project's **Add** menu and choose **MariaDB**. Set the version and storage, then connect services and set up S3 backups in the database's **Backups** tab. See [Create, back up, and restore databases](https://oss.zeabur.com/docs/zeabur/deploy/databases/).
 
 ## Remove it
 
-Removing the component deletes the operator, its webhook and the CRDs. Deleting the CRDs deletes every `MariaDB`, backup, user and grant object. Zeabur refuses while such objects exist, so delete the databases you no longer need first, and back up the rest. The PVCs stay. Delete them by hand when you no longer need the data. See [Remove components](https://oss.zeabur.com/docs/zeabur/cluster/components/#remove-components).
+Removing the component deletes the operator, its webhook and the CRDs. Deleting the CRDs deletes every `MariaDB`, backup, user and grant object. Zeabur OSS refuses while such objects exist, so delete the databases you no longer need first, and back up the rest. The PVCs stay. Delete them by hand when you no longer need the data. See [Remove components](https://oss.zeabur.com/docs/zeabur/cluster/components/#remove-components).
 
 ## Troubleshooting
 

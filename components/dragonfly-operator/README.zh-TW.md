@@ -8,11 +8,11 @@ Operator 會替每個 Namespace 的 `Dragonfly` 物件管理 Pod、StatefulSet�
 
 ## 使用方式
 
-在 Zeabur 打開專案的**新增**選單，選 **Dragonfly**。設定儲存空間，再接到服務。Dragonfly 沒有**備份**分頁，快照存在自己的磁碟區，啟動時載入最新的一份。詳見[建立、備份與還原資料庫](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/)。
+在 Zeabur 開源版打開專案的**新增**選單，選 **Dragonfly**。設定儲存空間，再接到服務。Dragonfly 沒有**備份**分頁，快照存在自己的磁碟區，啟動時載入最新的一份。詳見[建立、備份與還原資料庫](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/)。
 
 ## 移除
 
-移除 Operator 後，CRD 和所有 `Dragonfly` 物件都會留著。在 Operator 裝回來之前，沒有人管理這些物件。只要還有 `Dragonfly` 物件，Zeabur 就拒絕移除這個元件。請先刪除不要的資料庫。詳見[移除元件](https://oss.zeabur.com/zh-TW/docs/zeabur/cluster/components/#移除元件)。
+移除 Operator 後，CRD 和所有 `Dragonfly` 物件都會留著。在 Operator 裝回來之前，沒有人管理這些物件。只要還有 `Dragonfly` 物件，Zeabur 開源版就拒絕移除這個元件。請先刪除不要的資料庫。詳見[移除元件](https://oss.zeabur.com/zh-TW/docs/zeabur/cluster/components/#移除元件)。
 
 ## 疑難排解
 

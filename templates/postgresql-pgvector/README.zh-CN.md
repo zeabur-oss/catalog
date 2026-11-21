@@ -6,7 +6,7 @@
 
 ## 开始使用
 
-1. 在 Zeabur 的项目里打开 `postgresql` 数据库。**概览**显示它已就绪，就启动好了。数据库没有域名，也没有网页。
+1. 在 Zeabur 开源版的项目里打开 `postgresql` 数据库。**概览**显示它已就绪，就启动好了。数据库没有域名，也没有网页。
 2. 同一个项目里的应用连到 Service `postgresql-rw` 的 `5432` 端口，数据库用 `zeabur`，用户用 `app`。在**概览**的**连接**区块可以看到**主机**、**端口**、**数据库**和**用户名**，点密码旁的**显示**就能读取密码。要把这些值当成变量交给应用，点同一区块的**连接到服务**。
 3. 运算符还会创建机密变量 `postgresql-app`。项目里没有服务把它当成变量读取，所以用 kubectl 读取。密码在 `password`：
 
@@ -48,7 +48,7 @@ CREATE INDEX ON items USING hnsw (embedding vector_l2_ops);
 
 ### 备份数据
 
-在 Zeabur 打开 `postgresql` 数据库，到**备份** → **设置备份**，就能按计划备份到 S3 存储桶。PostgreSQL 备份需要 Barman Cloud 插件。要现在就拿一份数据，在数据库页面右上角点击**更多** → **导出**，浏览器会下载 `pg_dump --format=custom` 生成的 `.dump` 文件。详见[配置 S3 备份](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#配置-s3-备份)和[下载数据库转储文件](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#下载数据库转储文件)。
+在 Zeabur 开源版打开 `postgresql` 数据库，到**备份** → **设置备份**，就能按计划备份到 S3 存储桶。PostgreSQL 备份需要 Barman Cloud 插件。要现在就拿一份数据，在数据库页面右上角点击**更多** → **导出**，浏览器会下载 `pg_dump --format=custom` 生成的 `.dump` 文件。详见[配置 S3 备份](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#配置-s3-备份)和[下载数据库转储文件](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#下载数据库转储文件)。
 
 ## 故障排除
 

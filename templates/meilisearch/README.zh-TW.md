@@ -6,8 +6,8 @@
 
 ## 開始使用
 
-1. 在 Zeabur 打開 `meilisearch` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，例如 `search.example.com`。
-2. 取得主金鑰。打開**環境變數**，在**來自設定檔和機密變數**點 `meilisearch-secrets`，再按 `master-key` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `meilisearch-secrets` 的 `master-key`：
+1. 在 Zeabur 開源版打開 `meilisearch` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，例如 `search.example.com`。
+2. 取得主金鑰。打開**環境變數**，在**來自設定檔和機密變數**點 `meilisearch-secrets`，再按 `master-key` 旁的眼睛圖示。不用 Zeabur 開源版時，用 kubectl 讀取機密變數 `meilisearch-secrets` 的 `master-key`：
 
    ```sh
    kubectl -n <namespace> get secret meilisearch-secrets -o jsonpath='{.data.master-key}' | base64 -d
@@ -41,9 +41,9 @@ Meilisearch 會把傾印檔寫到磁碟區上的 `/meili_data/dumps`。詳見 [D
 
 ### 請求回應 502 或逾時
 
-在 Zeabur 打開 `meilisearch` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
+在 Zeabur 開源版打開 `meilisearch` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
 
-詳見 Zeabur 文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
+詳見 Zeabur 開源版文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
 
 ### 請求回傳 401
 

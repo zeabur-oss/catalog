@@ -1,6 +1,6 @@
 ## Introduction
 
-Zeabur Builder builds container images from Git repositories and uploaded folders, with a Dockerfile or Railpack. It keeps the images in zot, an OCI registry that the component installs with it, so builds need no external registry account. Zeabur needs it to deploy services from Git. Without it, services deploy from images only.
+Zeabur Builder builds container images from Git repositories and uploaded folders, with a Dockerfile or Railpack. It keeps the images in zot, an OCI registry that the component installs with it, so builds need no external registry account. Zeabur OSS needs it to deploy services from Git. Without it, services deploy from images only.
 
 Builder runs one buildkitd per namespace that builds. The component adds a CA through cert-manager for zot's certificate. Pushes need a short-lived token that Builder signs. A NetworkPolicy lets only Builder, buildkitd and build pods reach zot. zot keeps the 20 most recent tags of each repository, and it stores images on a 20Gi volume.
 
@@ -13,7 +13,7 @@ Builder reads, creates, updates and deletes Secrets in every namespace (Git cred
 
 ## Use it
 
-In a Zeabur project, select **Add** → **Deploy from Git** and enter the repository. See [Build and deploy a service from Git](https://oss.zeabur.com/docs/zeabur/deploy/git/). The page also covers uploading a folder. Keel deploys the finished image, so install it too.
+In a Zeabur OSS project, select **Add** → **Deploy from Git** and enter the repository. See [Build and deploy a service from Git](https://oss.zeabur.com/docs/zeabur/deploy/git/). The page also covers uploading a folder. Keel deploys the finished image, so install it too.
 
 ## Remove it
 

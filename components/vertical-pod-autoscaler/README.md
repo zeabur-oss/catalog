@@ -2,11 +2,11 @@
 
 The Vertical Pod Autoscaler (VPA) recommender watches how much CPU and memory a workload really uses and suggests resource requests. This component installs the recommender only. The updater and the admission controller are off, so nothing evicts or rewrites a Pod. A suggestion changes nothing until you apply it.
 
-Install it when you want to size requests from real use. It needs Metrics Server, and Zeabur installs that first. It reads Pods, workloads and metrics in every namespace, and writes the status and checkpoints of `VerticalPodAutoscaler` objects. It runs under the restricted Pod Security level.
+Install it when you want to size requests from real use. It needs Metrics Server, and Zeabur OSS installs that first. It reads Pods, workloads and metrics in every namespace, and writes the status and checkpoints of `VerticalPodAutoscaler` objects. It runs under the restricted Pod Security level.
 
 ## Use it
 
-VPA has no Zeabur screen. Create a `VerticalPodAutoscaler` for a workload, with `updateMode: "Off"`:
+VPA has no Zeabur OSS screen. Create a `VerticalPodAutoscaler` for a workload, with `updateMode: "Off"`:
 
 ```yaml
 apiVersion: autoscaling.k8s.io/v1

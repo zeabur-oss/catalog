@@ -6,8 +6,8 @@ The site is already installed. The owner account `admin` is created for you, wit
 
 ## Getting started
 
-1. In Zeabur, open the `wordpress` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**; it is the domain you entered in the install form.
-2. Sign in at `https://<your domain>/wp-admin` as `admin`. Open **Variables**, click `wordpress-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Without Zeabur, read Secret `wordpress-secrets`, key `admin-password`, with kubectl:
+1. In Zeabur OSS, open the `wordpress` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**; it is the domain you entered in the install form.
+2. Sign in at `https://<your domain>/wp-admin` as `admin`. Open **Variables**, click `wordpress-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Without Zeabur OSS, read Secret `wordpress-secrets`, key `admin-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret wordpress-secrets -o jsonpath='{.data.admin-password}' | base64 -d
@@ -38,9 +38,9 @@ Go to Settings, Permalinks, pick a structure and click Save Changes. See [Settin
 
 ### Back up the data
 
-In Zeabur, open the `mariadb` database and go to **Backups** → **Set up backups** to back up on a schedule to an S3 bucket. To get a copy now, click **More** at the top right of the database page, then **Export**. The browser downloads gzip-compressed SQL made by `mariadb-dump --single-transaction`. See [Set up S3 backups](https://oss.zeabur.com/docs/zeabur/deploy/databases/#set-up-s3-backups) and [Download a database dump](https://oss.zeabur.com/docs/zeabur/deploy/databases/#download-a-database-dump).
+In Zeabur OSS, open the `mariadb` database and go to **Backups** → **Set up backups** to back up on a schedule to an S3 bucket. To get a copy now, click **More** at the top right of the database page, then **Export**. The browser downloads gzip-compressed SQL made by `mariadb-dump --single-transaction`. See [Set up S3 backups](https://oss.zeabur.com/docs/zeabur/deploy/databases/#set-up-s3-backups) and [Download a database dump](https://oss.zeabur.com/docs/zeabur/deploy/databases/#download-a-database-dump).
 
-The uploads, themes and plugins are not in the database. They are in the `wordpress-data` volume, mounted at `/var/www/html` in the `wordpress` service. Back up `wp-content` together with the database dump. In Zeabur, the **Files** tab can download a folder, but a big folder can time out. For a big `wp-content`, stream it out with kubectl:
+The uploads, themes and plugins are not in the database. They are in the `wordpress-data` volume, mounted at `/var/www/html` in the `wordpress` service. Back up `wp-content` together with the database dump. In Zeabur OSS, the **Files** tab can download a folder, but a big folder can time out. For a big `wp-content`, stream it out with kubectl:
 
 ```sh
 kubectl -n <namespace> exec deploy/wordpress -c wordpress -- tar czf - -C /var/www/html wp-content > wp-content.tar.gz
@@ -50,6 +50,6 @@ kubectl -n <namespace> exec deploy/wordpress -c wordpress -- tar czf - -C /var/w
 
 ### The page shows 502 or does not load
 
-In Zeabur, open the `wordpress` service. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica keeps restarting, open **Deployments**, then **Events**. If the events show `OOMKilled`, raise **Maximum memory** in **Settings** → **Compute**. See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/).
+In Zeabur OSS, open the `wordpress` service. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica keeps restarting, open **Deployments**, then **Events**. If the events show `OOMKilled`, raise **Maximum memory** in **Settings** → **Compute**. See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/).
 
 If the domain or its certificate stays pending, see [Add public domains and HTTPS](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting).

@@ -8,7 +8,7 @@ VictoriaLogs 保存并搜索容器日志。每个节点上的采集器读取容�
 
 ## 使用方法
 
-在 Zeabur 打开服务的**日志**标签页，使用**历史记录**。集群管理员还要在 Zeabur 的 Helm chart 中开启 `proxy.enabled`。详见[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/#历史记录)。
+在 Zeabur 开源版打开服务的**日志**标签页，使用**历史记录**。集群管理员还要在 Zeabur 开源版的 Helm chart 中开启 `proxy.enabled`。详见[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/#历史记录)。
 
 要自己搜索，先转发存储服务的端口再查询。NetworkPolicy 不会拦截 `kubectl port-forward`：
 

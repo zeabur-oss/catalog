@@ -8,7 +8,7 @@ KEDA reads scale targets and the Secrets that triggers use in every namespace, a
 
 ## Use it
 
-Zeabur has no screen for KEDA. Create a ScaledObject next to the workload. This example runs 2 replicas of `web` from 08:00 to 20:00 and none outside those hours:
+Zeabur OSS has no screen for KEDA. Create a ScaledObject next to the workload. This example runs 2 replicas of `web` from 08:00 to 20:00 and none outside those hours:
 
 ```yaml
 apiVersion: keda.sh/v1alpha1
@@ -34,7 +34,7 @@ Check it with `kubectl -n shop get scaledobject web`. See [Scaling Deployments](
 
 ## Remove it
 
-The CRDs are part of the chart, so removing KEDA deletes them, and every ScaledObject, ScaledJob and TriggerAuthentication with them. A workload keeps the replica count it has at that moment. A service scaled to zero stays at zero. Before you remove KEDA, check `kubectl get scaledobject -A` and scale those workloads yourself afterwards. KEDA HTTP Add-on needs KEDA, so Zeabur refuses to remove KEDA while it is installed. See [Remove components](https://oss.zeabur.com/docs/zeabur/cluster/components/#remove-components).
+The CRDs are part of the chart, so removing KEDA deletes them, and every ScaledObject, ScaledJob and TriggerAuthentication with them. A workload keeps the replica count it has at that moment. A service scaled to zero stays at zero. Before you remove KEDA, check `kubectl get scaledobject -A` and scale those workloads yourself afterwards. KEDA HTTP Add-on needs KEDA, so Zeabur OSS refuses to remove KEDA while it is installed. See [Remove components](https://oss.zeabur.com/docs/zeabur/cluster/components/#remove-components).
 
 ## Troubleshooting
 

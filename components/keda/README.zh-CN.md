@@ -8,7 +8,7 @@ KEDA 会读取每个 Namespace 的伸缩目标，以及触发器用到的 Secret
 
 ## 使用方法
 
-Zeabur 没有 KEDA 的界面。在工作负载旁创建 ScaledObject。下面的例子让 `web` 在 08:00 到 20:00 之间运行 2 个副本，其余时间为零：
+Zeabur 开源版没有 KEDA 的界面。在工作负载旁创建 ScaledObject。下面的例子让 `web` 在 08:00 到 20:00 之间运行 2 个副本，其余时间为零：
 
 ```yaml
 apiVersion: keda.sh/v1alpha1
@@ -34,7 +34,7 @@ spec:
 
 ## 移除
 
-CRD 属于 Chart，所以移除 KEDA 会把它们删掉，所有 ScaledObject、ScaledJob 和 TriggerAuthentication 也随之消失。工作负载会保持当下的副本数，缩到零的服务就停在零。移除前先用 `kubectl get scaledobject -A` 检查，移除后自己调整这些工作负载的副本数。KEDA HTTP Add-on 需要 KEDA，所以它还装着时，Zeabur 会拒绝移除 KEDA。详见[移除组件](https://oss.zeabur.com/zh-CN/docs/zeabur/cluster/components/#移除组件)。
+CRD 属于 Chart，所以移除 KEDA 会把它们删掉，所有 ScaledObject、ScaledJob 和 TriggerAuthentication 也随之消失。工作负载会保持当下的副本数，缩到零的服务就停在零。移除前先用 `kubectl get scaledobject -A` 检查，移除后自己调整这些工作负载的副本数。KEDA HTTP Add-on 需要 KEDA，所以它还装着时，Zeabur 开源版会拒绝移除 KEDA。详见[移除组件](https://oss.zeabur.com/zh-CN/docs/zeabur/cluster/components/#移除组件)。
 
 ## 故障排除
 

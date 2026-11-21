@@ -8,7 +8,7 @@ It reads workloads, Pods, Services, Ingresses and RBAC objects in every namespac
 
 ## Use it
 
-Trivy Operator has no Zeabur screen. Read the reports with kubectl once the first scans finish.
+Trivy Operator has no Zeabur OSS screen. Read the reports with kubectl once the first scans finish.
 
 ```sh
 kubectl get vulnerabilityreports -A -o wide

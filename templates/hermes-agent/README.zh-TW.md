@@ -6,8 +6,8 @@
 
 ## 開始使用
 
-1. 在 Zeabur 打開 `hermes-agent` 服務。**概覽**顯示副本已就緒，服務就啟動好了。兩個網域都在**網路**分頁的**公開網域**，例如 API 用 `hermes.example.com`，管理面板用 `hermes-admin.example.com`。
-2. 取得管理面板密碼。打開**環境變數**，在**來自設定檔和機密變數**點 `hermes-secrets`，再按 `dashboard-password` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `hermes-secrets` 的 `dashboard-password`：
+1. 在 Zeabur 開源版打開 `hermes-agent` 服務。**概覽**顯示副本已就緒，服務就啟動好了。兩個網域都在**網路**分頁的**公開網域**，例如 API 用 `hermes.example.com`，管理面板用 `hermes-admin.example.com`。
+2. 取得管理面板密碼。打開**環境變數**，在**來自設定檔和機密變數**點 `hermes-secrets`，再按 `dashboard-password` 旁的眼睛圖示。不用 Zeabur 開源版時，用 kubectl 讀取機密變數 `hermes-secrets` 的 `dashboard-password`：
 
    ```sh
    kubectl -n <namespace> get secret hermes-secrets -o jsonpath='{.data.dashboard-password}' | base64 -d
@@ -49,11 +49,11 @@ Open WebUI、LobeChat、LibreChat 等相容 OpenAI 的用戶端都能使用這�
 
 ### 頁面顯示 502 或打不開
 
-在 Zeabur 打開 `hermes-agent` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
+在 Zeabur 開源版打開 `hermes-agent` 服務。確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本沒有就緒時，打開**部署紀錄**，切到**事件**。事件出現 `OOMKilled`，表示服務的記憶體不夠，到**設定** → **運算資源**調高**記憶體上限**。網域或憑證一直沒有完成時，見網域文件的[遇到問題](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)。
 
-不用 Zeabur 時，用 `kubectl -n <namespace> logs deployment/hermes-agent` 看日誌，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 看事件。
+不用 Zeabur 開源版時，用 `kubectl -n <namespace> logs deployment/hermes-agent` 看日誌，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 看事件。
 
-詳見 Zeabur 文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
+詳見 Zeabur 開源版文件的[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
 
 ### 請求失敗，出現模型服務商的錯誤
 

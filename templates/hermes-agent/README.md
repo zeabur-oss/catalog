@@ -6,8 +6,8 @@ This template runs Hermes Agent with two domains: one for the API and one for th
 
 ## Getting started
 
-1. In Zeabur, open the `hermes-agent` service. When **Overview** shows its replica as ready, the service is up. Both domains are on the **Networking** tab under **Public domains**, for example `hermes.example.com` for the API and `hermes-admin.example.com` for the dashboard.
-2. Get the dashboard password. Open **Variables**, click `hermes-secrets` under **From config files and secrets**, and click the eye icon next to `dashboard-password`. Without Zeabur, read Secret `hermes-secrets`, key `dashboard-password`, with kubectl:
+1. In Zeabur OSS, open the `hermes-agent` service. When **Overview** shows its replica as ready, the service is up. Both domains are on the **Networking** tab under **Public domains**, for example `hermes.example.com` for the API and `hermes-admin.example.com` for the dashboard.
+2. Get the dashboard password. Open **Variables**, click `hermes-secrets` under **From config files and secrets**, and click the eye icon next to `dashboard-password`. Without Zeabur OSS, read Secret `hermes-secrets`, key `dashboard-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret hermes-secrets -o jsonpath='{.data.dashboard-password}' | base64 -d
@@ -49,11 +49,11 @@ See [Web Dashboard](https://hermes-agent.nousresearch.com/docs/user-guide/featur
 
 ### The page shows 502 or does not load
 
-Open the `hermes-agent` service in Zeabur. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
+Open the `hermes-agent` service in Zeabur OSS. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
 
-Without Zeabur, read the logs with `kubectl -n <namespace> logs deployment/hermes-agent` and the events with `kubectl -n <namespace> get events --sort-by=.lastTimestamp`.
+Without Zeabur OSS, read the logs with `kubectl -n <namespace> logs deployment/hermes-agent` and the events with `kubectl -n <namespace> get events --sort-by=.lastTimestamp`.
 
-See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur docs.
+See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur OSS docs.
 
 ### Requests fail with a model provider error
 

@@ -6,13 +6,13 @@ The operator needs cert-manager. It secures the connection between the operator 
 
 ## Use it
 
-In Zeabur, open a project's **Add** menu and choose **PostgreSQL**. Set the version and storage, then connect services and set up S3 backups in the database's **Backups** tab. See [Create, back up, and restore databases](https://oss.zeabur.com/docs/zeabur/deploy/databases/).
+In Zeabur OSS, open a project's **Add** menu and choose **PostgreSQL**. Set the version and storage, then connect services and set up S3 backups in the database's **Backups** tab. See [Create, back up, and restore databases](https://oss.zeabur.com/docs/zeabur/deploy/databases/).
 
 CloudNativePG writes backup files to the bucket in plaintext. Use a bucket with server-side encryption, and limit who can read it.
 
 ## Remove it
 
-Removing the component removes the operator and the plugin. Zeabur refuses while `Cluster` objects exist, so delete the databases you no longer need first, and back up the rest. The CRDs stay, and so do the PVCs of deleted databases. Delete them by hand when you no longer need the data. See [Remove components](https://oss.zeabur.com/docs/zeabur/cluster/components/#remove-components).
+Removing the component removes the operator and the plugin. Zeabur OSS refuses while `Cluster` objects exist, so delete the databases you no longer need first, and back up the rest. The CRDs stay, and so do the PVCs of deleted databases. Delete them by hand when you no longer need the data. See [Remove components](https://oss.zeabur.com/docs/zeabur/cluster/components/#remove-components).
 
 ## Troubleshooting
 

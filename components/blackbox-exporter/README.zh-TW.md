@@ -6,7 +6,7 @@ Prometheus Blackbox Exporter 從叢集內部檢查網站或連接埠有沒有回
 
 ## 使用方式
 
-Blackbox Exporter 沒有 Zeabur 畫面。用 `VMProbe` 告訴指標代理程式要探測什麼。這個範例每分鐘檢查一個網站：
+Blackbox Exporter 沒有 Zeabur 開源版畫面。用 `VMProbe` 告訴指標代理程式要探測什麼。這個範例每分鐘檢查一個網站：
 
 ```yaml
 apiVersion: operator.victoriametrics.com/v1beta1

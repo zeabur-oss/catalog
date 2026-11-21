@@ -6,8 +6,8 @@
 
 ## 开始使用
 
-1. 在 Zeabur 打开 `open-webui` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**中，就是你在安装表单填的域名，例如 `chat.example.com`。
-2. 用你在安装表单填的管理员邮箱登录。密码从 `open-webui` 服务获取：打开**变量**，在**来自配置文件和机密变量**中点击 `app-secrets`，再点击 `admin-password` 旁的眼睛图标。不用 Zeabur 时，用 kubectl 读取机密变量 `app-secrets` 的 `admin-password`：
+1. 在 Zeabur 开源版打开 `open-webui` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**中，就是你在安装表单填的域名，例如 `chat.example.com`。
+2. 用你在安装表单填的管理员邮箱登录。密码从 `open-webui` 服务获取：打开**变量**，在**来自配置文件和机密变量**中点击 `app-secrets`，再点击 `admin-password` 旁的眼睛图标。不用 Zeabur 开源版时，用 kubectl 读取机密变量 `app-secrets` 的 `admin-password`：
 
    ```sh
    kubectl -n <namespace> get secret app-secrets -o jsonpath='{.data.admin-password}' | base64 -d
@@ -16,7 +16,7 @@
 3. Open WebUI 在第一次启动、还没有任何用户时创建管理员账号。之后改机密不会改变密码，要改请在 Open WebUI 里改。
 4. 注册功能已关闭，其他用户由管理员创建。
 5. 添加模型服务商。请见“配置”。
-6. 机密 `app-secrets` 里还有两个日常使用不需要的字段。`session-key` 是网页界面的密钥，`pipeline-key` 是网页界面调用 `pipeline` 服务用的 API 密钥。获取方式同上。不用 Zeabur 时，用 kubectl：
+6. 机密 `app-secrets` 里还有两个日常使用不需要的字段。`session-key` 是网页界面的密钥，`pipeline-key` 是网页界面调用 `pipeline` 服务用的 API 密钥。获取方式同上。不用 Zeabur 开源版时，用 kubectl：
 
    ```sh
    kubectl -n <namespace> get secret app-secrets -o jsonpath='{.data.session-key}' | base64 -d
@@ -35,9 +35,9 @@
 
 ### 页面显示 502、打不开或一直重新连接
 
-在 Zeabur 打开 `open-webui` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。服务很慢或一直重新连接，也常是内存不够，同样检查**事件**和**内存上限**。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
+在 Zeabur 开源版打开 `open-webui` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。服务很慢或一直重新连接，也常是内存不够，同样检查**事件**和**内存上限**。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
 
-详见 Zeabur 文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
+详见 Zeabur 开源版文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
 
 ### 在管理员设置里改的设置，重启后不见了
 
