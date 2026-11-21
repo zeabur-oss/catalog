@@ -2,7 +2,7 @@
 
 System Upgrade Controller 依照 Plan 升級節點上的 K3s 或 RKE2。Plan 指定節點和目標版本，控制器會一次升級一個節點（或依 `concurrency` 允許的數量），升級時先 cordon 並 drain 節點，再在每個節點上執行有特權的 Job。
 
-這個元件是選用的。只在 Plan 不改變 Kubernetes 版本（例如升級作業系統套件），或沒有其他工具替你升級節點時才需要裝。節點上若有工具固定了 K3s 或 RKE2 的版本（例如 Zeabur 開源版的安裝程式），就不要裝，那個工具會把版本改回固定的版本，蓋掉 Plan 的升級。Plan 會替換 K3s 或 RKE2 的執行檔，所以元件只支援 K3s 和 RKE2。
+這個元件是選用的。只在 Plan 不改變 Kubernetes 版本（例如升級作業系統套件），或沒有其他工具替你升級節點時才需要裝。節點上若有工具固定了 K3s 或 RKE2 的版本（例如用 `zeatend apply` 設定版本的 Zeatend），就不要裝，那個工具會把版本改回固定的版本，蓋掉 Plan 的升級。Plan 會替換 K3s 或 RKE2 的執行檔，所以元件只支援 K3s 和 RKE2。
 
 控制器會 cordon 並 drain 節點，Job 有特權，並在主機上執行 Plan 指定的映像檔。
 
