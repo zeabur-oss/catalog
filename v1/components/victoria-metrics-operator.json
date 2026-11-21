@@ -1,6 +1,6 @@
 {
   "id": "victoria-metrics-operator",
-  "sourceDigest": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo=",
+  "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -139,8 +139,8 @@
         {
           "workload": "victoria-metrics-operator",
           "kind": "Deployment",
-          "memory": "20Mi",
-          "cpu": "1m"
+          "memory": "21Mi",
+          "cpu": "2m"
         }
       ],
       "versions": [
@@ -149,12 +149,12 @@
           "version": "0.68.1"
         }
       ],
-      "sourceDigest": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo=",
+      "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0=",
       "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "k3s",
@@ -180,12 +180,12 @@
           "version": "0.68.1"
         }
       ],
-      "sourceDigest": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo=",
+      "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0=",
       "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -193,36 +193,6 @@
       "platform": {
         "os": "linux",
         "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "victoria-metrics-operator",
-          "kind": "Deployment",
-          "memory": "20Mi",
-          "cpu": "2m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "operator",
-          "version": "0.68.1"
-        }
-      ],
-      "sourceDigest": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo=",
-      "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
-      },
-      "measuredAt": "2026-11-20"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
       },
       "kubernetesVersion": "v1.37.0",
       "result": "passed",
@@ -240,12 +210,42 @@
           "version": "0.68.1"
         }
       ],
-      "sourceDigest": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo=",
+      "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0=",
       "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-19"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "victoria-metrics-operator",
+          "kind": "Deployment",
+          "memory": "20Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "operator",
+          "version": "0.68.1"
+        }
+      ],
+      "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0=",
+      "dependencies": {
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+      },
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -270,12 +270,12 @@
           "version": "0.68.1"
         }
       ],
-      "sourceDigest": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo=",
+      "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0=",
       "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -290,8 +290,8 @@
         {
           "workload": "victoria-metrics-operator",
           "kind": "Deployment",
-          "memory": "21Mi",
-          "cpu": "2m"
+          "memory": "20Mi",
+          "cpu": "1m"
         }
       ],
       "versions": [
@@ -300,12 +300,12 @@
           "version": "0.68.1"
         }
       ],
-      "sourceDigest": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo=",
+      "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0=",
       "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -321,8 +321,8 @@
         {
           "workload": "victoria-metrics-operator",
           "kind": "Deployment",
-          "memory": "21Mi",
-          "cpu": "1m"
+          "memory": "22Mi",
+          "cpu": "2m"
         }
       ],
       "versions": [
@@ -331,15 +331,15 @@
           "version": "0.68.1"
         }
       ],
-      "sourceDigest": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo=",
+      "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0=",
       "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -356,7 +356,7 @@
           "workload": "victoria-metrics-operator",
           "kind": "Deployment",
           "memory": "22Mi",
-          "cpu": "1m"
+          "cpu": "2m"
         }
       ],
       "versions": [
@@ -365,15 +365,15 @@
           "version": "0.68.1"
         }
       ],
-      "sourceDigest": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo=",
+      "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0=",
       "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -389,8 +389,8 @@
         {
           "workload": "victoria-metrics-operator",
           "kind": "Deployment",
-          "memory": "21Mi",
-          "cpu": "1m"
+          "memory": "20Mi",
+          "cpu": "2m"
         }
       ],
       "versions": [
@@ -399,15 +399,15 @@
           "version": "0.68.1"
         }
       ],
-      "sourceDigest": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo=",
+      "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0=",
       "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -423,8 +423,8 @@
         {
           "workload": "victoria-metrics-operator",
           "kind": "Deployment",
-          "memory": "19Mi",
-          "cpu": "2m"
+          "memory": "20Mi",
+          "cpu": "1m"
         }
       ],
       "versions": [
@@ -433,15 +433,15 @@
           "version": "0.68.1"
         }
       ],
-      "sourceDigest": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo=",
+      "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0=",
       "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-19"
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "id": "percona-mongodb",
-  "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
+  "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -165,8 +165,8 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "k3s",
@@ -182,7 +182,7 @@
         {
           "workload": "psmdb-operator",
           "kind": "Deployment",
-          "memory": "21Mi",
+          "memory": "22Mi",
           "cpu": "1m"
         }
       ],
@@ -192,8 +192,8 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -218,8 +218,8 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -234,7 +234,7 @@
         {
           "workload": "psmdb-operator",
           "kind": "Deployment",
-          "memory": "19Mi",
+          "memory": "18Mi",
           "cpu": "1m"
         }
       ],
@@ -244,8 +244,8 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -270,8 +270,8 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -281,6 +281,33 @@
         "architecture": "arm64"
       },
       "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "psmdb-operator",
+          "kind": "Deployment",
+          "memory": "18Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "psmdb-operator",
+          "version": "1.23.2"
+        }
+      ],
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
+      "measuredAt": "2026-11-19"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
       "result": "passed",
       "pods": [
         {
@@ -296,38 +323,11 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
-      "measuredAt": "2026-11-20"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.6",
-      "distributionVersion": "v1.3.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "psmdb-operator",
-          "kind": "Deployment",
-          "memory": "18Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "psmdb-operator",
-          "version": "1.23.2"
-        }
-      ],
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -353,11 +353,11 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -373,7 +373,7 @@
         {
           "workload": "psmdb-operator",
           "kind": "Deployment",
-          "memory": "23Mi",
+          "memory": "24Mi",
           "cpu": "1m"
         }
       ],
@@ -383,11 +383,11 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -403,7 +403,7 @@
         {
           "workload": "psmdb-operator",
           "kind": "Deployment",
-          "memory": "23Mi",
+          "memory": "24Mi",
           "cpu": "1m"
         }
       ],
@@ -413,11 +413,11 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-19"
     }
   ]
 }

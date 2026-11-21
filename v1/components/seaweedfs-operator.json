@@ -1,6 +1,6 @@
 {
   "id": "seaweedfs-operator",
-  "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
+  "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -161,7 +161,7 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "28Mi",
+          "memory": "27Mi",
           "cpu": "1m"
         }
       ],
@@ -171,12 +171,12 @@
           "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "k3s",
@@ -202,12 +202,12 @@
           "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -222,7 +222,7 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "25Mi",
+          "memory": "26Mi",
           "cpu": "1m"
         }
       ],
@@ -232,12 +232,12 @@
           "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -262,12 +262,12 @@
           "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kind",
@@ -275,36 +275,6 @@
       "platform": {
         "os": "linux",
         "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "seaweedfs-operator",
-          "kind": "Deployment",
-          "memory": "26Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "seaweedfs-operator",
-          "version": "0.1.47"
-        }
-      ],
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
-      "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
-      },
-      "measuredAt": "2026-11-20"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
       },
       "kubernetesVersion": "v1.37.0",
       "result": "passed",
@@ -322,12 +292,42 @@
           "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-19"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "26Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.47"
+        }
+      ],
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
+      "dependencies": {
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+      },
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "kubesolo",
@@ -335,6 +335,40 @@
       "platform": {
         "os": "linux",
         "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "seaweedfs-operator",
+          "kind": "Deployment",
+          "memory": "27Mi",
+          "cpu": "2m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "seaweedfs-operator",
+          "version": "0.1.47"
+        }
+      ],
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
+      "dependencies": {
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+      },
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-19"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
       },
       "kubernetesVersion": "v1.36.6",
       "distributionVersion": "v1.3.0",
@@ -353,49 +387,15 @@
           "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.6",
-      "distributionVersion": "v1.3.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "seaweedfs-operator",
-          "kind": "Deployment",
-          "memory": "24Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "seaweedfs-operator",
-          "version": "0.1.47"
-        }
-      ],
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
-      "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
-      },
-      "addOns": {
-        "helm-controller": "v0.17.9"
-      },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -411,7 +411,7 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "30Mi",
+          "memory": "28Mi",
           "cpu": "1m"
         }
       ],
@@ -421,15 +421,15 @@
           "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-19"
     },
     {
       "distribution": "rke2",
@@ -445,7 +445,7 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "29Mi",
+          "memory": "27Mi",
           "cpu": "1m"
         }
       ],
@@ -455,15 +455,15 @@
           "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4=",
       "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
+        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-19"
     }
   ]
 }

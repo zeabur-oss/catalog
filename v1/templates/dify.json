@@ -1,6 +1,6 @@
 {
   "id": "dify",
-  "sourceDigest": "h1:vsP5AEp3htlEGaBpwb9iqGd9oFhPQxIx/c/2fqtpNuw=",
+  "sourceDigest": "h1:zo1obwcPt62TGSsz3tqzOtTaww/Z4iAPb4nOFVZ5+1E=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -243,15 +243,15 @@
         {
           "locales": {
             "zh-CN": {
-              "mitigation": "在 Zeabur 开源版开启 Dragonfly 备份。DB0（缓存）和 DB1（Celery）是分开的，cache_mode=false 可以避免队列被清掉。重启前，先停掉 beat 和产生任务的程序，让 worker 把手上的工作做完。重启后，要检查任务有没有漏掉或重复执行。旧的 Valkey AOF、RDB 或 PVC 数据不会导入。",
+              "mitigation": "在 Zeabur 开启 Dragonfly 备份。DB0（缓存）和 DB1（Celery）是分开的，cache_mode=false 可以避免队列被清掉。重启前，先停掉 beat 和产生任务的程序，让 worker 把手上的工作做完。重启后，要检查任务有没有漏掉或重复执行。旧的 Valkey AOF、RDB 或 PVC 数据不会导入。",
               "risk": "Dragonfly 的数据只放在内存里，除非你开启快照。重启后，排队中或还没确认的任务、锁和缓存都会丢失。"
             },
             "zh-TW": {
-              "mitigation": "在 Zeabur 開源版開啟 Dragonfly 備份。DB0（快取）和 DB1（Celery）是分開的，cache_mode=false 可以避免佇列被清掉。重新啟動前，先停掉 beat 和產生任務的程式，讓 worker 把手上的工作做完。重新啟動後，要檢查任務有沒有漏掉或重複執行。舊的 Valkey AOF、RDB 或 PVC 資料不會匯入。",
+              "mitigation": "在 Zeabur 開啟 Dragonfly 備份。DB0（快取）和 DB1（Celery）是分開的，cache_mode=false 可以避免佇列被清掉。重新啟動前，先停掉 beat 和產生任務的程式，讓 worker 把手上的工作做完。重新啟動後，要檢查任務有沒有漏掉或重複執行。舊的 Valkey AOF、RDB 或 PVC 資料不會匯入。",
               "risk": "Dragonfly 的資料只放在記憶體裡，除非你開啟快照。重新啟動後，排隊中或還沒確認的任務、鎖和快取都會不見。"
             }
           },
-          "mitigation": "Turn on Dragonfly backups in Zeabur OSS. DB0 (cache) and DB1 (Celery) stay separate, and cache_mode=false stops the queue from being evicted. Before a restart, stop beat and the producers, and let the workers finish their jobs. After it, check that jobs ran once and only once. Old Valkey AOF, RDB or PVC data is not imported.",
+          "mitigation": "Turn on Dragonfly backups in Zeabur. DB0 (cache) and DB1 (Celery) stay separate, and cache_mode=false stops the queue from being evicted. Before a restart, stop beat and the producers, and let the workers finish their jobs. After it, check that jobs ran once and only once. Old Valkey AOF, RDB or PVC data is not imported.",
           "risk": "Dragonfly keeps data in memory only, until you turn on snapshots. A restart loses queued or unacknowledged tasks, locks and cache."
         },
         {

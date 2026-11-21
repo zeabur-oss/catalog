@@ -1,6 +1,6 @@
 {
   "id": "k8up",
-  "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI=",
+  "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -140,7 +140,7 @@
         {
           "workload": "k8up",
           "kind": "Deployment",
-          "memory": "10Mi",
+          "memory": "12Mi",
           "cpu": "1m"
         }
       ],
@@ -150,8 +150,8 @@
           "version": "4.10.1"
         }
       ],
-      "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "k3s",
@@ -167,8 +167,8 @@
         {
           "workload": "k8up",
           "kind": "Deployment",
-          "memory": "12Mi",
-          "cpu": "0"
+          "memory": "11Mi",
+          "cpu": "1m"
         }
       ],
       "versions": [
@@ -177,12 +177,64 @@
           "version": "4.10.1"
         }
       ],
-      "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
       "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "k8up",
+          "kind": "Deployment",
+          "memory": "12Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8up",
+          "version": "4.10.1"
+        }
+      ],
+      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "k8up",
+          "kind": "Deployment",
+          "memory": "12Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "k8up",
+          "version": "4.10.1"
+        }
+      ],
+      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
+      "measuredAt": "2026-11-12"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
       "platform": {
         "os": "linux",
         "architecture": "amd64"
@@ -203,12 +255,12 @@
           "version": "4.10.1"
         }
       ],
-      "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
-      "profile": "multi-node",
+      "profile": "single-node",
       "platform": {
         "os": "linux",
         "architecture": "arm64"
@@ -219,7 +271,7 @@
         {
           "workload": "k8up",
           "kind": "Deployment",
-          "memory": "12Mi",
+          "memory": "10Mi",
           "cpu": "1m"
         }
       ],
@@ -229,60 +281,8 @@
           "version": "4.10.1"
         }
       ],
-      "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI=",
-      "measuredAt": "2026-11-20"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "k8up",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "k8up",
-          "version": "4.10.1"
-        }
-      ],
-      "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI=",
-      "measuredAt": "2026-11-20"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "k8up",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "k8up",
-          "version": "4.10.1"
-        }
-      ],
-      "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kubesolo",
@@ -308,11 +308,11 @@
           "version": "4.10.1"
         }
       ],
-      "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI=",
+      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kubesolo",
@@ -338,11 +338,11 @@
           "version": "4.10.1"
         }
       ],
-      "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI=",
+      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "rke2",
@@ -368,11 +368,11 @@
           "version": "4.10.1"
         }
       ],
-      "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI=",
+      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "rke2",
@@ -389,7 +389,7 @@
           "workload": "k8up",
           "kind": "Deployment",
           "memory": "11Mi",
-          "cpu": "1m"
+          "cpu": "0"
         }
       ],
       "versions": [
@@ -398,11 +398,11 @@
           "version": "4.10.1"
         }
       ],
-      "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI=",
+      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-12"
     }
   ]
 }

@@ -299,15 +299,15 @@
     "id": {
       "type": "string",
       "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
-      "description": "The directory name of the component under components/."
+      "description": "The file name of the component without .yaml."
     },
     "sourceDigest": {
       "type": "string",
-      "description": "The Go module hash (h1:) of the directory components/\u003cid\u003e/, without its READMEs. A\nmeasurement with another sourceDigest tested older files."
+      "description": "The Go module hash (h1:) of components/\u003cid\u003e.yaml. A measurement with another sourceDigest\ntested an older file."
     },
     "declaration": {
       "$ref": "#/$defs/declaration",
-      "description": "components/\u003cid\u003e/component.yaml as written."
+      "description": "components/\u003cid\u003e.yaml as written."
     },
     "render": {
       "$ref": "#/$defs/render"

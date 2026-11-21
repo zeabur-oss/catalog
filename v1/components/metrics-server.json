@@ -1,6 +1,6 @@
 {
   "id": "metrics-server",
-  "sourceDigest": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo=",
+  "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -166,7 +166,7 @@
           "workload": "metrics-server",
           "kind": "Deployment",
           "memory": "17Mi",
-          "cpu": "2m"
+          "cpu": "3m"
         }
       ],
       "versions": [
@@ -175,8 +175,8 @@
           "version": "3.14.0"
         }
       ],
-      "sourceDigest": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "k3s",
@@ -192,8 +192,8 @@
         {
           "workload": "metrics-server",
           "kind": "Deployment",
-          "memory": "17Mi",
-          "cpu": "1m"
+          "memory": "18Mi",
+          "cpu": "2m"
         }
       ],
       "versions": [
@@ -202,8 +202,8 @@
           "version": "3.14.0"
         }
       ],
-      "sourceDigest": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
@@ -228,8 +228,8 @@
           "version": "3.14.0"
         }
       ],
-      "sourceDigest": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
@@ -254,8 +254,8 @@
           "version": "3.14.0"
         }
       ],
-      "sourceDigest": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
@@ -280,8 +280,8 @@
           "version": "3.14.0"
         }
       ],
-      "sourceDigest": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
@@ -306,8 +306,8 @@
           "version": "3.14.0"
         }
       ],
-      "sourceDigest": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kubesolo",
@@ -333,11 +333,11 @@
           "version": "3.14.0"
         }
       ],
-      "sourceDigest": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo=",
+      "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kubesolo",
@@ -363,11 +363,11 @@
           "version": "3.14.0"
         }
       ],
-      "sourceDigest": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo=",
+      "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "rke2",
@@ -393,11 +393,11 @@
           "version": "3.14.0"
         }
       ],
-      "sourceDigest": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo=",
+      "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "rke2",
@@ -413,8 +413,8 @@
         {
           "workload": "metrics-server",
           "kind": "Deployment",
-          "memory": "17Mi",
-          "cpu": "1m"
+          "memory": "16Mi",
+          "cpu": "2m"
         }
       ],
       "versions": [
@@ -423,11 +423,11 @@
           "version": "3.14.0"
         }
       ],
-      "sourceDigest": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo=",
+      "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-12"
     }
   ]
 }

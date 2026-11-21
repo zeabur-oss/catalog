@@ -1,7 +1,7 @@
 {
   "catalog": {
-    "version": "0.6.0",
-    "commit": "076b931851226292391d4220958a833a1d476183"
+    "version": "0.5.6",
+    "commit": "5d38a79f36e2c47a4de42796107ea8bf49cad70f"
   },
   "profiles": [
     "single-node",
@@ -30,115 +30,115 @@
   "components": [
     {
       "id": "blackbox-exporter",
-      "sourceDigest": "h1:IK5JX0ceFNqI1oqtNA3VzdkOPqEZp7XEIyUKw/qWLdU="
+      "sourceDigest": "h1:/tbwsnf5t59mcZXSF6ApDEwGD0PSUpW2k/R86uD/5Bc="
     },
     {
       "id": "cert-manager",
-      "sourceDigest": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies="
+      "sourceDigest": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58="
     },
     {
       "id": "cloudnative-pg",
-      "sourceDigest": "h1:Ng6oc40/aM4zbnEnU9OxiYQvyFSJOFad1fNMHEGfXH4="
+      "sourceDigest": "h1:VlI7FbJq8eu7nUwyl03sJAPplBUBm53QJYGDhleao90="
     },
     {
       "id": "crowdsec",
-      "sourceDigest": "h1:PP40PYGFHuoF9IbIz3YiTOZNJkJSe+1QvBlLldLQkaA="
+      "sourceDigest": "h1:Ax9apjutlcXCemj0nBOeEtJ34aPycIxE63wv1//UyZE="
     },
     {
       "id": "dragonfly-operator",
-      "sourceDigest": "h1:agJtm4yj1j5dfIdccXsZNcfRIthgHy+cvHc3fVqfES4="
+      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM="
     },
     {
       "id": "external-secrets",
-      "sourceDigest": "h1:J9BwTWHLxYulVB1U0FLXNBVlFnIfLk0oLQrTO+SraFQ="
+      "sourceDigest": "h1:atRm4CCvXCUh/WW3VQnXfsdDjdMfMfqmmkR2J3OOxkE="
     },
     {
       "id": "falco",
-      "sourceDigest": "h1:cqf+4FIapxElzB3bhhDpS8qDa1EP18YILl07QgEHGCI="
+      "sourceDigest": "h1:iPC8/+lNBcPT2W1WCKzULuctwAD0cojiIE+F9Ypwa3g="
     },
     {
       "id": "k8up",
-      "sourceDigest": "h1:/uAT8hxH2eN1SL8UhZpUKFyikY7Fm3v6UTmuNfMvdQI="
+      "sourceDigest": "h1:wYx7iQ7Pa53yWaXnowoQ03uiHKUf35PMZ4grRygBHJ4="
     },
     {
       "id": "keda",
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk="
+      "sourceDigest": "h1:kUWDM7dkML7U76e8EbPQHoeFO0Ht2IB9zNgKv0qeuXI="
     },
     {
       "id": "keda-http-add-on",
-      "sourceDigest": "h1:ZbyDfOoDbWmywXN0i/e5z3llSykoCnE+DGxTaViT70U="
+      "sourceDigest": "h1:GdksQ1WxTrWsuJJWfmnym+ayN9E2wwvEF71QACXD/r0="
     },
     {
       "id": "keel",
-      "sourceDigest": "h1:6TOe9sLD3dsOs2884BBqrffqOCuzKEHLBt8lekB6DME="
+      "sourceDigest": "h1:rc8EVZoMJVc3CqZqq9uOThc912u43xFidbu3SSWEnk4="
     },
     {
       "id": "longhorn",
-      "sourceDigest": "h1:KLXcopgWRZeL8+Chj/7e/PZg8qLHcbaJzCcumHHrEUY="
+      "sourceDigest": "h1:OYFtbIcjc70GEfUXHnTi9jGQHO2rNGNf/ONLf8Gnv5Y="
     },
     {
       "id": "mariadb-operator",
-      "sourceDigest": "h1:3Po7PxiFKlAxTRzCf8jHd2FosZvOenb0TGvqMF5yg/o="
+      "sourceDigest": "h1:6Qb+uLZA0Z0tDiXxvRmz8IsqwKmqyQKX3+oZVUEqAsI="
     },
     {
       "id": "metrics-server",
-      "sourceDigest": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo="
+      "sourceDigest": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU="
     },
     {
       "id": "moco",
-      "sourceDigest": "h1:WT758lhpwn6wCb4Z2ikRdPeG9dMi8yKq733BAs8bbJg="
+      "sourceDigest": "h1:R5r/A3ZPeOJmrq/BAffc5oeJFR3WjyQ4GTdoROUqAS4="
     },
     {
       "id": "percona-mongodb",
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do="
+      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA="
     },
     {
       "id": "reloader",
-      "sourceDigest": "h1:K2uUF8MdR+MNyPIdhaWBTDeF61tvR4myhIfKQ+SWe30="
+      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o="
     },
     {
       "id": "seaweedfs-operator",
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI="
+      "sourceDigest": "h1:s18vKhMND1chD1k1DF1v4Ci3vUZBbyR8+Cl2rc/YwD4="
     },
     {
       "id": "system-upgrade-controller",
-      "sourceDigest": "h1:oRpkcXGTXqsEUTLJ9Q9csZmVt6UKSCTEHUcnOAtQWcA="
+      "sourceDigest": "h1:RIEE7m8qS9pCIYJ9gvNd7AX3EN4s4s1NKE9S4GjmIDE="
     },
     {
       "id": "tailscale-operator",
-      "sourceDigest": "h1:r6+tNgND/ikVxZcavN+4EHCq0IXzPWJ6aEkGCV9YKHc="
+      "sourceDigest": "h1:uSw+pSxEiYolm+OUFVEOKFV2lpBFXuu/H0Fsu7vgWWE="
     },
     {
       "id": "traefik",
-      "sourceDigest": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      "sourceDigest": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
     },
     {
       "id": "trivy-operator",
-      "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M="
+      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek="
     },
     {
       "id": "velero",
-      "sourceDigest": "h1:HmdfgedYQFpzdtX40XNzNkun+ntT2bIbRYwSlOZZM0A="
+      "sourceDigest": "h1:t0msgY7HGOlvyKFzmJnIEdw03SjhRPd6ngFwRgeKjW4="
     },
     {
       "id": "vertical-pod-autoscaler",
-      "sourceDigest": "h1:hVCWKWUMtsiaLUqOIcBAoU65yFhsoHuUatEsXx5MDNk="
+      "sourceDigest": "h1:o3cZY06zmuC0FGPbrPv9L+jO4+1CVawaeCDCDVIf2Kw="
     },
     {
       "id": "victoria-logs",
-      "sourceDigest": "h1:jyYPvb1znfMjVO3aAfqOk+wkq2CM4PyZhGbWybsIa1g="
+      "sourceDigest": "h1:Ni/403qeeWZrM9Iv1EmEtCASjlCB+q0YCS9+/5YuXo4="
     },
     {
       "id": "victoria-metrics",
-      "sourceDigest": "h1:EPEyO8ZBpcCje/uVoCnDOkxfXbl6uQrVGbf3N4FDJH4="
+      "sourceDigest": "h1:IdDj4vI8qKyJ7B1MlUs4/+QkdId/JEA8MVl4UYjgbq0="
     },
     {
       "id": "victoria-metrics-operator",
-      "sourceDigest": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo="
+      "sourceDigest": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
     },
     {
       "id": "zeabur-builder",
-      "sourceDigest": "h1:ypC4OGuo2otI7jOMw9GnR5JsuxJE2PHBVOZW+dannEE="
+      "sourceDigest": "h1:czIeNzfYZ2CCOihyWraL03B0gkFEgpHgmwTYHoXO75E="
     }
   ],
   "templates": [
@@ -152,11 +152,11 @@
     },
     {
       "id": "dify",
-      "sourceDigest": "h1:vsP5AEp3htlEGaBpwb9iqGd9oFhPQxIx/c/2fqtpNuw="
+      "sourceDigest": "h1:zo1obwcPt62TGSsz3tqzOtTaww/Z4iAPb4nOFVZ5+1E="
     },
     {
       "id": "error-pages",
-      "sourceDigest": "h1:qFB6yiDZxs5RIWp/qySA9o4r9eNte66LORUMawqs7Xo="
+      "sourceDigest": "h1:H1Blslr/wlEFBaPrhu6J0Eu8rHZNczp6U3YBF0qZcww="
     },
     {
       "id": "ghost",
@@ -168,7 +168,7 @@
     },
     {
       "id": "halo",
-      "sourceDigest": "h1:omOPvGk2vOB43kKd5roM8DMevL0nLOVuGYb4OT9at3A="
+      "sourceDigest": "h1:Aera9HSNes6zHhbDvHVqPJ/dXEZy5yzyZZZ3QRvJtLI="
     },
     {
       "id": "hermes-agent",
@@ -200,15 +200,15 @@
     },
     {
       "id": "n8n",
-      "sourceDigest": "h1:Kep0LqdYhS3nM1xOSoGQaJVY06gpWhwvuTuH3AiZTN0="
+      "sourceDigest": "h1:fNLhOdcC64ZfliekQs1V7JFRWu7hCKWcp2eqP08Ncg4="
     },
     {
       "id": "n8n-ai-brain",
-      "sourceDigest": "h1:IPc9+XjrDmyjPqlucHqbKLBgseQx5IHDuzq+Gf0vGJs="
+      "sourceDigest": "h1:ifUr4ceKjM6Mp3QlDQ3vWeucljceeRb/E0536Eb48wg="
     },
     {
       "id": "n8n-sqlite",
-      "sourceDigest": "h1:Dw73zHvJCP9S7+DyB80wPY/+9YjFpA5eoHyJRxbkNMI="
+      "sourceDigest": "h1:kO12grVrsW3sC+zGsBfFN8cGyLaS18g9vpmdXMICtZg="
     },
     {
       "id": "new-api",
@@ -216,7 +216,7 @@
     },
     {
       "id": "nginx",
-      "sourceDigest": "h1:+U3VdJZt7jGXY8GpvbZxIwLfY6TfpVxsZ4fO2GcAu4A="
+      "sourceDigest": "h1:U+XTKtfJYegsB1Xtn8VpeYBY9LzwRh6mO9c2o37DUhU="
     },
     {
       "id": "ntfy",
@@ -248,7 +248,7 @@
     },
     {
       "id": "qdrant",
-      "sourceDigest": "h1:6rGn63MyGJ64CbzR5KPEB6zwPjsH3+erlrWcB5KiJJM="
+      "sourceDigest": "h1:UKSK6YCMYcYnxjFAewGvoAoYvYZIHrwzp0On1UVDjfY="
     },
     {
       "id": "searxng",

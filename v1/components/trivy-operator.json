@@ -1,6 +1,6 @@
 {
   "id": "trivy-operator",
-  "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M=",
+  "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -142,8 +142,8 @@
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "124Mi",
-          "cpu": "4m"
+          "memory": "115Mi",
+          "cpu": "2m"
         }
       ],
       "versions": [
@@ -152,8 +152,8 @@
           "version": "0.38.1"
         }
       ],
-      "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "k3s",
@@ -169,8 +169,8 @@
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "123Mi",
-          "cpu": "3m"
+          "memory": "113Mi",
+          "cpu": "1m"
         }
       ],
       "versions": [
@@ -179,8 +179,8 @@
           "version": "0.38.1"
         }
       ],
-      "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
@@ -195,8 +195,8 @@
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "137Mi",
-          "cpu": "3m"
+          "memory": "138Mi",
+          "cpu": "2m"
         }
       ],
       "versions": [
@@ -205,8 +205,8 @@
           "version": "0.38.1"
         }
       ],
-      "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
@@ -221,8 +221,8 @@
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "127Mi",
-          "cpu": "1m"
+          "memory": "125Mi",
+          "cpu": "2m"
         }
       ],
       "versions": [
@@ -231,8 +231,8 @@
           "version": "0.38.1"
         }
       ],
-      "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
@@ -247,11 +247,11 @@
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "121Mi",
-          "cpu": "4m"
+          "memory": "134Mi",
+          "cpu": "1m"
         },
         {
-          "workload": "scan-vulnerabilityreport-55bfb7cbb6",
+          "workload": "scan-vulnerabilityreport-67fd875dc",
           "kind": "Job",
           "memory": "0",
           "cpu": "0"
@@ -263,8 +263,8 @@
           "version": "0.38.1"
         }
       ],
-      "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kind",
@@ -279,8 +279,8 @@
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "133Mi",
-          "cpu": "3m"
+          "memory": "134Mi",
+          "cpu": "6m"
         }
       ],
       "versions": [
@@ -289,8 +289,8 @@
           "version": "0.38.1"
         }
       ],
-      "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kubesolo",
@@ -306,8 +306,8 @@
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "128Mi",
-          "cpu": "2m"
+          "memory": "113Mi",
+          "cpu": "3m"
         }
       ],
       "versions": [
@@ -316,11 +316,11 @@
           "version": "0.38.1"
         }
       ],
-      "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M=",
+      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "kubesolo",
@@ -336,8 +336,14 @@
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "121Mi",
+          "memory": "107Mi",
           "cpu": "2m"
+        },
+        {
+          "workload": "scan-vulnerabilityreport-56948f96f6",
+          "kind": "Job",
+          "memory": "0",
+          "cpu": "0"
         }
       ],
       "versions": [
@@ -346,11 +352,11 @@
           "version": "0.38.1"
         }
       ],
-      "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M=",
+      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "rke2",
@@ -366,8 +372,14 @@
         {
           "workload": "trivy-operator",
           "kind": "Deployment",
-          "memory": "139Mi",
+          "memory": "155Mi",
           "cpu": "3m"
+        },
+        {
+          "workload": "scan-vulnerabilityreport-84dfb5b8c7",
+          "kind": "Job",
+          "memory": "105Mi",
+          "cpu": "209m"
         }
       ],
       "versions": [
@@ -376,11 +388,11 @@
           "version": "0.38.1"
         }
       ],
-      "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M=",
+      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-12"
     },
     {
       "distribution": "rke2",
@@ -397,7 +409,13 @@
           "workload": "trivy-operator",
           "kind": "Deployment",
           "memory": "142Mi",
-          "cpu": "1m"
+          "cpu": "3m"
+        },
+        {
+          "workload": "scan-vulnerabilityreport-5c478b6879",
+          "kind": "Job",
+          "memory": "0",
+          "cpu": "0"
         }
       ],
       "versions": [
@@ -406,11 +424,11 @@
           "version": "0.38.1"
         }
       ],
-      "sourceDigest": "h1:UJNPI7CnTuf7Ih98h/ZTfnJDNwVP4efBPJFpDRXUu5M=",
+      "sourceDigest": "h1:v3cyZG0f4rL44gkSxHg0TA2xwsFbzkJByWg9clLF2Ek=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-12"
     }
   ]
 }
