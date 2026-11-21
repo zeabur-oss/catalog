@@ -54,6 +54,19 @@ jobs:
       - name: Test
         run: nix develop -c scripts/ci/test.sh
 
+  rust:
+    runs-on: instabox-medium
+    timeout-minutes: 30
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Nix
+        uses: zeabur-oss/.github/actions/ci-setup@993db7daf21a752dc7d3940f227e03478ee613cc # main
+      - name: Rust
+        run: nix develop -c scripts/ci/rust.sh
+
   check:
     runs-on: instabox-medium
     timeout-minutes: 30
@@ -101,7 +114,7 @@ jobs:
   ok:
     name: check / ok
     if: always()
-    needs: [lint, test, check, release, docs]
+    needs: [lint, test, rust, check, release, docs]
     runs-on: instabox-small
     timeout-minutes: 5
     steps:

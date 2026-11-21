@@ -1,0 +1,22 @@
+[alias]
+# The exact checks CI runs.
+lint = "clippy --workspace --all-targets --all-features --locked -- -D warnings"
+
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.release]
+# No build-host paths in release binaries.
+trim-paths = "all"
+
+[build]
+# Parallel compiler front end (nightly).
+rustflags = ["-Zthreads=8"]
+
+[registry]
+# Do not resolve crate versions published less than a week ago.
+# Urgent security fix: CARGO_REGISTRY_GLOBAL_MIN_PUBLISH_AGE="0 days" cargo update -p <crate>
+global-min-publish-age = "7 days"
+
+[resolver]
+incompatible-publish-age = "deny"
