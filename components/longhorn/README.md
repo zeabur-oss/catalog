@@ -19,7 +19,7 @@ Run `longhornctl check preflight` on a node to check it. After the install, `kub
 
 ## Use it
 
-In Zeabur, pick **Replicated disk** under **Storage class** when you add a volume. See [Choose a storage class](https://oss.zeabur.com/docs/zeabur/configure/volumes/#choose-a-storage-class). Outside Zeabur, set `storageClassName: longhorn` on the PVC:
+In Zeabur OSS, pick **Replicated disk** under **Storage class** when you add a volume. See [Choose a storage class](https://oss.zeabur.com/docs/zeabur/configure/volumes/#choose-a-storage-class). Outside Zeabur OSS, set `storageClassName: longhorn` on the PVC:
 
 ```yaml
 apiVersion: v1

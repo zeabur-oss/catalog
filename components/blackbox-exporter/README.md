@@ -6,7 +6,7 @@ Install it when you want uptime checks and alerts for your own targets. It needs
 
 ## Use it
 
-Blackbox Exporter has no Zeabur screen. Tell the metrics agent what to probe with a `VMProbe`. This example checks a site every minute:
+Blackbox Exporter has no Zeabur OSS screen. Tell the metrics agent what to probe with a `VMProbe`. This example checks a site every minute:
 
 ```yaml
 apiVersion: operator.victoriametrics.com/v1beta1

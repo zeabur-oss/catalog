@@ -6,8 +6,8 @@ This template runs LiteLLM behind your domain, with models, keys and spend store
 
 ## Getting started
 
-1. In Zeabur, open the `litellm` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**, for example `litellm.example.com`. The admin page is at `/ui` on that domain.
-2. Get the master key. Open **Variables**, click `litellm-secrets` under **From config files and secrets**, and click the eye icon next to `master-key`. Without Zeabur, read Secret `litellm-secrets`, key `master-key`, with kubectl:
+1. In Zeabur OSS, open the `litellm` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**, for example `litellm.example.com`. The admin page is at `/ui` on that domain.
+2. Get the master key. Open **Variables**, click `litellm-secrets` under **From config files and secrets**, and click the eye icon next to `master-key`. Without Zeabur OSS, read Secret `litellm-secrets`, key `master-key`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret litellm-secrets -o jsonpath='{.data.master-key}' | base64 -d
@@ -31,17 +31,17 @@ Do not give the master key to applications. Create a virtual key for each client
 
 ### Back up the data
 
-LiteLLM keeps models, keys and spend in the `litellm-db` database. It keeps nothing on a volume. In the project, open `litellm-db`. Under **Backups**, set up S3 backups. To get a file instead, click **More** → **Export**. Keep the Secret `litellm-secrets` with the backup, because `salt-key` decrypts the provider credentials in the database. See [Create, back up, and restore databases](https://oss.zeabur.com/docs/zeabur/deploy/databases/#set-up-s3-backups) and [Download a database dump](https://oss.zeabur.com/docs/zeabur/deploy/databases/#download-a-database-dump) in the Zeabur docs.
+LiteLLM keeps models, keys and spend in the `litellm-db` database. It keeps nothing on a volume. In the project, open `litellm-db`. Under **Backups**, set up S3 backups. To get a file instead, click **More** → **Export**. Keep the Secret `litellm-secrets` with the backup, because `salt-key` decrypts the provider credentials in the database. See [Create, back up, and restore databases](https://oss.zeabur.com/docs/zeabur/deploy/databases/#set-up-s3-backups) and [Download a database dump](https://oss.zeabur.com/docs/zeabur/deploy/databases/#download-a-database-dump) in the Zeabur OSS docs.
 
 ## Troubleshooting
 
 ### The page shows 502 or does not load
 
-Open the `litellm` service in Zeabur. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
+Open the `litellm` service in Zeabur OSS. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
 
-Without Zeabur, read the logs with `kubectl -n <namespace> logs deployment/litellm` and the events with `kubectl -n <namespace> get events --sort-by=.lastTimestamp`.
+Without Zeabur OSS, read the logs with `kubectl -n <namespace> logs deployment/litellm` and the events with `kubectl -n <namespace> get events --sort-by=.lastTimestamp`.
 
-See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur docs.
+See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur OSS docs.
 
 ### Requests fail with a provider error
 

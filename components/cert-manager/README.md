@@ -1,6 +1,6 @@
 ## Introduction
 
-cert-manager requests TLS certificates from an issuer and renews them before they expire. A cluster needs it for HTTPS on Zeabur public domains.
+cert-manager requests TLS certificates from an issuer and renews them before they expire. A cluster needs it for HTTPS on Zeabur OSS public domains.
 
 The component creates two Let's Encrypt ClusterIssuers, `letsencrypt` and `letsencrypt-staging`. Both use HTTP-01 through Traefik and set no email address. Try `letsencrypt-staging` first: its rate limits are far higher, but browsers do not trust its certificates. The component also turns on Gateway API support, so cert-manager can issue certificates for Gateway listeners, and it deletes a TLS Secret together with its Certificate.
 
@@ -14,13 +14,13 @@ cert-manager reads and writes Secrets in every namespace and updates the CA bund
 
 ## Use it
 
-In Zeabur, add a public domain on the service's **Networking** tab. When the cluster has more than one issuer, the form shows an **Issuer** field. See [Add public domains and HTTPS](https://oss.zeabur.com/docs/zeabur/configure/domains/). The same page shows how to create a DNS-01 issuer for wildcard domains.
+In Zeabur OSS, add a public domain on the service's **Networking** tab. When the cluster has more than one issuer, the form shows an **Issuer** field. See [Add public domains and HTTPS](https://oss.zeabur.com/docs/zeabur/configure/domains/). The same page shows how to create a DNS-01 issuer for wildcard domains.
 
 ## Remove it
 
 Removing cert-manager stops issuing and renewing. Existing Certificates, TLS Secrets and the CRDs stay, but the certificates expire when nobody renews them. The two ClusterIssuers go. The account key Secrets `letsencrypt-account-key` and `letsencrypt-staging-account-key` stay in the `cert-manager` namespace.
 
-Zeabur Builder and External Secrets Operator need it. Zeabur refuses to remove cert-manager while either is installed. See [Remove components](https://oss.zeabur.com/docs/zeabur/cluster/components/#remove-components).
+Zeabur Builder and External Secrets Operator need it. Zeabur OSS refuses to remove cert-manager while either is installed. See [Remove components](https://oss.zeabur.com/docs/zeabur/cluster/components/#remove-components).
 
 ## Troubleshooting
 

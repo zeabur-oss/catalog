@@ -6,8 +6,8 @@ Public registration is off, and SSH is off. People use Gitea over HTTPS.
 
 ## Getting started
 
-1. In Zeabur, open the `gitea` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**, for example `git.example.com`. There is no install wizard.
-2. The first start creates the administrator `gitea_admin`. Get its password. Open **Variables**, click `gitea-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Without Zeabur, read Secret `gitea-secrets`, key `admin-password`, with kubectl:
+1. In Zeabur OSS, open the `gitea` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**, for example `git.example.com`. There is no install wizard.
+2. The first start creates the administrator `gitea_admin`. Get its password. Open **Variables**, click `gitea-secrets` under **From config files and secrets**, and click the eye icon next to `admin-password`. Without Zeabur OSS, read Secret `gitea-secrets`, key `admin-password`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret gitea-secrets -o jsonpath='{.data.admin-password}' | base64 -d
@@ -41,7 +41,7 @@ Gitea keeps accounts, issues and settings in the `gitea-db` database. In the pro
 kubectl -n <namespace> cp <replica>:/var/lib/gitea ./gitea-data
 ```
 
-Gitea also has a `gitea dump` command that packs the repositories, the database and the data into one ZIP file. Gitea says to stop the instance during the backup, so that the files and the database match. See [Create, back up, and restore databases](https://oss.zeabur.com/docs/zeabur/deploy/databases/#set-up-s3-backups) and [Download a database dump](https://oss.zeabur.com/docs/zeabur/deploy/databases/#download-a-database-dump) in the Zeabur docs and [Backup and Restore](https://docs.gitea.com/administration/backup-and-restore) in the Gitea docs.
+Gitea also has a `gitea dump` command that packs the repositories, the database and the data into one ZIP file. Gitea says to stop the instance during the backup, so that the files and the database match. See [Create, back up, and restore databases](https://oss.zeabur.com/docs/zeabur/deploy/databases/#set-up-s3-backups) and [Download a database dump](https://oss.zeabur.com/docs/zeabur/deploy/databases/#download-a-database-dump) in the Zeabur OSS docs and [Backup and Restore](https://docs.gitea.com/administration/backup-and-restore) in the Gitea docs.
 
 ## Troubleshooting
 
@@ -51,8 +51,8 @@ SSH is off in this template. Use the HTTPS clone address of the repository. See 
 
 ### The page shows 502 or does not load
 
-Open the `gitea` service in Zeabur. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
+Open the `gitea` service in Zeabur OSS. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
 
-Without Zeabur, read the logs with `kubectl -n <namespace> logs deployment/gitea` and the events with `kubectl -n <namespace> get events --sort-by=.lastTimestamp`.
+Without Zeabur OSS, read the logs with `kubectl -n <namespace> logs deployment/gitea` and the events with `kubectl -n <namespace> get events --sort-by=.lastTimestamp`.
 
-See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur docs.
+See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur OSS docs.

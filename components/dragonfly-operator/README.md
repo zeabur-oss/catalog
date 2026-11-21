@@ -8,11 +8,11 @@ The operator manages Pods, StatefulSets, Services and PodDisruptionBudgets for `
 
 ## Use it
 
-In Zeabur, open a project's **Add** menu and choose **Dragonfly**. Set the storage, then connect services. Dragonfly has no **Backups** tab. It keeps snapshots on its volume and loads the newest one when it starts. See [Create, back up, and restore databases](https://oss.zeabur.com/docs/zeabur/deploy/databases/).
+In Zeabur OSS, open a project's **Add** menu and choose **Dragonfly**. Set the storage, then connect services. Dragonfly has no **Backups** tab. It keeps snapshots on its volume and loads the newest one when it starts. See [Create, back up, and restore databases](https://oss.zeabur.com/docs/zeabur/deploy/databases/).
 
 ## Remove it
 
-Removing the operator leaves the CRD in place, and with it every `Dragonfly` object. Nothing manages those objects until the operator is back. Zeabur refuses to remove the component while `Dragonfly` objects exist. Delete the databases you no longer need first. See [Remove components](https://oss.zeabur.com/docs/zeabur/cluster/components/#remove-components).
+Removing the operator leaves the CRD in place, and with it every `Dragonfly` object. Nothing manages those objects until the operator is back. Zeabur OSS refuses to remove the component while `Dragonfly` objects exist. Delete the databases you no longer need first. See [Remove components](https://oss.zeabur.com/docs/zeabur/cluster/components/#remove-components).
 
 ## Troubleshooting
 

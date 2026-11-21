@@ -6,8 +6,8 @@ This template runs one Gateway behind your domain. It uses the OpenAI-compatible
 
 ## Getting started
 
-1. In Zeabur, open the `openclaw` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**. It is the domain you entered in the install form, for example `openclaw.example.com`.
-2. The sign-in screen has a Gateway secret field. Paste the gateway token into it. Get the token from the `openclaw` service: open **Variables**, click `openclaw-secrets` under **From config files and secrets**, and click the eye icon next to `gateway-token`. Without Zeabur, read Secret `openclaw-secrets`, key `gateway-token`, with kubectl:
+1. In Zeabur OSS, open the `openclaw` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**. It is the domain you entered in the install form, for example `openclaw.example.com`.
+2. The sign-in screen has a Gateway secret field. Paste the gateway token into it. Get the token from the `openclaw` service: open **Variables**, click `openclaw-secrets` under **From config files and secrets**, and click the eye icon next to `gateway-token`. Without Zeabur OSS, read Secret `openclaw-secrets`, key `gateway-token`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret openclaw-secrets -o jsonpath='{.data.gateway-token}' | base64 -d
@@ -45,7 +45,7 @@ See [Connect and pair](https://docs.openclaw.ai/web/control-ui/connect-and-pair)
 
 ### The page shows 502 or does not load
 
-In Zeabur, open the `openclaw` service. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica keeps restarting, open **Deployments**, then **Events**. If the events show `OOMKilled`, raise **Maximum memory** in **Settings** → **Compute**. See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/).
+In Zeabur OSS, open the `openclaw` service. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica keeps restarting, open **Deployments**, then **Events**. If the events show `OOMKilled`, raise **Maximum memory** in **Settings** → **Compute**. See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/).
 
 If the service is slow or keeps reconnecting, check the same things.
 

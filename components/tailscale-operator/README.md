@@ -16,7 +16,7 @@ Create a Tailscale OAuth client and give its values to the inputs:
 
 ## Use it
 
-Zeabur has no screen for it. Create an Ingress with the class `tailscale`. This example puts the Service `web` (port 8080) of the `shop` namespace on the tailnet:
+Zeabur OSS has no screen for it. Create an Ingress with the class `tailscale`. This example puts the Service `web` (port 8080) of the `shop` namespace on the tailnet:
 
 ```yaml
 apiVersion: networking.k8s.io/v1

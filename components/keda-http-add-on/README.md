@@ -8,7 +8,7 @@ The add-on reads Services, EndpointSlices and its own resources in every namespa
 
 ## Use it
 
-Zeabur has no screen for the add-on. Create an InterceptorRoute first, then a ScaledObject. This example scales the Service `web` (port 8080) of the `shop` namespace:
+Zeabur OSS has no screen for the add-on. Create an InterceptorRoute first, then a ScaledObject. This example scales the Service `web` (port 8080) of the `shop` namespace:
 
 ```yaml
 apiVersion: http.keda.sh/v1beta1

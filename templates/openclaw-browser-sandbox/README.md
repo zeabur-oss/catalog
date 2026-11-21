@@ -6,7 +6,7 @@ The browser is for one trusted owner. It has no web page, no sign-in and no toke
 
 ## Getting started
 
-1. In Zeabur, open the `openclaw-sandbox-browser` service. When **Overview** shows its replica as ready, the service is up. It has no domain.
+1. In Zeabur OSS, open the `openclaw-sandbox-browser` service. When **Overview** shows its replica as ready, the service is up. It has no domain.
 2. Pods of the OpenClaw template already carry the client label. Any other client Pod needs it in its Pod template:
 
    ```yaml
@@ -44,7 +44,7 @@ With an `http://` address, OpenClaw finds the WebSocket endpoint through `/json/
 
 ### The browser restarts or stops answering
 
-In Zeabur, open the `openclaw-sandbox-browser` service. Check that **Overview** shows its replica as ready, then read the **Logs** tab. Open **Deployments**, then **Events**. If the events show `OOMKilled`, raise **Maximum memory** in **Settings** → **Compute**. See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/).
+In Zeabur OSS, open the `openclaw-sandbox-browser` service. Check that **Overview** shows its replica as ready, then read the **Logs** tab. Open **Deployments**, then **Events**. If the events show `OOMKilled`, raise **Maximum memory** in **Settings** → **Compute**. See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/).
 
 ### The client cannot connect
 

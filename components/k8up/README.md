@@ -6,7 +6,7 @@ K8up backs up only PVCs that carry the annotation `k8up.io/backup=true`, so inst
 
 ## Use it
 
-In Zeabur, open a service's **Settings** → **Storage** and click **Back up this volume**. Have an S3 bucket and keys ready, or an S3 destination that an administrator registered. Zeabur creates the K8up Schedule and the Secret that holds the restic password. See [Set up volume backups](https://oss.zeabur.com/docs/zeabur/configure/volumes/#set-up-volume-backups).
+In Zeabur OSS, open a service's **Settings** → **Storage** and click **Back up this volume**. Have an S3 bucket and keys ready, or an S3 destination that an administrator registered. Zeabur OSS creates the K8up Schedule and the Secret that holds the restic password. See [Set up volume backups](https://oss.zeabur.com/docs/zeabur/configure/volumes/#set-up-volume-backups).
 
 Copy the `RESTIC_PASSWORD` from the backup Secret to a safe place. Without it, you can't read the backups in S3.
 

@@ -2,7 +2,7 @@
 
 Keel updates a workload to a new image tag. It acts only on Deployments and other workloads that carry the annotation `keel.sh/policy`, so installing it changes nothing by itself.
 
-Zeabur needs it for **Auto-deploy new builds**. Zeabur Builder calls the Keel webhook (`http://keel.keel.svc:9300/v1/webhooks/native`) after each push. For workloads annotated `keel.sh/trigger: poll`, Keel also polls the registry every 5 minutes. A workload can set `keel.sh/pollSchedule` to poll faster.
+Zeabur OSS needs it for **Auto-deploy new builds**. Zeabur Builder calls the Keel webhook (`http://keel.keel.svc:9300/v1/webhooks/native`) after each push. For workloads annotated `keel.sh/trigger: poll`, Keel also polls the registry every 5 minutes. A workload can set `keel.sh/pollSchedule` to poll faster.
 
 The component turns the Helm provider off, so Keel never rewrites Helm release values. The webhook takes no credentials, so its Service is ClusterIP and a NetworkPolicy lets only the `builder-system` and `keel` namespaces reach port 9300.
 
@@ -10,9 +10,9 @@ Keel reads every Secret (for registry credentials), Namespace and Node. It reads
 
 ## Use it
 
-In Zeabur, a service built from Git gets the annotation when you leave **Auto-deploy new builds** on in its **Builds** tab. See [New commits and automatic deployment](https://oss.zeabur.com/docs/zeabur/deploy/git/#new-commits-and-automatic-deployment).
+In Zeabur OSS, a service built from Git gets the annotation when you leave **Auto-deploy new builds** on in its **Builds** tab. See [New commits and automatic deployment](https://oss.zeabur.com/docs/zeabur/deploy/git/#new-commits-and-automatic-deployment).
 
-For a workload outside Zeabur, add the annotation yourself:
+For a workload outside Zeabur OSS, add the annotation yourself:
 
 ```sh
 kubectl -n <namespace> annotate deployment <name> keel.sh/policy=force

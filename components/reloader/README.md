@@ -6,9 +6,9 @@ Install it when services should pick up new shared variables or Secrets without 
 
 ## Use it
 
-In Zeabur, open the service's **Settings** → **Compute**, turn on **Restart when its config files or secrets change**, then review and apply. Zeabur sets the annotation for you. See [Variables](https://oss.zeabur.com/docs/zeabur/configure/variables/).
+In Zeabur OSS, open the service's **Settings** → **Compute**, turn on **Restart when its config files or secrets change**, then review and apply. Zeabur OSS sets the annotation for you. See [Variables](https://oss.zeabur.com/docs/zeabur/configure/variables/).
 
-For a workload outside Zeabur, add the annotation yourself:
+For a workload outside Zeabur OSS, add the annotation yourself:
 
 ```sh
 kubectl -n <namespace> annotate deployment <name> reloader.stakater.com/auto=true

@@ -1,25 +1,25 @@
 ---
 title: Get started with Zeabur Catalog
-description: One-click application templates for your own server, each installed and tested before it ships. Use them in Zeabur, or read the catalog from your own tools.
+description: One-click application templates for your own server, each installed and tested before it ships. Use them in Zeabur OSS, or read the catalog from your own tools.
 ---
 
-Zeabur Catalog is the set of application templates you deploy in Zeabur with one click: n8n, WordPress, Dify, OpenClaw and more. Before any change to a template is merged, CI installs it on a Kubernetes cluster and checks that the application answers. It is the open-source counterpart of zeabur.com's template marketplace.
+Zeabur Catalog is the set of application templates you deploy in Zeabur OSS with one click: n8n, WordPress, Dify, OpenClaw and more. Before any change to a template is merged, CI installs it on a Kubernetes cluster and checks that the application answers. It is the open-source counterpart of Zeabur's template marketplace.
 
-## I use Zeabur
+## I use Zeabur OSS
 
-The catalog is already built into Zeabur, and you don't install it. In a project, select **Add** → **App template**, pick an application and deploy it. See [Deploy from an application template](https://oss.zeabur.com/docs/zeabur/deploy/templates/) in the Zeabur docs.
+The catalog is already built into Zeabur OSS, and you don't install it. In a project, select **Add** → **App template**, pick an application and deploy it. See [Deploy from an application template](https://oss.zeabur.com/docs/zeabur/deploy/templates/) in the Zeabur OSS docs.
 
-- Coming from zeabur.com? [Templates from zeabur.com](get-started/zeabur-com-templates.mdx) lists the catalog template for each popular zeabur.com template, and which aren't in the catalog yet. The [Zeabur docs](https://oss.zeabur.com/docs/zeabur/) cover moving your services to your own server.
-- If a template needs a component, such as CloudNativePG for PostgreSQL, see [View and install cluster components](https://oss.zeabur.com/docs/zeabur/cluster/components/) in the Zeabur docs.
+- Coming from Zeabur? [Templates from Zeabur](get-started/zeabur-com-templates.mdx) lists the catalog template for each popular Zeabur template, and which aren't in the catalog yet. The [Zeabur OSS docs](https://oss.zeabur.com/docs/zeabur/) cover moving your services to your own server.
+- If a template needs a component, such as CloudNativePG for PostgreSQL, see [View and install cluster components](https://oss.zeabur.com/docs/zeabur/cluster/components/) in the Zeabur OSS docs.
 - The [template list](reference/templates.mdx) has every template.
 
-Each template pins its images, so it installs the same application every time. Zeabur bundles one catalog release, and new templates and versions arrive when you upgrade Zeabur. Passwords and keys are generated when you deploy and stored as Kubernetes Secrets. Each template states the CPU and memory it needs, and runs without root where the application allows.
+Each template pins its images, so it installs the same application every time. Zeabur OSS bundles one catalog release, and new templates and versions arrive when you upgrade Zeabur OSS. Passwords and keys are generated when you deploy and stored as Kubernetes Secrets. Each template states the CPU and memory it needs, and runs without root where the application allows.
 
-If you use Zeabur, you can stop reading here. The rest of this page is for people who use the catalog on its own.
+If you use Zeabur OSS, you can stop reading here. The rest of this page is for people who use the catalog on its own.
 
 ## I use the catalog on its own
 
-Without Zeabur, the catalog is tested component and template data for Kubernetes clusters. Each release publishes one signed bundle and a static API that any tool can read to generate `helm install` commands, Flux or Argo CD manifests, k3s `HelmChart` objects, or template installations.
+Without Zeabur OSS, the catalog is tested component and template data for Kubernetes clusters. Each release publishes one signed bundle and a static API that any tool can read to generate `helm install` commands, Flux or Argo CD manifests, k3s `HelmChart` objects, or template installations.
 
 - **Components** are installed once per cluster by cluster administrators. Examples include Ingress, certificates, metrics, and database operators. Each capability specifies the upstream chart, version, configuration, and reasons for those choices.
 - **Templates** are installed into a single Namespace by project members. Examples include n8n, Dify, WordPress, and PostgreSQL. Templates pin images, set resource requests and limits, and run under the Restricted Pod Security Standard where possible. Templates name their required components in `requires`.

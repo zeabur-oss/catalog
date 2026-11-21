@@ -10,7 +10,7 @@ An agent on each node reads `/var/log` through a read-only host path and runs pr
 
 ## Use it
 
-CrowdSec has no Zeabur screen. List what it blocks and what it saw:
+CrowdSec has no Zeabur OSS screen. List what it blocks and what it saw:
 
 ```sh
 kubectl -n crowdsec exec deploy/crowdsec-lapi -- cscli decisions list

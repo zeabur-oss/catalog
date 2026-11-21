@@ -6,8 +6,8 @@ This template runs one Browserless instance behind your domain. Every call needs
 
 ## Getting started
 
-1. In Zeabur, open the `browserless` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**, for example `browserless.example.com`.
-2. Get the token. Open **Variables**, click `browserless-secrets` under **From config files and secrets**, and click the eye icon next to `token`. Without Zeabur, read Secret `browserless-secrets`, key `token`, with kubectl:
+1. In Zeabur OSS, open the `browserless` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**, for example `browserless.example.com`.
+2. Get the token. Open **Variables**, click `browserless-secrets` under **From config files and secrets**, and click the eye icon next to `token`. Without Zeabur OSS, read Secret `browserless-secrets`, key `token`, with kubectl:
 
    ```sh
    kubectl -n <namespace> get secret browserless-secrets -o jsonpath='{.data.token}' | base64 -d
@@ -41,8 +41,8 @@ The template allows a limited number of browser sessions at once (`CONCURRENT`) 
 
 ### The page shows 502 or does not load
 
-Open the `browserless` service in Zeabur. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the service is slow or keeps reconnecting, open the **Usage** tab. **Near memory max** means the memory is close to the limit. Raise **Maximum memory** the same way. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
+Open the `browserless` service in Zeabur OSS. Check that **Overview** shows its replica as ready, then read the **Logs** tab. If the replica is not ready, open **Deployments** and switch to **Events**. If Events show `OOMKilled`, the service ran out of memory. Raise **Maximum memory** under **Settings** → **Compute**. If the service is slow or keeps reconnecting, open the **Usage** tab. **Near memory max** means the memory is close to the limit. Raise **Maximum memory** the same way. If the domain or the certificate stays pending, see [Troubleshooting](https://oss.zeabur.com/docs/zeabur/configure/domains/#troubleshooting) on the domains page.
 
-Without Zeabur, read the logs with `kubectl -n <namespace> logs deployment/browserless` and the events with `kubectl -n <namespace> get events --sort-by=.lastTimestamp`.
+Without Zeabur OSS, read the logs with `kubectl -n <namespace> logs deployment/browserless` and the events with `kubectl -n <namespace> get events --sort-by=.lastTimestamp`.
 
-See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur docs.
+See [Adjust replicas, resources, and health checks](https://oss.zeabur.com/docs/zeabur/configure/service-settings/) and [View logs, events, and usage, and open a terminal](https://oss.zeabur.com/docs/zeabur/configure/logs-terminal/) in the Zeabur OSS docs.

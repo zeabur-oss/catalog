@@ -6,7 +6,7 @@ The database is called `zeabur` and is owned by the user `app`. There is one ins
 
 ## Getting started
 
-1. In Zeabur, open the `postgresql` database in your project. When **Overview** shows it as ready, it is up. The database has no domain and no web page.
+1. In Zeabur OSS, open the `postgresql` database in your project. When **Overview** shows it as ready, it is up. The database has no domain and no web page.
 2. Apps in the same project connect to Service `postgresql-rw` on port `5432`, with database `zeabur` and user `app`. Under **Overview**, the **Connections** section shows the **Host**, **Port**, **Database** and **Username**. Click **Show** next to the password to read it. To give an app these values as variables, click **Connect to a service** in the same section.
 3. The operator also creates Secret `postgresql-app`. No service in the project reads it as a variable, so read it with kubectl. The password is in key `password`:
 
@@ -48,7 +48,7 @@ Use `vector_cosine_ops` for `<=>` and `vector_ip_ops` for `<#>`. See [HNSW](http
 
 ### Back up the data
 
-In Zeabur, open the `postgresql` database and go to **Backups** → **Set up backups** to back up on a schedule to an S3 bucket. PostgreSQL backups need the Barman Cloud plugin. To get a copy now, click **More** at the top right of the database page, then **Export**. The browser downloads a `.dump` file made by `pg_dump --format=custom`. See [Set up S3 backups](https://oss.zeabur.com/docs/zeabur/deploy/databases/#set-up-s3-backups) and [Download a database dump](https://oss.zeabur.com/docs/zeabur/deploy/databases/#download-a-database-dump).
+In Zeabur OSS, open the `postgresql` database and go to **Backups** → **Set up backups** to back up on a schedule to an S3 bucket. PostgreSQL backups need the Barman Cloud plugin. To get a copy now, click **More** at the top right of the database page, then **Export**. The browser downloads a `.dump` file made by `pg_dump --format=custom`. See [Set up S3 backups](https://oss.zeabur.com/docs/zeabur/deploy/databases/#set-up-s3-backups) and [Download a database dump](https://oss.zeabur.com/docs/zeabur/deploy/databases/#download-a-database-dump).
 
 ## Troubleshooting
 
