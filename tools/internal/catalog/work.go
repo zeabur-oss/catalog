@@ -11,7 +11,7 @@ import (
 
 // Quantities is a component's own amount of resources: Kubernetes quantities
 // by resource name, such as memory: 256Mi.
-type Quantities map[string]any
+type Quantities map[string]string
 
 // resourceNames are the resources that Quantities may name.
 var resourceNames = []string{"cpu", "memory"}
@@ -22,7 +22,7 @@ func (q Quantities) check() error {
 		if !slices.Contains(resourceNames, name) {
 			return fmt.Errorf("%s is not a resource; use %s", name, strings.Join(resourceNames, " or "))
 		}
-		v, err := resource.ParseQuantity(fmt.Sprint(q[name]))
+		v, err := resource.ParseQuantity(q[name])
 		if err != nil {
 			return fmt.Errorf("%s: %v is not a quantity", name, q[name])
 		}

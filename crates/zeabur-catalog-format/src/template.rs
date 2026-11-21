@@ -31,12 +31,14 @@ pub struct Template {
     /// The components the cluster must have.
     #[serde(default)]
     #[schemars(extend("uniqueItems" = true))]
+    #[ts(as = "Option<_>", optional)]
     pub requires: Vec<Reference>,
     /// The workloads in `manifests.yaml`.
     #[schemars(length(min = 1))]
     pub services: Vec<Service>,
     /// Values a person gives or the installer generates.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub inputs: Vec<Input>,
     /// What it exposes and how its risks are mitigated.
     pub security: Security,
@@ -106,12 +108,14 @@ pub struct Service {
     pub pod_security: PodSecurity,
     /// Its named ports.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub ports: Vec<Port>,
     /// Its requests and limits.
     pub resources: ServiceResources,
     /// Public hostnames; rendering then needs a domain and a `ClusterIssuer`.
     #[serde(default)]
     #[schemars(inner(length(min = 1)))]
+    #[ts(as = "Option<_>", optional)]
     pub domains: Vec<String>,
 }
 
@@ -168,22 +172,28 @@ pub struct Input {
     /// A short name for the field, in English.
     #[serde(default)]
     #[schemars(length(max = 40))]
+    #[ts(optional)]
     pub label: Option<String>,
     /// The label and description in other languages.
     #[serde(default)]
     #[schemars(extend("propertyNames" = {"type": "string", "pattern": crate::schema::pattern::LOCALE}))]
+    #[ts(as = "Option<_>", optional)]
     pub locales: Locales<InputLocale>,
     /// How the installer makes it.
     #[serde(default)]
+    #[ts(optional)]
     pub generate: Option<Generate>,
     /// A deploy needs a value.
     #[serde(default)]
+    #[ts(as = "Option<_>", optional)]
     pub required: bool,
     /// The value when a deploy does not give it.
     #[serde(default)]
+    #[ts(optional)]
     pub default: Option<String>,
     /// The Secret key a generated value is stored in.
     #[serde(default)]
+    #[ts(optional)]
     pub secret: Option<InputSecret>,
     /// What the value must match.
     pub validation: Validation,
@@ -237,12 +247,14 @@ pub struct Security {
     /// The summary in other languages.
     #[serde(default)]
     #[schemars(extend("propertyNames" = {"type": "string", "pattern": crate::schema::pattern::LOCALE}))]
+    #[ts(as = "Option<_>", optional)]
     pub locales: Locales<Summary>,
     /// Its risks.
     pub risks: Vec<Risk>,
     /// Services with no sign-in or key of their own.
     #[serde(default)]
     #[schemars(extend("uniqueItems" = true))]
+    #[ts(as = "Option<_>", optional)]
     pub unauthenticated: Vec<String>,
 }
 
@@ -292,15 +304,18 @@ pub struct Smoke {
     /// What it reaches, as a `kubectl wait --for` value.
     #[serde(default)]
     #[schemars(regex(pattern = crate::schema::pattern::CONDITION))]
+    #[ts(optional)]
     pub condition: Option<String>,
     /// How long to wait.
     #[schemars(regex(pattern = crate::schema::pattern::TIMEOUT))]
     pub timeout: String,
     /// A GET through a port-forward to a Service.
     #[serde(default)]
+    #[ts(optional)]
     pub http: Option<HttpCheck>,
     /// One read-only `SELECT` on a `CloudNativePG` primary.
     #[serde(default)]
+    #[ts(optional)]
     pub sql: Option<SqlCheck>,
 }
 
@@ -323,6 +338,7 @@ pub struct HttpCheck {
     pub status: u16,
     /// Text the body contains.
     #[serde(default)]
+    #[ts(optional)]
     pub contains: Option<String>,
 }
 
