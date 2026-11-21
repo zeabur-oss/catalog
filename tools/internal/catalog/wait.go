@@ -5,17 +5,15 @@ import (
 	"slices"
 	"strings"
 	"time"
-
-	gen "github.com/invopop/jsonschema"
 )
 
 // Wait is the objects that a check waits for, and what they reach. Health checks, the smoke checks
 // of components and the smoke checks of templates all run as a Wait.
 type Wait struct {
 	// One object as kind/name, such as certificate/smoke. A kind alone takes a selector or all.
-	Resource string `yaml:"resource" json:"resource" jsonschema:"required,pattern=^[A-Za-z][A-Za-z0-9.]*(/[a-z0-9][a-z0-9.-]*)?$"`
+	Resource string `yaml:"resource" json:"resource"`
 	// The namespace of the objects. A kind without namespaces has none.
-	Namespace string `yaml:"namespace" json:"namespace,omitempty" jsonschema:"minLength=1"`
+	Namespace string `yaml:"namespace" json:"namespace,omitempty"`
 	// The labels of the objects, each a key with its value.
 	Selector map[string]string `yaml:"selector" json:"selector,omitempty"`
 	// Every object of the kind.
@@ -23,32 +21,6 @@ type Wait struct {
 	// What the objects reach, as a kubectl wait --for value. A deployment, statefulset or daemonset
 	// has none: it is ready when its rollout is complete.
 	Condition string `yaml:"condition" json:"condition,omitempty"`
-}
-
-func (Wait) JSONSchemaExtend(s *gen.Schema) {
-	SetCondition(s)
-	selector, _ := s.Properties.Get("selector")
-	selector.MinProperties = new(uint64(1))
-	all, _ := s.Properties.Get("all")
-	all.Const = true
-	// A kind alone needs a selector or all, and one object takes neither.
-	named := gen.NewProperties()
-	named.Set("resource", &gen.Schema{Pattern: "/"})
-	s.If = &gen.Schema{Properties: named}
-	s.Then = &gen.Schema{Not: &gen.Schema{AnyOf: []*gen.Schema{{Required: []string{"selector"}}, {Required: []string{"all"}}}}}
-	s.Else = &gen.Schema{OneOf: []*gen.Schema{{Required: []string{"selector"}}, {Required: []string{"all"}}}}
-	// A workload is ready when its rollout is complete, so it needs no condition, and a condition
-	// of a workload is a jsonpath on its fields. Any other object needs one, because nothing else
-	// says when it is ready.
-	workload := gen.NewProperties()
-	workload.Set("resource", &gen.Schema{Pattern: WorkloadResource()})
-	jsonpathOnly := gen.NewProperties()
-	jsonpathOnly.Set("condition", &gen.Schema{Pattern: "^jsonpath="})
-	s.AllOf = []*gen.Schema{{
-		If:   &gen.Schema{Properties: workload},
-		Then: &gen.Schema{Properties: jsonpathOnly},
-		Else: &gen.Schema{Required: []string{"condition"}},
-	}}
 }
 
 // Target returns the objects of w. A Wait that has no namespace uses defaultNS.

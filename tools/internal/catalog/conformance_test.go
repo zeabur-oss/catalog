@@ -37,7 +37,7 @@ func TestGeneratedInputsStateLengthAndEncoding(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	schema, err := jsonschema.NewCompiler().Compile(schemaPath + "#/$defs/generate")
+	schema, err := jsonschema.NewCompiler().Compile(schemaPath + "#/$defs/Generate")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -67,13 +67,15 @@ components/<id>/README*.md                Its READMEs: README.md, README.zh-TW.m
 templates/<id>/template.yaml              one application: inputs, services, security, smoke checks
 templates/<id>/manifests.yaml             its Kubernetes objects
 templates/<id>/e2e.yaml                       test-only inputs of that template (optional)
-schema/v1/                                JSON Schemas for both
+schema/v1/                                JSON Schemas for both, generated from crates/
+types/v1/                                 TypeScript types, generated from crates/
 config/licenses.yaml                      OSI-approved SPDX identifiers; opt-in-only exceptions
 config/kubernetes.yaml                    Kubernetes versions; kind node version for e2e
 config/budget.yaml                        single-node memory budget (MiB)
 config/e2e.yaml                           test-only values
 conformance/                              test cases for installers and template clients
 measurements/                             idle memory and CPU, written by CI
+crates/                                   the format types and the `zeabur-catalog` command (Rust)
 tools/                                    the `catalog` command (Go)
 docs/                                     the documentation
 ```

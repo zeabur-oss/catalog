@@ -6,6 +6,7 @@ pub mod common;
 pub mod component;
 pub mod contributions;
 pub mod order;
+pub mod schema;
 pub mod select;
 pub mod template;
 pub mod values;
