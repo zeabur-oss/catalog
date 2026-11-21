@@ -1,6 +1,6 @@
 {
   "id": "vertical-pod-autoscaler",
-  "sourceDigest": "h1:o3cZY06zmuC0FGPbrPv9L+jO4+1CVawaeCDCDVIf2Kw=",
+  "sourceDigest": "h1:hVCWKWUMtsiaLUqOIcBAoU65yFhsoHuUatEsXx5MDNk=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -126,8 +126,8 @@
         {
           "workload": "vpa-vertical-pod-autoscaler-recommender",
           "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "0"
+          "memory": "11Mi",
+          "cpu": "1m"
         }
       ],
       "versions": [
@@ -136,11 +136,11 @@
           "version": "0.16.0"
         }
       ],
-      "sourceDigest": "h1:o3cZY06zmuC0FGPbrPv9L+jO4+1CVawaeCDCDVIf2Kw=",
+      "sourceDigest": "h1:hVCWKWUMtsiaLUqOIcBAoU65yFhsoHuUatEsXx5MDNk=",
       "dependencies": {
-        "metrics-server": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU="
+        "metrics-server": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo="
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "k3s",
@@ -166,11 +166,11 @@
           "version": "0.16.0"
         }
       ],
-      "sourceDigest": "h1:o3cZY06zmuC0FGPbrPv9L+jO4+1CVawaeCDCDVIf2Kw=",
+      "sourceDigest": "h1:hVCWKWUMtsiaLUqOIcBAoU65yFhsoHuUatEsXx5MDNk=",
       "dependencies": {
-        "metrics-server": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU="
+        "metrics-server": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo="
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kind",
@@ -178,93 +178,6 @@
       "platform": {
         "os": "linux",
         "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vpa-vertical-pod-autoscaler-recommender",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "vpa",
-          "version": "0.16.0"
-        }
-      ],
-      "sourceDigest": "h1:o3cZY06zmuC0FGPbrPv9L+jO4+1CVawaeCDCDVIf2Kw=",
-      "dependencies": {
-        "metrics-server": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU="
-      },
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vpa-vertical-pod-autoscaler-recommender",
-          "kind": "Deployment",
-          "memory": "10Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "vpa",
-          "version": "0.16.0"
-        }
-      ],
-      "sourceDigest": "h1:o3cZY06zmuC0FGPbrPv9L+jO4+1CVawaeCDCDVIf2Kw=",
-      "dependencies": {
-        "metrics-server": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU="
-      },
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vpa-vertical-pod-autoscaler-recommender",
-          "kind": "Deployment",
-          "memory": "9Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "vpa",
-          "version": "0.16.0"
-        }
-      ],
-      "sourceDigest": "h1:o3cZY06zmuC0FGPbrPv9L+jO4+1CVawaeCDCDVIf2Kw=",
-      "dependencies": {
-        "metrics-server": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU="
-      },
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
       },
       "kubernetesVersion": "v1.37.0",
       "result": "passed",
@@ -282,11 +195,98 @@
           "version": "0.16.0"
         }
       ],
-      "sourceDigest": "h1:o3cZY06zmuC0FGPbrPv9L+jO4+1CVawaeCDCDVIf2Kw=",
+      "sourceDigest": "h1:hVCWKWUMtsiaLUqOIcBAoU65yFhsoHuUatEsXx5MDNk=",
       "dependencies": {
-        "metrics-server": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU="
+        "metrics-server": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo="
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vpa-vertical-pod-autoscaler-recommender",
+          "kind": "Deployment",
+          "memory": "9Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "vpa",
+          "version": "0.16.0"
+        }
+      ],
+      "sourceDigest": "h1:hVCWKWUMtsiaLUqOIcBAoU65yFhsoHuUatEsXx5MDNk=",
+      "dependencies": {
+        "metrics-server": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo="
+      },
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vpa-vertical-pod-autoscaler-recommender",
+          "kind": "Deployment",
+          "memory": "9Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "vpa",
+          "version": "0.16.0"
+        }
+      ],
+      "sourceDigest": "h1:hVCWKWUMtsiaLUqOIcBAoU65yFhsoHuUatEsXx5MDNk=",
+      "dependencies": {
+        "metrics-server": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo="
+      },
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vpa-vertical-pod-autoscaler-recommender",
+          "kind": "Deployment",
+          "memory": "10Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "vpa",
+          "version": "0.16.0"
+        }
+      ],
+      "sourceDigest": "h1:hVCWKWUMtsiaLUqOIcBAoU65yFhsoHuUatEsXx5MDNk=",
+      "dependencies": {
+        "metrics-server": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo="
+      },
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kubesolo",
@@ -312,14 +312,14 @@
           "version": "0.16.0"
         }
       ],
-      "sourceDigest": "h1:o3cZY06zmuC0FGPbrPv9L+jO4+1CVawaeCDCDVIf2Kw=",
+      "sourceDigest": "h1:hVCWKWUMtsiaLUqOIcBAoU65yFhsoHuUatEsXx5MDNk=",
       "dependencies": {
-        "metrics-server": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU="
+        "metrics-server": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo="
       },
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kubesolo",
@@ -336,7 +336,7 @@
           "workload": "vpa-vertical-pod-autoscaler-recommender",
           "kind": "Deployment",
           "memory": "10Mi",
-          "cpu": "1m"
+          "cpu": "0"
         }
       ],
       "versions": [
@@ -345,14 +345,14 @@
           "version": "0.16.0"
         }
       ],
-      "sourceDigest": "h1:o3cZY06zmuC0FGPbrPv9L+jO4+1CVawaeCDCDVIf2Kw=",
+      "sourceDigest": "h1:hVCWKWUMtsiaLUqOIcBAoU65yFhsoHuUatEsXx5MDNk=",
       "dependencies": {
-        "metrics-server": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU="
+        "metrics-server": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo="
       },
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "rke2",
@@ -368,8 +368,8 @@
         {
           "workload": "vpa-vertical-pod-autoscaler-recommender",
           "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "1m"
+          "memory": "12Mi",
+          "cpu": "0"
         }
       ],
       "versions": [
@@ -378,14 +378,14 @@
           "version": "0.16.0"
         }
       ],
-      "sourceDigest": "h1:o3cZY06zmuC0FGPbrPv9L+jO4+1CVawaeCDCDVIf2Kw=",
+      "sourceDigest": "h1:hVCWKWUMtsiaLUqOIcBAoU65yFhsoHuUatEsXx5MDNk=",
       "dependencies": {
-        "metrics-server": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU="
+        "metrics-server": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "rke2",
@@ -411,14 +411,14 @@
           "version": "0.16.0"
         }
       ],
-      "sourceDigest": "h1:o3cZY06zmuC0FGPbrPv9L+jO4+1CVawaeCDCDVIf2Kw=",
+      "sourceDigest": "h1:hVCWKWUMtsiaLUqOIcBAoU65yFhsoHuUatEsXx5MDNk=",
       "dependencies": {
-        "metrics-server": "h1:o9Jh4ZrcGRoT2v96npags0Wsj3v3s2nkuNXc08k5CrU="
+        "metrics-server": "h1:qGMjFQRcP8N+snXs4qsYJfXorwVlRLrnEZcQwssGwTo="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     }
   ]
 }

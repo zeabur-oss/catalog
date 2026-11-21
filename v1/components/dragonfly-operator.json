@@ -1,6 +1,6 @@
 {
   "id": "dragonfly-operator",
-  "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
+  "sourceDigest": "h1:agJtm4yj1j5dfIdccXsZNcfRIthgHy+cvHc3fVqfES4=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -185,8 +185,8 @@
           "version": "v1.7.1"
         }
       ],
-      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:agJtm4yj1j5dfIdccXsZNcfRIthgHy+cvHc3fVqfES4=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "k3s",
@@ -202,6 +202,58 @@
         {
           "workload": "dragonfly-operator",
           "kind": "Deployment",
+          "memory": "19Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "dragonfly-operator",
+          "version": "v1.7.1"
+        }
+      ],
+      "sourceDigest": "h1:agJtm4yj1j5dfIdccXsZNcfRIthgHy+cvHc3fVqfES4=",
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "dragonfly-operator",
+          "kind": "Deployment",
+          "memory": "21Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "dragonfly-operator",
+          "version": "v1.7.1"
+        }
+      ],
+      "sourceDigest": "h1:agJtm4yj1j5dfIdccXsZNcfRIthgHy+cvHc3fVqfES4=",
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "dragonfly-operator",
+          "kind": "Deployment",
           "memory": "20Mi",
           "cpu": "1m"
         }
@@ -212,12 +264,12 @@
           "version": "v1.7.1"
         }
       ],
-      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:agJtm4yj1j5dfIdccXsZNcfRIthgHy+cvHc3fVqfES4=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kind",
-      "profile": "multi-node",
+      "profile": "single-node",
       "platform": {
         "os": "linux",
         "architecture": "amd64"
@@ -238,60 +290,8 @@
           "version": "v1.7.1"
         }
       ],
-      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "dragonfly-operator",
-          "kind": "Deployment",
-          "memory": "20Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "dragonfly-operator",
-          "version": "v1.7.1"
-        }
-      ],
-      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "dragonfly-operator",
-          "kind": "Deployment",
-          "memory": "20Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "dragonfly-operator",
-          "version": "v1.7.1"
-        }
-      ],
-      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:agJtm4yj1j5dfIdccXsZNcfRIthgHy+cvHc3fVqfES4=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kind",
@@ -306,7 +306,7 @@
         {
           "workload": "dragonfly-operator",
           "kind": "Deployment",
-          "memory": "20Mi",
+          "memory": "19Mi",
           "cpu": "1m"
         }
       ],
@@ -316,8 +316,8 @@
           "version": "v1.7.1"
         }
       ],
-      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:agJtm4yj1j5dfIdccXsZNcfRIthgHy+cvHc3fVqfES4=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kubesolo",
@@ -333,7 +333,7 @@
         {
           "workload": "dragonfly-operator",
           "kind": "Deployment",
-          "memory": "20Mi",
+          "memory": "19Mi",
           "cpu": "1m"
         }
       ],
@@ -343,11 +343,11 @@
           "version": "v1.7.1"
         }
       ],
-      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
+      "sourceDigest": "h1:agJtm4yj1j5dfIdccXsZNcfRIthgHy+cvHc3fVqfES4=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kubesolo",
@@ -363,7 +363,7 @@
         {
           "workload": "dragonfly-operator",
           "kind": "Deployment",
-          "memory": "20Mi",
+          "memory": "21Mi",
           "cpu": "1m"
         }
       ],
@@ -373,11 +373,11 @@
           "version": "v1.7.1"
         }
       ],
-      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
+      "sourceDigest": "h1:agJtm4yj1j5dfIdccXsZNcfRIthgHy+cvHc3fVqfES4=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "rke2",
@@ -393,7 +393,7 @@
         {
           "workload": "dragonfly-operator",
           "kind": "Deployment",
-          "memory": "22Mi",
+          "memory": "24Mi",
           "cpu": "1m"
         }
       ],
@@ -403,11 +403,11 @@
           "version": "v1.7.1"
         }
       ],
-      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
+      "sourceDigest": "h1:agJtm4yj1j5dfIdccXsZNcfRIthgHy+cvHc3fVqfES4=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "rke2",
@@ -433,11 +433,11 @@
           "version": "v1.7.1"
         }
       ],
-      "sourceDigest": "h1:0LIRgytmj4EA5I1OXz/ZGf/cnB7IhyC4RB8Tt4dUwfM=",
+      "sourceDigest": "h1:agJtm4yj1j5dfIdccXsZNcfRIthgHy+cvHc3fVqfES4=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     }
   ]
 }
