@@ -183,7 +183,7 @@ pub fn release_values(
         };
         if component
             .input_release(input)
-            .map(crate::component::Release::name)
+            .and_then(crate::component::Release::name)
             == Some(release.name.as_str())
         {
             set_path(&mut values, path, value.clone(), &input.name)?;

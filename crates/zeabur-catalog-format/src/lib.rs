@@ -1,6 +1,7 @@
 #![doc = include_str!("../README.md")]
 
 pub mod api;
+pub mod check;
 pub mod common;
 pub mod component;
 pub mod contributions;
@@ -65,9 +66,9 @@ pub struct Catalog {
 }
 
 impl Catalog {
-    /// Reads the checkout at `root`. A component directory holds `component.yaml` and its
-    /// READMEs; a template directory holds `template.yaml`, `manifests.yaml`, its READMEs and an
-    /// optional `e2e.yaml`.
+    /// Reads the checkout at `root` strictly ([`check`]). A component directory holds
+    /// `component.yaml` and its READMEs; a template directory holds `template.yaml`,
+    /// `manifests.yaml`, its READMEs and an optional `e2e.yaml`.
     ///
     /// # Errors
     ///
@@ -82,7 +83,7 @@ impl Catalog {
             )?;
             catalog
                 .components
-                .insert(id, yaml(&dir.join("component.yaml"))?);
+                .insert(id, check::read(&dir.join("component.yaml"))?);
         }
         for (id, dir) in dirs(&root.join("templates"))? {
             check_files(
@@ -94,7 +95,7 @@ impl Catalog {
             catalog.templates.insert(
                 id,
                 TemplateDir {
-                    template: yaml(&dir.join("template.yaml"))?,
+                    template: check::read(&dir.join("template.yaml"))?,
                     manifests: fs::read_to_string(&manifests).map_err(|source| ReadError::Io {
                         path: manifests,
                         source,
@@ -116,19 +117,11 @@ pub fn is_readme(name: &str) -> bool {
     name.starts_with("README") && name.ends_with(".md")
 }
 
-/// Reads one YAML file strictly into `T`.
-///
-/// # Errors
-///
-/// It cannot be read or is no valid `T`.
-pub fn yaml<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T, ReadError> {
-    let text = fs::read_to_string(path).map_err(|source| ReadError::Io {
+/// The text of the file at `path`.
+pub(crate) fn read_text(path: &Path) -> Result<String, ReadError> {
+    fs::read_to_string(path).map_err(|source| ReadError::Io {
         path: path.to_owned(),
         source,
-    })?;
-    serde_saphyr::from_str(&text).map_err(|e| ReadError::Format {
-        path: path.to_owned(),
-        message: e.to_string(),
     })
 }
 

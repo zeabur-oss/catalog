@@ -13,7 +13,7 @@ use crate::template::Template;
 
 /// `catalog.json`: the release, its test environments, its components and its templates.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Index {
     /// The release.
     pub catalog: CatalogRelease,
@@ -42,7 +42,7 @@ impl Index {
 
 /// The catalog release an API was built from.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct CatalogRelease {
     /// `0.5.6`.
     pub version: String,
@@ -52,7 +52,7 @@ pub struct CatalogRelease {
 
 /// The release of a distribution that e2e installs on the host.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct PinnedDistribution {
     /// The distribution.
     pub name: Distribution,
@@ -62,7 +62,7 @@ pub struct PinnedDistribution {
 
 /// A component or template in `catalog.json`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Entry {
     /// Its directory name.
     pub id: String,
@@ -72,7 +72,7 @@ pub struct Entry {
 
 /// `components/<id>.json`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct ComponentFile {
     /// Its id.
     pub id: String,
@@ -103,6 +103,7 @@ impl ComponentFile {
         index
             .distributions
             .iter()
+            .filter(|pinned| pinned.name != Distribution::Unknown)
             .filter_map(|pinned| {
                 let mut platforms: Vec<String> = Vec::new();
                 for run in &self.measurements {
@@ -137,7 +138,7 @@ impl ComponentFile {
                         pass = Some(run);
                     }
                 }
-                RunResult::Failed => {
+                RunResult::Failed | RunResult::Unknown => {
                     if fail.is_none_or(|f| run.measured_at.as_str() > f) {
                         fail = Some(&run.measured_at);
                     }
@@ -153,7 +154,7 @@ impl ComponentFile {
 
 /// A distribution where a component passed its test, with the platforms it passed on.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct TestedOn {
     /// The distribution.
     pub distribution: Distribution,
@@ -163,7 +164,7 @@ pub struct TestedOn {
 
 /// What `helm template` renders for each profile with the test inputs and every contribution.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Render {
     /// The Kubernetes version of the render.
     pub kubernetes_version: String,
@@ -173,7 +174,7 @@ pub struct Render {
 
 /// The objects of a component on one profile.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct RenderedProfile {
     /// Its workloads.
     pub workloads: Vec<RenderedWorkload>,
@@ -183,7 +184,7 @@ pub struct RenderedProfile {
 
 /// A rendered workload. One that an operator creates later is missing.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct RenderedWorkload {
     /// The release that renders it.
     pub release: String,
@@ -208,7 +209,7 @@ pub struct RenderedWorkload {
 
 /// The requests and limits of a container, by resource name.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct RenderedContainer {
     /// Its name.
     pub name: String,
@@ -222,7 +223,7 @@ pub struct RenderedContainer {
 
 /// The requested storage of a `PersistentVolumeClaim`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct RenderedClaim {
     /// The release that renders it; a `volumeClaimTemplates` entry has none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -238,7 +239,7 @@ pub struct RenderedClaim {
 
 /// `templates/<id>.json`: the two files of a template as written.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct TemplateFile {
     /// Its id.
     pub id: String,
@@ -252,7 +253,7 @@ pub struct TemplateFile {
 
 /// `measurements/components/<id>.json` or `measurements/templates/<id>.json`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct MeasurementFile {
     /// The component's id; a template's file has none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -266,7 +267,7 @@ pub struct MeasurementFile {
 
 /// One run of an e2e test.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Environment {
     /// Where it ran.
     pub distribution: MeasuredDistribution,
@@ -327,11 +328,14 @@ pub enum RunResult {
     Passed,
     /// It failed.
     Failed,
+    /// A result this reader does not know, read as a failed run.
+    #[serde(other)]
+    Unknown,
 }
 
 /// An OS and an architecture.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Platform {
     /// `linux`.
     pub os: String,
@@ -347,7 +351,7 @@ impl std::fmt::Display for Platform {
 
 /// The idle use of one pod of a workload.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct PodUsage {
     /// The controller the pod belongs to.
     pub workload: String,
@@ -361,7 +365,7 @@ pub struct PodUsage {
 
 /// The version of a component's release or of a template's image.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct MeasuredVersion {
     /// The release.
     #[serde(default, skip_serializing_if = "Option::is_none")]

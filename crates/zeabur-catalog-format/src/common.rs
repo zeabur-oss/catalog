@@ -45,7 +45,7 @@ impl fmt::Display for Profile {
 
 /// A value for each profile.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+#[serde(rename_all = "kebab-case")]
 pub struct PerProfile<T> {
     /// On `single-node`.
     pub single_node: T,
@@ -74,6 +74,21 @@ pub enum Mode {
     Optional,
     /// Not installed on the profile.
     Unsupported,
+    /// A mode this reader does not know, read as `unsupported`.
+    #[serde(other)]
+    Unknown,
+}
+
+impl PerProfile<Mode> {
+    /// The mode on `profile`, with a mode this reader does not know read as `unsupported`.
+    #[must_use]
+    pub const fn mode(self, profile: Profile) -> Mode {
+        match *self.get(profile) {
+            Mode::Unknown | Mode::Unsupported => Mode::Unsupported,
+            Mode::Recommended => Mode::Recommended,
+            Mode::Optional => Mode::Optional,
+        }
+    }
 }
 
 /// A host distribution of Kubernetes that a component runs on.
@@ -86,6 +101,9 @@ pub enum Distribution {
     Rke2,
     /// KubeSolo.
     Kubesolo,
+    /// A distribution this reader does not know. An entry that names it is ignored.
+    #[serde(other)]
+    Unknown,
 }
 
 impl Distribution {
@@ -96,6 +114,7 @@ impl Distribution {
             Self::K3s => "k3s",
             Self::Rke2 => "rke2",
             Self::Kubesolo => "kubesolo",
+            Self::Unknown => "unknown",
         }
     }
 }
@@ -116,6 +135,9 @@ pub enum PodSecurity {
     Baseline,
     /// `privileged`.
     Privileged,
+    /// A level this reader does not know. A component or template with it is not offered.
+    #[serde(other)]
+    Unknown,
 }
 
 /// A component by id, or a capability: one component that provides it.
@@ -130,7 +152,7 @@ pub enum Reference {
 
 /// A name and a summary in English, with the summary in other languages.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Summary {
     /// One line.
     pub summary: String,
@@ -141,7 +163,7 @@ pub type Locales<T> = BTreeMap<String, T>;
 
 /// A key of a Secret.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct SecretRef {
     /// The Secret's name.
     pub name: String,
@@ -153,7 +175,7 @@ pub struct SecretRef {
 
 /// How an installer makes a value instead of asking for it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "type", deny_unknown_fields)]
+#[serde(tag = "type")]
 pub enum Generate {
     /// `bytes` random bytes in `encoding`.
     #[serde(rename = "random")]
@@ -166,6 +188,9 @@ pub enum Generate {
     /// A free address in the cluster's Service CIDR, for a Service's fixed `ClusterIP`.
     #[serde(rename = "clusterIP")]
     ClusterIp,
+    /// A type this reader does not know. The input is not filled in.
+    #[serde(other)]
+    Unknown,
 }
 
 /// How random bytes are written.
@@ -187,4 +212,7 @@ pub enum WorkloadKind {
     Deployment,
     /// `StatefulSet`.
     StatefulSet,
+    /// A kind this reader does not know. An entry that names it is ignored.
+    #[serde(other)]
+    Unknown,
 }

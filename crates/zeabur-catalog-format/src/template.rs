@@ -16,7 +16,7 @@ pub enum TemplateKind {
 
 /// One application that a project member installs into one namespace.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Template {
     /// `catalog.zeabur.com/v1`.
     pub api_version: ApiVersion,
@@ -38,9 +38,26 @@ pub struct Template {
     pub smoke: Vec<Smoke>,
 }
 
+impl Template {
+    /// Whether this reader can install it: the pod security level of every service and the
+    /// `generate` type of every required input without a default are known. One it cannot
+    /// install is not offered.
+    #[must_use]
+    pub fn known(&self) -> bool {
+        !self
+            .services
+            .iter()
+            .any(|s| s.pod_security == PodSecurity::Unknown)
+            && !self
+                .inputs
+                .iter()
+                .any(|i| i.required && i.default.is_none() && i.generate == Some(Generate::Unknown))
+    }
+}
+
 /// A template's name, summary, version and docs.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Metadata {
     /// The name for people.
     pub name: String,
@@ -60,7 +77,7 @@ pub struct Metadata {
 
 /// A workload in `manifests.yaml`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Service {
     /// Its name.
     pub name: String,
@@ -78,7 +95,7 @@ pub struct Service {
 
 /// A named port of a service.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Port {
     /// Its name.
     pub name: String,
@@ -88,7 +105,7 @@ pub struct Port {
 
 /// The requests and limits of a service.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct ServiceResources {
     /// What it requests.
     pub requests: CpuMemory,
@@ -98,7 +115,7 @@ pub struct ServiceResources {
 
 /// A CPU and a memory quantity.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct CpuMemory {
     /// CPU, such as `50m`.
     pub cpu: String,
@@ -108,7 +125,7 @@ pub struct CpuMemory {
 
 /// A value the person installing gives, or the installer generates into a Secret.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Input {
     /// Its name, camelCase.
     pub name: String,
@@ -138,7 +155,7 @@ pub struct Input {
 
 /// An input's label and description in one language.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct InputLocale {
     /// A short name for the field.
     pub label: String,
@@ -148,7 +165,7 @@ pub struct InputLocale {
 
 /// A key of a Secret in the template's namespace.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct InputSecret {
     /// The Secret's name.
     pub name: String,
@@ -158,7 +175,7 @@ pub struct InputSecret {
 
 /// What an input's value must match.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Validation {
     /// A regular expression the whole value matches.
     pub pattern: String,
@@ -166,7 +183,7 @@ pub struct Validation {
 
 /// What a template exposes and how its risks are mitigated.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Security {
     /// What it exposes.
     pub summary: String,
@@ -182,7 +199,7 @@ pub struct Security {
 
 /// A risk of a template and its mitigation.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 #[expect(clippy::struct_field_names, reason = "the file's key is `risk`")]
 pub struct Risk {
     /// The risk.
@@ -195,7 +212,7 @@ pub struct Risk {
 
 /// A risk and its mitigation in one language.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct RiskLocale {
     /// The risk.
     pub risk: String,
@@ -205,7 +222,7 @@ pub struct RiskLocale {
 
 /// An e2e check after install.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Smoke {
     /// Its name.
     pub name: String,
@@ -226,7 +243,7 @@ pub struct Smoke {
 
 /// A GET through a port-forward to a Service.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct HttpCheck {
     /// The Service.
     pub service: String,
@@ -243,7 +260,7 @@ pub struct HttpCheck {
 
 /// One read-only `SELECT` on a `CloudNativePG` primary.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct SqlCheck {
     /// The `CloudNativePG` cluster.
     pub cluster: String,

@@ -5,9 +5,10 @@ mod tests {
     use std::collections::BTreeMap;
     use std::path::Path;
 
-    use zeabur_catalog_format::common::Profile;
+    use zeabur_catalog_format::api::MeasurementFile;
+    use zeabur_catalog_format::common::{Distribution, Profile};
     use zeabur_catalog_format::order::install_order;
-    use zeabur_catalog_format::{Catalog, Contributions, values};
+    use zeabur_catalog_format::{Catalog, Component, Contributions, check, values};
 
     fn catalog() -> Catalog {
         Catalog::read(&Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")).unwrap()
@@ -52,19 +53,68 @@ mod tests {
             for entry in std::fs::read_dir(root.join(kind)).unwrap() {
                 let path = entry.unwrap().path();
                 let text = std::fs::read_to_string(&path).unwrap();
-                serde_json::from_str::<zeabur_catalog_format::api::MeasurementFile>(&text)
-                    .unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+                check::from_yaml::<MeasurementFile>(&text)
+                    .unwrap_or_else(|e| panic!("{}: {e:?}", path.display()));
             }
         }
     }
 
-    #[test]
-    fn an_unknown_field_is_an_error() {
+    fn traefik() -> String {
         let path =
             Path::new(env!("CARGO_MANIFEST_DIR")).join("../../components/traefik/component.yaml");
-        let text = std::fs::read_to_string(path).unwrap() + "\nunknownField: 1\n";
-        let read: Result<zeabur_catalog_format::Component, _> = serde_saphyr::from_str(&text);
-        let error = read.unwrap_err().to_string();
-        assert!(error.contains("unknownField"), "{error}");
+        std::fs::read_to_string(path).unwrap()
+    }
+
+    fn strict_problems(text: &str) -> Vec<String> {
+        check::from_yaml::<Component>(text).unwrap_err()
+    }
+
+    #[test]
+    fn the_check_names_an_unknown_field_by_its_path() {
+        let text = traefik().replace("    condition: Ready", "    conditon: Ready");
+        assert!(strict_problems(&text).contains(&"unknown field health[0].conditon".to_owned()));
+    }
+
+    #[test]
+    fn the_check_sees_unknown_fields_inside_a_release() {
+        let text = traefik().replace(
+            "    chart: oci://",
+            "    chartVersion: 1\n    chart: oci://",
+        );
+        assert!(
+            strict_problems(&text).contains(&"unknown field releases[1].chartVersion".to_owned()),
+            "{:?}",
+            strict_problems(&text)
+        );
+    }
+
+    #[test]
+    fn the_check_refuses_an_unknown_value() {
+        let text = traefik().replace(
+            "distributions: [k3s, rke2, kubesolo]",
+            "distributions: [k3s, k0s]",
+        );
+        assert!(strict_problems(&text).contains(&"unknown value at distributions[1]".to_owned()));
+    }
+
+    #[test]
+    fn a_reader_ignores_what_it_does_not_know() {
+        let text = traefik().replace(
+            "distributions: [k3s, rke2, kubesolo]",
+            "distributions: [k3s, k0s]",
+        ) + "\nnewField: 1\n";
+        let read: Component = serde_saphyr::from_str(&text).unwrap();
+        assert_eq!(
+            read.distributions,
+            [Distribution::K3s, Distribution::Unknown]
+        );
+        assert!(read.known());
+
+        let text = traefik().replace("type: helm", "type: kustomize");
+        let read: Component = serde_saphyr::from_str(&text).unwrap();
+        assert!(
+            !read.known(),
+            "a component with an unknown release type is not offered"
+        );
     }
 }

@@ -20,7 +20,7 @@ pub enum ComponentKind {
 
 /// One upstream project that a cluster administrator installs.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Component {
     /// `catalog.zeabur.com/v1`.
     pub api_version: ApiVersion,
@@ -92,7 +92,7 @@ impl Component {
     /// The release named `name`.
     #[must_use]
     pub fn release(&self, name: &str) -> Option<&Release> {
-        self.releases.iter().find(|r| r.name() == name)
+        self.releases.iter().find(|r| r.name() == Some(name))
     }
 
     /// The release whose values take a `path` input: the input's `release`, else the first chart
@@ -108,13 +108,26 @@ impl Component {
     /// Its mode on `profile`.
     #[must_use]
     pub const fn mode(&self, profile: Profile) -> Mode {
-        *self.defaults.get(profile)
+        self.defaults.mode(profile)
+    }
+
+    /// Whether this reader can install it: every release type, its pod security level and the
+    /// `generate` type of every required input without a default are known. One it cannot
+    /// install is not offered.
+    #[must_use]
+    pub fn known(&self) -> bool {
+        !self.releases.iter().any(|r| matches!(r, Release::Unknown))
+            && self.security.pod_security != PodSecurity::Unknown
+            && !self
+                .inputs
+                .iter()
+                .any(|i| i.required && i.default.is_none() && i.generate == Some(Generate::Unknown))
     }
 }
 
 /// A component's name and summary.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Metadata {
     /// The name for people.
     pub name: String,
@@ -130,7 +143,7 @@ pub struct Metadata {
 
 /// What a component's RBAC lets it do and what its namespaces must allow.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Security {
     /// What its RBAC lets it do.
     pub summary: String,
@@ -140,7 +153,7 @@ pub struct Security {
 
 /// What a component offers other software in the cluster.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Provides {
     /// The capability it offers, such as `logs`.
     #[serde(default)]
@@ -152,7 +165,7 @@ pub struct Provides {
 
 /// An OCI registry in the cluster that nodes pull from.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Registry {
     /// The `host:port` that images name.
     pub host: String,
@@ -162,7 +175,7 @@ pub struct Registry {
 
 /// What a component needs beyond its measured idle use.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Resources {
     /// Each kind of work it does, such as a build.
     pub work: Vec<Work>,
@@ -170,7 +183,7 @@ pub struct Resources {
 
 /// One kind of work a component does.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Work {
     /// Its name.
     pub name: String,
@@ -187,7 +200,7 @@ pub struct Work {
 
 /// Kubernetes quantities by resource name.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Quantities {
     /// CPU, such as `100m`.
     #[serde(default)]
@@ -207,26 +220,31 @@ pub enum Release {
     Manifest(ManifestRelease),
     /// Objects written in the file.
     Inline(InlineRelease),
+    /// A type this reader does not know. A component with it is not offered.
+    #[serde(other)]
+    Unknown,
 }
 
 impl Release {
     /// Its name in the file.
     #[must_use]
-    pub fn name(&self) -> &str {
+    pub fn name(&self) -> Option<&str> {
         match self {
-            Self::Helm(r) => &r.name,
-            Self::Manifest(r) => &r.name,
-            Self::Inline(r) => &r.name,
+            Self::Helm(r) => Some(&r.name),
+            Self::Manifest(r) => Some(&r.name),
+            Self::Inline(r) => Some(&r.name),
+            Self::Unknown => None,
         }
     }
 
     /// The namespace it installs into.
     #[must_use]
-    pub fn namespace(&self) -> &str {
+    pub fn namespace(&self) -> Option<&str> {
         match self {
-            Self::Helm(r) => &r.namespace,
-            Self::Manifest(r) => &r.namespace,
-            Self::Inline(r) => &r.namespace,
+            Self::Helm(r) => Some(&r.namespace),
+            Self::Manifest(r) => Some(&r.namespace),
+            Self::Inline(r) => Some(&r.namespace),
+            Self::Unknown => None,
         }
     }
 
@@ -237,6 +255,7 @@ impl Release {
             Self::Helm(r) => &r.skip_if_present,
             Self::Manifest(r) => &r.skip_if_present,
             Self::Inline(r) => &r.skip_if_present,
+            Self::Unknown => &[],
         }
     }
 
@@ -245,14 +264,14 @@ impl Release {
     pub const fn helm(&self) -> Option<&HelmRelease> {
         match self {
             Self::Helm(r) => Some(r),
-            Self::Manifest(_) | Self::Inline(_) => None,
+            Self::Manifest(_) | Self::Inline(_) | Self::Unknown => None,
         }
     }
 }
 
 /// A release of a Helm chart.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct HelmRelease {
     /// Its name in the file.
     pub name: String,
@@ -294,7 +313,7 @@ impl HelmRelease {
 
 /// Values for some profiles, as YAML.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+#[serde(rename_all = "kebab-case")]
 pub struct ProfileValues {
     /// On `single-node`.
     #[serde(default)]
@@ -317,7 +336,7 @@ impl ProfileValues {
 
 /// A release of files downloaded from URLs.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct ManifestRelease {
     /// Its name in the file.
     pub name: String,
@@ -347,7 +366,7 @@ impl ManifestRelease {
 
 /// A release of objects written in the file.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct InlineRelease {
     /// Its name in the file.
     pub name: String,
@@ -362,7 +381,7 @@ pub struct InlineRelease {
 
 /// A value an installer asks for or generates.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Input {
     /// Its name, camelCase.
     pub name: String,
@@ -427,7 +446,7 @@ impl InputValue {
 
 /// Values a component adds to a release of another component.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Contribution {
     /// The release that receives them.
     pub target: ReleaseRef,
@@ -437,7 +456,7 @@ pub struct Contribution {
 
 /// A release of a component.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct ReleaseRef {
     /// The component's id.
     pub component: String,
@@ -447,7 +466,7 @@ pub struct ReleaseRef {
 
 /// How to recognise an existing installation. Any one match means it is there.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Detection {
     /// `CustomResourceDefinition` names.
     #[serde(default)]
@@ -487,7 +506,7 @@ impl Detection {
 
 /// An add-on of a distribution.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Addon {
     /// The distribution.
     pub distribution: Distribution,
@@ -497,7 +516,7 @@ pub struct Addon {
 
 /// A workload whose labels show the upstream.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct DetectedWorkload {
     /// Its kind.
     pub kind: WorkloadKind,
@@ -507,7 +526,7 @@ pub struct DetectedWorkload {
 
 /// A read-only check of an installed component: one `kubectl wait` or `kubectl rollout status`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Health {
     /// Its name.
     pub name: String,
@@ -525,7 +544,7 @@ pub struct Health {
 
 /// The objects of one kind a health check waits for: by `name`, by `selector`, or `all`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct HealthResource {
     /// Their kind.
     pub kind: HealthKind,
@@ -604,7 +623,7 @@ impl HealthKind {
 
 /// An e2e check after install.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Smoke {
     /// Its name.
     pub name: String,
@@ -620,7 +639,7 @@ pub struct Smoke {
 
 /// One `kubectl wait` of a smoke check.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Wait {
     /// One object as `kind/name`, or a kind alone with a selector or `all`.
     pub resource: String,
@@ -650,7 +669,9 @@ pub const DEFAULT_ACCOUNT_PREFIX: &str = "default-account-";
 pub fn default_accounts(component: &Component) -> Vec<Release> {
     let mut namespaces: Vec<&str> = Vec::new();
     for release in &component.releases {
-        let namespace = release.namespace();
+        let Some(namespace) = release.namespace() else {
+            continue;
+        };
         if namespace != "kube-system" && !namespaces.contains(&namespace) {
             namespaces.push(namespace);
         }

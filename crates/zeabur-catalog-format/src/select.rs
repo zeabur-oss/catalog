@@ -14,7 +14,7 @@ use crate::order::{self, OrderError};
 
 /// What selection reads of a component, with the `testedOn` and `installOrder` worked out.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Candidate {
     /// Its id.
     pub id: String,
@@ -34,7 +34,7 @@ pub struct Candidate {
 
 /// The install order on each profile.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+#[serde(rename_all = "kebab-case")]
 pub struct InstallOrders {
     /// On `single-node`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -57,7 +57,8 @@ impl InstallOrders {
 
 impl Candidate {
     /// The candidate of `file`, with its `testedOn` from `index` and its install order among
-    /// `components`.
+    /// `components`. `None` when this reader cannot install it ([`Component::known`]), so it is
+    /// not offered.
     ///
     /// # Errors
     ///
@@ -66,9 +67,12 @@ impl Candidate {
         file: &ComponentFile,
         index: &Index,
         components: &BTreeMap<String, C>,
-    ) -> Result<Self, OrderError> {
+    ) -> Result<Option<Self>, OrderError> {
+        if !file.declaration.known() {
+            return Ok(None);
+        }
         let order = |p| order::install_order(components, &file.id, p);
-        Ok(Self {
+        Ok(Some(Self {
             id: file.id.clone(),
             provides: file.declaration.provides.clone(),
             defaults: file.declaration.defaults,
@@ -78,7 +82,7 @@ impl Candidate {
                 single_node: order(Profile::SingleNode)?,
                 multi_node: order(Profile::MultiNode)?,
             },
-        })
+        }))
     }
 
     fn capability(&self) -> Option<&str> {
@@ -96,7 +100,7 @@ impl Candidate {
             Some(LeftOut::Distributions {
                 distributions: self.distributions.clone(),
             })
-        } else if *self.defaults.get(config.profile) == Mode::Unsupported {
+        } else if self.defaults.mode(config.profile) == Mode::Unsupported {
             Some(LeftOut::Unsupported {
                 profile: config.profile,
             })
@@ -108,7 +112,7 @@ impl Candidate {
 
 /// The cluster and the lists of the installer and the person.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Config {
     /// The profile.
     pub profile: Profile,
@@ -129,7 +133,7 @@ pub struct Config {
 
 /// The chosen components and why.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Selection {
     /// In install order.
     #[serde(default)]
@@ -144,7 +148,7 @@ pub struct Selection {
 
 /// A component to install.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Chosen {
     /// Its id.
     pub id: String,
@@ -166,7 +170,7 @@ pub enum Why {
 
 /// Why a chosen component is taken out.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "reason", rename_all = "kebab-case", deny_unknown_fields)]
+#[serde(tag = "reason", rename_all = "kebab-case")]
 pub enum LeftOut {
     /// Its `distributions` do not list the cluster's.
     Distributions {
@@ -182,7 +186,7 @@ pub enum LeftOut {
 
 /// Something the person should know about the selection.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
+#[serde(tag = "kind", rename_all = "kebab-case")]
 pub enum Warning {
     /// A component to install did not pass its test on the distribution and platform.
     Untested {
@@ -200,7 +204,7 @@ pub enum Warning {
 
 /// Why nothing is installed.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, thiserror::Error)]
-#[serde(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
+#[serde(tag = "kind", rename_all = "kebab-case")]
 pub enum SelectError {
     /// A name is no component id or capability.
     #[error("{name} is no component or capability in the catalog")]
@@ -227,7 +231,7 @@ pub fn select(candidates: &[Candidate], config: &Config) -> Result<Selection, Se
     let by_id: BTreeMap<&str, &Candidate> = candidates.iter().map(|c| (c.id.as_str(), c)).collect();
     let mut chosen: BTreeMap<&str, Why> = by_id
         .iter()
-        .filter(|(_, c)| *c.defaults.get(config.profile) == Mode::Recommended)
+        .filter(|(_, c)| c.defaults.mode(config.profile) == Mode::Recommended)
         .map(|(id, _)| (*id, Why::Default))
         .collect();
     for name in &config.add {
@@ -322,11 +326,11 @@ fn resolve<'a>(
         .collect();
     let supported = providing
         .iter()
-        .filter(|(_, c)| *c.defaults.get(config.profile) != Mode::Unsupported)
+        .filter(|(_, c)| c.defaults.mode(config.profile) != Mode::Unsupported)
         .min_by_key(|(id, c)| {
             (
                 !c.tested(config),
-                *c.defaults.get(config.profile) != Mode::Recommended,
+                c.defaults.mode(config.profile) != Mode::Recommended,
                 *id,
             )
         });
@@ -357,4 +361,37 @@ fn named<'a>(
         });
     }
     Ok(ids)
+}
+
+/// A case of `conformance/select/`: a small catalog, a configuration and what an installer
+/// chooses.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SelectCase {
+    /// The rule the case checks.
+    pub description: String,
+    /// The catalog.
+    pub components: Vec<Candidate>,
+    /// The configuration.
+    pub config: Config,
+    /// The selection, or the error.
+    pub want: Expected,
+}
+
+/// What a case expects. A list or map left out is empty.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Expected {
+    /// In install order.
+    #[serde(default)]
+    pub components: Vec<Chosen>,
+    /// By id.
+    #[serde(default)]
+    pub left_out: BTreeMap<String, LeftOut>,
+    /// In any order.
+    #[serde(default)]
+    pub warnings: Vec<Warning>,
+    /// The error, instead of a selection.
+    #[serde(default)]
+    pub error: Option<SelectError>,
 }
