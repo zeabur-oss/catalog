@@ -7,10 +7,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log/slog"
 	"maps"
-	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -578,27 +576,14 @@ func (c *cluster) startKubesolo(k kubesoloConfig) error {
 
 // download saves url to path and fails unless its SHA-256 is sum.
 func download(url, sum, path string) error {
-	resp, err := http.Get(url)
+	data, err := catalog.Fetch(url)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("%s: %s", url, resp.Status)
+	if sha := sha256.Sum256(data); hex.EncodeToString(sha[:]) != sum {
+		return fmt.Errorf("%s: sha256 is %x, want %q", url, sha, sum)
 	}
-	f, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	h := sha256.New()
-	if _, err := io.Copy(io.MultiWriter(f, h), resp.Body); err != nil {
-		return err
-	}
-	if got := hex.EncodeToString(h.Sum(nil)); got != sum {
-		return fmt.Errorf("%s: sha256 is %s, want %q", url, got, sum)
-	}
-	return nil
+	return os.WriteFile(path, data, 0o644)
 }
 
 // writeMirrorHosts writes a containerd hosts.toml for each entry of spec, a
