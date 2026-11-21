@@ -1,0 +1,96 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.5.6"
+edition = "2024"
+rust-version = "1.99"
+license = "Apache-2.0"
+repository = "https://github.com/zeabur-oss/catalog"
+publish = false
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde-saphyr = { version = "2", default-features = false, features = ["deserialize"] }
+serde_json = "1"
+thiserror = "2"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+non_ascii_idents = "forbid"
+rust_2018_idioms = { level = "warn", priority = -1 }
+missing_docs = "warn"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+unused_qualifications = "warn"
+unused_lifetimes = "warn"
+unused_macro_rules = "warn"
+redundant_lifetimes = "warn"
+single_use_lifetimes = "warn"
+trivial_casts = "warn"
+trivial_numeric_casts = "warn"
+let_underscore_drop = "warn"
+meta_variable_misuse = "warn"
+unit_bindings = "warn"
+
+[workspace.lints.rustdoc]
+broken_intra_doc_links = "warn"
+private_intra_doc_links = "warn"
+unescaped_backticks = "warn"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+cargo = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+# Duplicate versions are tracked by cargo-deny, not clippy.
+multiple_crate_versions = "allow"
+# Contradicts rustc's `unreachable_pub`, which we keep: items are `pub(crate)` unless exported.
+redundant_pub_crate = "allow"
+
+# Selected `restriction` lints.
+# Panics on attacker-controlled input are a denial-of-service bug in a server.
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+indexing_slicing = "warn"
+string_slice = "warn"
+get_unwrap = "warn"
+unwrap_in_result = "warn"
+todo = "warn"
+unimplemented = "warn"
+exit = "warn"
+# Security-relevant logic must handle every case explicitly.
+wildcard_enum_match_arm = "warn"
+# Errors must keep their cause.
+map_err_ignore = "warn"
+let_underscore_must_use = "warn"
+let_underscore_untyped = "warn"
+unused_result_ok = "warn"
+# Suppressions must be explicit and justified.
+allow_attributes = "warn"
+allow_attributes_without_reason = "warn"
+# Output goes through `tracing`; the CLI writes through one audited module.
+dbg_macro = "warn"
+print_stdout = "warn"
+print_stderr = "warn"
+# Hygiene.
+clone_on_ref_ptr = "warn"
+empty_structs_with_brackets = "warn"
+error_impl_error = "warn"
+format_push_string = "warn"
+if_then_some_else_none = "warn"
+infinite_loop = "warn"
+mem_forget = "warn"
+mod_module_files = "warn"
+multiple_inherent_impl = "warn"
+partial_pub_fields = "warn"
+rest_pat_in_fully_bound_structs = "warn"
+str_to_string = "warn"
+tests_outside_test_module = "warn"
+try_err = "warn"
+undocumented_unsafe_blocks = "warn"
+unneeded_field_pattern = "warn"
+unseparated_literal_suffix = "warn"
+verbose_file_reads = "warn"
+

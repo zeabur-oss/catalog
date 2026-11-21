@@ -4,6 +4,11 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    # The nightly of rust-toolchain.toml.
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     # The base shell of every zeabur-oss repository: Bun, the release tools and the shared linters.
     oss = {
       url = "github:zeabur-oss/.github/993db7daf21a752dc7d3940f227e03478ee613cc";
@@ -16,12 +21,18 @@
       self,
       nixpkgs,
       flake-utils,
+      rust-overlay,
       oss,
     }:
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ rust-overlay.overlays.default ];
+        };
+        # The nightly, components and targets of rust-toolchain.toml, the same file rustup reads.
+        rustToolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
         # The release version: the Release workflow compares the tag with it.
         version = "0.5.6";
         catalog = pkgs.buildGoModule {
@@ -84,6 +95,9 @@
           packages = with pkgs; [
             go
             gopls
+            rustToolchain
+            cargo-deny
+            cargo-nextest
             kubectl
             kubeconform
             kind
@@ -92,6 +106,7 @@
             victoriametrics
             yq-go
           ];
+          RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
         };
       }
     );
