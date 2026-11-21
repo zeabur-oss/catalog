@@ -19,7 +19,7 @@ Longhorn 在每个节点运行特权 Pod。这些 Pod 会从主机挂载 `/dev`�
 
 ## 使用方法
 
-在 Zeabur 添加卷时，在**存储类**中选择**多副本磁盘**。详见[选择存储类](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/volumes/#选择存储类)。在 Zeabur 之外，把 PVC 的 `storageClassName` 设为 `longhorn`：
+在 Zeabur 开源版添加卷时，在**存储类**中选择**多副本磁盘**。详见[选择存储类](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/volumes/#选择存储类)。在 Zeabur 开源版之外，把 PVC 的 `storageClassName` 设为 `longhorn`：
 
 ```yaml
 apiVersion: v1

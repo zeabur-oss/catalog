@@ -6,9 +6,9 @@ Stakater Reloader 會在 Deployment、StatefulSet 或 DaemonSet 使用的 Config
 
 ## 使用方式
 
-在 Zeabur 打開服務的**設定** → **運算資源**，開啟**設定檔或機密變數變更時自動重新啟動**，再檢查並套用。Zeabur 會幫你加上註解。詳見[變數](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/variables/)。
+在 Zeabur 開源版打開服務的**設定** → **運算資源**，開啟**設定檔或機密變數變更時自動重新啟動**，再檢查並套用。Zeabur 開源版會幫你加上註解。詳見[變數](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/variables/)。
 
-不是 Zeabur 管理的工作負載，自己加上註解：
+不是 Zeabur 開源版管理的工作負載，自己加上註解：
 
 ```sh
 kubectl -n <namespace> annotate deployment <name> reloader.stakater.com/auto=true

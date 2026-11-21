@@ -6,14 +6,14 @@
 
 ## 開始使用
 
-1. 在 Zeabur 打開 `ollama` 服務。**概覽**顯示副本已就緒，服務就啟動好了。它沒有網域。
+1. 在 Zeabur 開源版打開 `ollama` 服務。**概覽**顯示副本已就緒，服務就啟動好了。它沒有網域。
 2. 其他工作負載用 Service `ollama` 的 `11434` 連接埠連到 Ollama，例如 `http://ollama:11434`。範本只允許同一個命名空間裡、帶有下面這個標籤的 Pod：
 
    ```yaml
    templates.zeabur.com/ollama-client: "true"
    ```
 
-3. 要從你的電腦使用 API，先轉發連接埠，再用 `http://localhost:11434`。Zeabur 沒有轉發連接埠的介面，請用 kubectl：
+3. 要從你的電腦使用 API，先轉發連接埠，再用 `http://localhost:11434`。Zeabur 開源版沒有轉發連接埠的介面，請用 kubectl：
 
    ```sh
    kubectl -n <namespace> port-forward service/ollama 11434

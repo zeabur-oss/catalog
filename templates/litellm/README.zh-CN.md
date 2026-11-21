@@ -6,8 +6,8 @@
 
 ## 开始使用
 
-1. 在 Zeabur 打开 `litellm` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**中，例如 `litellm.example.com`。管理页面在这个域名的 `/ui`。
-2. 获取主密钥。打开**变量**，在**来自配置文件和机密变量**中点击 `litellm-secrets`，再点击 `master-key` 旁的眼睛图标。不用 Zeabur 时，用 kubectl 读取机密变量 `litellm-secrets` 的 `master-key`：
+1. 在 Zeabur 开源版打开 `litellm` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**中，例如 `litellm.example.com`。管理页面在这个域名的 `/ui`。
+2. 获取主密钥。打开**变量**，在**来自配置文件和机密变量**中点击 `litellm-secrets`，再点击 `master-key` 旁的眼睛图标。不用 Zeabur 开源版时，用 kubectl 读取机密变量 `litellm-secrets` 的 `master-key`：
 
    ```sh
    kubectl -n <namespace> get secret litellm-secrets -o jsonpath='{.data.master-key}' | base64 -d
@@ -31,17 +31,17 @@
 
 ### 备份数据
 
-LiteLLM 把模型、密钥和花费存在 `litellm-db` 数据库，没有往卷里放任何东西。在项目中打开 `litellm-db`，到**备份**配置 S3 备份。想直接拿到文件，点击**更多** → **导出**。备份时一并保管机密变量 `litellm-secrets`，因为数据库里的模型服务凭据要靠 `salt-key` 解密。详见 Zeabur 文档的[配置 S3 备份](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#配置-s3-备份)和[下载数据库转储文件](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#下载数据库转储文件)。
+LiteLLM 把模型、密钥和花费存在 `litellm-db` 数据库，没有往卷里放任何东西。在项目中打开 `litellm-db`，到**备份**配置 S3 备份。想直接拿到文件，点击**更多** → **导出**。备份时一并保管机密变量 `litellm-secrets`，因为数据库里的模型服务凭据要靠 `salt-key` 解密。详见 Zeabur 开源版文档的[配置 S3 备份](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#配置-s3-备份)和[下载数据库转储文件](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#下载数据库转储文件)。
 
 ## 故障排除
 
 ### 页面显示 502 或打不开
 
-在 Zeabur 打开 `litellm` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
+在 Zeabur 开源版打开 `litellm` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
 
-不用 Zeabur 时，用 `kubectl -n <namespace> logs deployment/litellm` 查看日志，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 查看事件。
+不用 Zeabur 开源版时，用 `kubectl -n <namespace> logs deployment/litellm` 查看日志，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 查看事件。
 
-详见 Zeabur 文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
+详见 Zeabur 开源版文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
 
 ### 请求失败，出现模型服务商的错误
 

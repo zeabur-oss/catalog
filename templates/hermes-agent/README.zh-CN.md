@@ -6,8 +6,8 @@
 
 ## 开始使用
 
-1. 在 Zeabur 打开 `hermes-agent` 服务。**概览**显示副本已就绪，服务就启动好了。两个域名都在**网络**标签页的**公开域名**中，例如 API 用 `hermes.example.com`，管理面板用 `hermes-admin.example.com`。
-2. 获取管理面板密码。打开**变量**，在**来自配置文件和机密变量**中点击 `hermes-secrets`，再点击 `dashboard-password` 旁的眼睛图标。不用 Zeabur 时，用 kubectl 读取机密变量 `hermes-secrets` 的 `dashboard-password`：
+1. 在 Zeabur 开源版打开 `hermes-agent` 服务。**概览**显示副本已就绪，服务就启动好了。两个域名都在**网络**标签页的**公开域名**中，例如 API 用 `hermes.example.com`，管理面板用 `hermes-admin.example.com`。
+2. 获取管理面板密码。打开**变量**，在**来自配置文件和机密变量**中点击 `hermes-secrets`，再点击 `dashboard-password` 旁的眼睛图标。不用 Zeabur 开源版时，用 kubectl 读取机密变量 `hermes-secrets` 的 `dashboard-password`：
 
    ```sh
    kubectl -n <namespace> get secret hermes-secrets -o jsonpath='{.data.dashboard-password}' | base64 -d
@@ -49,11 +49,11 @@ Open WebUI、LobeChat、LibreChat 等兼容 OpenAI 的客户端都能使用这�
 
 ### 页面显示 502 或打不开
 
-在 Zeabur 打开 `hermes-agent` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
+在 Zeabur 开源版打开 `hermes-agent` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
 
-不用 Zeabur 时，用 `kubectl -n <namespace> logs deployment/hermes-agent` 查看日志，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 查看事件。
+不用 Zeabur 开源版时，用 `kubectl -n <namespace> logs deployment/hermes-agent` 查看日志，用 `kubectl -n <namespace> get events --sort-by=.lastTimestamp` 查看事件。
 
-详见 Zeabur 文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
+详见 Zeabur 开源版文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
 
 ### 请求失败，出现模型服务商的错误
 

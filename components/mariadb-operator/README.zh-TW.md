@@ -6,11 +6,11 @@ MariaDB Operator 依 `MariaDB` 物件執行 MariaDB，可單機也可複寫。�
 
 ## 使用方式
 
-在 Zeabur 打開專案的**新增**選單，選 **MariaDB**。設定版本和儲存空間，再接到服務，並在資料庫的**備份**分頁設定 S3 備份。詳見[建立、備份與還原資料庫](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/)。
+在 Zeabur 開源版打開專案的**新增**選單，選 **MariaDB**。設定版本和儲存空間，再接到服務，並在資料庫的**備份**分頁設定 S3 備份。詳見[建立、備份與還原資料庫](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/)。
 
 ## 移除
 
-移除元件會刪除 Operator、它的 webhook 和 CRD。刪除 CRD 會連帶刪除所有 `MariaDB`、備份、使用者和權限物件。有這些物件時 Zeabur 會拒絕移除，所以先刪除不要的資料庫，其餘的先備份。PVC 會留著，確定不再需要資料時，自己刪除。詳見[移除元件](https://oss.zeabur.com/zh-TW/docs/zeabur/cluster/components/#移除元件)。
+移除元件會刪除 Operator、它的 webhook 和 CRD。刪除 CRD 會連帶刪除所有 `MariaDB`、備份、使用者和權限物件。有這些物件時 Zeabur 開源版會拒絕移除，所以先刪除不要的資料庫，其餘的先備份。PVC 會留著，確定不再需要資料時，自己刪除。詳見[移除元件](https://oss.zeabur.com/zh-TW/docs/zeabur/cluster/components/#移除元件)。
 
 ## 疑難排解
 

@@ -6,20 +6,20 @@
 
 ## 开始使用
 
-1. 在 Zeabur 打开 `n8n` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**中，就是你在安装表单填的域名，例如 `n8n.example.com`。
-2. 用你在安装表单填的所有者邮箱登录。密码从 `n8n` 服务获取：打开**变量**，在**来自配置文件和机密变量**中点击 `n8n-secrets`，再点击 `owner-password` 旁的眼睛图标。不用 Zeabur 时，用 kubectl 读取机密变量 `n8n-secrets` 的 `owner-password`：
+1. 在 Zeabur 开源版打开 `n8n` 服务。**概览**显示副本已就绪，服务就启动好了。域名在**网络**标签页的**公开域名**中，就是你在安装表单填的域名，例如 `n8n.example.com`。
+2. 用你在安装表单填的所有者邮箱登录。密码从 `n8n` 服务获取：打开**变量**，在**来自配置文件和机密变量**中点击 `n8n-secrets`，再点击 `owner-password` 旁的眼睛图标。不用 Zeabur 开源版时，用 kubectl 读取机密变量 `n8n-secrets` 的 `owner-password`：
 
    ```sh
    kubectl -n <namespace> get secret n8n-secrets -o jsonpath='{.data.owner-password}' | base64 -d
    ```
 
-3. 把加密密钥另外备份到安全的地方。n8n 用这把密钥加密它保存的凭据。获取方式相同：在**变量**中点击 `n8n-secrets`，再点击 `encryption-key` 旁的眼睛图标。不用 Zeabur 时，用 kubectl 读取机密变量 `n8n-secrets` 的 `encryption-key`：
+3. 把加密密钥另外备份到安全的地方。n8n 用这把密钥加密它保存的凭据。获取方式相同：在**变量**中点击 `n8n-secrets`，再点击 `encryption-key` 旁的眼睛图标。不用 Zeabur 开源版时，用 kubectl 读取机密变量 `n8n-secrets` 的 `encryption-key`：
 
    ```sh
    kubectl -n <namespace> get secret n8n-secrets -o jsonpath='{.data.encryption-key}' | base64 -d
    ```
 
-4. 机密 `n8n-secrets` 里还有 `runner-token`，这是 n8n 和 task runner 彼此信任用的共享机密。日常使用不需要它。获取方式同上。不用 Zeabur 时，用 kubectl：
+4. 机密 `n8n-secrets` 里还有 `runner-token`，这是 n8n 和 task runner 彼此信任用的共享机密。日常使用不需要它。获取方式同上。不用 Zeabur 开源版时，用 kubectl：
 
    ```sh
    kubectl -n <namespace> get secret n8n-secrets -o jsonpath='{.data.runner-token}' | base64 -d
@@ -41,7 +41,7 @@ Webhook 节点有两个 URL。测试 URL 在你选 Listen for Test Event 时有�
 
 n8n 把工作流、凭证和执行记录存在 `n8n-db` 数据库。`n8n-data` 卷挂载在 `/home/node/.n8n`，放二进制数据之类的文件。备份要有数据库、加密密钥和工作流保存的文件，要迁到另一个 n8n 时，还要导出工作流和凭证。
 
-1. 备份数据库。在项目中打开 `n8n-db` 数据库。到**备份**配置 S3 备份。想直接拿到文件，点击**更多** → **导出**。详见 Zeabur 文档的[配置 S3 备份](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#配置-s3-备份)和[下载数据库转储文件](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#下载数据库转储文件)。
+1. 备份数据库。在项目中打开 `n8n-db` 数据库。到**备份**配置 S3 备份。想直接拿到文件，点击**更多** → **导出**。详见 Zeabur 开源版文档的[配置 S3 备份](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#配置-s3-备份)和[下载数据库转储文件](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/#下载数据库转储文件)。
 2. 留好“开始使用”里的加密密钥。没有它，n8n 读不了已保存的凭证。
 3. 导出工作流和凭证。点击 `n8n` 服务页面顶部的**终端**，运行：
 
@@ -75,12 +75,12 @@ n8n import:credentials --separate --input=<credentials folder>
 
 ### 页面显示 502、打不开或一直重新连接
 
-在 Zeabur 打开 `n8n` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。服务很慢或一直重新连接，也常是内存不够，同样检查**事件**和**内存上限**。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
+在 Zeabur 开源版打开 `n8n` 服务。确认**概览**显示副本已就绪，再看**日志**标签页。副本没有就绪时，打开**部署记录**，切换到**事件**。事件出现 `OOMKilled`，表示服务的内存不够，到**设置** → **计算资源**调高**内存上限**。服务很慢或一直重新连接，也常是内存不够，同样检查**事件**和**内存上限**。域名或证书一直没有完成时，见域名文档的[遇到问题](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/domains/#遇到问题)。
 
-详见 Zeabur 文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
+详见 Zeabur 开源版文档的[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
 
 ### Code 节点不运行
 
-Code 节点在 `task-runner` 服务里运行，它用 `runner-token` 连接 n8n。在 Zeabur 打开 `task-runner` 服务，确认**概览**显示副本已就绪，再看**日志**标签页。
+Code 节点在 `task-runner` 服务里运行，它用 `runner-token` 连接 n8n。在 Zeabur 开源版打开 `task-runner` 服务，确认**概览**显示副本已就绪，再看**日志**标签页。
 
 详见 n8n 文档的 [Task runners](https://docs.n8n.io/deploy/host-n8n/configure-n8n/set-up-task-runners)。

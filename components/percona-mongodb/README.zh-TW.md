@@ -8,11 +8,11 @@ Operator 會替每個 Namespace 的 MongoDB 叢集管理 Pod、Service、Secret 
 
 ## 使用方式
 
-在 Zeabur 打開專案的**新增**選單，選 **MongoDB**。設定版本和儲存空間，再接到服務，並在資料庫的**備份**分頁設定 S3 備份。詳見[建立、備份與還原資料庫](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/)。
+在 Zeabur 開源版打開專案的**新增**選單，選 **MongoDB**。設定版本和儲存空間，再接到服務，並在資料庫的**備份**分頁設定 S3 備份。詳見[建立、備份與還原資料庫](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/)。
 
 ## 移除
 
-移除 Operator 後，CRD 會留著。只要還有 `PerconaServerMongoDB` 物件，Zeabur 就拒絕移除，所以先刪除不要的資料庫，其餘的先備份。已刪除資料庫的 PVC 會留著。確定不再需要資料時，自己刪除。詳見[移除元件](https://oss.zeabur.com/zh-TW/docs/zeabur/cluster/components/#移除元件)。
+移除 Operator 後，CRD 會留著。只要還有 `PerconaServerMongoDB` 物件，Zeabur 開源版就拒絕移除，所以先刪除不要的資料庫，其餘的先備份。已刪除資料庫的 PVC 會留著。確定不再需要資料時，自己刪除。詳見[移除元件](https://oss.zeabur.com/zh-TW/docs/zeabur/cluster/components/#移除元件)。
 
 ## 疑難排解
 
@@ -22,4 +22,4 @@ Operator 會替每個 Namespace 的 MongoDB 叢集管理 Pod、Service、Secret 
 
 ### MongoDB 8 的 Pod 一啟動就當掉
 
-MongoDB 8 無法在 Linux 6.19 以上啟動（SERVER-121912）。用 `uname -r` 查看節點的核心版本。Zeabur 建立的 MongoDB 8 資料庫都會加上 `GLIBC_TUNABLES=glibc.pthread.rseq=1`。自己建立的資料庫請改用 7.0 映像檔。
+MongoDB 8 無法在 Linux 6.19 以上啟動（SERVER-121912）。用 `uname -r` 查看節點的核心版本。Zeabur 開源版建立的 MongoDB 8 資料庫都會加上 `GLIBC_TUNABLES=glibc.pthread.rseq=1`。自己建立的資料庫請改用 7.0 映像檔。

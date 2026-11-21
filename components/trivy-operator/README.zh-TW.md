@@ -8,7 +8,7 @@ Operator 讀取每個 Namespace 的工作負載、Pod、Service、Ingress 和 RB
 
 ## 使用方式
 
-Trivy Operator 沒有 Zeabur 畫面。等第一批掃描完成後，用 kubectl 讀報告。
+Trivy Operator 沒有 Zeabur 開源版畫面。等第一批掃描完成後，用 kubectl 讀報告。
 
 ```sh
 kubectl get vulnerabilityreports -A -o wide

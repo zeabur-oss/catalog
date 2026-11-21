@@ -8,7 +8,7 @@ Add-on 会读取每个 Namespace 的 Service、EndpointSlice 和它自己的资�
 
 ## 使用方法
 
-Zeabur 没有这个 Add-on 的界面。先创建 InterceptorRoute，再创建 ScaledObject。下面的例子伸缩 `shop` Namespace 里的 Service `web`（端口 8080）：
+Zeabur 开源版没有这个 Add-on 的界面。先创建 InterceptorRoute，再创建 ScaledObject。下面的例子伸缩 `shop` Namespace 里的 Service `web`（端口 8080）：
 
 ```yaml
 apiVersion: http.keda.sh/v1beta1

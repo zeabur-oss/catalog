@@ -1,6 +1,6 @@
 ## 簡介
 
-Zeabur Builder 用 Dockerfile 或 Railpack，從 Git 儲存庫和上傳的資料夾建置容器映像檔，並把映像檔存在 zot 裡。zot 是隨元件一起安裝的 OCI 映像檔倉庫，所以建置不需要外部倉庫的帳號。Zeabur 要從 Git 部署服務，就需要它；沒有它，服務只能從映像檔部署。
+Zeabur Builder 用 Dockerfile 或 Railpack，從 Git 儲存庫和上傳的資料夾建置容器映像檔，並把映像檔存在 zot 裡。zot 是隨元件一起安裝的 OCI 映像檔倉庫，所以建置不需要外部倉庫的帳號。Zeabur 開源版要從 Git 部署服務，就需要它；沒有它，服務只能從映像檔部署。
 
 Builder 會為每個要建置的 Namespace 執行一個 buildkitd。元件用 cert-manager 建立一個 CA，替 zot 簽發憑證。推送映像檔需要 Builder 簽發的短效 token。NetworkPolicy 只讓 Builder、buildkitd 和建置 Pod 連到 zot。zot 每個倉庫保留最近的 20 個 tag，映像檔存在 20Gi 的磁碟區。
 
@@ -13,7 +13,7 @@ Builder 會讀取、建立、更新和刪除每個 Namespace 的 Secret（Git �
 
 ## 使用方式
 
-在 Zeabur 專案裡選**新增** → **從 Git 部署**，輸入儲存庫。詳見[從 Git 建置並部署服務](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/git/)，同一頁也說明上傳資料夾。建置完成的映像檔由 Keel 部署，所以也要安裝 Keel。
+在 Zeabur 開源版專案裡選**新增** → **從 Git 部署**，輸入儲存庫。詳見[從 Git 建置並部署服務](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/git/)，同一頁也說明上傳資料夾。建置完成的映像檔由 Keel 部署，所以也要安裝 Keel。
 
 ## 移除
 

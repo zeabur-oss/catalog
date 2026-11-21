@@ -16,7 +16,7 @@ Operator 會建立、更新和刪除每個 Namespace 的 Service 和 Ingress，�
 
 ## 使用方式
 
-Zeabur 沒有這個元件的畫面。建立 class 為 `tailscale` 的 Ingress。下面的例子把 `shop` Namespace 裡的 Service `web`（連接埠 8080）放上 tailnet：
+Zeabur 開源版沒有這個元件的畫面。建立 class 為 `tailscale` 的 Ingress。下面的例子把 `shop` Namespace 裡的 Service `web`（連接埠 8080）放上 tailnet：
 
 ```yaml
 apiVersion: networking.k8s.io/v1

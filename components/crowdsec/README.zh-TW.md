@@ -10,7 +10,7 @@ CrowdSec 讀取 Traefik 的存取日誌，找出暴力破解和掃描行為，�
 
 ## 使用方式
 
-CrowdSec 沒有 Zeabur 畫面。列出封鎖了什麼、看到了什麼：
+CrowdSec 沒有 Zeabur 開源版畫面。列出封鎖了什麼、看到了什麼：
 
 ```sh
 kubectl -n crowdsec exec deploy/crowdsec-lapi -- cscli decisions list

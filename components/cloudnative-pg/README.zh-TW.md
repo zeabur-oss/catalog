@@ -6,13 +6,13 @@ Operator 需要 cert-manager，用憑證保護 Operator 和外掛之間的連線
 
 ## 使用方式
 
-在 Zeabur 打開專案的**新增**選單，選 **PostgreSQL**。設定版本和儲存空間，再接到服務，並在資料庫的**備份**分頁設定 S3 備份。詳見[建立、備份與還原資料庫](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/)。
+在 Zeabur 開源版打開專案的**新增**選單，選 **PostgreSQL**。設定版本和儲存空間，再接到服務，並在資料庫的**備份**分頁設定 S3 備份。詳見[建立、備份與還原資料庫](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/)。
 
 CloudNativePG 會把備份檔以明文寫進儲存貯體。請用開啟伺服器端加密的儲存貯體，並限制誰能讀取。
 
 ## 移除
 
-移除元件會移除 Operator 和外掛。只要還有 `Cluster` 物件，Zeabur 就拒絕移除，所以先刪除不要的資料庫，其餘的先備份。CRD 會留著，已刪除資料庫的 PVC 也會留著。確定不再需要資料時，自己刪除。詳見[移除元件](https://oss.zeabur.com/zh-TW/docs/zeabur/cluster/components/#移除元件)。
+移除元件會移除 Operator 和外掛。只要還有 `Cluster` 物件，Zeabur 開源版就拒絕移除，所以先刪除不要的資料庫，其餘的先備份。CRD 會留著，已刪除資料庫的 PVC 也會留著。確定不再需要資料時，自己刪除。詳見[移除元件](https://oss.zeabur.com/zh-TW/docs/zeabur/cluster/components/#移除元件)。
 
 ## 疑難排解
 

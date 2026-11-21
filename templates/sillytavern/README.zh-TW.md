@@ -6,8 +6,8 @@
 
 ## 開始使用
 
-1. 在 Zeabur 打開 `sillytavern` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，也就是你在安裝表單填的網域。
-2. 瀏覽器會要求登入。使用者名稱是 `user`。密碼在機密變數 `app-secrets` 的 `basic-password`。打開**環境變數**，在**來自設定檔和機密變數**點 `app-secrets`，再按 `basic-password` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `app-secrets` 的 `basic-password`：
+1. 在 Zeabur 開源版打開 `sillytavern` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，也就是你在安裝表單填的網域。
+2. 瀏覽器會要求登入。使用者名稱是 `user`。密碼在機密變數 `app-secrets` 的 `basic-password`。打開**環境變數**，在**來自設定檔和機密變數**點 `app-secrets`，再按 `basic-password` 旁的眼睛圖示。不用 Zeabur 開源版時，用 kubectl 讀取機密變數 `app-secrets` 的 `basic-password`：
 
    ```sh
    kubectl -n <namespace> get secret app-secrets -o jsonpath='{.data.basic-password}' | base64 -d
@@ -29,7 +29,7 @@
 
 ### 頁面顯示 502 或打不開
 
-在 Zeabur 打開 `sillytavern` 服務，確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本一直重新啟動時，打開**部署紀錄**，切到**事件**。如果事件寫著 `OOMKilled`，到**設定** → **運算資源**調高**記憶體上限**。詳見[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
+在 Zeabur 開源版打開 `sillytavern` 服務，確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本一直重新啟動時，打開**部署紀錄**，切到**事件**。如果事件寫著 `OOMKilled`，到**設定** → **運算資源**調高**記憶體上限**。詳見[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
 
 網域或憑證一直停在等待中時，看[加上公開網域與 HTTPS](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)的「遇到問題」。
 

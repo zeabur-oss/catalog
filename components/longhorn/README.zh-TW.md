@@ -19,7 +19,7 @@ Longhorn 在每個節點執行特權 Pod。這些 Pod 會從主機掛載 `/dev`�
 
 ## 使用方式
 
-在 Zeabur 新增磁碟區時，在**儲存類別**選**複寫磁碟**。詳見[選擇儲存類別](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/volumes/#選擇儲存類別)。在 Zeabur 之外，把 PVC 的 `storageClassName` 設為 `longhorn`：
+在 Zeabur 開源版新增磁碟區時，在**儲存類別**選**複寫磁碟**。詳見[選擇儲存類別](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/volumes/#選擇儲存類別)。在 Zeabur 開源版之外，把 PVC 的 `storageClassName` 設為 `longhorn`：
 
 ```yaml
 apiVersion: v1

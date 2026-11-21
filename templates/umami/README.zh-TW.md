@@ -6,8 +6,8 @@
 
 ## 開始使用
 
-1. 在 Zeabur 打開 `umami` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，也就是你在安裝表單填的網域。
-2. 用 `admin` 登入。打開**環境變數**，在**來自設定檔和機密變數**點 `umami-secrets`，再按 `admin-password` 旁的眼睛圖示。不用 Zeabur 時，用 kubectl 讀取機密變數 `umami-secrets` 的 `admin-password`：
+1. 在 Zeabur 開源版打開 `umami` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，也就是你在安裝表單填的網域。
+2. 用 `admin` 登入。打開**環境變數**，在**來自設定檔和機密變數**點 `umami-secrets`，再按 `admin-password` 旁的眼睛圖示。不用 Zeabur 開源版時，用 kubectl 讀取機密變數 `umami-secrets` 的 `admin-password`：
 
    ```sh
    kubectl -n <namespace> get secret umami-secrets -o jsonpath='{.data.admin-password}' | base64 -d
@@ -30,7 +30,7 @@
 
 ### 備份資料
 
-在 Zeabur 打開 `umami-db` 資料庫，到**備份** → **設定備份**，就能依排程備份到 S3 儲存貯體。PostgreSQL 備份需要 Barman Cloud 外掛。要現在就拿一份資料，在資料庫頁面右上角按**更多** → **匯出**，瀏覽器會下載 `pg_dump --format=custom` 產生的 `.dump` 檔。詳見[設定 S3 備份](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/#設定-s3-備份)和[下載資料庫傾印檔](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/#下載資料庫傾印檔)。
+在 Zeabur 開源版打開 `umami-db` 資料庫，到**備份** → **設定備份**，就能依排程備份到 S3 儲存貯體。PostgreSQL 備份需要 Barman Cloud 外掛。要現在就拿一份資料，在資料庫頁面右上角按**更多** → **匯出**，瀏覽器會下載 `pg_dump --format=custom` 產生的 `.dump` 檔。詳見[設定 S3 備份](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/#設定-s3-備份)和[下載資料庫傾印檔](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/#下載資料庫傾印檔)。
 
 Umami 的資料都在這個資料庫裡，所以傾印檔就是完整備份。
 
@@ -38,7 +38,7 @@ Umami 的資料都在這個資料庫裡，所以傾印檔就是完整備份。
 
 ### 頁面顯示 502 或打不開
 
-在 Zeabur 打開 `umami` 服務，確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本一直重新啟動時，打開**部署紀錄**，切到**事件**。如果事件寫著 `OOMKilled`，到**設定** → **運算資源**調高**記憶體上限**。詳見[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
+在 Zeabur 開源版打開 `umami` 服務，確認**概覽**顯示副本已就緒，再看**日誌**分頁。副本一直重新啟動時，打開**部署紀錄**，切到**事件**。如果事件寫著 `OOMKilled`，到**設定** → **運算資源**調高**記憶體上限**。詳見[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
 
 網域或憑證一直停在等待中時，看[加上公開網域與 HTTPS](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/domains/#遇到問題)的「遇到問題」。
 

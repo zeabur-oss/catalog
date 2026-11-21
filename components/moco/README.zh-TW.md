@@ -6,11 +6,11 @@ MOCO 需要 cert-manager 簽發憑證，用於 webhook，以及控制器與代�
 
 ## 使用方式
 
-在 Zeabur 打開專案的**新增**選單，選 **MySQL**。設定版本和儲存空間，再接到服務，並在資料庫的**備份**分頁設定 S3 備份。詳見[建立、備份與還原資料庫](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/)。
+在 Zeabur 開源版打開專案的**新增**選單，選 **MySQL**。設定版本和儲存空間，再接到服務，並在資料庫的**備份**分頁設定 S3 備份。詳見[建立、備份與還原資料庫](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/)。
 
 ## 移除
 
-移除 MOCO 會移除控制器和它的 webhook。只要還有 `MySQLCluster` 物件，Zeabur 就拒絕移除，所以先刪除不要的資料庫，其餘的先備份。CRD 會留著，已刪除資料庫的 PVC 也會留著。確定不再需要資料時，自己刪除。詳見[移除元件](https://oss.zeabur.com/zh-TW/docs/zeabur/cluster/components/#移除元件)。
+移除 MOCO 會移除控制器和它的 webhook。只要還有 `MySQLCluster` 物件，Zeabur 開源版就拒絕移除，所以先刪除不要的資料庫，其餘的先備份。CRD 會留著，已刪除資料庫的 PVC 也會留著。確定不再需要資料時，自己刪除。詳見[移除元件](https://oss.zeabur.com/zh-TW/docs/zeabur/cluster/components/#移除元件)。
 
 ## 疑難排解
 

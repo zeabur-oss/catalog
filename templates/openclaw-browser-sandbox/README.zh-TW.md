@@ -6,7 +6,7 @@
 
 ## 開始使用
 
-1. 在 Zeabur 打開 `openclaw-sandbox-browser` 服務。**概覽**顯示副本已就緒，服務就啟動好了。它沒有網域。
+1. 在 Zeabur 開源版打開 `openclaw-sandbox-browser` 服務。**概覽**顯示副本已就緒，服務就啟動好了。它沒有網域。
 2. OpenClaw 範本的 Pod 已經帶有用戶端標籤。其他用戶端 Pod 要在 Pod 範本加上：
 
    ```yaml
@@ -44,7 +44,7 @@
 
 ### 瀏覽器一直重新啟動或沒有回應
 
-在 Zeabur 打開 `openclaw-sandbox-browser` 服務，確認**概覽**顯示副本已就緒，再看**日誌**分頁。打開**部署紀錄**，切到**事件**。如果事件寫著 `OOMKilled`，到**設定** → **運算資源**調高**記憶體上限**。詳見[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
+在 Zeabur 開源版打開 `openclaw-sandbox-browser` 服務，確認**概覽**顯示副本已就緒，再看**日誌**分頁。打開**部署紀錄**，切到**事件**。如果事件寫著 `OOMKilled`，到**設定** → **運算資源**調高**記憶體上限**。詳見[調整副本、資源與健康檢查](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/service-settings/)和[查看日誌、事件與用量，開啟終端機](https://oss.zeabur.com/zh-TW/docs/zeabur/configure/logs-terminal/)。
 
 ### 用戶端連不上
 

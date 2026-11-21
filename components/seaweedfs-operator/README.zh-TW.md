@@ -8,11 +8,11 @@ Operator 會替每個 Namespace 的 `Seaweed` 物件管理 Pod、StatefulSet、S
 
 ## 使用方式
 
-在 Zeabur 打開專案的**新增**選單，選**物件儲存**。設定容量和第一個儲存貯體，再把 S3 端點和金鑰接到服務。詳見[建立 S3 物件儲存與儲存貯體](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/object-storage/)。
+在 Zeabur 開源版打開專案的**新增**選單，選**物件儲存**。設定容量和第一個儲存貯體，再把 S3 端點和金鑰接到服務。詳見[建立 S3 物件儲存與儲存貯體](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/object-storage/)。
 
 ## 移除
 
-移除 Operator 只會刪除 Operator 本身和 webhook。CRD 會留著，你的 `Seaweed` 和儲存貯體物件、Operator 建立的 Pod 和它們的 PVC 也都會留著。在 Operator 裝回來之前，沒有人管理這些物件。只要還有 `Seaweed` 物件，Zeabur 就拒絕移除這個元件。請先在 Zeabur 刪除物件儲存，還需要的檔案先備份。已刪除儲存服務留下的 PVC 要自己刪除。詳見[移除元件](https://oss.zeabur.com/zh-TW/docs/zeabur/cluster/components/#移除元件)。
+移除 Operator 只會刪除 Operator 本身和 webhook。CRD 會留著，你的 `Seaweed` 和儲存貯體物件、Operator 建立的 Pod 和它們的 PVC 也都會留著。在 Operator 裝回來之前，沒有人管理這些物件。只要還有 `Seaweed` 物件，Zeabur 開源版就拒絕移除這個元件。請先在 Zeabur 開源版刪除物件儲存，還需要的檔案先備份。已刪除儲存服務留下的 PVC 要自己刪除。詳見[移除元件](https://oss.zeabur.com/zh-TW/docs/zeabur/cluster/components/#移除元件)。
 
 ## 疑難排解
 
