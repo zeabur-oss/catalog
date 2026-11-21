@@ -45,4 +45,4 @@ smoke:
       port: 8080
       path: /
       status: 200
-      contains: Hello from Nginx deployed on Zeabur!
+      contains: Hello from Nginx deployed on Zeabur OSS!

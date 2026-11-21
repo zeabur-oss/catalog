@@ -23,7 +23,7 @@ func logsManifests(t *testing.T) string {
 	return ""
 }
 
-// The collector leaves out Kubernetes' and its own namespace, and keeps Zeabur's components
+// The collector leaves out Kubernetes' and its own namespace, and keeps Zeabur OSS's components
 // and the projects.
 func TestLogCollectionLeavesOutOnlyInfrastructure(t *testing.T) {
 	m := regexp.MustCompile(`kubernetes\.pod_namespace:in\(([^)]*)\)`).FindStringSubmatch(logsManifests(t))

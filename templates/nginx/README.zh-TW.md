@@ -7,7 +7,7 @@
 ## 開始使用
 
 1. 在 Zeabur 開源版打開 `nginx` 服務。**概覽**顯示副本已就緒，服務就啟動好了。網域在**網路**分頁的**公開網域**，就是你在安裝表單填的網域，例如 `nginx.example.com`。
-2. 頁面會顯示 `Hello from Nginx deployed on Zeabur!` 這行文字。不需要登入，範本也不會建立任何機密。
+2. 頁面會顯示 `Hello from Nginx deployed on Zeabur OSS!` 這行文字。不需要登入，範本也不會建立任何機密。
 3. 要提供其他內容，請見「設定」。
 
 ## 設定

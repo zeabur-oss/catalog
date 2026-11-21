@@ -21,7 +21,7 @@ data:
         server_name _;
         location / {
           default_type text/plain;
-          return 200 'Hello from Nginx deployed on Zeabur!';
+          return 200 'Hello from Nginx deployed on Zeabur OSS!';
         }
       }
     }
