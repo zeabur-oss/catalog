@@ -4,7 +4,7 @@ metadata:
   name: error-pages
   namespace: {{ .Namespace }}
   labels:
-    # Zeabur edits the pages of the ConfigMap with this label.
+    # Zeabur OSS edits the pages of the ConfigMap with this label.
     zeabur.com/page-server: "true"
 data:
   404.html: |
@@ -227,7 +227,7 @@ metadata:
   name: error-pages
   namespace: {{ .Namespace }}
   labels:
-    # Zeabur sends maintenance and error pages to the Service with this label.
+    # Zeabur OSS sends maintenance and error pages to the Service with this label.
     zeabur.com/page-server: "true"
 spec:
   selector: {app.kubernetes.io/name: error-pages}

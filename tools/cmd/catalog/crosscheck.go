@@ -9,7 +9,7 @@ import (
 )
 
 // crosscheck writes crosscheck.json: for each template, the options and the
-// objects of its e2e render. Zeabur renders the same options with its own
+// objects of its e2e render. Zeabur OSS renders the same options with its own
 // code and compares the objects.
 func crosscheck(fs *flag.FlagSet, r *repo) error {
 	out := fs.String("out", "crosscheck.json", "output file")

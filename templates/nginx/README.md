@@ -7,7 +7,7 @@ This template runs one NGINX behind your domain. It answers every request with o
 ## Getting started
 
 1. In Zeabur OSS, open the `nginx` service. When **Overview** shows its replica as ready, the service is up. Its domain is on the **Networking** tab under **Public domains**. It is the domain you entered in the install form, for example `nginx.example.com`.
-2. The page shows the text `Hello from Nginx deployed on Zeabur!`. There is no sign-in, and the template creates no Secret.
+2. The page shows the text `Hello from Nginx deployed on Zeabur OSS!`. There is no sign-in, and the template creates no Secret.
 3. To serve something else, see Configuration.
 
 ## Configuration

@@ -197,7 +197,7 @@ security:
           risk: "Dragonfly 引擎采用 BUSL-1.1 许可，源码可看但不算开源。它的附加使用授权不允许你把 Dragonfly 作为托管服务或内存数据库产品提供给第三方。"
           mitigation: "模板说明里有写明许可证。请只在固定版本的授权范围内使用，或另外获得授权。Apache-2.0 的 operator 并不会改变引擎的许可。固定的引擎版本会在 2030-11-01 改为 Apache-2.0。"
     - risk: "Dragonfly keeps data in memory only, until you turn on snapshots. A restart loses queued or unacknowledged tasks, locks and cache."
-      mitigation: "Turn on Dragonfly backups in Zeabur. DB0 (cache) and DB1 (Celery) stay separate, and cache_mode=false stops the queue from being evicted. Before a restart, stop beat and the producers, and let the workers finish their jobs. After it, check that jobs ran once and only once. Old Valkey AOF, RDB or PVC data is not imported."
+      mitigation: "Turn on Dragonfly backups in Zeabur OSS. DB0 (cache) and DB1 (Celery) stay separate, and cache_mode=false stops the queue from being evicted. Before a restart, stop beat and the producers, and let the workers finish their jobs. After it, check that jobs ran once and only once. Old Valkey AOF, RDB or PVC data is not imported."
       locales:
         zh-TW:
           risk: "Dragonfly 的資料只放在記憶體裡，除非你開啟快照。重新啟動後，排隊中或還沒確認的任務、鎖和快取都會不見。"
