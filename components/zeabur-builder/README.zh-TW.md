@@ -9,7 +9,7 @@ Builder 會讀取、建立、更新和刪除每個 Namespace 的 Secret（Git �
 ## 安裝前準備
 
 - 先安裝 cert-manager，由它簽發 zot 的憑證。
-- 節點用輸入項 `clusterIp` 的固定位址從 zot 拉映像檔。這是叢集 Service CIDR 裡的一個未使用的位址，例如 K3s 和 RKE2 上的 `10.43.0.50`。節點需要一個指向它的映像檔倉庫鏡像（K3s 和 RKE2 寫在 `registries.yaml`），並信任 `zot` Namespace 裡 `zot-tls` Secret 的 CA。沒有設定 `clusterIp` 時，只有 Pod 連得到倉庫。
+- 節點用輸入項 `clusterIp` 的固定位址從 zot 拉映像檔。這是叢集 Service CIDR 裡一個沒人用的位址；留空時 Zeabur 會自動挑一個。在 K3s、RKE2 和 KubeSolo 上，`zot-node` DaemonSet 會讓每個節點改連這個位址，並給節點 `zot-tls` Secret 裡的 CA。其他發行版要自己在每個節點設定 `zot.zot.svc:5000` 指向這個位址的映像檔倉庫鏡像，並信任這個 CA。
 
 ## 使用方式
 
@@ -29,4 +29,4 @@ zot 會等 Secret `zot-tls` 和 `zot-token-signer` 出現。執行 `kubectl -n z
 
 ### 服務拉不到映像檔
 
-Pod 停在 `ImagePullBackOff`。執行 `kubectl describe pod <name>` 看事件。確認節點有指向 `clusterIp` 位址的映像檔倉庫鏡像，並信任 `zot-tls` 的 CA。
+Pod 停在 `ImagePullBackOff`。執行 `kubectl describe pod <name>` 看事件。在 K3s、RKE2 和 KubeSolo 上，確認那個節點有一個在跑的 `zot-node` Pod，而且 `/var/lib/rancher/k3s/agent/etc/containerd/certs.d/zot.zot.svc:5000/hosts.toml`（RKE2 是 `rancher/rke2`，KubeSolo 是 `/var/lib/kubesolo/containerd/registry/`）寫的是 `clusterIp` 的位址。
