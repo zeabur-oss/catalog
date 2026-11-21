@@ -14,14 +14,14 @@ The Release workflow builds its files with `scripts/ci/release.sh <version> <dir
 ```sh
 nix develop -c go test ./...
 nix develop -c go run ./tools/cmd/catalog validate   # schema, licences, references, value comments
-nix develop -c go run ./tools/cmd/catalog schema     # writes schema/v1 from the Go types; edit those, not the JSON
+nix develop -c cargo run -p zeabur-catalog -- schema # writes schema/v1 and types/v1 from the Rust types; edit those, not the output
 nix develop -c go run ./tools/cmd/catalog api -version 0.0.0   # the static API into out/api, checked against the schemas
 nix develop -c go run ./tools/cmd/catalog render     # helm template every profile, kubeconform
 nix develop -c go run ./tools/cmd/catalog template lint -values values.json <id>   # safety rules, kubeconform
 ```
 `crates/zeabur-catalog-format` is the typed model and the installer rules in Rust; the `rust` job
 runs `scripts/ci/rust.sh` (rustfmt, `cargo lint`, docs, nextest with every `conformance/select/`
-case, cargo-deny). Iterate with `nix develop -c cargo nextest run -p zeabur-catalog-format`.
+case, the check that `schema/v1` and `types/v1` match the Rust types, cargo-deny). Iterate with `nix develop -c cargo nextest run -p zeabur-catalog-format`.
 Cluster tests come in tiers (`docs/contribute/tests.mdx`). `check` starts its own etcd and kube-apiserver and
 needs no Docker. `smoke` and `full` create their own kind clusters; run them on a disposable Linux machine or VM:
 ```sh
