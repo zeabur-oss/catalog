@@ -27,7 +27,7 @@ The API is static JSON files. It holds facts: what each component declares, what
 | `v1/templates/<id>.json` | One template: its `id` and `sourceDigest`, its `template` and its `manifests`. | [`template-file.schema.json`](../../schema/v1/template-file.schema.json) |
 | `v1/schema/` | The schemas above, `component.schema.json`, the schema of a declaration, and `template.schema.json`, the schema of `template`. | |
 
-The schemas are the contract, and the Go types of the catalog's tools generate them. Each file of a release passes its schema.
+The schemas are the contract, and the Rust types of `crates/zeabur-catalog-format` generate them, with the TypeScript types of [`types/v1/catalog.ts`](../../types/v1/catalog.ts). Each file of a release passes its schema.
 
 - `declaration` is the [component file](component-format.mdx) as written, as JSON.
 - `sourceDigest` is the digest of the component's directory without its READMEs, which is `component.yaml`. A measurement with the same `sourceDigest` measured this file.

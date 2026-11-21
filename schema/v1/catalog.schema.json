@@ -1,127 +1,146 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://oss-catalog.zeabur.com/v1/schema/catalog.schema.json",
   "$defs": {
-    "catalogRelease": {
+    "CatalogRelease": {
+      "additionalProperties": false,
+      "description": "The catalog release an API was built from.",
       "properties": {
-        "version": {
-          "type": "string",
-          "minLength": 1,
-          "description": "The catalog version, such as 0.5.0."
-        },
         "commit": {
-          "type": "string",
+          "description": "The Git commit.",
           "pattern": "^[0-9a-f]{40}$",
-          "description": "The Git commit of the catalog."
+          "type": "string"
+        },
+        "version": {
+          "description": "`0.5.6`.",
+          "minLength": 1,
+          "type": "string"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "version",
         "commit"
       ],
-      "description": "CatalogRelease is the catalog release that the API was built from."
+      "type": "object"
     },
-    "componentEntry": {
+    "Distribution": {
+      "description": "A host distribution of Kubernetes that a component runs on.",
+      "oneOf": [
+        {
+          "const": "k3s",
+          "description": "K3s.",
+          "type": "string"
+        },
+        {
+          "const": "rke2",
+          "description": "RKE2.",
+          "type": "string"
+        },
+        {
+          "const": "kubesolo",
+          "description": "KubeSolo.",
+          "type": "string"
+        }
+      ]
+    },
+    "Entry": {
+      "additionalProperties": false,
+      "description": "A component or template in `catalog.json`.",
       "properties": {
         "id": {
-          "type": "string",
+          "description": "Its directory name.",
           "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
-          "description": "The directory name of the component under components/."
+          "type": "string"
         },
         "sourceDigest": {
-          "type": "string",
-          "description": "The Go module hash (h1:) of the directory components/\u003cid\u003e/, without its READMEs. A\nmeasurement with another sourceDigest tested older files."
+          "description": "The Go module hash (`h1:`) of its directory without its READMEs.",
+          "type": "string"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "id",
         "sourceDigest"
       ],
-      "description": "ComponentEntry names a component. components/\u003cid\u003e.json holds the rest."
+      "type": "object"
     },
-    "pinnedDistribution": {
+    "PinnedDistribution": {
+      "additionalProperties": false,
+      "description": "The release of a distribution that e2e installs on the host.",
       "properties": {
         "name": {
-          "type": "string",
-          "description": "k3s, rke2 or kubesolo. A reader ignores a value it does not know."
+          "$ref": "#/$defs/Distribution",
+          "description": "The distribution."
         },
         "version": {
+          "description": "Its release, such as `v1.37.2+k3s1`.",
           "type": "string"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "name",
         "version"
       ],
-      "description": "PinnedDistribution is the release of a distribution that e2e installs on the host."
+      "type": "object"
     },
-    "templateEntry": {
-      "properties": {
-        "id": {
-          "type": "string",
-          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
-          "description": "The directory name of the template under templates/."
+    "Profile": {
+      "description": "A deployment layout. Every component describes both.",
+      "oneOf": [
+        {
+          "const": "single-node",
+          "description": "One node.",
+          "type": "string"
         },
-        "sourceDigest": {
-          "type": "string",
-          "description": "The Go module hash (h1:) of the directory templates/\u003cid\u003e/, without its READMEs and e2e.yaml.\nA measurement with another sourceDigest tested older files."
+        {
+          "const": "multi-node",
+          "description": "Three nodes or more.",
+          "type": "string"
         }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "id",
-        "sourceDigest"
-      ],
-      "description": "TemplateEntry names a template. templates/\u003cid\u003e.json holds the rest."
+      ]
     }
   },
+  "$id": "https://oss-catalog.zeabur.com/v1/schema/catalog.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "`catalog.json`: the release, its test environments, its components and its templates.",
   "properties": {
     "catalog": {
-      "$ref": "#/$defs/catalogRelease"
-    },
-    "profiles": {
-      "items": {
-        "type": "string"
-      },
-      "type": "array",
-      "description": "The profiles that every component describes."
-    },
-    "kubernetes": {
-      "items": {
-        "type": "string"
-      },
-      "type": "array",
-      "description": "The Kubernetes versions that every profile is rendered and schema-checked against."
-    },
-    "distributions": {
-      "items": {
-        "$ref": "#/$defs/pinnedDistribution"
-      },
-      "type": "array",
-      "description": "The release of each host distribution that e2e installs. A measurement at another\ndistributionVersion tested another release."
+      "$ref": "#/$defs/CatalogRelease",
+      "description": "The release."
     },
     "components": {
+      "description": "Each component's id and digest.",
       "items": {
-        "$ref": "#/$defs/componentEntry"
+        "$ref": "#/$defs/Entry"
+      },
+      "type": "array"
+    },
+    "distributions": {
+      "description": "The release of each host distribution that e2e installs.",
+      "items": {
+        "$ref": "#/$defs/PinnedDistribution"
+      },
+      "type": "array"
+    },
+    "kubernetes": {
+      "description": "The Kubernetes versions every profile is rendered against.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "profiles": {
+      "description": "The profiles every component describes.",
+      "items": {
+        "$ref": "#/$defs/Profile"
       },
       "type": "array"
     },
     "templates": {
+      "description": "Each template's id and digest.",
       "items": {
-        "$ref": "#/$defs/templateEntry"
+        "$ref": "#/$defs/Entry"
       },
       "type": "array"
     }
   },
-  "additionalProperties": false,
-  "type": "object",
   "required": [
     "catalog",
     "profiles",
@@ -131,5 +150,5 @@
     "templates"
   ],
   "title": "catalog.json",
-  "description": "CatalogFile is catalog.json: the catalog release, its test environments, its components and its\ntemplates."
+  "type": "object"
 }

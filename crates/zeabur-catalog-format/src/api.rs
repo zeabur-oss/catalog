@@ -5,14 +5,17 @@
 
 use std::collections::BTreeMap;
 
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::common::{Distribution, Profile, WorkloadKind};
 use crate::component::Component;
 use crate::template::Template;
 
 /// `catalog.json`: the release, its test environments, its components and its templates.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[ts(export_to = "catalog.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct Index {
     /// The release.
@@ -41,17 +44,21 @@ impl Index {
 }
 
 /// The catalog release an API was built from.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[ts(export_to = "catalog.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct CatalogRelease {
     /// `0.5.6`.
+    #[schemars(length(min = 1))]
     pub version: String,
     /// The Git commit.
+    #[schemars(regex(pattern = crate::schema::pattern::COMMIT))]
     pub commit: String,
 }
 
 /// The release of a distribution that e2e installs on the host.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[ts(export_to = "catalog.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct PinnedDistribution {
     /// The distribution.
@@ -61,24 +68,29 @@ pub struct PinnedDistribution {
 }
 
 /// A component or template in `catalog.json`.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[ts(export_to = "catalog.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct Entry {
     /// Its directory name.
+    #[schemars(regex(pattern = crate::schema::pattern::ID))]
     pub id: String,
     /// The Go module hash (`h1:`) of its directory without its READMEs.
     pub source_digest: String,
 }
 
 /// `components/<id>.json`.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[ts(export_to = "catalog.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct ComponentFile {
     /// Its id.
+    #[schemars(regex(pattern = crate::schema::pattern::ID))]
     pub id: String,
     /// The digest of its directory.
     pub source_digest: String,
     /// `component.yaml` as written.
+    #[schemars(schema_with = "crate::schema::component_ref")]
     pub declaration: Component,
     /// What it renders on each profile.
     pub render: Render,
@@ -153,17 +165,22 @@ impl ComponentFile {
 }
 
 /// A distribution where a component passed its test, with the platforms it passed on.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[ts(export_to = "catalog.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct TestedOn {
     /// The distribution.
     pub distribution: Distribution,
     /// The platforms, such as `linux/amd64`.
+    #[schemars(length(min = 1))]
+    #[schemars(extend("uniqueItems" = true))]
+    #[schemars(inner(regex(pattern = crate::schema::pattern::PLATFORM)))]
     pub platforms: Vec<String>,
 }
 
 /// What `helm template` renders for each profile with the test inputs and every contribution.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[ts(export_to = "catalog.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct Render {
     /// The Kubernetes version of the render.
@@ -173,7 +190,8 @@ pub struct Render {
 }
 
 /// The objects of a component on one profile.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[ts(export_to = "catalog.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct RenderedProfile {
     /// Its workloads.
@@ -183,7 +201,8 @@ pub struct RenderedProfile {
 }
 
 /// A rendered workload. One that an operator creates later is missing.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[ts(export_to = "catalog.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct RenderedWorkload {
     /// The release that renders it.
@@ -208,21 +227,25 @@ pub struct RenderedWorkload {
 }
 
 /// The requests and limits of a container, by resource name.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[ts(export_to = "catalog.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct RenderedContainer {
     /// Its name.
     pub name: String,
     /// Its requests.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[schemars(extend("additionalProperties" = {"type": "string", "pattern": crate::schema::pattern::QUANTITY}))]
     pub requests: BTreeMap<String, String>,
     /// Its limits.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[schemars(extend("additionalProperties" = {"type": "string", "pattern": crate::schema::pattern::QUANTITY}))]
     pub limits: BTreeMap<String, String>,
 }
 
 /// The requested storage of a `PersistentVolumeClaim`.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[ts(export_to = "catalog.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct RenderedClaim {
     /// The release that renders it; a `volumeClaimTemplates` entry has none.
@@ -234,25 +257,30 @@ pub struct RenderedClaim {
     /// Its name.
     pub name: String,
     /// The storage it requests.
+    #[schemars(regex(pattern = crate::schema::pattern::QUANTITY))]
     pub storage: String,
 }
 
 /// `templates/<id>.json`: the two files of a template as written.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[ts(export_to = "catalog.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct TemplateFile {
     /// Its id.
+    #[schemars(regex(pattern = crate::schema::pattern::ID))]
     pub id: String,
     /// The digest of its directory.
     pub source_digest: String,
     /// `template.yaml` as written.
+    #[schemars(schema_with = "crate::schema::template_ref")]
     pub template: Template,
     /// The text of `manifests.yaml`, with template fields such as `{{ .Namespace }}`.
     pub manifests: String,
 }
 
 /// `measurements/components/<id>.json` or `measurements/templates/<id>.json`.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[ts(export_to = "catalog.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct MeasurementFile {
     /// The component's id; a template's file has none.
@@ -266,7 +294,8 @@ pub struct MeasurementFile {
 }
 
 /// One run of an e2e test.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[ts(export_to = "catalog.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct Environment {
     /// Where it ran.
@@ -299,11 +328,13 @@ pub struct Environment {
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub add_ons: BTreeMap<String, String>,
     /// The day, `YYYY-MM-DD` in UTC.
+    #[schemars(extend("format" = "date"))]
     pub measured_at: String,
 }
 
 /// Where an e2e run ran: kind, or a host distribution.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[ts(export_to = "catalog.ts")]
 #[serde(untagged)]
 pub enum MeasuredDistribution {
     /// kind.
@@ -313,7 +344,8 @@ pub enum MeasuredDistribution {
 }
 
 /// kind, Kubernetes in Docker.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[ts(export_to = "catalog.ts")]
 #[serde(rename_all = "lowercase")]
 pub enum Kind {
     /// `kind`.
@@ -321,7 +353,8 @@ pub enum Kind {
 }
 
 /// Whether a run passed.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[ts(export_to = "catalog.ts")]
 #[serde(rename_all = "lowercase")]
 pub enum RunResult {
     /// It passed.
@@ -330,11 +363,14 @@ pub enum RunResult {
     Failed,
     /// A result this reader does not know, read as a failed run.
     #[serde(other)]
+    #[schemars(skip)]
+    #[ts(skip)]
     Unknown,
 }
 
 /// An OS and an architecture.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[ts(export_to = "catalog.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct Platform {
     /// `linux`.
@@ -350,7 +386,8 @@ impl std::fmt::Display for Platform {
 }
 
 /// The idle use of one pod of a workload.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[ts(export_to = "catalog.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct PodUsage {
     /// The controller the pod belongs to.
@@ -358,13 +395,16 @@ pub struct PodUsage {
     /// The controller's kind.
     pub kind: String,
     /// Memory, such as `22Mi`.
+    #[schemars(regex(pattern = crate::schema::pattern::QUANTITY))]
     pub memory: String,
     /// CPU, such as `3m`.
+    #[schemars(regex(pattern = crate::schema::pattern::QUANTITY))]
     pub cpu: String,
 }
 
 /// The version of a component's release or of a template's image.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[ts(export_to = "catalog.ts")]
 #[serde(rename_all = "camelCase")]
 pub struct MeasuredVersion {
     /// The release.

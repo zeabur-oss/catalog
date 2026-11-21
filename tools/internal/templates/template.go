@@ -12,7 +12,6 @@ import (
 	"text/template"
 	"text/template/parse"
 
-	gen "github.com/invopop/jsonschema"
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"go.yaml.in/yaml/v4"
 	"k8s.io/apimachinery/pkg/util/validation"
@@ -22,17 +21,17 @@ import (
 // manifests.yaml next to it. A project member installs it into one namespace.
 type Template struct {
 	ID         string   `yaml:"-" json:"id"`
-	APIVersion string   `yaml:"apiVersion" json:"apiVersion" jsonschema:"required"`
-	Kind       string   `yaml:"kind" json:"kind" jsonschema:"required"`
-	Metadata   Metadata `yaml:"metadata" json:"metadata" jsonschema:"required"`
+	APIVersion string   `yaml:"apiVersion" json:"apiVersion"`
+	Kind       string   `yaml:"kind" json:"kind"`
+	Metadata   Metadata `yaml:"metadata" json:"metadata"`
 	// Components the cluster must have.
-	Requires []catalog.Ref `yaml:"requires" json:"requires,omitempty" jsonschema:"uniqueItems=true"`
+	Requires []catalog.Ref `yaml:"requires" json:"requires,omitempty"`
 	// The workloads in manifests.yaml, for people and for the Pod Security profile of each.
-	Services []Service `yaml:"services" json:"services" jsonschema:"required,minItems=1"`
+	Services []Service `yaml:"services" json:"services"`
 	Inputs   []Input   `yaml:"inputs" json:"inputs,omitempty"`
-	Security Security  `yaml:"security" json:"security" jsonschema:"required"`
+	Security Security  `yaml:"security" json:"security"`
 	// e2e checks after install, in the template's namespace.
-	Smoke []Smoke `yaml:"smoke" json:"smoke" jsonschema:"required,minItems=1"`
+	Smoke []Smoke `yaml:"smoke" json:"smoke"`
 
 	Dir string `yaml:"-" json:"-"` // holds template.yaml and manifests.yaml
 	// E2E is the template's e2e.yaml, which holds only test data.
@@ -40,167 +39,113 @@ type Template struct {
 	raw any
 }
 
-func (Template) JSONSchemaExtend(s *gen.Schema) {
-	s.Properties.Set("apiVersion", &gen.Schema{Const: "catalog.zeabur.com/v1"})
-	s.Properties.Set("kind", &gen.Schema{Const: "Template"})
-}
-
 // Metadata is a template's name, summary, version and docs.
 type Metadata struct {
 	catalog.Metadata `yaml:",inline"`
 	// The upstream docs on how to use the application, not the repository root.
-	Docs string `yaml:"docs" json:"docs" jsonschema:"required,format=uri,pattern=^https://"`
+	Docs string `yaml:"docs" json:"docs"`
 	// The application version: the tag of its main image. Objects get it as the label
 	// app.kubernetes.io/version.
-	Version string `yaml:"version" json:"version" jsonschema:"required"`
-}
-
-func (Metadata) JSONSchemaExtend(s *gen.Schema) {
-	nonEmpty(s, "name", "Name for people.")
-	nonEmpty(s, "license", "SPDX expression for the application, its images and charts.")
-	summary, _ := s.Properties.Get("summary")
-	summary.Description = "What the application is, in one plain sentence for people choosing a template."
-	homepage, _ := s.Properties.Get("homepage")
-	homepage.Pattern = "^https?://"
-}
-
-// nonEmpty makes property name a string of at least one character.
-func nonEmpty(s *gen.Schema, name, description string) {
-	s.Properties.Set(name, &gen.Schema{Type: "string", MinLength: new(uint64(1)), Description: description})
+	Version string `yaml:"version" json:"version"`
 }
 
 // Security is what a template exposes and how its risks are mitigated.
 type Security struct {
-	Summary string                 `yaml:"summary" json:"summary" jsonschema:"required,minLength=1"`
+	Summary string                 `yaml:"summary" json:"summary"`
 	Locales catalog.SummaryLocales `yaml:"locales" json:"locales,omitempty"`
-	Risks   []Risk                 `yaml:"risks" json:"risks" jsonschema:"required"`
+	Risks   []Risk                 `yaml:"risks" json:"risks"`
 	// Services with no sign-in or key of their own. Each needs an ingress NetworkPolicy; the risks
 	// say why.
-	Unauthenticated []string `yaml:"unauthenticated" json:"unauthenticated,omitempty" jsonschema:"uniqueItems=true"`
+	Unauthenticated []string `yaml:"unauthenticated" json:"unauthenticated,omitempty"`
 }
 
 // Risk is a risk of a template and its mitigation.
 type Risk struct {
-	Risk       string      `yaml:"risk" json:"risk" jsonschema:"required,minLength=1"`
-	Mitigation string      `yaml:"mitigation" json:"mitigation" jsonschema:"required,minLength=1"`
-	Locales    RiskLocales `yaml:"locales" json:"locales,omitempty" jsonschema:"required"`
+	Risk       string      `yaml:"risk" json:"risk"`
+	Mitigation string      `yaml:"mitigation" json:"mitigation"`
+	Locales    RiskLocales `yaml:"locales" json:"locales,omitempty"`
 }
 
 // RiskLocales is the risk and mitigation in other languages, by BCP 47 tag. config/locales.yaml
 // lists the tags each needs.
 type RiskLocales map[catalog.Locale]struct {
-	Risk       string `yaml:"risk" json:"risk" jsonschema:"required,minLength=1"`
-	Mitigation string `yaml:"mitigation" json:"mitigation" jsonschema:"required,minLength=1"`
+	Risk       string `yaml:"risk" json:"risk"`
+	Mitigation string `yaml:"mitigation" json:"mitigation"`
 }
-
-func (RiskLocales) JSONSchemaExtend(s *gen.Schema) { catalog.LocaleKeys(s) }
 
 // Service is a workload in manifests.yaml.
 type Service struct {
-	Name string `yaml:"name" json:"name" jsonschema:"required,pattern=^[a-z][a-z0-9-]*$,maxLength=53"`
+	Name string `yaml:"name" json:"name"`
 	// The Pod Security Standard level its pods meet.
-	PodSecurity string           `yaml:"podSecurity" json:"podSecurity" jsonschema:"required,enum=restricted,enum=baseline"`
+	PodSecurity string           `yaml:"podSecurity" json:"podSecurity"`
 	Ports       []Port           `yaml:"ports" json:"ports,omitempty"`
-	Resources   ServiceResources `yaml:"resources" json:"resources" jsonschema:"required"`
+	Resources   ServiceResources `yaml:"resources" json:"resources"`
 	// Public hostnames; rendering then needs a domain and a ClusterIssuer.
-	Domains []string `yaml:"domains" json:"domains,omitempty" jsonschema:"minLength=1"`
+	Domains []string `yaml:"domains" json:"domains,omitempty"`
 }
 
 // ServiceResources is the requests and limits of a service, by level and resource name.
 type ServiceResources map[string]map[string]string
 
-func (ServiceResources) JSONSchema() *gen.Schema {
-	values := gen.NewProperties()
-	values.Set("cpu", &gen.Schema{Type: "string", Pattern: `^[0-9]+(\.[0-9]+)?m?$`})
-	values.Set("memory", &gen.Schema{Type: "string", Pattern: "^[1-9][0-9]*(Ki|Mi|Gi|Ti|K|M|G|T)?$"})
-	v := &gen.Schema{Type: "object", Properties: values, Required: []string{"cpu", "memory"}, AdditionalProperties: gen.FalseSchema}
-	levels := gen.NewProperties()
-	levels.Set("requests", v)
-	levels.Set("limits", v)
-	return &gen.Schema{Type: "object", Properties: levels, Required: []string{"requests", "limits"}, AdditionalProperties: gen.FalseSchema}
-}
-
 // Port is a named port of a service.
 type Port struct {
-	Name string `yaml:"name" json:"name" jsonschema:"required,minLength=1"`
-	Port int    `yaml:"port" json:"port" jsonschema:"required,minimum=1,maximum=65535"`
+	Name string `yaml:"name" json:"name"`
+	Port int    `yaml:"port" json:"port"`
 }
 
 // Input is a value the person installing gives (required) or the installer generates into a
 // Secret (generate).
 type Input struct {
 	// camelCase.
-	Name        string `yaml:"name" json:"name" jsonschema:"required,pattern=^[a-z][A-Za-z0-9]*$"`
-	Description string `yaml:"description" json:"description" jsonschema:"required,minLength=1"`
+	Name        string `yaml:"name" json:"name"`
+	Description string `yaml:"description" json:"description"`
 	// A short name for the field, in English.
-	Label    string            `yaml:"label" json:"label,omitempty" jsonschema:"maxLength=40"`
+	Label    string            `yaml:"label" json:"label,omitempty"`
 	Locales  InputLocales      `yaml:"locales" json:"locales,omitempty"`
 	Generate *catalog.Generate `yaml:"generate" json:"generate,omitempty"`
 	Required bool              `yaml:"required" json:"required,omitempty"`
 	// The value when a deploy does not give the input.
 	Default string `yaml:"default" json:"default,omitempty"`
 	Secret  *struct {
-		Name string `yaml:"name" json:"name" jsonschema:"required,pattern=^[a-z0-9][a-z0-9.-]*$"`
-		Key  string `yaml:"key" json:"key" jsonschema:"required,pattern=^[A-Za-z0-9_.-]+$"`
+		Name string `yaml:"name" json:"name"`
+		Key  string `yaml:"key" json:"key"`
 	} `yaml:"secret" json:"secret,omitempty"`
 	Validation struct {
 		// Regular expression the whole value matches.
-		Pattern string `yaml:"pattern" json:"pattern" jsonschema:"required,minLength=1"`
-	} `yaml:"validation" json:"validation" jsonschema:"required"`
-}
-
-func (Input) JSONSchemaExtend(s *gen.Schema) {
-	s.OneOf = []*gen.Schema{
-		{Required: []string{"generate", "secret"},
-			Not: &gen.Schema{AnyOf: []*gen.Schema{{Required: []string{"required"}}, {Required: []string{"default"}}}}},
-		{Description: "A person gives the value, so the field has a label in every language.",
-			Required: []string{"required", "label", "locales"},
-			Not:      &gen.Schema{AnyOf: []*gen.Schema{{Required: []string{"generate"}}, {Required: []string{"secret"}}}}},
-	}
+		Pattern string `yaml:"pattern" json:"pattern"`
+	} `yaml:"validation" json:"validation"`
 }
 
 // InputLocales is the label and description in other languages, by BCP 47 tag.
 // config/locales.yaml lists the tags each needs.
 type InputLocales map[catalog.Locale]struct {
-	Label       string `yaml:"label" json:"label" jsonschema:"required,maxLength=40"`
-	Description string `yaml:"description" json:"description" jsonschema:"required,minLength=1"`
+	Label       string `yaml:"label" json:"label"`
+	Description string `yaml:"description" json:"description"`
 }
-
-func (InputLocales) JSONSchemaExtend(s *gen.Schema) { catalog.LocaleKeys(s) }
 
 // Smoke is an e2e check after install.
 type Smoke struct {
-	Name     string `yaml:"name" json:"name" jsonschema:"required,minLength=1"`
-	Resource string `yaml:"resource" json:"resource" jsonschema:"required,pattern=^[a-zA-Z0-9.-]+/[a-z0-9][a-z0-9.-]*$"`
+	Name     string `yaml:"name" json:"name"`
+	Resource string `yaml:"resource" json:"resource"`
 	// What the object reaches, as a kubectl wait --for value. A deployment, statefulset or daemonset
 	// has none: it is ready when its rollout is complete.
 	Condition string `yaml:"condition" json:"condition,omitempty"`
-	Timeout   string `yaml:"timeout" json:"timeout" jsonschema:"required"`
+	Timeout   string `yaml:"timeout" json:"timeout"`
 	// GET through a port-forward to the Service.
 	HTTP *struct {
-		Service  string `yaml:"service" json:"service" jsonschema:"required,pattern=^[a-z0-9][a-z0-9-]*$"`
-		Port     int    `yaml:"port" json:"port" jsonschema:"required,minimum=1,maximum=65535"`
-		Path     string `yaml:"path" json:"path" jsonschema:"required,pattern=^/"`
-		Status   int    `yaml:"status" json:"status" jsonschema:"required,minimum=100,maximum=599"`
+		Service  string `yaml:"service" json:"service"`
+		Port     int    `yaml:"port" json:"port"`
+		Path     string `yaml:"path" json:"path"`
+		Status   int    `yaml:"status" json:"status"`
 		Contains string `yaml:"contains" json:"contains,omitempty"`
 	} `yaml:"http" json:"http,omitempty"`
 	// One read-only SELECT on the CloudNativePG primary.
 	SQL *struct {
-		Cluster  string `yaml:"cluster" json:"cluster" jsonschema:"required,pattern=^[a-z][a-z0-9-]*$"`
-		Database string `yaml:"database" json:"database" jsonschema:"required,pattern=^[A-Za-z][A-Za-z0-9_]*$"`
-		Query    string `yaml:"query" json:"query" jsonschema:"required,pattern=^[Ss][Ee][Ll][Ee][Cc][Tt] "`
-		Expect   string `yaml:"expect" json:"expect" jsonschema:"required"`
+		Cluster  string `yaml:"cluster" json:"cluster"`
+		Database string `yaml:"database" json:"database"`
+		Query    string `yaml:"query" json:"query"`
+		Expect   string `yaml:"expect" json:"expect"`
 	} `yaml:"sql" json:"sql,omitempty"`
-}
-
-func (Smoke) JSONSchemaExtend(s *gen.Schema) {
-	catalog.SetCondition(s)
-	catalog.SetTimeout(s)
-	resource := gen.NewProperties()
-	resource.Set("resource", &gen.Schema{Pattern: catalog.WorkloadResource()})
-	s.If = &gen.Schema{Properties: resource}
-	s.Then = &gen.Schema{Not: &gen.Schema{Required: []string{"condition"}}}
-	s.Else = &gen.Schema{Required: []string{"condition"}}
 }
 
 // Load reads templates/<id>/template.yaml under root, sorted by ID.

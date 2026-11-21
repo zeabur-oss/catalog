@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -15,19 +14,6 @@ import (
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
-
-func TestSchemasAreGeneratedFromTheGoTypes(t *testing.T) {
-	t.Chdir("../../..")
-	files, err := schemaFiles()
-	if err != nil {
-		t.Fatal(err)
-	}
-	for name, want := range files {
-		if got, err := os.ReadFile(filepath.Join("schema", "v1", name)); err != nil || !bytes.Equal(got, want) {
-			t.Errorf("schema/v1/%s is not what the Go types give; run go run ./tools/cmd/catalog schema", name)
-		}
-	}
-}
 
 const webComponent = `apiVersion: catalog.zeabur.com/v1
 kind: Component
