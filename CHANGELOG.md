@@ -2,6 +2,32 @@
 
 All notable changes to this catalog are documented in this file; each section comes from the change files in `.changeset/` (CONTRIBUTING.md, "Releases").
 
+## 0.6.0 (2026-11-21)
+
+### Breaking Changes
+
+#### Each component has its own directory
+
+A component moved from `components/<id>.yaml` to `components/<id>/component.yaml`, with its READMEs (`README.md`, `README.zh-TW.md`, `README.zh-CN.md`) in the same directory, as templates are. A reader of the release bundle reads the new paths. `catalog validate` refuses any other file in `components/`.
+
+A component's `sourceDigest` is now the digest of its directory without the READMEs, so every component has a new digest and is untested until the next e2e run. Editing only a README of a component or a template keeps its `sourceDigest`.
+
+### Features
+
+#### Add the zeabur-catalog-format Rust crate
+
+`crates/zeabur-catalog-format` holds the typed model of component, template, API and measurement files and the rules installers follow: install order, choosing components, contributions and release values. Readers of the API ignore fields and values they do not know, and the catalog's check refuses them by path. A test runs every `conformance/select/` case against it.
+
+### Fixes
+
+#### A component that adds values to another needs a Helm release
+
+`catalog check` now refuses `contributes` from a component without a `helm` release. Installers find the components they installed by their Helm releases, so they could not add the values of such a component again when they write the target. CrowdSec and VictoriaMetrics already have one.
+
+#### Release downloads retry transient failures
+
+`catalog check` and `catalog cluster` now retry a release download that fails with a connection error, a 5xx or a 429 response, up to four attempts with backoff. A 4xx response and a checksum mismatch still fail at once.
+
 ## 0.5.6 (2026-11-20)
 
 ### Features
