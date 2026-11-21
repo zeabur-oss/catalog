@@ -14,8 +14,8 @@
         {
           "workload": "dify-db",
           "kind": "Cluster",
-          "memory": "101Mi",
-          "cpu": "5m"
+          "memory": "100Mi",
+          "cpu": "6m"
         },
         {
           "workload": "dify",
@@ -26,19 +26,19 @@
         {
           "workload": "dify-api",
           "kind": "Deployment",
-          "memory": "523Mi",
+          "memory": "510Mi",
           "cpu": "0"
         },
         {
           "workload": "dify-beat",
           "kind": "Deployment",
-          "memory": "488Mi",
-          "cpu": "6m"
+          "memory": "490Mi",
+          "cpu": "4m"
         },
         {
           "workload": "dify-plugin",
           "kind": "Deployment",
-          "memory": "15Mi",
+          "memory": "14Mi",
           "cpu": "1m"
         },
         {
@@ -50,26 +50,26 @@
         {
           "workload": "dify-sandbox",
           "kind": "Deployment",
-          "memory": "36Mi",
+          "memory": "35Mi",
           "cpu": "0"
         },
         {
           "workload": "dify-web",
           "kind": "Deployment",
-          "memory": "76Mi",
+          "memory": "77Mi",
           "cpu": "0"
         },
         {
           "workload": "dify-worker",
           "kind": "Deployment",
-          "memory": "504Mi",
-          "cpu": "1m"
+          "memory": "505Mi",
+          "cpu": "9m"
         },
         {
           "workload": "dify-dragonfly",
           "kind": "StatefulSet",
           "memory": "14Mi",
-          "cpu": "11m"
+          "cpu": "12m"
         }
       ],
       "versions": [
@@ -109,7 +109,7 @@
           "digest": "sha256:6a097f68bae708cedbabd6188d68c7e2e7a38cedd05a176e1cc0ba29e3bbe029"
         }
       ],
-      "sourceDigest": "h1:EKDXWdxJl0LtSnRvZ+yyWeAk8dL2NgjQz7Ac4bAtAZs=",
+      "sourceDigest": "h1:vsP5AEp3htlEGaBpwb9iqGd9oFhPQxIx/c/2fqtpNuw=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "cloudnative-pg": "h1:Ng6oc40/aM4zbnEnU9OxiYQvyFSJOFad1fNMHEGfXH4=",
