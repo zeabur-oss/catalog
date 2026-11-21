@@ -34,7 +34,7 @@
         # The nightly, components and targets of rust-toolchain.toml, the same file rustup reads.
         rustToolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
         # The release version: the Release workflow compares the tag with it.
-        version = "0.5.6";
+        version = "0.6.0";
         catalog = pkgs.buildGoModule {
           pname = "catalog";
           inherit version;
