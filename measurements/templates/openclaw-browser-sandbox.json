@@ -14,7 +14,7 @@
         {
           "workload": "openclaw-sandbox-browser",
           "kind": "Deployment",
-          "memory": "138Mi",
+          "memory": "176Mi",
           "cpu": "1m"
         }
       ],

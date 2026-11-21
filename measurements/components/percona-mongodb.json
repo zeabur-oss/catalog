@@ -25,8 +25,8 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "k3s",
@@ -42,7 +42,7 @@
         {
           "workload": "psmdb-operator",
           "kind": "Deployment",
-          "memory": "22Mi",
+          "memory": "21Mi",
           "cpu": "1m"
         }
       ],
@@ -52,8 +52,8 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kind",
@@ -78,8 +78,8 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kind",
@@ -89,85 +89,6 @@
         "architecture": "arm64"
       },
       "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "psmdb-operator",
-          "kind": "Deployment",
-          "memory": "18Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "psmdb-operator",
-          "version": "1.23.2"
-        }
-      ],
-      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "psmdb-operator",
-          "kind": "Deployment",
-          "memory": "18Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "psmdb-operator",
-          "version": "1.23.2"
-        }
-      ],
-      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "psmdb-operator",
-          "kind": "Deployment",
-          "memory": "18Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "psmdb-operator",
-          "version": "1.23.2"
-        }
-      ],
-      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.6",
-      "distributionVersion": "v1.3.0",
       "result": "passed",
       "pods": [
         {
@@ -183,11 +104,90 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
+      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "psmdb-operator",
+          "kind": "Deployment",
+          "memory": "18Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "psmdb-operator",
+          "version": "1.23.2"
+        }
+      ],
+      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "psmdb-operator",
+          "kind": "Deployment",
+          "memory": "19Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "psmdb-operator",
+          "version": "1.23.2"
+        }
+      ],
+      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "psmdb-operator",
+          "kind": "Deployment",
+          "memory": "18Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "psmdb-operator",
+          "version": "1.23.2"
+        }
+      ],
+      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kubesolo",
@@ -213,11 +213,11 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
+      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "rke2",
@@ -233,7 +233,7 @@
         {
           "workload": "psmdb-operator",
           "kind": "Deployment",
-          "memory": "24Mi",
+          "memory": "23Mi",
           "cpu": "1m"
         }
       ],
@@ -243,11 +243,11 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
+      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "rke2",
@@ -263,7 +263,7 @@
         {
           "workload": "psmdb-operator",
           "kind": "Deployment",
-          "memory": "24Mi",
+          "memory": "23Mi",
           "cpu": "1m"
         }
       ],
@@ -273,11 +273,11 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:jFJwJViCU7c9WfXezOoIFE4u4cPVpljvYJYQgS3NrQA=",
+      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     }
   ]
 }

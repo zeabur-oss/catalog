@@ -20,8 +20,8 @@
         {
           "workload": "n8n",
           "kind": "Deployment",
-          "memory": "319Mi",
-          "cpu": "2m"
+          "memory": "312Mi",
+          "cpu": "3m"
         },
         {
           "workload": "task-runner",
@@ -33,20 +33,20 @@
       "versions": [
         {
           "image": "docker.io/n8nio/n8n",
-          "version": "3.2.0",
-          "digest": "sha256:9e67c2627d3c30dbb0d51f5da83d4499ac7913f6b4f358a900a58026a832ba12"
+          "version": "3.2.2",
+          "digest": "sha256:c5d94cb443ff3d7b3abd65927fd8c9af1281f026ebfed9b208cf8d0f6b199a94"
         },
         {
           "image": "docker.io/n8nio/runners",
-          "version": "3.2.0",
-          "digest": "sha256:121b0ae16e397b31dca8c9f188f44a611d75ed46bcda16bacc42381a4ea1ae90"
+          "version": "3.2.2",
+          "digest": "sha256:7e64bb2cbcfddf644dbb1f6ef703ce6e70adf8880f6494c870dcc54aa976f099"
         }
       ],
-      "sourceDigest": "h1:fNLhOdcC64ZfliekQs1V7JFRWu7hCKWcp2eqP08Ncg4=",
+      "sourceDigest": "h1:Kep0LqdYhS3nM1xOSoGQaJVY06gpWhwvuTuH3AiZTN0=",
       "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "cloudnative-pg": "h1:VlI7FbJq8eu7nUwyl03sJAPplBUBm53QJYGDhleao90=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM="
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "cloudnative-pg": "h1:Ng6oc40/aM4zbnEnU9OxiYQvyFSJOFad1fNMHEGfXH4=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
       "measuredAt": "2026-11-20"
     }
