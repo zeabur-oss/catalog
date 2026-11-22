@@ -200,6 +200,18 @@ func TestRefusedCRDs(t *testing.T) {
 			}
 			return dir
 		}
+		// The dry run step has installed the CRDs; they do not differ here.
+		data, err := os.ReadFile(filepath.Join(render("a"), "x/z/w.yaml"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		crds, err := crdsOf(data, "w")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := crds.reset(nil); err != nil {
+			t.Fatal(err)
+		}
 		found, err := refused(c, render("a"), render("b"))
 		if err != nil {
 			t.Fatal(err)
