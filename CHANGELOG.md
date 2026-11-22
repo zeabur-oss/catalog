@@ -2,6 +2,24 @@
 
 All notable changes to this catalog are documented in this file; each section comes from the change files in `.changeset/` (CONTRIBUTING.md, "Releases").
 
+## 0.6.1 (2026-11-22)
+
+### Fixes
+
+#### The API on `/v1/` only adds
+
+Every release on `https://oss-catalog.zeabur.com/v1/` keeps each field and type of the last one and makes no field required, whatever its Zeabur Catalog version. A breaking change goes to `/v2/`. CI compares the schemas with those of the latest published release and fails on such a change.
+
+#### Zeabur Builder installs chart 0.2.5
+
+The upload Secrets of Zeabur Builder now hold the registry's CA in `ca.crt`, so an uploader that may read the Secret trusts zot without reading zot's own Secret. The controller may also read ServiceAccounts, which the optional agent builder needs.
+
+The chart's ClusterBuilders name their type, with `spec.railpack` in place of `spec.planner`. A ClusterBuilder you made yourself needs the same change, and a Build's `spec.source` is now `type: git` with `git: {…}` or `type: archive` with `archive: {}`. Apply `crds/crds.yaml` of the chart before you upgrade, because Helm does not update CRDs.
+
+#### Nodes pull Zeabur Builder's images without manual setup
+
+On K3s, RKE2 and KubeSolo, the new `zot-node` DaemonSet points each node's container runtime at zot's fixed ClusterIP and gives it zot's CA, so a pod can pull `zot.zot.svc:5000/...` images right after you install the component. You no longer write `registries.yaml` by hand.
+
 ## 0.6.0 (2026-11-21)
 
 ### Breaking Changes
