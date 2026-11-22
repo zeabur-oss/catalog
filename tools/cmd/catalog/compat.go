@@ -84,27 +84,37 @@ func breaks(path string, before, after map[string]any) []string {
 			out = append(out, breaks(path+"/"+key+"/"+name, bs, as)...)
 		}
 	}
+	// A schema added here, such as a new then, is compared with an empty one: it must not require.
 	for _, key := range []string{"items", "additionalProperties", "then", "else"} {
-		if b, ok := before[key].(map[string]any); ok {
-			a, _ := after[key].(map[string]any)
+		b, _ := before[key].(map[string]any)
+		if a, ok := after[key].(map[string]any); ok || b != nil {
 			out = append(out, breaks(path+"/"+key, b, a)...)
 		}
 	}
-	// The generator writes the branches in a fixed order, so they compare by index.
+	// The generator writes the branches in a fixed order, so they compare by index. A new anyOf
+	// or oneOf branch accepts more, and a new allOf branch must not require.
 	for _, key := range []string{"anyOf", "oneOf", "allOf"} {
 		b, _ := before[key].([]any)
 		a, _ := after[key].([]any)
-		for i := range b {
-			if i >= len(a) {
+		for i := range max(len(b), len(a)) {
+			switch {
+			case i >= len(a):
 				out = append(out, fmt.Sprintf("%s: %s/%d is removed", path, key, i))
-				continue
+			case i < len(b) || key == "allOf":
+				bs, _ := at(b, i).(map[string]any)
+				as, _ := a[i].(map[string]any)
+				out = append(out, breaks(fmt.Sprintf("%s/%s/%d", path, key, i), bs, as)...)
 			}
-			bs, _ := b[i].(map[string]any)
-			as, _ := a[i].(map[string]any)
-			out = append(out, breaks(fmt.Sprintf("%s/%s/%d", path, key, i), bs, as)...)
 		}
 	}
 	return out
+}
+
+func at(list []any, i int) any {
+	if i < len(list) {
+		return list[i]
+	}
+	return nil
 }
 
 func mustJSON(v any) string {

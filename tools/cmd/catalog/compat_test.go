@@ -24,6 +24,9 @@ func TestOnlyAnAdditionKeepsV1(t *testing.T) {
 		{"a newly required field", `"required": ["id"]`, `"required": ["id", "size"]`, "size is newly required"},
 		{"a changed type in a branch", `{"type": "string"}, {"type": "integer"}`, `{"type": "boolean"}, {"type": "integer"}`, `anyOf/0: type "string" is now "boolean"`},
 		{"a removed branch", `{"type": "string"}, {"type": "integer"}`, `{"type": "string"}`, "anyOf/1 is removed"},
+		{"an allOf that requires", `"type": "object", "required": ["id"]`, `"type": "object", "required": ["id"], "allOf": [{"required": ["size"]}]`, "allOf/0: size is newly required"},
+		{"a then that requires", `"type": "object", "required": ["id"]`, `"type": "object", "required": ["id"], "if": {"required": ["id"]}, "then": {"required": ["size"]}`, "then: size is newly required"},
+		{"an added anyOf branch", `{"type": "string"}, {"type": "integer"}`, `{"type": "string"}, {"type": "integer"}, {"type": "null"}`, ""},
 		{"a removed definition", `"entry": {`, `"other": {`, "$defs entry is removed"},
 	} {
 		t.Run(c.name, func(t *testing.T) {
