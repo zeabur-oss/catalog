@@ -43,6 +43,19 @@ func TestManifestsAllowOnlyFieldSubstitution(t *testing.T) {
 	}
 }
 
+func TestDomainActionNeedsADeclaredDomain(t *testing.T) {
+	m := []byte("url: https://{{ .Domain }}")
+	if err := checkDomain(m, []Service{{Name: "a"}}); err == nil {
+		t.Error("accepted {{ .Domain }} without domains")
+	}
+	if err := checkDomain(m, []Service{{Name: "a", Domains: []string{"{{ .Domain }}"}}}); err != nil {
+		t.Error(err)
+	}
+	if err := checkDomain([]byte("x: y"), []Service{{Name: "a"}}); err != nil {
+		t.Error(err)
+	}
+}
+
 func TestInputDefaultFillsAnInputThatIsNotGiven(t *testing.T) {
 	dir := t.TempDir()
 	manifest := "apiVersion: v1\nkind: ConfigMap\nmetadata: {name: app}\ndata: {url: '{{ .Inputs.url }}'}\n"

@@ -291,6 +291,8 @@ func Check(root string, cat *catalog.Catalog, all []*Template) error {
 			fail("%v", err)
 		} else if err := checkActions(data, t.Inputs); err != nil {
 			fail("manifests.yaml: %v", err)
+		} else if err := checkDomain(data, t.Services); err != nil {
+			fail("manifests.yaml: %v", err)
 		} else if src, err := os.ReadFile(filepath.Join(t.Dir, "template.yaml")); err != nil {
 			fail("%v", err)
 		} else if err := CheckVersion(src, data, t.Metadata.Version); err != nil {
@@ -369,6 +371,17 @@ func checkActions(manifests []byte, inputs []Input) error {
 		default:
 			return fmt.Errorf("only field substitution is allowed, not %s", n)
 		}
+	}
+	return nil
+}
+
+var domainAction = regexp.MustCompile(`\{\{\s*\.Domain\s*\}\}`)
+
+// checkDomain rejects manifests that use {{ .Domain }} when no service declares domains, since
+// rendering then has no domain to fill in and the Ingress host is empty.
+func checkDomain(manifests []byte, services []Service) error {
+	if domainAction.Match(manifests) && !slices.ContainsFunc(services, func(s Service) bool { return len(s.Domains) > 0 }) {
+		return errors.New("{{ .Domain }} is used but no service declares domains")
 	}
 	return nil
 }
