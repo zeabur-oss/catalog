@@ -3,7 +3,7 @@ title: 版本與 API
 description: 從靜態 API 讀取 catalog、固定 Zeabur Catalog 版本並驗證 Sigstore 簽章，或從指定 commit 建置版本檔案。
 ---
 
-打上 `vX.Y.Z` tag 後，會建置 `bundle.tar.gz`、`api-v1.tar.gz`，以及 `SHA256SUMS` 和它的 Sigstore 簽章套件，並用它們建立草稿版本，由維護者發布。已發布的非預發布版本也會將 API 發布到 `https://oss-catalog.zeabur.com/v1/`。1.0 之前，像 0.1 升到 0.2 這樣的更新也可能改變檔案格式，需要固定版本時，請指定某個確切版本。
+打上 `vX.Y.Z` tag 後，會建置 `bundle.tar.gz`、`api-v1.tar.gz`，以及 `SHA256SUMS` 和它的 Sigstore 簽章套件，並用它們建立草稿版本，由維護者發布。已發布的非預發布版本也會將 API 發布到 `https://oss-catalog.zeabur.com/v1/`。Zeabur Catalog 的版本號是這個儲存庫的發布編號。1.0 之前，像 0.1 升到 0.2 這樣的更新可能改變 `bundle.tar.gz` 和儲存庫裡的檔案，但 `v1/` 的 API 只會照 [API](#api) 一節所說的方式變更，所以讀得懂 `v1` 的工具讀得懂 `v1` 上的每個版本。
 
 ## 版本檔案
 
@@ -37,7 +37,7 @@ Schema 定義資料格式，由 catalog 工具的 Go 型別產生。每個版本
 - `manifests` 是 `manifests.yaml` 原有的文字，整份放在一個字串裡。裡面有 `{{ .Namespace }}` 這類欄位，要等安裝工具展開後才是 YAML；JSON 物件留不住這些欄位和註解。
 - 範本的 `sourceDigest` 是整個範本目錄的雜湊值，包含 `template.yaml` 和 `manifests.yaml`，不含 README 和 `e2e.yaml`，所以只改 README 不會改變雜湊值。
 
-`https://oss-catalog.zeabur.com/v1/` 永遠提供 API 主版本 1 的最新版本。如果變更會讓讀取 `v1` 的工具無法繼續使用，就會在另一個路徑發布 `v2`，`v1` 則保留最後一個提供它的版本。新版本可以新增欄位或值，不必更換主版本。讀取工具略過不認得的欄位，遇到不認得的值則照下表處理：
+`https://oss-catalog.zeabur.com/v1/` 永遠提供 API 主版本 1 的最新版本，不論 Zeabur Catalog 的版本號是多少。`v1` 裡的變更只會新增，例如新增欄位、值或檔案，不會移除欄位、改變欄位的型別，也不會把欄位改成必填。會造成這類變更時，就在另一個路徑發布 `v2`，`v1` 則保留最後一個提供它的版本。CI 會拿 schema 和最新發布版本的 schema 比對，遇到這類變更就失敗。讀取工具略過不認得的欄位，遇到不認得的值則照下表處理：
 
 | 欄位 | 遇到不認得的值 |
 | --- | --- |

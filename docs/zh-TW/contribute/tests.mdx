@@ -84,7 +84,7 @@ description: 了解各層 CI 的執行時機與檢查內容，並設定範本測
 
 ### 建置發行檔
 
-用 `nix build .#release` 建置 `bundle.tar.gz`，用 `catalog api` 建置靜態 API。變更 `go.sum` 後，要等 `flake.nix` 換成新的 `vendorHash`，這一步才會通過。
+用 `nix build .#release` 建置 `bundle.tar.gz`，用 `catalog api` 建置靜態 API。變更 `go.sum` 後，要等 `flake.nix` 換成新的 `vendorHash`，這一步才會通過。接著 `catalog compat` 拿 API 的 schema 和最新發布版本的 schema 比對，`v1` 裡的變更若移除欄位、改變型別或把欄位改成必填，這一步就失敗。
 
 </Step>
 
