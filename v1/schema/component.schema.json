@@ -1147,5 +1147,5 @@
     "security"
   ],
   "title": "Component",
-  "description": "Component is one upstream, at components/\u003cid\u003e.yaml. A cluster administrator installs it."
+  "description": "Component is one upstream, at components/\u003cid\u003e/component.yaml. A cluster administrator installs it."
 }

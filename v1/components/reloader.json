@@ -1,6 +1,6 @@
 {
   "id": "reloader",
-  "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
+  "sourceDigest": "h1:K2uUF8MdR+MNyPIdhaWBTDeF61tvR4myhIfKQ+SWe30=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -168,7 +168,7 @@
         {
           "workload": "reloader-reloader",
           "kind": "Deployment",
-          "memory": "16Mi",
+          "memory": "15Mi",
           "cpu": "0"
         }
       ],
@@ -178,8 +178,8 @@
           "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:K2uUF8MdR+MNyPIdhaWBTDeF61tvR4myhIfKQ+SWe30=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "k3s",
@@ -205,8 +205,8 @@
           "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:K2uUF8MdR+MNyPIdhaWBTDeF61tvR4myhIfKQ+SWe30=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kind",
@@ -221,7 +221,7 @@
         {
           "workload": "reloader-reloader",
           "kind": "Deployment",
-          "memory": "9Mi",
+          "memory": "10Mi",
           "cpu": "1m"
         }
       ],
@@ -231,8 +231,8 @@
           "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:K2uUF8MdR+MNyPIdhaWBTDeF61tvR4myhIfKQ+SWe30=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kind",
@@ -247,7 +247,7 @@
         {
           "workload": "reloader-reloader",
           "kind": "Deployment",
-          "memory": "9Mi",
+          "memory": "10Mi",
           "cpu": "1m"
         }
       ],
@@ -257,8 +257,8 @@
           "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:K2uUF8MdR+MNyPIdhaWBTDeF61tvR4myhIfKQ+SWe30=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kind",
@@ -283,8 +283,8 @@
           "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:K2uUF8MdR+MNyPIdhaWBTDeF61tvR4myhIfKQ+SWe30=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kind",
@@ -309,8 +309,8 @@
           "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:K2uUF8MdR+MNyPIdhaWBTDeF61tvR4myhIfKQ+SWe30=",
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kubesolo",
@@ -326,7 +326,7 @@
         {
           "workload": "reloader-reloader",
           "kind": "Deployment",
-          "memory": "9Mi",
+          "memory": "10Mi",
           "cpu": "0"
         }
       ],
@@ -336,11 +336,11 @@
           "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
+      "sourceDigest": "h1:K2uUF8MdR+MNyPIdhaWBTDeF61tvR4myhIfKQ+SWe30=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kubesolo",
@@ -356,7 +356,7 @@
         {
           "workload": "reloader-reloader",
           "kind": "Deployment",
-          "memory": "9Mi",
+          "memory": "10Mi",
           "cpu": "0"
         }
       ],
@@ -366,11 +366,11 @@
           "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
+      "sourceDigest": "h1:K2uUF8MdR+MNyPIdhaWBTDeF61tvR4myhIfKQ+SWe30=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "rke2",
@@ -396,11 +396,11 @@
           "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
+      "sourceDigest": "h1:K2uUF8MdR+MNyPIdhaWBTDeF61tvR4myhIfKQ+SWe30=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "rke2",
@@ -416,7 +416,7 @@
         {
           "workload": "reloader-reloader",
           "kind": "Deployment",
-          "memory": "16Mi",
+          "memory": "17Mi",
           "cpu": "0"
         }
       ],
@@ -426,11 +426,11 @@
           "version": "2.2.20"
         }
       ],
-      "sourceDigest": "h1:s+9fTRoX3n0VDPO0StA+OtZJpqD0HsxUwX9HyVGpl5o=",
+      "sourceDigest": "h1:K2uUF8MdR+MNyPIdhaWBTDeF61tvR4myhIfKQ+SWe30=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     }
   ]
 }

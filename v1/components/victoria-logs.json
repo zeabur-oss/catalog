@@ -1,6 +1,6 @@
 {
   "id": "victoria-logs",
-  "sourceDigest": "h1:Ni/403qeeWZrM9Iv1EmEtCASjlCB+q0YCS9+/5YuXo4=",
+  "sourceDigest": "h1:jyYPvb1znfMjVO3aAfqOk+wkq2CM4PyZhGbWybsIa1g=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -141,13 +141,13 @@
           "cpu": "1m"
         }
       ],
-      "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
+      "sourceDigest": "h1:jyYPvb1znfMjVO3aAfqOk+wkq2CM4PyZhGbWybsIa1g=",
       "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
-        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU=",
+        "victoria-metrics-operator": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo="
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "k3s",
@@ -169,141 +169,141 @@
         {
           "workload": "vlsingle-victoria-logs",
           "kind": "Deployment",
+          "memory": "7Mi",
+          "cpu": "1m"
+        }
+      ],
+      "sourceDigest": "h1:jyYPvb1znfMjVO3aAfqOk+wkq2CM4PyZhGbWybsIa1g=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU=",
+        "victoria-metrics-operator": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo="
+      },
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vlagent-collector",
+          "kind": "DaemonSet",
+          "memory": "7Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "vlsingle-victoria-logs",
+          "kind": "Deployment",
+          "memory": "9Mi",
+          "cpu": "2m"
+        }
+      ],
+      "sourceDigest": "h1:jyYPvb1znfMjVO3aAfqOk+wkq2CM4PyZhGbWybsIa1g=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU=",
+        "victoria-metrics-operator": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo="
+      },
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vlagent-collector",
+          "kind": "DaemonSet",
+          "memory": "7Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "vlsingle-victoria-logs",
+          "kind": "Deployment",
+          "memory": "9Mi",
+          "cpu": "1m"
+        }
+      ],
+      "sourceDigest": "h1:jyYPvb1znfMjVO3aAfqOk+wkq2CM4PyZhGbWybsIa1g=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU=",
+        "victoria-metrics-operator": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo="
+      },
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vlagent-collector",
+          "kind": "DaemonSet",
+          "memory": "7Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "vlsingle-victoria-logs",
+          "kind": "Deployment",
+          "memory": "9Mi",
+          "cpu": "1m"
+        }
+      ],
+      "sourceDigest": "h1:jyYPvb1znfMjVO3aAfqOk+wkq2CM4PyZhGbWybsIa1g=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU=",
+        "victoria-metrics-operator": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo="
+      },
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vlagent-collector",
+          "kind": "DaemonSet",
+          "memory": "7Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "vlsingle-victoria-logs",
+          "kind": "Deployment",
           "memory": "8Mi",
           "cpu": "1m"
         }
       ],
-      "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
+      "sourceDigest": "h1:jyYPvb1znfMjVO3aAfqOk+wkq2CM4PyZhGbWybsIa1g=",
       "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
-        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU=",
+        "victoria-metrics-operator": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo="
       },
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vlagent-collector",
-          "kind": "DaemonSet",
-          "memory": "7Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "vlsingle-victoria-logs",
-          "kind": "Deployment",
-          "memory": "9Mi",
-          "cpu": "1m"
-        }
-      ],
-      "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
-      "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
-        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
-      },
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vlagent-collector",
-          "kind": "DaemonSet",
-          "memory": "7Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "vlsingle-victoria-logs",
-          "kind": "Deployment",
-          "memory": "9Mi",
-          "cpu": "1m"
-        }
-      ],
-      "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
-      "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
-        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
-      },
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vlagent-collector",
-          "kind": "DaemonSet",
-          "memory": "7Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "vlsingle-victoria-logs",
-          "kind": "Deployment",
-          "memory": "9Mi",
-          "cpu": "1m"
-        }
-      ],
-      "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
-      "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
-        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
-      },
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vlagent-collector",
-          "kind": "DaemonSet",
-          "memory": "7Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "vlsingle-victoria-logs",
-          "kind": "Deployment",
-          "memory": "9Mi",
-          "cpu": "1m"
-        }
-      ],
-      "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
-      "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
-        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
-      },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kubesolo",
@@ -329,16 +329,16 @@
           "cpu": "1m"
         }
       ],
-      "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
+      "sourceDigest": "h1:jyYPvb1znfMjVO3aAfqOk+wkq2CM4PyZhGbWybsIa1g=",
       "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
-        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU=",
+        "victoria-metrics-operator": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo="
       },
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "kubesolo",
@@ -349,6 +349,41 @@
       },
       "kubernetesVersion": "v1.36.6",
       "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vlagent-collector",
+          "kind": "DaemonSet",
+          "memory": "8Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "vlsingle-victoria-logs",
+          "kind": "Deployment",
+          "memory": "8Mi",
+          "cpu": "1m"
+        }
+      ],
+      "sourceDigest": "h1:jyYPvb1znfMjVO3aAfqOk+wkq2CM4PyZhGbWybsIa1g=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU=",
+        "victoria-metrics-operator": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo="
+      },
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-20"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
       "result": "passed",
       "pods": [
         {
@@ -364,51 +399,16 @@
           "cpu": "1m"
         }
       ],
-      "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
+      "sourceDigest": "h1:jyYPvb1znfMjVO3aAfqOk+wkq2CM4PyZhGbWybsIa1g=",
       "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
-        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
-      },
-      "addOns": {
-        "helm-controller": "v0.17.9"
-      },
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "rke2",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.2",
-      "distributionVersion": "v1.37.2+rke2r1",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "vlagent-collector",
-          "kind": "DaemonSet",
-          "memory": "8Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "vlsingle-victoria-logs",
-          "kind": "Deployment",
-          "memory": "9Mi",
-          "cpu": "1m"
-        }
-      ],
-      "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
-      "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
-        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU=",
+        "victoria-metrics-operator": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     },
     {
       "distribution": "rke2",
@@ -424,26 +424,26 @@
         {
           "workload": "vlagent-collector",
           "kind": "DaemonSet",
-          "memory": "7Mi",
+          "memory": "8Mi",
           "cpu": "1m"
         },
         {
           "workload": "vlsingle-victoria-logs",
           "kind": "Deployment",
           "memory": "9Mi",
-          "cpu": "1m"
+          "cpu": "0"
         }
       ],
-      "sourceDigest": "h1:3BPdlpTwfZY4iH/gJIjLg6IMgAXuUP7low3BNNhYwnY=",
+      "sourceDigest": "h1:jyYPvb1znfMjVO3aAfqOk+wkq2CM4PyZhGbWybsIa1g=",
       "dependencies": {
-        "cert-manager": "h1:iZSroqUyVlFn9hczx6u69KukiR/p4pj4g/d1FSvyF58=",
-        "traefik": "h1:6SHXynJ039mjXY9+zwXwTfVz1xe2gRFh5aaSJHvzjXM=",
-        "victoria-metrics-operator": "h1:8aAkBGQ5WSn0QHW85zWM9cuuXfKM0+uxq01jXInW0P0="
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU=",
+        "victoria-metrics-operator": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo="
       },
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-20"
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "id": "system-upgrade-controller",
-  "sourceDigest": "h1:RIEE7m8qS9pCIYJ9gvNd7AX3EN4s4s1NKE9S4GjmIDE=",
+  "sourceDigest": "h1:c4Z/hGMx5y4kbDtRJ2q4IUE984n2AItbkOnDbdJdSDg=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -57,19 +57,19 @@
         "urls": [
           "https://github.com/rancher/system-upgrade-controller/releases/download/{version}/crd.yaml"
         ],
-        "version": "v0.21.0"
+        "version": "v0.21.1"
       },
       {
         "name": "controller",
         "namespace": "system-upgrade",
         "type": "manifest",
         "urlDigests": [
-          "sha256:81ef8c40f85b8822c87e0cf790612fc6d4dcf1eebb83f89e522bc929ef85e18c"
+          "sha256:5b46172058b198f8297c9966aacdcd9da2604f740254f0beae74e61b1ad84eac"
         ],
         "urls": [
           "https://github.com/rancher/system-upgrade-controller/releases/download/{version}/system-upgrade-controller.yaml"
         ],
-        "version": "v0.21.0"
+        "version": "v0.21.1"
       }
     ],
     "security": {
@@ -131,22 +131,22 @@
         {
           "workload": "system-upgrade-controller",
           "kind": "Deployment",
-          "memory": "17Mi",
+          "memory": "16Mi",
           "cpu": "0"
         }
       ],
       "versions": [
         {
           "release": "crds",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         },
         {
           "release": "controller",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         }
       ],
-      "sourceDigest": "h1:RIEE7m8qS9pCIYJ9gvNd7AX3EN4s4s1NKE9S4GjmIDE=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:c4Z/hGMx5y4kbDtRJ2q4IUE984n2AItbkOnDbdJdSDg=",
+      "measuredAt": "2026-11-22"
     },
     {
       "distribution": "k3s",
@@ -162,116 +162,56 @@
         {
           "workload": "system-upgrade-controller",
           "kind": "Deployment",
-          "memory": "14Mi",
+          "memory": "16Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "crds",
+          "version": "v0.21.1"
+        },
+        {
+          "release": "controller",
+          "version": "v0.21.1"
+        }
+      ],
+      "sourceDigest": "h1:c4Z/hGMx5y4kbDtRJ2q4IUE984n2AItbkOnDbdJdSDg=",
+      "measuredAt": "2026-11-22"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "system-upgrade-controller",
+          "kind": "Deployment",
+          "memory": "12Mi",
           "cpu": "1m"
         }
       ],
       "versions": [
         {
           "release": "crds",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         },
         {
           "release": "controller",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         }
       ],
-      "sourceDigest": "h1:RIEE7m8qS9pCIYJ9gvNd7AX3EN4s4s1NKE9S4GjmIDE=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:c4Z/hGMx5y4kbDtRJ2q4IUE984n2AItbkOnDbdJdSDg=",
+      "measuredAt": "2026-11-22"
     },
     {
       "distribution": "kind",
       "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "system-upgrade-controller",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "crds",
-          "version": "v0.21.0"
-        },
-        {
-          "release": "controller",
-          "version": "v0.21.0"
-        }
-      ],
-      "sourceDigest": "h1:RIEE7m8qS9pCIYJ9gvNd7AX3EN4s4s1NKE9S4GjmIDE=",
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "system-upgrade-controller",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "crds",
-          "version": "v0.21.0"
-        },
-        {
-          "release": "controller",
-          "version": "v0.21.0"
-        }
-      ],
-      "sourceDigest": "h1:RIEE7m8qS9pCIYJ9gvNd7AX3EN4s4s1NKE9S4GjmIDE=",
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "system-upgrade-controller",
-          "kind": "Deployment",
-          "memory": "11Mi",
-          "cpu": "0"
-        }
-      ],
-      "versions": [
-        {
-          "release": "crds",
-          "version": "v0.21.0"
-        },
-        {
-          "release": "controller",
-          "version": "v0.21.0"
-        }
-      ],
-      "sourceDigest": "h1:RIEE7m8qS9pCIYJ9gvNd7AX3EN4s4s1NKE9S4GjmIDE=",
-      "measuredAt": "2026-11-19"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
       "platform": {
         "os": "linux",
         "architecture": "arm64"
@@ -289,15 +229,75 @@
       "versions": [
         {
           "release": "crds",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         },
         {
           "release": "controller",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         }
       ],
-      "sourceDigest": "h1:RIEE7m8qS9pCIYJ9gvNd7AX3EN4s4s1NKE9S4GjmIDE=",
-      "measuredAt": "2026-11-19"
+      "sourceDigest": "h1:c4Z/hGMx5y4kbDtRJ2q4IUE984n2AItbkOnDbdJdSDg=",
+      "measuredAt": "2026-11-22"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "system-upgrade-controller",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "crds",
+          "version": "v0.21.1"
+        },
+        {
+          "release": "controller",
+          "version": "v0.21.1"
+        }
+      ],
+      "sourceDigest": "h1:c4Z/hGMx5y4kbDtRJ2q4IUE984n2AItbkOnDbdJdSDg=",
+      "measuredAt": "2026-11-22"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "system-upgrade-controller",
+          "kind": "Deployment",
+          "memory": "11Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "release": "crds",
+          "version": "v0.21.1"
+        },
+        {
+          "release": "controller",
+          "version": "v0.21.1"
+        }
+      ],
+      "sourceDigest": "h1:c4Z/hGMx5y4kbDtRJ2q4IUE984n2AItbkOnDbdJdSDg=",
+      "measuredAt": "2026-11-22"
     },
     {
       "distribution": "rke2",
@@ -320,18 +320,18 @@
       "versions": [
         {
           "release": "crds",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         },
         {
           "release": "controller",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         }
       ],
-      "sourceDigest": "h1:RIEE7m8qS9pCIYJ9gvNd7AX3EN4s4s1NKE9S4GjmIDE=",
+      "sourceDigest": "h1:c4Z/hGMx5y4kbDtRJ2q4IUE984n2AItbkOnDbdJdSDg=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-22"
     },
     {
       "distribution": "rke2",
@@ -354,18 +354,18 @@
       "versions": [
         {
           "release": "crds",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         },
         {
           "release": "controller",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         }
       ],
-      "sourceDigest": "h1:RIEE7m8qS9pCIYJ9gvNd7AX3EN4s4s1NKE9S4GjmIDE=",
+      "sourceDigest": "h1:c4Z/hGMx5y4kbDtRJ2q4IUE984n2AItbkOnDbdJdSDg=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-19"
+      "measuredAt": "2026-11-22"
     }
   ]
 }
