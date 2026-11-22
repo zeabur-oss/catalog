@@ -14,14 +14,14 @@
         {
           "workload": "ghost",
           "kind": "StatefulSet",
-          "memory": "164Mi",
+          "memory": "163Mi",
           "cpu": "1m"
         },
         {
           "workload": "ghost-mysql",
           "kind": "StatefulSet",
-          "memory": "236Mi",
-          "cpu": "7m"
+          "memory": "235Mi",
+          "cpu": "8m"
         }
       ],
       "versions": [
@@ -36,12 +36,12 @@
           "digest": "sha256:a81d043930e51745522bd5c430961cf8286f0a23f0a9a2a6e0108f7ea71b0902"
         }
       ],
-      "sourceDigest": "h1:ttkOF8Lm4VUdWunhz6X9uyGN2DM7A5uZ9CaSMTERkZA=",
+      "sourceDigest": "h1:AXuLsBA57LxRvOdAO0PfvPetodN4EE5Qqj/KGN+reHk=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-22"
     }
   ]
 }
