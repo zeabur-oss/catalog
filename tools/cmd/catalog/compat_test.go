@@ -8,9 +8,9 @@ import (
 
 func TestOnlyAnAdditionKeepsV1(t *testing.T) {
 	const before = `{
-		"$defs": {"entry": {"type": "object", "required": ["id"], "properties": {
+		"$defs": {"entry": {"type": "object", "required": ["id"], "if": {"required": ["id"]}, "then": {}, "properties": {
 			"id": {"type": "string"}, "size": {"type": "integer"},
-			"cpu": {"anyOf": [{"type": "string"}, {"type": "integer"}]}}}},
+			"any": true, "cpu": {"anyOf": [{"type": "string"}, {"type": "integer"}]}}}},
 		"type": "object", "required": ["entries"],
 		"properties": {"entries": {"type": "array", "items": {"$ref": "#/$defs/entry"}}}
 	}`
@@ -25,8 +25,10 @@ func TestOnlyAnAdditionKeepsV1(t *testing.T) {
 		{"a changed type in a branch", `{"type": "string"}, {"type": "integer"}`, `{"type": "boolean"}, {"type": "integer"}`, `anyOf/0: type "string" is now "boolean"`},
 		{"a removed branch", `{"type": "string"}, {"type": "integer"}`, `{"type": "string"}`, "anyOf/1 is removed"},
 		{"an allOf that requires", `"type": "object", "required": ["id"]`, `"type": "object", "required": ["id"], "allOf": [{"required": ["size"]}]`, "allOf/0: size is newly required"},
-		{"a then that requires", `"type": "object", "required": ["id"]`, `"type": "object", "required": ["id"], "if": {"required": ["id"]}, "then": {"required": ["size"]}`, "then: size is newly required"},
+		{"a then that requires", `"then": {}`, `"then": {"required": ["size"]}`, "then: size is newly required"},
 		{"an added anyOf branch", `{"type": "string"}, {"type": "integer"}`, `{"type": "string"}, {"type": "integer"}, {"type": "null"}`, ""},
+		{"a type on a field that took anything", `"any": true`, `"any": {"type": "string"}`, `any: type null is now "string"`},
+		{"a changed if", `"if": {"required": ["id"]}`, `"if": {}`, `if {"required":["id"]} is now {}`},
 		{"a removed definition", `"entry": {`, `"other": {`, "$defs entry is removed"},
 	} {
 		t.Run(c.name, func(t *testing.T) {

@@ -50,18 +50,14 @@ func readSchema(path string) (map[string]any, error) {
 }
 
 // breaks lists what a reader of before cannot read in after: a field, definition or branch
-// removed, a type or $ref changed, or a field newly required.
+// removed, a type, $ref or if added, changed or removed, or a field newly required.
 func breaks(path string, before, after map[string]any) []string {
 	var out []string
-	for _, key := range []string{"type", "$ref"} {
-		b, ok := before[key]
-		if !ok {
-			continue
-		}
-		if a, ok := after[key]; !ok {
-			out = append(out, fmt.Sprintf("%s: %s %s is removed", path, key, mustJSON(b)))
-		} else if mustJSON(a) != mustJSON(b) {
-			out = append(out, fmt.Sprintf("%s: %s %s is now %s", path, key, mustJSON(b), mustJSON(a)))
+	// An if is compared whole: a change to it can make its then apply to more files.
+	for _, key := range []string{"type", "$ref", "if"} {
+		b, a := mustJSON(before[key]), mustJSON(after[key])
+		if b != a {
+			out = append(out, fmt.Sprintf("%s: %s %s is now %s", path, key, b, a))
 		}
 	}
 	required := func(s map[string]any) []any { r, _ := s["required"].([]any); return r }
