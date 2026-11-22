@@ -4,7 +4,7 @@
 # Manual run, on the tag of a published release (gh workflow run pages --ref v0.5.6): publish it
 # again, such as to roll back. Pages takes the run's commit as the build version and keeps the live
 # site when it is the live one's, so a run on main, whose commit can be the live release's, would
-# deploy nothing.
+# deploy nothing. A tag runs its own pages.yml: for v0.6.0 and earlier, also pass -f tag=<the tag>.
 name: pages
 
 on:
