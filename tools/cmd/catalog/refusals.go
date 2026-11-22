@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 )
@@ -236,7 +235,8 @@ func refused(c *catalog.Component, from, to string) (map[string]string, error) {
 			if _, err := catalog.Kubectl([]byte(namespaceDoc(d.namespace)), "apply", "-f", "-"); err != nil {
 				return nil, fmt.Errorf("namespace %s: %w", d.namespace, err)
 			}
-			if err := applyBase(d); err != nil {
+			if _, err := catalog.Kubectl([]byte(d.docs), "apply", "--server-side", "--force-conflicts",
+				"--field-manager=catalog", "-n", d.namespace, "-f", "-"); err != nil {
 				return nil, fmt.Errorf("apply %s: %w", rel.Name, err)
 			}
 		}
@@ -310,20 +310,6 @@ func prefixed(prefix string, names []string) []string {
 		out[i] = prefix + n
 	}
 	return out
-}
-
-// applyBase applies the base's objects of one namespace. The API server serves
-// a CRD's new schema a moment after the CRD is Established, so a failure is
-// tried again for a few seconds before it is an error.
-func applyBase(d nsDocs) (err error) {
-	for range 10 {
-		if _, err = catalog.Kubectl([]byte(d.docs), "apply", "--server-side", "--force-conflicts",
-			"--field-manager=catalog", "-n", d.namespace, "-f", "-"); err == nil {
-			return nil
-		}
-		time.Sleep(time.Second)
-	}
-	return err
 }
 
 func namespaceDoc(ns string) string {
