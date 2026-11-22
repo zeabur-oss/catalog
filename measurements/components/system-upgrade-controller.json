@@ -15,22 +15,22 @@
         {
           "workload": "system-upgrade-controller",
           "kind": "Deployment",
-          "memory": "14Mi",
+          "memory": "16Mi",
           "cpu": "0"
         }
       ],
       "versions": [
         {
           "release": "crds",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         },
         {
           "release": "controller",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         }
       ],
-      "sourceDigest": "h1:oRpkcXGTXqsEUTLJ9Q9csZmVt6UKSCTEHUcnOAtQWcA=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:c4Z/hGMx5y4kbDtRJ2q4IUE984n2AItbkOnDbdJdSDg=",
+      "measuredAt": "2026-11-22"
     },
     {
       "distribution": "k3s",
@@ -46,22 +46,22 @@
         {
           "workload": "system-upgrade-controller",
           "kind": "Deployment",
-          "memory": "17Mi",
+          "memory": "16Mi",
           "cpu": "0"
         }
       ],
       "versions": [
         {
           "release": "crds",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         },
         {
           "release": "controller",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         }
       ],
-      "sourceDigest": "h1:oRpkcXGTXqsEUTLJ9Q9csZmVt6UKSCTEHUcnOAtQWcA=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:c4Z/hGMx5y4kbDtRJ2q4IUE984n2AItbkOnDbdJdSDg=",
+      "measuredAt": "2026-11-22"
     },
     {
       "distribution": "kind",
@@ -77,21 +77,21 @@
           "workload": "system-upgrade-controller",
           "kind": "Deployment",
           "memory": "12Mi",
-          "cpu": "0"
+          "cpu": "1m"
         }
       ],
       "versions": [
         {
           "release": "crds",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         },
         {
           "release": "controller",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         }
       ],
-      "sourceDigest": "h1:oRpkcXGTXqsEUTLJ9Q9csZmVt6UKSCTEHUcnOAtQWcA=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:c4Z/hGMx5y4kbDtRJ2q4IUE984n2AItbkOnDbdJdSDg=",
+      "measuredAt": "2026-11-22"
     },
     {
       "distribution": "kind",
@@ -113,15 +113,15 @@
       "versions": [
         {
           "release": "crds",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         },
         {
           "release": "controller",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         }
       ],
-      "sourceDigest": "h1:oRpkcXGTXqsEUTLJ9Q9csZmVt6UKSCTEHUcnOAtQWcA=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:c4Z/hGMx5y4kbDtRJ2q4IUE984n2AItbkOnDbdJdSDg=",
+      "measuredAt": "2026-11-22"
     },
     {
       "distribution": "kind",
@@ -136,22 +136,22 @@
         {
           "workload": "system-upgrade-controller",
           "kind": "Deployment",
-          "memory": "12Mi",
+          "memory": "11Mi",
           "cpu": "0"
         }
       ],
       "versions": [
         {
           "release": "crds",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         },
         {
           "release": "controller",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         }
       ],
-      "sourceDigest": "h1:oRpkcXGTXqsEUTLJ9Q9csZmVt6UKSCTEHUcnOAtQWcA=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:c4Z/hGMx5y4kbDtRJ2q4IUE984n2AItbkOnDbdJdSDg=",
+      "measuredAt": "2026-11-22"
     },
     {
       "distribution": "kind",
@@ -173,15 +173,15 @@
       "versions": [
         {
           "release": "crds",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         },
         {
           "release": "controller",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         }
       ],
-      "sourceDigest": "h1:oRpkcXGTXqsEUTLJ9Q9csZmVt6UKSCTEHUcnOAtQWcA=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:c4Z/hGMx5y4kbDtRJ2q4IUE984n2AItbkOnDbdJdSDg=",
+      "measuredAt": "2026-11-22"
     },
     {
       "distribution": "rke2",
@@ -204,18 +204,18 @@
       "versions": [
         {
           "release": "crds",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         },
         {
           "release": "controller",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         }
       ],
-      "sourceDigest": "h1:oRpkcXGTXqsEUTLJ9Q9csZmVt6UKSCTEHUcnOAtQWcA=",
+      "sourceDigest": "h1:c4Z/hGMx5y4kbDtRJ2q4IUE984n2AItbkOnDbdJdSDg=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-22"
     },
     {
       "distribution": "rke2",
@@ -231,25 +231,25 @@
         {
           "workload": "system-upgrade-controller",
           "kind": "Deployment",
-          "memory": "14Mi",
+          "memory": "15Mi",
           "cpu": "0"
         }
       ],
       "versions": [
         {
           "release": "crds",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         },
         {
           "release": "controller",
-          "version": "v0.21.0"
+          "version": "v0.21.1"
         }
       ],
-      "sourceDigest": "h1:oRpkcXGTXqsEUTLJ9Q9csZmVt6UKSCTEHUcnOAtQWcA=",
+      "sourceDigest": "h1:c4Z/hGMx5y4kbDtRJ2q4IUE984n2AItbkOnDbdJdSDg=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-22"
     }
   ]
 }
