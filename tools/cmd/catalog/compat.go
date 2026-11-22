@@ -49,8 +49,8 @@ func readSchema(path string) (map[string]any, error) {
 	return s, json.Unmarshal(data, &s)
 }
 
-// breaks lists what a reader of before cannot read in after: a field or definition removed, a
-// type or $ref changed, or a field newly required.
+// breaks lists what a reader of before cannot read in after: a field, definition or branch
+// removed, a type or $ref changed, or a field newly required.
 func breaks(path string, before, after map[string]any) []string {
 	var out []string
 	for _, key := range []string{"type", "$ref"} {
@@ -84,10 +84,24 @@ func breaks(path string, before, after map[string]any) []string {
 			out = append(out, breaks(path+"/"+key+"/"+name, bs, as)...)
 		}
 	}
-	for _, key := range []string{"items", "additionalProperties"} {
+	for _, key := range []string{"items", "additionalProperties", "then", "else"} {
 		if b, ok := before[key].(map[string]any); ok {
 			a, _ := after[key].(map[string]any)
 			out = append(out, breaks(path+"/"+key, b, a)...)
+		}
+	}
+	// The generator writes the branches in a fixed order, so they compare by index.
+	for _, key := range []string{"anyOf", "oneOf", "allOf"} {
+		b, _ := before[key].([]any)
+		a, _ := after[key].([]any)
+		for i := range b {
+			if i >= len(a) {
+				out = append(out, fmt.Sprintf("%s: %s/%d is removed", path, key, i))
+				continue
+			}
+			bs, _ := b[i].(map[string]any)
+			as, _ := a[i].(map[string]any)
+			out = append(out, breaks(fmt.Sprintf("%s/%s/%d", path, key, i), bs, as)...)
 		}
 	}
 	return out

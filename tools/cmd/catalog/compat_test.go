@@ -9,7 +9,8 @@ import (
 func TestOnlyAnAdditionKeepsV1(t *testing.T) {
 	const before = `{
 		"$defs": {"entry": {"type": "object", "required": ["id"], "properties": {
-			"id": {"type": "string"}, "size": {"type": "integer"}}}},
+			"id": {"type": "string"}, "size": {"type": "integer"},
+			"cpu": {"anyOf": [{"type": "string"}, {"type": "integer"}]}}}},
 		"type": "object", "required": ["entries"],
 		"properties": {"entries": {"type": "array", "items": {"$ref": "#/$defs/entry"}}}
 	}`
@@ -21,6 +22,8 @@ func TestOnlyAnAdditionKeepsV1(t *testing.T) {
 		{"a changed type", `"size": {"type": "integer"}`, `"size": {"type": "string"}`, `type "integer" is now "string"`},
 		{"a changed $ref", `"#/$defs/entry"`, `"#/$defs/other"`, `$ref "#/$defs/entry" is now "#/$defs/other"`},
 		{"a newly required field", `"required": ["id"]`, `"required": ["id", "size"]`, "size is newly required"},
+		{"a changed type in a branch", `{"type": "string"}, {"type": "integer"}`, `{"type": "boolean"}, {"type": "integer"}`, `anyOf/0: type "string" is now "boolean"`},
+		{"a removed branch", `{"type": "string"}, {"type": "integer"}`, `{"type": "string"}`, "anyOf/1 is removed"},
 		{"a removed definition", `"entry": {`, `"other": {`, "$defs entry is removed"},
 	} {
 		t.Run(c.name, func(t *testing.T) {
