@@ -184,6 +184,31 @@ func TestRefusedCRDs(t *testing.T) {
 		}
 	})
 
+	t.Run("an update that a rule of the new CRD refuses is refused", func(t *testing.T) {
+		render := func(value string) string {
+			dir := writeWidgets(t, "fixed")
+			f := filepath.Join(dir, "x/z/w.yaml")
+			data, err := os.ReadFile(f)
+			if err != nil {
+				t.Fatal(err)
+			}
+			text := strings.Replace(string(data), "fixed: {type: string}",
+				"fixed: {type: string, x-kubernetes-validations: [{rule: self == oldSelf, message: fixed is immutable}]}", 1)
+			text = strings.Replace(text, "spec: {fixed: a}", "spec: {fixed: "+value+"}", 1)
+			if err := os.WriteFile(f, []byte(text), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			return dir
+		}
+		found, err := refused(c, render("a"), render("b"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(found["w"], "fixed is immutable") {
+			t.Errorf("got %v, want the Widget refused", found)
+		}
+	})
+
 	t.Run("a base object that does not apply against its own CRD is an error", func(t *testing.T) {
 		broken := writeWidgets(t, "planner")
 		f := filepath.Join(broken, "x/z/w.yaml")

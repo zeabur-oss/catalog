@@ -226,7 +226,7 @@ func refused(c *catalog.Component, from, to string) (map[string]string, error) {
 		}
 		changed := oldCRDs.text != newCRDs.text
 		if changed {
-			if err := oldCRDs.replace(newCRDs.names); err != nil {
+			if err := oldCRDs.reset(newCRDs.names); err != nil {
 				return nil, fmt.Errorf("%s: base CRDs: %w", rel.Name, err)
 			}
 		}
@@ -241,7 +241,7 @@ func refused(c *catalog.Component, from, to string) (map[string]string, error) {
 			}
 		}
 		if changed {
-			if err := newCRDs.replace(oldCRDs.names); err != nil {
+			if err := newCRDs.install(); err != nil {
 				return nil, fmt.Errorf("%s: new CRDs: %w", rel.Name, err)
 			}
 		}
@@ -279,18 +279,22 @@ func crdsOf(data []byte, defaultNamespace string) (crdSet, error) {
 	return set, nil
 }
 
-// replace installs the CRDs in place of the ones the API server has under
-// their names or under other, so a CRD that lost a field has none left from
-// the version before. Deleting a CRD deletes its objects.
-func (s crdSet) replace(other []string) error {
+// reset deletes the CRDs under their names and under other, with their
+// objects, and installs these, so none is left from the version before.
+func (s crdSet) reset(other []string) error {
 	gone := slices.Concat(s.names, other)
-	if len(gone) == 0 {
-		return nil
+	if len(gone) > 0 {
+		if _, err := catalog.Kubectl(nil, append([]string{"delete", "crd", "--ignore-not-found", "--timeout=2m"}, gone...)...); err != nil {
+			return err
+		}
 	}
-	if _, err := catalog.Kubectl(nil, append([]string{"delete", "crd", "--ignore-not-found", "--timeout=2m"}, gone...)...); err != nil {
-		return err
-	}
-	if s.text == "" {
+	return s.install()
+}
+
+// install applies the CRDs over the ones in the API server, as an upgrade
+// does, and keeps the objects they hold.
+func (s crdSet) install() error {
+	if len(s.names) == 0 {
 		return nil
 	}
 	if _, err := catalog.Kubectl([]byte(s.text), "apply", "--server-side", "--force-conflicts", "--field-manager=catalog", "-f", "-"); err != nil {
