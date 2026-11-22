@@ -119,6 +119,116 @@ func TestRefused(t *testing.T) {
 	})
 }
 
+// widgetCRD is a CRD of kind Widget with one spec field, FIELD.
+const widgetCRD = `apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata: {name: widgets.example.test}
+spec:
+  group: example.test
+  scope: Namespaced
+  names: {kind: Widget, plural: widgets, singular: widget}
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                FIELD: {type: string}
+`
+
+// writeWidgets writes release w of component x/z: the Widget CRD with the
+// field FIELD and a Widget that sets it.
+func writeWidgets(t *testing.T, field string) string {
+	t.Helper()
+	dir := t.TempDir()
+	f := filepath.Join(dir, "x/z/w.yaml")
+	if err := os.MkdirAll(filepath.Dir(f), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	manifest := strings.ReplaceAll(widgetCRD, "FIELD", field) + "---\n" +
+		"apiVersion: example.test/v1\nkind: Widget\nmetadata: {name: one}\nspec: {" + field + ": a}\n"
+	if err := os.WriteFile(f, []byte(manifest), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return dir
+}
+
+// An upgrade starts from the base's CRDs with the base's objects stored, then
+// applies the new CRDs and sends the new objects over them.
+func TestRefusedCRDs(t *testing.T) {
+	if _, err := exec.LookPath("kube-apiserver"); err != nil {
+		t.Skip("needs the dev shell's kube-apiserver and etcd")
+	}
+	api, err := startAPIServer()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer api.stop()
+	c := &catalog.Component{ID: "x/z", Releases: []catalog.Release{{Name: "w", Namespace: "w"}}}
+	if _, err := catalog.Kubectl([]byte(namespaceDoc("w")), "apply", "-f", "-"); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("a CRD that drops a field and an object that stops setting it pass", func(t *testing.T) {
+		found, err := refused(c, writeWidgets(t, "planner"), writeWidgets(t, "railpack"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(found) != 0 {
+			t.Errorf("got %v, want nothing", found)
+		}
+	})
+
+	t.Run("an update that a rule of the new CRD refuses is refused", func(t *testing.T) {
+		render := func(rule bool, value string) string {
+			dir := writeWidgets(t, "fixed")
+			f := filepath.Join(dir, "x/z/w.yaml")
+			data, err := os.ReadFile(f)
+			if err != nil {
+				t.Fatal(err)
+			}
+			text := strings.Replace(string(data), "spec: {fixed: a}", "spec: {fixed: "+value+"}", 1)
+			if rule {
+				text = strings.Replace(text, "fixed: {type: string}",
+					"fixed: {type: string, x-kubernetes-validations: [{rule: self == oldSelf, message: fixed is immutable}]}", 1)
+			}
+			if err := os.WriteFile(f, []byte(text), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			return dir
+		}
+		// Only the new CRD has the rule, and the base's object is still stored when it arrives.
+		found, err := refused(c, render(false, "a"), render(true, "b"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(found["w"], "fixed is immutable") {
+			t.Errorf("got %v, want the Widget refused", found)
+		}
+	})
+
+	t.Run("a base object that does not apply against its own CRD is an error", func(t *testing.T) {
+		broken := writeWidgets(t, "planner")
+		f := filepath.Join(broken, "x/z/w.yaml")
+		data, err := os.ReadFile(f)
+		if err != nil {
+			t.Fatal(err)
+		}
+		data = []byte(strings.Replace(string(data), "spec: {planner: a}", "spec: {other: a}", 1))
+		if err := os.WriteFile(f, data, 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := refused(c, broken, writeWidgets(t, "railpack")); err == nil {
+			t.Error("want an error")
+		}
+	})
+}
+
 // An upgrade refusal passes only when the pull request adds a change file
 // whose frontmatter says `default: major`. A profile switch never passes.
 func TestJudgeRefusals(t *testing.T) {
