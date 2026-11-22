@@ -22,6 +22,7 @@ services:
     podSecurity: restricted
     ports: [{name: http, port: 2368}]
     resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "2", memory: 1Gi}}
+    domains: ['{{ .Domain }}']
   - name: ghost-mysql
     podSecurity: restricted
     ports: [{name: mysql, port: 3306}]
