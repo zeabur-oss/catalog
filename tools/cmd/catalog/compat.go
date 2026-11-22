@@ -50,9 +50,10 @@ func readSchema(path string) (any, error) {
 }
 
 // breaks lists what changed from before to after other than an addition. An addition is a new
-// optional property or definition, a new anyOf branch, a new enum value, a field no longer
-// required, or a new description. Inside an if, a not or a oneOf nothing may change. Anything
-// else, such as a removed field, a changed type or a new required field, can break a reader.
+// property where before forbade other fields, a new definition, a new branch of an existing anyOf,
+// a new value of an existing enum, a field no longer required, or a new description. Inside an
+// if, a not or a oneOf nothing may change. Anything else, such as a removed field, a changed type
+// or a new required field, can break a reader.
 func breaks(path string, before, after any) []string {
 	b, bok := before.(map[string]any)
 	a, aok := after.(map[string]any)
@@ -89,30 +90,51 @@ func breaks(path string, before, after any) []string {
 					out = append(out, breaks(at+"/"+name, bm[name], am[name])...)
 				}
 			}
+			// A new property constrains a field that before let through, unless before forbade
+			// every other field.
+			if key == "properties" && b["additionalProperties"] != false {
+				for _, name := range slices.Sorted(maps.Keys(am)) {
+					if _, ok := bm[name]; !ok {
+						out = append(out, fmt.Sprintf("%s/%s is new", at, name))
+					}
+				}
+			}
 		case "required":
 			for _, v := range asList(a[key]) {
 				if !contains(asList(b[key]), v) {
 					out = append(out, fmt.Sprintf("%s: %v is new", at, v))
 				}
 			}
-		case "enum":
-			for _, v := range asList(b[key]) {
-				if !contains(asList(a[key]), v) {
-					out = append(out, fmt.Sprintf("%s: %v is removed", at, v))
-				}
-			}
-		case "anyOf", "allOf":
-			bl, al := asList(b[key]), asList(a[key])
-			if len(al) < len(bl) || key == "allOf" && len(al) != len(bl) {
-				out = append(out, fmt.Sprintf("%s: %d branches are now %d", at, len(bl), len(al)))
+		case "enum", "anyOf", "allOf":
+			if _, ok := b[key]; !ok {
+				out = append(out, fmt.Sprintf("%s: %s is new", at, mustJSON(a[key])))
 				continue
 			}
-			for i := range bl {
-				out = append(out, breaks(fmt.Sprintf("%s/%d", at, i), bl[i], al[i])...)
+			if key == "enum" {
+				for _, v := range asList(b[key]) {
+					if !contains(asList(a[key]), v) {
+						out = append(out, fmt.Sprintf("%s: %v is removed", at, v))
+					}
+				}
+			} else {
+				out = append(out, branches(at, key, asList(b[key]), asList(a[key]))...)
 			}
 		default:
 			out = append(out, breaks(at, b[key], a[key])...)
 		}
+	}
+	return out
+}
+
+// branches compares anyOf or allOf branches by index: the generator writes them in a fixed order.
+// An anyOf may gain branches; an allOf may not.
+func branches(path, key string, before, after []any) []string {
+	if len(after) < len(before) || key == "allOf" && len(after) != len(before) {
+		return []string{fmt.Sprintf("%s: %d branches are now %d", path, len(before), len(after))}
+	}
+	var out []string
+	for i := range before {
+		out = append(out, breaks(fmt.Sprintf("%s/%d", path, i), before[i], after[i])...)
 	}
 	return out
 }
