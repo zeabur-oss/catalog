@@ -31,7 +31,7 @@ releases:
     namespace: system-upgrade
     urls:
       - https://github.com/rancher/system-upgrade-controller/releases/download/{version}/crd.yaml
-    version: v0.21.0
+    version: v0.21.1
     urlDigests:
       - sha256:1393ba034e7691273fc519b721a7f72a0cdbef8c7b051c9e408be96090b8478d
   - name: controller
@@ -39,9 +39,9 @@ releases:
     namespace: system-upgrade
     urls:
       - https://github.com/rancher/system-upgrade-controller/releases/download/{version}/system-upgrade-controller.yaml
-    version: v0.21.0
+    version: v0.21.1
     urlDigests:
-      - sha256:81ef8c40f85b8822c87e0cf790612fc6d4dcf1eebb83f89e522bc929ef85e18c
+      - sha256:5b46172058b198f8297c9966aacdcd9da2604f740254f0beae74e61b1ad84eac
 
 detection:
   crds: [plans.upgrade.cattle.io]
