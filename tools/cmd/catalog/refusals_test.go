@@ -185,34 +185,25 @@ func TestRefusedCRDs(t *testing.T) {
 	})
 
 	t.Run("an update that a rule of the new CRD refuses is refused", func(t *testing.T) {
-		render := func(value string) string {
+		render := func(rule bool, value string) string {
 			dir := writeWidgets(t, "fixed")
 			f := filepath.Join(dir, "x/z/w.yaml")
 			data, err := os.ReadFile(f)
 			if err != nil {
 				t.Fatal(err)
 			}
-			text := strings.Replace(string(data), "fixed: {type: string}",
-				"fixed: {type: string, x-kubernetes-validations: [{rule: self == oldSelf, message: fixed is immutable}]}", 1)
-			text = strings.Replace(text, "spec: {fixed: a}", "spec: {fixed: "+value+"}", 1)
+			text := strings.Replace(string(data), "spec: {fixed: a}", "spec: {fixed: "+value+"}", 1)
+			if rule {
+				text = strings.Replace(text, "fixed: {type: string}",
+					"fixed: {type: string, x-kubernetes-validations: [{rule: self == oldSelf, message: fixed is immutable}]}", 1)
+			}
 			if err := os.WriteFile(f, []byte(text), 0o644); err != nil {
 				t.Fatal(err)
 			}
 			return dir
 		}
-		// The dry run step has installed the CRDs; they do not differ here.
-		data, err := os.ReadFile(filepath.Join(render("a"), "x/z/w.yaml"))
-		if err != nil {
-			t.Fatal(err)
-		}
-		crds, err := crdsOf(data, "w")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if err := crds.reset(nil); err != nil {
-			t.Fatal(err)
-		}
-		found, err := refused(c, render("a"), render("b"))
+		// Only the new CRD has the rule, and the base's object is still stored when it arrives.
+		found, err := refused(c, render(false, "a"), render(true, "b"))
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 )
@@ -246,8 +247,7 @@ func refused(c *catalog.Component, from, to string) (map[string]string, error) {
 			}
 		}
 		for _, d := range newDocs {
-			if _, err := catalog.Kubectl([]byte(d.docs), "apply", "--server-side", "--force-conflicts", "--dry-run=server",
-				"--field-manager=catalog", "-n", d.namespace, "-f", "-"); err != nil {
+			if err := dryRunUpdate(d, changed); err != nil {
 				var run *catalog.RunError
 				if errors.As(err, &run) {
 					found[rel.Name] += run.Stderr
@@ -310,6 +310,23 @@ func prefixed(prefix string, names []string) []string {
 		out[i] = prefix + n
 	}
 	return out
+}
+
+// dryRunUpdate sends the new objects of one namespace over the stored ones.
+// The API server serves an updated CRD's schema a moment after the update, so
+// with new CRDs a "not declared in schema" error is tried again for a few
+// seconds before it counts.
+func dryRunUpdate(d nsDocs, newCRDs bool) (err error) {
+	for range 10 {
+		_, err = catalog.Kubectl([]byte(d.docs), "apply", "--server-side", "--force-conflicts", "--dry-run=server",
+			"--field-manager=catalog", "-n", d.namespace, "-f", "-")
+		var run *catalog.RunError
+		if err == nil || !newCRDs || !errors.As(err, &run) || !strings.Contains(run.Stderr, "not declared in schema") {
+			return err
+		}
+		time.Sleep(time.Second)
+	}
+	return err
 }
 
 func namespaceDoc(ns string) string {
