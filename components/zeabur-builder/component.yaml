@@ -29,7 +29,7 @@ resources:
   work:
     - name: build
       # The build pod, which the controller creates and no render shows. A copy
-      # of buildkitd.resources in chart 0.2.3. Change it with the chart.
+      # of buildkitd.resources in the chart. Change it with the chart.
       requests: {cpu: 100m, memory: 256Mi}
       limits: {cpu: "1", memory: 1Gi}
       # buildkitd running one small Railpack build, pushing to zot.
@@ -401,8 +401,8 @@ releases:
     type: helm
     namespace: builder-system
     chart: oci://ghcr.io/zeabur-oss/charts/zeabur-builder
-    version: 0.2.3
-    chartDigest: sha256:a9197d4f2f8418ca2ee83bcae1bff81d157b6f2f8d1e1119ccd879520a5620e7
+    version: 0.2.5
+    chartDigest: sha256:bbcf68928d1d043888ec61c06c653d54408ec80d55e3be5d6c138a622032bc9d
     values: |
       registry:
         # zot above: images go to zot.zot.svc:5000/<namespace>/<build>.
@@ -448,9 +448,10 @@ detection:
 security:
   summary: >
     Zeabur Builder: a ClusterRole that manages Builds, BuildRuns and Jobs in
-    every namespace; reads Pods and Namespaces; reads, creates, updates and
-    deletes Secrets in every namespace (the Git credentials Builds name, and
-    the copies it puts in build namespaces), and reads the zot token signer.
+    every namespace; reads Pods, Namespaces and ServiceAccounts; reads,
+    creates, updates and deletes Secrets in every namespace (the Git
+    credentials Builds name, and the copies it puts in build namespaces), and
+    reads the zot token signer.
     Runs one privileged buildkitd per building namespace in its own namespace,
     with a user namespace and an egress policy. An admission policy limits the
     Jobs and StatefulSets it can create. zot: no RBAC, a ServiceAccount without
