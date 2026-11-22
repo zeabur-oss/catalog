@@ -186,6 +186,9 @@ func componentRefusals(c *catalog.Component, dir, baseDir string) ([]refusal, er
 // under to with --dry-run=server, and returns kubectl's output for each
 // release the API server refuses to update. A release missing under from is
 // new and skipped; one that renders the same is too.
+// When the CRDs differ, from's are installed before from's objects and to's
+// after them, as in an upgrade. An object that does not apply against its own
+// CRDs is an error, not a refusal.
 func refused(c *catalog.Component, from, to string) (map[string]string, error) {
 	found := map[string]string{}
 	var done []nsDocs
@@ -213,6 +216,20 @@ func refused(c *catalog.Component, from, to string) (map[string]string, error) {
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", rel.Name, err)
 		}
+		oldCRDs, err := crdsOf(before, rel.Namespace)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", rel.Name, err)
+		}
+		newCRDs, err := crdsOf(after, rel.Namespace)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", rel.Name, err)
+		}
+		changed := oldCRDs.text != newCRDs.text
+		if changed {
+			if err := oldCRDs.replace(newCRDs.names); err != nil {
+				return nil, fmt.Errorf("%s: base CRDs: %w", rel.Name, err)
+			}
+		}
 		for _, d := range oldDocs {
 			done = append(done, d)
 			if _, err := catalog.Kubectl([]byte(namespaceDoc(d.namespace)), "apply", "-f", "-"); err != nil {
@@ -221,6 +238,11 @@ func refused(c *catalog.Component, from, to string) (map[string]string, error) {
 			if _, err := catalog.Kubectl([]byte(d.docs), "apply", "--server-side", "--force-conflicts",
 				"--field-manager=catalog", "-n", d.namespace, "-f", "-"); err != nil {
 				return nil, fmt.Errorf("apply %s: %w", rel.Name, err)
+			}
+		}
+		if changed {
+			if err := newCRDs.replace(oldCRDs.names); err != nil {
+				return nil, fmt.Errorf("%s: new CRDs: %w", rel.Name, err)
 			}
 		}
 		for _, d := range newDocs {
@@ -234,6 +256,56 @@ func refused(c *catalog.Component, from, to string) (map[string]string, error) {
 		}
 	}
 	return found, nil
+}
+
+// crdSet is the CRDs of a rendered release.
+type crdSet struct {
+	names []string
+	text  string
+}
+
+func crdsOf(data []byte, defaultNamespace string) (crdSet, error) {
+	docs, err := manifestDocs(data, defaultNamespace)
+	if err != nil {
+		return crdSet{}, err
+	}
+	var set crdSet
+	for _, d := range docs {
+		if d.Kind == "CustomResourceDefinition" {
+			set.names = append(set.names, d.Name)
+			set.text += d.text + "\n---\n"
+		}
+	}
+	return set, nil
+}
+
+// replace installs the CRDs in place of the ones the API server has under
+// their names or under other, so a CRD that lost a field has none left from
+// the version before. Deleting a CRD deletes its objects.
+func (s crdSet) replace(other []string) error {
+	gone := slices.Concat(s.names, other)
+	if len(gone) == 0 {
+		return nil
+	}
+	if _, err := catalog.Kubectl(nil, append([]string{"delete", "crd", "--ignore-not-found", "--timeout=2m"}, gone...)...); err != nil {
+		return err
+	}
+	if s.text == "" {
+		return nil
+	}
+	if _, err := catalog.Kubectl([]byte(s.text), "apply", "--server-side", "--force-conflicts", "--field-manager=catalog", "-f", "-"); err != nil {
+		return err
+	}
+	_, err := catalog.Kubectl(nil, append([]string{"wait", "--for=condition=Established", "--timeout=2m"}, prefixed("crd/", s.names)...)...)
+	return err
+}
+
+func prefixed(prefix string, names []string) []string {
+	out := make([]string, len(names))
+	for i, n := range names {
+		out[i] = prefix + n
+	}
+	return out
 }
 
 func namespaceDoc(ns string) string {
