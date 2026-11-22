@@ -1,17 +1,16 @@
 # A published release that is not a pre-release publishes its static API, api-v<N>.tar.gz, to
 # GitHub Pages under /v<N>/ (https://oss-catalog.zeabur.com/v1/). The gh-pages branch keeps every
 # major: a release replaces only its own v<N>/, so the last release of an older major stays there.
-# Manual run: publish an earlier published release again, such as to roll back.
+# Manual run, on the tag of a published release (gh workflow run pages --ref v0.5.6): publish it
+# again, such as to roll back. Pages takes the run's commit as the build version and keeps the live
+# site when it is the live one's, so a run on main, whose commit can be the live release's, would
+# deploy nothing.
 name: pages
 
 on:
   release:
     types: [published]
   workflow_dispatch:
-    inputs:
-      tag:
-        description: "Release to publish (v0.5.0)"
-        required: true
 
 permissions:
   contents: read
@@ -41,8 +40,12 @@ jobs:
         id: release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ inputs.tag || github.event.release.tag_name }}
+          TAG: ${{ github.ref_name }}
         run: |
+          if [ "$GITHUB_REF_TYPE" != tag ]; then
+            echo "::error::run pages on the tag of the release to publish: gh workflow run pages --ref vX.Y.Z"
+            exit 1
+          fi
           if [ "$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft,isPrerelease \
             --jq '.isDraft or .isPrerelease')" != false ]; then
             echo "::error::$TAG is a draft or a pre-release; publish only a published release"
@@ -82,7 +85,7 @@ jobs:
       - name: Replace the major on gh-pages
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ inputs.tag || github.event.release.tag_name }}
+          TAG: ${{ github.ref_name }}
           ARCHIVE: ${{ steps.release.outputs.archive }}
           MAJOR: ${{ steps.release.outputs.major }}
         run: |

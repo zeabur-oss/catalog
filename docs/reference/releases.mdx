@@ -3,7 +3,7 @@ title: Releases and the API
 description: Read the catalog from its static API, pin a Zeabur Catalog version and verify its Sigstore signature, or build the release files from a specific commit.
 ---
 
-Pushing a `vX.Y.Z` tag builds `bundle.tar.gz`, `api-v1.tar.gz`, and `SHA256SUMS` with its Sigstore signature bundle, and creates a draft release with them. A maintainer publishes the draft. Each published release that isn't a pre-release also publishes its API at `https://oss-catalog.zeabur.com/v1/`. Before 1.0, a minor release can change the file format, so pin an exact release when you need one.
+Pushing a `vX.Y.Z` tag builds `bundle.tar.gz`, `api-v1.tar.gz`, and `SHA256SUMS` with its Sigstore signature bundle, and creates a draft release with them. A maintainer publishes the draft. Each published release that isn't a pre-release also publishes its API at `https://oss-catalog.zeabur.com/v1/`. The Zeabur Catalog version numbers the releases of this repository. Before 1.0, a minor release can change `bundle.tar.gz` and the files in this repository, but the API on `v1/` changes only as [The API](#the-api) describes, so a reader of `v1` reads every release on it.
 
 ## Release files
 
@@ -37,7 +37,7 @@ The schemas are the contract, and the Go types of the catalog's tools generate t
 - `manifests` is the text of `manifests.yaml` as written, as one string. It has `{{ .Namespace }}` fields, so it isn't YAML until the installer expands it, and a JSON object couldn't keep its comments or those fields.
 - A template's `sourceDigest` is the digest of its directory, `template.yaml` and `manifests.yaml` together. The READMEs and `e2e.yaml` are left out, so editing a README keeps the digest.
 
-`https://oss-catalog.zeabur.com/v1/` always holds the latest release of API major version 1. A change that would break a reader of `v1` comes with `v2`, at its own path, and `v1` then keeps the last release that had it. A newer release can add a field or a value without a new major version. A reader ignores a field it doesn't know, and handles a value it doesn't know as follows:
+`https://oss-catalog.zeabur.com/v1/` always holds the latest release of API major version 1, whatever the Zeabur Catalog version. A change inside `v1` only adds, such as a field, a value or a file. It never removes a field, changes a field's type or makes a field required. A change that would do so comes with `v2`, at its own path, and `v1` then keeps the last release that had it. CI compares the schemas with those of the latest published release and fails on such a change. A reader ignores a field it doesn't know, and handles a value it doesn't know as follows:
 
 | Field | A value the reader doesn't know |
 | --- | --- |
