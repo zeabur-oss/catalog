@@ -5,8 +5,9 @@
 //! fetches charts and manifests into a cache.
 
 use std::fs;
+use std::io::Write as _;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 use k8s_openapi::apiextensions_apiserver::pkg::apis::apiextensions::v1::{
     CustomResourceDefinition, JSONSchemaProps, JSONSchemaPropsOrArray, JSONSchemaPropsOrBool,
@@ -180,20 +181,15 @@ impl Cache {
                     &test_inputs(component),
                 )
                 .map_err(|e| e.to_string())?;
-                let file = self.entry("values", &[id, &helm.name, profile.as_str()]);
-                if let Some(dir) = file.parent() {
-                    fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
-                }
-                // JSON is YAML that every YAML reader takes the same way.
+                // JSON is YAML that every YAML reader takes the same way. Helm reads `-f -` from
+                // stdin, so concurrent renders share no values file.
                 let json = serde_json::to_vec(&values).map_err(|e| e.to_string())?;
-                fs::write(&file, json).map_err(|e| format!("{}: {e}", file.display()))?;
                 let mut cmd = self.helm();
                 cmd.args(["template", helm.helm_name()])
                     .arg(&chart)
                     .args(["--namespace", &helm.namespace, "--include-crds"])
-                    .args(["--kube-version", kube_version, "-f"])
-                    .arg(&file);
-                run(&mut cmd)
+                    .args(["--kube-version", kube_version, "-f", "-"]);
+                run_with_input(&mut cmd, &json)
             }
             Release::Manifest(manifest) => self.manifests(manifest),
             Release::Inline(inline) => Ok(inline.manifests.clone().into_bytes()),
@@ -251,16 +247,32 @@ fn check_digest(what: &str, data: &[u8], want: &str) -> Result<(), String> {
 
 /// Runs `cmd` and returns its stdout; a failure carries its stderr.
 fn run(cmd: &mut Command) -> Result<Vec<u8>, String> {
-    let out = cmd
-        .output()
-        .map_err(|e| format!("{}: {e}", cmd.get_program().to_string_lossy()))?;
+    run_with_input(cmd, &[])
+}
+
+/// Runs `cmd` with `input` on its stdin and returns its stdout.
+fn run_with_input(cmd: &mut Command, input: &[u8]) -> Result<Vec<u8>, String> {
+    let name = cmd.get_program().to_string_lossy().into_owned();
+    let mut child = cmd
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("{name}: {e}"))?;
+    if let Some(mut stdin) = child.stdin.take() {
+        stdin
+            .write_all(input)
+            .map_err(|e| format!("{name}: stdin: {e}"))?;
+    }
+    let out = child
+        .wait_with_output()
+        .map_err(|e| format!("{name}: {e}"))?;
     if out.status.success() {
         return Ok(out.stdout);
     }
     let args: Vec<_> = cmd.get_args().map(|a| a.to_string_lossy()).collect();
     Err(format!(
-        "{} {}: {}: {}",
-        cmd.get_program().to_string_lossy(),
+        "{name} {}: {}: {}",
         args.join(" "),
         out.status,
         String::from_utf8_lossy(&out.stderr).trim()
