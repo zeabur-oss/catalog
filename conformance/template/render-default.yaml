@@ -5,7 +5,7 @@ template:
   services: [{name: app}]
   inputs:
     - {name: port, required: false, default: "8080", validation: {pattern: '[0-9]+'}}
-    - {name: motd, required: false, validation: {pattern: '.*'}}
+    - {name: motd, required: false, validation: {pattern: '[A-Za-z ]*'}}
 manifests: |
   apiVersion: v1
   kind: ConfigMap

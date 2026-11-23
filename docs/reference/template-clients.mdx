@@ -28,7 +28,7 @@ The client checks the options before it renders. When a check fails, it renders 
 | Each given value matches the whole `validation.pattern` of its input, not only a part of it | `pattern` | `input` |
 | Each given name is an input of the template | `unknown-input` | `input` |
 
-A pattern uses only the syntax that RE2, Rust's `regex` crate and JavaScript read the same way: ASCII characters, `.`, bracket classes of characters and ranges such as `[a-z0-9_-]` or `[^@ ]`, groups `( )` and `(?: )`, `|`, the repetitions `?`, `*`, `+`, `{n}`, `{n,}` and `{n,m}`, and `^` and `$`. Escape a special character with `\`, and always escape `]` inside a class. The catalog's check refuses every other construct, such as `\d`, `\s`, `\w`, `\b`, `\p{...}`, flags and named groups, because these engines read them differently. To match the whole value, wrap a pattern as `^(?:<pattern>)$`.
+A pattern uses only the syntax that RE2, Rust's `regex` crate and JavaScript read the same way: ASCII characters, bracket classes of characters and ranges such as `[a-z0-9_-]` or `[^@ ]`, groups `( )` and `(?: )`, `|`, the repetitions `?`, `*`, `+`, `{n}`, `{n,}` and `{n,m}` with counts up to 1000, and `^` and `$`. Escape a special character with `\`, and always escape `]` inside a class. The catalog's check refuses every other construct, such as `.`, `\d`, `\s`, `\w`, `\b`, `\p{...}`, flags and named groups, because these engines read them differently. To match the whole value, wrap a pattern as `^(?:<pattern>)$`.
 
 When several checks fail, the client reports one of them. `render.go` checks in the order of the table. Each case breaks one rule, so the order doesn't change the result.
 

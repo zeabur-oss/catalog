@@ -10,7 +10,8 @@ use std::net::IpAddr;
 
 use regex::Regex;
 use regex_syntax::ast::{
-    self, AssertionKind, Ast, ClassSet, ClassSetItem, GroupKind, Literal, LiteralKind, Span,
+    self, AssertionKind, Ast, ClassSet, ClassSetItem, GroupKind, Literal, LiteralKind,
+    RepetitionKind, RepetitionRange, Span,
 };
 use serde_json::{Map, Value};
 use zeabur_catalog_format::{Template, TemplateDir};
@@ -303,11 +304,15 @@ fn whole_match(pattern: &str) -> Result<Regex, regex::Error> {
 }
 
 /// Why `pattern` is outside [the syntax every client reads the same way][template-clients]:
-/// ASCII literals, `.`, bracket classes of literals and ranges, groups, `|`, repetition, `^` and
-/// `$`. RE2, the `regex` crate and JavaScript differ on the rest, such as `\d`, `\s`, `\b`,
-/// `\p{..}`, flags and nested classes.
+/// ASCII literals, bracket classes of literals and ranges, groups, `|`, repetition up to
+/// [`MAX_REPEAT`], `^` and `$`. RE2, the `regex` crate and JavaScript differ on the rest, such as
+/// `.`, which ends at different line terminators, `\d`, `\s`, `\b`, `\p{..}`, flags and nested
+/// classes.
 ///
 /// [template-clients]: https://github.com/zeabur-oss/catalog/blob/main/docs/reference/template-clients.mdx
+/// The largest count RE2 repeats, as in `a{1000}`.
+const MAX_REPEAT: u32 = 1000;
+
 fn pattern_problem(pattern: &str) -> Option<String> {
     if !pattern.is_ascii() {
         return Some("it has a character that is not ASCII".to_owned());
@@ -325,7 +330,8 @@ fn pattern_problem(pattern: &str) -> Option<String> {
 
 fn portable(ast: &Ast) -> Result<(), Span> {
     match ast {
-        Ast::Empty(_) | Ast::Dot(_) => Ok(()),
+        Ast::Empty(_) => Ok(()),
+        Ast::Dot(span) => Err(**span),
         Ast::Literal(literal) => portable_literal(literal),
         Ast::Assertion(assertion) => match assertion.kind {
             AssertionKind::StartLine | AssertionKind::EndLine => Ok(()),
@@ -344,7 +350,17 @@ fn portable(ast: &Ast) -> Result<(), Span> {
             ClassSet::Item(item) => portable_item(item),
             ClassSet::BinaryOp(op) => Err(op.span),
         },
-        Ast::Repetition(repetition) => portable(&repetition.ast),
+        Ast::Repetition(repetition) => match repetition.op.kind {
+            RepetitionKind::Range(
+                RepetitionRange::Exactly(n)
+                | RepetitionRange::AtLeast(n)
+                | RepetitionRange::Bounded(_, n),
+            ) if n > MAX_REPEAT => Err(repetition.op.span),
+            RepetitionKind::ZeroOrOne
+            | RepetitionKind::ZeroOrMore
+            | RepetitionKind::OneOrMore
+            | RepetitionKind::Range(_) => portable(&repetition.ast),
+        },
         Ast::Group(group) => match &group.kind {
             GroupKind::CaptureIndex(_) => portable(&group.ast),
             GroupKind::NonCapturing(flags) if flags.items.is_empty() => portable(&group.ast),
@@ -499,6 +515,8 @@ mod tests {
             r"[\]a]+",
             "a|",
             "x{2,}?",
+            "a{1000}",
+            "a{0,1000}",
         ] {
             assert_eq!(pattern_problem(pattern), None, "{pattern}");
         }
@@ -506,7 +524,7 @@ mod tests {
             (r"\d+", r"\d"),
             (r"[^@\s]+", r"\s"),
             (r"\w", r"\w"),
-            (r".*\bx", r"\b"),
+            (r"x\b", r"\b"),
             (r"\p{Greek}", r"\p{Greek}"),
             ("(?i)https", "(?i)"),
             ("(?i:a)", "(?i:a)"),
@@ -518,6 +536,10 @@ mod tests {
             ("[a[b]]", "[b]"),
             ("[a&&b]", "a&&b"),
             ("[]a]", "]"),
+            (".+", "."),
+            ("a{1001}", "{1001}"),
+            ("a{2,1001}", "{2,1001}"),
+            ("a{1001,}", "{1001,}"),
             ("caf\u{e9}", "it has a character that is not ASCII"),
         ] {
             let problem = pattern_problem(pattern).unwrap_or_default();
