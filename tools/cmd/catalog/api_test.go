@@ -142,7 +142,7 @@ func writeTestAPI(t *testing.T) {
 
 func TestAPIPublishesTheDeclarationRenderAndMeasurements(t *testing.T) {
 	writeTestAPI(t)
-	if err := checkAPI("out/v1"); err != nil {
+	if err := checkAPI("out/v1", "out/v1/schema"); err != nil {
 		t.Fatal(err)
 	}
 	data, err := os.ReadFile("out/v1/components/web.json")
@@ -202,7 +202,7 @@ func TestAPIPublishesTheDeclarationRenderAndMeasurements(t *testing.T) {
 
 func TestAPIPublishesTheTemplateAsWritten(t *testing.T) {
 	writeTestAPI(t)
-	if err := checkAPI("out/v1"); err != nil {
+	if err := checkAPI("out/v1", "out/v1/schema"); err != nil {
 		t.Fatal(err)
 	}
 	data, err := os.ReadFile("out/v1/templates/blog.json")
@@ -285,7 +285,7 @@ func TestAPICheckRejectsABrokenFile(t *testing.T) {
 			}
 			c.breakIt(doc)
 			writeFile(t, path, doc)
-			if err := checkAPI("out/v1"); err == nil {
+			if err := checkAPI("out/v1", "out/v1/schema"); err == nil {
 				t.Error("checkAPI passed a broken file")
 			}
 		})

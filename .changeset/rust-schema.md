@@ -9,3 +9,5 @@ default: minor
 The schemas accept the same files. Their `$defs` have new names, such as `Generate` for `generate`, so a `$ref` into another schema's `$defs` needs the new name. An internally tagged object, such as a release, now lists its fields in each variant of its `oneOf`.
 
 A quantity in `resources.work` is a string, such as `cpu: "1"` or `memory: 256Mi`, as the Rust reader reads it. A number there no longer passes the schema.
+
+CI no longer compares the text of the schemas with the latest release's. It checks that every file of the new API passes the latest release's schemas and its own, because readers depend on the data. These schemas are the new baseline.

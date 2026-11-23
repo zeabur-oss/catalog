@@ -6,7 +6,7 @@
 //	catalog e2e -tier check|smoke|full [-cluster current] [-since <ref>|ids]  run a test tier (see tier.go)
 //	catalog budget                      single-node memory budget
 //	catalog api -version <v> [-out out/api]  write the static API: catalog.json, components/<id>.json, schema/
-//	catalog compat <dir>                fail unless schema/v1/ only adds to the API's schemas in <dir>
+//	catalog compat <published> <api>    fail unless every file of the API in <api> passes the schemas of <published>
 //	catalog crosscheck                  write crosscheck.json, the render of every template with its e2e values
 //	catalog merge [-keep <dir>] <dir>   merge measurements uploaded by CI jobs into measurements/
 //	catalog template render <id>        expand manifests.yaml

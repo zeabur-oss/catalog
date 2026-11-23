@@ -174,7 +174,7 @@ func api(fs *flag.FlagSet, r *repo) error {
 	if err := writeAPI(r.cat, r.templates, cfg, dir, *version, strings.TrimSpace(commit)); err != nil {
 		return err
 	}
-	return checkAPI(dir)
+	return checkAPI(dir, filepath.Join(dir, "schema"))
 }
 
 // writeAPI replaces dir with catalog.json, components/<id>.json, templates/<id>.json and the
@@ -252,11 +252,11 @@ func writeAPI(cat *catalog.Catalog, ts []*templates.Template, cfg config, dir, v
 	return nil
 }
 
-// checkAPI fails unless each file of the API in dir passes its schema.
-func checkAPI(dir string) error {
+// checkAPI fails unless each file of the API in dir passes its schema in schemas.
+func checkAPI(dir, schemas string) error {
 	var errs []error
 	check := func(schema, file string) {
-		s, err := catalog.CompileSchema(filepath.Join(dir, "schema"), schema)
+		s, err := catalog.CompileSchema(schemas, schema)
 		if err != nil {
 			errs = append(errs, err)
 			return
