@@ -1,157 +1,558 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/zeabur-oss/catalog/schema/v1/select-case.schema.json",
-  "title": "Selection case",
-  "description": "One case of conformance/select/: a small catalog, an installer configuration and the components an installer chooses. docs/reference/installers.mdx gives the rules.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": ["description", "components", "config", "want"],
-  "properties": {
-    "description": { "type": "string", "description": "The rule the case checks, in one or two sentences." },
-    "components": {
-      "type": "array",
-      "description": "The catalog: each component with only the fields selection reads, and the testedOn and installOrder that an installer works out.",
-      "minItems": 1,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["id", "defaults", "distributions", "testedOn"],
-        "properties": {
-          "id": { "$ref": "#/$defs/id" },
-          "provides": { "type": "object", "additionalProperties": false, "properties": { "capability": { "type": "string", "pattern": "^[a-z0-9-]+$" } } },
-          "defaults": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["single-node", "multi-node"],
-            "properties": {
-              "single-node": { "enum": ["recommended", "optional", "unsupported"] },
-              "multi-node": { "enum": ["recommended", "optional", "unsupported"] }
-            }
+  "$defs": {
+    "Candidate": {
+      "additionalProperties": false,
+      "description": "What selection reads of a component, with the `testedOn` and `installOrder` worked out.",
+      "properties": {
+        "defaults": {
+          "$ref": "#/$defs/PerProfile",
+          "description": "Its mode on each profile."
+        },
+        "distributions": {
+          "description": "The distributions it runs on.",
+          "items": {
+            "$ref": "#/$defs/Distribution"
           },
-          "distributions": { "$ref": "#/$defs/distributions" },
-          "testedOn": { "$ref": "#/$defs/testedOn" },
-          "installOrder": {
-            "type": "object",
-            "description": "Per profile. A profile left out means the component alone.",
-            "additionalProperties": false,
-            "properties": {
-              "single-node": { "$ref": "#/$defs/ids" },
-              "multi-node": { "$ref": "#/$defs/ids" }
-            }
-          }
-        }
-      }
-    },
-    "config": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["profile", "distribution", "platform"],
-      "properties": {
-        "profile": { "enum": ["single-node", "multi-node"] },
-        "distribution": { "enum": ["k3s", "rke2", "kubesolo"] },
-        "platform": { "$ref": "#/$defs/platform", "description": "The platform of the cluster's nodes." },
-        "add": { "$ref": "#/$defs/names", "description": "What the installer adds to the defaults." },
-        "enable": { "$ref": "#/$defs/names" },
-        "disable": { "$ref": "#/$defs/names" }
-      }
-    },
-    "want": {
-      "type": "object",
-      "description": "Either the selection or an error. A list or map left out is empty.",
-      "additionalProperties": false,
-      "properties": {
-        "components": {
           "type": "array",
-          "description": "In install order.",
+          "uniqueItems": true
+        },
+        "id": {
+          "description": "Its id.",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "type": "string"
+        },
+        "installOrder": {
+          "$ref": "#/$defs/InstallOrders",
+          "default": {},
+          "description": "What installing it installs; a profile left out means the component alone."
+        },
+        "provides": {
+          "$ref": "#/$defs/Provides",
+          "description": "The capability it provides."
+        },
+        "testedOn": {
+          "description": "Where it passed its test.",
           "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["id", "why"],
-            "properties": {
-              "id": { "$ref": "#/$defs/id" },
-              "why": { "enum": ["default", "enabled", "dependency"] }
-            }
-          }
-        },
-        "leftOut": {
-          "type": "object",
-          "description": "Component id to why it is left out.",
-          "propertyNames": { "$ref": "#/$defs/id" },
-          "additionalProperties": {
-            "oneOf": [
-              {
-                "type": "object",
-                "additionalProperties": false,
-                "required": ["reason", "distributions"],
-                "properties": { "reason": { "const": "distributions" }, "distributions": { "$ref": "#/$defs/distributions" } }
-              },
-              {
-                "type": "object",
-                "additionalProperties": false,
-                "required": ["reason", "profile"],
-                "properties": { "reason": { "const": "unsupported" }, "profile": { "enum": ["single-node", "multi-node"] } }
-              }
-            ]
-          }
-        },
-        "warnings": {
-          "type": "array",
-          "description": "In any order.",
-          "items": {
-            "oneOf": [
-              {
-                "type": "object",
-                "additionalProperties": false,
-                "required": ["kind", "component", "distribution"],
-                "properties": { "kind": { "const": "untested" }, "component": { "$ref": "#/$defs/id" }, "distribution": { "type": "string" } }
-              },
-              {
-                "type": "object",
-                "additionalProperties": false,
-                "required": ["kind", "component"],
-                "properties": { "kind": { "const": "left-out" }, "component": { "$ref": "#/$defs/id" } }
-              }
-            ]
-          }
-        },
-        "error": {
-          "oneOf": [
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["kind", "name"],
-              "properties": { "kind": { "const": "unknown" }, "name": { "type": "string" } }
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["kind", "component", "dependency"],
-              "properties": { "kind": { "const": "needs-disabled" }, "component": { "$ref": "#/$defs/id" }, "dependency": { "$ref": "#/$defs/id" } }
-            }
-          ]
+            "$ref": "#/$defs/TestedOn"
+          },
+          "type": "array"
         }
       },
-      "not": { "required": ["error", "components"] }
+      "required": [
+        "id",
+        "defaults",
+        "distributions",
+        "testedOn"
+      ],
+      "type": "object"
+    },
+    "Chosen": {
+      "additionalProperties": false,
+      "description": "A component to install.",
+      "properties": {
+        "id": {
+          "description": "Its id.",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "type": "string"
+        },
+        "why": {
+          "$ref": "#/$defs/Why",
+          "description": "Why it is installed."
+        }
+      },
+      "required": [
+        "id",
+        "why"
+      ],
+      "type": "object"
+    },
+    "Config": {
+      "additionalProperties": false,
+      "description": "The cluster and the lists of the installer and the person.",
+      "properties": {
+        "add": {
+          "default": [],
+          "description": "What the installer adds to the defaults.",
+          "items": {
+            "pattern": "^[a-z0-9-]+$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "disable": {
+          "default": [],
+          "description": "What the person turns off, by id or capability.",
+          "items": {
+            "pattern": "^[a-z0-9-]+$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "distribution": {
+          "$ref": "#/$defs/Distribution",
+          "description": "The distribution."
+        },
+        "enable": {
+          "default": [],
+          "description": "What the person turns on, by id or capability.",
+          "items": {
+            "pattern": "^[a-z0-9-]+$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "platform": {
+          "description": "The platform of the nodes, such as `linux/amd64`.",
+          "pattern": "^[a-z0-9]+/[a-z0-9]+$",
+          "type": "string"
+        },
+        "profile": {
+          "$ref": "#/$defs/Profile",
+          "description": "The profile."
+        }
+      },
+      "required": [
+        "profile",
+        "distribution",
+        "platform"
+      ],
+      "type": "object"
+    },
+    "Distribution": {
+      "description": "A host distribution of Kubernetes that a component runs on.",
+      "oneOf": [
+        {
+          "const": "k3s",
+          "description": "K3s.",
+          "type": "string"
+        },
+        {
+          "const": "rke2",
+          "description": "RKE2.",
+          "type": "string"
+        },
+        {
+          "const": "kubesolo",
+          "description": "KubeSolo.",
+          "type": "string"
+        }
+      ]
+    },
+    "Expected": {
+      "additionalProperties": false,
+      "description": "What a case expects. A list or map left out is empty.",
+      "not": {
+        "required": [
+          "error",
+          "components"
+        ]
+      },
+      "properties": {
+        "components": {
+          "default": [],
+          "description": "In install order.",
+          "items": {
+            "$ref": "#/$defs/Chosen"
+          },
+          "type": "array"
+        },
+        "error": {
+          "$ref": "#/$defs/SelectError",
+          "default": null,
+          "description": "The error, instead of a selection."
+        },
+        "leftOut": {
+          "additionalProperties": {
+            "$ref": "#/$defs/LeftOut"
+          },
+          "default": {},
+          "description": "By id.",
+          "propertyNames": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "type": "object"
+        },
+        "warnings": {
+          "default": [],
+          "description": "In any order.",
+          "items": {
+            "$ref": "#/$defs/Warning"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "InstallOrders": {
+      "additionalProperties": false,
+      "description": "The install order on each profile.",
+      "properties": {
+        "multi-node": {
+          "description": "On `multi-node`.",
+          "items": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "single-node": {
+          "description": "On `single-node`.",
+          "items": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "type": "object"
+    },
+    "LeftOut": {
+      "description": "Why a chosen component is taken out.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "Its `distributions` do not list the cluster's.",
+          "properties": {
+            "distributions": {
+              "description": "What it runs on.",
+              "items": {
+                "$ref": "#/$defs/Distribution"
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
+            "reason": {
+              "const": "distributions",
+              "type": "string"
+            }
+          },
+          "required": [
+            "reason",
+            "distributions"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "It is `unsupported` on the profile.",
+          "properties": {
+            "profile": {
+              "$ref": "#/$defs/Profile",
+              "description": "The profile."
+            },
+            "reason": {
+              "const": "unsupported",
+              "type": "string"
+            }
+          },
+          "required": [
+            "reason",
+            "profile"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "Mode": {
+      "description": "Whether a profile installs a component by default.",
+      "oneOf": [
+        {
+          "const": "recommended",
+          "description": "On by default.",
+          "type": "string"
+        },
+        {
+          "const": "optional",
+          "description": "Off by default.",
+          "type": "string"
+        },
+        {
+          "const": "unsupported",
+          "description": "Not installed on the profile.",
+          "type": "string"
+        }
+      ]
+    },
+    "PerProfile": {
+      "additionalProperties": false,
+      "description": "A value for each profile.",
+      "properties": {
+        "multi-node": {
+          "$ref": "#/$defs/Mode",
+          "description": "On `multi-node`."
+        },
+        "single-node": {
+          "$ref": "#/$defs/Mode",
+          "description": "On `single-node`."
+        }
+      },
+      "required": [
+        "single-node",
+        "multi-node"
+      ],
+      "type": "object"
+    },
+    "Profile": {
+      "description": "A deployment layout. Every component describes both.",
+      "oneOf": [
+        {
+          "const": "single-node",
+          "description": "One node.",
+          "type": "string"
+        },
+        {
+          "const": "multi-node",
+          "description": "Three nodes or more.",
+          "type": "string"
+        }
+      ]
+    },
+    "Provides": {
+      "additionalProperties": false,
+      "description": "What a component offers other software in the cluster.",
+      "minProperties": 1,
+      "properties": {
+        "capability": {
+          "default": null,
+          "description": "The capability it offers, such as `logs`.",
+          "pattern": "^[a-z0-9-]+$",
+          "type": "string"
+        },
+        "registry": {
+          "$ref": "#/$defs/Registry",
+          "default": null,
+          "description": "An OCI registry in the cluster that nodes pull from."
+        }
+      },
+      "type": "object"
+    },
+    "Registry": {
+      "additionalProperties": false,
+      "description": "An OCI registry in the cluster that nodes pull from.",
+      "properties": {
+        "ca": {
+          "$ref": "#/$defs/SecretRef",
+          "description": "The CA that signs its serving certificate."
+        },
+        "host": {
+          "description": "The `host:port` that images name.",
+          "pattern": "^[a-z0-9.-]+:[0-9]+$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "host",
+        "ca"
+      ],
+      "type": "object"
+    },
+    "SecretRef": {
+      "additionalProperties": false,
+      "description": "A key of a Secret.",
+      "properties": {
+        "key": {
+          "description": "The key.",
+          "type": "string"
+        },
+        "name": {
+          "description": "The Secret's name.",
+          "type": "string"
+        },
+        "namespace": {
+          "description": "The Secret's namespace.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "key",
+        "namespace"
+      ],
+      "type": "object"
+    },
+    "SelectError": {
+      "description": "Why nothing is installed.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "A name is no component id or capability.",
+          "properties": {
+            "kind": {
+              "const": "unknown",
+              "type": "string"
+            },
+            "name": {
+              "description": "The name.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A chosen component needs one that is disabled or left out.",
+          "properties": {
+            "component": {
+              "description": "The chosen component.",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+              "type": "string"
+            },
+            "dependency": {
+              "description": "What it needs.",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+              "type": "string"
+            },
+            "kind": {
+              "const": "needs-disabled",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "component",
+            "dependency"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "TestedOn": {
+      "additionalProperties": false,
+      "description": "A distribution where a component passed its test, with the platforms it passed on.",
+      "properties": {
+        "distribution": {
+          "$ref": "#/$defs/Distribution",
+          "description": "The distribution."
+        },
+        "platforms": {
+          "description": "The platforms, such as `linux/amd64`.",
+          "items": {
+            "pattern": "^[a-z0-9]+/[a-z0-9]+$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "distribution",
+        "platforms"
+      ],
+      "type": "object"
+    },
+    "Warning": {
+      "description": "Something the person should know about the selection.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "A component to install did not pass its test on the distribution and platform.",
+          "properties": {
+            "component": {
+              "description": "The component.",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+              "type": "string"
+            },
+            "distribution": {
+              "$ref": "#/$defs/Distribution",
+              "description": "The distribution."
+            },
+            "kind": {
+              "const": "untested",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "component",
+            "distribution"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "An enabled component is left out.",
+          "properties": {
+            "component": {
+              "description": "The component.",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+              "type": "string"
+            },
+            "kind": {
+              "const": "left-out",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "component"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "Why": {
+      "description": "Why a component is installed.",
+      "oneOf": [
+        {
+          "const": "default",
+          "description": "It is recommended on the profile, or the installer adds it.",
+          "type": "string"
+        },
+        {
+          "const": "enabled",
+          "description": "The person enables it.",
+          "type": "string"
+        },
+        {
+          "const": "dependency",
+          "description": "A chosen component needs it.",
+          "type": "string"
+        }
+      ]
     }
   },
-  "$defs": {
-    "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
-    "ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
-    "names": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z0-9-]+$" } },
-    "distributions": { "type": "array", "uniqueItems": true, "items": { "enum": ["k3s", "rke2", "kubesolo"] } },
-    "platform": { "type": "string", "pattern": "^[a-z0-9]+/[a-z0-9]+$" },
-    "testedOn": {
-      "type": "array",
-      "description": "Each distribution where the test passed, with the platforms it passed on.",
+  "$id": "https://oss-catalog.zeabur.com/v1/schema/select-case.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A case of `conformance/select/`: a small catalog, a configuration and what an installer\nchooses.",
+  "properties": {
+    "components": {
+      "description": "The catalog.",
       "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["distribution", "platforms"],
-        "properties": {
-          "distribution": { "enum": ["k3s", "rke2", "kubesolo"] },
-          "platforms": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/platform" } }
-        }
-      }
+        "$ref": "#/$defs/Candidate"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "config": {
+      "$ref": "#/$defs/Config",
+      "description": "The configuration."
+    },
+    "description": {
+      "description": "The rule the case checks.",
+      "type": "string"
+    },
+    "want": {
+      "$ref": "#/$defs/Expected",
+      "description": "The selection, or the error."
     }
-  }
+  },
+  "required": [
+    "description",
+    "components",
+    "config",
+    "want"
+  ],
+  "title": "A case of conformance/select/",
+  "type": "object"
 }

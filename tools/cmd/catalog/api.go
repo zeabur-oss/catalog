@@ -11,7 +11,6 @@ import (
 	"slices"
 	"strings"
 
-	gen "github.com/invopop/jsonschema"
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -45,9 +44,9 @@ type CatalogFile struct {
 // CatalogRelease is the catalog release that the API was built from.
 type CatalogRelease struct {
 	// The catalog version, such as 0.5.0.
-	Version string `json:"version" jsonschema:"minLength=1"`
+	Version string `json:"version"`
 	// The Git commit of the catalog.
-	Commit string `json:"commit" jsonschema:"pattern=^[0-9a-f]{40}$"`
+	Commit string `json:"commit"`
 }
 
 // PinnedDistribution is the release of a distribution that e2e installs on the host.
@@ -60,7 +59,7 @@ type PinnedDistribution struct {
 // ComponentEntry names a component. components/<id>.json holds the rest.
 type ComponentEntry struct {
 	// The directory name of the component under components/.
-	ID string `json:"id" jsonschema:"pattern=^[a-z0-9]+(-[a-z0-9]+)*$"`
+	ID string `json:"id"`
 	// The Go module hash (h1:) of the directory components/<id>/, without its READMEs. A
 	// measurement with another sourceDigest tested older files.
 	SourceDigest string `json:"sourceDigest"`
@@ -69,7 +68,7 @@ type ComponentEntry struct {
 // TemplateEntry names a template. templates/<id>.json holds the rest.
 type TemplateEntry struct {
 	// The directory name of the template under templates/.
-	ID string `json:"id" jsonschema:"pattern=^[a-z0-9]+(-[a-z0-9]+)*$"`
+	ID string `json:"id"`
 	// The Go module hash (h1:) of the directory templates/<id>/, without its READMEs and e2e.yaml.
 	// A measurement with another sourceDigest tested older files.
 	SourceDigest string `json:"sourceDigest"`
@@ -90,8 +89,6 @@ type WrittenTemplate struct{ raw any }
 
 func (w WrittenTemplate) MarshalJSON() ([]byte, error) { return json.Marshal(w.raw) }
 
-func (WrittenTemplate) JSONSchema() *gen.Schema { return &gen.Schema{Ref: "template.schema.json"} }
-
 // ComponentFile is components/<id>.json: the declaration of a component, the objects it renders
 // and the runs of its e2e test.
 type ComponentFile struct {
@@ -107,8 +104,6 @@ type ComponentFile struct {
 type Declaration struct{ raw any }
 
 func (d Declaration) MarshalJSON() ([]byte, error) { return json.Marshal(d.raw) }
-
-func (Declaration) JSONSchema() *gen.Schema { return &gen.Schema{Ref: "component.schema.json"} }
 
 // Render is what helm template renders for each profile with the test inputs and the values that
 // other components contribute.
@@ -179,7 +174,7 @@ func api(fs *flag.FlagSet, r *repo) error {
 	if err := writeAPI(r.cat, r.templates, cfg, dir, *version, strings.TrimSpace(commit)); err != nil {
 		return err
 	}
-	return checkAPI(dir)
+	return checkAPI(dir, filepath.Join(dir, "schema"))
 }
 
 // writeAPI replaces dir with catalog.json, components/<id>.json, templates/<id>.json and the
@@ -257,11 +252,11 @@ func writeAPI(cat *catalog.Catalog, ts []*templates.Template, cfg config, dir, v
 	return nil
 }
 
-// checkAPI fails unless each file of the API in dir passes its schema.
-func checkAPI(dir string) error {
+// checkAPI fails unless each file of the API in dir passes its schema in schemas.
+func checkAPI(dir, schemas string) error {
 	var errs []error
 	check := func(schema, file string) {
-		s, err := catalog.CompileSchema(filepath.Join(dir, "schema"), schema)
+		s, err := catalog.CompileSchema(schemas, schema)
 		if err != nil {
 			errs = append(errs, err)
 			return

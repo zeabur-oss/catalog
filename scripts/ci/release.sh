@@ -3,7 +3,7 @@
 # API of major N. `catalog api` renders charts that helm fetches, so the API is built outside the
 # nix sandbox. Both are reproducible: the Release workflow verifies a draft by building them again.
 # CI builds them at flake.nix's version, so a go.sum change fails here first, with flake.nix's new
-# vendorHash. A change inside v<N> only adds, so the schemas are compared with the latest published
+# vendorHash. A change inside v<N> keeps every file passing the schemas of the latest published
 # release's api-v<N>.tar.gz; a breaking change goes to v<N+1>, which has none yet.
 #
 #   scripts/ci/release.sh [<version> <dir>]
@@ -39,7 +39,7 @@ status=$(curl -sSL -o "$published/api.tar.gz" -w '%{http_code}' \
 case $status in
   200)
     tar -xzf "$published/api.tar.gz" -C "$published"
-    go run ./tools/cmd/catalog compat "$published/$major"
+    go run ./tools/cmd/catalog compat "$published/$major" "$api/$major"
     ;;
   404) echo "no published release has api-$major.tar.gz yet; nothing to compare" ;;
   *) echo "downloading the latest release's api-$major.tar.gz: HTTP $status" >&2; exit 1 ;;

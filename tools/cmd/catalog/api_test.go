@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -15,19 +14,6 @@ import (
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
-
-func TestSchemasAreGeneratedFromTheGoTypes(t *testing.T) {
-	t.Chdir("../../..")
-	files, err := schemaFiles()
-	if err != nil {
-		t.Fatal(err)
-	}
-	for name, want := range files {
-		if got, err := os.ReadFile(filepath.Join("schema", "v1", name)); err != nil || !bytes.Equal(got, want) {
-			t.Errorf("schema/v1/%s is not what the Go types give; run go run ./tools/cmd/catalog schema", name)
-		}
-	}
-}
 
 const webComponent = `apiVersion: catalog.zeabur.com/v1
 kind: Component
@@ -156,7 +142,7 @@ func writeTestAPI(t *testing.T) {
 
 func TestAPIPublishesTheDeclarationRenderAndMeasurements(t *testing.T) {
 	writeTestAPI(t)
-	if err := checkAPI("out/v1"); err != nil {
+	if err := checkAPI("out/v1", "out/v1/schema"); err != nil {
 		t.Fatal(err)
 	}
 	data, err := os.ReadFile("out/v1/components/web.json")
@@ -216,7 +202,7 @@ func TestAPIPublishesTheDeclarationRenderAndMeasurements(t *testing.T) {
 
 func TestAPIPublishesTheTemplateAsWritten(t *testing.T) {
 	writeTestAPI(t)
-	if err := checkAPI("out/v1"); err != nil {
+	if err := checkAPI("out/v1", "out/v1/schema"); err != nil {
 		t.Fatal(err)
 	}
 	data, err := os.ReadFile("out/v1/templates/blog.json")
@@ -299,7 +285,7 @@ func TestAPICheckRejectsABrokenFile(t *testing.T) {
 			}
 			c.breakIt(doc)
 			writeFile(t, path, doc)
-			if err := checkAPI("out/v1"); err == nil {
+			if err := checkAPI("out/v1", "out/v1/schema"); err == nil {
 				t.Error("checkAPI passed a broken file")
 			}
 		})

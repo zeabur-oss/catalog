@@ -69,7 +69,7 @@ type Environment struct {
 	// The pinned release of each add-on that the run installed on the host, by name.
 	AddOns map[string]string `json:"addOns,omitempty"`
 	// The day of the run, in UTC.
-	MeasuredAt string `json:"measuredAt" jsonschema:"format=date"`
+	MeasuredAt string `json:"measuredAt"`
 }
 
 // MeasuredVersion is the version of a component's release or of a template's image.

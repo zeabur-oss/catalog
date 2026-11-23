@@ -17,7 +17,6 @@ import (
 	"strconv"
 	"strings"
 
-	gen "github.com/invopop/jsonschema"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -27,26 +26,26 @@ var Profiles = []string{"single-node", "multi-node"}
 // Component is one upstream, at components/<id>/component.yaml. A cluster administrator installs it.
 type Component struct {
 	ID         string   `yaml:"-" json:"-"`
-	APIVersion string   `yaml:"apiVersion" jsonschema:"required"`
-	Kind       string   `yaml:"kind" jsonschema:"required"`
-	Metadata   Metadata `yaml:"metadata" jsonschema:"required"`
+	APIVersion string   `yaml:"apiVersion"`
+	Kind       string   `yaml:"kind"`
+	Metadata   Metadata `yaml:"metadata"`
 	// Per profile: recommended (on by default), optional (off by default) or unsupported.
-	Defaults Modes `yaml:"defaults" jsonschema:"required"`
+	Defaults Modes `yaml:"defaults"`
 	// Distributions it runs on and e2e tests it on, of k3s, rke2 and kubesolo. kind tests it
 	// regardless. A reader ignores a value it does not know.
-	Distributions []string `yaml:"distributions" jsonschema:"required,minItems=1,uniqueItems=true,enum=k3s,enum=rke2,enum=kubesolo"`
+	Distributions []string `yaml:"distributions"`
 	// The Kubernetes versions it supports, as a SemVer range like Helm's Chart.yaml kubeVersion:
 	// the strictest kubeVersion of its charts, else the oldest version that config/kubernetes.yaml
 	// renders. Every version that config/kubernetes.yaml renders or tests on must be in it.
-	KubeVersion string `yaml:"kubeVersion" jsonschema:"required,minLength=1"`
+	KubeVersion string `yaml:"kubeVersion"`
 	// Keeps state in volumes; uninstalling loses data.
 	PersistsData bool `yaml:"persistsData"`
 	// Components installed first.
-	Requires []Ref `yaml:"requires" jsonschema:"uniqueItems=true"`
+	Requires []Ref `yaml:"requires"`
 	// Values the installer asks for or generates.
 	Inputs []Input `yaml:"inputs"`
 	// Installed in order.
-	Releases []Release `yaml:"releases" jsonschema:"required,minItems=1"`
+	Releases []Release `yaml:"releases"`
 	// What it offers other software in the cluster.
 	Provides *Provides `yaml:"provides"`
 	// CRDs of detection.crds whose objects the component writes itself, so they don't mean anyone
@@ -59,8 +58,8 @@ type Component struct {
 	NetworkPolicies string `yaml:"networkPolicies"`
 	// Values this component adds to another component's release.
 	Contributes []Contribution `yaml:"contributes"`
-	Detection   Detection      `yaml:"detection" jsonschema:"required"`
-	Security    Security       `yaml:"security" jsonschema:"required"`
+	Detection   Detection      `yaml:"detection"`
+	Security    Security       `yaml:"security"`
 	// Read-only checks that an installer runs on an installed cluster.
 	// Each is one `kubectl wait` and applies nothing. e2e runs them after install, before smoke.
 	Health []Health `yaml:"health"`
@@ -77,65 +76,35 @@ type Component struct {
 // Dir is the directory of c: its component.yaml and READMEs.
 func (c *Component) Dir() string { return path.Dir(c.Path) }
 
-func (Component) JSONSchemaExtend(s *gen.Schema) {
-	constant(s, "apiVersion", "catalog.zeabur.com/v1")
-	constant(s, "kind", "Component")
-}
-
-// constant sets the schema of property name to the value v.
-func constant(s *gen.Schema, name string, v any) {
-	s.Properties.Set(name, &gen.Schema{Const: v})
-}
-
 // Modes is the mode of a component on each profile.
 type Modes map[string]string
-
-func (Modes) JSONSchema() *gen.Schema {
-	return profileMap(&gen.Schema{Enum: []any{"recommended", "optional", "unsupported"}}, true)
-}
-
-// profileMap is an object with a value of schema v for each profile.
-func profileMap(v *gen.Schema, required bool) *gen.Schema {
-	s := &gen.Schema{Type: "object", Properties: gen.NewProperties(), AdditionalProperties: gen.FalseSchema}
-	for _, p := range Profiles {
-		s.Properties.Set(p, v)
-	}
-	if required {
-		s.Required = Profiles
-	}
-	return s
-}
 
 // Metadata is a component's name and summary.
 type Metadata struct {
 	// Name for people.
-	Name string `yaml:"name" jsonschema:"required"`
+	Name string `yaml:"name"`
 	// What it gives the cluster, in one plain sentence for people choosing components.
-	Summary string         `yaml:"summary" jsonschema:"required,pattern=^[^\\n]+$"`
-	Locales SummaryLocales `yaml:"locales" jsonschema:"required"`
+	Summary string         `yaml:"summary"`
+	Locales SummaryLocales `yaml:"locales"`
 	// SPDX expression; every identifier must be OSI-approved, or listed under optInOnly in
 	// config/licenses.yaml with no profile recommending the component.
-	License  string `yaml:"license" jsonschema:"required"`
-	Homepage string `yaml:"homepage" jsonschema:"required,format=uri"`
+	License  string `yaml:"license"`
+	Homepage string `yaml:"homepage"`
 }
 
 // Security is what a component's RBAC lets it do and what its namespaces must allow.
 type Security struct {
 	// What its RBAC lets it do.
-	Summary string `yaml:"summary" jsonschema:"required"`
+	Summary string `yaml:"summary"`
 	// The Pod Security Standard level its namespaces need.
-	PodSecurity string `yaml:"podSecurity" jsonschema:"required,enum=restricted,enum=baseline,enum=privileged"`
+	PodSecurity string `yaml:"podSecurity"`
 }
 
 // Ref is a component by id, or a capability: its recommended upstream on the profile, else an
 // optional one.
 type Ref struct {
-	Component  string `yaml:"component" json:"component,omitempty" jsonschema:"pattern=^[a-z0-9]+(-[a-z0-9]+)*$"`
-	Capability string `yaml:"capability" json:"capability,omitempty" jsonschema:"pattern=^[a-z0-9-]+$"`
-}
-
-func (Ref) JSONSchemaExtend(s *gen.Schema) {
-	s.OneOf = []*gen.Schema{{Required: []string{"component"}}, {Required: []string{"capability"}}}
+	Component  string `yaml:"component" json:"component,omitempty"`
+	Capability string `yaml:"capability" json:"capability,omitempty"`
 }
 
 // ByID returns a ref to each component ID.
@@ -149,19 +118,17 @@ func ByID(ids ...string) []Ref {
 
 // ReleaseRef is the release of another component that receives the values.
 type ReleaseRef struct {
-	Component string `yaml:"component" jsonschema:"required,pattern=^[a-z0-9]+(-[a-z0-9]+)*$"`
-	Release   string `yaml:"release" jsonschema:"required"`
+	Component string `yaml:"component"`
+	Release   string `yaml:"release"`
 }
 
 // Provides is what a component offers other software in the cluster.
 type Provides struct {
 	// The capability it offers, such as logs. A requires entry {capability: <name>} installs one
 	// component that offers it.
-	Capability string    `yaml:"capability" jsonschema:"pattern=^[a-z0-9-]+$"`
+	Capability string    `yaml:"capability"`
 	Registry   *Registry `yaml:"registry"`
 }
-
-func (Provides) JSONSchemaExtend(s *gen.Schema) { s.MinProperties = new(uint64(1)) }
 
 // Capability is the capability the component provides, or "".
 func (c *Component) Capability() string {
@@ -174,20 +141,20 @@ func (c *Component) Capability() string {
 // Registry is an OCI registry in the cluster that nodes pull from.
 type Registry struct {
 	// host:port that images name.
-	Host string `yaml:"host" jsonschema:"required,pattern=^[a-z0-9.-]+:[0-9]+$"`
+	Host string `yaml:"host"`
 	// The CA that signs its serving certificate.
-	CA SecretRef `yaml:"ca" jsonschema:"required"`
+	CA SecretRef `yaml:"ca"`
 }
 
 // Resources is what a component needs beyond its measured idle use.
 type Resources struct {
 	// Each kind of work the component does, such as a build. Names are unique.
-	Work []Work `yaml:"work" jsonschema:"required,minItems=1"`
+	Work []Work `yaml:"work"`
 }
 
 // Work is one kind of work a component does, such as a build.
 type Work struct {
-	Name string `yaml:"name" jsonschema:"required,pattern=^[a-z0-9-]+$"`
+	Name string `yaml:"name"`
 	// Resource requests of each pod doing one unit of work, for pods that no render shows, such as
 	// a build pod.
 	Requests Quantities `yaml:"requests"`
@@ -197,14 +164,12 @@ type Work struct {
 	Use Quantities `yaml:"use"`
 }
 
-func (Work) JSONSchemaExtend(s *gen.Schema) { s.AnyOf = anyRequired("requests", "limits", "use").AnyOf }
-
 // Release is one install step of a component.
 type Release struct {
-	Name string `yaml:"name" jsonschema:"required,pattern=^[a-z0-9-]+$"`
+	Name string `yaml:"name"`
 	// helm: a chart. manifest: files downloaded from urls. inline: the objects in manifests.
-	Type      string `yaml:"type" jsonschema:"required,enum=helm,enum=manifest,enum=inline"`
-	Namespace string `yaml:"namespace" jsonschema:"required"`
+	Type      string `yaml:"type"`
+	Namespace string `yaml:"namespace"`
 	// Helm release name; defaults to name.
 	ReleaseName string `yaml:"releaseName"`
 	// Skip when these CRDs already exist.
@@ -212,15 +177,15 @@ type Release struct {
 	// oci://registry/path/chart, or a chart name with repo.
 	Chart string `yaml:"chart"`
 	// HTTP chart repository.
-	Repo string `yaml:"repo" jsonschema:"pattern=^https://"`
+	Repo string `yaml:"repo"`
 	// Manifest URLs; {version} is replaced.
-	URLs    []string `yaml:"urls" jsonschema:"pattern=\\{version\\}"`
+	URLs    []string `yaml:"urls"`
 	Version string   `yaml:"version"`
 	// The chart at version: for an oci:// chart, its OCI manifest digest; for a chart in an HTTP
 	// repository, the SHA-256 of the chart archive, as the repository's index.yaml records it.
-	ChartDigest string `yaml:"chartDigest" jsonschema:"pattern=^sha256:[a-f0-9]{64}$"`
+	ChartDigest string `yaml:"chartDigest"`
 	// The SHA-256 of each file in urls, in the same order.
-	URLDigests []string `yaml:"urlDigests" jsonschema:"pattern=^sha256:[a-f0-9]{64}$"`
+	URLDigests []string `yaml:"urlDigests"`
 	// Images, without tag, that the chart cannot pin by digest. A comment says why.
 	Unpinned []string `yaml:"unpinnedImages"`
 	// Objects applied as written.
@@ -231,27 +196,11 @@ type Release struct {
 	Profiles map[string]string `yaml:"profiles"`
 }
 
-func (Release) JSONSchemaExtend(s *gen.Schema) {
-	s.Properties.Set("profiles", profileMap(&gen.Schema{Type: "string"}, false))
-	of := func(t string, required []string, forbidden ...string) *gen.Schema {
-		s := typed(t)
-		s.Required, s.Not = required, anyRequired(forbidden...)
-		return s
-	}
-	s.OneOf = []*gen.Schema{
-		of("helm", []string{"chart", "version", "chartDigest"}, "urls", "manifests"),
-		of("manifest", []string{"urls", "version", "urlDigests"}, "chart", "manifests"),
-		of("inline", []string{"manifests"}, "chart", "urls"),
-	}
-	s.DependentRequired = map[string][]string{"repo": {"chart"}, "values": {"chart"}, "profiles": {"chart"},
-		"chartDigest": {"chart"}, "urlDigests": {"urls"}}
-}
-
 // Input is a value the installer asks for or generates.
 type Input struct {
 	// camelCase.
-	Name        string `yaml:"name" jsonschema:"required,pattern=^[a-z][A-Za-z0-9]*$"`
-	Description string `yaml:"description" jsonschema:"required"`
+	Name        string `yaml:"name"`
+	Description string `yaml:"description"`
 	// Release whose values receive the input; defaults to the first chart release.
 	Release string `yaml:"release"`
 	// Dotted values path; numbers index lists.
@@ -265,22 +214,18 @@ type Input struct {
 	TestValue any `yaml:"testValue"`
 }
 
-func (Input) JSONSchemaExtend(s *gen.Schema) {
-	s.OneOf = []*gen.Schema{{Required: []string{"path"}}, {Required: []string{"secret"}}}
-}
-
 // SecretRef is a key of a Secret.
 type SecretRef struct {
-	Name      string `yaml:"name" jsonschema:"required"`
-	Key       string `yaml:"key" jsonschema:"required"`
-	Namespace string `yaml:"namespace" jsonschema:"required"`
+	Name      string `yaml:"name"`
+	Key       string `yaml:"key"`
+	Namespace string `yaml:"namespace"`
 }
 
 // Contribution is values that a component adds to a release of another component.
 type Contribution struct {
-	Target ReleaseRef `yaml:"target" jsonschema:"required"`
+	Target ReleaseRef `yaml:"target"`
 	// Helm values (YAML). Every value needs a comment saying why.
-	Values string `yaml:"values" jsonschema:"required"`
+	Values string `yaml:"values"`
 }
 
 // Detection is how to recognise an existing installation.
@@ -297,73 +242,46 @@ type Detection struct {
 	Workloads []DetectedWorkload `yaml:"workloads"`
 }
 
-func (Detection) JSONSchemaExtend(s *gen.Schema) { s.MinProperties = new(uint64(1)) }
-
 // Addon is an add-on of a distribution.
 type Addon struct {
 	// A reader ignores an entry of a distribution it does not know.
-	Distribution string `yaml:"distribution" jsonschema:"required"`
-	Name         string `yaml:"name" jsonschema:"required"`
+	Distribution string `yaml:"distribution"`
+	Name         string `yaml:"name"`
 }
 
 // DetectedWorkload is a workload whose labels show the upstream.
 type DetectedWorkload struct {
-	Kind   string            `yaml:"kind" jsonschema:"required"`
-	Labels map[string]string `yaml:"labels" jsonschema:"required"`
-}
-
-func (DetectedWorkload) JSONSchemaExtend(s *gen.Schema) {
-	kind, _ := s.Properties.Get("kind")
-	for _, k := range WorkloadKinds {
-		kind.Enum = append(kind.Enum, k)
-	}
+	Kind   string            `yaml:"kind"`
+	Labels map[string]string `yaml:"labels"`
 }
 
 // Health is a read-only check of an installed component: one kubectl wait
 // that applies nothing, so it can run on a production cluster.
 type Health struct {
-	Name string `yaml:"name" jsonschema:"required,pattern=^[a-z0-9-]+$"`
+	Name string `yaml:"name"`
 	// The objects to wait for.
-	Resource HealthResource `yaml:"resource" jsonschema:"required"`
+	Resource HealthResource `yaml:"resource"`
 	// The condition the objects reach, such as Ready. A Deployment, DaemonSet or StatefulSet has none:
 	// it is ready when its rollout is complete.
-	Condition string `yaml:"condition" jsonschema:"pattern=^[A-Za-z]+$"`
-	Timeout   string `yaml:"timeout" jsonschema:"required"`
+	Condition string `yaml:"condition"`
+	Timeout   string `yaml:"timeout"`
 	// What to do when the check fails, in English. An installer shows it to the reader.
-	Advice string `yaml:"advice" jsonschema:"required,minLength=1"`
-}
-
-func (Health) JSONSchemaExtend(s *gen.Schema) {
-	SetTimeout(s)
-	resource := gen.NewProperties()
-	kind := gen.NewProperties()
-	var workloads []any
-	for _, k := range WorkloadKinds {
-		workloads = append(workloads, k)
-	}
-	kind.Set("kind", &gen.Schema{Enum: workloads})
-	resource.Set("resource", &gen.Schema{Properties: kind})
-	s.If = &gen.Schema{Properties: resource}
-	// kubectl rollout status takes a name or a selector, not every object.
-	noAll := gen.NewProperties()
-	noAll.Set("resource", &gen.Schema{Not: &gen.Schema{Required: []string{"all"}}})
-	s.Then = &gen.Schema{Not: &gen.Schema{Required: []string{"condition"}}, Properties: noAll}
-	s.Else = &gen.Schema{Required: []string{"condition"}}
+	Advice string `yaml:"advice"`
 }
 
 // HealthResource names the objects of one kind by name, by labels, or all of them.
 type HealthResource struct {
 	// The kind of the objects. A kind outside the core and apps groups that shares a name with
 	// another has its group after a dot, such as Node.longhorn.io.
-	Kind string `yaml:"kind" jsonschema:"required"`
+	Kind string `yaml:"kind"`
 	// The name of one object.
-	Name string `yaml:"name" jsonschema:"minLength=1"`
+	Name string `yaml:"name"`
 	// The labels of the objects, each a key with its value.
 	Selector map[string]string `yaml:"selector"`
 	// Every object of the kind.
 	All bool `yaml:"all"`
 	// The namespace of the objects. A kind that has namespaces needs it, and any other kind can't have it.
-	Namespace string `yaml:"namespace" jsonschema:"minLength=1"`
+	Namespace string `yaml:"namespace"`
 }
 
 // healthKind is a kind that a health check can wait for.
@@ -383,29 +301,6 @@ var healthKinds = map[string]healthKind{
 	"StatefulSet":      {"statefulsets.apps", true},
 }
 
-func (HealthResource) JSONSchemaExtend(s *gen.Schema) {
-	selector, _ := s.Properties.Get("selector")
-	selector.MinProperties = new(uint64(1))
-	all, _ := s.Properties.Get("all")
-	all.Const = true
-	kind, _ := s.Properties.Get("kind")
-	var namespaced []any
-	for _, k := range slices.Sorted(maps.Keys(healthKinds)) {
-		kind.Enum = append(kind.Enum, k)
-		if healthKinds[k].namespaced {
-			namespaced = append(namespaced, k)
-		}
-	}
-	for _, f := range []string{"name", "selector", "all"} {
-		s.OneOf = append(s.OneOf, &gen.Schema{Required: []string{f}})
-	}
-	p := gen.NewProperties()
-	p.Set("kind", &gen.Schema{Enum: namespaced})
-	s.If = &gen.Schema{Properties: p}
-	s.Then = &gen.Schema{Required: []string{"namespace"}}
-	s.Else = &gen.Schema{Not: &gen.Schema{Required: []string{"namespace"}}}
-}
-
 // Wait returns the wait that runs h.
 func (h Health) Wait() Wait {
 	r, k := h.Resource, healthKinds[h.Resource.Kind]
@@ -421,15 +316,13 @@ func (h Health) Wait() Wait {
 
 // Smoke is an e2e check after install.
 type Smoke struct {
-	Name string `yaml:"name" jsonschema:"required"`
+	Name string `yaml:"name"`
 	// Objects to apply first, in namespace catalog-smoke.
 	Manifest string `yaml:"manifest"`
 	// What to wait for after the objects are applied.
-	Wait    []Wait `yaml:"wait" jsonschema:"required"`
-	Timeout string `yaml:"timeout" jsonschema:"default=180s"`
+	Wait    []Wait `yaml:"wait"`
+	Timeout string `yaml:"timeout"`
 }
-
-func (Smoke) JSONSchemaExtend(s *gen.Schema) { SetTimeout(s) }
 
 // HelmName is the Helm release name.
 func (r Release) HelmName() string { return cmp.Or(r.ReleaseName, r.Name) }
@@ -636,18 +529,11 @@ func (c *Component) inputRelease(in Input) string {
 type Generate struct {
 	// random: bytes random bytes in encoding. clusterIP: a free address in the cluster's Service
 	// CIDR, for a Service's fixed ClusterIP. A template generates random values only.
-	Type string `yaml:"type" jsonschema:"required"`
+	Type string `yaml:"type"`
 	// Random bytes to generate.
-	Bytes int `yaml:"bytes" jsonschema:"minimum=12,maximum=64"`
+	Bytes int `yaml:"bytes"`
 	// hex, or base64url without padding.
-	Encoding string `yaml:"encoding" jsonschema:"enum=hex,enum=base64url"`
-}
-
-func (Generate) JSONSchemaExtend(s *gen.Schema) {
-	random, clusterIP := typed(GenerateRandom), typed(GenerateClusterIP)
-	random.Required = []string{"bytes", "encoding"}
-	clusterIP.Not = anyRequired("bytes", "encoding")
-	s.OneOf = []*gen.Schema{random, clusterIP}
+	Encoding string `yaml:"encoding"`
 }
 
 // Types of Generate.

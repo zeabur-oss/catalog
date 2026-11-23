@@ -5,150 +5,111 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"maps"
 	"os"
 	"path/filepath"
-	"slices"
-	"strings"
 )
 
-// compat fails unless schema/v1/ only adds to the schemas of the API in <dir>/schema/, such as a
-// published release's v1/: it keeps every field and type, and requires no new field.
+// compat fails unless every file of the API in <api> passes the schemas of the published API in
+// <published>, such as the latest release's v1/, and its own. A reader of v1 checks the data, not
+// the text of the schemas, so the data is what must keep passing.
 func compat(fs *flag.FlagSet, _ *repo) error {
 	fs.Parse(os.Args[2:])
-	if fs.NArg() != 1 {
-		return errors.New("usage: catalog compat <dir of a published v1>")
+	if fs.NArg() != 2 {
+		return errors.New("usage: catalog compat <dir of a published v1> <dir of the new v1>")
 	}
-	var problems []string
-	for _, name := range apiSchemas {
-		before, err := readSchema(filepath.Join(fs.Arg(0), "schema", name))
-		if errors.Is(err, os.ErrNotExist) {
-			continue // a schema the release did not have yet
-		}
+	return checkCompat(fs.Arg(0), fs.Arg(1))
+}
+
+// checkCompat checks the API in api against the schemas of published, then against its own. A
+// reader of v1 ignores a field it does not know and handles a value it does not know, so the
+// published schemas are checked without closed objects and enums: a new field or value passes, a
+// missing or retyped field does not.
+func checkCompat(published, api string) error {
+	open, err := os.MkdirTemp("", "catalog-compat-")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(open)
+	if err := openSchemas(filepath.Join(published, "schema"), open); err != nil {
+		return err
+	}
+	if err := checkAPI(api, open); err != nil {
+		return fmt.Errorf("a change inside v1 must keep passing the published schemas; a breaking change goes to v2:\n%w", err)
+	}
+	return checkAPI(api, filepath.Join(api, "schema"))
+}
+
+// openSchemas copies the schemas in dir to out without "additionalProperties": false and enums.
+func openSchemas(dir, out string) error {
+	files, err := filepath.Glob(filepath.Join(dir, "*.schema.json"))
+	if err != nil {
+		return err
+	}
+	for _, f := range files {
+		data, err := os.ReadFile(f)
 		if err != nil {
 			return err
 		}
-		after, err := readSchema(filepath.Join("schema", "v1", name))
+		var schema any
+		if err := json.Unmarshal(data, &schema); err != nil {
+			return fmt.Errorf("%s: %w", f, err)
+		}
+		data, err = json.Marshal(opened(schema))
 		if err != nil {
 			return err
 		}
-		problems = append(problems, breaks(name, before, after)...)
-	}
-	if len(problems) > 0 {
-		return fmt.Errorf("a change inside v1 must only add; a breaking change goes to v2:\n%s", strings.Join(problems, "\n"))
+		if err := os.WriteFile(filepath.Join(out, filepath.Base(f)), data, 0o644); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-func readSchema(path string) (any, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
+// opened drops "additionalProperties": false, "enum", and a "oneOf" whose every branch is a
+// "const", which is how the generated schemas write an enum. An "if" or a "not" stays as written:
+// opened, it would match other data, so "then" would apply to every value, or "not" to none.
+func opened(v any) any {
+	schema, ok := v.(map[string]any)
+	if !ok {
+		return v
 	}
-	var s any
-	return s, json.Unmarshal(data, &s)
-}
-
-// breaks lists what changed from before to after other than an addition. An addition is a new
-// property where before forbade other fields, a new definition, a new branch of an existing anyOf,
-// a new value of an existing enum, a field no longer required, or a new description. Inside an
-// if, a not or a oneOf nothing may change. Anything else, such as a removed field, a changed type
-// or a new required field, can break a reader.
-func breaks(path string, before, after any) []string {
-	b, bok := before.(map[string]any)
-	a, aok := after.(map[string]any)
-	if !bok || !aok {
-		if mustJSON(before) == mustJSON(after) {
-			return nil
-		}
-		return []string{fmt.Sprintf("%s: %s is now %s", path, mustJSON(before), mustJSON(after))}
+	if closed, ok := schema["additionalProperties"].(bool); ok && !closed {
+		delete(schema, "additionalProperties")
 	}
-	var out []string
-	keys := slices.Sorted(maps.Keys(b))
-	for k := range a {
-		if _, ok := b[k]; !ok {
-			keys = append(keys, k)
-		}
+	delete(schema, "enum")
+	if branches, ok := schema["oneOf"].([]any); ok && allConst(branches) {
+		delete(schema, "oneOf")
 	}
-	for _, key := range keys {
-		at := path + "/" + key
-		switch key {
-		case "description":
-		case "if", "not", "oneOf":
-			// Loosening these can tighten the schema (a then applies to more, a oneOf matches
-			// twice), so any change to them counts.
-			if mustJSON(b[key]) != mustJSON(a[key]) {
-				out = append(out, fmt.Sprintf("%s: %s is now %s", at, mustJSON(b[key]), mustJSON(a[key])))
-			}
-		case "properties", "$defs":
-			bm, _ := b[key].(map[string]any)
-			am, _ := a[key].(map[string]any)
-			for _, name := range slices.Sorted(maps.Keys(bm)) {
-				if _, ok := am[name]; !ok {
-					out = append(out, fmt.Sprintf("%s/%s is removed", at, name))
-				} else {
-					out = append(out, breaks(at+"/"+name, bm[name], am[name])...)
+	for k, e := range schema {
+		switch k {
+		case "properties", "patternProperties", "$defs":
+			if named, ok := e.(map[string]any); ok {
+				for name, s := range named {
+					named[name] = opened(s)
 				}
 			}
-			// A new property constrains a field that before let through, unless before forbade
-			// every other field.
-			if key == "properties" && b["additionalProperties"] != false {
-				for _, name := range slices.Sorted(maps.Keys(am)) {
-					if _, ok := bm[name]; !ok {
-						out = append(out, fmt.Sprintf("%s/%s is new", at, name))
-					}
+		case "allOf", "anyOf", "oneOf", "prefixItems":
+			if list, ok := e.([]any); ok {
+				for i, s := range list {
+					list[i] = opened(s)
 				}
 			}
-		case "required":
-			for _, v := range asList(a[key]) {
-				if !contains(asList(b[key]), v) {
-					out = append(out, fmt.Sprintf("%s: %v is new", at, v))
-				}
-			}
-		case "enum", "anyOf", "allOf":
-			if _, ok := b[key]; !ok {
-				out = append(out, fmt.Sprintf("%s: %s is new", at, mustJSON(a[key])))
-				continue
-			}
-			if key == "enum" {
-				for _, v := range asList(b[key]) {
-					if !contains(asList(a[key]), v) {
-						out = append(out, fmt.Sprintf("%s: %v is removed", at, v))
-					}
-				}
-			} else {
-				out = append(out, branches(at, key, asList(b[key]), asList(a[key]))...)
-			}
-		default:
-			out = append(out, breaks(at, b[key], a[key])...)
+		case "items", "additionalProperties", "then", "else", "contains", "propertyNames":
+			schema[k] = opened(e)
 		}
 	}
-	return out
+	return schema
 }
 
-// branches compares anyOf or allOf branches by index: the generator writes them in a fixed order.
-// An anyOf may gain branches; an allOf may not.
-func branches(path, key string, before, after []any) []string {
-	if len(after) < len(before) || key == "allOf" && len(after) != len(before) {
-		return []string{fmt.Sprintf("%s: %d branches are now %d", path, len(before), len(after))}
+func allConst(branches []any) bool {
+	for _, b := range branches {
+		m, ok := b.(map[string]any)
+		if !ok {
+			return false
+		}
+		if _, ok := m["const"]; !ok {
+			return false
+		}
 	}
-	var out []string
-	for i := range before {
-		out = append(out, breaks(fmt.Sprintf("%s/%d", path, i), before[i], after[i])...)
-	}
-	return out
-}
-
-func asList(v any) []any {
-	l, _ := v.([]any)
-	return l
-}
-
-func contains(l []any, v any) bool {
-	return slices.ContainsFunc(l, func(x any) bool { return mustJSON(x) == mustJSON(v) })
-}
-
-func mustJSON(v any) string {
-	data, _ := json.Marshal(v)
-	return string(data)
+	return len(branches) > 0
 }

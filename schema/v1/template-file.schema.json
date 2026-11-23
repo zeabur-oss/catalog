@@ -1,38 +1,33 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://oss-catalog.zeabur.com/v1/schema/template-file.schema.json",
-  "$defs": {
-    "writtenTemplate": {
-      "$ref": "template.schema.json"
-    }
-  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "`templates/<id>.json`: the two files of a template as written.",
   "properties": {
     "id": {
-      "type": "string",
+      "description": "Its id.",
       "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
-      "description": "The directory name of the template under templates/."
-    },
-    "sourceDigest": {
-      "type": "string",
-      "description": "The Go module hash (h1:) of the directory templates/\u003cid\u003e/, without its READMEs and e2e.yaml.\nA measurement with another sourceDigest tested older files."
-    },
-    "template": {
-      "$ref": "#/$defs/writtenTemplate",
-      "description": "templates/\u003cid\u003e/template.yaml as written."
+      "type": "string"
     },
     "manifests": {
-      "type": "string",
-      "description": "The text of templates/\u003cid\u003e/manifests.yaml. It has Go template fields such as {{ .Namespace }},\nso it is not YAML yet: the installer expands it, then reads the objects."
+      "description": "The text of `manifests.yaml`, with template fields such as `{{ .Namespace }}`.",
+      "type": "string"
+    },
+    "sourceDigest": {
+      "description": "The digest of its directory.",
+      "type": "string"
+    },
+    "template": {
+      "$ref": "template.schema.json",
+      "description": "`template.yaml` as written."
     }
   },
-  "additionalProperties": false,
-  "type": "object",
   "required": [
     "id",
     "sourceDigest",
     "template",
     "manifests"
   ],
-  "title": "templates/\u003cid\u003e.json",
-  "description": "TemplateFile is templates/\u003cid\u003e.json: the two files of a template as written."
+  "title": "templates/<id>.json",
+  "type": "object"
 }

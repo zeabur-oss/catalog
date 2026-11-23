@@ -27,7 +27,7 @@ The API is static JSON files. It holds facts: what each component declares, what
 | `v1/templates/<id>.json` | One template: its `id` and `sourceDigest`, its `template` and its `manifests`. | [`template-file.schema.json`](../../schema/v1/template-file.schema.json) |
 | `v1/schema/` | The schemas above, `component.schema.json`, the schema of a declaration, and `template.schema.json`, the schema of `template`. | |
 
-The schemas are the contract, and the Go types of the catalog's tools generate them. Each file of a release passes its schema.
+The schemas are the contract, and the Rust types of `crates/zeabur-catalog-format` generate them, with the TypeScript types of [`types/v1/catalog.ts`](../../types/v1/catalog.ts). Each file of a release passes its schema.
 
 - `declaration` is the [component file](component-format.mdx) as written, as JSON.
 - `sourceDigest` is the digest of the component's directory without its READMEs, which is `component.yaml`. A measurement with the same `sourceDigest` measured this file.
@@ -37,7 +37,7 @@ The schemas are the contract, and the Go types of the catalog's tools generate t
 - `manifests` is the text of `manifests.yaml` as written, as one string. It has `{{ .Namespace }}` fields, so it isn't YAML until the installer expands it, and a JSON object couldn't keep its comments or those fields.
 - A template's `sourceDigest` is the digest of its directory, `template.yaml` and `manifests.yaml` together. The READMEs and `e2e.yaml` are left out, so editing a README keeps the digest.
 
-`https://oss-catalog.zeabur.com/v1/` always holds the latest release of API major version 1, whatever the Zeabur Catalog version. A change inside `v1` only adds, such as a field, a value or a file. It never removes a field, changes a field's type or makes a field required. A change that would do so comes with `v2`, at its own path, and `v1` then keeps the last release that had it. CI compares the schemas with those of the latest published release and fails on such a change. A reader ignores a field it doesn't know, and handles a value it doesn't know as follows:
+`https://oss-catalog.zeabur.com/v1/` always holds the latest release of API major version 1, whatever the Zeabur Catalog version. A change inside `v1` only adds, such as a field, a value or a file. It never removes a field, changes a field's type or makes a field required. A change that would do so comes with `v2`, at its own path, and `v1` then keeps the last release that had it. CI checks every file of a new release against the schemas of the latest published release, and against its own, and fails when one does not pass. A new field or value passes the published schemas, because a reader ignores a field it doesn't know and handles a value it doesn't know. A reader depends on the data, so the data is what must keep passing; the text of a schema may change. The first release whose schemas come from the Rust types is the new baseline: its schemas rename their `$defs`, write enums as `oneOf` and take a quantity only as a string, and every component and template of the catalog passes both them and the schemas before them. A reader ignores a field it doesn't know, and handles a value it doesn't know as follows:
 
 | Field | A value the reader doesn't know |
 | --- | --- |

@@ -1,0 +1,15 @@
+[package]
+name = "zeabur-catalog"
+description = "Zeabur Catalog's command: writes the schemas and TypeScript types of the catalog's files"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+zeabur-catalog-format.workspace = true
