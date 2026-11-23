@@ -19,3 +19,8 @@ serde_ignored.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 ts-rs.workspace = true
+utoipa = { workspace = true, optional = true }
+
+[features]
+# Derives `utoipa::ToSchema` on the types a reader puts in its own API.
+utoipa = ["dep:utoipa"]
