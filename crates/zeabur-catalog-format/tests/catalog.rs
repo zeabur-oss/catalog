@@ -8,7 +8,7 @@ mod tests {
     use zeabur_catalog_format::api::MeasurementFile;
     use zeabur_catalog_format::common::{Distribution, Profile};
     use zeabur_catalog_format::order::install_order;
-    use zeabur_catalog_format::{Catalog, Component, Contributions, check, values};
+    use zeabur_catalog_format::{Catalog, Component, Contributions, check, common, values};
 
     fn catalog() -> Catalog {
         Catalog::read(&Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")).unwrap()
@@ -19,6 +19,29 @@ mod tests {
         let catalog = catalog();
         assert!(catalog.components.contains_key("cert-manager"));
         assert!(catalog.templates.values().all(|t| !t.manifests.is_empty()));
+    }
+
+    #[test]
+    fn every_license_ref_has_a_url() {
+        let catalog = catalog();
+        let components = catalog
+            .components
+            .iter()
+            .map(|(id, c)| (id, &c.metadata.license, &c.metadata.license_urls));
+        let templates = catalog.templates.iter().map(|(id, t)| {
+            (
+                id,
+                &t.template.metadata.license,
+                &t.template.metadata.license_urls,
+            )
+        });
+        for (id, license, urls) in components.chain(templates) {
+            assert_eq!(
+                common::license_url_problems(license, urls),
+                Vec::<String>::new(),
+                "{id}"
+            );
+        }
     }
 
     #[test]

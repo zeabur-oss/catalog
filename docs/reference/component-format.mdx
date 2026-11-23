@@ -21,7 +21,7 @@ metadata:
 requires: [{capability: certificates}]   # or {component: <id>}
 ```
 
-A component's `metadata` also has a `summary`: what it gives the cluster, in one plain sentence for people choosing components, with its translations in `locales`. A comment at the top of the file says why the catalog recommends the component.
+A component's `metadata` also has a `summary`: what it gives the cluster, in one plain sentence for people choosing components, with its translations in `locales`. A comment at the top of the file says why the catalog recommends the component. A `LicenseRef-` id in `license` needs the HTTPS URL of its text in `licenseUrls`, such as `licenseUrls: {LicenseRef-example: https://example.com/license}`, so that a reader can link it.
 
 ```yaml
 metadata:

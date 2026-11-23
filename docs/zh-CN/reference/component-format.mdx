@@ -21,7 +21,7 @@ metadata:
 requires: [{capability: certificates}]   # or {component: <id>}
 ```
 
-组件的 `metadata` 还有 `summary`：用一句平实的话说明它为集群提供什么，给挑选组件的人看，翻译放在 `locales`。文件开头的注释说明选用这个组件的原因。
+组件的 `metadata` 还有 `summary`：用一句平实的话说明它为集群提供什么，给挑选组件的人看，翻译放在 `locales`。文件开头的注释说明选用这个组件的原因。`license` 里的 `LicenseRef-` 许可证要在 `licenseUrls` 写上许可证全文的 HTTPS 网址，例如 `licenseUrls: {LicenseRef-example: https://example.com/license}`，读取端才能放上链接。
 
 ```yaml
 metadata:

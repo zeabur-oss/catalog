@@ -15,6 +15,8 @@ metadata:
     zh-CN:
       summary: "让自动化工具用令牌操作的无头 Chrome 浏览器。"
   license: SSPL-1.0 OR LicenseRef-Browserless-Commercial
+  licenseUrls:
+    LicenseRef-Browserless-Commercial: https://github.com/browserless/browserless/blob/main/LICENSE
   # Also: https://docs.browserless.io/
   homepage: https://github.com/browserless/browserless
   docs: https://docs.browserless.io/baas/docker/quickstart

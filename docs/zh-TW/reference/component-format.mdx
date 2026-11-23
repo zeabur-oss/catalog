@@ -21,7 +21,7 @@ metadata:
 requires: [{capability: certificates}]   # or {component: <id>}
 ```
 
-元件的 `metadata` 還有 `summary`：用一句白話說明它為叢集提供什麼，給挑選元件的人看，翻譯放在 `locales`。檔案開頭的註解說明選用這個元件的原因。
+元件的 `metadata` 還有 `summary`：用一句白話說明它為叢集提供什麼，給挑選元件的人看，翻譯放在 `locales`。檔案開頭的註解說明選用這個元件的原因。`license` 裡的 `LicenseRef-` 授權要在 `licenseUrls` 寫上授權全文的 HTTPS 網址，例如 `licenseUrls: {LicenseRef-example: https://example.com/license}`，讀取端才能放上連結。
 
 ```yaml
 metadata:

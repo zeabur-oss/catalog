@@ -61,6 +61,8 @@ pub(crate) mod pattern {
     pub(crate) const LINE: &str = "^[^\\n]+$";
     /// A BCP 47 tag in its recommended case, such as `zh-TW`.
     pub(crate) const LOCALE: &str = "^([a-z]{2,3}(-[a-z]{3}){0,3}|[a-z]{4,8})(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?(-([a-z0-9]{5,8}|[0-9][a-z0-9]{3}))*(-[a-wyz0-9](-[a-z0-9]{2,8})+)*(-x(-[a-z0-9]{1,8})+)?$";
+    /// A `LicenseRef-` id of SPDX.
+    pub(crate) const LICENSE_REF: &str = "^LicenseRef-[A-Za-z0-9.-]+$";
     /// A `sha256:` digest.
     pub(crate) const DIGEST: &str = "^sha256:[a-f0-9]{64}$";
     /// A manifest URL, which names its version.

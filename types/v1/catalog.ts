@@ -763,6 +763,10 @@ locales: { [key in string]: Summary },
  */
 license: string, 
 /**
+ * The URL of the text of each `LicenseRef-` licence in `license`, by its id.
+ */
+licenseUrls?: { [key in string]: string }, 
+/**
  * The project's home page.
  */
 homepage: string, };
@@ -1357,6 +1361,10 @@ locales: { [key in string]: Summary },
  * An SPDX expression for the application, its images and charts.
  */
 license: string, 
+/**
+ * The URL of the text of each `LicenseRef-` licence in `license`, by its id.
+ */
+licenseUrls?: { [key in string]: string }, 
 /**
  * The project's home page.
  */
