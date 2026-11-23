@@ -65,6 +65,8 @@ impl Tree {
                 reason = "granit-parser's Event and Placement are non-exhaustive"
             )]
             let kind = match event {
+                // An empty comment explains nothing.
+                Event::Comment(text, _) if text.trim().is_empty() => continue,
                 Event::Comment(_, Placement::Above) => {
                     above = true;
                     continue;
@@ -194,6 +196,10 @@ mod tests {
             ("a: [1, 2] # why\n", &[]),
             ("a:\n  # empty on purpose\n  []\nb: 2\n", &["b"]),
             ("a:\n  # the list\n  - [1, 2]\n  - [3, 4]\n", &[]),
+            ("a: 1 #\n", &["a"]),
+            ("#\na: 1\n", &["a"]),
+            ("#\n\na: 1\n", &["a"]),
+            ("a:\n  #\n  b: 1\n", &["a.b"]),
         ];
         for (values, want) in cases {
             let found: Vec<String> = unexplained(values)
