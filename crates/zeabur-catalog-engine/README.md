@@ -6,3 +6,4 @@ reads. Zeabur and the catalog's own tests call the same code.
 - `template`: the objects of a template for one namespace. It follows
   [the rules for clients](https://github.com/zeabur-oss/catalog/blob/main/docs/reference/template-clients.mdx),
   and the tests run the cases in `conformance/template/`.
+- `kube_version`: whether a component's `kubeVersion` range admits a Kubernetes version.
