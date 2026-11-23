@@ -16,25 +16,33 @@ func TestCompatChecksTheDataAgainstThePublishedSchemas(t *testing.T) {
 	if err := checkCompat(published, "out/v1"); err != nil {
 		t.Fatalf("the same schemas: %v", err)
 	}
-	// A reader ignores a field it does not know, so a field the published schemas lack passes.
+	// A reader ignores a field it does not know and handles a value it does not know, so a new
+	// field or profile passes, though the published schemas as written refuse them.
+	open := t.TempDir()
+	if err := openSchemas(filepath.Join(published, "schema"), open); err != nil {
+		t.Fatal(err)
+	}
 	catalogJSON := filepath.Join("out", "v1", "catalog.json")
 	data, err := os.ReadFile(catalogJSON)
 	if err != nil {
 		t.Fatal(err)
 	}
-	added := strings.Replace(string(data), "{", `{"added": true, `, 1)
-	if err := os.WriteFile(catalogJSON, []byte(added), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	if err := checkAPI("out/v1", filepath.Join(published, "schema")); err == nil {
-		t.Fatal("the published schema itself must refuse the new field")
-	}
-	open, err := openSchemas(filepath.Join(published, "schema"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := checkAPI("out/v1", open); err != nil {
-		t.Fatalf("a new field: %v", err)
+	for name, changed := range map[string]string{
+		"a new field":   strings.Replace(string(data), "{", `{"added": true, `, 1),
+		"a new profile": strings.Replace(string(data), `"profiles": [`, `"profiles": ["edge", `, 1),
+	} {
+		if changed == string(data) {
+			t.Fatalf("%s: nothing changed", name)
+		}
+		if err := os.WriteFile(catalogJSON, []byte(changed), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if err := checkAPI("out/v1", filepath.Join(published, "schema")); err == nil {
+			t.Fatalf("%s: the published schema as written must refuse it", name)
+		}
+		if err := checkAPI("out/v1", open); err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
 	}
 	if err := os.WriteFile(catalogJSON, data, 0o644); err != nil {
 		t.Fatal(err)

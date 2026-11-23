@@ -21,64 +21,82 @@ func compat(fs *flag.FlagSet, _ *repo) error {
 }
 
 // checkCompat checks the API in api against the schemas of published, then against its own. A
-// reader of v1 ignores fields it does not know, so the published schemas are checked as if no
-// object were closed: a new field passes, a missing or changed one does not.
+// reader of v1 ignores a field it does not know and handles a value it does not know, so the
+// published schemas are checked without closed objects and enums: a new field or value passes, a
+// missing or retyped field does not.
 func checkCompat(published, api string) error {
-	open, err := openSchemas(filepath.Join(published, "schema"))
+	open, err := os.MkdirTemp("", "catalog-compat-")
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(open)
+	if err := openSchemas(filepath.Join(published, "schema"), open); err != nil {
+		return err
+	}
 	if err := checkAPI(api, open); err != nil {
 		return fmt.Errorf("a change inside v1 must keep passing the published schemas; a breaking change goes to v2:\n%w", err)
 	}
 	return checkAPI(api, filepath.Join(api, "schema"))
 }
 
-// openSchemas copies the schemas in dir to a temporary directory without
-// "additionalProperties": false.
-func openSchemas(dir string) (string, error) {
+// openSchemas copies the schemas in dir to out without "additionalProperties": false and enums.
+func openSchemas(dir, out string) error {
 	files, err := filepath.Glob(filepath.Join(dir, "*.schema.json"))
 	if err != nil {
-		return "", err
-	}
-	out, err := os.MkdirTemp("", "catalog-compat-")
-	if err != nil {
-		return "", err
+		return err
 	}
 	for _, f := range files {
 		data, err := os.ReadFile(f)
 		if err != nil {
-			return out, err
+			return err
 		}
 		var schema any
 		if err := json.Unmarshal(data, &schema); err != nil {
-			return out, fmt.Errorf("%s: %w", f, err)
+			return fmt.Errorf("%s: %w", f, err)
 		}
-		data, err = json.Marshal(withoutClosedObjects(schema))
+		data, err = json.Marshal(opened(schema))
 		if err != nil {
-			return out, err
+			return err
 		}
 		if err := os.WriteFile(filepath.Join(out, filepath.Base(f)), data, 0o644); err != nil {
-			return out, err
+			return err
 		}
 	}
-	return out, nil
+	return nil
 }
 
-func withoutClosedObjects(v any) any {
+// opened drops "additionalProperties": false, "enum", and a "oneOf" whose every branch is a
+// "const", which is how the generated schemas write an enum.
+func opened(v any) any {
 	switch v := v.(type) {
 	case map[string]any:
 		if closed, ok := v["additionalProperties"].(bool); ok && !closed {
 			delete(v, "additionalProperties")
 		}
+		delete(v, "enum")
+		if branches, ok := v["oneOf"].([]any); ok && allConst(branches) {
+			delete(v, "oneOf")
+		}
 		for k, e := range v {
-			v[k] = withoutClosedObjects(e)
+			v[k] = opened(e)
 		}
 	case []any:
 		for i, e := range v {
-			v[i] = withoutClosedObjects(e)
+			v[i] = opened(e)
 		}
 	}
 	return v
+}
+
+func allConst(branches []any) bool {
+	for _, b := range branches {
+		m, ok := b.(map[string]any)
+		if !ok {
+			return false
+		}
+		if _, ok := m["const"]; !ok {
+			return false
+		}
+	}
+	return len(branches) > 0
 }
