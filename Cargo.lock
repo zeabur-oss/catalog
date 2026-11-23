@@ -482,6 +482,7 @@ name = "zeabur-catalog-engine"
 version = "0.5.6"
 dependencies = [
  "regex",
+ "regex-syntax",
  "serde-saphyr",
  "serde_json",
  "thiserror",

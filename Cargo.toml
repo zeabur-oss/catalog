@@ -11,7 +11,8 @@ repository = "https://github.com/zeabur-oss/catalog"
 publish = false
 
 [workspace.dependencies]
-regex = { version = "1.13", default-features = false, features = ["std", "unicode-case", "unicode-gencat", "unicode-perl", "unicode-script"] }
+regex = { version = "1.13", default-features = false, features = ["std", "unicode-case", "unicode-perl"] }
+regex-syntax = { version = "0.8", default-features = false, features = ["std"] }
 schemars = { version = "1.2.3", default-features = false, features = ["derive", "std"] }
 serde = { version = "1", features = ["derive"] }
 serde-saphyr = { version = "2", default-features = false, features = ["deserialize"] }

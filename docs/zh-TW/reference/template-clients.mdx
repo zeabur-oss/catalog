@@ -33,7 +33,7 @@ description: 用戶端渲染範本前要做的檢查、怎麼判斷範本需要�
 
 {/* vale ZeaburZhTW.Terms = YES */}
 
-pattern 使用 [RE2 語法](https://github.com/google/re2/wiki/Syntax)。要比對整個值，請把 pattern 包成 `\A(?:<pattern>)\z`。RE2 的 `\d`、`\s`、`\w` 和 `\b` 只認 ASCII 字元。如果用戶端的正規表示式把其中某個當成 Unicode，例如 Rust，或 JavaScript 的 `\s`，要換成對應的 ASCII 字元類別。
+pattern 只用 RE2、Rust 的 `regex` crate 和 JavaScript 讀法都一樣的語法：ASCII 字元、`.`、由字元和範圍組成的方括號字元類別（例如 `[a-z0-9_-]` 或 `[^@ ]`）、群組 `( )` 和 `(?: )`、`|`、重複 `?`、`*`、`+`、`{n}`、`{n,}` 和 `{n,m}`，以及 `^` 和 `$`。特殊字元要用 `\` 跳脫，字元類別裡的 `]` 一律要跳脫。其他寫法，例如 `\d`、`\s`、`\w`、`\b`、`\p{...}`、旗標和具名群組，這幾種引擎的讀法不同，目錄的檢查會拒絕。要比對整個值，請把 pattern 包成 `^(?:<pattern>)$`。
 
 有好幾項檢查沒過時，用戶端回報其中一項即可。`render.go` 依表格的順序檢查。每個測試案例只違反一條規則，所以檢查順序不影響結果。
 

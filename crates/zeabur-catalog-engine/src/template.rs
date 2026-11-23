@@ -8,7 +8,10 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::net::IpAddr;
 
-use regex::{Regex, RegexBuilder};
+use regex::Regex;
+use regex_syntax::ast::{
+    self, AssertionKind, Ast, ClassSet, ClassSetItem, GroupKind, Literal, LiteralKind, Span,
+};
 use serde_json::{Map, Value};
 use zeabur_catalog_format::{Template, TemplateDir};
 
@@ -153,6 +156,9 @@ pub fn check(id: &str, dir: &TemplateDir) -> Result<(), RenderError> {
         if !names.insert(input.name.as_str()) {
             return Err(broken(format!("duplicate input {}", input.name)));
         }
+        if let Some(problem) = pattern_problem(&input.validation.pattern) {
+            return Err(broken(format!("the pattern of {}: {problem}", input.name)));
+        }
         if let Some(secret) = &input.secret
             && !secrets.insert((secret.name.as_str(), secret.key.as_str()))
         {
@@ -291,95 +297,98 @@ fn check_options(id: &str, template: &Template, options: &Options<'_>) -> Result
     Ok(())
 }
 
-/// `pattern` as RE2 reads it, matching a whole value. RE2 reads `\141` as an octal character
-/// code, which the `regex` crate allows only with `octal`.
+/// `pattern` matching a whole value.
 fn whole_match(pattern: &str) -> Result<Regex, regex::Error> {
-    RegexBuilder::new(&format!(r"\A(?:{})\z", re2(pattern)))
-        .octal(true)
-        .build()
+    Regex::new(&format!(r"\A(?:{pattern})\z"))
 }
 
-/// `pattern` with the Perl classes and word boundaries of [RE2], which are ASCII, where the
-/// `regex` crate's are Unicode. Each class becomes a bracket class, which is also valid inside
-/// another class. RE2's literal text `\Q...\E`, which the `regex` crate lacks, becomes escaped
-/// text; without `\E` it runs to the end. Inside a bracket class, RE2 reads `[`, `&`, `~` and a
-/// second `-` as themselves, where the `regex` crate reads nested classes and set operations,
-/// so they are escaped.
+/// Why `pattern` is outside [the syntax every client reads the same way][template-clients]:
+/// ASCII literals, `.`, bracket classes of literals and ranges, groups, `|`, repetition, `^` and
+/// `$`. RE2, the `regex` crate and JavaScript differ on the rest, such as `\d`, `\s`, `\b`,
+/// `\p{..}`, flags and nested classes.
 ///
-/// [RE2]: https://github.com/google/re2/wiki/Syntax
-fn re2(pattern: &str) -> String {
-    let mut out = String::with_capacity(pattern.len());
-    let mut chars = pattern.chars();
-    // Inside a bracket class: whether no member has been read yet, and whether the last one
-    // was a `-`.
-    let mut class: Option<(bool, bool)> = None;
-    while let Some(c) = chars.next() {
-        if c != '\\' {
-            class = match (c, class) {
-                ('[', None) => {
-                    out.push(c);
-                    if chars.clone().next() == Some('^') {
-                        out.push('^');
-                        chars.next();
-                    }
-                    Some((true, false))
-                }
-                (']', Some((false, _))) | (_, None) => {
-                    out.push(c);
-                    None
-                }
-                ('[', Some(_)) => {
-                    let rest = chars.as_str();
-                    match rest.strip_prefix(':').and_then(|r| r.split_once(":]")) {
-                        Some((name, after)) => {
-                            out.push_str("[:");
-                            out.push_str(name);
-                            out.push_str(":]");
-                            chars = after.chars();
-                        }
-                        None => out.push_str("\\["),
-                    }
-                    Some((false, false))
-                }
-                ('&' | '~', Some(_)) | ('-', Some((_, true))) => {
-                    out.push('\\');
-                    out.push(c);
-                    Some((false, false))
-                }
-                (_, Some(_)) => {
-                    out.push(c);
-                    Some((false, c == '-'))
-                }
-            };
-            continue;
-        }
-        class = class.map(|_| (false, false));
-        let Some(next) = chars.next() else {
-            out.push(c);
-            break;
-        };
-        match next {
-            'd' => out.push_str("[0-9]"),
-            'D' => out.push_str("[^0-9]"),
-            's' => out.push_str("[\\t\\n\\f\\r ]"),
-            'S' => out.push_str("[^\\t\\n\\f\\r ]"),
-            'w' => out.push_str("[0-9A-Za-z_]"),
-            'W' => out.push_str("[^0-9A-Za-z_]"),
-            'b' => out.push_str("(?-u:\\b)"),
-            'B' => out.push_str("(?-u:\\B)"),
-            'Q' => {
-                let rest = chars.as_str();
-                let (literal, after) = rest.split_once("\\E").unwrap_or((rest, ""));
-                out.push_str(&regex::escape(literal));
-                chars = after.chars();
-            }
-            _ => {
-                out.push(c);
-                out.push(next);
-            }
-        }
+/// [template-clients]: https://github.com/zeabur-oss/catalog/blob/main/docs/reference/template-clients.mdx
+fn pattern_problem(pattern: &str) -> Option<String> {
+    if !pattern.is_ascii() {
+        return Some("it has a character that is not ASCII".to_owned());
     }
-    out
+    let ast = match ast::parse::Parser::new().parse(pattern) {
+        Ok(ast) => ast,
+        Err(e) => return Some(e.to_string()),
+    };
+    let span = portable(&ast).err()?;
+    let text = pattern
+        .get(span.start.offset..span.end.offset)
+        .unwrap_or(pattern);
+    Some(format!("{text} is not read the same way by every client"))
+}
+
+fn portable(ast: &Ast) -> Result<(), Span> {
+    match ast {
+        Ast::Empty(_) | Ast::Dot(_) => Ok(()),
+        Ast::Literal(literal) => portable_literal(literal),
+        Ast::Assertion(assertion) => match assertion.kind {
+            AssertionKind::StartLine | AssertionKind::EndLine => Ok(()),
+            AssertionKind::StartText
+            | AssertionKind::EndText
+            | AssertionKind::WordBoundary
+            | AssertionKind::NotWordBoundary
+            | AssertionKind::WordBoundaryStart
+            | AssertionKind::WordBoundaryEnd
+            | AssertionKind::WordBoundaryStartAngle
+            | AssertionKind::WordBoundaryEndAngle
+            | AssertionKind::WordBoundaryStartHalf
+            | AssertionKind::WordBoundaryEndHalf => Err(assertion.span),
+        },
+        Ast::ClassBracketed(class) => match &class.kind {
+            ClassSet::Item(item) => portable_item(item),
+            ClassSet::BinaryOp(op) => Err(op.span),
+        },
+        Ast::Repetition(repetition) => portable(&repetition.ast),
+        Ast::Group(group) => match &group.kind {
+            GroupKind::CaptureIndex(_) => portable(&group.ast),
+            GroupKind::NonCapturing(flags) if flags.items.is_empty() => portable(&group.ast),
+            GroupKind::NonCapturing(_) | GroupKind::CaptureName { .. } => Err(group.span),
+        },
+        Ast::Alternation(alternation) => alternation.asts.iter().try_for_each(portable),
+        Ast::Concat(concat) => concat.asts.iter().try_for_each(portable),
+        Ast::Flags(flags) => Err(flags.span),
+        Ast::ClassUnicode(class) => Err(class.span),
+        Ast::ClassPerl(class) => Err(class.span),
+    }
+}
+
+/// A member of a bracket class. A `]` is escaped: JavaScript reads `[]` as an empty class.
+fn portable_item(item: &ClassSetItem) -> Result<(), Span> {
+    match item {
+        ClassSetItem::Literal(literal)
+            if literal.kind == LiteralKind::Verbatim && literal.c == ']' =>
+        {
+            Err(literal.span)
+        }
+        ClassSetItem::Literal(literal) => portable_literal(literal),
+        ClassSetItem::Range(range) => {
+            portable_literal(&range.start)?;
+            portable_literal(&range.end)
+        }
+        ClassSetItem::Union(union) => union.items.iter().try_for_each(portable_item),
+        ClassSetItem::Empty(span) => Err(*span),
+        ClassSetItem::Ascii(class) => Err(class.span),
+        ClassSetItem::Unicode(class) => Err(class.span),
+        ClassSetItem::Perl(class) => Err(class.span),
+        ClassSetItem::Bracketed(class) => Err(class.span),
+    }
+}
+
+/// A character as itself, or a special character escaped.
+const fn portable_literal(literal: &Literal) -> Result<(), Span> {
+    match literal.kind {
+        LiteralKind::Verbatim | LiteralKind::Meta | LiteralKind::Superfluous => Ok(()),
+        LiteralKind::Octal
+        | LiteralKind::HexFixed(_)
+        | LiteralKind::HexBrace(_)
+        | LiteralKind::Special(_) => Err(literal.span),
+    }
 }
 
 /// A field of the data a template reads.
@@ -479,34 +488,43 @@ mod tests {
     use super::*;
 
     #[test]
-    fn perl_classes_and_boundaries_are_ascii_as_in_re2() {
-        for (pattern, value, matches) in [
-            (r"\d+", "12", true),
-            (r"\d+", "\u{661}\u{662}", false),
-            (r"\w+", "caf\u{e9}", false),
-            (r"[^@\s]+", "a\u{a0}b", true),
-            (r"\S+", "a\u{a0}b", true),
-            (r"[\d\-]+", "1-2", true),
-            (r"\\d", "\\d", true),
-            (r".*\bx", "\u{e9}x", true),
-            (r"\Qa.b\E", "a.b", true),
-            (r"\Qa.b\E", "axb", false),
-            (r"\Qa.b\E+", "a.bbb", true),
-            (r"x\Q(*", "x(*", true),
-            (r"[a&&b]+", "a&b", true),
-            (r"[a~~b]+", "a~b", true),
-            (r"[+--]+", "+,-", true),
-            (r"[[a]+", "[a", true),
-            (r"[]a]+", "]a", true),
-            (r"[^]a]+", "bc", true),
-            (r"[[:digit:]x]+", "1x", true),
-            (r"[a\]&&]+", "a]&", true),
-            (r"[a]&&b", "a&&b", true),
-            (r"\141+", "aaa", true),
-            (r"[\141-\143]+", "cab", true),
+    fn a_pattern_keeps_to_what_every_client_reads_the_same_way() {
+        for pattern in [
+            "^[A-Za-z0-9_-]{43}$",
+            r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$",
+            "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+            "^(?:465|587)$",
+            r"^https://[A-Za-z0-9.-]+(:443)?(/[A-Za-z0-9._~/-]*)?$",
+            "[^@ ]+@[^@ ]+",
+            r"[\]a]+",
+            "a|",
+            "x{2,}?",
         ] {
-            let regex = whole_match(pattern).unwrap();
-            assert_eq!(regex.is_match(value), matches, "{pattern} {value:?}");
+            assert_eq!(pattern_problem(pattern), None, "{pattern}");
+        }
+        for (pattern, at) in [
+            (r"\d+", r"\d"),
+            (r"[^@\s]+", r"\s"),
+            (r"\w", r"\w"),
+            (r".*\bx", r"\b"),
+            (r"\p{Greek}", r"\p{Greek}"),
+            ("(?i)https", "(?i)"),
+            ("(?i:a)", "(?i:a)"),
+            ("(?P<n>a)", "(?P<n>a)"),
+            (r"\Aa\z", r"\A"),
+            (r"\x61", r"\x61"),
+            (r"\t", r"\t"),
+            ("[[:digit:]]", "[:digit:]"),
+            ("[a[b]]", "[b]"),
+            ("[a&&b]", "a&&b"),
+            ("[]a]", "]"),
+            ("caf\u{e9}", "it has a character that is not ASCII"),
+        ] {
+            let problem = pattern_problem(pattern).unwrap_or_default();
+            assert!(problem.starts_with(at), "{pattern}: {problem}");
+        }
+        for unread in ["a{", "a{,3}", r"\141", r"\1"] {
+            assert!(pattern_problem(unread).is_some(), "{unread}");
         }
     }
 
