@@ -6,7 +6,13 @@
 //! `health[0].conditon`.
 //!
 //! [releases]: https://github.com/zeabur-oss/catalog/blob/main/docs/reference/releases.mdx
+#![expect(
+    clippy::disallowed_types,
+    clippy::disallowed_methods,
+    reason = "the check walks the file as written, of any shape, to find what the types skip"
+)]
 
+use std::fmt;
 use std::path::Path;
 
 use serde::de::DeserializeOwned;
@@ -15,33 +21,66 @@ use serde_json::Value;
 use crate::api::{MeasuredDistribution, MeasurementFile, RunResult};
 use crate::common::{Distribution, Generate, Mode, PerProfile, PodSecurity, WorkloadKind};
 use crate::component::{Component, HelmRelease, InlineRelease, ManifestRelease, Release};
-use crate::select::{LeftOut, SelectCase, Warning};
+use crate::problem::{FieldPath, Problem, Problems};
+use crate::select::{LeftOut, SelectCase, SelectError, Warning};
 use crate::template::Template;
 use crate::{ReadError, read_text};
 
-/// A file type the check reads strictly.
-pub trait Strict: DeserializeOwned {
-    /// Adds the path of each value the types read as `Unknown`, and of each unknown field inside
-    /// an internally tagged part of `raw`, which `serde_ignored` cannot see.
-    fn problems(&self, raw: &Value, problems: &mut Vec<String>);
+/// What strict reading finds.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum StrictProblem {
+    /// A field the type does not have.
+    UnknownField,
+    /// A value the type reads as `Unknown`.
+    UnknownValue,
+    /// The text is no valid file of the type.
+    Decode {
+        /// The parser's message.
+        message: String,
+    },
 }
 
-/// Reads `text` as `T`, failing on every field and value `T` does not know.
+impl fmt::Display for StrictProblem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::UnknownField => f.write_str("unknown field"),
+            Self::UnknownValue => f.write_str("unknown value"),
+            Self::Decode { message } => f.write_str(message),
+        }
+    }
+}
+
+/// A file type the check reads strictly.
+pub trait Strict: DeserializeOwned {
+    /// Adds each value the types read as `Unknown`, and each unknown field inside an internally
+    /// tagged part of `raw`, which `serde_ignored` cannot see.
+    fn problems(&self, raw: &Value, problems: &mut Problems);
+}
+
+/// Reads `text`, the content of `file`, as `T`, failing on every field and value `T` does not
+/// know.
 ///
 /// # Errors
 ///
-/// The text is no valid `T`, or it has fields or values `T` does not know: one message each.
-pub fn from_yaml<T: Strict>(text: &str) -> Result<T, Vec<String>> {
-    let raw: Value = serde_saphyr::from_str(text).map_err(|e| vec![e.to_string()])?;
-    let mut problems = Vec::new();
-    let Some(read) = decode::<T>(&raw, "", &[], &mut problems) else {
-        return Err(problems);
+/// The text is no valid `T`, or it has fields or values `T` does not know.
+pub fn from_yaml<T: Strict>(file: &Path, text: &str) -> Result<T, Vec<Problem>> {
+    let mut problems = Problems::new(file);
+    let raw: Value = match serde_saphyr::from_str(text) {
+        Ok(raw) => raw,
+        Err(e) => {
+            let message = e.to_string();
+            problems.push(FieldPath::root(), StrictProblem::Decode { message });
+            return Err(problems.into_vec());
+        }
+    };
+    let Some(read) = decode::<T>(&raw, &FieldPath::root(), &[], &mut problems) else {
+        return Err(problems.into_vec());
     };
     read.problems(&raw, &mut problems);
     if problems.is_empty() {
         Ok(read)
     } else {
-        Err(problems)
+        Err(problems.into_vec())
     }
 }
 
@@ -51,58 +90,43 @@ pub fn from_yaml<T: Strict>(text: &str) -> Result<T, Vec<String>> {
 ///
 /// It cannot be read, is no valid `T`, or has fields or values `T` does not know.
 pub fn read<T: Strict>(path: &Path) -> Result<T, ReadError> {
-    from_yaml(&read_text(path)?).map_err(|problems| ReadError::Format {
-        path: path.to_owned(),
-        message: problems.join("; "),
-    })
+    from_yaml(path, &read_text(path)?).map_err(ReadError::Check)
 }
 
-/// Decodes `raw`, adding each ignored field below `at` except `skip` to `problems`. `None` with
-/// the error in `problems` when it does not decode.
+/// Decodes `raw`, adding each ignored field below `at` except the top-level fields `skip` to
+/// `problems`. `None` with the error in `problems` when it does not decode.
 fn decode<T: DeserializeOwned>(
     raw: &Value,
-    at: &str,
+    at: &FieldPath,
     skip: &[&str],
-    problems: &mut Vec<String>,
+    problems: &mut Problems,
 ) -> Option<T> {
     let mut ignored = Vec::new();
-    let read = serde_ignored::deserialize(raw.clone(), |path| ignored.push(render(&path)));
+    let read = serde_ignored::deserialize(raw.clone(), |path| ignored.push(field_path(&path)));
     for path in ignored {
-        if !skip.contains(&path.as_str()) {
-            problems.push(format!("unknown field {}", join(at, &path)));
+        if !skip.iter().any(|key| path == FieldPath::root().key(*key)) {
+            problems.push(at.clone().join(path), StrictProblem::UnknownField);
         }
     }
     match read {
         Ok(read) => Some(read),
         Err(e) => {
-            problems.push(format!("{}: {e}", if at.is_empty() { "." } else { at }));
+            let message = e.to_string();
+            problems.push(at.clone(), StrictProblem::Decode { message });
             None
         }
     }
 }
 
-fn render(path: &serde_ignored::Path<'_>) -> String {
+fn field_path(path: &serde_ignored::Path<'_>) -> FieldPath {
     match path {
-        serde_ignored::Path::Root => String::new(),
-        serde_ignored::Path::Seq { parent, index } => format!("{}[{index}]", render(parent)),
-        serde_ignored::Path::Map { parent, key } => join(&render(parent), key),
+        serde_ignored::Path::Root => FieldPath::root(),
+        serde_ignored::Path::Seq { parent, index } => field_path(parent).index(*index),
+        serde_ignored::Path::Map { parent, key } => field_path(parent).key(key.as_str()),
         serde_ignored::Path::Some { parent }
         | serde_ignored::Path::NewtypeStruct { parent }
-        | serde_ignored::Path::NewtypeVariant { parent } => render(parent),
+        | serde_ignored::Path::NewtypeVariant { parent } => field_path(parent),
     }
-}
-
-fn join(at: &str, key: &str) -> String {
-    match (at.is_empty(), key.is_empty()) {
-        (true, _) => key.to_owned(),
-        (false, true) => at.to_owned(),
-        (false, false) if key.starts_with('[') => format!("{at}{key}"),
-        (false, false) => format!("{at}.{key}"),
-    }
-}
-
-fn unknown(problems: &mut Vec<String>, at: &str) {
-    problems.push(format!("unknown value at {at}"));
 }
 
 fn items<'a>(raw: &'a Value, key: &str) -> impl Iterator<Item = &'a Value> {
@@ -110,125 +134,135 @@ fn items<'a>(raw: &'a Value, key: &str) -> impl Iterator<Item = &'a Value> {
 }
 
 /// Checks the keys of a tagged part that has no struct of its own.
-fn keys(raw: &Value, at: &str, allowed: &[&str], problems: &mut Vec<String>) {
+fn keys(raw: &Value, at: &FieldPath, allowed: &[&str], problems: &mut Problems) {
     for key in raw.as_object().into_iter().flat_map(|m| m.keys()) {
         if !allowed.contains(&key.as_str()) {
-            problems.push(format!("unknown field {at}.{key}"));
+            problems.push(at.clone().key(key.as_str()), StrictProblem::UnknownField);
         }
     }
 }
 
-fn modes(defaults: PerProfile<Mode>, at: &str, problems: &mut Vec<String>) {
+fn modes(defaults: PerProfile<Mode>, at: &FieldPath, problems: &mut Problems) {
     for (profile, mode) in [
         ("single-node", defaults.single_node),
         ("multi-node", defaults.multi_node),
     ] {
         if mode == Mode::Unknown {
-            unknown(problems, &format!("{at}defaults.{profile}"));
+            let at = at.clone().key("defaults").key(profile);
+            problems.push(at, StrictProblem::UnknownValue);
         }
     }
 }
 
-fn distributions(list: &[Distribution], at: &str, problems: &mut Vec<String>) {
+fn distributions(list: &[Distribution], at: &FieldPath, problems: &mut Problems) {
     for (i, d) in list.iter().enumerate() {
         if *d == Distribution::Unknown {
-            unknown(problems, &format!("{at}[{i}]"));
+            problems.push(at.clone().index(i), StrictProblem::UnknownValue);
         }
     }
 }
 
-fn generate(generate: Option<Generate>, raw: &Value, at: &str, problems: &mut Vec<String>) {
+fn generate(generate: Option<Generate>, raw: &Value, at: &FieldPath, problems: &mut Problems) {
     match generate {
-        Some(Generate::Unknown) => unknown(problems, &format!("{at}.type")),
+        Some(Generate::Unknown) => unknown(problems, at.clone().key("type")),
         Some(Generate::Random { .. }) => keys(raw, at, &["type", "bytes", "encoding"], problems),
         Some(Generate::ClusterIp) => keys(raw, at, &["type"], problems),
         None => {}
     }
 }
 
+fn inputs(generates: impl Iterator<Item = Option<Generate>>, raw: &Value, problems: &mut Problems) {
+    for (i, (input, raw)) in generates.zip(items(raw, "inputs")).enumerate() {
+        let raw = raw.get("generate").unwrap_or(&Value::Null);
+        let at = FieldPath::root().key("inputs").index(i).key("generate");
+        generate(input, raw, &at, problems);
+    }
+}
+
+fn unknown(problems: &mut Problems, at: FieldPath) {
+    problems.push(at, StrictProblem::UnknownValue);
+}
+
 impl Strict for Component {
-    fn problems(&self, raw: &Value, problems: &mut Vec<String>) {
-        modes(self.defaults, "", problems);
-        distributions(&self.distributions, "distributions", problems);
+    fn problems(&self, raw: &Value, problems: &mut Problems) {
+        let root = FieldPath::root();
+        modes(self.defaults, &root, problems);
+        distributions(
+            &self.distributions,
+            &root.clone().key("distributions"),
+            problems,
+        );
         if self.security.pod_security == PodSecurity::Unknown {
-            unknown(problems, "security.podSecurity");
+            unknown(problems, root.clone().key("security").key("podSecurity"));
         }
         for (i, (release, raw)) in self.releases.iter().zip(items(raw, "releases")).enumerate() {
-            let at = format!("releases[{i}]");
+            let at = root.clone().key("releases").index(i);
             let skip = &["type"];
             match release {
                 Release::Helm(_) => drop(decode::<HelmRelease>(raw, &at, skip, problems)),
                 Release::Manifest(_) => drop(decode::<ManifestRelease>(raw, &at, skip, problems)),
                 Release::Inline(_) => drop(decode::<InlineRelease>(raw, &at, skip, problems)),
-                Release::Unknown => unknown(problems, &format!("{at}.type")),
+                Release::Unknown => unknown(problems, at.key("type")),
             }
         }
-        for (i, (input, raw)) in self.inputs.iter().zip(items(raw, "inputs")).enumerate() {
-            let raw = raw.get("generate").unwrap_or(&Value::Null);
-            generate(
-                input.generate,
-                raw,
-                &format!("inputs[{i}].generate"),
-                problems,
-            );
-        }
+        inputs(self.inputs.iter().map(|i| i.generate), raw, problems);
         for (i, addon) in self.detection.addons.iter().enumerate() {
             if addon.distribution == Distribution::Unknown {
-                unknown(problems, &format!("detection.addons[{i}].distribution"));
+                let at = root.clone().key("detection").key("addons").index(i);
+                unknown(problems, at.key("distribution"));
             }
         }
         for (i, workload) in self.detection.workloads.iter().enumerate() {
             if workload.kind == WorkloadKind::Unknown {
-                unknown(problems, &format!("detection.workloads[{i}].kind"));
+                let at = root.clone().key("detection").key("workloads").index(i);
+                unknown(problems, at.key("kind"));
             }
         }
     }
 }
 
 impl Strict for Template {
-    fn problems(&self, raw: &Value, problems: &mut Vec<String>) {
+    fn problems(&self, raw: &Value, problems: &mut Problems) {
         for (i, service) in self.services.iter().enumerate() {
             if service.pod_security == PodSecurity::Unknown {
-                unknown(problems, &format!("services[{i}].podSecurity"));
+                let at = FieldPath::root().key("services").index(i);
+                unknown(problems, at.key("podSecurity"));
             }
         }
-        for (i, (input, raw)) in self.inputs.iter().zip(items(raw, "inputs")).enumerate() {
-            let raw = raw.get("generate").unwrap_or(&Value::Null);
-            generate(
-                input.generate,
-                raw,
-                &format!("inputs[{i}].generate"),
-                problems,
-            );
-        }
+        inputs(self.inputs.iter().map(|i| i.generate), raw, problems);
     }
 }
 
 impl Strict for SelectCase {
-    fn problems(&self, raw: &Value, problems: &mut Vec<String>) {
+    fn problems(&self, raw: &Value, problems: &mut Problems) {
         for (i, c) in self.components.iter().enumerate() {
-            let at = format!("components[{i}].");
+            let at = FieldPath::root().key("components").index(i);
             modes(c.defaults, &at, problems);
-            distributions(&c.distributions, &format!("{at}distributions"), problems);
+            distributions(&c.distributions, &at.clone().key("distributions"), problems);
             for (j, t) in c.tested_on.iter().enumerate() {
                 if t.distribution == Distribution::Unknown {
-                    unknown(problems, &format!("{at}testedOn[{j}].distribution"));
+                    let at = at.clone().key("testedOn").index(j);
+                    unknown(problems, at.key("distribution"));
                 }
             }
         }
         if self.config.distribution == Distribution::Unknown {
-            unknown(problems, "config.distribution");
+            unknown(
+                problems,
+                FieldPath::root().key("config").key("distribution"),
+            );
         }
         let want = raw.get("want").unwrap_or(&Value::Null);
+        let want_at = FieldPath::root().key("want");
         for (id, left_out) in &self.want.left_out {
-            let at = format!("want.leftOut.{id}");
+            let at = want_at.clone().key("leftOut").key(id.as_str());
             let raw = want
                 .get("leftOut")
                 .and_then(|l| l.get(id))
                 .unwrap_or(&Value::Null);
             match left_out {
                 LeftOut::Distributions { distributions: d } => {
-                    distributions(d, &format!("{at}.distributions"), problems);
+                    distributions(d, &at.clone().key("distributions"), problems);
                     keys(raw, &at, &["reason", "distributions"], problems);
                 }
                 LeftOut::Unsupported { .. } => keys(raw, &at, &["reason", "profile"], problems),
@@ -241,11 +275,11 @@ impl Strict for SelectCase {
             .zip(items(want, "warnings"))
             .enumerate()
         {
-            let at = format!("want.warnings[{i}]");
+            let at = want_at.clone().key("warnings").index(i);
             match warning {
                 Warning::Untested { distribution, .. } => {
                     if *distribution == Distribution::Unknown {
-                        unknown(problems, &format!("{at}.distribution"));
+                        unknown(problems, at.clone().key("distribution"));
                     }
                     keys(raw, &at, &["kind", "component", "distribution"], problems);
                 }
@@ -254,24 +288,23 @@ impl Strict for SelectCase {
         }
         if let (Some(error), Some(raw)) = (&self.want.error, want.get("error")) {
             let allowed: &[&str] = match error {
-                crate::select::SelectError::Unknown { .. } => &["kind", "name"],
-                crate::select::SelectError::NeedsDisabled { .. } => {
-                    &["kind", "component", "dependency"]
-                }
+                SelectError::Unknown { .. } => &["kind", "name"],
+                SelectError::NeedsDisabled { .. } => &["kind", "component", "dependency"],
             };
-            keys(raw, "want.error", allowed, problems);
+            keys(raw, &want_at.key("error"), allowed, problems);
         }
     }
 }
 
 impl Strict for MeasurementFile {
-    fn problems(&self, _raw: &Value, problems: &mut Vec<String>) {
+    fn problems(&self, _raw: &Value, problems: &mut Problems) {
         for (i, run) in self.environments.iter().enumerate() {
+            let at = FieldPath::root().key("environments").index(i);
             if run.distribution == MeasuredDistribution::Host(Distribution::Unknown) {
-                unknown(problems, &format!("environments[{i}].distribution"));
+                unknown(problems, at.clone().key("distribution"));
             }
             if run.result == RunResult::Unknown {
-                unknown(problems, &format!("environments[{i}].result"));
+                unknown(problems, at.key("result"));
             }
         }
     }

@@ -4,6 +4,8 @@
 
 #[cfg(test)]
 mod tests {
+    #![expect(clippy::disallowed_types, reason = "a schema is JSON of any shape")]
+
     use schemars::schema_for;
     use serde_json::{Value, json};
     use utoipa::PartialSchema;
