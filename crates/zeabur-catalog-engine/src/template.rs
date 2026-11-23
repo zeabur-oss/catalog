@@ -294,17 +294,58 @@ fn check_options(id: &str, template: &Template, options: &Options<'_>) -> Result
 /// `pattern` with the Perl classes and word boundaries of [RE2], which are ASCII, where the
 /// `regex` crate's are Unicode. Each class becomes a bracket class, which is also valid inside
 /// another class. RE2's literal text `\Q...\E`, which the `regex` crate lacks, becomes escaped
-/// text; without `\E` it runs to the end.
+/// text; without `\E` it runs to the end. Inside a bracket class, RE2 reads `[`, `&`, `~` and a
+/// second `-` as themselves, where the `regex` crate reads nested classes and set operations,
+/// so they are escaped.
 ///
 /// [RE2]: https://github.com/google/re2/wiki/Syntax
 fn re2(pattern: &str) -> String {
     let mut out = String::with_capacity(pattern.len());
     let mut chars = pattern.chars();
+    // Inside a bracket class: whether no member has been read yet, and whether the last one
+    // was a `-`.
+    let mut class: Option<(bool, bool)> = None;
     while let Some(c) = chars.next() {
         if c != '\\' {
-            out.push(c);
+            class = match (c, class) {
+                ('[', None) => {
+                    out.push(c);
+                    if chars.clone().next() == Some('^') {
+                        out.push('^');
+                        chars.next();
+                    }
+                    Some((true, false))
+                }
+                (']', Some((false, _))) | (_, None) => {
+                    out.push(c);
+                    None
+                }
+                ('[', Some(_)) => {
+                    let rest = chars.as_str();
+                    match rest.strip_prefix(':').and_then(|r| r.split_once(":]")) {
+                        Some((name, after)) => {
+                            out.push_str("[:");
+                            out.push_str(name);
+                            out.push_str(":]");
+                            chars = after.chars();
+                        }
+                        None => out.push_str("\\["),
+                    }
+                    Some((false, false))
+                }
+                ('&' | '~', Some(_)) | ('-', Some((_, true))) => {
+                    out.push('\\');
+                    out.push(c);
+                    Some((false, false))
+                }
+                (_, Some(_)) => {
+                    out.push(c);
+                    Some((false, c == '-'))
+                }
+            };
             continue;
         }
+        class = class.map(|_| (false, false));
         let Some(next) = chars.next() else {
             out.push(c);
             break;
@@ -444,6 +485,15 @@ mod tests {
             (r"\Qa.b\E", "axb", false),
             (r"\Qa.b\E+", "a.bbb", true),
             (r"x\Q(*", "x(*", true),
+            (r"[a&&b]+", "a&b", true),
+            (r"[a~~b]+", "a~b", true),
+            (r"[+--]+", "+,-", true),
+            (r"[[a]+", "[a", true),
+            (r"[]a]+", "]a", true),
+            (r"[^]a]+", "bc", true),
+            (r"[[:digit:]x]+", "1x", true),
+            (r"[a\]&&]+", "a]&", true),
+            (r"[a]&&b", "a&&b", true),
         ] {
             let regex = Regex::new(&format!(r"\A(?:{})\z", re2(pattern))).unwrap();
             assert_eq!(regex.is_match(value), matches, "{pattern} {value:?}");
