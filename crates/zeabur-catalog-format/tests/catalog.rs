@@ -36,11 +36,7 @@ mod tests {
             )
         });
         for (id, license, urls) in components.chain(templates) {
-            assert_eq!(
-                common::license_url_problems(license, urls),
-                Vec::<String>::new(),
-                "{id}"
-            );
+            assert_eq!(common::license_url_problems(license, urls), [], "{id}");
         }
     }
 

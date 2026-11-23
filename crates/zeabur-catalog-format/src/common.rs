@@ -191,23 +191,48 @@ pub type Locales<T> = BTreeMap<String, T>;
 /// The URL of each `LicenseRef-` licence's text, by its id in `license`.
 pub type LicenseUrls = BTreeMap<String, String>;
 
-/// What is wrong with the links of `license`'s `LicenseRef-` ids: an id without a URL, or a URL
-/// for an id that `license` does not use.
+/// What is wrong with the link of a `LicenseRef-` id.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum LicenseUrlProblem {
+    /// `license` uses the id, and `licenseUrls` has no URL for it.
+    Unlinked {
+        /// The `LicenseRef-` id.
+        id: String,
+    },
+    /// `licenseUrls` has a URL for the id, and `license` does not use it.
+    Unused {
+        /// The `LicenseRef-` id.
+        id: String,
+    },
+}
+
+impl fmt::Display for LicenseUrlProblem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Unlinked { id } => write!(f, "license {id} has no URL in licenseUrls"),
+            Self::Unused { id } => write!(f, "licenseUrls names {id}, which license does not use"),
+        }
+    }
+}
+
+/// What is wrong with the links of `license`'s `LicenseRef-` ids.
 #[must_use]
-pub fn license_url_problems(license: &str, urls: &LicenseUrls) -> Vec<String> {
+pub fn license_url_problems(license: &str, urls: &LicenseUrls) -> Vec<LicenseUrlProblem> {
     let used: Vec<&str> = license
         .split(|c: char| c.is_whitespace() || c == '(' || c == ')')
         .map(|token| token.trim_end_matches('+'))
         .filter(|token| token.starts_with("LicenseRef-"))
         .collect();
-    let unlinked = used
-        .iter()
-        .filter(|id| !urls.contains_key(**id))
-        .map(|id| format!("license {id} has no URL in licenseUrls"));
+    let unlinked =
+        used.iter()
+            .filter(|id| !urls.contains_key(**id))
+            .map(|id| LicenseUrlProblem::Unlinked {
+                id: (*id).to_owned(),
+            });
     let unused = urls
         .keys()
         .filter(|id| !used.contains(&id.as_str()))
-        .map(|id| format!("licenseUrls names {id}, which license does not use"));
+        .map(|id| LicenseUrlProblem::Unused { id: id.clone() });
     unlinked.chain(unused).collect()
 }
 
@@ -280,7 +305,7 @@ pub enum WorkloadKind {
 
 #[cfg(test)]
 mod tests {
-    use super::{LicenseUrls, license_url_problems};
+    use super::{LicenseUrlProblem, LicenseUrls, license_url_problems};
 
     fn urls(ids: &[&str]) -> LicenseUrls {
         ids.iter()
@@ -293,11 +318,13 @@ mod tests {
         let license = "(MIT OR LicenseRef-A) AND LicenseRef-B+";
         assert_eq!(
             license_url_problems(license, &urls(&["LicenseRef-A", "LicenseRef-B"])),
-            Vec::<String>::new()
+            []
         );
         assert_eq!(
             license_url_problems(license, &urls(&["LicenseRef-A"])),
-            ["license LicenseRef-B has no URL in licenseUrls"]
+            [LicenseUrlProblem::Unlinked {
+                id: "LicenseRef-B".to_owned()
+            }]
         );
     }
 
@@ -305,7 +332,9 @@ mod tests {
     fn a_url_needs_its_license_ref() {
         assert_eq!(
             license_url_problems("MIT", &urls(&["LicenseRef-A"])),
-            ["licenseUrls names LicenseRef-A, which license does not use"]
+            [LicenseUrlProblem::Unused {
+                id: "LicenseRef-A".to_owned()
+            }]
         );
     }
 }
