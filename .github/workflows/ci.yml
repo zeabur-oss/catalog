@@ -37,7 +37,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up Nix
-        uses: zeabur-oss/.github/actions/ci-setup@993db7daf21a752dc7d3940f227e03478ee613cc # main
+        uses: zeabur-oss/.github/actions/ci-setup@0558836e9cf7e00101c99d4fd123276e4a20fe20 # main
       - name: Lint
         run: nix develop -c scripts/ci/lint.sh
 
@@ -50,7 +50,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up Nix
-        uses: zeabur-oss/.github/actions/ci-setup@993db7daf21a752dc7d3940f227e03478ee613cc # main
+        uses: zeabur-oss/.github/actions/ci-setup@0558836e9cf7e00101c99d4fd123276e4a20fe20 # main
       - name: Test
         run: nix develop -c scripts/ci/test.sh
 
@@ -63,7 +63,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up Nix
-        uses: zeabur-oss/.github/actions/ci-setup@993db7daf21a752dc7d3940f227e03478ee613cc # main
+        uses: zeabur-oss/.github/actions/ci-setup@0558836e9cf7e00101c99d4fd123276e4a20fe20 # main
       - name: Rust
         run: nix develop -c scripts/ci/rust.sh
 
@@ -78,7 +78,7 @@ jobs:
           # The history of origin/main, to find the merge-base to dry-run an upgrade from.
           fetch-depth: 0
       - name: Set up Nix
-        uses: zeabur-oss/.github/actions/ci-setup@993db7daf21a752dc7d3940f227e03478ee613cc # main
+        uses: zeabur-oss/.github/actions/ci-setup@0558836e9cf7e00101c99d4fd123276e4a20fe20 # main
       - name: Check the catalog
         run: nix develop -c scripts/ci/check.sh
 
@@ -91,7 +91,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up Nix
-        uses: zeabur-oss/.github/actions/ci-setup@993db7daf21a752dc7d3940f227e03478ee613cc # main
+        uses: zeabur-oss/.github/actions/ci-setup@0558836e9cf7e00101c99d4fd123276e4a20fe20 # main
       - name: Build the release
         run: nix develop -c scripts/ci/release.sh
         env:
@@ -162,7 +162,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up Nix
-        uses: zeabur-oss/.github/actions/ci-setup@993db7daf21a752dc7d3940f227e03478ee613cc # main
+        uses: zeabur-oss/.github/actions/ci-setup@0558836e9cf7e00101c99d4fd123276e4a20fe20 # main
       - name: Restore the downloads
         uses: ./.github/actions/downloads
       - name: iSCSI module for Longhorn
