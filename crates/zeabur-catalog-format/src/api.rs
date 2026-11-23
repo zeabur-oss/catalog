@@ -99,6 +99,7 @@ pub struct ComponentFile {
     /// The locales of its READMEs, such as `en` and `zh-TW`. Each is a Markdown file next to this
     /// one: `components/<id>/README.md` for `en`, `components/<id>/README.<locale>.md` for
     /// another.
+    #[serde(default)]
     pub readmes: Vec<String>,
 }
 
@@ -282,9 +283,11 @@ pub struct TemplateFile {
     pub manifests: String,
     /// Every recorded run of its e2e test. A run tested this template when its `sourceDigest` is
     /// this file's.
+    #[serde(default)]
     pub measurements: Vec<Environment>,
     /// The locales of its READMEs, such as `en` and `zh-TW`. Each is a Markdown file next to this
     /// one: `templates/<id>/README.md` for `en`, `templates/<id>/README.<locale>.md` for another.
+    #[serde(default)]
     pub readmes: Vec<String>,
 }
 

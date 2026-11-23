@@ -425,6 +425,7 @@
       "type": "array"
     },
     "readmes": {
+      "default": [],
       "description": "The locales of its READMEs, such as `en` and `zh-TW`. Each is a Markdown file next to this\none: `components/<id>/README.md` for `en`, `components/<id>/README.<locale>.md` for\nanother.",
       "items": {
         "type": "string"
@@ -445,8 +446,7 @@
     "sourceDigest",
     "declaration",
     "render",
-    "measurements",
-    "readmes"
+    "measurements"
   ],
   "title": "components/<id>.json",
   "type": "object"

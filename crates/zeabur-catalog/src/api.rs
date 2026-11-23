@@ -708,6 +708,10 @@ kubesolo: {version: v1.3.0}
         );
         assert_eq!(file.measurements[0].pods[0].memory, "30Mi");
         assert_eq!(file.readmes, ["en", "zh-TW"]);
+        let mut older = api.json("components/web.json");
+        older.as_object_mut().unwrap().remove("readmes");
+        let older: ComponentFile = serde_json::from_value(older).unwrap();
+        assert_eq!(older.readmes, Vec::<String>::new());
         assert_eq!(
             fs::read_to_string(api.dir().join("components/web/README.zh-TW.md")).unwrap(),
             "# Web 網頁\n"
@@ -727,6 +731,14 @@ kubesolo: {version: v1.3.0}
         assert_eq!(file.source_digest, digest);
         assert_eq!(file.measurements[0].pods[0].memory, "80Mi");
         assert_eq!(file.readmes, ["en"]);
+        // A file written before these fields existed still reads.
+        let mut older = api.json("templates/blog.json");
+        for key in ["measurements", "readmes"] {
+            older.as_object_mut().unwrap().remove(key);
+        }
+        let older: TemplateFile = serde_json::from_value(older).unwrap();
+        assert_eq!(older.measurements, []);
+        assert_eq!(older.readmes, Vec::<String>::new());
         assert!(api.dir().join("templates/blog/README.md").exists());
         let index: Index = serde_json::from_value(api.json("catalog.json")).unwrap();
         assert_eq!(

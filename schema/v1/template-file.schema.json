@@ -1,8 +1,4 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://oss-catalog.zeabur.com/v1/schema/template-file.schema.json",
-  "title": "templates/<id>.json",
-  "description": "`templates/<id>.json`: the two files of a template as written.",
   "$defs": {
     "Distribution": {
       "description": "A host distribution of Kubernetes that a component runs on.",
@@ -226,7 +222,10 @@
       ]
     }
   },
+  "$id": "https://oss-catalog.zeabur.com/v1/schema/template-file.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
+  "description": "`templates/<id>.json`: the two files of a template as written.",
   "properties": {
     "id": {
       "description": "Its id.",
@@ -238,6 +237,7 @@
       "type": "string"
     },
     "measurements": {
+      "default": [],
       "description": "Every recorded run of its e2e test. A run tested this template when its `sourceDigest` is\nthis file's.",
       "items": {
         "$ref": "#/$defs/Environment"
@@ -245,6 +245,7 @@
       "type": "array"
     },
     "readmes": {
+      "default": [],
       "description": "The locales of its READMEs, such as `en` and `zh-TW`. Each is a Markdown file next to this\none: `templates/<id>/README.md` for `en`, `templates/<id>/README.<locale>.md` for another.",
       "items": {
         "type": "string"
@@ -264,9 +265,8 @@
     "id",
     "sourceDigest",
     "template",
-    "manifests",
-    "measurements",
-    "readmes"
+    "manifests"
   ],
+  "title": "templates/<id>.json",
   "type": "object"
 }
