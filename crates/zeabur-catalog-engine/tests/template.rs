@@ -2,6 +2,12 @@
 
 #[cfg(test)]
 mod tests {
+    #![expect(
+        clippy::disallowed_types,
+        clippy::disallowed_methods,
+        reason = "the cases and the rendered objects are JSON of any shape"
+    )]
+
     use std::collections::BTreeMap;
     use std::path::{Path, PathBuf};
 

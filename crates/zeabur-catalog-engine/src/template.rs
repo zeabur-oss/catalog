@@ -171,6 +171,11 @@ pub fn check(id: &str, dir: &TemplateDir) -> Result<(), RenderError> {
 /// # Errors
 ///
 /// The options do not fit the template, or the template is [broken](RenderError::Broken).
+#[expect(
+    clippy::disallowed_types,
+    clippy::disallowed_methods,
+    reason = "a template renders Kubernetes objects of any kind, custom resources included"
+)]
 pub fn render(
     id: &str,
     dir: &TemplateDir,
@@ -224,6 +229,10 @@ pub fn render(
 }
 
 /// The value of `key`, an empty object when `object` lacks it.
+#[expect(
+    clippy::disallowed_types,
+    reason = "a part of a rendered object, which may be of any kind"
+)]
 fn child<'a>(object: &'a mut Map<String, Value>, key: &str) -> &'a mut Value {
     object
         .entry(key)
