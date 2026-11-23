@@ -172,6 +172,27 @@ mod tests {
         assert!(ran > 0, "no render cases");
     }
 
+    #[test]
+    fn refuses_a_default_that_does_not_match_its_pattern() {
+        let dir = |default: &str| TemplateDir {
+            template: complete(json!({
+                "inputs": [{
+                    "name": "port",
+                    "required": false,
+                    "default": default,
+                    "validation": {"pattern": "[0-9]+"},
+                }],
+            })),
+            manifests: String::new(),
+        };
+        assert!(template::check("app", &dir("8080")).is_ok());
+        assert!(template::check("app", &dir("")).is_ok());
+        assert!(matches!(
+            template::check("app", &dir("port")),
+            Err(RenderError::Broken { detail, .. }) if detail.contains("default")
+        ));
+    }
+
     /// A value for each input that a template needs and gives no default.
     const INPUTS: &[(&str, &str)] = &[
         ("adminDomain", "admin.example.com"),

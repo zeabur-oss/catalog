@@ -139,8 +139,10 @@ pub fn routes_domain(template: &Template) -> bool {
     template.services.iter().any(|s| !s.domains.is_empty())
 }
 
-/// Checks what rendering needs of the template `id` itself: `manifests.yaml` has only field
-/// substitution, and no two inputs share a name or a Secret key.
+/// Checks what rendering needs of the template `id` itself.
+///
+/// `manifests.yaml` has only field substitution. Each input has a unique name and Secret key, and
+/// a pattern its default matches.
 ///
 /// # Errors
 ///
@@ -159,6 +161,16 @@ pub fn check(id: &str, dir: &TemplateDir) -> Result<(), RenderError> {
         }
         if let Some(problem) = pattern_problem(&input.validation.pattern) {
             return Err(broken(format!("the pattern of {}: {problem}", input.name)));
+        }
+        // An empty default is no default: the input is empty.
+        if let Some(default) = input.default.as_deref().filter(|d| !d.is_empty())
+            && !whole_match(&input.validation.pattern)
+                .is_ok_and(|pattern| pattern.is_match(default))
+        {
+            return Err(broken(format!(
+                "the default of {} does not match its pattern",
+                input.name
+            )));
         }
         if let Some(secret) = &input.secret
             && !secrets.insert((secret.name.as_str(), secret.key.as_str()))
