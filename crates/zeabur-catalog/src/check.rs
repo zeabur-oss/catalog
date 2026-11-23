@@ -3,32 +3,26 @@
 //! Each component and template file must pass its schema in `schema/v1/`. The components must
 //! then fit together: references, install order, contributions, inputs and what they provision.
 //! Each template's manifests must parse, with no input name or Secret key twice.
+#![expect(
+    clippy::disallowed_types,
+    reason = "a file is checked against its JSON Schema as JSON of any shape"
+)]
 
-use std::path::Path;
-use std::{fmt, fs};
+use std::fs;
+use std::path::{Path, PathBuf};
 
+use jsonschema::paths::LocationSegment;
 use regex::Regex;
 use serde::Deserialize;
 use serde_json::Value;
 use zeabur_catalog_engine::template;
+use zeabur_catalog_format::check::StrictProblem;
 use zeabur_catalog_format::common::{Generate, Mode, Profile};
 use zeabur_catalog_format::component::{Release, Resources};
+use zeabur_catalog_format::problem::{
+    ComponentProblem, FieldPath, Problem, Problems, QuantityProblem, SchemaProblem, TemplateProblem,
+};
 use zeabur_catalog_format::{Catalog, Component, order};
-
-/// One problem of one file.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct Problem {
-    /// The file, or `components` for a problem of the components together.
-    pub(crate) path: String,
-    /// What is wrong.
-    pub(crate) message: String,
-}
-
-impl fmt::Display for Problem {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}: {}", self.path, self.message)
-    }
-}
 
 /// The problems of the checkout at `root`. Schema problems come alone: the other rules read the
 /// files as their types.
@@ -45,13 +39,21 @@ pub(crate) fn check(root: &Path) -> Result<Vec<Problem>, String> {
     let mut problems = component_problems(&catalog);
     for (id, dir) in &catalog.templates {
         if let Err(e) = template::check(id, dir) {
-            problems.push(problem(
-                &format!("templates/{id}/template.yaml"),
-                e.to_string(),
-            ));
+            let mut found = Problems::new(&template_file(id));
+            let message = e.to_string();
+            found.push(FieldPath::root(), TemplateProblem::Broken { message });
+            problems.extend(found.into_vec());
         }
     }
     Ok(problems)
+}
+
+fn template_file(id: &str) -> PathBuf {
+    Path::new("templates").join(id).join("template.yaml")
+}
+
+fn component_file(id: &str) -> PathBuf {
+    Path::new("components").join(id).join("component.yaml")
 }
 
 /// The files of each kind and the schema they pass.
@@ -66,6 +68,16 @@ pub(crate) fn validator(schema: &Value) -> Result<jsonschema::Validator, String>
         .should_validate_formats(true)
         .build(schema)
         .map_err(|e| e.to_string())
+}
+
+/// The place in a file that a schema error names.
+fn field_path(location: &jsonschema::paths::Location) -> FieldPath {
+    location
+        .into_iter()
+        .fold(FieldPath::root(), |at, segment| match segment {
+            LocationSegment::Property(key) => at.key(key),
+            LocationSegment::Index(index) => at.index(index),
+        })
 }
 
 fn schema_problems(root: &Path) -> Result<Vec<Problem>, String> {
@@ -83,21 +95,22 @@ fn schema_problems(root: &Path) -> Result<Vec<Problem>, String> {
             .map_err(|e| format!("{dir}: {e}"))?;
         ids.sort_unstable();
         for id in ids {
-            let path = format!("{dir}/{id}/{file}");
+            let path = Path::new(dir).join(&id).join(file);
             let text = read(&root.join(&path))?;
-            let instance: Value = match serde_saphyr::from_str(&text) {
-                Ok(instance) => instance,
-                Err(e) => {
-                    problems.push(problem(&path, e.to_string()));
-                    continue;
+            let mut found = Problems::new(&path);
+            match serde_saphyr::from_str::<Value>(&text) {
+                Ok(instance) => {
+                    for error in validator.iter_errors(&instance) {
+                        let message = error.to_string();
+                        found.push(field_path(error.instance_path()), SchemaProblem { message });
+                    }
                 }
-            };
-            for error in validator.iter_errors(&instance) {
-                problems.push(problem(
-                    &path,
-                    format!("{}: {error}", error.instance_path()),
-                ));
+                Err(e) => {
+                    let message = e.to_string();
+                    found.push(FieldPath::root(), StrictProblem::Decode { message });
+                }
             }
+            problems.extend(found.into_vec());
         }
     }
     Ok(problems)
@@ -107,43 +120,36 @@ fn read(path: &Path) -> Result<String, String> {
     fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))
 }
 
-fn problem(path: &str, message: String) -> Problem {
-    Problem {
-        path: path.to_owned(),
-        message,
-    }
-}
-
 /// The problems of the components, each on its own and all together.
 pub(crate) fn component_problems(catalog: &Catalog) -> Vec<Problem> {
     let mut problems = Vec::new();
     for (id, component) in &catalog.components {
-        let path = format!("components/{id}/component.yaml");
-        problems.extend(
-            problems_of(catalog, id, component)
-                .into_iter()
-                .map(|message| problem(&path, message)),
-        );
+        let mut found = Problems::new(&component_file(id));
+        problems_of(catalog, id, component, &mut found);
+        problems.extend(found.into_vec());
     }
+    let mut together = Problems::new(Path::new("components"));
     for profile in Profile::ALL {
         let order_problem = catalog
             .components
             .iter()
             .filter(|(_, c)| c.mode(profile) != Mode::Unsupported)
             .find_map(|(id, _)| order::install_order(&catalog.components, id, profile).err());
-        if let Some(e) = order_problem {
-            problems.push(problem("components", format!("{}: {e}", profile.as_str())));
+        if let Some(error) = order_problem {
+            together.push(
+                FieldPath::root(),
+                ComponentProblem::InstallOrder { profile, error },
+            );
         }
     }
+    problems.extend(together.into_vec());
     problems
 }
 
-fn problems_of(catalog: &Catalog, id: &str, component: &Component) -> Vec<String> {
-    let mut out = Vec::new();
+fn problems_of(catalog: &Catalog, id: &str, component: &Component, found: &mut Problems) {
+    let root = FieldPath::root();
     if !is_id(id) {
-        out.push(
-            "the directory name must be lowercase letters, digits and single hyphens".to_owned(),
-        );
+        found.push(root.clone(), ComponentProblem::Id);
     }
     // An installer reads a name in enable or disable as a component id first, so that id must
     // not hide another component's capability.
@@ -153,45 +159,43 @@ fn problems_of(catalog: &Catalog, id: &str, component: &Component) -> Vec<String
             .get(capability)
             .is_some_and(|other| other.capability() != Some(capability))
     {
-        out.push(format!(
-            "provides.capability: {capability} is the ID of another component"
-        ));
+        let capability = capability.to_owned();
+        found.push(
+            root.clone().key("provides").key("capability"),
+            ComponentProblem::CapabilityIsComponent { capability },
+        );
     }
-    for release in &component.releases {
+    for (i, release) in component.releases.iter().enumerate() {
         if let Release::Manifest(r) = release
             && r.url_digests.len() != r.urls.len()
         {
-            out.push(format!(
-                "{}: urlDigests needs one digest for each of the {} urls",
-                r.name,
-                r.urls.len()
-            ));
+            found.push(
+                root.clone().key("releases").index(i).key("urlDigests"),
+                ComponentProblem::UrlDigests { urls: r.urls.len() },
+            );
         }
     }
-    for input in &component.inputs {
+    for (i, input) in component.inputs.iter().enumerate() {
+        let at = root.clone().key("inputs").index(i);
         if input.path.is_some() && component.input_release(input).is_none() {
-            out.push(format!(
-                "input {}: no chart release for its path",
-                input.name
-            ));
+            found.push(
+                at.clone().key("path"),
+                ComponentProblem::InputWithoutRelease,
+            );
         }
         if input.required
             && input.default.is_none()
             && input.test_value.is_none()
             && input.generate.is_none()
         {
-            out.push(format!(
-                "input {}: required, so set default, testValue or generate for CI to install it",
-                input.name
-            ));
+            found.push(at, ComponentProblem::InputWithoutValue);
         }
     }
-    out.extend(provision_problems(component));
+    provision_problems(component, found);
     if let Some(resources) = &component.resources {
-        out.extend(work_problems(resources));
+        work_problems(resources, found);
     }
-    out.extend(contribution_problems(catalog, component));
-    out
+    contribution_problems(catalog, component, found);
 }
 
 /// Whether `id` names a component or template: lowercase words joined by single hyphens.
@@ -220,8 +224,8 @@ struct ObjectMeta {
 
 /// What `provides`, `internalCRDs`, generated inputs and `networkPolicies` name, against the
 /// component's own CRDs, inputs and namespaces.
-fn provision_problems(component: &Component) -> Vec<String> {
-    let mut out = Vec::new();
+fn provision_problems(component: &Component, found: &mut Problems) {
+    let root = FieldPath::root();
     let owns = |namespace: &str| {
         component
             .releases
@@ -234,49 +238,62 @@ fn provision_problems(component: &Component) -> Vec<String> {
         .and_then(|p| p.registry.as_ref())
         && !owns(&registry.ca.namespace)
     {
-        out.push(format!(
-            "provides.registry.ca: {} is none of its namespaces",
-            registry.ca.namespace
-        ));
+        let at = root.clone().key("provides").key("registry").key("ca");
+        let namespace = registry.ca.namespace.clone();
+        found.push(
+            at.key("namespace"),
+            ComponentProblem::CaNamespace { namespace },
+        );
     }
-    for crd in &component.internal_crds {
+    for (i, crd) in component.internal_crds.iter().enumerate() {
         if !component.detection.crds.contains(crd) {
-            out.push(format!("internalCRDs: {crd} is not in detection.crds"));
+            let crd = crd.clone();
+            found.push(
+                root.clone().key("internalCRDs").index(i),
+                ComponentProblem::InternalCrd { crd },
+            );
         }
     }
-    for input in &component.inputs {
+    for (i, input) in component.inputs.iter().enumerate() {
         if input.generate == Some(Generate::ClusterIp) && input.path.is_none() {
-            out.push(format!(
-                "input {}: generate clusterIP needs a path",
-                input.name
-            ));
+            found.push(
+                root.clone().key("inputs").index(i).key("generate"),
+                ComponentProblem::ClusterIpWithoutPath,
+            );
         }
     }
+    let at = root.key("networkPolicies");
     let policies = component.network_policies.as_deref().unwrap_or_default();
     match serde_saphyr::from_multiple::<Option<Object>>(policies) {
-        Err(e) => out.push(format!("networkPolicies: {e}")),
+        Err(e) => {
+            let message = e.to_string();
+            found.push(at, ComponentProblem::NetworkPolicies { message });
+        }
         Ok(objects) => {
             for object in objects.into_iter().flatten() {
                 if object.kind != "NetworkPolicy"
                     || !object.metadata.namespace.as_deref().is_some_and(owns)
                 {
-                    out.push(format!(
-                        "networkPolicies: {} {} must be a NetworkPolicy in one of its namespaces",
-                        object.kind, object.metadata.name
-                    ));
+                    found.push(
+                        at.clone(),
+                        ComponentProblem::NetworkPolicy {
+                            kind: object.kind,
+                            name: object.metadata.name,
+                        },
+                    );
                 }
             }
         }
     }
-    out
 }
 
-fn work_problems(resources: &Resources) -> Vec<String> {
-    let mut out = Vec::new();
+fn work_problems(resources: &Resources, found: &mut Problems) {
     let mut seen = Vec::new();
-    for work in &resources.work {
+    for (i, work) in resources.work.iter().enumerate() {
+        let at = FieldPath::root().key("resources").key("work").index(i);
         if seen.contains(&work.name.as_str()) {
-            out.push(format!("resources.work: {} is listed twice", work.name));
+            let name = work.name.clone();
+            found.push(at.clone().key("name"), ComponentProblem::WorkTwice { name });
         }
         seen.push(&work.name);
         for (field, quantities) in [
@@ -291,15 +308,12 @@ fn work_problems(resources: &Resources) -> Vec<String> {
             });
             for (resource, value) in values {
                 if let Err(e) = above_zero(value) {
-                    out.push(format!(
-                        "resources.work {}: {field}: {resource}: {e}",
-                        work.name
-                    ));
+                    let at = at.clone().key(field).key(resource);
+                    found.push(at, ComponentProblem::Quantity(e));
                 }
             }
         }
     }
-    out
 }
 
 /// A Kubernetes quantity [quantity], such as `256Mi` or `100m`.
@@ -309,35 +323,53 @@ const QUANTITY: &str =
     r"\A[+-]?([0-9]+(\.[0-9]*)?|\.[0-9]+)(([KMGTPE]i)|[numkMGTPE]|([eE][+-]?[0-9]+))?\z";
 
 /// Whether `value` is a quantity above zero.
-fn above_zero(value: &str) -> Result<(), String> {
-    let quantity = Regex::new(QUANTITY).map_err(|e| e.to_string())?;
-    let Some(number) = quantity.captures(value).and_then(|c| c.get(1)) else {
-        return Err(format!("{value} is not a quantity"));
+fn above_zero(value: &str) -> Result<(), QuantityProblem> {
+    let not_a_quantity = || QuantityProblem::NotAQuantity {
+        value: value.to_owned(),
+    };
+    // QUANTITY is a constant that a test compiles, so it does not fail here.
+    let quantity = Regex::new(QUANTITY).ok();
+    let Some(number) = quantity
+        .as_ref()
+        .and_then(|q| q.captures(value))
+        .and_then(|c| c.get(1))
+    else {
+        return Err(not_a_quantity());
     };
     if value.starts_with('-') || !number.as_str().bytes().any(|b| matches!(b, b'1'..=b'9')) {
-        return Err(format!("{value} is not above zero"));
+        return Err(QuantityProblem::NotAboveZero {
+            value: value.to_owned(),
+        });
     }
     Ok(())
 }
 
-fn contribution_problems(catalog: &Catalog, component: &Component) -> Vec<String> {
-    let mut out = Vec::new();
+fn contribution_problems(catalog: &Catalog, component: &Component, found: &mut Problems) {
+    let at = FieldPath::root().key("contributes");
     // An installer finds the contributors it installed by their Helm releases.
     if !component.contributes.is_empty() && !component.releases.iter().any(|r| r.helm().is_some()) {
-        out.push("contributes: needs a helm release of its own".to_owned());
+        found.push(at.clone(), ComponentProblem::ContributorWithoutHelm);
     }
-    for contribution in &component.contributes {
+    for (i, contribution) in component.contributes.iter().enumerate() {
+        let at = at.clone().index(i).key("target");
         let target = &contribution.target;
         match catalog.components.get(&target.component) {
-            None => out.push(format!("contributes: unknown target {}", target.component)),
-            Some(other) if other.release(&target.release).is_none() => out.push(format!(
-                "contributes: {} has no release {}",
-                target.component, target.release
-            )),
+            None => found.push(
+                at.key("component"),
+                ComponentProblem::UnknownTarget {
+                    component: target.component.clone(),
+                },
+            ),
+            Some(other) if other.release(&target.release).is_none() => found.push(
+                at.key("release"),
+                ComponentProblem::UnknownTargetRelease {
+                    component: target.component.clone(),
+                    release: target.release.clone(),
+                },
+            ),
             Some(_) => {}
         }
     }
-    out
 }
 
 #[cfg(test)]
@@ -358,13 +390,18 @@ mod tests {
     }
 
     /// The problems of the repository with `edit` made to one component.
-    fn problems(id: &str, edit: impl FnOnce(&mut Component)) -> Vec<String> {
+    fn problems(id: &str, edit: impl FnOnce(&mut Component)) -> Vec<Problem> {
         let mut catalog = catalog();
         edit(catalog.components.get_mut(id).unwrap());
         component_problems(&catalog)
-            .into_iter()
-            .map(|p| p.to_string())
-            .collect()
+    }
+
+    fn problem(file: PathBuf, at: FieldPath, kind: ComponentProblem) -> Problem {
+        Problem {
+            file,
+            at,
+            kind: kind.into(),
+        }
     }
 
     #[test]
@@ -387,22 +424,25 @@ mod tests {
         let got = problems("traefik", |c| {
             c.provides.as_mut().unwrap().capability = Some("cert-manager".to_owned());
         });
-        assert!(
-            got.contains(&"components/traefik/component.yaml: provides.capability: cert-manager is the ID of another component".to_owned()),
-            "{got:?}"
+        let want = problem(
+            component_file("traefik"),
+            FieldPath::root().key("provides").key("capability"),
+            ComponentProblem::CapabilityIsComponent {
+                capability: "cert-manager".to_owned(),
+            },
         );
+        assert!(got.contains(&want), "{got:?}");
     }
 
     #[test]
     fn a_contributor_needs_a_helm_release() {
         let got = problems("crowdsec", |c| c.releases.retain(|r| r.helm().is_none()));
-        assert!(
-            got.contains(
-                &"components/crowdsec/component.yaml: contributes: needs a helm release of its own"
-                    .to_owned()
-            ),
-            "{got:?}"
+        let want = problem(
+            component_file("crowdsec"),
+            FieldPath::root().key("contributes"),
+            ComponentProblem::ContributorWithoutHelm,
         );
+        assert!(got.contains(&want), "{got:?}");
     }
 
     #[test]
@@ -412,12 +452,18 @@ mod tests {
                 "no-such-component".to_owned(),
             )];
         });
-        assert!(
-            got.iter()
-                .any(|p| p.starts_with("components: single-node: ")
-                    && p.contains("no-such-component")),
-            "{got:?}"
+        let want = problem(
+            PathBuf::from("components"),
+            FieldPath::root(),
+            ComponentProblem::InstallOrder {
+                profile: Profile::SingleNode,
+                error: order::OrderError::UnknownComponent {
+                    by: "traefik".to_owned(),
+                    id: "no-such-component".to_owned(),
+                },
+            },
         );
+        assert!(got.contains(&want), "{got:?}");
     }
 
     #[test]
@@ -457,19 +503,29 @@ mod tests {
                 .ca
                 .namespace = "default".to_owned();
         });
-        assert!(
-            got.iter()
-                .any(|p| p.ends_with("provides.registry.ca: default is none of its namespaces")),
-            "{got:?}"
+        let want = problem(
+            component_file("zeabur-builder"),
+            FieldPath::root()
+                .key("provides")
+                .key("registry")
+                .key("ca")
+                .key("namespace"),
+            ComponentProblem::CaNamespace {
+                namespace: "default".to_owned(),
+            },
         );
+        assert!(got.contains(&want), "{got:?}");
         let got = problems("zeabur-builder", |c| {
             c.internal_crds = vec!["other.example.com".to_owned()];
         });
-        assert!(
-            got.iter()
-                .any(|p| p.ends_with("internalCRDs: other.example.com is not in detection.crds")),
-            "{got:?}"
+        let want = problem(
+            component_file("zeabur-builder"),
+            FieldPath::root().key("internalCRDs").index(0),
+            ComponentProblem::InternalCrd {
+                crd: "other.example.com".to_owned(),
+            },
         );
+        assert!(got.contains(&want), "{got:?}");
     }
 
     #[test]
@@ -477,8 +533,19 @@ mod tests {
         for ok in ["1", "100m", "0.5", "256Mi", "1e3", "+1"] {
             assert_eq!(above_zero(ok), Ok(()), "{ok}");
         }
-        for bad in ["0", "0m", "-1", "0.0", "abc", "1Mb", ""] {
-            assert!(above_zero(bad).is_err(), "{bad}");
+        for bad in ["0", "0m", "-1", "0.0"] {
+            let value = bad.to_owned();
+            assert_eq!(
+                above_zero(bad),
+                Err(QuantityProblem::NotAboveZero { value })
+            );
+        }
+        for bad in ["abc", "1Mb", ""] {
+            let value = bad.to_owned();
+            assert_eq!(
+                above_zero(bad),
+                Err(QuantityProblem::NotAQuantity { value })
+            );
         }
     }
 
