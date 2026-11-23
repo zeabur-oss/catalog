@@ -92,9 +92,10 @@ impl Tree {
             };
             let block = matches!(kind, Kind::Map(_) | Kind::Seq(_));
             let index = tree.nodes.len();
-            // A comment above a block belongs to its first entry, as YAML parsers attach it.
+            // A comment above a nested block explains the block. Above the top block it belongs to
+            // the first key, which needs its own as every top key does.
             tree.nodes.push(Node {
-                above: !block && std::mem::take(&mut above),
+                above: !(block && open.is_empty()) && std::mem::take(&mut above),
                 right: false,
                 kind,
             });
@@ -191,6 +192,8 @@ mod tests {
             ("a:\n  # the list\n  - name: x\n    value: 1\n", &[]),
             ("a:\n  - name: x\n    # why\n    value: 1\n", &["a[0].name"]),
             ("a: [1, 2] # why\n", &[]),
+            ("a:\n  # empty on purpose\n  []\nb: 2\n", &["b"]),
+            ("a:\n  # the list\n  - [1, 2]\n  - [3, 4]\n", &[]),
         ];
         for (values, want) in cases {
             let found: Vec<String> = unexplained(values)
