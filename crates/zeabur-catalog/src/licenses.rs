@@ -6,15 +6,55 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct LicenseList {
-    license_list_version: String,
+    license_list_version: ListVersion,
     licenses: Vec<License>,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct License {
-    license_id: String,
+    license_id: LicenseId,
     is_osi_approved: bool,
+}
+
+/// A `licenseListVersion`: digits and dots, so it cannot break the YAML it is written into.
+#[derive(Debug, Deserialize)]
+#[serde(try_from = "String")]
+struct ListVersion(String);
+
+impl TryFrom<String> for ListVersion {
+    type Error = String;
+
+    fn try_from(version: String) -> Result<Self, Self::Error> {
+        if version.is_empty() || !version.chars().all(|c| c.is_ascii_digit() || c == '.') {
+            return Err(format!("licenseListVersion {version:?} is not a version"));
+        }
+        Ok(Self(version))
+    }
+}
+
+/// An SPDX short identifier: `idstring = 1*(ALPHA / DIGIT / "-" / ".")`, SPDX 3.0.1, "SPDX
+/// license expressions" (<https://spdx.github.io/spdx-spec/v3.0.1/annexes/spdx-license-expressions/>),
+/// with the trailing `+` of deprecated ids such as `GPL-1.0+`. Any other character could break
+/// the YAML it is written into.
+#[derive(Debug, Deserialize)]
+#[serde(try_from = "String")]
+struct LicenseId(String);
+
+impl TryFrom<String> for LicenseId {
+    type Error = String;
+
+    fn try_from(id: String) -> Result<Self, Self::Error> {
+        let stem = id.strip_suffix('+').unwrap_or(&id);
+        if stem.is_empty()
+            || !stem
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '.')
+        {
+            return Err(format!("licenseId {id:?} is not an SPDX identifier"));
+        }
+        Ok(Self(id))
+    }
 }
 
 /// `current`, the text of `config/licenses.yaml`, with `spdxVersion` and `osiApproved` from
@@ -23,12 +63,7 @@ struct License {
 pub(crate) fn update(current: &str, list: &str) -> Result<String, String> {
     let list: LicenseList =
         serde_json::from_str(list).map_err(|e| format!("licenses.json: {e}"))?;
-    let version = list.license_list_version;
-    if version.is_empty() || !version.chars().all(|c| c.is_ascii_digit() || c == '.') {
-        return Err(format!(
-            "licenses.json: licenseListVersion {version:?} is not a version"
-        ));
-    }
+    let ListVersion(version) = list.license_list_version;
     let (_, rest) = current
         .split_once("\nosiApproved:\n")
         .ok_or("config/licenses.yaml: no osiApproved")?;
@@ -40,7 +75,7 @@ pub(crate) fn update(current: &str, list: &str) -> Result<String, String> {
         .licenses
         .into_iter()
         .filter(|l| l.is_osi_approved)
-        .map(|l| l.license_id)
+        .map(|l| l.license_id.0)
         .collect();
     ids.sort_unstable();
     let mut out = format!(
@@ -100,6 +135,16 @@ mod tests {
             update(CURRENT, &list)
                 .unwrap_err()
                 .contains("is not a version")
+        );
+    }
+
+    #[test]
+    fn refuses_an_id_that_would_break_the_yaml() {
+        let list = LIST.replace("\"MIT\"", "\"MIT\\n  - evil\"");
+        assert!(
+            update(CURRENT, &list)
+                .unwrap_err()
+                .contains("is not an SPDX identifier")
         );
     }
 }
