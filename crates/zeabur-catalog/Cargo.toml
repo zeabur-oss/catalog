@@ -12,6 +12,10 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+jsonschema.workspace = true
+regex.workspace = true
 serde.workspace = true
+zeabur-catalog-engine.workspace = true
 serde_json.workspace = true
+serde-saphyr.workspace = true
 zeabur-catalog-format.workspace = true

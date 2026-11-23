@@ -7,7 +7,8 @@ use std::fmt;
 use std::path::{Path, PathBuf};
 
 use crate::check::StrictProblem;
-use crate::common::LicenseUrlProblem;
+use crate::common::{LicenseUrlProblem, Profile};
+use crate::order::OrderError;
 
 /// One problem of one file.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -37,6 +38,12 @@ pub enum ProblemKind {
     Strict(StrictProblem),
     /// A `LicenseRef-` id and its link.
     LicenseUrl(LicenseUrlProblem),
+    /// The file does not pass its schema in `schema/v1/`.
+    Schema(SchemaProblem),
+    /// A component, alone or with the others.
+    Component(ComponentProblem),
+    /// A template.
+    Template(TemplateProblem),
 }
 
 impl fmt::Display for ProblemKind {
@@ -44,6 +51,9 @@ impl fmt::Display for ProblemKind {
         match self {
             Self::Strict(p) => p.fmt(f),
             Self::LicenseUrl(p) => p.fmt(f),
+            Self::Schema(p) => p.fmt(f),
+            Self::Component(p) => p.fmt(f),
+            Self::Template(p) => p.fmt(f),
         }
     }
 }
@@ -57,6 +67,189 @@ impl From<StrictProblem> for ProblemKind {
 impl From<LicenseUrlProblem> for ProblemKind {
     fn from(p: LicenseUrlProblem) -> Self {
         Self::LicenseUrl(p)
+    }
+}
+
+impl From<SchemaProblem> for ProblemKind {
+    fn from(p: SchemaProblem) -> Self {
+        Self::Schema(p)
+    }
+}
+
+impl From<ComponentProblem> for ProblemKind {
+    fn from(p: ComponentProblem) -> Self {
+        Self::Component(p)
+    }
+}
+
+impl From<TemplateProblem> for ProblemKind {
+    fn from(p: TemplateProblem) -> Self {
+        Self::Template(p)
+    }
+}
+
+/// What the check finds in a template.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TemplateProblem {
+    /// A client cannot render it: its manifests do not parse, or two inputs share a name or a
+    /// Secret key.
+    Broken {
+        /// The renderer's message.
+        message: String,
+    },
+}
+
+impl fmt::Display for TemplateProblem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Broken { message } => f.write_str(message),
+        }
+    }
+}
+
+/// A rule of a schema that a value breaks.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SchemaProblem {
+    /// The validator's message.
+    pub message: String,
+}
+
+impl fmt::Display for SchemaProblem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.message)
+    }
+}
+
+/// What the check finds in a component, alone or with the others.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ComponentProblem {
+    /// The directory name is no id.
+    Id,
+    /// `provides.capability` is the id of another component, which an installer reads first.
+    CapabilityIsComponent {
+        /// The capability.
+        capability: String,
+    },
+    /// `urlDigests` has not one digest for each URL.
+    UrlDigests {
+        /// How many URLs the release has.
+        urls: usize,
+    },
+    /// An input has a path and the component no chart release for it.
+    InputWithoutRelease,
+    /// A required input has no value CI can install it with.
+    InputWithoutValue,
+    /// `provides.registry.ca` is in a namespace the component does not own.
+    CaNamespace {
+        /// The namespace.
+        namespace: String,
+    },
+    /// An internal CRD is not in `detection.crds`.
+    InternalCrd {
+        /// The CRD.
+        crd: String,
+    },
+    /// An input generated as a cluster IP has no path.
+    ClusterIpWithoutPath,
+    /// `networkPolicies` is no list of objects.
+    NetworkPolicies {
+        /// The parser's message.
+        message: String,
+    },
+    /// An object of `networkPolicies` is no `NetworkPolicy` in a namespace the component owns.
+    NetworkPolicy {
+        /// Its kind.
+        kind: String,
+        /// Its name.
+        name: String,
+    },
+    /// Two works have the same name.
+    WorkTwice {
+        /// The name.
+        name: String,
+    },
+    /// A quantity of a work.
+    Quantity(QuantityProblem),
+    /// The component contributes values and has no Helm release, by which an installer finds it.
+    ContributorWithoutHelm,
+    /// A contribution names no component.
+    UnknownTarget {
+        /// The id it names.
+        component: String,
+    },
+    /// A contribution names a release its component does not have.
+    UnknownTargetRelease {
+        /// The component.
+        component: String,
+        /// The release it names.
+        release: String,
+    },
+    /// The components have no install order on a profile.
+    InstallOrder {
+        /// The profile.
+        profile: Profile,
+        /// Why.
+        error: OrderError,
+    },
+}
+
+impl fmt::Display for ComponentProblem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Id => f.write_str(
+                "the directory name must be lowercase letters, digits and single hyphens",
+            ),
+            Self::CapabilityIsComponent { capability } => {
+                write!(f, "{capability} is the ID of another component")
+            }
+            Self::UrlDigests { urls } => {
+                write!(f, "needs one digest for each of the {urls} urls")
+            }
+            Self::InputWithoutRelease => f.write_str("no chart release for its path"),
+            Self::InputWithoutValue => {
+                f.write_str("required, so set default, testValue or generate for CI to install it")
+            }
+            Self::CaNamespace { namespace } => write!(f, "{namespace} is none of its namespaces"),
+            Self::InternalCrd { crd } => write!(f, "{crd} is not in detection.crds"),
+            Self::ClusterIpWithoutPath => f.write_str("generate clusterIP needs a path"),
+            Self::NetworkPolicies { message } => f.write_str(message),
+            Self::NetworkPolicy { kind, name } => write!(
+                f,
+                "{kind} {name} must be a NetworkPolicy in one of its namespaces"
+            ),
+            Self::WorkTwice { name } => write!(f, "{name} is listed twice"),
+            Self::Quantity(p) => p.fmt(f),
+            Self::ContributorWithoutHelm => f.write_str("needs a helm release of its own"),
+            Self::UnknownTarget { component } => write!(f, "unknown target {component}"),
+            Self::UnknownTargetRelease { component, release } => {
+                write!(f, "{component} has no release {release}")
+            }
+            Self::InstallOrder { profile, error } => write!(f, "{}: {error}", profile.as_str()),
+        }
+    }
+}
+
+/// A quantity that is not one, or not above zero.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum QuantityProblem {
+    /// It is no Kubernetes quantity.
+    NotAQuantity {
+        /// The text.
+        value: String,
+    },
+    /// It is zero or less.
+    NotAboveZero {
+        /// The text.
+        value: String,
+    },
+}
+
+impl fmt::Display for QuantityProblem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::NotAQuantity { value } => write!(f, "{value} is not a quantity"),
+            Self::NotAboveZero { value } => write!(f, "{value} is not above zero"),
+        }
     }
 }
 
