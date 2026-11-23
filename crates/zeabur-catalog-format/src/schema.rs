@@ -274,20 +274,19 @@ mod tests {
     use super::{BASE, schemas};
 
     /// Every file of `schema/v1/`, generated or written by hand, starts with `$schema` and then
-    /// its `$id` under [`BASE`].
+    /// its `$id` under [`BASE`]. The generated-is-fresh check keeps the generated files equal to
+    /// [`schemas`].
     #[test]
     fn every_schema_starts_with_its_schema_and_id() {
-        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../schema/v1");
         let mut texts: Vec<(String, String)> = schemas()
             .unwrap()
             .into_iter()
             .map(|(name, text)| (name.to_owned(), text))
             .collect();
-        for entry in std::fs::read_dir(&dir).unwrap() {
-            let path = entry.unwrap().path();
-            let name = path.file_name().unwrap().to_string_lossy().into_owned();
-            texts.push((name, std::fs::read_to_string(&path).unwrap()));
-        }
+        texts.push((
+            "template-case.schema.json".to_owned(),
+            include_str!("../../../schema/v1/template-case.schema.json").to_owned(),
+        ));
         for (name, text) in texts {
             let lines: Vec<&str> = text.lines().take(3).collect();
             assert_eq!(lines.first(), Some(&"{"), "{name}");
