@@ -3,15 +3,15 @@ package main
 import (
 	"cmp"
 	"encoding/json"
-	"io"
+	"errors"
 	"maps"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
-	"golang.org/x/mod/sumdb/dirhash"
 	"k8s.io/apimachinery/pkg/version"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
@@ -169,17 +169,46 @@ func templateMeasurementPath(id string) string {
 	return filepath.Join("measurements", "templates", id+".json")
 }
 
-// sourceDigest returns the Go module hash (dirhash.Hash1, "h1:...") of every
-// file in dir, the directory of a component or template, except e2e.yaml and
-// the READMEs, which hold test data and docs and change no measurement.
+// sourceDigest returns the sourceDigest of dir, the directory of a component or template, from
+// `zeabur-catalog digest`, so that the API and the measurements share one definition.
 func sourceDigest(dir string) (string, error) {
-	files, err := dirhash.DirFiles(dir, "")
+	bin, err := rustCLI()
 	if err != nil {
 		return "", err
 	}
-	files = slices.DeleteFunc(files, func(f string) bool { return f == "e2e.yaml" || catalog.IsReadme(f) })
-	return dirhash.Hash1(files, func(name string) (io.ReadCloser, error) { return os.Open(filepath.Join(dir, name)) })
+	out, err := catalog.Run(nil, bin, "digest", dir)
+	return strings.TrimSpace(out), err
 }
+
+// startDir is the directory the command starts in, read before the tests change it.
+var startDir, startDirErr = os.Getwd()
+
+// rustCLI builds zeabur-catalog once and returns its path. The workspace is the first directory
+// above startDir with a Cargo.toml.
+var rustCLI = sync.OnceValues(func() (string, error) {
+	root, err := startDir, startDirErr
+	for err == nil {
+		if _, err = os.Stat(filepath.Join(root, "Cargo.toml")); err == nil {
+			break
+		}
+		parent := filepath.Dir(root)
+		if parent == root {
+			return "", errors.New("no Cargo.toml above the current directory")
+		}
+		root, err = parent, nil
+	}
+	if err != nil {
+		return "", err
+	}
+	if _, err := catalog.Run(nil, "cargo", "build", "--locked", "-q", "--manifest-path", filepath.Join(root, "Cargo.toml"), "-p", "zeabur-catalog"); err != nil {
+		return "", err
+	}
+	target := os.Getenv("CARGO_TARGET_DIR")
+	if target == "" {
+		target = filepath.Join(root, "target")
+	}
+	return filepath.Join(target, "debug", "zeabur-catalog"), nil
+})
 
 func today() string { return time.Now().UTC().Format(time.DateOnly) }
 
