@@ -59,7 +59,7 @@ pattern 只用 RE2、Rust 的 `regex` crate 和 JavaScript 讀法都一樣的語
 
 ## 範本需要的元件
 
-`requires` 的每一項是 `{component: <id>}` 或 `{capability: <capability>}`，項目唯一欄位的值就是它的名稱。`catalog validate` 會檢查每一項都對得到這個版本裡的元件。
+`requires` 的每一項是 `{component: <id>}` 或 `{capability: <capability>}`，項目唯一欄位的值就是它的名稱。`zeabur-catalog check` 會檢查每一項都對得到這個版本裡的元件。
 
 - `{component: <id>}` 對到 ID 相同的那個元件。
 - `{capability: <capability>}` 對到 `provides.capability` 是這個 capability 的所有元件。

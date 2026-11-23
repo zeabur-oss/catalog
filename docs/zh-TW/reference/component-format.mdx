@@ -31,7 +31,7 @@ metadata:
     zh-CN: {summary: 把域名的流量转发到你的服务。}
 ```
 
-`locales` 的鍵是 BCP 47 語言標籤。`config/locales.yaml` 列出元件和範本裡每個 `locales` 都要有的語言，`catalog validate` 會檢查。也可以加上其他語言。
+`locales` 的鍵是 BCP 47 語言標籤。`config/locales.yaml` 列出元件和範本裡每個 `locales` 都要有的語言，`zeabur-catalog check` 會檢查。也可以加上其他語言。
 
 ## README
 
@@ -43,7 +43,7 @@ metadata:
 - **移除**（必填）說明移除會刪掉什麼、會留下什麼，以及要先確認什麼。
 - **疑難排解**（選填）每個問題一個 `###`。
 
-`catalog validate` 會檢查檔案和標題。
+`zeabur-catalog check` 會檢查檔案和標題。
 
 ## 元件欄位
 
@@ -71,7 +71,7 @@ releases:                         # installed in order
     chartDigest: sha256:…                       # required with chart; see Digests
     values: |                                   # shared by every profile
       gatewayClass:
-        # Every value has a comment saying why; `catalog validate` enforces it.
+        # Every value has a comment saying why; `zeabur-catalog check` enforces it.
         enabled: true
       image:
         # Every image is <tag>@sha256:<digest>; `catalog render` enforces it.
@@ -161,7 +161,7 @@ health:
 
 `distributions` 列出元件支援的發行版，e2e 會在每個發行版上測試它。通過測試的環境是另一份清單，由安裝工具根據 API 的量測資料算出，做法見[安裝工具如何選擇和安裝元件](installers.mdx#通過測試的環境)。元件在某個發行版和平台上沒有通過測試時，安裝工具會提醒使用者。
 
-`kubeVersion` 是元件支援的 Kubernetes 版本範圍，寫法和 Helm chart 的 `kubeVersion` 相同。填入各 chart 裡最嚴格的範圍，chart 都沒寫時填 `">=1.34.0-0"`。範圍沒有涵蓋 catalog 測試的某個 Kubernetes 版本時，`catalog validate` 會失敗。叢集版本不在範圍內時，安裝工具不會提供這個元件。
+`kubeVersion` 是元件支援的 Kubernetes 版本範圍，寫法和 Helm chart 的 `kubeVersion` 相同。填入各 chart 裡最嚴格的範圍，chart 都沒寫時填 `">=1.34.0-0"`。範圍沒有涵蓋 catalog 測試的某個 Kubernetes 版本時，`zeabur-catalog check` 會失敗。叢集版本不在範圍內時，安裝工具不會提供這個元件。
 
 `persistsData: true` 表示元件把狀態存在磁碟區裡，移除它會失去這些資料。
 
@@ -182,7 +182,7 @@ contributes:
 
 `security.podSecurity` 是元件自己的 namespace 需要的 Pod Security 等級：`restricted`、`baseline` 或 `privileged`。`catalog render` 會用它檢查渲染出的每個 Pod。
 
-`networkPolicies` 給預設擋掉每個命名空間入站流量的安裝工具用。內容是元件自己命名空間裡的標準 NetworkPolicy 物件，這類安裝工具會在安裝 releases 前套用，放行元件需要從其他地方進來的流量。其他安裝工具可以忽略它。`catalog validate` 會檢查每個物件都是元件命名空間裡的 NetworkPolicy。
+`networkPolicies` 給預設擋掉每個命名空間入站流量的安裝工具用。內容是元件自己命名空間裡的標準 NetworkPolicy 物件，這類安裝工具會在安裝 releases 前套用，放行元件需要從其他地方進來的流量。其他安裝工具可以忽略它。`zeabur-catalog check` 會檢查每個物件都是元件命名空間裡的 NetworkPolicy。
 
 ## 用 digest 固定內容
 

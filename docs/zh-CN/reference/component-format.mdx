@@ -31,7 +31,7 @@ metadata:
     zh-CN: {summary: 把域名的流量转发到你的服务。}
 ```
 
-`locales` 的键是 BCP 47 语言标签。`config/locales.yaml` 列出组件和模板里每个 `locales` 都必须包含的语言，`catalog validate` 会检查。也可以加上其他语言。
+`locales` 的键是 BCP 47 语言标签。`config/locales.yaml` 列出组件和模板里每个 `locales` 都必须包含的语言，`zeabur-catalog check` 会检查。也可以加上其他语言。
 
 ## README
 
@@ -43,7 +43,7 @@ metadata:
 - **移除**（必填）说明移除会删除什么、会保留什么，以及要先确认什么。
 - **故障排除**（选填）每个问题一个 `###`。
 
-`catalog validate` 会检查文件和标题。
+`zeabur-catalog check` 会检查文件和标题。
 
 ## 组件字段
 
@@ -71,7 +71,7 @@ releases:                         # installed in order
     chartDigest: sha256:…                       # required with chart; see Digests
     values: |                                   # shared by every profile
       gatewayClass:
-        # Every value has a comment saying why; `catalog validate` enforces it.
+        # Every value has a comment saying why; `zeabur-catalog check` enforces it.
         enabled: true
       image:
         # Every image is <tag>@sha256:<digest>; `catalog render` enforces it.
@@ -161,7 +161,7 @@ health:
 
 `distributions` 列出组件支持的发行版，e2e 会在每个发行版上测试它。通过测试的环境是另一个列表，由安装工具根据 API 的测量数据算出，做法见[安装工具如何选择和安装组件](installers.mdx#通过测试的环境)。组件在某个发行版和平台上没有通过测试时，安装工具会提示用户。
 
-`kubeVersion` 是组件支持的 Kubernetes 版本范围，写法与 Helm chart 的 `kubeVersion` 相同。填写各 chart 中最严格的范围，chart 都没写时填 `">=1.34.0-0"`。范围没有覆盖 catalog 测试的某个 Kubernetes 版本时，`catalog validate` 会失败。集群版本不在范围内时，安装工具不会提供这个组件。
+`kubeVersion` 是组件支持的 Kubernetes 版本范围，写法与 Helm chart 的 `kubeVersion` 相同。填写各 chart 中最严格的范围，chart 都没写时填 `">=1.34.0-0"`。范围没有覆盖 catalog 测试的某个 Kubernetes 版本时，`zeabur-catalog check` 会失败。集群版本不在范围内时，安装工具不会提供这个组件。
 
 `persistsData: true` 表示组件把状态存在卷里，移除它会丢失这些数据。
 
@@ -182,7 +182,7 @@ contributes:
 
 `security.podSecurity` 是组件自己的 namespace 需要的 Pod Security 级别：`restricted`、`baseline` 或 `privileged`。`catalog render` 会用它检查渲染出的每个 Pod。
 
-`networkPolicies` 给默认拦截每个命名空间入站流量的安装工具用。内容是组件自己命名空间里的标准 NetworkPolicy 对象，这类安装工具会在安装 releases 前应用，放行组件需要从其他地方进来的流量。其他安装工具可以忽略它。`catalog validate` 会检查每个对象都是组件命名空间里的 NetworkPolicy。
+`networkPolicies` 给默认拦截每个命名空间入站流量的安装工具用。内容是组件自己命名空间里的标准 NetworkPolicy 对象，这类安装工具会在安装 releases 前应用，放行组件需要从其他地方进来的流量。其他安装工具可以忽略它。`zeabur-catalog check` 会检查每个对象都是组件命名空间里的 NetworkPolicy。
 
 ## 用 digest 固定内容
 

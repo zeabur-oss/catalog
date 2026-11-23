@@ -39,10 +39,10 @@ Replace `vX.Y.Z` with the release tag you plan to deploy, check out its source, 
 tag=vX.Y.Z
 git clone --depth 1 --branch "$tag" https://github.com/zeabur-oss/catalog
 cd catalog
-go run ./tools/cmd/catalog validate
+cargo run -p zeabur-catalog -- check
 ```
 
-`validate` prints `ok`.
+`check` prints nothing and exits with status 0 when the catalog has no problems.
 
 </Step>
 

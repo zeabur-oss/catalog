@@ -54,7 +54,7 @@ pattern 只用 RE2、Rust 的 `regex` crate 和 JavaScript 读法都一样的语
 
 ## 模板需要的组件
 
-`requires` 的每一项是 `{component: <id>}` 或 `{capability: <capability>}`，项目唯一字段的值就是它的名称。`catalog validate` 会检查每一项都能对应到这个版本里的组件。
+`requires` 的每一项是 `{component: <id>}` 或 `{capability: <capability>}`，项目唯一字段的值就是它的名称。`zeabur-catalog check` 会检查每一项都能对应到这个版本里的组件。
 
 - `{component: <id>}` 对应 ID 相同的那个组件。
 - `{capability: <capability>}` 对应 `provides.capability` 是这个 capability 的所有组件。

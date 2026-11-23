@@ -39,10 +39,10 @@ kubectl get storageclass
 tag=vX.Y.Z
 git clone --depth 1 --branch "$tag" https://github.com/zeabur-oss/catalog
 cd catalog
-go run ./tools/cmd/catalog validate
+cargo run -p zeabur-catalog -- check
 ```
 
-`validate` 会输出 `ok`。
+目录没有问题时，`check` 不会输出任何内容，并以状态 0 退出。
 
 </Step>
 

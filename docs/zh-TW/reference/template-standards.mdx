@@ -3,13 +3,13 @@ title: 範本標準
 description: 新增或修改 Zeabur Catalog 範本時，請依照範本標準檢查安全性、網路、資料、升級與測試設定。
 ---
 
-Zeabur Catalog 的每個範本都必須符合以下規則。新增或修改範本時，請用 `catalog validate`、`catalog template lint` 與安裝測試檢查其中多項規則，其餘規則則需自行逐項確認。查閱上游文件時，請確認文件版本與範本固定使用的版本完全一致。
+Zeabur Catalog 的每個範本都必須符合以下規則。新增或修改範本時，請用 `zeabur-catalog check`、`catalog template lint` 與安裝測試檢查其中多項規則，其餘規則則需自行逐項確認。查閱上游文件時，請確認文件版本與範本固定使用的版本完全一致。
 
 ## `template.yaml`
 
 - `metadata` 必須列出應用程式名稱、授權、首頁與 `docs`。`docs` 是上游使用說明的 https 連結，不是原始碼儲存庫。
 - `metadata.summary` 用一句白話說明這是什麼應用程式，給挑選範本的人看。`zh-TW` 與 `zh-CN` 的摘要寫在 `metadata.locales`。
-- 每個範本都有 `README.md`、`README.zh-TW.md` 和 `README.zh-CN.md`，寫給剛部署完的人看。二級標題只能用這幾個，順序固定：英文是 `## Introduction`、`## Getting started`、`## Configuration`、`## Troubleshooting`，zh-TW 是 `簡介`、`開始使用`、`設定`、`疑難排解`，zh-CN 是 `简介`、`开始使用`、`配置`、`故障排除`。前兩個必填。簡介說明這是什麼應用、範本跑了什麼。開始使用寫成編號步驟：從哪裡打開、第一個人怎麼登入，以及每個自動產生的值放在哪個 Secret 的哪個 key。設定和疑難排解收錄使用者常遇到的工作或問題，每項一個 `###`，並連到上游出處。步驟以 Zeabur 開源版介面來寫，例如自動產生的值到服務的**環境變數**分頁查看；只有給不用 Zeabur 開源版的讀者，或 Zeabur 開源版沒有對應畫面時，才寫 kubectl 指令。每個步驟都要對照上游文件和範本的 manifests 確認。`catalog validate` 會檢查檔案、標題，以及開始使用有沒有寫出每個 `generate` 輸入的 Secret。
+- 每個範本都有 `README.md`、`README.zh-TW.md` 和 `README.zh-CN.md`，寫給剛部署完的人看。二級標題只能用這幾個，順序固定：英文是 `## Introduction`、`## Getting started`、`## Configuration`、`## Troubleshooting`，zh-TW 是 `簡介`、`開始使用`、`設定`、`疑難排解`，zh-CN 是 `简介`、`开始使用`、`配置`、`故障排除`。前兩個必填。簡介說明這是什麼應用、範本跑了什麼。開始使用寫成編號步驟：從哪裡打開、第一個人怎麼登入，以及每個自動產生的值放在哪個 Secret 的哪個 key。設定和疑難排解收錄使用者常遇到的工作或問題，每項一個 `###`，並連到上游出處。步驟以 Zeabur 開源版介面來寫，例如自動產生的值到服務的**環境變數**分頁查看；只有給不用 Zeabur 開源版的讀者，或 Zeabur 開源版沒有對應畫面時，才寫 kubectl 指令。每個步驟都要對照上游文件和範本的 manifests 確認。`zeabur-catalog check` 會檢查檔案、標題，以及開始使用有沒有寫出每個 `generate` 輸入的 Secret。
 - 每個服務都必須指定安全性 profile（`restricted` 或 `baseline`）、資源請求與上限，以及連接埠。服務名稱必須與對應的 Deployment、StatefulSet 或資料庫物件名稱相同。服務的 CPU 與記憶體數值必須是該物件所有容器的總和，連接埠則必須對應容器的具名連接埠。`catalog template lint` 會檢查資源總和與連接埠。
 - `security` 必須列出管理者在部署前需要知道的風險，每個風險都附上降低風險的措施。
 - `smoke` 必須包含能證明應用程式正常運作的煙霧測試（smoke check），包括資源狀態條件，以及對執行中服務的 HTTP 或 SQL 檢查。
