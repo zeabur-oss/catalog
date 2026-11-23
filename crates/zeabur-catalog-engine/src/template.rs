@@ -346,6 +346,9 @@ fn portable(ast: &Ast) -> Result<(), Span> {
             | AssertionKind::WordBoundaryStartHalf
             | AssertionKind::WordBoundaryEndHalf => Err(assertion.span),
         },
+        // A negated class matches a character outside ASCII, which JavaScript counts in UTF-16
+        // units.
+        Ast::ClassBracketed(class) if class.negated => Err(class.span),
         Ast::ClassBracketed(class) => match &class.kind {
             ClassSet::Item(item) => portable_item(item),
             ClassSet::BinaryOp(op) => Err(op.span),
@@ -356,6 +359,7 @@ fn portable(ast: &Ast) -> Result<(), Span> {
                 | RepetitionRange::AtLeast(n)
                 | RepetitionRange::Bounded(_, n),
             ) if n > MAX_REPEAT => Err(repetition.op.span),
+            _ if matches!(*repetition.ast, Ast::Repetition(_)) => Err(repetition.op.span),
             RepetitionKind::ZeroOrOne
             | RepetitionKind::ZeroOrMore
             | RepetitionKind::OneOrMore
@@ -511,7 +515,7 @@ mod tests {
             "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
             "^(?:465|587)$",
             r"^https://[A-Za-z0-9.-]+(:443)?(/[A-Za-z0-9._~/-]*)?$",
-            "[^@ ]+@[^@ ]+",
+            "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+",
             r"[\]a]+",
             "a|",
             "x{2,}?",
@@ -522,7 +526,10 @@ mod tests {
         }
         for (pattern, at) in [
             (r"\d+", r"\d"),
-            (r"[^@\s]+", r"\s"),
+            (r"[^@\s]+", "[^@\\s]"),
+            ("[^@ ]+", "[^@ ]"),
+            ("a++", "+"),
+            ("a{2}*", "*"),
             (r"\w", r"\w"),
             (r"x\b", r"\b"),
             (r"\p{Greek}", r"\p{Greek}"),

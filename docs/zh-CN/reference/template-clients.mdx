@@ -28,7 +28,7 @@ description: 客户端渲染模板前要做的检查、怎样判断模板需要�
 | 提供的每个值都要完整匹配该输入字段的 `validation.pattern`，只匹配一部分不算 | `pattern` | `input` |
 | 提供的每个名称都是模板里的输入字段 | `unknown-input` | `input` |
 
-pattern 只用 RE2、Rust 的 `regex` crate 和 JavaScript 读法都一样的语法：ASCII 字符、由字符和范围组成的方括号字符类（例如 `[a-z0-9_-]` 或 `[^@ ]`）、分组 `( )` 和 `(?: )`、`|`、重复 `?`、`*`、`+`、`{n}`、`{n,}` 和 `{n,m}`（次数最多 1000），以及 `^` 和 `$`。特殊字符要用 `\` 转义，字符类里的 `]` 一律要转义。其他写法，例如 `.`、`\d`、`\s`、`\w`、`\b`、`\p{...}`、标志和命名分组，这几种引擎的读法不同，目录的检查会拒绝。要匹配整个值，请把 pattern 包成 `^(?:<pattern>)$`。
+pattern 只用 RE2、Rust 的 `regex` crate 和 JavaScript 读法都一样的语法：ASCII 字符、由字符和范围组成的方括号字符类（例如 `[a-z0-9_-]`）、分组 `( )` 和 `(?: )`、`|`、重复 `?`、`*`、`+`、`{n}`、`{n,}` 和 `{n,m}`（次数最多 1000），以及 `^` 和 `$`。特殊字符要用 `\` 转义，字符类里的 `]` 一律要转义。其他写法，例如 `.`、否定字符类 `[^...]`、重复再重复（例如 `a++`）、`\d`、`\s`、`\w`、`\b`、`\p{...}`、标志和命名分组，这几种引擎的读法不同，目录的检查会拒绝。要匹配整个值，请把 pattern 包成 `^(?:<pattern>)$`。
 
 有多项检查不通过时，客户端报告其中一项即可。`render.go` 按表格的顺序检查。每个测试用例只违反一条规则，所以检查顺序不影响结果。
 
@@ -88,7 +88,7 @@ template:            # template.yaml, with only the fields rendering reads
   metadata: {version: "1.2.0"}
   services: [{name: app, domains: ["{{ .Domain }}"]}]
   inputs:
-    - {name: adminEmail, required: true, validation: {pattern: '[^@\s]+@[^@\s]+'}}
+    - {name: adminEmail, required: true, validation: {pattern: '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+'}}
 manifests: |
   apiVersion: v1
   kind: ConfigMap
