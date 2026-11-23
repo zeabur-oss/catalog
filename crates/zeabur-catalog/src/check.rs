@@ -2,12 +2,14 @@
 //!
 //! Each component and template file must pass its schema in `schema/v1/`. The components must
 //! then fit together: references, install order, contributions, inputs and what they provision.
-//! Each template's manifests must parse, with no input name or Secret key twice.
+//! Each template's manifests must parse, with no input name or Secret key twice. Then the
+//! repository's policy: licences, languages, READMEs and Kubernetes versions.
 #![expect(
     clippy::disallowed_types,
     reason = "a file is checked against its JSON Schema as JSON of any shape"
 )]
 
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -24,6 +26,8 @@ use zeabur_catalog_format::problem::{
 };
 use zeabur_catalog_format::{Catalog, Component, order};
 
+use crate::policy;
+
 /// The problems of the checkout at `root`. Schema problems come alone: the other rules read the
 /// files as their types.
 ///
@@ -31,19 +35,38 @@ use zeabur_catalog_format::{Catalog, Component, order};
 ///
 /// A file or a schema cannot be read.
 pub(crate) fn check(root: &Path) -> Result<Vec<Problem>, String> {
-    let problems = schema_problems(root)?;
+    let (problems, files) = schema_problems(root)?;
     if !problems.is_empty() {
         return Ok(problems);
     }
     let catalog = Catalog::read(root).map_err(|e| e.to_string())?;
+    let config = policy::Config::read(root)?;
     let mut problems = component_problems(&catalog);
+    let null = Value::Null;
+    for (id, component) in &catalog.components {
+        let raw = files.get(&component_file(id)).unwrap_or(&null);
+        let dir = Path::new("components").join(id);
+        problems.extend(policy::component_problems(
+            &config, root, &dir, component, raw,
+        ));
+    }
     for (id, dir) in &catalog.templates {
+        let path = template_file(id);
+        let mut found = Problems::new(&path);
         if let Err(e) = template::check(id, dir) {
-            let mut found = Problems::new(&template_file(id));
             let message = e.to_string();
             found.push(FieldPath::root(), TemplateProblem::Broken { message });
-            problems.extend(found.into_vec());
         }
+        problems.extend(found.into_vec());
+        let raw = files.get(&path).unwrap_or(&null);
+        let template_dir = Path::new("templates").join(id);
+        problems.extend(policy::template_problems(
+            &config,
+            root,
+            &template_dir,
+            &dir.template,
+            raw,
+        ));
     }
     Ok(problems)
 }
@@ -80,8 +103,10 @@ fn field_path(location: &jsonschema::paths::Location) -> FieldPath {
         })
 }
 
-fn schema_problems(root: &Path) -> Result<Vec<Problem>, String> {
+/// The schema problems of each file, and each file read as it is written, by path.
+fn schema_problems(root: &Path) -> Result<(Vec<Problem>, BTreeMap<PathBuf, Value>), String> {
     let mut problems = Vec::new();
+    let mut files = BTreeMap::new();
     for (dir, file, schema) in SCHEMAS {
         let schema_path = root.join("schema/v1").join(schema);
         let schema: Value = serde_json::from_str(&read(&schema_path)?)
@@ -104,6 +129,7 @@ fn schema_problems(root: &Path) -> Result<Vec<Problem>, String> {
                         let message = error.to_string();
                         found.push(field_path(error.instance_path()), SchemaProblem { message });
                     }
+                    files.insert(path, instance);
                 }
                 Err(e) => {
                     let message = e.to_string();
@@ -113,7 +139,7 @@ fn schema_problems(root: &Path) -> Result<Vec<Problem>, String> {
             problems.extend(found.into_vec());
         }
     }
-    Ok(problems)
+    Ok((problems, files))
 }
 
 fn read(path: &Path) -> Result<String, String> {

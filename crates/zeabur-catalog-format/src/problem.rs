@@ -44,6 +44,8 @@ pub enum ProblemKind {
     Component(ComponentProblem),
     /// A template.
     Template(TemplateProblem),
+    /// How the repository writes its files: licences, languages, READMEs, Kubernetes versions.
+    Policy(PolicyProblem),
 }
 
 impl fmt::Display for ProblemKind {
@@ -54,6 +56,7 @@ impl fmt::Display for ProblemKind {
             Self::Schema(p) => p.fmt(f),
             Self::Component(p) => p.fmt(f),
             Self::Template(p) => p.fmt(f),
+            Self::Policy(p) => p.fmt(f),
         }
     }
 }
@@ -85,6 +88,125 @@ impl From<ComponentProblem> for ProblemKind {
 impl From<TemplateProblem> for ProblemKind {
     fn from(p: TemplateProblem) -> Self {
         Self::Template(p)
+    }
+}
+
+impl From<PolicyProblem> for ProblemKind {
+    fn from(p: PolicyProblem) -> Self {
+        Self::Policy(p)
+    }
+}
+
+/// What the repository's policy finds: the files install without it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PolicyProblem {
+    /// A licence is not OSI-approved.
+    NotOsiApproved {
+        /// The SPDX id.
+        license: String,
+    },
+    /// A licence is opt-in only, and the component is recommended on a profile.
+    OptInRecommended {
+        /// The SPDX id.
+        license: String,
+        /// The profile.
+        profile: Profile,
+    },
+    /// A `locales` map lacks a language that `config/locales.yaml` requires.
+    MissingLocale {
+        /// The language.
+        lang: String,
+    },
+    /// The policy has no README headings for a language that `config/locales.yaml` requires.
+    NoHeadings {
+        /// The language.
+        lang: String,
+    },
+    /// The README of a required language is missing.
+    MissingReadme,
+    /// A README has a level-1 heading.
+    Level1Heading {
+        /// The line.
+        line: String,
+        /// The first level-2 heading.
+        first: String,
+    },
+    /// A level-2 heading is not one of the README's, or out of order.
+    Heading {
+        /// The line.
+        line: String,
+        /// The level-2 headings, in order.
+        headings: Vec<String>,
+    },
+    /// A README lacks a section it needs.
+    MissingSection {
+        /// The heading.
+        heading: String,
+    },
+    /// A template README does not say where to read a generated input.
+    SecretNotNamed {
+        /// The section that should name it.
+        section: String,
+        /// The Secret.
+        secret: String,
+        /// The input.
+        input: String,
+    },
+    /// `kubeVersion` leaves out a version that `config/kubernetes.yaml` tests.
+    LeavesOut {
+        /// The range.
+        range: String,
+        /// The version.
+        version: String,
+    },
+    /// `config/kubernetes.yaml` names something that is no version.
+    NotAVersion {
+        /// The text.
+        version: String,
+    },
+    /// `kubeVersion` is no range the check reads.
+    NotARange {
+        /// The text.
+        range: String,
+    },
+}
+
+impl fmt::Display for PolicyProblem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::NotOsiApproved { license } => write!(f, "{license} is not OSI-approved"),
+            Self::OptInRecommended { license, profile } => write!(
+                f,
+                "{license} is opt-in only, so {} cannot be recommended",
+                profile.as_str()
+            ),
+            Self::MissingLocale { lang } => write!(f, "no {lang}"),
+            Self::NoHeadings { lang } => write!(f, "no README headings for {lang}"),
+            Self::MissingReadme => f.write_str("missing"),
+            Self::Level1Heading { line, first } => {
+                write!(f, "level-1 heading {line:?}; start with ## {first}")
+            }
+            Self::Heading { line, headings } => write!(
+                f,
+                "heading {line:?}; the level-2 headings are {}, in that order",
+                headings.join(", ")
+            ),
+            Self::MissingSection { heading } => write!(f, "no ## {heading}"),
+            Self::SecretNotNamed {
+                section,
+                secret,
+                input,
+            } => write!(
+                f,
+                "{section} does not name Secret {secret} of input {input}"
+            ),
+            Self::LeavesOut { range, version } => write!(
+                f,
+                "{range} leaves out {version}, which config/kubernetes.yaml tests"
+            ),
+            Self::NotAVersion { version } => write!(f, "{version:?} is not a version"),
+            Self::NotARange { range } => write!(f, "{range:?} is not a range it reads"),
+        }
     }
 }
 

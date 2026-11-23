@@ -11,6 +11,7 @@ use std::process::ExitCode;
 
 mod check;
 mod licenses;
+mod policy;
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
