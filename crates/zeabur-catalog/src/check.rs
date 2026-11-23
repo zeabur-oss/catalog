@@ -208,6 +208,23 @@ fn is_id(id: &str) -> bool {
     })
 }
 
+/// A document of `networkPolicies`: a `List` stands for its items, as `kubeobj.Decode` reads it.
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum Document {
+    List { items: Vec<Object> },
+    One(Object),
+}
+
+impl Document {
+    fn objects(self) -> Vec<Object> {
+        match self {
+            Self::List { items } => items,
+            Self::One(object) => vec![object],
+        }
+    }
+}
+
 /// An object of `networkPolicies`, as far as the check reads it.
 #[derive(Deserialize)]
 struct Object {
@@ -264,13 +281,13 @@ fn provision_problems(component: &Component, found: &mut Problems) {
     }
     let at = root.key("networkPolicies");
     let policies = component.network_policies.as_deref().unwrap_or_default();
-    match serde_saphyr::from_multiple::<Option<Object>>(policies) {
+    match serde_saphyr::from_multiple::<Option<Document>>(policies) {
         Err(e) => {
             let message = e.to_string();
             found.push(at, ComponentProblem::NetworkPolicies { message });
         }
         Ok(objects) => {
-            for object in objects.into_iter().flatten() {
+            for object in objects.into_iter().flatten().flat_map(Document::objects) {
                 if object.kind != "NetworkPolicy"
                     || !object.metadata.namespace.as_deref().is_some_and(owns)
                 {
@@ -471,6 +488,20 @@ mod tests {
         let ok = "kind: NetworkPolicy\nmetadata: {name: a, namespace: zot}\n";
         let cases: &[(&str, Option<&str>, bool)] = &[
             ("its own namespace", Some(ok), false),
+            (
+                "a List of policies in its own namespace",
+                Some(
+                    "kind: List\nitems:\n  - kind: NetworkPolicy\n    metadata: {name: a, namespace: zot}\n",
+                ),
+                false,
+            ),
+            (
+                "a List with a policy in another namespace",
+                Some(
+                    "kind: List\nitems:\n  - kind: NetworkPolicy\n    metadata: {name: a, namespace: default}\n",
+                ),
+                true,
+            ),
             (
                 "a policy in another namespace",
                 Some("kind: NetworkPolicy\nmetadata: {name: a, namespace: default}\n"),
