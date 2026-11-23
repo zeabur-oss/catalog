@@ -38,7 +38,7 @@ const BINARY: [(&str, u32); 6] = [
 ];
 
 /// The canonical text of `text`, or `None` when it is not a quantity or is too large for this
-/// port (Go caps those, which no chart needs).
+/// port.
 #[must_use]
 pub fn canonical(text: &str) -> Option<String> {
     if text == "0" {
@@ -68,6 +68,8 @@ impl<'a> Parsed<'a> {
         let negative = text.starts_with('-');
         let rest = text.strip_prefix(['-', '+']).unwrap_or(text);
         let (num, rest) = split_digits(rest);
+        // Go strips the leading zeros before its fast path, but keeps the text as written.
+        let num = num.trim_start_matches('0');
         let num = if num.is_empty() { "0" } else { num };
         let (denom, suffix) = rest.strip_prefix('.').map_or(("", rest), split_digits);
         let (format, exponent) = interpret(suffix)?;
@@ -119,7 +121,15 @@ impl<'a> Parsed<'a> {
                 amount.exponent = amount.exponent.checked_add(self.exponent)?;
             }
         }
-        Some(amount.round_up_to_nano())
+        let amount = amount.round_up_to_nano();
+        if self.format == Format::BinarySi && amount.above_int64() {
+            // Go caps a binary quantity at the largest int64.
+            return Some(Amount {
+                mantissa: amount.mantissa.signum() * i128::from(i64::MAX),
+                exponent: 0,
+            });
+        }
+        Some(amount)
     }
 }
 
@@ -171,6 +181,24 @@ impl Amount {
         Self {
             mantissa: rounded,
             exponent: -9,
+        }
+    }
+
+    /// Whether the magnitude is above the largest int64.
+    fn above_int64(&self) -> bool {
+        let max = i128::from(i64::MAX);
+        let magnitude = self.mantissa.abs();
+        let power = self.exponent.unsigned_abs();
+        if self.exponent >= 0 {
+            10_i128
+                .checked_pow(power)
+                .and_then(|scale| magnitude.checked_mul(scale))
+                .is_none_or(|value| value > max)
+        } else {
+            10_i128
+                .checked_pow(power)
+                .and_then(|scale| max.checked_mul(scale))
+                .is_some_and(|limit| magnitude > limit)
         }
     }
 
@@ -258,6 +286,14 @@ mod tests {
             ("-1", "-1"),
             ("-500m", "-500m"),
             ("5Gi", "5Gi"),
+            ("01", "01"),
+            ("0001m", "0001m"),
+            ("010Mi", "010Mi"),
+            ("000", "0"),
+            ("7Ei", "7Ei"),
+            ("8Ei", "9223372036854775807"),
+            ("9Ei", "9223372036854775807"),
+            ("-9Ei", "-9223372036854775807"),
             ("3G", "3G"),
             ("1000k", "1M"),
             ("1000000", "1M"),
