@@ -293,7 +293,8 @@ fn check_options(id: &str, template: &Template, options: &Options<'_>) -> Result
 
 /// `pattern` with the Perl classes and word boundaries of [RE2], which are ASCII, where the
 /// `regex` crate's are Unicode. Each class becomes a bracket class, which is also valid inside
-/// another class.
+/// another class. RE2's literal text `\Q...\E`, which the `regex` crate lacks, becomes escaped
+/// text; without `\E` it runs to the end.
 ///
 /// [RE2]: https://github.com/google/re2/wiki/Syntax
 fn re2(pattern: &str) -> String {
@@ -317,6 +318,12 @@ fn re2(pattern: &str) -> String {
             'W' => out.push_str("[^0-9A-Za-z_]"),
             'b' => out.push_str("(?-u:\\b)"),
             'B' => out.push_str("(?-u:\\B)"),
+            'Q' => {
+                let rest = chars.as_str();
+                let (literal, after) = rest.split_once("\\E").unwrap_or((rest, ""));
+                out.push_str(&regex::escape(literal));
+                chars = after.chars();
+            }
             _ => {
                 out.push(c);
                 out.push(next);
@@ -433,6 +440,10 @@ mod tests {
             (r"[\d\-]+", "1-2", true),
             (r"\\d", "\\d", true),
             (r".*\bx", "\u{e9}x", true),
+            (r"\Qa.b\E", "a.b", true),
+            (r"\Qa.b\E", "axb", false),
+            (r"\Qa.b\E+", "a.bbb", true),
+            (r"x\Q(*", "x(*", true),
         ] {
             let regex = Regex::new(&format!(r"\A(?:{})\z", re2(pattern))).unwrap();
             assert_eq!(regex.is_match(value), matches, "{pattern} {value:?}");
