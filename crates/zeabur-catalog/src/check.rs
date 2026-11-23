@@ -60,14 +60,22 @@ const SCHEMAS: [(&str, &str, &str); 2] = [
     ("templates", "template.yaml", "template.schema.json"),
 ];
 
+/// The validator of `schema`. It asserts `format`, which Draft 2020-12 only annotates by default.
+pub(crate) fn validator(schema: &Value) -> Result<jsonschema::Validator, String> {
+    jsonschema::options()
+        .should_validate_formats(true)
+        .build(schema)
+        .map_err(|e| e.to_string())
+}
+
 fn schema_problems(root: &Path) -> Result<Vec<Problem>, String> {
     let mut problems = Vec::new();
     for (dir, file, schema) in SCHEMAS {
         let schema_path = root.join("schema/v1").join(schema);
         let schema: Value = serde_json::from_str(&read(&schema_path)?)
             .map_err(|e| format!("{}: {e}", schema_path.display()))?;
-        let validator = jsonschema::validator_for(&schema)
-            .map_err(|e| format!("{}: {e}", schema_path.display()))?;
+        let validator =
+            validator(&schema).map_err(|e| format!("{}: {e}", schema_path.display()))?;
         let mut ids: Vec<String> = fs::read_dir(root.join(dir))
             .map_err(|e| format!("{dir}: {e}"))?
             .map(|entry| entry.map(|e| e.file_name().to_string_lossy().into_owned()))
@@ -357,6 +365,21 @@ mod tests {
             .into_iter()
             .map(|p| p.to_string())
             .collect()
+    }
+
+    #[test]
+    fn the_schemas_assert_formats() {
+        let schema: Value =
+            serde_json::from_str(&read(&root().join("schema/v1/component.schema.json")).unwrap())
+                .unwrap();
+        let validator = validator(&schema).unwrap();
+        let mut component: Value = serde_saphyr::from_str(
+            &read(&root().join("components/traefik/component.yaml")).unwrap(),
+        )
+        .unwrap();
+        assert!(validator.is_valid(&component));
+        component["metadata"]["homepage"] = Value::from("not a URL");
+        assert!(!validator.is_valid(&component));
     }
 
     #[test]
