@@ -203,26 +203,25 @@ var rustCLI = sync.OnceValues(func() (string, error) {
 		return "", err
 	}
 	// Run in the workspace, so rustup finds rust-toolchain.toml even when the caller runs in a
-	// temporary directory.
-	build := exec.Command("cargo", "build", "--locked", "-q", "-p", "zeabur-catalog")
+	// temporary directory. Cargo names the executable it built, wherever its config puts it.
+	build := exec.Command("cargo", "build", "--locked", "-q", "-p", "zeabur-catalog", "--bin", "zeabur-catalog", "--message-format=json-render-diagnostics")
 	build.Dir = root
-	if out, err := build.CombinedOutput(); err != nil {
-		return "", fmt.Errorf("cargo build: %w: %s", err, strings.TrimSpace(string(out)))
-	}
-	// Cargo's own answer, so a target-dir set in any Cargo config or the environment counts.
-	metadata := exec.Command("cargo", "metadata", "--format-version", "1", "--no-deps", "--locked")
-	metadata.Dir = root
-	out, err := metadata.Output()
+	var stderr strings.Builder
+	build.Stderr = &stderr
+	out, err := build.Output()
 	if err != nil {
-		return "", fmt.Errorf("cargo metadata: %w", err)
+		return "", fmt.Errorf("cargo build: %w: %s", err, strings.TrimSpace(stderr.String()))
 	}
-	var m struct {
-		TargetDirectory string `json:"target_directory"`
+	for line := range strings.Lines(string(out)) {
+		var m struct {
+			Reason     string  `json:"reason"`
+			Executable *string `json:"executable"`
+		}
+		if json.Unmarshal([]byte(line), &m) == nil && m.Reason == "compiler-artifact" && m.Executable != nil {
+			return *m.Executable, nil
+		}
 	}
-	if err := json.Unmarshal(out, &m); err != nil {
-		return "", fmt.Errorf("cargo metadata: %w", err)
-	}
-	return filepath.Join(m.TargetDirectory, "debug", "zeabur-catalog"), nil
+	return "", errors.New("cargo build named no zeabur-catalog executable")
 })
 
 func today() string { return time.Now().UTC().Format(time.DateOnly) }
