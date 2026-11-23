@@ -18,6 +18,8 @@ metadata:
     zh-CN:
       summary: "构建 LLM 应用的平台，内含 PostgreSQL、队列、代码沙箱和 S3 存储。"
   license: LicenseRef-Dify-Modified-Apache-2.0 AND BUSL-1.1 AND Apache-2.0 AND PostgreSQL
+  licenseUrls:
+    LicenseRef-Dify-Modified-Apache-2.0: https://github.com/langgenius/dify/blob/main/LICENSE
   # Also: https://github.com/langgenius/dify-sandbox, https://cloudnative-pg.io/docs/, https://github.com/dragonflydb/dragonfly, https://github.com/dragonflydb/dragonfly-operator
   homepage: https://github.com/langgenius/dify
   docs: https://docs.dify.ai/en/self-host/quick-start/docker-compose

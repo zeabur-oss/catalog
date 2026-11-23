@@ -528,6 +528,19 @@
           "description": "An SPDX expression.",
           "type": "string"
         },
+        "licenseUrls": {
+          "additionalProperties": {
+            "format": "uri",
+            "pattern": "^https://",
+            "type": "string"
+          },
+          "description": "The URL of the text of each `LicenseRef-` licence in `license`, by its id.",
+          "propertyNames": {
+            "pattern": "^LicenseRef-[A-Za-z0-9.-]+$",
+            "type": "string"
+          },
+          "type": "object"
+        },
         "locales": {
           "additionalProperties": {
             "$ref": "#/$defs/Summary"

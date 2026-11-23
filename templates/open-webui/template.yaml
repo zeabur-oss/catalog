@@ -14,6 +14,8 @@ metadata:
     zh-CN:
       summary: "需要登录的 LLM 聊天界面，许可要求保留其品牌标识。"
   license: LicenseRef-Open-WebUI AND MIT
+  licenseUrls:
+    LicenseRef-Open-WebUI: https://github.com/open-webui/open-webui/blob/main/LICENSE
   # Also: https://github.com/open-webui/pipelines
   homepage: https://github.com/open-webui/open-webui
   docs: https://docs.openwebui.com/reference/env-configuration

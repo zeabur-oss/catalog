@@ -7,7 +7,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
-use crate::common::{ApiVersion, Generate, Locales, PodSecurity, Reference, Summary};
+use crate::common::{ApiVersion, Generate, LicenseUrls, Locales, PodSecurity, Reference, Summary};
 
 /// The `kind` of a template file.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
@@ -82,6 +82,14 @@ pub struct Metadata {
     /// An SPDX expression for the application, its images and charts.
     #[schemars(length(min = 1))]
     pub license: String,
+    /// The URL of the text of each `LicenseRef-` licence in `license`, by its id.
+    #[serde(default, skip_serializing_if = "LicenseUrls::is_empty")]
+    #[ts(optional, as = "Option<_>")]
+    #[schemars(extend(
+        "propertyNames" = {"type": "string", "pattern": crate::schema::pattern::LICENSE_REF},
+        "additionalProperties" = {"type": "string", "format": "uri", "pattern": crate::schema::pattern::HTTPS}
+    ))]
+    pub license_urls: LicenseUrls,
     /// The project's home page.
     #[schemars(url)]
     #[schemars(regex(pattern = crate::schema::pattern::HTTP))]

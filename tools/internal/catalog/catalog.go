@@ -88,8 +88,10 @@ type Metadata struct {
 	Locales SummaryLocales `yaml:"locales"`
 	// SPDX expression; every identifier must be OSI-approved, or listed under optInOnly in
 	// config/licenses.yaml with no profile recommending the component.
-	License  string `yaml:"license"`
-	Homepage string `yaml:"homepage"`
+	License string `yaml:"license"`
+	// The URL of the text of each LicenseRef- licence in License, by its id.
+	LicenseURLs map[string]string `yaml:"licenseUrls,omitempty"`
+	Homepage    string            `yaml:"homepage"`
 }
 
 // Security is what a component's RBAC lets it do and what its namespaces must allow.

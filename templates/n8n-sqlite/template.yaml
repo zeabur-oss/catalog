@@ -14,7 +14,9 @@ metadata:
     zh-CN:
       summary: "工作流自动化，数据存在 SQLite，搭配独立的代码执行器。"
   license: LicenseRef-n8n-sustainable-use
-  # Also: https://docs.n8n.io/hosting/, https://docs.n8n.io/sustainable-use-license/
+  licenseUrls:
+    LicenseRef-n8n-sustainable-use: https://docs.n8n.io/sustainable-use-license/
+  # Also: https://docs.n8n.io/hosting/
   homepage: https://github.com/n8n-io/n8n
   docs: https://docs.n8n.io/hosting/configuration/environment-variables/user-management-smtp-2fa/
 

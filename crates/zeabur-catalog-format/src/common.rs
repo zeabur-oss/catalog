@@ -188,6 +188,29 @@ pub struct Summary {
 /// Text in other languages, by BCP 47 tag (`zh-TW`). `config/locales.yaml` lists the tags.
 pub type Locales<T> = BTreeMap<String, T>;
 
+/// The URL of each `LicenseRef-` licence's text, by its id in `license`.
+pub type LicenseUrls = BTreeMap<String, String>;
+
+/// What is wrong with the links of `license`'s `LicenseRef-` ids: an id without a URL, or a URL
+/// for an id that `license` does not use.
+#[must_use]
+pub fn license_url_problems(license: &str, urls: &LicenseUrls) -> Vec<String> {
+    let used: Vec<&str> = license
+        .split(|c: char| c.is_whitespace() || c == '(' || c == ')')
+        .map(|token| token.trim_end_matches('+'))
+        .filter(|token| token.starts_with("LicenseRef-"))
+        .collect();
+    let unlinked = used
+        .iter()
+        .filter(|id| !urls.contains_key(**id))
+        .map(|id| format!("license {id} has no URL in licenseUrls"));
+    let unused = urls
+        .keys()
+        .filter(|id| !used.contains(&id.as_str()))
+        .map(|id| format!("licenseUrls names {id}, which license does not use"));
+    unlinked.chain(unused).collect()
+}
+
 /// A key of a Secret.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
 #[ts(export_to = "catalog.ts")]
@@ -253,4 +276,36 @@ pub enum WorkloadKind {
     #[schemars(skip)]
     #[ts(skip)]
     Unknown,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{LicenseUrls, license_url_problems};
+
+    fn urls(ids: &[&str]) -> LicenseUrls {
+        ids.iter()
+            .map(|id| ((*id).to_owned(), "https://example.com/license".to_owned()))
+            .collect()
+    }
+
+    #[test]
+    fn every_license_ref_needs_a_url() {
+        let license = "(MIT OR LicenseRef-A) AND LicenseRef-B+";
+        assert_eq!(
+            license_url_problems(license, &urls(&["LicenseRef-A", "LicenseRef-B"])),
+            Vec::<String>::new()
+        );
+        assert_eq!(
+            license_url_problems(license, &urls(&["LicenseRef-A"])),
+            ["license LicenseRef-B has no URL in licenseUrls"]
+        );
+    }
+
+    #[test]
+    fn a_url_needs_its_license_ref() {
+        assert_eq!(
+            license_url_problems("MIT", &urls(&["LicenseRef-A"])),
+            ["licenseUrls names LicenseRef-A, which license does not use"]
+        );
+    }
 }

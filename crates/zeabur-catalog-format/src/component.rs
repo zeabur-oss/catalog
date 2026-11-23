@@ -9,8 +9,8 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use crate::common::{
-    ApiVersion, Distribution, Generate, Locales, Mode, PerProfile, PodSecurity, Profile, Reference,
-    SecretRef, Summary, WorkloadKind,
+    ApiVersion, Distribution, Generate, LicenseUrls, Locales, Mode, PerProfile, PodSecurity,
+    Profile, Reference, SecretRef, Summary, WorkloadKind,
 };
 
 /// The `kind` of a component file.
@@ -160,6 +160,14 @@ pub struct Metadata {
     pub locales: Locales<Summary>,
     /// An SPDX expression.
     pub license: String,
+    /// The URL of the text of each `LicenseRef-` licence in `license`, by its id.
+    #[serde(default, skip_serializing_if = "LicenseUrls::is_empty")]
+    #[ts(optional, as = "Option<_>")]
+    #[schemars(extend(
+        "propertyNames" = {"type": "string", "pattern": crate::schema::pattern::LICENSE_REF},
+        "additionalProperties" = {"type": "string", "format": "uri", "pattern": crate::schema::pattern::HTTPS}
+    ))]
+    pub license_urls: LicenseUrls,
     /// The project's home page.
     #[schemars(url)]
     pub homepage: String,

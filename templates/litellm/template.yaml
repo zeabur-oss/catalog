@@ -16,7 +16,9 @@ metadata:
   # enterprise/ and the bundled litellm_enterprise package use the BerriAI
   # Enterprise license; the rest of LiteLLM is MIT.
   license: MIT AND LicenseRef-LiteLLM-Enterprise AND PostgreSQL AND Apache-2.0
-  # Also: https://github.com/BerriAI/litellm/blob/main/enterprise/LICENSE.md, https://cloudnative-pg.io/
+  licenseUrls:
+    LicenseRef-LiteLLM-Enterprise: https://github.com/BerriAI/litellm/blob/main/enterprise/LICENSE.md
+  # Also: https://cloudnative-pg.io/
   homepage: https://www.litellm.ai/
   docs: https://docs.litellm.ai/docs/proxy/ui
 
