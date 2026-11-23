@@ -1,4 +1,8 @@
 {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oss-catalog.zeabur.com/v1/schema/select-case.schema.json",
+  "title": "A case of conformance/select/",
+  "description": "A case of `conformance/select/`: a small catalog, a configuration and what an installer\nchooses.",
   "$defs": {
     "Candidate": {
       "additionalProperties": false,
@@ -521,10 +525,7 @@
       ]
     }
   },
-  "$id": "https://oss-catalog.zeabur.com/v1/schema/select-case.schema.json",
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
-  "description": "A case of `conformance/select/`: a small catalog, a configuration and what an installer\nchooses.",
   "properties": {
     "components": {
       "description": "The catalog.",
@@ -553,6 +554,5 @@
     "config",
     "want"
   ],
-  "title": "A case of conformance/select/",
   "type": "object"
 }

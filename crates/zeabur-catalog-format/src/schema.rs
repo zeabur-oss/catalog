@@ -6,6 +6,7 @@ use std::path::Path;
 use schemars::generate::SchemaSettings;
 use schemars::transform::transform_subschemas;
 use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
+use serde::Serialize;
 use serde_json::{Map, Value, json};
 use ts_rs::{Config, TS};
 
@@ -18,16 +19,19 @@ use crate::template::Template;
 pub const BASE: &str = "https://oss-catalog.zeabur.com/v1/schema/";
 
 /// Each schema of `schema/v1/`: its file name and its text.
-#[must_use]
-pub fn schemas() -> Vec<(&'static str, String)> {
-    vec![
-        file::<Component>("component.schema.json", "Component"),
-        file::<Template>("template.schema.json", "Template"),
-        file::<Index>("catalog.schema.json", "catalog.json"),
-        file::<ComponentFile>("component-file.schema.json", "components/<id>.json"),
-        file::<TemplateFile>("template-file.schema.json", "templates/<id>.json"),
-        file::<SelectCase>("select-case.schema.json", "A case of conformance/select/"),
-    ]
+///
+/// # Errors
+///
+/// A schema cannot be written as JSON.
+pub fn schemas() -> Result<Vec<(&'static str, String)>, serde_json::Error> {
+    Ok(vec![
+        file::<Component>("component.schema.json", "Component")?,
+        file::<Template>("template.schema.json", "Template")?,
+        file::<Index>("catalog.schema.json", "catalog.json")?,
+        file::<ComponentFile>("component-file.schema.json", "components/<id>.json")?,
+        file::<TemplateFile>("template-file.schema.json", "templates/<id>.json")?,
+        file::<SelectCase>("select-case.schema.json", "A case of conformance/select/")?,
+    ])
 }
 
 /// Writes the TypeScript types of every file in [`schemas`] to `<dir>/catalog.ts`, replacing it.
@@ -222,14 +226,73 @@ fn inline(value: &mut Value, defs: &Map<String, Value>, inlined: &mut Vec<String
     }
 }
 
-fn file<T: JsonSchema>(name: &'static str, title: &str) -> (&'static str, String) {
+fn file<T: JsonSchema>(
+    name: &'static str,
+    title: &str,
+) -> Result<(&'static str, String), serde_json::Error> {
     let settings = SchemaSettings::draft2020_12();
     let mut schema = settings
         .with_transform(closed)
         .into_generator()
         .into_root_schema_for::<T>();
     inline_variants(&mut schema);
-    schema.insert("$id".to_owned(), format!("{BASE}{name}").into());
-    schema.insert("title".to_owned(), title.into());
-    (name, format!("{:#}\n", schema.as_value()))
+    let mut rest = schema.as_object().cloned().unwrap_or_default();
+    let header = Header {
+        schema: rest.remove("$schema"),
+        id: format!("{BASE}{name}"),
+        title,
+        description: rest.remove("description"),
+        rest: {
+            rest.remove("$id");
+            rest.remove("title");
+            rest
+        },
+    };
+    Ok((
+        name,
+        format!("{}\n", serde_json::to_string_pretty(&header)?),
+    ))
+}
+
+/// The keys a reader looks for first, in this order, then the rest of the schema. `Map` keeps
+/// its keys sorted, so without this `$defs` would come before `$id`.
+#[derive(Serialize)]
+struct Header<'a> {
+    #[serde(rename = "$schema", skip_serializing_if = "Option::is_none")]
+    schema: Option<Value>,
+    #[serde(rename = "$id")]
+    id: String,
+    title: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    description: Option<Value>,
+    #[serde(flatten)]
+    rest: Map<String, Value>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{BASE, schemas};
+
+    /// Every file of `schema/v1/`, generated or written by hand, starts with `$schema` and then
+    /// its `$id` under [`BASE`].
+    #[test]
+    fn every_schema_starts_with_its_schema_and_id() {
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../schema/v1");
+        let mut texts: Vec<(String, String)> = schemas()
+            .unwrap()
+            .into_iter()
+            .map(|(name, text)| (name.to_owned(), text))
+            .collect();
+        for entry in std::fs::read_dir(&dir).unwrap() {
+            let path = entry.unwrap().path();
+            let name = path.file_name().unwrap().to_string_lossy().into_owned();
+            texts.push((name, std::fs::read_to_string(&path).unwrap()));
+        }
+        for (name, text) in texts {
+            let lines: Vec<&str> = text.lines().take(3).collect();
+            assert_eq!(lines.first(), Some(&"{"), "{name}");
+            assert!(lines[1].starts_with("  \"$schema\": "), "{name}");
+            assert_eq!(lines[2], format!("  \"$id\": \"{BASE}{name}\","), "{name}");
+        }
+    }
 }

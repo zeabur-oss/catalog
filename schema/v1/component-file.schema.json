@@ -1,4 +1,8 @@
 {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oss-catalog.zeabur.com/v1/schema/component-file.schema.json",
+  "title": "components/<id>.json",
+  "description": "`components/<id>.json`.",
   "$defs": {
     "Distribution": {
       "description": "A host distribution of Kubernetes that a component runs on.",
@@ -403,10 +407,7 @@
       ]
     }
   },
-  "$id": "https://oss-catalog.zeabur.com/v1/schema/component-file.schema.json",
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
-  "description": "`components/<id>.json`.",
   "properties": {
     "declaration": {
       "$ref": "component.schema.json",
@@ -440,6 +441,5 @@
     "render",
     "measurements"
   ],
-  "title": "components/<id>.json",
   "type": "object"
 }

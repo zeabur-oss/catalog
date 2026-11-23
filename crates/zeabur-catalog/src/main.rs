@@ -24,7 +24,8 @@ fn main() -> ExitCode {
 }
 
 fn write() -> Result<(), String> {
-    for (name, text) in zeabur_catalog_format::schema::schemas() {
+    let schemas = zeabur_catalog_format::schema::schemas().map_err(|e| e.to_string())?;
+    for (name, text) in schemas {
         let path = format!("schema/v1/{name}");
         std::fs::write(&path, text).map_err(|e| format!("{path}: {e}"))?;
     }

@@ -1,4 +1,8 @@
 {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oss-catalog.zeabur.com/v1/schema/component.schema.json",
+  "title": "Component",
+  "description": "One upstream project that a cluster administrator installs.",
   "$defs": {
     "Addon": {
       "additionalProperties": false,
@@ -1218,10 +1222,7 @@
       ]
     }
   },
-  "$id": "https://oss-catalog.zeabur.com/v1/schema/component.schema.json",
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
-  "description": "One upstream project that a cluster administrator installs.",
   "properties": {
     "apiVersion": {
       "$ref": "#/$defs/ApiVersion",
@@ -1358,6 +1359,5 @@
     "detection",
     "security"
   ],
-  "title": "Component",
   "type": "object"
 }

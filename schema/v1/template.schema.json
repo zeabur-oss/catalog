@@ -1,4 +1,8 @@
 {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oss-catalog.zeabur.com/v1/schema/template.schema.json",
+  "title": "Template",
+  "description": "One application that a project member installs into one namespace.",
   "$defs": {
     "ApiVersion": {
       "description": "The `apiVersion` of every component and template file.",
@@ -729,10 +733,7 @@
       "type": "object"
     }
   },
-  "$id": "https://oss-catalog.zeabur.com/v1/schema/template.schema.json",
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
-  "description": "One application that a project member installs into one namespace.",
   "properties": {
     "apiVersion": {
       "$ref": "#/$defs/ApiVersion",
@@ -792,6 +793,5 @@
     "security",
     "smoke"
   ],
-  "title": "Template",
   "type": "object"
 }

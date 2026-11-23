@@ -1,8 +1,9 @@
 {
-  "$id": "https://oss-catalog.zeabur.com/v1/schema/template-file.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "additionalProperties": false,
+  "$id": "https://oss-catalog.zeabur.com/v1/schema/template-file.schema.json",
+  "title": "templates/<id>.json",
   "description": "`templates/<id>.json`: the two files of a template as written.",
+  "additionalProperties": false,
   "properties": {
     "id": {
       "description": "Its id.",
@@ -28,6 +29,5 @@
     "template",
     "manifests"
   ],
-  "title": "templates/<id>.json",
   "type": "object"
 }

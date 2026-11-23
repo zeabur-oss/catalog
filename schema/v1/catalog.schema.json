@@ -1,4 +1,8 @@
 {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oss-catalog.zeabur.com/v1/schema/catalog.schema.json",
+  "title": "catalog.json",
+  "description": "`catalog.json`: the release, its test environments, its components and its templates.",
   "$defs": {
     "CatalogRelease": {
       "additionalProperties": false,
@@ -96,10 +100,7 @@
       ]
     }
   },
-  "$id": "https://oss-catalog.zeabur.com/v1/schema/catalog.schema.json",
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
-  "description": "`catalog.json`: the release, its test environments, its components and its templates.",
   "properties": {
     "catalog": {
       "$ref": "#/$defs/CatalogRelease",
@@ -149,6 +150,5 @@
     "components",
     "templates"
   ],
-  "title": "catalog.json",
   "type": "object"
 }

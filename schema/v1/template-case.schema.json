@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/zeabur-oss/catalog/schema/v1/template-case.schema.json",
+  "$id": "https://oss-catalog.zeabur.com/v1/schema/template-case.schema.json",
   "title": "Template case",
   "description": "One case of conformance/template/: a render, the state of what a template requires, or the words a reader sees. docs/reference/template-clients.mdx gives the rules.",
   "oneOf": [
