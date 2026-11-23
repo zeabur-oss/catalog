@@ -8,7 +8,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::net::IpAddr;
 
-use regex::Regex;
+use regex::{Regex, RegexBuilder};
 use serde_json::{Map, Value};
 use zeabur_catalog_format::{Template, TemplateDir};
 
@@ -270,11 +270,11 @@ fn check_options(id: &str, template: &Template, options: &Options<'_>) -> Result
             None if input.required => return Err(RenderError::Missing(input.name.clone())),
             None => {}
             Some(value) => {
-                let pattern = Regex::new(&format!(r"\A(?:{})\z", re2(&input.validation.pattern)))
-                    .map_err(|e| RenderError::Broken {
-                    template: id.to_owned(),
-                    detail: format!("the pattern of {}: {e}", input.name),
-                })?;
+                let pattern =
+                    whole_match(&input.validation.pattern).map_err(|e| RenderError::Broken {
+                        template: id.to_owned(),
+                        detail: format!("the pattern of {}: {e}", input.name),
+                    })?;
                 if !pattern.is_match(value) {
                     return Err(RenderError::Pattern(input.name.clone()));
                 }
@@ -289,6 +289,14 @@ fn check_options(id: &str, template: &Template, options: &Options<'_>) -> Result
         return Err(RenderError::UnknownInput(unknown.clone()));
     }
     Ok(())
+}
+
+/// `pattern` as RE2 reads it, matching a whole value. RE2 reads `\141` as an octal character
+/// code, which the `regex` crate allows only with `octal`.
+fn whole_match(pattern: &str) -> Result<Regex, regex::Error> {
+    RegexBuilder::new(&format!(r"\A(?:{})\z", re2(pattern)))
+        .octal(true)
+        .build()
 }
 
 /// `pattern` with the Perl classes and word boundaries of [RE2], which are ASCII, where the
@@ -494,8 +502,10 @@ mod tests {
             (r"[[:digit:]x]+", "1x", true),
             (r"[a\]&&]+", "a]&", true),
             (r"[a]&&b", "a&&b", true),
+            (r"\141+", "aaa", true),
+            (r"[\141-\143]+", "cab", true),
         ] {
-            let regex = Regex::new(&format!(r"\A(?:{})\z", re2(pattern))).unwrap();
+            let regex = whole_match(pattern).unwrap();
             assert_eq!(regex.is_match(value), matches, "{pattern} {value:?}");
         }
     }
