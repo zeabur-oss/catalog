@@ -96,6 +96,10 @@ pub struct ComponentFile {
     pub render: Render,
     /// Every recorded run of its e2e test.
     pub measurements: Vec<Environment>,
+    /// The locales of its READMEs, such as `en` and `zh-TW`. Each is a Markdown file next to this
+    /// one: `components/<id>/README.md` for `en`, `components/<id>/README.<locale>.md` for
+    /// another.
+    pub readmes: Vec<String>,
 }
 
 impl AsRef<Component> for ComponentFile {
@@ -276,6 +280,12 @@ pub struct TemplateFile {
     pub template: Template,
     /// The text of `manifests.yaml`, with template fields such as `{{ .Namespace }}`.
     pub manifests: String,
+    /// Every recorded run of its e2e test. A run tested this template when its `sourceDigest` is
+    /// this file's.
+    pub measurements: Vec<Environment>,
+    /// The locales of its READMEs, such as `en` and `zh-TW`. Each is a Markdown file next to this
+    /// one: `templates/<id>/README.md` for `en`, `templates/<id>/README.<locale>.md` for another.
+    pub readmes: Vec<String>,
 }
 
 /// `measurements/components/<id>.json` or `measurements/templates/<id>.json`.

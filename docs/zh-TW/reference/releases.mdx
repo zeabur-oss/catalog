@@ -23,11 +23,12 @@ API 是一組靜態 JSON 檔案，存放各元件的宣告、渲染結果、e2e 
 | 路徑 | 內容 | Schema |
 | --- | --- | --- |
 | `v1/catalog.json` | 版本的 `version` 和 `commit`、profile、Kubernetes 版本、固定版本的 `distributions`，以及各元件和各範本的 `id` 和 `sourceDigest`。 | [`catalog.schema.json`](../../../schema/v1/catalog.schema.json) |
-| `v1/components/<id>.json` | 一個元件的 `id`、`sourceDigest`、`declaration`、`render` 和 `measurements`。 | [`component-file.schema.json`](../../../schema/v1/component-file.schema.json) |
-| `v1/templates/<id>.json` | 一個範本的 `id`、`sourceDigest`、`template` 和 `manifests`。 | [`template-file.schema.json`](../../../schema/v1/template-file.schema.json) |
+| `v1/components/<id>.json` | 一個元件的 `id`、`sourceDigest`、`declaration`、`render`、`measurements`，以及有 README 的語言 `readmes`。 | [`component-file.schema.json`](../../../schema/v1/component-file.schema.json) |
+| `v1/templates/<id>.json` | 一個範本的 `id`、`sourceDigest`、`template`、`manifests`、`measurements`，以及有 README 的語言 `readmes`。 | [`template-file.schema.json`](../../../schema/v1/template-file.schema.json) |
+| `v1/components/<id>/README.md`、`v1/templates/<id>/README.md` | 元件或範本的 README，檔名和儲存庫裡相同：`en` 是 `README.md`，`readmes` 裡的其他語言是 `README.<語言>.md`。 | |
 | `v1/schema/` | 上面的 schema，宣告的 schema `component.schema.json`，以及 `template` 的 schema `template.schema.json`。 | |
 
-Schema 定義資料格式，由 catalog 工具的 Go 型別產生。每個版本的所有檔案都通過對應 schema 的檢查。
+Schema 定義資料格式，由 `crates/zeabur-catalog-format` 的 Rust 型別產生。每個版本的所有檔案都通過對應 schema 的檢查。
 
 - `declaration` 是[元件檔案](component-format.mdx)原有的內容，改用 JSON 表示。
 - `sourceDigest` 是元件目錄除了 README 以外的雜湊值，也就是 `component.yaml` 的雜湊值。量測紀錄的 `sourceDigest` 相同，就表示量測的是這個檔案。

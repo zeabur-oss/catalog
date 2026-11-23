@@ -66,6 +66,7 @@ struct WrittenComponent<'a> {
     declaration: Value,
     render: Render,
     measurements: Vec<Environment>,
+    readmes: Vec<String>,
 }
 
 /// A [`TemplateFile`](zeabur_catalog_format::api::TemplateFile) whose template is `template.yaml`
@@ -77,6 +78,8 @@ struct WrittenTemplate<'a> {
     source_digest: &'a str,
     template: Value,
     manifests: &'a str,
+    measurements: Vec<Environment>,
+    readmes: Vec<String>,
 }
 
 /// Replaces `dir` with the API of the checkout at `root`, for the catalog `version` at `commit`.
@@ -130,6 +133,10 @@ pub(crate) fn write(root: &Path, version: &str, commit: &str, dir: &Path) -> Res
             declaration: read_yaml(&root.join(format!("components/{id}/component.yaml")))?,
             render,
             measurements: measurements(&root.join(format!("measurements/components/{id}.json")))?,
+            readmes: readmes(
+                &root.join("components").join(id),
+                &dir.join("components").join(id),
+            )?,
         };
         write_json(&dir.join(format!("components/{id}.json")), &file)?;
         index.components.push(entry);
@@ -142,6 +149,11 @@ pub(crate) fn write(root: &Path, version: &str, commit: &str, dir: &Path) -> Res
             source_digest: &entry.source_digest,
             template: read_yaml(&root.join(format!("templates/{id}/template.yaml")))?,
             manifests: &template.manifests,
+            measurements: measurements(&root.join(format!("measurements/templates/{id}.json")))?,
+            readmes: readmes(
+                &root.join("templates").join(id),
+                &dir.join("templates").join(id),
+            )?,
         };
         write_json(&dir.join(format!("templates/{id}.json")), &file)?;
         index.templates.push(entry);
@@ -412,6 +424,35 @@ fn measurements(path: &Path) -> Result<Vec<Environment>, String> {
     Ok(file.environments)
 }
 
+/// Copies the READMEs of the directory `from` to `to` under the same names and returns their
+/// locales: `en` for `README.md`, `zh-TW` for `README.zh-TW.md`.
+fn readmes(from: &Path, to: &Path) -> Result<Vec<String>, String> {
+    let entries = fs::read_dir(from).map_err(|e| format!("{}: {e}", from.display()))?;
+    let mut locales = Vec::new();
+    for entry in entries {
+        let entry = entry.map_err(|e| format!("{}: {e}", from.display()))?;
+        let name = entry.file_name();
+        let Some(locale) = name.to_str().and_then(readme_locale) else {
+            continue;
+        };
+        fs::create_dir_all(to).map_err(|e| format!("{}: {e}", to.display()))?;
+        fs::copy(entry.path(), to.join(&name))
+            .map_err(|e| format!("{}: {e}", entry.path().display()))?;
+        locales.push(locale.to_owned());
+    }
+    locales.sort();
+    Ok(locales)
+}
+
+/// The locale of a README file name, `None` for another file.
+fn readme_locale(name: &str) -> Option<&str> {
+    let stem = name.strip_prefix("README")?.strip_suffix(".md")?;
+    if stem.is_empty() {
+        return Some("en");
+    }
+    stem.strip_prefix('.').filter(|l| !l.is_empty())
+}
+
 fn entry(root: &Path, kind: &str, id: &str) -> Result<Entry, String> {
     let dir = root.join(kind).join(id);
     Ok(Entry {
@@ -558,7 +599,12 @@ kubesolo: {version: v1.3.0}
         "pods": [{"workload": "web", "kind": "Deployment", "memory": "30Mi", "cpu": "0"}],
         "versions": [{"release": "web", "version": "v1.0.0"}], "measuredAt": "2026-11-20"}]}"#;
 
-    /// A catalog with the component `web`, the template `blog` and one run of `web`, and its
+    const BLOG_RUN: &str = r#"{"template": "blog", "environments": [{"distribution": "kind",
+        "profile": "single-node", "platform": {"os": "linux", "architecture": "amd64"},
+        "result": "passed", "pods": [{"workload": "blog", "kind": "Deployment", "memory": "80Mi",
+        "cpu": "1m"}], "measuredAt": "2026-11-21"}]}"#;
+
+    /// A catalog with the component `web`, the template `blog`, a run and READMEs of each, and its
     /// API in `out/v1`.
     pub(crate) struct Api(pub(crate) PathBuf);
 
@@ -573,6 +619,10 @@ kubesolo: {version: v1.3.0}
                 ("templates/blog/template.yaml", BLOG),
                 ("templates/blog/manifests.yaml", BLOG_MANIFESTS),
                 ("measurements/components/web.json", RUN),
+                ("measurements/templates/blog.json", BLOG_RUN),
+                ("components/web/README.md", "# Web\n"),
+                ("components/web/README.zh-TW.md", "# Web 網頁\n"),
+                ("templates/blog/README.md", "# Blog\n"),
                 ("config/kubernetes.yaml", KUBERNETES),
             ] {
                 let path = root.join(path);
@@ -657,6 +707,11 @@ kubesolo: {version: v1.3.0}
             ("cache", Some("web"), "5Gi")
         );
         assert_eq!(file.measurements[0].pods[0].memory, "30Mi");
+        assert_eq!(file.readmes, ["en", "zh-TW"]);
+        assert_eq!(
+            fs::read_to_string(api.dir().join("components/web/README.zh-TW.md")).unwrap(),
+            "# Web 網頁\n"
+        );
     }
 
     #[test]
@@ -670,6 +725,9 @@ kubesolo: {version: v1.3.0}
         assert_eq!(file.manifests, BLOG_MANIFESTS);
         let digest = source_digest(&api.0.join("templates/blog")).unwrap();
         assert_eq!(file.source_digest, digest);
+        assert_eq!(file.measurements[0].pods[0].memory, "80Mi");
+        assert_eq!(file.readmes, ["en"]);
+        assert!(api.dir().join("templates/blog/README.md").exists());
         let index: Index = serde_json::from_value(api.json("catalog.json")).unwrap();
         assert_eq!(
             index.templates,
@@ -680,6 +738,19 @@ kubesolo: {version: v1.3.0}
         );
         assert_eq!(index.catalog.commit, "a".repeat(40));
         assert!(api.dir().join("schema/template.schema.json").exists());
+    }
+
+    #[test]
+    fn reads_the_locale_of_a_readme() {
+        for (name, locale) in [
+            ("README.md", Some("en")),
+            ("README.zh-CN.md", Some("zh-CN")),
+            ("README..md", None),
+            ("README.txt", None),
+            ("component.yaml", None),
+        ] {
+            assert_eq!(readme_locale(name), locale, "{name}");
+        }
     }
 
     #[test]

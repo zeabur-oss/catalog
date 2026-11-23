@@ -1,8 +1,232 @@
 {
-  "$id": "https://oss-catalog.zeabur.com/v1/schema/template-file.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "additionalProperties": false,
+  "$id": "https://oss-catalog.zeabur.com/v1/schema/template-file.schema.json",
+  "title": "templates/<id>.json",
   "description": "`templates/<id>.json`: the two files of a template as written.",
+  "$defs": {
+    "Distribution": {
+      "description": "A host distribution of Kubernetes that a component runs on.",
+      "oneOf": [
+        {
+          "const": "k3s",
+          "description": "K3s.",
+          "type": "string"
+        },
+        {
+          "const": "rke2",
+          "description": "RKE2.",
+          "type": "string"
+        },
+        {
+          "const": "kubesolo",
+          "description": "KubeSolo.",
+          "type": "string"
+        }
+      ]
+    },
+    "Environment": {
+      "additionalProperties": false,
+      "description": "One run of an e2e test.",
+      "properties": {
+        "addOns": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The pinned release of each add-on it installed on the host, by name.",
+          "type": "object"
+        },
+        "dependencies": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The digest of each component it installed first, by id.",
+          "type": "object"
+        },
+        "distribution": {
+          "$ref": "#/$defs/MeasuredDistribution",
+          "description": "Where it ran."
+        },
+        "distributionVersion": {
+          "description": "The release of a host distribution; kind has none.",
+          "type": "string"
+        },
+        "kubernetesVersion": {
+          "description": "Absent when the cluster never answered.",
+          "type": "string"
+        },
+        "measuredAt": {
+          "description": "The day, `YYYY-MM-DD` in UTC.",
+          "format": "date",
+          "type": "string"
+        },
+        "platform": {
+          "$ref": "#/$defs/Platform",
+          "description": "The platform of the nodes."
+        },
+        "pods": {
+          "description": "The idle use of one pod of each workload it started.",
+          "items": {
+            "$ref": "#/$defs/PodUsage"
+          },
+          "type": "array"
+        },
+        "profile": {
+          "$ref": "#/$defs/Profile",
+          "description": "The profile whose values it installed."
+        },
+        "result": {
+          "$ref": "#/$defs/RunResult",
+          "description": "Whether it passed."
+        },
+        "sourceDigest": {
+          "description": "The digest of the directory it installed.",
+          "type": "string"
+        },
+        "versions": {
+          "description": "The version of each release or image it installed.",
+          "items": {
+            "$ref": "#/$defs/MeasuredVersion"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "distribution",
+        "profile",
+        "platform",
+        "result",
+        "measuredAt"
+      ],
+      "type": "object"
+    },
+    "Kind": {
+      "description": "kind, Kubernetes in Docker.",
+      "oneOf": [
+        {
+          "const": "kind",
+          "description": "`kind`.",
+          "type": "string"
+        }
+      ]
+    },
+    "MeasuredDistribution": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Kind",
+          "description": "kind."
+        },
+        {
+          "$ref": "#/$defs/Distribution",
+          "description": "A distribution installed on the host."
+        }
+      ],
+      "description": "Where an e2e run ran: kind, or a host distribution."
+    },
+    "MeasuredVersion": {
+      "additionalProperties": false,
+      "description": "The version of a component's release or of a template's image.",
+      "properties": {
+        "digest": {
+          "description": "The digest.",
+          "type": "string"
+        },
+        "image": {
+          "description": "The image.",
+          "type": "string"
+        },
+        "release": {
+          "description": "The release.",
+          "type": "string"
+        },
+        "version": {
+          "description": "The version.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Platform": {
+      "additionalProperties": false,
+      "description": "An OS and an architecture.",
+      "properties": {
+        "architecture": {
+          "description": "`amd64`.",
+          "type": "string"
+        },
+        "os": {
+          "description": "`linux`.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "os",
+        "architecture"
+      ],
+      "type": "object"
+    },
+    "PodUsage": {
+      "additionalProperties": false,
+      "description": "The idle use of one pod of a workload.",
+      "properties": {
+        "cpu": {
+          "description": "CPU, such as `3m`.",
+          "pattern": "^[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)(([KMGTPE]i)|[numkMGTPE]|([eE][+-]?[0-9]+))?$",
+          "type": "string"
+        },
+        "kind": {
+          "description": "The controller's kind.",
+          "type": "string"
+        },
+        "memory": {
+          "description": "Memory, such as `22Mi`.",
+          "pattern": "^[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)(([KMGTPE]i)|[numkMGTPE]|([eE][+-]?[0-9]+))?$",
+          "type": "string"
+        },
+        "workload": {
+          "description": "The controller the pod belongs to.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "workload",
+        "kind",
+        "memory",
+        "cpu"
+      ],
+      "type": "object"
+    },
+    "Profile": {
+      "description": "A deployment layout. Every component describes both.",
+      "oneOf": [
+        {
+          "const": "single-node",
+          "description": "One node.",
+          "type": "string"
+        },
+        {
+          "const": "multi-node",
+          "description": "Three nodes or more.",
+          "type": "string"
+        }
+      ]
+    },
+    "RunResult": {
+      "description": "Whether a run passed.",
+      "oneOf": [
+        {
+          "const": "passed",
+          "description": "It passed.",
+          "type": "string"
+        },
+        {
+          "const": "failed",
+          "description": "It failed.",
+          "type": "string"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
   "properties": {
     "id": {
       "description": "Its id.",
@@ -12,6 +236,20 @@
     "manifests": {
       "description": "The text of `manifests.yaml`, with template fields such as `{{ .Namespace }}`.",
       "type": "string"
+    },
+    "measurements": {
+      "description": "Every recorded run of its e2e test. A run tested this template when its `sourceDigest` is\nthis file's.",
+      "items": {
+        "$ref": "#/$defs/Environment"
+      },
+      "type": "array"
+    },
+    "readmes": {
+      "description": "The locales of its READMEs, such as `en` and `zh-TW`. Each is a Markdown file next to this\none: `templates/<id>/README.md` for `en`, `templates/<id>/README.<locale>.md` for another.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
     },
     "sourceDigest": {
       "description": "The digest of its directory.",
@@ -26,8 +264,9 @@
     "id",
     "sourceDigest",
     "template",
-    "manifests"
+    "manifests",
+    "measurements",
+    "readmes"
   ],
-  "title": "templates/<id>.json",
   "type": "object"
 }

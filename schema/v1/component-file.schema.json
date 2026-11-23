@@ -424,6 +424,13 @@
       },
       "type": "array"
     },
+    "readmes": {
+      "description": "The locales of its READMEs, such as `en` and `zh-TW`. Each is a Markdown file next to this\none: `components/<id>/README.md` for `en`, `components/<id>/README.<locale>.md` for\nanother.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
     "render": {
       "$ref": "#/$defs/Render",
       "description": "What it renders on each profile."
@@ -438,7 +445,8 @@
     "sourceDigest",
     "declaration",
     "render",
-    "measurements"
+    "measurements",
+    "readmes"
   ],
   "title": "components/<id>.json",
   "type": "object"

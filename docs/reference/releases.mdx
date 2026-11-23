@@ -23,8 +23,9 @@ The API is static JSON files. It holds facts: what each component declares, what
 | Path | Contents | Schema |
 | --- | --- | --- |
 | `v1/catalog.json` | The release's `version` and `commit`, the profiles, the Kubernetes versions, the pinned `distributions` and the `id` and `sourceDigest` of each component and each template. | [`catalog.schema.json`](../../schema/v1/catalog.schema.json) |
-| `v1/components/<id>.json` | One component: its `id` and `sourceDigest`, its `declaration`, its `render` and its `measurements`. | [`component-file.schema.json`](../../schema/v1/component-file.schema.json) |
-| `v1/templates/<id>.json` | One template: its `id` and `sourceDigest`, its `template` and its `manifests`. | [`template-file.schema.json`](../../schema/v1/template-file.schema.json) |
+| `v1/components/<id>.json` | One component: its `id` and `sourceDigest`, its `declaration`, its `render`, its `measurements` and the locales of its `readmes`. | [`component-file.schema.json`](../../schema/v1/component-file.schema.json) |
+| `v1/templates/<id>.json` | One template: its `id` and `sourceDigest`, its `template`, its `manifests`, its `measurements` and the locales of its `readmes`. | [`template-file.schema.json`](../../schema/v1/template-file.schema.json) |
+| `v1/components/<id>/README.md`, `v1/templates/<id>/README.md` | The README of a component or template, with the same name as in the repository: `README.md` for `en`, `README.<locale>.md` for another locale in `readmes`. | |
 | `v1/schema/` | The schemas above, `component.schema.json`, the schema of a declaration, and `template.schema.json`, the schema of `template`. | |
 
 The schemas are the contract, and the Rust types of `crates/zeabur-catalog-format` generate them, with the TypeScript types of [`types/v1/catalog.ts`](../../types/v1/catalog.ts). Each file of a release passes its schema.
