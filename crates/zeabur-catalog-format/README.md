@@ -15,3 +15,6 @@ Readers of the API decode the types directly: they ignore a field they do not kn
 unknown value as `Unknown`, as [releases](https://github.com/zeabur-oss/catalog/blob/main/docs/reference/releases.mdx)
 says. `check` reads the files authors write strictly and names each unknown field or value by its
 path. `Catalog::read` reads a catalog checkout through it.
+
+The `utoipa` feature, off by default, derives `utoipa::ToSchema` on the types a reader puts in its
+own OpenAPI document, so the reader needs no copy of them. It covers `InputValue`.

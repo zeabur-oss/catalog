@@ -7,4 +7,4 @@ allow-print-in-tests = true
 avoid-breaking-exported-api = false
 
 # Proper nouns that doc_markdown would otherwise ask to wrap in backticks.
-doc-valid-idents = ["ClusterIP", "HelmChart", "HelmChartConfig", "ServiceAccount", "StatefulSet", "DaemonSet", "APIService", "GatewayClass", "IngressClass", "CustomResourceDefinition", "NetworkPolicy", "NetworkPolicies", "PersistentVolumeClaim", "PersistentVolumeClaims", "CloudNativePG", "VictoriaLogs", "VictoriaMetrics", "KubeSolo", "TypeScript", "SemVer", ".."]
+doc-valid-idents = ["ClusterIP", "HelmChart", "HelmChartConfig", "ServiceAccount", "StatefulSet", "DaemonSet", "APIService", "GatewayClass", "IngressClass", "CustomResourceDefinition", "NetworkPolicy", "NetworkPolicies", "PersistentVolumeClaim", "PersistentVolumeClaims", "CloudNativePG", "VictoriaLogs", "VictoriaMetrics", "KubeSolo", "TypeScript", "OpenAPI", "SemVer", ".."]

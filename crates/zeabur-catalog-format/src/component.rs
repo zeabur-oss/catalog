@@ -492,6 +492,7 @@ pub struct Input {
 
 /// The value of an input.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, TS)]
+#[cfg_attr(feature = "utoipa", derive(utoipa::ToSchema))]
 #[ts(export_to = "catalog.ts")]
 #[serde(untagged)]
 pub enum InputValue {
