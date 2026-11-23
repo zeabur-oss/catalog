@@ -12,16 +12,20 @@ use std::process::{Command, Stdio};
 use k8s_openapi::apiextensions_apiserver::pkg::apis::apiextensions::v1::{
     CustomResourceDefinition, JSONSchemaProps, JSONSchemaPropsOrArray, JSONSchemaPropsOrBool,
 };
+use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
 use serde::Deserialize;
 use serde_json::{Map, Value};
 use sha2::{Digest, Sha256};
+use zeabur_catalog_engine::pod_security;
 use zeabur_catalog_format::Catalog;
-use zeabur_catalog_format::common::{Mode, Profile};
+use zeabur_catalog_format::common::{Mode, PodSecurity, Profile};
 use zeabur_catalog_format::component::{
     Component, HelmRelease, ManifestRelease, Release, default_accounts,
 };
 use zeabur_catalog_format::contributions::Contributions;
-use zeabur_catalog_format::problem::{FieldPath, Problem, Problems, RenderProblem, Rendering};
+use zeabur_catalog_format::problem::{
+    FieldPath, ObjectName, Problem, Problems, RenderProblem, Rendering,
+};
 use zeabur_catalog_format::values::release_values;
 
 /// `config/kubernetes.yaml`: the versions every profile is rendered against.
@@ -306,9 +310,9 @@ pub(crate) fn render(root: &Path, ids: &[String], out: &Path) -> Result<Vec<Prob
         if !ids.is_empty() && !ids.contains(id) {
             continue;
         }
-        let file = Path::new("components").join(id).join("component.yaml");
-        let mut found = Problems::new(&file);
+        let mut found = Problems::new(&Path::new("components").join(id).join("component.yaml"));
         let accounts = default_accounts(component);
+        let mut webhook = false;
         for release in accounts.iter().chain(&component.releases) {
             let name = release.name().unwrap_or_default();
             for version in &versions {
@@ -345,15 +349,50 @@ pub(crate) fn render(root: &Path, ids: &[String], out: &Path) -> Result<Vec<Prob
                     }
                     fs::write(&file, &objects).map_err(|e| format!("{}: {e}", file.display()))?;
                     if let Err(message) = crd_schemas(&objects, &schemas) {
+                        let on = on.clone();
                         found.push(FieldPath::root(), RenderProblem::CrdSchemas { on, message });
+                    }
+                    let docs = match documents(&objects) {
+                        Ok(docs) => docs,
+                        Err(message) => {
+                            found.push(FieldPath::root(), RenderProblem::NotYaml { on, message });
+                            continue;
+                        }
+                    };
+                    webhook |= docs.iter().any(is_webhook);
+                    let first = versions.first() == Some(version);
+                    let images = unpinned_allowed(release).filter(|_| first);
+                    for refused in refusals(&on, component.security.pod_security, images, &docs) {
+                        found.push(FieldPath::root(), refused);
+                    }
+                    // The same values must give the same objects on every install, so a chart
+                    // must not generate secrets or certificates.
+                    if first
+                        && matches!(release, Release::Helm(_))
+                        && cache
+                            .render(component, release, profile, version, &contributions, id)
+                            .is_ok_and(|again| again != objects)
+                    {
+                        found.push(FieldPath::root(), RenderProblem::NotReproducible { on });
                     }
                 }
             }
         }
+        if webhook && component.health.is_empty() {
+            found.push(FieldPath::root(), RenderProblem::WebhookWithoutHealth);
+        }
         problems.extend(found.into_vec());
         crate::output::info(&format!("rendered {id}"));
     }
-    for version in &versions {
+    problems.extend(kubeconform(&versions, out, &schemas));
+    Ok(problems)
+}
+
+/// Checks the rendered objects of each version against its Kubernetes schemas and the CRDs in
+/// `schemas`.
+fn kubeconform(versions: &[String], out: &Path, schemas: &Path) -> Vec<Problem> {
+    let mut problems = Vec::new();
+    for version in versions {
         let mut cmd = Command::new("kubeconform");
         cmd.args(["-kubernetes-version", version, "-strict", "-summary"])
             .args(["-skip", "CustomResourceDefinition"])
@@ -372,7 +411,150 @@ pub(crate) fn render(root: &Path, ids: &[String], out: &Path) -> Result<Vec<Prob
         found.push(FieldPath::root(), RenderProblem::Kubeconform { message });
         problems.extend(found.into_vec());
     }
-    Ok(problems)
+    problems
+}
+
+/// The kind and metadata of a rendered object of any kind.
+#[derive(Default, Deserialize)]
+struct Head {
+    #[serde(default)]
+    kind: String,
+    #[serde(default)]
+    metadata: ObjectMeta,
+}
+
+impl Head {
+    /// The kind and metadata of `doc`; empty when they do not read, as for an object without
+    /// them.
+    #[expect(
+        clippy::disallowed_types,
+        reason = "a rendered object may be of any kind"
+    )]
+    fn of(doc: &Value) -> Self {
+        Self::deserialize(doc).unwrap_or_default()
+    }
+}
+
+/// What the catalog refuses in the objects of a release, rendered `on`: pods below `level`, and,
+/// when `images` lists the images allowed without a digest, every other image without one. Helm
+/// test hooks are skipped, because only `helm test` creates them.
+#[expect(
+    clippy::disallowed_types,
+    reason = "a rendered object may be of any kind"
+)]
+fn refusals(
+    on: &Rendering,
+    level: PodSecurity,
+    images: Option<&[String]>,
+    docs: &[Value],
+) -> Vec<RenderProblem> {
+    let mut out = Vec::new();
+    for doc in docs {
+        let head = Head::of(doc);
+        let hook = head
+            .metadata
+            .annotations
+            .as_ref()
+            .and_then(|a| a.get("helm.sh/hook"));
+        if hook.is_some_and(|h| h.contains("test")) {
+            continue;
+        }
+        let object = ObjectName {
+            kind: head.kind,
+            name: head.metadata.name.unwrap_or_default(),
+        };
+        let template = match pod_security::pod_template(doc) {
+            Ok(Some(template)) => template,
+            Ok(None) => continue,
+            Err(e) => {
+                let (on, message) = (on.clone(), e.to_string());
+                out.push(RenderProblem::InvalidPod {
+                    on,
+                    object,
+                    message,
+                });
+                continue;
+            }
+        };
+        let spec = template.spec.unwrap_or_default();
+        if let Some(refusal) =
+            pod_security::check(level, &template.metadata.unwrap_or_default(), &spec)
+        {
+            out.push(RenderProblem::PodSecurity {
+                on: on.clone(),
+                object: object.clone(),
+                level,
+                refusal: refusal.to_string(),
+            });
+        }
+        let Some(allowed) = images else { continue };
+        let ephemeral = spec
+            .ephemeral_containers
+            .iter()
+            .flatten()
+            .map(|c| (&c.name, &c.image));
+        let containers = spec
+            .init_containers
+            .iter()
+            .flatten()
+            .chain(&spec.containers);
+        for (container, image) in containers.map(|c| (&c.name, &c.image)).chain(ephemeral) {
+            let image = image.as_deref().unwrap_or_default();
+            if !pinned(image) && !allowed.iter().any(|a| a == without_tag(image)) {
+                out.push(RenderProblem::UnpinnedImage {
+                    on: on.clone(),
+                    object: object.clone(),
+                    container: container.clone(),
+                    image: image.to_owned(),
+                });
+            }
+        }
+    }
+    out
+}
+
+/// The images a release may use without a digest, or `None` when its images are not checked: a
+/// URL release is pinned by the digest of its files, and its images are the upstream's choice.
+fn unpinned_allowed(release: &Release) -> Option<&[String]> {
+    match release {
+        Release::Helm(helm) => Some(&helm.unpinned_images),
+        Release::Inline(_) | Release::Unknown => Some(&[]),
+        Release::Manifest(_) => None,
+    }
+}
+
+/// An admission webhook, which the API server calls before it stores an object.
+#[expect(
+    clippy::disallowed_types,
+    reason = "a rendered object may be of any kind"
+)]
+fn is_webhook(doc: &Value) -> bool {
+    matches!(
+        Head::of(doc).kind.as_str(),
+        "ValidatingWebhookConfiguration" | "MutatingWebhookConfiguration"
+    )
+}
+
+/// `<image>@sha256:<64 hex>`.
+fn pinned(image: &str) -> bool {
+    image.split_once("@sha256:").is_some_and(|(name, digest)| {
+        !name.is_empty()
+            && !image.contains(char::is_whitespace)
+            && digest.len() == 64
+            && digest
+                .bytes()
+                .all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
+    })
+}
+
+/// The image without its tag: `ghcr.io/a/b:1` is `ghcr.io/a/b`, and a registry port stays.
+fn without_tag(image: &str) -> &str {
+    match (image.rfind(':'), image.rfind('/')) {
+        (Some(colon), slash) if slash.is_none_or(|s| colon > s) => {
+            image.get(..colon).unwrap_or(image)
+        }
+        _ => image,
+    }
 }
 
 /// The documents of a YAML stream, without the empty ones.
@@ -389,14 +571,9 @@ pub(crate) fn documents(text: &[u8]) -> Result<Vec<Value>, String> {
 /// Writes a kubeconform schema for each version of each CRD in `objects`, at
 /// `dir/<group>/<kind>_<version>.json`, so custom resources are checked against the CRDs they
 /// install with.
-#[expect(
-    clippy::disallowed_types,
-    clippy::disallowed_methods,
-    reason = "only its kind tells whether a rendered object is a CRD"
-)]
 fn crd_schemas(objects: &[u8], dir: &Path) -> Result<(), String> {
     for doc in documents(objects)? {
-        if doc.get("kind").and_then(Value::as_str) != Some("CustomResourceDefinition") {
+        if Head::of(&doc).kind != "CustomResourceDefinition" {
             continue;
         }
         let crd: CustomResourceDefinition =
@@ -507,6 +684,88 @@ mod tests {
         assert_eq!(got["properties"]["open"].get("additionalProperties"), None);
         // The top level stays open: kubeconform checks apiVersion, kind and metadata there.
         assert_eq!(got.get("additionalProperties"), None);
+    }
+
+    #[test]
+    fn an_image_needs_a_digest_unless_the_release_allows_it() {
+        let digest = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+        let text = format!(
+            "kind: Deployment
+metadata: {{name: op}}
+spec:
+  template:
+    spec:
+      initContainers:
+        - {{name: init, image: 'ghcr.io/a/init:1.0@sha256:{digest}'}}
+      containers:
+        - {{name: op, image: 'ghcr.io/a/op:1.0'}}
+        - {{name: sidecar, image: 'ghcr.io/a/sidecar:1.0'}}
+---
+kind: CronJob
+metadata: {{name: clean}}
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - {{name: clean, image: 'localhost:5000/clean:2'}}
+---
+kind: Pod
+metadata:
+  name: test-connection
+  annotations: {{helm.sh/hook: test}}
+spec:
+  containers:
+    - {{name: wget, image: busybox}}
+"
+        );
+        let docs = documents(text.as_bytes()).unwrap();
+        let allowed = ["ghcr.io/a/sidecar".to_owned()];
+        let on = Rendering {
+            release: "op".to_owned(),
+            profile: Profile::SingleNode,
+            version: "1.33.0".to_owned(),
+        };
+        let object = |kind: &str, name: &str| ObjectName {
+            kind: kind.to_owned(),
+            name: name.to_owned(),
+        };
+        let unpinned =
+            |object: ObjectName, container: &str, image: &str| RenderProblem::UnpinnedImage {
+                on: on.clone(),
+                object,
+                container: container.to_owned(),
+                image: image.to_owned(),
+            };
+        assert_eq!(
+            refusals(&on, PodSecurity::Privileged, Some(&allowed), &docs),
+            [
+                unpinned(object("Deployment", "op"), "op", "ghcr.io/a/op:1.0"),
+                unpinned(
+                    object("CronJob", "clean"),
+                    "clean",
+                    "localhost:5000/clean:2"
+                ),
+            ]
+        );
+        assert_eq!(refusals(&on, PodSecurity::Privileged, None, &docs), []);
+        let restricted = refusals(&on, PodSecurity::Restricted, None, &docs);
+        let objects: Vec<_> = restricted
+            .iter()
+            .filter_map(|p| {
+                if let RenderProblem::PodSecurity { object, .. } = p {
+                    Some(object.clone())
+                } else {
+                    None
+                }
+            })
+            .collect();
+        assert_eq!(restricted.len(), objects.len(), "{restricted:?}");
+        assert_eq!(
+            objects,
+            [object("Deployment", "op"), object("CronJob", "clean")]
+        );
     }
 
     #[test]

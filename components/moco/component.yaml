@@ -71,6 +71,12 @@ security:
 # The chart annotates its CRDs helm.sh/resource-policy: keep.
 leftovers: [customresourcedefinitions, persistentvolumeclaims]
 
+health:
+  - name: controller
+    resource: {kind: Deployment, name: moco-controller, namespace: moco-system}
+    timeout: 60s
+    advice: MySQL clusters can't be created or changed until the MOCO controller and its webhook run. Check its pods with kubectl -n moco-system get pods.
+
 smoke:
   - name: one-instance
     manifest: |

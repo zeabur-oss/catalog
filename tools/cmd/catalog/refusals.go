@@ -55,7 +55,10 @@ func renderBase() (sha, dir string, err error) {
 		return "", "", err
 	}
 	slog.Info("rendering the base", "sha", sha)
-	cmd := exec.Command("go", "run", "./tools/cmd/catalog", "render", "-out", dir)
+	cmd := exec.Command("cargo", "run", "--locked", "-p", "zeabur-catalog", "--", "render", "--out", dir)
+	if _, err := os.Stat(filepath.Join(src, "tools/cmd/catalog/render.go")); err == nil {
+		cmd = exec.Command("go", "run", "./tools/cmd/catalog", "render", "-out", dir)
+	}
 	cmd.Dir = src
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return "", "", fmt.Errorf("render %s: %w: %s", sha, err, tail(string(out), 20))

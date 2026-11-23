@@ -229,7 +229,7 @@ func runTier(r *repo, tier string, o tierOptions) error {
 	return fmt.Errorf("unknown -tier %q; use %s", tier, strings.Join(tiers, ", "))
 }
 
-// runCheck checks config/e2e.yaml, renders and lints everything, then sends every rendered
+// runCheck checks config/e2e.yaml, lints every template, then sends every rendered
 // component and template to a local API server with --dry-run=server, and
 // fails when it refuses an upgrade from the pull request's base or a profile
 // switch.
@@ -250,10 +250,8 @@ func runCheck(r *repo, cfg config, o tierOptions) error {
 	}); err != nil {
 		return err
 	}
+	// scripts/ci/check.sh runs `zeabur-catalog render` first.
 	out := "out/render"
-	if err := step("render", func() error { return renderComponents(r.cat, r.cat.Components, out, cfg.Versions) }); err != nil {
-		return err
-	}
 	if err := step("template lint", func() error { return lintTemplates(r, out, cfg.Versions) }); err != nil {
 		return err
 	}

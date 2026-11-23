@@ -1,6 +1,5 @@
 // Command catalog checks, renders, tests and packages the catalog.
 //
-//	catalog render [ids]                helm template every profile and Kubernetes version, then kubeconform
 //	catalog list -tier smoke|full [-ids <ids>|-since <ref>]  e2e CI matrix as JSON; full without IDs lists what is stale
 //	catalog e2e -tier check|smoke|full [-cluster current] [-since <ref>|ids]  run a test tier (see tier.go)
 //	catalog budget                      single-node memory budget
@@ -35,7 +34,6 @@ type repo struct {
 }
 
 var commands = map[string]func(*flag.FlagSet, *repo) error{
-	"render":     render,
 	"list":       list,
 	"e2e":        e2e,
 	"budget":     budget,
@@ -48,7 +46,7 @@ var commands = map[string]func(*flag.FlagSet, *repo) error{
 
 func main() {
 	if len(os.Args) < 2 || commands[os.Args[1]] == nil {
-		fmt.Fprintln(os.Stderr, "usage: catalog render|list|e2e|budget|api|compat|crosscheck|merge|template [flags] [ids]")
+		fmt.Fprintln(os.Stderr, "usage: catalog list|e2e|budget|api|compat|crosscheck|merge|template [flags] [ids]")
 		os.Exit(2)
 	}
 	if dir, err := os.UserCacheDir(); err == nil {

@@ -84,3 +84,13 @@ detection:
 security:
   summary: Reads scale targets and trigger secrets cluster-wide; serves the external metrics API.
   podSecurity: restricted
+
+health:
+  - name: operator
+    resource: {kind: Deployment, name: keda-operator, namespace: keda}
+    timeout: 60s
+    advice: Nothing is scaled on events until the KEDA operator runs. Check its pods with kubectl -n keda get pods.
+  - name: webhook
+    resource: {kind: Deployment, name: keda-admission-webhooks, namespace: keda}
+    timeout: 60s
+    advice: Scaled objects can't be created or changed until the KEDA admission webhook runs. Check its pods with kubectl -n keda get pods.

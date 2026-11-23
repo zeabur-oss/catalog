@@ -21,7 +21,7 @@ mkdir -p "$out"
 dir=$(cd "$out" && pwd)
 
 cargo run --locked -p zeabur-catalog -- check
-go run ./tools/cmd/catalog render
+cargo run --locked -p zeabur-catalog -- render
 nix build .#release
 install -m 644 result/bundle.tar.gz "$dir/bundle.tar.gz"
 

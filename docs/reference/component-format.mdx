@@ -74,7 +74,7 @@ releases:                         # installed in order
         # Every value has a comment saying why; `zeabur-catalog check` enforces it.
         enabled: true
       image:
-        # Every image is <tag>@sha256:<digest>; `catalog render` enforces it.
+        # Every image is <tag>@sha256:<digest>; `zeabur-catalog render` enforces it.
         tag: v3.7.16@sha256:…
     profiles:                                   # merged over values like helm -f
       single-node: |
@@ -150,6 +150,8 @@ The API publishes `resources.work` as written. An installer adds the memory of `
 
 `health` lists read-only checks that an installer runs on an installed cluster. Each check waits until the objects in `resource` reach `condition`, within `timeout`. A check of a `Deployment`, `DaemonSet` or `StatefulSet` has no `condition` and no `all`: those objects are ready when their rollout is complete. `resource` has a `kind`, a `namespace` when the kind has one, and exactly one of these: `name` for one object, `selector` for the objects with those labels, or `all: true` for every object of the kind. `validate` fails on a kind that isn't listed in [the schema](../../schema/v1/component.schema.json), and on a missing field. When a check fails, the installer shows the reason and message of the object, then its `advice`, which tells the reader in English what to do. A health check has no manifest and applies nothing. Put checks that create objects in `smoke`, which only e2e runs. e2e runs `health` after install and before `smoke`. Each `smoke` check lists `wait` entries. An entry names its objects as `resource: <kind>/<name>`, or as a kind with `selector` or `all: true`, with a `namespace` when the kind has one. It has a `condition`, either `condition=<name>` or `jsonpath=<path>=<value>`, unless the objects are a `Deployment`, `DaemonSet` or `StatefulSet`, which are ready when their rollout is complete.
 
+A component that serves an admission webhook (a `ValidatingWebhookConfiguration` or `MutatingWebhookConfiguration`) needs at least one `health` check, so that the components that need it install only after the webhook answers. `zeabur-catalog render` fails otherwise.
+
 ```yaml
 health:
   - name: nodes-ready
@@ -180,21 +182,21 @@ The other lists of `detection` find an existing installation of the upstream, so
 
 `detection.addons` lists the add-ons of a distribution that install the same upstream, such as `{distribution: k3s, name: traefik}` for the Traefik that k3s packages and `{distribution: rke2, name: rke2-traefik}` for RKE2's. The name is the add-on's HelmChart in `kube-system`. A reader ignores an entry of a distribution it doesn't know.
 
-`security.podSecurity` is the Pod Security level that the component's own namespaces need: `restricted`, `baseline` or `privileged`. `catalog render` checks every Pod of the render against it.
+`security.podSecurity` is the Pod Security level that the component's own namespaces need: `restricted`, `baseline` or `privileged`. `zeabur-catalog render` checks every Pod of the render against it.
 
 `networkPolicies` is for installers that block incoming traffic to each namespace by default. It holds standard NetworkPolicy objects in the component's own namespaces, which such an installer applies before the releases, for the traffic the component needs from elsewhere. Other installers can ignore it. `zeabur-catalog check` checks that each object is a NetworkPolicy in one of the component's namespaces.
 
 ## Pin content with digests
 
-Every `releases` entry must pin its content with a digest. `catalog render` stops if the chart or URL content doesn't match its digest, and an installer must stop too.
+Every `releases` entry must pin its content with a digest. `zeabur-catalog render` stops if the chart or URL content doesn't match its digest, and an installer must stop too.
 
 - For HTTP charts, `chartDigest` uses the `digest` from the corresponding entry in the repository's `index.yaml`, which is the sha256 of the `.tgz`.
 - For OCI charts, `chartDigest` uses the manifest digest, which is the value that `helm push` outputs. `helm pull <chart>:<version>@sha256:…` checks this value.
 - `urlDigests` uses the sha256 of each downloaded file, in the same order as the URLs.
 - Images in `values` use `<tag>@sha256:<digest>`, including images that the chart passes to an operator as arguments. If a chart doesn't accept a digest, list the image in `unpinnedImages` and explain why in a comment. URL installation entries are exempt from this requirement.
 
-Renovate updates image and chart versions together with their digests. It can't read digests for URLs: after Renovate updates their `version`, `catalog render` fails and outputs the new digest for you to copy into the file.
+Renovate updates image and chart versions together with their digests. It can't read digests for URLs: after Renovate updates their `version`, `zeabur-catalog render` fails and outputs the new digest for you to copy into the file.
 
-Installation results must be consistent: charts must not generate keys or certificates. Put values that need generation in `inputs` and store them in Secrets; cert-manager supplies certificates. If two renders produce different results, `catalog render` fails.
+Installation results must be consistent: charts must not generate keys or certificates. Put values that need generation in `inputs` and store them in Secrets; cert-manager supplies certificates. If two renders produce different results, `zeabur-catalog render` fails.
 
 For the complete field definitions, see the [component JSON Schema](../../schema/v1/component.schema.json).
