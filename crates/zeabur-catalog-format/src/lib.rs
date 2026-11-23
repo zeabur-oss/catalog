@@ -6,6 +6,7 @@ pub mod common;
 pub mod component;
 pub mod contributions;
 pub mod order;
+pub mod problem;
 pub mod schema;
 pub mod select;
 pub mod template;
@@ -31,13 +32,8 @@ pub enum ReadError {
         source: std::io::Error,
     },
     /// It is no valid file of its kind.
-    #[error("{path}: {message}")]
-    Format {
-        /// The file.
-        path: PathBuf,
-        /// Why.
-        message: String,
-    },
+    #[error("{}", join(.0))]
+    Check(Vec<problem::Problem>),
     /// A directory holds a file it may not.
     #[error("{path}: {rule}")]
     Layout {
@@ -46,6 +42,14 @@ pub enum ReadError {
         /// What the directory may hold.
         rule: &'static str,
     },
+}
+
+fn join(problems: &[problem::Problem]) -> String {
+    problems
+        .iter()
+        .map(ToString::to_string)
+        .collect::<Vec<_>>()
+        .join("; ")
 }
 
 /// A template directory: `template.yaml` and the text of `manifests.yaml`.

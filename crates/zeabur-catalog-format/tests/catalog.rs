@@ -6,8 +6,10 @@ mod tests {
     use std::path::Path;
 
     use zeabur_catalog_format::api::MeasurementFile;
+    use zeabur_catalog_format::check::StrictProblem;
     use zeabur_catalog_format::common::{Distribution, Profile};
     use zeabur_catalog_format::order::install_order;
+    use zeabur_catalog_format::problem::{FieldPath, ProblemKind};
     use zeabur_catalog_format::{Catalog, Component, Contributions, check, common, values};
 
     fn catalog() -> Catalog {
@@ -36,11 +38,7 @@ mod tests {
             )
         });
         for (id, license, urls) in components.chain(templates) {
-            assert_eq!(
-                common::license_url_problems(license, urls),
-                Vec::<String>::new(),
-                "{id}"
-            );
+            assert_eq!(common::license_url_problems(license, urls), [], "{id}");
         }
     }
 
@@ -76,7 +74,7 @@ mod tests {
             for entry in std::fs::read_dir(root.join(kind)).unwrap() {
                 let path = entry.unwrap().path();
                 let text = std::fs::read_to_string(&path).unwrap();
-                check::from_yaml::<MeasurementFile>(&text)
+                check::from_yaml::<MeasurementFile>(&path, &text)
                     .unwrap_or_else(|e| panic!("{}: {e:?}", path.display()));
             }
         }
@@ -88,14 +86,24 @@ mod tests {
         std::fs::read_to_string(path).unwrap()
     }
 
-    fn strict_problems(text: &str) -> Vec<String> {
-        check::from_yaml::<Component>(text).unwrap_err()
+    /// Where strict reading finds each problem of `text`, and what.
+    fn strict_problems(text: &str) -> Vec<(FieldPath, ProblemKind)> {
+        check::from_yaml::<Component>(Path::new("component.yaml"), text)
+            .unwrap_err()
+            .into_iter()
+            .map(|p| (p.at, p.kind))
+            .collect()
+    }
+
+    fn found(at: FieldPath, kind: StrictProblem) -> (FieldPath, ProblemKind) {
+        (at, kind.into())
     }
 
     #[test]
     fn the_check_names_an_unknown_field_by_its_path() {
         let text = traefik().replace("    condition: Ready", "    conditon: Ready");
-        assert!(strict_problems(&text).contains(&"unknown field health[0].conditon".to_owned()));
+        let at = FieldPath::root().key("health").index(0).key("conditon");
+        assert!(strict_problems(&text).contains(&found(at, StrictProblem::UnknownField)));
     }
 
     #[test]
@@ -104,10 +112,14 @@ mod tests {
             "    chart: oci://",
             "    chartVersion: 1\n    chart: oci://",
         );
+        let at = FieldPath::root()
+            .key("releases")
+            .index(1)
+            .key("chartVersion");
+        let problems = strict_problems(&text);
         assert!(
-            strict_problems(&text).contains(&"unknown field releases[1].chartVersion".to_owned()),
-            "{:?}",
-            strict_problems(&text)
+            problems.contains(&found(at, StrictProblem::UnknownField)),
+            "{problems:?}"
         );
     }
 
@@ -117,7 +129,8 @@ mod tests {
             "distributions: [k3s, rke2, kubesolo]",
             "distributions: [k3s, k0s]",
         );
-        assert!(strict_problems(&text).contains(&"unknown value at distributions[1]".to_owned()));
+        let at = FieldPath::root().key("distributions").index(1);
+        assert!(strict_problems(&text).contains(&found(at, StrictProblem::UnknownValue)));
     }
 
     #[test]

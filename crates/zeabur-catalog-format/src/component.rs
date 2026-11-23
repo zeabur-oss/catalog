@@ -515,6 +515,10 @@ pub enum InputValue {
 impl InputValue {
     /// The value in a chart's values.
     #[must_use]
+    #[expect(
+        clippy::disallowed_types,
+        reason = "a value in Helm values, which are YAML of any shape"
+    )]
     pub fn to_json(&self) -> serde_json::Value {
         match self {
             Self::Flag(b) => (*b).into(),

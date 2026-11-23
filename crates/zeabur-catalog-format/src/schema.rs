@@ -1,5 +1,9 @@
 //! The JSON Schemas of `schema/v1/` and the TypeScript types of `types/v1/`, generated from the
 //! types of this crate.
+#![expect(
+    clippy::disallowed_types,
+    reason = "a JSON Schema is a document of any shape, which the generated schemas are edited as"
+)]
 
 use std::path::Path;
 

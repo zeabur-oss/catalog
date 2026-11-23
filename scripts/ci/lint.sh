@@ -9,4 +9,5 @@ if [[ -n "$unformatted" ]]; then
   exit 1
 fi
 shellcheck scripts/ci/*.sh
+scripts/ci/patterns.sh
 jactionlint

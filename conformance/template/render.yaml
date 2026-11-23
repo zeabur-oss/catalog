@@ -4,7 +4,7 @@ template:            # template.yaml, with only the fields rendering reads
   metadata: {version: "1.2.0"}
   services: [{name: app, domains: ["{{ .Domain }}"]}]
   inputs:
-    - {name: adminEmail, required: true, validation: {pattern: '[^@\s]+@[^@\s]+'}}
+    - {name: adminEmail, required: true, validation: {pattern: '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+'}}
 manifests: |
   apiVersion: v1
   kind: ConfigMap

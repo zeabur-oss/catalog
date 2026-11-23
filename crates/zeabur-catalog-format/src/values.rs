@@ -1,5 +1,9 @@
 //! Helm values of a release: the release's own, its profile's, what other components contribute,
 //! and the inputs at their paths.
+#![expect(
+    clippy::disallowed_types,
+    reason = "Helm values are YAML of any shape, which the chart reads"
+)]
 
 use serde_json::{Map, Value};
 
