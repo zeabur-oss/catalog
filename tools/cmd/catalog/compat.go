@@ -66,26 +66,39 @@ func openSchemas(dir, out string) error {
 }
 
 // opened drops "additionalProperties": false, "enum", and a "oneOf" whose every branch is a
-// "const", which is how the generated schemas write an enum.
+// "const", which is how the generated schemas write an enum. An "if" or a "not" stays as written:
+// opened, it would match other data, so "then" would apply to every value, or "not" to none.
 func opened(v any) any {
-	switch v := v.(type) {
-	case map[string]any:
-		if closed, ok := v["additionalProperties"].(bool); ok && !closed {
-			delete(v, "additionalProperties")
-		}
-		delete(v, "enum")
-		if branches, ok := v["oneOf"].([]any); ok && allConst(branches) {
-			delete(v, "oneOf")
-		}
-		for k, e := range v {
-			v[k] = opened(e)
-		}
-	case []any:
-		for i, e := range v {
-			v[i] = opened(e)
+	schema, ok := v.(map[string]any)
+	if !ok {
+		return v
+	}
+	if closed, ok := schema["additionalProperties"].(bool); ok && !closed {
+		delete(schema, "additionalProperties")
+	}
+	delete(schema, "enum")
+	if branches, ok := schema["oneOf"].([]any); ok && allConst(branches) {
+		delete(schema, "oneOf")
+	}
+	for k, e := range schema {
+		switch k {
+		case "properties", "patternProperties", "$defs":
+			if named, ok := e.(map[string]any); ok {
+				for name, s := range named {
+					named[name] = opened(s)
+				}
+			}
+		case "allOf", "anyOf", "oneOf", "prefixItems":
+			if list, ok := e.([]any); ok {
+				for i, s := range list {
+					list[i] = opened(s)
+				}
+			}
+		case "items", "additionalProperties", "then", "else", "contains", "propertyNames":
+			schema[k] = opened(e)
 		}
 	}
-	return v
+	return schema
 }
 
 func allConst(branches []any) bool {

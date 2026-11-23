@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -59,5 +61,30 @@ func TestCompatChecksTheDataAgainstThePublishedSchemas(t *testing.T) {
 	}
 	if err := checkCompat(published, "out/v1"); err == nil || !strings.Contains(err.Error(), "catalog.json") {
 		t.Fatalf("got %v, want catalog.json to fail the published schema", err)
+	}
+}
+
+func TestOpenedKeepsConditions(t *testing.T) {
+	parse := func(text string) any {
+		var v any
+		if err := json.Unmarshal([]byte(text), &v); err != nil {
+			t.Fatal(err)
+		}
+		return v
+	}
+	// A check of a workload kind names no condition; a property may be called "enum".
+	got := opened(parse(`{"items": {
+		"additionalProperties": false,
+		"properties": {"enum": {"type": "string"}, "kind": {"enum": ["Deployment", "Node"]}},
+		"if": {"properties": {"kind": {"enum": ["Deployment"]}}},
+		"then": {"not": {"required": ["condition"]}, "additionalProperties": false}
+	}}`))
+	want := parse(`{"items": {
+		"properties": {"enum": {"type": "string"}, "kind": {}},
+		"if": {"properties": {"kind": {"enum": ["Deployment"]}}},
+		"then": {"not": {"required": ["condition"]}}
+	}}`)
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("got %v, want %v", got, want)
 	}
 }
