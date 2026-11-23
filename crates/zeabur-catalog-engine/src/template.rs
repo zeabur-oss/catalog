@@ -14,6 +14,7 @@ use regex_syntax::ast::{
     RepetitionKind, RepetitionRange, Span,
 };
 use serde_json::{Map, Value};
+use zeabur_catalog_format::common::Generate;
 use zeabur_catalog_format::{Template, TemplateDir};
 
 use crate::dns::{is_dns_label, is_hostname};
@@ -141,7 +142,8 @@ pub fn routes_domain(template: &Template) -> bool {
 
 /// Checks what rendering needs of the template `id` itself.
 ///
-/// `manifests.yaml` has only field substitution. Each input has a unique name and Secret key, and
+/// `manifests.yaml` has only field substitution of the inputs it gives, and a domain only when a
+/// service routes one. Each input has a unique name and Secret key, a random generator if any, and
 /// a pattern its default matches.
 ///
 /// # Errors
@@ -152,25 +154,15 @@ pub fn check(id: &str, dir: &TemplateDir) -> Result<(), RenderError> {
         template: id.to_owned(),
         detail,
     };
-    parse(&dir.manifests).map_err(broken)?;
+    let template = &dir.template;
     let mut names = BTreeSet::new();
     let mut secrets = BTreeSet::new();
-    for input in &dir.template.inputs {
+    for input in &template.inputs {
         if !names.insert(input.name.as_str()) {
             return Err(broken(format!("duplicate input {}", input.name)));
         }
         if let Some(problem) = pattern_problem(&input.validation.pattern) {
             return Err(broken(format!("the pattern of {}: {problem}", input.name)));
-        }
-        // An empty default is no default: the input is empty.
-        if let Some(default) = input.default.as_deref().filter(|d| !d.is_empty())
-            && !whole_match(&input.validation.pattern)
-                .is_ok_and(|pattern| pattern.is_match(default))
-        {
-            return Err(broken(format!(
-                "the default of {} does not match its pattern",
-                input.name
-            )));
         }
         if let Some(secret) = &input.secret
             && !secrets.insert((secret.name.as_str(), secret.key.as_str()))
@@ -179,6 +171,48 @@ pub fn check(id: &str, dir: &TemplateDir) -> Result<(), RenderError> {
                 "duplicate Secret key {}/{}",
                 secret.name, secret.key
             )));
+        }
+        if input
+            .generate
+            .as_ref()
+            .is_some_and(|g| !matches!(g, Generate::Random { .. }))
+        {
+            return Err(broken(format!(
+                "input {}: a template generates random values only",
+                input.name
+            )));
+        }
+        let pattern = Regex::new(&format!(r"\A(?:{})\z", input.validation.pattern))
+            .map_err(|e| broken(format!("input {}: {e}", input.name)))?;
+        if input
+            .default
+            .as_deref()
+            .is_some_and(|d| !d.is_empty() && !pattern.is_match(d))
+        {
+            return Err(broken(format!(
+                "input {}: default does not match its pattern",
+                input.name
+            )));
+        }
+    }
+    for node in parse(&dir.manifests).map_err(broken)? {
+        match node {
+            Node::Field(Field::Input(name))
+                if !template
+                    .inputs
+                    .iter()
+                    .any(|i| i.name == name && i.generate.is_none()) =>
+            {
+                return Err(broken(format!(
+                    "{{{{ .Inputs.{name} }}}} names no input the template is given"
+                )));
+            }
+            Node::Field(Field::Domain) if !routes_domain(template) => {
+                return Err(broken(
+                    "{{ .Domain }} is used but no service declares domains".to_owned(),
+                ));
+            }
+            Node::Field(_) | Node::Text(_) => {}
         }
     }
     Ok(())

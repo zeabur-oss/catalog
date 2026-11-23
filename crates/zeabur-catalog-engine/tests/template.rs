@@ -330,4 +330,59 @@ mod tests {
         assert!(template::check("t", &dir([("a", "s", "k"), ("a", "s", "l")])).is_err());
         assert!(template::check("t", &dir([("a", "s", "k"), ("b", "s", "k")])).is_err());
     }
+
+    #[test]
+    fn manifests_use_only_given_inputs_and_a_routed_domain() {
+        let dir = |manifests: &str, domains: bool| {
+            let services = if domains {
+                json!([{"name": "web", "domains": ["web"]}])
+            } else {
+                json!([])
+            };
+            TemplateDir {
+                template: complete(json!({
+                    "services": services,
+                    "inputs": [
+                        {"name": "given", "validation": {"pattern": "[a-z]+"}, "default": "abc"},
+                        {
+                            "name": "made",
+                            "generate": {"type": "random", "bytes": 32, "encoding": "base64url"},
+                            "secret": {"name": "s", "key": "k"},
+                            "validation": {"pattern": "x"},
+                        },
+                    ],
+                })),
+                manifests: manifests.to_owned(),
+            }
+        };
+        assert!(template::check("t", &dir("a: {{ .Inputs.given }}", false)).is_ok());
+        assert!(template::check("t", &dir("a: {{ .Domain }}", true)).is_ok());
+        for (manifests, domains) in [
+            ("a: {{ .Inputs.made }}", false),
+            ("a: {{ .Inputs.none }}", false),
+            ("a: {{ .Domain }}", false),
+        ] {
+            assert!(
+                template::check("t", &dir(manifests, domains)).is_err(),
+                "{manifests}"
+            );
+        }
+    }
+
+    #[test]
+    fn an_input_generates_random_values_and_its_default_matches_its_pattern() {
+        let dir = |input: Value| TemplateDir {
+            template: complete(json!({ "inputs": [input] })),
+            manifests: String::new(),
+        };
+        let ok = json!({"name": "a", "validation": {"pattern": "[a-z]+"}, "default": "abc"});
+        assert!(template::check("t", &dir(ok)).is_ok());
+        for bad in [
+            json!({"name": "a", "validation": {"pattern": "[a-z]+"}, "default": "ABC"}),
+            json!({"name": "a", "validation": {"pattern": "("}}),
+            json!({"name": "a", "validation": {"pattern": "x"}, "generate": {"type": "clusterIP"}}),
+        ] {
+            assert!(template::check("t", &dir(bad.clone())).is_err(), "{bad}");
+        }
+    }
 }
