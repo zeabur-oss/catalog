@@ -2,7 +2,7 @@
 //! holds it. Inside a nested block, a comment above its first entry covers the block; at the top
 //! of the values each key needs its own.
 
-use granit_parser::{Event, Parser, Placement};
+use granit_parser::{Event, Parser, Placement, StructureStyle};
 use zeabur_catalog_format::problem::FieldPath;
 
 /// A node of the values, with whether a comment explains it.
@@ -64,7 +64,7 @@ impl Tree {
                 clippy::wildcard_enum_match_arm,
                 reason = "granit-parser's Event and Placement are non-exhaustive"
             )]
-            let kind = match event {
+            let (kind, flow) = match event {
                 // An empty comment explains nothing.
                 Event::Comment(text, _) if text.trim().is_empty() => continue,
                 Event::Comment(_, Placement::Above) => {
@@ -85,10 +85,14 @@ impl Tree {
                     last = open.pop().map(|(block, _)| block);
                     continue;
                 }
-                Event::Scalar(value, ..) => Kind::Scalar(value.into_owned()),
-                Event::Alias(_) | Event::UnresolvedAlias(_) => Kind::Scalar(String::new()),
-                Event::MappingStart(..) => Kind::Map(Vec::new()),
-                Event::SequenceStart(..) => Kind::Seq(Vec::new()),
+                Event::Scalar(value, ..) => (Kind::Scalar(value.into_owned()), false),
+                Event::Alias(_) | Event::UnresolvedAlias(_) => (Kind::Scalar(String::new()), false),
+                Event::MappingStart(style, ..) => {
+                    (Kind::Map(Vec::new()), style == StructureStyle::Flow)
+                }
+                Event::SequenceStart(style, ..) => {
+                    (Kind::Seq(Vec::new()), style == StructureStyle::Flow)
+                }
                 // Stream and document bounds, anchors, and events of later versions: no node.
                 _ => continue,
             };
@@ -104,7 +108,8 @@ impl Tree {
             tree.attach(&mut open, index);
             if block {
                 open.push((index, None));
-                last = None;
+                // A comment after `[` or `{` on its line explains a flow collection.
+                last = flow.then_some(index);
             } else {
                 last = Some(index);
             }
@@ -200,6 +205,9 @@ mod tests {
             ("#\na: 1\n", &["a"]),
             ("#\n\na: 1\n", &["a"]),
             ("a:\n  #\n  b: 1\n", &["a.b"]),
+            ("a: [ # the list\n  1, 2\n]\n", &[]),
+            ("a: { # the map\n  b: 1\n}\n", &[]),
+            ("a: [\n  1, # one\n  2\n]\n", &["a[1]"]),
         ];
         for (values, want) in cases {
             let found: Vec<String> = unexplained(values)
