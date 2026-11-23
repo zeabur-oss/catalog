@@ -18,11 +18,27 @@ pub fn admits(range: &str, version: &str) -> Option<bool> {
 }
 
 /// The release of a version, without its `v`, pre-release and build metadata.
+///
+/// The pre-release and the build metadata hold only `[0-9A-Za-z.-]`, as in Semantic Versioning
+/// 2.0.0, so a suffix such as `-0<1.35.0-0` does not read.
 #[must_use]
 pub fn release(version: &str) -> Option<(u64, u64, u64)> {
     let version = version.trim();
     let version = version.strip_prefix('v').unwrap_or(version);
-    let version = version.split(['+', '-']).next()?;
+    let (version, build) = version
+        .split_once('+')
+        .map_or((version, None), |(v, b)| (v, Some(b)));
+    let (version, pre) = version
+        .split_once('-')
+        .map_or((version, None), |(v, p)| (v, Some(p)));
+    let identifiers = |s: &str| {
+        !s.is_empty()
+            && s.chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '.' || c == '-')
+    };
+    if !pre.into_iter().chain(build).all(identifiers) {
+        return None;
+    }
     let mut parts = version.split('.');
     let mut next = || parts.next().map_or(Some(0), |p| p.parse().ok());
     let release = (next()?, next()?, next()?);
@@ -82,5 +98,7 @@ mod tests {
         assert_eq!(admits("1.x", "v1.36.5"), None);
         assert_eq!(admits("", "v1.36.5"), None);
         assert_eq!(admits(">=1.30.0", "main"), None);
+        assert_eq!(admits(">=1.34.0-0<1.35.0-0", "v1.37.0"), None);
+        assert_eq!(admits(">=1.34.0+a+b", "v1.37.0"), None);
     }
 }
