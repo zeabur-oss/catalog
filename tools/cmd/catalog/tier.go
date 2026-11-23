@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"maps"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"slices"
@@ -250,8 +251,14 @@ func runCheck(r *repo, cfg config, o tierOptions) error {
 	}); err != nil {
 		return err
 	}
-	// scripts/ci/check.sh runs `zeabur-catalog render` first.
 	out := "out/render"
+	if err := step("render", func() error {
+		cmd := exec.Command("cargo", "run", "--locked", "-q", "-p", "zeabur-catalog", "--", "render", "--out", out)
+		cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+		return cmd.Run()
+	}); err != nil {
+		return err
+	}
 	if err := step("template lint", func() error { return lintTemplates(r, out, cfg.Versions) }); err != nil {
 		return err
 	}
