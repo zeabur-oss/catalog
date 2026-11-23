@@ -1,5 +1,6 @@
-//! How the catalog's files are written: licences, languages, READMEs and the Kubernetes versions
-//! a component admits. The files install without these; the repository holds itself to them.
+//! How the catalog's files are written: licences and their links, languages, READMEs and the
+//! Kubernetes versions a component admits. The files install without these; the repository holds
+//! itself to them.
 #![expect(
     clippy::disallowed_types,
     reason = "the languages of every `locales` map are found in the file as written, of any shape"
@@ -12,7 +13,9 @@ use std::path::Path;
 use serde::Deserialize;
 use serde_json::Value;
 use zeabur_catalog_engine::kube_version;
-use zeabur_catalog_format::common::{Mode, Profile};
+use zeabur_catalog_format::common::{
+    LicenseUrlProblem, LicenseUrls, Mode, Profile, license_url_problems,
+};
 use zeabur_catalog_format::problem::{FieldPath, PolicyProblem, Problem, Problems};
 use zeabur_catalog_format::{Component, Template};
 
@@ -130,6 +133,8 @@ pub(crate) fn component_problems(
 ) -> Vec<Problem> {
     let mut found = Problems::new(&dir.join("component.yaml"));
     license_problems(&config.licenses, component, &mut found);
+    let metadata = &component.metadata;
+    license_urls(&metadata.license, &metadata.license_urls, &mut found);
     missing_locales(raw, &config.locales, &mut found);
     let mut out = kube_version_problems(config, &component.kube_version, &mut found);
     let needs_setup = component
@@ -187,6 +192,8 @@ pub(crate) fn template_problems(
     raw: &Value,
 ) -> Vec<Problem> {
     let mut found = Problems::new(&dir.join("template.yaml"));
+    let metadata = &template.metadata;
+    license_urls(&metadata.license, &metadata.license_urls, &mut found);
     missing_locales(raw, &config.locales, &mut found);
     let mut out = found.into_vec();
     for (lang, want, text) in readmes(root, dir, &config.locales, TEMPLATE_SECTIONS, &mut out) {
@@ -323,6 +330,19 @@ fn license_problems(licenses: &Licenses, component: &Component, found: &mut Prob
                 );
             }
         }
+    }
+}
+
+/// Adds a problem for each `LicenseRef-` id of `license` without a link, and each link to an id
+/// it does not use.
+fn license_urls(license: &str, urls: &LicenseUrls, found: &mut Problems) {
+    let at = FieldPath::root().key("metadata");
+    for problem in license_url_problems(license, urls) {
+        let at = match &problem {
+            LicenseUrlProblem::Unlinked { .. } => at.clone().key("license"),
+            LicenseUrlProblem::Unused { id } => at.clone().key("licenseUrls").key(id.as_str()),
+        };
+        found.push(at, problem);
     }
 }
 
