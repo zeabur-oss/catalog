@@ -5,23 +5,26 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
-# name | files (rg glob) | pattern (rg -U) | reason | an example that breaks the rule
+# name | files (rg glob) | pattern (rg -U, may hold |) | reason | an example that breaks the rule
 rules=(
   "string-problems|crates/**/*.rs|fn \w*problems?\w*(<[^>]*>)?\([^)]*\)\s*->[^{;]*Vec<String>|a check returns its own problem enum, wrapped by zeabur_catalog_format::problem::ProblemKind|fn license_problems(x: &str) -> Vec<String> {"
   "string-problems-out|crates/**/*.rs|fn \w*problems?\w*(<[^>]*>)?\([^)]*&mut Vec<String>|a check pushes its own problem enum into zeabur_catalog_format::problem::Problems|fn walk_problems(\n    raw: &Value,\n    out: &mut Vec<String>,\n) {"
+  "text-tools|scripts/**|\b(grep|sed|awk|cut)\b|scripts read JSON with jq, YAML with yq, objects with kubectl -o jsonpath and search with rg|ready=\$(cut -d, -f2 pods.csv)"
 )
 
 failed=0
 example_dir=$(mktemp -d)
 trap 'rm -rf "$example_dir"' EXIT
 for rule in "${rules[@]}"; do
-  IFS='|' read -r name glob pattern reason example <<<"$rule"
+  IFS='|' read -r -a fields <<<"$rule"
+  name=${fields[0]} glob=${fields[1]} reason=${fields[-2]} example=${fields[-1]}
+  pattern=$(IFS="|"; echo "${fields[*]:2:${#fields[@]}-4}")
   printf '%b\n' "$example" >"$example_dir/example.rs"
   if ! rg -q -U "$pattern" "$example_dir/example.rs"; then
     echo "patterns.sh: rule $name does not catch its own example" >&2
     failed=1
   fi
-  if rg -n -U --glob "$glob" "$pattern" crates; then
+  if rg -n -U --glob "$glob" --glob '!scripts/ci/patterns.sh' "$pattern" .; then
     echo "patterns.sh: $name: $reason" >&2
     failed=1
   fi
