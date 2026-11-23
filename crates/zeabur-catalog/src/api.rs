@@ -189,9 +189,11 @@ pub(crate) fn check(dir: &Path, schemas: &Path) -> Result<Vec<Problem>, String> 
 }
 
 /// A validator of `schema` in `dir`. Its `$ref`s name the other schemas, which are read from `dir`.
+/// It asserts `format`, which Draft 2020-12 only annotates by default.
 fn validator(dir: &Path, schema: &str) -> Result<jsonschema::Validator, String> {
     let contents: Value = read_json(&dir.join(schema))?;
     jsonschema::options()
+        .should_validate_formats(true)
         .with_retriever(Files(dir.to_owned()))
         .build(&contents)
         .map_err(|e| format!("{}: {e}", dir.join(schema).display()))
@@ -653,6 +655,11 @@ kubesolo: {version: v1.3.0}
                 Some(json!(2)),
             ),
             ("catalog.json", "/catalog/commit", Some(json!("main"))),
+            (
+                "components/web.json",
+                "/measurements/0/measuredAt",
+                Some(json!("not-a-date")),
+            ),
         ] {
             let path = api.dir().join(file);
             let text = fs::read_to_string(&path).unwrap();
