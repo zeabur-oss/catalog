@@ -341,8 +341,6 @@ func (c *Component) Release(name string) (Release, bool) {
 // Catalog is every component in the repository, sorted by ID.
 type Catalog struct {
 	Components []*Component
-	// Raw holds each file decoded generically, for schema validation.
-	Raw map[string]any
 }
 
 // Load reads components/<id>/component.yaml under root. It fails on any other file in
@@ -353,7 +351,7 @@ func Load(root string) (*Catalog, error) {
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, err
 	}
-	cat := &Catalog{Raw: map[string]any{}}
+	cat := &Catalog{}
 	for _, d := range dirs {
 		dir := path.Join("components", d.Name())
 		if !d.IsDir() {
@@ -373,11 +371,6 @@ func Load(root string) (*Catalog, error) {
 		if err != nil {
 			return nil, err
 		}
-		var raw any
-		if err := yaml.Unmarshal(data, &raw); err != nil {
-			return nil, fmt.Errorf("%s: %w", rel, err)
-		}
-		cat.Raw[rel] = raw
 		c := &Component{Path: rel}
 		if err := yaml.Unmarshal(data, c); err != nil {
 			return nil, fmt.Errorf("%s: %w", rel, err)

@@ -3,8 +3,6 @@
 //	catalog list -tier smoke|full [-ids <ids>|-since <ref>]  e2e CI matrix as JSON; full without IDs lists what is stale
 //	catalog e2e -tier check|smoke|full [-cluster current] [-since <ref>|ids]  run a test tier (see tier.go)
 //	catalog budget                      single-node memory budget
-//	catalog api -version <v> [-out out/api]  write the static API: catalog.json, components/<id>.json, schema/
-//	catalog compat <published> <api>    fail unless every file of the API in <api> passes the schemas of <published>
 //	catalog crosscheck                  write crosscheck.json, the render of every template with its e2e values
 //	catalog merge [-keep <dir>] <dir>   merge measurements uploaded by CI jobs into measurements/
 //	catalog template render <id>        expand manifests.yaml
@@ -37,8 +35,6 @@ var commands = map[string]func(*flag.FlagSet, *repo) error{
 	"list":       list,
 	"e2e":        e2e,
 	"budget":     budget,
-	"api":        api,
-	"compat":     compat,
 	"crosscheck": crosscheck,
 	"merge":      merge,
 	"template":   template,
@@ -46,7 +42,7 @@ var commands = map[string]func(*flag.FlagSet, *repo) error{
 
 func main() {
 	if len(os.Args) < 2 || commands[os.Args[1]] == nil {
-		fmt.Fprintln(os.Stderr, "usage: catalog list|e2e|budget|api|compat|crosscheck|merge|template [flags] [ids]")
+		fmt.Fprintln(os.Stderr, "usage: catalog list|e2e|budget|crosscheck|merge|template [flags] [ids]")
 		os.Exit(2)
 	}
 	if dir, err := os.UserCacheDir(); err == nil {

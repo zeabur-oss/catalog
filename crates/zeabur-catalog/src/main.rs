@@ -2,6 +2,8 @@
 //!
 //! - `zeabur-catalog api --version <v> [--out <dir>]` writes the static API of the release to
 //!   `<dir>/v1/` (`out/api` by default) and checks it against its schemas.
+//! - `zeabur-catalog compat <published> <api>` fails unless every file of the API in `<api>` passes
+//!   the schemas of `<published>`, opened for new fields and values, and its own.
 //! - `zeabur-catalog check` prints the problems of the catalog's files and fails if there are any.
 //! - `zeabur-catalog render [--out <dir>] [<id>…]` renders each release of each component on each
 //!   profile and Kubernetes version into `out/render/` and checks the objects with kubeconform.
@@ -17,6 +19,7 @@ use std::process::ExitCode;
 
 mod api;
 mod check;
+mod compat;
 mod licenses;
 mod policy;
 mod render;
@@ -33,11 +36,15 @@ fn main() -> ExitCode {
     {
         ["api", "--version", version, rest @ ..] => api(version, rest),
         ["check"] => check(),
+        ["compat", published, api] => compat(published, api),
         ["render", rest @ ..] => render(rest),
         ["digest", dirs @ ..] if !dirs.is_empty() => digest(dirs),
         ["schema"] => write(),
         ["licenses-update"] => licenses_update(),
-        _ => Err("usage: zeabur-catalog api|check|render|digest|schema|licenses-update".to_owned()),
+        _ => Err(
+            "usage: zeabur-catalog api|check|compat|render|digest|schema|licenses-update"
+                .to_owned(),
+        ),
     };
     match result {
         Ok(()) => ExitCode::SUCCESS,
@@ -57,7 +64,7 @@ fn api(version: &str, args: &[&str]) -> Result<(), String> {
     let dir = std::path::Path::new(out).join(format!("v{}", api::MAJOR));
     let root = std::path::Path::new(".");
     api::write(root, version, &api::commit(root)?, &dir)?;
-    let problems = api::check(&dir, &dir.join("schema"))?;
+    let problems = api::check(&dir, &api::Schemas::read(&dir.join("schema"))?)?;
     for problem in &problems {
         output::error(&problem.to_string());
     }
@@ -69,6 +76,17 @@ fn api(version: &str, args: &[&str]) -> Result<(), String> {
 
 fn check() -> Result<(), String> {
     let problems = check::check(std::path::Path::new("."))?;
+    for problem in &problems {
+        output::error(&problem.to_string());
+    }
+    match problems.len() {
+        0 => Ok(()),
+        n => Err(format!("{n} problems")),
+    }
+}
+
+fn compat(published: &str, api: &str) -> Result<(), String> {
+    let problems = compat::compat(std::path::Path::new(published), std::path::Path::new(api))?;
     for problem in &problems {
         output::error(&problem.to_string());
     }

@@ -5,8 +5,9 @@
     reason = "the API publishes each file as written, and checks its files and schemas as JSON"
 )]
 
+use std::collections::BTreeMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
 
 use jsonschema::{Retrieve, Uri};
@@ -25,7 +26,7 @@ use zeabur_catalog_format::api::{
 use zeabur_catalog_format::common::{Distribution, Mode, Profile, WorkloadKind};
 use zeabur_catalog_format::component::{Component, Release};
 use zeabur_catalog_format::contributions::Contributions;
-use zeabur_catalog_format::problem::{Problem, Problems, SchemaProblem};
+use zeabur_catalog_format::problem::{Problem, ProblemKind, Problems, SchemaProblem};
 
 use crate::check::field_path;
 use crate::render::{Cache, documents, kube_versions};
@@ -155,9 +156,71 @@ pub(crate) fn write(root: &Path, version: &str, commit: &str, dir: &Path) -> Res
     Ok(())
 }
 
-/// The problems of each file of the API in `dir` against the schemas in `schemas`.
-pub(crate) fn check(dir: &Path, schemas: &Path) -> Result<Vec<Problem>, String> {
-    let mut problems = Vec::new();
+/// The schemas of an API, by file name.
+#[derive(Clone)]
+pub(crate) struct Schemas(BTreeMap<&'static str, Value>);
+
+impl Schemas {
+    /// The schemas in `dir`.
+    pub(crate) fn read(dir: &Path) -> Result<Self, String> {
+        SCHEMAS
+            .into_iter()
+            .map(|name| Ok((name, read_json(&dir.join(name))?)))
+            .collect::<Result<_, String>>()
+            .map(Self)
+    }
+
+    /// Each schema changed by `f`.
+    pub(crate) fn map(self, f: impl Fn(Value) -> Value) -> Self {
+        Self(
+            self.0
+                .into_iter()
+                .map(|(name, schema)| (name, f(schema)))
+                .collect(),
+        )
+    }
+
+    /// A validator of `name`. Its `$ref`s name the other schemas, whatever host their `$id`
+    /// names. It asserts `format`, which Draft 2020-12 only annotates by default.
+    fn validator(&self, name: &str) -> Result<jsonschema::Validator, String> {
+        let schema = self
+            .0
+            .get(name)
+            .ok_or_else(|| format!("no schema {name}"))?;
+        jsonschema::options()
+            .should_validate_formats(true)
+            .with_retriever(self.clone())
+            .build(schema)
+            .map_err(|e| format!("{name}: {e}"))
+    }
+}
+
+impl Retrieve for Schemas {
+    fn retrieve(
+        &self,
+        uri: &Uri<String>,
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
+        let name = uri.path().as_str().rsplit('/').next().unwrap_or_default();
+        Ok(self
+            .0
+            .get(name)
+            .cloned()
+            .ok_or_else(|| format!("{uri}: not a schema of the API"))?)
+    }
+}
+
+/// The problems of each file of the API in `dir` against `schemas`.
+pub(crate) fn check(dir: &Path, schemas: &Schemas) -> Result<Vec<Problem>, String> {
+    check_as(dir, schemas, ProblemKind::from)
+}
+
+/// The problems of each file of the API in `dir` against `schemas`, each of the kind `kind` makes
+/// of what the schema finds.
+pub(crate) fn check_as(
+    dir: &Path,
+    schemas: &Schemas,
+    kind: impl Fn(SchemaProblem) -> ProblemKind,
+) -> Result<Vec<Problem>, String> {
     let mut files = vec![("catalog.schema.json", dir.join("catalog.json"))];
     for (kind, schema) in [
         ("components", "component-file.schema.json"),
@@ -175,47 +238,21 @@ pub(crate) fn check(dir: &Path, schemas: &Path) -> Result<Vec<Problem>, String> 
         }
     }
     files.sort();
+    let mut problems = Vec::new();
     for (schema, path) in files {
-        let validator = validator(schemas, schema)?;
+        let validator = schemas.validator(schema)?;
         let doc: Value = read_json(&path)?;
         let mut found = Problems::new(&path);
         for error in validator.iter_errors(&doc) {
             let message = error.to_string();
-            found.push(field_path(error.instance_path()), SchemaProblem { message });
+            found.push(
+                field_path(error.instance_path()),
+                kind(SchemaProblem { message }),
+            );
         }
         problems.extend(found.into_vec());
     }
     Ok(problems)
-}
-
-/// A validator of `schema` in `dir`. Its `$ref`s name the other schemas, which are read from `dir`.
-/// It asserts `format`, which Draft 2020-12 only annotates by default.
-fn validator(dir: &Path, schema: &str) -> Result<jsonschema::Validator, String> {
-    let contents: Value = read_json(&dir.join(schema))?;
-    jsonschema::options()
-        .should_validate_formats(true)
-        .with_retriever(Files(dir.to_owned()))
-        .build(&contents)
-        .map_err(|e| format!("{}: {e}", dir.join(schema).display()))
-}
-
-/// Retrieves a schema of the API from `<dir>/<name>`, whatever host its `$id` names.
-struct Files(PathBuf);
-
-impl Retrieve for Files {
-    fn retrieve(
-        &self,
-        uri: &Uri<String>,
-    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
-        let name = uri
-            .path()
-            .as_str()
-            .rsplit('/')
-            .next()
-            .filter(|name| SCHEMAS.contains(name))
-            .ok_or_else(|| format!("{uri}: not a schema of the API"))?;
-        Ok(read_json(&self.0.join(name))?)
-    }
 }
 
 /// The objects of each release of `component` on each profile it supports.
@@ -225,8 +262,8 @@ fn rendered(
     id: &str,
     kube_version: &str,
     contributions: &Contributions,
-) -> Result<std::collections::BTreeMap<Profile, RenderedProfile>, String> {
-    let mut profiles = std::collections::BTreeMap::new();
+) -> Result<BTreeMap<Profile, RenderedProfile>, String> {
+    let mut profiles = BTreeMap::new();
     for profile in Profile::ALL {
         if *component.defaults.get(profile) == Mode::Unsupported {
             continue;
@@ -345,9 +382,7 @@ fn containers(list: &[Container]) -> Result<Vec<RenderedContainer>, String> {
         .collect()
 }
 
-fn quantities(
-    list: std::collections::BTreeMap<String, Quantity>,
-) -> Result<std::collections::BTreeMap<String, String>, String> {
+fn quantities(list: BTreeMap<String, Quantity>) -> Result<BTreeMap<String, String>, String> {
     list.into_iter()
         .map(|(name, q)| Ok((name, canonical(&q)?)))
         .collect()
@@ -421,15 +456,16 @@ fn write_json(path: &Path, value: &impl Serialize) -> Result<(), String> {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     #![expect(
         clippy::disallowed_methods,
         reason = "the cases break a published file at a JSON pointer"
     )]
 
+    use std::path::PathBuf;
+
     use serde_json::json;
     use zeabur_catalog_format::api::{ComponentFile, TemplateFile};
-    use zeabur_catalog_format::problem::ProblemKind;
 
     use super::*;
 
@@ -524,10 +560,10 @@ kubesolo: {version: v1.3.0}
 
     /// A catalog with the component `web`, the template `blog` and one run of `web`, and its
     /// API in `out/v1`.
-    struct Api(PathBuf);
+    pub(crate) struct Api(pub(crate) PathBuf);
 
     impl Api {
-        fn new(name: &str) -> Self {
+        pub(crate) fn new(name: &str) -> Self {
             let root = std::env::temp_dir()
                 .join(format!("zeabur-catalog-api-{}-{name}", std::process::id()));
             fs::remove_dir_all(&root).unwrap_or_default();
@@ -551,12 +587,16 @@ kubesolo: {version: v1.3.0}
             Self(root)
         }
 
-        fn dir(&self) -> PathBuf {
+        pub(crate) fn dir(&self) -> PathBuf {
             self.0.join("out/v1")
         }
 
-        fn problems(&self) -> Vec<Problem> {
-            check(&self.dir(), &self.dir().join("schema")).unwrap()
+        pub(crate) fn problems(&self) -> Vec<Problem> {
+            check(
+                &self.dir(),
+                &Schemas::read(&self.dir().join("schema")).unwrap(),
+            )
+            .unwrap()
         }
 
         fn json(&self, file: &str) -> Value {
