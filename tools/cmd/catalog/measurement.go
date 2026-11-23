@@ -209,11 +209,20 @@ var rustCLI = sync.OnceValues(func() (string, error) {
 	if out, err := build.CombinedOutput(); err != nil {
 		return "", fmt.Errorf("cargo build: %w: %s", err, strings.TrimSpace(string(out)))
 	}
-	target := os.Getenv("CARGO_TARGET_DIR")
-	if target == "" {
-		target = filepath.Join(root, "target")
+	// Cargo's own answer, so a target-dir set in any Cargo config or the environment counts.
+	metadata := exec.Command("cargo", "metadata", "--format-version", "1", "--no-deps", "--locked")
+	metadata.Dir = root
+	out, err := metadata.Output()
+	if err != nil {
+		return "", fmt.Errorf("cargo metadata: %w", err)
 	}
-	return filepath.Join(target, "debug", "zeabur-catalog"), nil
+	var m struct {
+		TargetDirectory string `json:"target_directory"`
+	}
+	if err := json.Unmarshal(out, &m); err != nil {
+		return "", fmt.Errorf("cargo metadata: %w", err)
+	}
+	return filepath.Join(m.TargetDirectory, "debug", "zeabur-catalog"), nil
 })
 
 func today() string { return time.Now().UTC().Format(time.DateOnly) }
