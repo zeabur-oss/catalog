@@ -6,55 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"go.yaml.in/yaml/v4"
 )
-
-func TestManifestsAllowOnlyFieldSubstitution(t *testing.T) {
-	inputs := []Input{{Name: "a_b"}, {Name: "gen", Generate: &catalog.Generate{Type: catalog.GenerateRandom, Bytes: 32, Encoding: "base64url"}}}
-	ok := []string{
-		"ns: {{ .Namespace }} d: {{.Domain}} i: {{ .ClusterIssuer }} x: '{{ .Inputs.a_b }}'",
-	}
-	for _, m := range ok {
-		if err := checkActions([]byte(m), inputs); err != nil {
-			t.Errorf("%q: %v", m, err)
-		}
-	}
-	bad := []string{
-		"{{ if .Inputs.a_b }}x{{ end }}",
-		`{{ eq .Inputs.a_b "x" }}`,
-		"{{ range .Inputs }}x{{ end }}",
-		`{{ printf "%s" .Namespace }}`,
-		"{{ .Namespace | printf }}",
-		"{{ dnsEgress }}",
-		"{{ $x := .Namespace }}",
-		"{{ .Inputs.gen }}",
-		"{{ .Inputs.unknown }}",
-		"{{ .Inputs }}",
-		"{{ .Other }}",
-		"{{ . }}",
-		"a\n  {{- .Namespace }}",
-		"{{ .Namespace -}}\n",
-	}
-	for _, m := range bad {
-		if err := checkActions([]byte(m), inputs); err == nil {
-			t.Errorf("%q: accepted", m)
-		}
-	}
-}
-
-func TestDomainActionNeedsADeclaredDomain(t *testing.T) {
-	m := []byte("url: https://{{ .Domain }}")
-	if err := checkDomain(m, []Service{{Name: "a"}}); err == nil {
-		t.Error("accepted {{ .Domain }} without domains")
-	}
-	if err := checkDomain(m, []Service{{Name: "a", Domains: []string{"{{ .Domain }}"}}}); err != nil {
-		t.Error(err)
-	}
-	if err := checkDomain([]byte("x: y"), []Service{{Name: "a"}}); err != nil {
-		t.Error(err)
-	}
-}
 
 func TestInputDefaultFillsAnInputThatIsNotGiven(t *testing.T) {
 	dir := t.TempDir()

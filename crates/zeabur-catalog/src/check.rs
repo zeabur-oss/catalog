@@ -110,11 +110,7 @@ fn schema_problems(root: &Path) -> Result<(Vec<Problem>, BTreeMap<PathBuf, Value
     let mut problems = Vec::new();
     let mut files = BTreeMap::new();
     for (dir, file, schema) in SCHEMAS {
-        let schema_path = root.join("schema/v1").join(schema);
-        let schema: Value = serde_json::from_str(&read(&schema_path)?)
-            .map_err(|e| format!("{}: {e}", schema_path.display()))?;
-        let validator =
-            validator(&schema).map_err(|e| format!("{}: {e}", schema_path.display()))?;
+        let validator = schema_validator(root, schema)?;
         let mut ids: Vec<String> = fs::read_dir(root.join(dir))
             .map_err(|e| format!("{dir}: {e}"))?
             .map(|entry| entry.map(|e| e.file_name().to_string_lossy().into_owned()))
@@ -142,6 +138,14 @@ fn schema_problems(root: &Path) -> Result<(Vec<Problem>, BTreeMap<PathBuf, Value
         }
     }
     Ok((problems, files))
+}
+
+/// The validator of `schema/v1/<schema>`.
+fn schema_validator(root: &Path, schema: &str) -> Result<jsonschema::Validator, String> {
+    let path = root.join("schema/v1").join(schema);
+    let schema: Value =
+        serde_json::from_str(&read(&path)?).map_err(|e| format!("{}: {e}", path.display()))?;
+    validator(&schema).map_err(|e| format!("{}: {e}", path.display()))
 }
 
 fn read(path: &Path) -> Result<String, String> {
@@ -419,6 +423,8 @@ fn contribution_problems(catalog: &Catalog, component: &Component, found: &mut P
 
 #[cfg(test)]
 mod tests {
+    use serde_json::json;
+
     use super::*;
 
     fn root() -> &'static Path {
@@ -585,6 +591,156 @@ mod tests {
             },
         );
         assert!(got.contains(&want), "{got:?}");
+    }
+
+    /// A change to a health check.
+    type Edit<'a> = dyn Fn(&mut Value) + 'a;
+
+    /// Whether the schema accepts component `id` with `field` set to `value`.
+    fn accepts(id: &str, field: &str, value: Value) -> bool {
+        let path = root().join(format!("components/{id}/component.yaml"));
+        let mut component: Value = serde_saphyr::from_str(&read(&path).unwrap()).unwrap();
+        component[field] = value;
+        schema_validator(root(), "component.schema.json")
+            .unwrap()
+            .is_valid(&component)
+    }
+
+    #[test]
+    #[expect(
+        clippy::disallowed_methods,
+        reason = "the cases are files the schema must refuse, which no type can hold"
+    )]
+    fn a_health_check_names_its_objects_one_way() {
+        let health = |edit: &dyn Fn(&mut Value)| {
+            let mut check = json!({
+                "name": "controller",
+                "resource": {"kind": "Deployment", "name": "traefik", "namespace": "traefik"},
+                "timeout": "60s",
+                "advice": "Check the pods.",
+            });
+            edit(&mut check);
+            json!([check])
+        };
+        let pod = |h: &mut Value| {
+            h["resource"]["kind"] = json!("Pod");
+            h["condition"] = json!("Ready");
+        };
+        let unname = |h: &mut Value| {
+            h["resource"].as_object_mut().unwrap().remove("name");
+        };
+        let cases: &[(&str, bool, &Edit<'_>)] = &[
+            ("by name", true, &|_| {}),
+            ("by selector", true, &|h| {
+                unname(h);
+                h["resource"]["selector"] = json!({"app.kubernetes.io/name": "traefik"});
+            }),
+            ("all", true, &|h| {
+                pod(h);
+                unname(h);
+                h["resource"]["all"] = json!(true);
+            }),
+            ("condition of a kind that is not a workload", true, &pod),
+            ("cluster-scoped kind", true, &|h| {
+                h["resource"] = json!({"kind": "GatewayClass", "name": "traefik"});
+                h["condition"] = json!("Accepted");
+            }),
+            ("workload with a condition", false, &|h| {
+                h["condition"] = json!("Available");
+            }),
+            ("all of a workload", false, &|h| {
+                unname(h);
+                h["resource"]["all"] = json!(true);
+            }),
+            ("unknown kind", false, &|h| {
+                h["resource"]["kind"] = json!("ConfigMap");
+            }),
+            ("no condition", false, &|h| {
+                pod(h);
+                h.as_object_mut().unwrap().remove("condition");
+            }),
+            ("no advice", false, &|h| {
+                h.as_object_mut().unwrap().remove("advice");
+            }),
+            ("no timeout", false, &|h| {
+                h.as_object_mut().unwrap().remove("timeout");
+            }),
+            ("no object", false, &unname),
+            ("name and all", false, &|h| {
+                h["resource"]["all"] = json!(true);
+            }),
+            ("all false", false, &|h| {
+                unname(h);
+                h["resource"]["all"] = json!(false);
+            }),
+            ("empty selector", false, &|h| {
+                unname(h);
+                h["resource"]["selector"] = json!({});
+            }),
+            ("namespaced kind without namespace", false, &|h| {
+                h["resource"].as_object_mut().unwrap().remove("namespace");
+            }),
+            ("cluster-scoped kind with namespace", false, &|h| {
+                h["resource"] =
+                    json!({"kind": "GatewayClass", "name": "traefik", "namespace": "traefik"});
+            }),
+            ("kubectl arguments", false, &|h| {
+                h["wait"] = json!(["--for=condition=Ready", "pod"]);
+            }),
+        ];
+        for (name, ok, edit) in cases {
+            assert_eq!(accepts("traefik", "health", health(edit)), *ok, "{name}");
+        }
+    }
+
+    #[test]
+    fn a_smoke_wait_needs_a_condition_except_for_workloads() {
+        let cases = [
+            (
+                "object with a condition",
+                true,
+                json!({"resource": "certificate/smoke", "namespace": "x", "condition": "condition=Ready"}),
+            ),
+            (
+                "object without a condition",
+                false,
+                json!({"resource": "certificate/smoke", "namespace": "x"}),
+            ),
+            (
+                "workload without a condition",
+                true,
+                json!({"resource": "deployment/web", "namespace": "x"}),
+            ),
+            (
+                "workload with a condition",
+                false,
+                json!({"resource": "deployment/web", "namespace": "x", "condition": "condition=Available"}),
+            ),
+            (
+                "workload with a jsonpath",
+                true,
+                json!({"resource": "deployment/web", "namespace": "x", "condition": "jsonpath={.metadata.generation}=2"}),
+            ),
+            (
+                "kind alone without selector",
+                false,
+                json!({"resource": "pod", "condition": "condition=Ready"}),
+            ),
+            (
+                "kind alone with selector",
+                true,
+                json!({"resource": "pod", "selector": {"a": "b"}, "condition": "condition=Ready"}),
+            ),
+            (
+                "object with all",
+                false,
+                json!({"resource": "pod/x", "all": true, "condition": "condition=Ready"}),
+            ),
+        ];
+        for (name, ok, wait) in cases {
+            let smoke = json!([{"name": "x", "wait": [wait]}]);
+            assert_eq!(accepts("cert-manager", "smoke", smoke), ok, "{name}");
+        }
     }
 
     #[test]

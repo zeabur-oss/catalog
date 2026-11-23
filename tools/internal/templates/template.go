@@ -3,18 +3,13 @@
 package templates
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
-	"slices"
 	"text/template"
-	"text/template/parse"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"go.yaml.in/yaml/v4"
-	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 // Template is one application, at templates/<slug>/template.yaml with its objects in
@@ -189,87 +184,6 @@ func Get(all []*Template, id string) (*Template, error) {
 	return nil, fmt.Errorf("unknown template %q", id)
 }
 
-// Check validates every template without a cluster: schema, ID, services,
-// inputs, manifests syntax and that the catalog provides what each requires.
-func Check(root string, cat *catalog.Catalog, all []*Template) error {
-	var errs []error
-	schema, err := catalog.CompileSchema(filepath.Join(root, "schema", "v1"), "template.schema.json")
-	if err != nil {
-		return err
-	}
-	locales, err := catalog.ReadLocales(root)
-	if err != nil {
-		return err
-	}
-	for _, t := range all {
-		fail := func(format string, a ...any) {
-			errs = append(errs, fmt.Errorf("templates/%s: %s", t.ID, fmt.Sprintf(format, a...)))
-		}
-		if err := schema.Validate(t.raw); err != nil {
-			fail("%v", err)
-			continue
-		}
-		for _, p := range catalog.MissingLocales(t.raw, locales) {
-			fail("%s", p)
-		}
-		for _, p := range checkReadmes(t, locales) {
-			fail("%s", p)
-		}
-		// The e2e namespace templates-e2e-<id> must be a DNS label.
-		if !catalog.ValidID(t.ID) || len(t.ID) > 49 {
-			fail("directory name must be a DNS label of at most 49 characters")
-		}
-		if _, ok := cat.Get(t.ID); ok {
-			fail("components/%s has the same ID", t.ID)
-		}
-		names := map[string]bool{}
-		for _, s := range t.Services {
-			if names[s.Name] {
-				fail("duplicate service %s", s.Name)
-			}
-			names[s.Name] = true
-		}
-		if _, err := validateInputs(t.Inputs); err != nil {
-			fail("%v", err)
-		}
-		if data, err := os.ReadFile(filepath.Join(t.Dir, "manifests.yaml")); err != nil {
-			fail("%v", err)
-		} else if err := checkActions(data, t.Inputs); err != nil {
-			fail("manifests.yaml: %v", err)
-		} else if err := checkDomain(data, t.Services); err != nil {
-			fail("manifests.yaml: %v", err)
-		} else if src, err := os.ReadFile(filepath.Join(t.Dir, "template.yaml")); err != nil {
-			fail("%v", err)
-		} else if err := CheckVersion(src, data, t.Metadata.Version); err != nil {
-			fail("%v", err)
-		}
-		for _, p := range catalog.Profiles {
-			if _, err := cat.InstallOrder(t.Requires, p); err != nil {
-				fail("requires on %s: %v", p, err)
-			}
-		}
-	}
-	return errors.Join(errs...)
-}
-
-// versionImage is the line above metadata.version that names the image whose tag it is, so that
-// Renovate moves the version with that image.
-var versionImage = regexp.MustCompile(`(?m)^  # renovate: depName=(\S+)\n  version: "?([^"\s]+)"?$`)
-
-// CheckVersion reports whether metadata.version names, on the line above it, an image of the
-// manifests that is pinned at that tag with a digest.
-func CheckVersion(templateYAML, manifests []byte, version string) error {
-	m := versionImage.FindSubmatch(templateYAML)
-	if m == nil || string(m[2]) != version {
-		return errors.New(`metadata.version needs "# renovate: depName=<image>" on the line above it`)
-	}
-	image := regexp.MustCompile(`(^|[\s"'])` + regexp.QuoteMeta(string(m[1])+":"+version+"@sha256:"))
-	if version == "" || len(validation.IsValidLabelValue(version)) > 0 || !image.Match(manifests) {
-		return fmt.Errorf("metadata.version must be the tag of %s in manifests.yaml, pinned with a digest", m[1])
-	}
-	return nil
-}
-
 // RequiresCertificates reports whether the template requires a component
 // that provides certificates.
 func (t *Template) RequiresCertificates(cat *catalog.Catalog) bool {
@@ -286,60 +200,4 @@ func (t *Template) RequiresCertificates(cat *catalog.Catalog) bool {
 
 func parseManifests(manifests []byte) (*template.Template, error) {
 	return template.New("manifests").Option("missingkey=error").Parse(string(manifests))
-}
-
-var trimMarker = regexp.MustCompile(`\{\{-[ \t\r\n]|[ \t\r\n]-\}\}`)
-
-// checkActions accepts only field substitution: {{ .Namespace }}, {{ .Domain }},
-// {{ .ClusterIssuer }} and {{ .Inputs.<name> }} of an input that is not generated.
-func checkActions(manifests []byte, inputs []Input) error {
-	if trimMarker.Match(manifests) {
-		return errors.New("trim markers are not allowed")
-	}
-	t, err := parseManifests(manifests)
-	if err != nil {
-		return err
-	}
-	given := map[string]bool{}
-	for _, in := range inputs {
-		if in.Generate == nil {
-			given[in.Name] = true
-		}
-	}
-	for _, n := range t.Tree.Root.Nodes {
-		switch n := n.(type) {
-		case *parse.TextNode:
-		case *parse.ActionNode:
-			if f := actionField(n); len(f) == 0 || !(len(f) == 1 && slices.Contains([]string{"Namespace", "Domain", "ClusterIssuer"}, f[0]) || len(f) == 2 && f[0] == "Inputs" && given[f[1]]) {
-				return fmt.Errorf("only {{ .Namespace }}, {{ .Domain }}, {{ .ClusterIssuer }} and {{ .Inputs.<name> }} of a given input are allowed, not %s", n)
-			}
-		default:
-			return fmt.Errorf("only field substitution is allowed, not %s", n)
-		}
-	}
-	return nil
-}
-
-var domainAction = regexp.MustCompile(`\{\{\s*\.Domain\s*\}\}`)
-
-// checkDomain rejects manifests that use {{ .Domain }} when no service declares domains, since
-// rendering then has no domain to fill in and the Ingress host is empty.
-func checkDomain(manifests []byte, services []Service) error {
-	if domainAction.Match(manifests) && !slices.ContainsFunc(services, func(s Service) bool { return len(s.Domains) > 0 }) {
-		return errors.New("{{ .Domain }} is used but no service declares domains")
-	}
-	return nil
-}
-
-// actionField returns the path of the field that a plain {{ .A.B }} action
-// reads, or nil for any other action.
-func actionField(n *parse.ActionNode) []string {
-	p := n.Pipe
-	if len(p.Decl) > 0 || len(p.Cmds) != 1 || len(p.Cmds[0].Args) != 1 {
-		return nil
-	}
-	if f, ok := p.Cmds[0].Args[0].(*parse.FieldNode); ok {
-		return f.Ident
-	}
-	return nil
 }

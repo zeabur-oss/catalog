@@ -229,7 +229,7 @@ func runTier(r *repo, tier string, o tierOptions) error {
 	return fmt.Errorf("unknown -tier %q; use %s", tier, strings.Join(tiers, ", "))
 }
 
-// runCheck validates, renders and lints everything, then sends every rendered
+// runCheck checks config/e2e.yaml, renders and lints everything, then sends every rendered
 // component and template to a local API server with --dry-run=server, and
 // fails when it refuses an upgrade from the pull request's base or a profile
 // switch.
@@ -244,7 +244,10 @@ func runCheck(r *repo, cfg config, o tierOptions) error {
 		}
 		return err
 	}
-	if err := step("validate", func() error { return check(r) }); err != nil {
+	if err := step("e2e config", func() error {
+		_, err := representative(r)
+		return err
+	}); err != nil {
 		return err
 	}
 	out := "out/render"
