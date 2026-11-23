@@ -107,7 +107,7 @@ leftovers: []     # what the upstream keeps on uninstall (e.g. CRDs)
 
 `provides.capability` 是元件提供的 capability（用途類別），例如 `ingress` 或 `logs`。`requires` 寫 `{capability: <capability>}` 時，會安裝提供這個 capability 的其中一個元件。不提供 capability 的元件不寫這個欄位，`requires` 要用 `{component: <id>}` 指定它。安裝工具讀 `enable` 和 `disable` 裡的名稱時先當作元件 ID，所以 capability 不能和另一個提供其他 capability 的元件 ID 相同。
 
-`provides.registry` 是叢集裡的 OCI registry：`host` 是映像檔名稱裡的 `host:port`，`ca` 是 Secret key，存放替 registry 簽發憑證的 CA。移除元件前，會等到元件的命名空間以外沒有 Pod 在執行這個 host 的映像檔。
+`provides.registry` 是叢集裡的 OCI registry：`host` 是映像檔名稱裡的 `host:port`，`ca` 是 Secret key，存放替 registry 簽發憑證的 CA。Zeabur 和登入的使用者都會讀這個 Secret，所以裡面只放 CA，不放私鑰。移除元件前，會等到元件的命名空間以外沒有 Pod 在執行這個 host 的映像檔。
 
 輸入設成 `generate: {type: clusterIP}`，就是替元件的某個 Service 指定固定的 ClusterIP。節點的容器執行環境解析不了 registry 的 host，所以輸入留空時，Zeabur 安裝元件時會從 Service CIDR 挑一個沒人用的位址填進去。讓每個節點連到這個位址是元件自己的事，Zeabur Builder 用一個 DaemonSet 處理。不經過 Zeabur 安裝時（CI 就是這樣），輸入維持空白，Kubernetes 會自動分配位址，只有 Pod 連得到 registry。
 
@@ -121,7 +121,7 @@ provides:
   capability: builds
   registry:
     host: zot.zot.svc:5000
-    ca: {name: zot-tls, key: ca.crt, namespace: zot}
+    ca: {name: registry-ca, key: ca.crt, namespace: builder-system}
 ```
 
 輸入的 `name` 用 camelCase。設成 `generate: {type: random, bytes: 64, encoding: hex}` 的輸入，會產生 `bytes` 個隨機位元組（12 到 64），再用 `encoding` 編碼：小寫 `hex`，或不含填補字元的 `base64url`。這兩個欄位都必填，安裝工具不用猜長度。遇到不認得的 `generate.type`，安裝工具不會替這個輸入填值。
