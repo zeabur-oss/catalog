@@ -89,14 +89,60 @@ mod tests {
         )
     }
 
+    /// Each file of `conformance/template/` with its text, built into the test so the test
+    /// opens no path it reads from a directory listing.
+    macro_rules! cases {
+        ($($name:literal,)*) => {
+            &[$((
+                $name,
+                include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../conformance/template/", $name)),
+            )),*]
+        };
+    }
+
+    const CASES: &[(&str, &str)] = cases![
+        "generated-input.yaml",
+        "invalid-cluster-issuer.yaml",
+        "invalid-domain.yaml",
+        "invalid-namespace.yaml",
+        "missing-input.yaml",
+        "needs-cluster-issuer.yaml",
+        "needs-domain.yaml",
+        "pattern-ascii-digit.yaml",
+        "pattern-ascii-space.yaml",
+        "pattern-case-insensitive.yaml",
+        "pattern.yaml",
+        "render-default.yaml",
+        "render-generated.yaml",
+        "render-no-domain.yaml",
+        "render.yaml",
+        "requires-capability.yaml",
+        "requires-component.yaml",
+        "requires-discovery-failed.yaml",
+        "requires-group.yaml",
+        "requires-no-crds.yaml",
+        "unknown-input.yaml",
+        "words-each-block.yaml",
+        "words-english.yaml",
+        "words-locale.yaml",
+    ];
+
+    #[test]
+    fn lists_every_conformance_case() {
+        let mut found: Vec<String> = std::fs::read_dir(root().join("conformance/template"))
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name().to_string_lossy().into_owned())
+            .collect();
+        found.sort();
+        let listed: Vec<&str> = CASES.iter().map(|(name, _)| *name).collect();
+        assert_eq!(found, listed, "add each case file to CASES");
+    }
+
     #[test]
     fn renders_as_the_conformance_cases_want() {
-        let dir = root().join("conformance/template");
         let mut ran = 0;
-        for entry in std::fs::read_dir(&dir).unwrap() {
-            let path = entry.unwrap().path();
-            let case: Value =
-                serde_saphyr::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+        for (name, text) in CASES {
+            let case: Value = serde_saphyr::from_str(text).unwrap();
             // The other cases are for a client's API: requirements and words.
             let Some(manifests) = case["manifests"].as_str() else {
                 continue;
@@ -123,10 +169,10 @@ mod tests {
                 Ok(objects) => json!({"objects": objects}),
                 Err(error) => json!({"error": case_error(&error)}),
             };
-            assert_eq!(got, case["want"], "{}", path.display());
+            assert_eq!(got, case["want"], "{name}");
             ran += 1;
         }
-        assert!(ran > 0, "no render cases in {}", dir.display());
+        assert!(ran > 0, "no render cases");
     }
 
     /// A value for each input that a template needs and gives no default.
