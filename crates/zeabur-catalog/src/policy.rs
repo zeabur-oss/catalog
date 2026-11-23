@@ -607,12 +607,13 @@ mod tests {
         .unwrap();
         assert_eq!(template_problems(&config, root, id, template, &raw), []);
 
-        let scratch = std::env::temp_dir().join(format!("catalog-readme-{}", std::process::id()));
+        let scratch = root
+            .join("target")
+            .join(format!("catalog-readme-{}", std::process::id()));
         let dir = Path::new("browserless");
         fs::create_dir_all(scratch.join(dir)).unwrap();
-        for entry in fs::read_dir(root.join(id)).unwrap() {
-            let path = entry.unwrap().path();
-            fs::copy(&path, scratch.join(dir).join(path.file_name().unwrap())).unwrap();
+        for name in ["template.yaml", "manifests.yaml", "README.zh-CN.md"] {
+            fs::copy(root.join(id).join(name), scratch.join(dir).join(name)).unwrap();
         }
         fs::write(
             scratch.join(dir).join("README.md"),
