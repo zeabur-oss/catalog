@@ -565,7 +565,24 @@ fn without_tag(image: &str) -> &str {
 pub(crate) fn documents(text: &[u8]) -> Result<Vec<Value>, String> {
     let text = std::str::from_utf8(text).map_err(|e| e.to_string())?;
     let docs: Vec<Value> = serde_saphyr::from_multiple(text).map_err(|e| e.to_string())?;
-    Ok(docs.into_iter().filter(|d| !d.is_null()).collect())
+    let mut out = Vec::new();
+    for doc in docs {
+        match doc {
+            Value::Null => {}
+            // A list, such as `kind: List`, stands for its items, as `kubectl apply` reads it.
+            Value::Object(mut object) if object.get("items").is_some_and(Value::is_array) => {
+                if let Some(Value::Array(items)) = object.remove("items") {
+                    out.extend(items);
+                }
+            }
+            doc @ (Value::Bool(_)
+            | Value::Number(_)
+            | Value::String(_)
+            | Value::Array(_)
+            | Value::Object(_)) => out.push(doc),
+        }
+    }
+    Ok(out)
 }
 
 /// Writes a kubeconform schema for each version of each CRD in `objects`, at
@@ -772,6 +789,33 @@ spec:
     fn a_stream_has_its_documents_without_the_empty_ones() {
         let docs = documents(b"# Source: a\n---\nkind: A\n---\n---\nkind: B\n").unwrap();
         assert_eq!(docs, [json!({"kind": "A"}), json!({"kind": "B"})]);
+    }
+
+    #[test]
+    fn a_list_stands_for_its_items() {
+        let text = "apiVersion: v1\nkind: List\nitems:\n  - {apiVersion: apps/v1, kind: Deployment, \
+                    metadata: {name: op}, spec: {template: {spec: {containers: \
+                    [{name: op, image: 'ghcr.io/a/op:1.0'}]}}}}\n";
+        let docs = documents(text.as_bytes()).unwrap();
+        assert_eq!(docs[0]["kind"], "Deployment");
+        let on = Rendering {
+            release: "op".to_owned(),
+            profile: Profile::SingleNode,
+            version: "1.33.0".to_owned(),
+        };
+        let want = RenderProblem::UnpinnedImage {
+            on: on.clone(),
+            object: ObjectName {
+                kind: "Deployment".to_owned(),
+                name: "op".to_owned(),
+            },
+            container: "op".to_owned(),
+            image: "ghcr.io/a/op:1.0".to_owned(),
+        };
+        assert_eq!(
+            refusals(&on, PodSecurity::Privileged, Some(&[]), &docs),
+            [want]
+        );
     }
 
     #[test]
