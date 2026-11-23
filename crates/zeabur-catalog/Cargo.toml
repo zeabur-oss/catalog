@@ -1,6 +1,6 @@
 [package]
 name = "zeabur-catalog"
-description = "Zeabur Catalog's command: writes the schemas and TypeScript types of the catalog's files"
+description = "Zeabur Catalog's command: writes the schemas, TypeScript types and licence list of the catalog"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -12,4 +12,6 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+serde.workspace = true
+serde_json.workspace = true
 zeabur-catalog-format.workspace = true

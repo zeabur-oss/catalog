@@ -434,6 +434,8 @@ dependencies = [
 name = "zeabur-catalog"
 version = "0.5.6"
 dependencies = [
+ "serde",
+ "serde_json",
  "zeabur-catalog-format",
 ]
 
