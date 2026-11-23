@@ -111,6 +111,7 @@ mod tests {
         "pattern-ascii-digit.yaml",
         "pattern-ascii-space.yaml",
         "pattern-case-insensitive.yaml",
+        "pattern-unicode-script.yaml",
         "pattern.yaml",
         "render-default.yaml",
         "render-generated.yaml",

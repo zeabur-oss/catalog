@@ -1,0 +1,25 @@
+description: A pattern can name a Unicode script or general category, as in RE2. Ελλάδα matches \p{Greek}\p{L}+.
+id: app
+template:
+  metadata: {version: "1.0.0"}
+  services: [{name: app}]
+  inputs:
+    - {name: word, required: true, validation: {pattern: '\p{Greek}\p{L}+'}}
+manifests: |
+  apiVersion: v1
+  kind: ConfigMap
+  metadata: {name: app, namespace: {{ .Namespace }}}
+  data:
+    word: "{{ .Inputs.word }}"
+options:
+  namespace: shop
+  inputs: {word: "Ελλάδα"}
+want:
+  objects:
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: app
+        namespace: shop
+        labels: {app.kubernetes.io/instance: app, app.kubernetes.io/version: "1.0.0", templates.zeabur.com/template: app}
+      data: {word: "Ελλάδα"}
