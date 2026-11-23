@@ -68,10 +68,13 @@ impl<'a> Parsed<'a> {
         let negative = text.starts_with('-');
         let rest = text.strip_prefix(['-', '+']).unwrap_or(text);
         let (num, rest) = split_digits(rest);
+        let (denom, suffix) = rest.strip_prefix('.').map_or(("", rest), split_digits);
+        if num.is_empty() && denom.is_empty() {
+            return None;
+        }
         // Go strips the leading zeros before its fast path, but keeps the text as written.
         let num = num.trim_start_matches('0');
         let num = if num.is_empty() { "0" } else { num };
-        let (denom, suffix) = rest.strip_prefix('.').map_or(("", rest), split_digits);
         let (format, exponent) = interpret(suffix)?;
         Some(Self {
             negative,
@@ -187,15 +190,16 @@ impl Amount {
     /// Whether the magnitude is above the largest int64.
     fn above_int64(&self) -> bool {
         let max = i128::from(i64::MAX);
-        let magnitude = self.mantissa.abs();
+        let max = max.unsigned_abs();
+        let magnitude = self.mantissa.unsigned_abs();
         let power = self.exponent.unsigned_abs();
         if self.exponent >= 0 {
-            10_i128
+            10_u128
                 .checked_pow(power)
                 .and_then(|scale| magnitude.checked_mul(scale))
                 .is_none_or(|value| value > max)
         } else {
-            10_i128
+            10_u128
                 .checked_pow(power)
                 .and_then(|scale| max.checked_mul(scale))
                 .is_some_and(|limit| magnitude > limit)
@@ -217,7 +221,7 @@ impl Amount {
             return Some("0".to_owned());
         }
         if format == Format::BinarySi
-            && let Some(value) = self.integer().filter(|value| value.abs() >= 1024)
+            && let Some(value) = self.integer().filter(|value| value.unsigned_abs() >= 1024)
         {
             let mut value = value;
             let mut power = 0;
@@ -234,7 +238,7 @@ impl Amount {
         let (mut mantissa, mut exponent) = (self.mantissa, self.exponent);
         while mantissa % 10 == 0 {
             mantissa /= 10;
-            exponent += 1;
+            exponent = exponent.checked_add(1)?;
         }
         while exponent.rem_euclid(3) != 0 {
             mantissa = mantissa.checked_mul(10)?;
@@ -309,7 +313,12 @@ mod tests {
         ] {
             assert_eq!(canonical(text).as_deref(), Some(want), "{text}");
         }
-        for text in ["abc", "1.2.3", ""] {
+        // A binary quantity at i128::MIN is capped like any other.
+        assert_eq!(
+            canonical("-166153499473114484112975882535043072Ki").as_deref(),
+            Some("-9223372036854775807")
+        );
+        for text in ["abc", "1.2.3", "", "Pi", ".Pi", "-Ki", ".", "10e2147483647"] {
             assert_eq!(canonical(text), None, "{text}");
         }
     }
