@@ -1,5 +1,6 @@
 //! Zeabur Catalog's command. Run it from the repository root.
 //!
+//! - `zeabur-catalog check` prints the problems of the catalog's files and fails if there are any.
 //! - `zeabur-catalog schema` writes `schema/v1/` and `types/v1/catalog.ts` from the types of
 //!   `zeabur-catalog-format`.
 //! - `zeabur-catalog licenses-update` reads the SPDX License List's `licenses.json` from stdin and
@@ -8,6 +9,7 @@
 use std::io::Read;
 use std::process::ExitCode;
 
+mod check;
 mod licenses;
 
 fn main() -> ExitCode {
@@ -18,9 +20,10 @@ fn main() -> ExitCode {
         .collect::<Vec<_>>()
         .as_slice()
     {
+        ["check"] => check(),
         ["schema"] => write(),
         ["licenses-update"] => licenses_update(),
-        _ => Err("usage: zeabur-catalog schema|licenses-update".to_owned()),
+        _ => Err("usage: zeabur-catalog check|schema|licenses-update".to_owned()),
     };
     match result {
         Ok(()) => ExitCode::SUCCESS,
@@ -28,6 +31,17 @@ fn main() -> ExitCode {
             output::error(&e);
             ExitCode::FAILURE
         }
+    }
+}
+
+fn check() -> Result<(), String> {
+    let problems = check::check(std::path::Path::new("."))?;
+    for problem in &problems {
+        output::error(&problem.to_string());
+    }
+    match problems.len() {
+        0 => Ok(()),
+        n => Err(format!("{n} problems")),
     }
 }
 
