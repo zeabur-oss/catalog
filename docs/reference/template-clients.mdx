@@ -28,7 +28,7 @@ The client checks the options before it renders. When a check fails, it renders 
 | Each given value matches the whole `validation.pattern` of its input, not only a part of it | `pattern` | `input` |
 | Each given name is an input of the template | `unknown-input` | `input` |
 
-A pattern uses [RE2 syntax](https://github.com/google/re2/wiki/Syntax). To match the whole value, wrap it as `\A(?:<pattern>)\z`.
+A pattern uses [RE2 syntax](https://github.com/google/re2/wiki/Syntax). To match the whole value, wrap it as `\A(?:<pattern>)\z`. In RE2, `\d`, `\s`, `\w` and `\b` are ASCII only, so a client whose regular expressions treat one of them as Unicode, such as Rust, or JavaScript for `\s`, replaces it with its ASCII class.
 
 When several checks fail, the client reports one of them. `render.go` checks in the order of the table. Each case breaks one rule, so the order doesn't change the result.
 

@@ -261,11 +261,11 @@ fn check_options(id: &str, template: &Template, options: &Options<'_>) -> Result
             None if input.required => return Err(RenderError::Missing(input.name.clone())),
             None => {}
             Some(value) => {
-                let pattern = Regex::new(&format!(r"\A(?:{})\z", input.validation.pattern))
+                let pattern = Regex::new(&format!(r"\A(?:{})\z", re2(&input.validation.pattern)))
                     .map_err(|e| RenderError::Broken {
-                        template: id.to_owned(),
-                        detail: format!("the pattern of {}: {e}", input.name),
-                    })?;
+                    template: id.to_owned(),
+                    detail: format!("the pattern of {}: {e}", input.name),
+                })?;
                 if !pattern.is_match(value) {
                     return Err(RenderError::Pattern(input.name.clone()));
                 }
@@ -280,6 +280,41 @@ fn check_options(id: &str, template: &Template, options: &Options<'_>) -> Result
         return Err(RenderError::UnknownInput(unknown.clone()));
     }
     Ok(())
+}
+
+/// `pattern` with the Perl classes and word boundaries of [RE2], which are ASCII, where the
+/// `regex` crate's are Unicode. Each class becomes a bracket class, which is also valid inside
+/// another class.
+///
+/// [RE2]: https://github.com/google/re2/wiki/Syntax
+fn re2(pattern: &str) -> String {
+    let mut out = String::with_capacity(pattern.len());
+    let mut chars = pattern.chars();
+    while let Some(c) = chars.next() {
+        if c != '\\' {
+            out.push(c);
+            continue;
+        }
+        let Some(next) = chars.next() else {
+            out.push(c);
+            break;
+        };
+        match next {
+            'd' => out.push_str("[0-9]"),
+            'D' => out.push_str("[^0-9]"),
+            's' => out.push_str("[\\t\\n\\f\\r ]"),
+            'S' => out.push_str("[^\\t\\n\\f\\r ]"),
+            'w' => out.push_str("[0-9A-Za-z_]"),
+            'W' => out.push_str("[^0-9A-Za-z_]"),
+            'b' => out.push_str("(?-u:\\b)"),
+            'B' => out.push_str("(?-u:\\B)"),
+            _ => {
+                out.push(c);
+                out.push(next);
+            }
+        }
+    }
+    out
 }
 
 /// A field of the data a template reads.
@@ -377,6 +412,23 @@ fn execute(nodes: &[Node], values: &Values<'_>, out: &mut String) -> Result<(), 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn perl_classes_and_boundaries_are_ascii_as_in_re2() {
+        for (pattern, value, matches) in [
+            (r"\d+", "12", true),
+            (r"\d+", "\u{661}\u{662}", false),
+            (r"\w+", "caf\u{e9}", false),
+            (r"[^@\s]+", "a\u{a0}b", true),
+            (r"\S+", "a\u{a0}b", true),
+            (r"[\d\-]+", "1-2", true),
+            (r"\\d", "\\d", true),
+            (r".*\bx", "\u{e9}x", true),
+        ] {
+            let regex = Regex::new(&format!(r"\A(?:{})\z", re2(pattern))).unwrap();
+            assert_eq!(regex.is_match(value), matches, "{pattern} {value:?}");
+        }
+    }
 
     fn run(text: &str, inputs: &[(&str, &str)]) -> Result<String, String> {
         let values = Values {

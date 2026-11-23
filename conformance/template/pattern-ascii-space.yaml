@@ -1,0 +1,25 @@
+description: In a pattern, \s, \d and \w are ASCII, as in RE2. A no-break space is not \s, so it matches [^@\s].
+id: app
+template:
+  metadata: {version: "1.0.0"}
+  services: [{name: app}]
+  inputs:
+    - {name: adminEmail, required: true, validation: {pattern: '[^@\s]+@[^@\s]+'}}
+manifests: |
+  apiVersion: v1
+  kind: ConfigMap
+  metadata: {name: app, namespace: {{ .Namespace }}}
+  data:
+    admin: "{{ .Inputs.adminEmail }}"
+options:
+  namespace: shop
+  inputs: {adminEmail: "me\u00a0@example.com"}
+want:
+  objects:
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: app
+        namespace: shop
+        labels: {app.kubernetes.io/instance: app, app.kubernetes.io/version: "1.0.0", templates.zeabur.com/template: app}
+      data: {admin: "me\u00a0@example.com"}
