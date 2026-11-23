@@ -4,8 +4,10 @@ import (
 	"cmp"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"maps"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -200,8 +202,12 @@ var rustCLI = sync.OnceValues(func() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if _, err := catalog.Run(nil, "cargo", "build", "--locked", "-q", "--manifest-path", filepath.Join(root, "Cargo.toml"), "-p", "zeabur-catalog"); err != nil {
-		return "", err
+	// Run in the workspace, so rustup finds rust-toolchain.toml even when the caller runs in a
+	// temporary directory.
+	build := exec.Command("cargo", "build", "--locked", "-q", "-p", "zeabur-catalog")
+	build.Dir = root
+	if out, err := build.CombinedOutput(); err != nil {
+		return "", fmt.Errorf("cargo build: %w: %s", err, strings.TrimSpace(string(out)))
 	}
 	target := os.Getenv("CARGO_TARGET_DIR")
 	if target == "" {
