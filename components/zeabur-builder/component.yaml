@@ -401,23 +401,23 @@ releases:
     type: helm
     namespace: builder-system
     chart: oci://ghcr.io/zeabur-oss/charts/zeabur-builder
-    version: 0.2.5
-    chartDigest: sha256:bbcf68928d1d043888ec61c06c653d54408ec80d55e3be5d6c138a622032bc9d
+    version: 0.3.0
+    chartDigest: sha256:838704ae07ada7bbfb3bf750475b5c56b57d9ca24995d571c432358d182ffa17
     values: |
       registry:
         # zot above: images go to zot.zot.svc:5000/<namespace>/<build>.
         host: zot.zot.svc:5000
         # zot's token signer: each build pushes with a short-lived token for
         # its own repositories only.
-        tokenKey:
+        tokenSecretRef:
           namespace: zot
-          secret: zot-token-signer
+          name: zot-token-signer
         # zot's CA. The controller follows this Secret and publishes the CA
         # alone in builder-system/registry-ca, which buildkitd mounts and
         # provides.registry.ca names.
-        caSecret:
+        caSecretRef:
           namespace: zot
-          secret: zot-tls
+          name: zot-tls
         # The egress policy lets buildkitd reach zot's pods on 5000; every
         # other private address stays blocked.
         inCluster:
