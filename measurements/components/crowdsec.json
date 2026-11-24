@@ -15,13 +15,13 @@
         {
           "workload": "crowdsec-agent",
           "kind": "DaemonSet",
-          "memory": "41Mi",
+          "memory": "45Mi",
           "cpu": "1m"
         },
         {
           "workload": "crowdsec-lapi",
           "kind": "Deployment",
-          "memory": "36Mi",
+          "memory": "33Mi",
           "cpu": "1m"
         }
       ],
@@ -36,7 +36,7 @@
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-22"
+      "measuredAt": "2026-11-23"
     },
     {
       "distribution": "k3s",
@@ -52,13 +52,13 @@
         {
           "workload": "crowdsec-agent",
           "kind": "DaemonSet",
-          "memory": "47Mi",
+          "memory": "42Mi",
           "cpu": "1m"
         },
         {
           "workload": "crowdsec-lapi",
           "kind": "Deployment",
-          "memory": "35Mi",
+          "memory": "37Mi",
           "cpu": "1m"
         }
       ],
@@ -73,7 +73,7 @@
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-22"
+      "measuredAt": "2026-11-23"
     },
     {
       "distribution": "kind",
@@ -88,8 +88,193 @@
         {
           "workload": "crowdsec-agent",
           "kind": "DaemonSet",
-          "memory": "42Mi",
+          "memory": "46Mi",
           "cpu": "1m"
+        },
+        {
+          "workload": "crowdsec-lapi",
+          "kind": "Deployment",
+          "memory": "44Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "crowdsec",
+          "version": "0.24.2"
+        }
+      ],
+      "sourceDigest": "h1:K1kM/eLfYFXn2Hx7bEaq1T2bBhqS+qe5WdlO2s9FxZ4=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "measuredAt": "2026-11-23"
+    },
+    {
+      "distribution": "kind",
+      "profile": "multi-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "crowdsec-agent",
+          "kind": "DaemonSet",
+          "memory": "44Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "crowdsec-lapi",
+          "kind": "Deployment",
+          "memory": "41Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "crowdsec",
+          "version": "0.24.2"
+        }
+      ],
+      "sourceDigest": "h1:K1kM/eLfYFXn2Hx7bEaq1T2bBhqS+qe5WdlO2s9FxZ4=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "measuredAt": "2026-11-23"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "crowdsec-agent",
+          "kind": "DaemonSet",
+          "memory": "46Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "crowdsec-lapi",
+          "kind": "Deployment",
+          "memory": "37Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "crowdsec",
+          "version": "0.24.2"
+        }
+      ],
+      "sourceDigest": "h1:K1kM/eLfYFXn2Hx7bEaq1T2bBhqS+qe5WdlO2s9FxZ4=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "measuredAt": "2026-11-23"
+    },
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "crowdsec-agent",
+          "kind": "DaemonSet",
+          "memory": "39Mi",
+          "cpu": "1m"
+        },
+        {
+          "workload": "crowdsec-lapi",
+          "kind": "Deployment",
+          "memory": "38Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "crowdsec",
+          "version": "0.24.2"
+        }
+      ],
+      "sourceDigest": "h1:K1kM/eLfYFXn2Hx7bEaq1T2bBhqS+qe5WdlO2s9FxZ4=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "measuredAt": "2026-11-23"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "crowdsec-agent",
+          "kind": "DaemonSet",
+          "memory": "43Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "crowdsec-lapi",
+          "kind": "Deployment",
+          "memory": "37Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "crowdsec",
+          "version": "0.24.2"
+        }
+      ],
+      "sourceDigest": "h1:K1kM/eLfYFXn2Hx7bEaq1T2bBhqS+qe5WdlO2s9FxZ4=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-23"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "crowdsec-agent",
+          "kind": "DaemonSet",
+          "memory": "41Mi",
+          "cpu": "0"
         },
         {
           "workload": "crowdsec-lapi",
@@ -109,195 +294,10 @@
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-22"
-    },
-    {
-      "distribution": "kind",
-      "profile": "multi-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "crowdsec-agent",
-          "kind": "DaemonSet",
-          "memory": "46Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "crowdsec-lapi",
-          "kind": "Deployment",
-          "memory": "38Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "crowdsec",
-          "version": "0.24.2"
-        }
-      ],
-      "sourceDigest": "h1:K1kM/eLfYFXn2Hx7bEaq1T2bBhqS+qe5WdlO2s9FxZ4=",
-      "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
-      },
-      "measuredAt": "2026-11-22"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "crowdsec-agent",
-          "kind": "DaemonSet",
-          "memory": "43Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "crowdsec-lapi",
-          "kind": "Deployment",
-          "memory": "42Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "crowdsec",
-          "version": "0.24.2"
-        }
-      ],
-      "sourceDigest": "h1:K1kM/eLfYFXn2Hx7bEaq1T2bBhqS+qe5WdlO2s9FxZ4=",
-      "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
-      },
-      "measuredAt": "2026-11-22"
-    },
-    {
-      "distribution": "kind",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.37.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "crowdsec-agent",
-          "kind": "DaemonSet",
-          "memory": "42Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "crowdsec-lapi",
-          "kind": "Deployment",
-          "memory": "37Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "crowdsec",
-          "version": "0.24.2"
-        }
-      ],
-      "sourceDigest": "h1:K1kM/eLfYFXn2Hx7bEaq1T2bBhqS+qe5WdlO2s9FxZ4=",
-      "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
-      },
-      "measuredAt": "2026-11-22"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.6",
-      "distributionVersion": "v1.3.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "crowdsec-agent",
-          "kind": "DaemonSet",
-          "memory": "39Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "crowdsec-lapi",
-          "kind": "Deployment",
-          "memory": "37Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "crowdsec",
-          "version": "0.24.2"
-        }
-      ],
-      "sourceDigest": "h1:K1kM/eLfYFXn2Hx7bEaq1T2bBhqS+qe5WdlO2s9FxZ4=",
-      "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
-      },
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-22"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
-      },
-      "kubernetesVersion": "v1.36.6",
-      "distributionVersion": "v1.3.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "crowdsec-agent",
-          "kind": "DaemonSet",
-          "memory": "39Mi",
-          "cpu": "0"
-        },
-        {
-          "workload": "crowdsec-lapi",
-          "kind": "Deployment",
-          "memory": "37Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "crowdsec",
-          "version": "0.24.2"
-        }
-      ],
-      "sourceDigest": "h1:K1kM/eLfYFXn2Hx7bEaq1T2bBhqS+qe5WdlO2s9FxZ4=",
-      "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
-      },
-      "addOns": {
-        "helm-controller": "v0.17.9"
-      },
-      "measuredAt": "2026-11-22"
+      "measuredAt": "2026-11-23"
     },
     {
       "distribution": "rke2",
@@ -305,46 +305,6 @@
       "platform": {
         "os": "linux",
         "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.37.2",
-      "distributionVersion": "v1.37.2+rke2r1",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "crowdsec-agent",
-          "kind": "DaemonSet",
-          "memory": "44Mi",
-          "cpu": "1m"
-        },
-        {
-          "workload": "crowdsec-lapi",
-          "kind": "Deployment",
-          "memory": "39Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "crowdsec",
-          "version": "0.24.2"
-        }
-      ],
-      "sourceDigest": "h1:K1kM/eLfYFXn2Hx7bEaq1T2bBhqS+qe5WdlO2s9FxZ4=",
-      "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
-      },
-      "addOns": {
-        "local-path-provisioner": "v0.0.37"
-      },
-      "measuredAt": "2026-11-22"
-    },
-    {
-      "distribution": "rke2",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
       },
       "kubernetesVersion": "v1.37.2",
       "distributionVersion": "v1.37.2+rke2r1",
@@ -354,12 +314,12 @@
           "workload": "crowdsec-agent",
           "kind": "DaemonSet",
           "memory": "41Mi",
-          "cpu": "1m"
+          "cpu": "0"
         },
         {
           "workload": "crowdsec-lapi",
           "kind": "Deployment",
-          "memory": "38Mi",
+          "memory": "41Mi",
           "cpu": "1m"
         }
       ],
@@ -377,7 +337,47 @@
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-22"
+      "measuredAt": "2026-11-23"
+    },
+    {
+      "distribution": "rke2",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.37.2",
+      "distributionVersion": "v1.37.2+rke2r1",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "crowdsec-agent",
+          "kind": "DaemonSet",
+          "memory": "43Mi",
+          "cpu": "0"
+        },
+        {
+          "workload": "crowdsec-lapi",
+          "kind": "Deployment",
+          "memory": "39Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "crowdsec",
+          "version": "0.24.2"
+        }
+      ],
+      "sourceDigest": "h1:K1kM/eLfYFXn2Hx7bEaq1T2bBhqS+qe5WdlO2s9FxZ4=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "addOns": {
+        "local-path-provisioner": "v0.0.37"
+      },
+      "measuredAt": "2026-11-23"
     }
   ]
 }

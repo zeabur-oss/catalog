@@ -14,14 +14,14 @@
         {
           "workload": "halo-db",
           "kind": "Cluster",
-          "memory": "64Mi",
-          "cpu": "5m"
+          "memory": "63Mi",
+          "cpu": "4m"
         },
         {
           "workload": "halo",
           "kind": "StatefulSet",
-          "memory": "439Mi",
-          "cpu": "7m"
+          "memory": "365Mi",
+          "cpu": "6m"
         }
       ],
       "versions": [
@@ -34,10 +34,10 @@
       "sourceDigest": "h1:0rbKUVN31DjHGz9UycAp51BzcHciXgwtlQF/zFTYNAY=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "cloudnative-pg": "h1:Ng6oc40/aM4zbnEnU9OxiYQvyFSJOFad1fNMHEGfXH4=",
+        "cloudnative-pg": "h1:kxR2I/yV/uEYbOKkmqnpEBZvRo8+vX6+eVHsYbxjO1Q=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-22"
+      "measuredAt": "2026-11-24"
     }
   ]
 }
