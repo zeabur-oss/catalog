@@ -182,7 +182,13 @@ render: Render,
 /**
  * Every recorded run of its e2e test.
  */
-measurements: Array<Environment>, };
+measurements: Array<Environment>, 
+/**
+ * The locales of its READMEs, such as `en` and `zh-TW`. Each is a Markdown file next to this
+ * one: `components/<id>/README.md` for `en`, `components/<id>/README.<locale>.md` for
+ * another.
+ */
+readmes: Array<string>, };
 
 /**
  * The `kind` of a component file.
@@ -1293,7 +1299,17 @@ template: Template,
 /**
  * The text of `manifests.yaml`, with template fields such as `{{ .Namespace }}`.
  */
-manifests: string, };
+manifests: string, 
+/**
+ * Every recorded run of its e2e test. A run tested this template when its `sourceDigest` is
+ * this file's.
+ */
+measurements: Array<Environment>, 
+/**
+ * The locales of its READMEs, such as `en` and `zh-TW`. Each is a Markdown file next to this
+ * one: `templates/<id>/README.md` for `en`, `templates/<id>/README.<locale>.md` for another.
+ */
+readmes: Array<string>, };
 
 /**
  * A value the person installing gives, or the installer generates into a Secret.
