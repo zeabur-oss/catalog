@@ -24,7 +24,7 @@
       ]
     },
     {
-      "description": "Manifests from GitHub releases. Renovate cannot read their urlDigests: catalog render prints the new ones",
+      "description": "Manifests from GitHub releases. Renovate cannot read their urlDigests: zeabur-catalog render prints the new ones",
       "customType": "regex",
       "managerFilePatterns": [
         "/^components/.+\\.yaml$/"

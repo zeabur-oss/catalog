@@ -91,6 +91,12 @@ security:
 # The chart annotates its CRDs helm.sh/resource-policy: keep.
 leftovers: [customresourcedefinitions, persistentvolumeclaims]
 
+health:
+  - name: operator
+    resource: {kind: Deployment, name: seaweedfs-operator, namespace: seaweedfs-operator}
+    timeout: 60s
+    advice: SeaweedFS clusters can't be created or changed until the SeaweedFS operator and its webhook run. Check its pods with kubectl -n seaweedfs-operator get pods.
+
 smoke:
   - name: one-node-s3
     manifest: |

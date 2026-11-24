@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"slices"
 	"strings"
 
 	"go.yaml.in/yaml/v4"
@@ -281,36 +280,3 @@ func strict(s *apiextensionsv1.JSONSchemaProps) {
 
 // PinnedImage is an image reference with a sha256 digest.
 var PinnedImage = regexp.MustCompile(`^[^\s]+@sha256:[a-f0-9]{64}$`)
-
-// UnpinnedImages returns each container in manifest whose image has no digest,
-// as <kind>/<name> <container>: <image>. It skips images named in allowed, and
-// Helm test hooks, because only helm test creates them.
-func UnpinnedImages(manifest []byte, allowed []string) ([]string, error) {
-	objs, err := kubeobj.Decode(manifest)
-	if err != nil {
-		return nil, err
-	}
-	var out []string
-	for _, o := range objs {
-		if strings.Contains(o.GetAnnotations()["helm.sh/hook"], "test") {
-			continue
-		}
-		t, ok, err := kubeobj.PodTemplate(o)
-		if err != nil {
-			return nil, fmt.Errorf("%s/%s: %w", o.GetKind(), o.GetName(), err)
-		}
-		if !ok {
-			continue
-		}
-		for _, c := range kubeobj.Containers(&t.Spec) {
-			name := c.Image
-			if i := strings.LastIndex(c.Image, ":"); i > strings.LastIndex(c.Image, "/") {
-				name = c.Image[:i]
-			}
-			if !PinnedImage.MatchString(c.Image) && !slices.Contains(allowed, name) {
-				out = append(out, fmt.Sprintf("%s/%s %v: %s", o.GetKind(), o.GetName(), c.Name, c.Image))
-			}
-		}
-	}
-	return out, nil
-}

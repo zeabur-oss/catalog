@@ -162,6 +162,19 @@ pub enum PodSecurity {
     Unknown,
 }
 
+impl PodSecurity {
+    /// The name the files use (`restricted`).
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Restricted => "restricted",
+            Self::Baseline => "baseline",
+            Self::Privileged => "privileged",
+            Self::Unknown => "unknown",
+        }
+    }
+}
+
 /// A component by id, or a capability: one component that provides it.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, JsonSchema, TS)]
 #[ts(export_to = "catalog.ts")]

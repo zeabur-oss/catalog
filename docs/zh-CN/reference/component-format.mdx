@@ -74,7 +74,7 @@ releases:                         # installed in order
         # Every value has a comment saying why; `zeabur-catalog check` enforces it.
         enabled: true
       image:
-        # Every image is <tag>@sha256:<digest>; `catalog render` enforces it.
+        # Every image is <tag>@sha256:<digest>; `zeabur-catalog render` enforces it.
         tag: v3.7.16@sha256:…
     profiles:                                   # merged over values like helm -f
       single-node: |
@@ -150,6 +150,8 @@ API 原样发布 `resources.work`。调度器看的是请求量，所以安装�
 
 `health` 列出只读检查，供安装工具检查已安装的集群。每项检查会在 `timeout` 指定的时间内，等待 `resource` 指定的对象满足 `condition` 条件。`Deployment`、`DaemonSet` 和 `StatefulSet` 的检查没有 `condition`，也不能用 `all`，这些对象在 rollout 完成时就算就绪。`resource` 要填写 `kind`，该类型有命名空间时还要填写 `namespace`，并且必须从以下三种方式中选一种：用 `name` 指定单个对象、用 `selector` 指定标签匹配的对象，或用 `all: true` 指定该类型的所有对象。`kind` 不在 [schema](../../../schema/v1/component.schema.json) 列出的类型中，或缺少必填字段时，`validate` 会失败。检查失败时，安装工具会先显示对象的原因和消息，再显示 `advice`，用英文告诉用户该怎么处理。健康检查没有 manifest，也不会应用任何对象。需要创建对象的检查放在 `smoke`，只有 e2e 会运行。e2e 在安装完成后、运行 `smoke` 之前，先运行 `health`。 每个 `smoke` 检查有 `wait` 列表。每一项用 `resource: <kind>/<name>` 指定对象，或用类型加上 `selector` 或 `all: true` 指定，该类型有命名空间时还要填写 `namespace`。每一项要填写 `condition`，格式是 `condition=<name>` 或 `jsonpath=<path>=<value>`；`Deployment`、`DaemonSet` 和 `StatefulSet` 不用填，rollout 完成就算就绪。
 
+提供 admission webhook（`ValidatingWebhookConfiguration` 或 `MutatingWebhookConfiguration`）的组件至少要有一项 `health` 检查，这样需要它的组件才会等 webhook 能响应后再安装。没有的话，`zeabur-catalog render` 会失败。
+
 ```yaml
 health:
   - name: nodes-ready
@@ -180,21 +182,21 @@ contributes:
 
 `detection.addons` 列出发行版自带、安装同一个上游的附加组件，例如 k3s 内置的 Traefik 写成 `{distribution: k3s, name: traefik}`，RKE2 的写成 `{distribution: rke2, name: rke2-traefik}`。名称是该附加组件在 `kube-system` 里的 HelmChart。读取方遇到不认识的发行版时，跳过那一项。
 
-`security.podSecurity` 是组件自己的 namespace 需要的 Pod Security 级别：`restricted`、`baseline` 或 `privileged`。`catalog render` 会用它检查渲染出的每个 Pod。
+`security.podSecurity` 是组件自己的 namespace 需要的 Pod Security 级别：`restricted`、`baseline` 或 `privileged`。`zeabur-catalog render` 会用它检查渲染出的每个 Pod。
 
 `networkPolicies` 给默认拦截每个命名空间入站流量的安装工具用。内容是组件自己命名空间里的标准 NetworkPolicy 对象，这类安装工具会在安装 releases 前应用，放行组件需要从其他地方进来的流量。其他安装工具可以忽略它。`zeabur-catalog check` 会检查每个对象都是组件命名空间里的 NetworkPolicy。
 
 ## 用 digest 固定内容
 
-每个 `releases` 条目都要用 digest 固定内容。chart 或 URL 的内容与 digest 不符时，`catalog render` 会停止，安装工具也必须停止。
+每个 `releases` 条目都要用 digest 固定内容。chart 或 URL 的内容与 digest 不符时，`zeabur-catalog render` 会停止，安装工具也必须停止。
 
 - HTTP chart 的 `chartDigest` 使用仓库 `index.yaml` 中对应条目的 `digest`，也就是 `.tgz` 的 sha256。
 - OCI chart 的 `chartDigest` 使用 manifest digest，也就是 `helm push` 输出的值。`helm pull <chart>:<version>@sha256:…` 会检查这个值。
 - `urlDigests` 使用每个下载文件的 sha256，顺序必须与 URL 一致。
 - 镜像在 `values` 中使用 `<tag>@sha256:<digest>`，也包括 chart 通过参数传给 operator 的镜像。chart 无法接受 digest 时，要在 `unpinnedImages` 中列出镜像，并用注释说明原因。URL 安装条目不受这项要求限制。
 
-Renovate 会一起更新镜像和 chart 的版本与 digest，但无法读取 URL 的 digest。Renovate 更新 URL 的 `version` 后，`catalog render` 会失败，并输出新的 digest，供你复制填入。
+Renovate 会一起更新镜像和 chart 的版本与 digest，但无法读取 URL 的 digest。Renovate 更新 URL 的 `version` 后，`zeabur-catalog render` 会失败，并输出新的 digest，供你复制填入。
 
-安装结果必须一致：chart 不得生成密钥或证书。需要生成的值放在 `inputs` 中，并存储在 Secret 中；证书由 cert-manager 提供。如果两次渲染的结果不同，`catalog render` 会失败。
+安装结果必须一致：chart 不得生成密钥或证书。需要生成的值放在 `inputs` 中，并存储在 Secret 中；证书由 cert-manager 提供。如果两次渲染的结果不同，`zeabur-catalog render` 会失败。
 
 完整字段定义见[组件 JSON Schema](../../../schema/v1/component.schema.json)。

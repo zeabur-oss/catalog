@@ -83,3 +83,9 @@ leftovers:
   # The cleanup hook's RBAC outlives uninstall.
   - clusterroles/victoria-metrics-operator-cleanup-hook
   - clusterrolebindings/victoria-metrics-operator-cleanup-hook
+
+health:
+  - name: operator
+    resource: {kind: Deployment, name: victoria-metrics-operator, namespace: observability}
+    timeout: 60s
+    advice: VictoriaMetrics and VictoriaLogs objects can't be created or changed until the operator and its webhook run. Check its pods with kubectl -n observability get pods.

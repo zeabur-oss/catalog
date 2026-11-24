@@ -107,6 +107,12 @@ security:
 # The chart annotates its CRDs helm.sh/resource-policy: keep.
 leftovers: [customresourcedefinitions, persistentvolumeclaims]
 
+health:
+  - name: operator
+    resource: {kind: Deployment, name: cnpg-cloudnative-pg, namespace: cnpg-system}
+    timeout: 60s
+    advice: PostgreSQL clusters can't be created or changed until the CloudNativePG operator and its webhook run. Check its pods with kubectl -n cnpg-system get pods.
+
 smoke:
   - name: one-instance-cluster
     manifest: |

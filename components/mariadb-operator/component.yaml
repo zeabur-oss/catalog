@@ -126,6 +126,16 @@ security:
 
 leftovers: [persistentvolumeclaims]
 
+health:
+  - name: operator
+    resource: {kind: Deployment, name: mariadb-operator, namespace: mariadb-operator}
+    timeout: 60s
+    advice: MariaDB servers aren't created or changed until the MariaDB operator runs. Check its pods with kubectl -n mariadb-operator get pods.
+  - name: webhook
+    resource: {kind: Deployment, name: mariadb-operator-webhook, namespace: mariadb-operator}
+    timeout: 60s
+    advice: MariaDB objects can't be created or changed until the MariaDB operator webhook runs. Check its pods with kubectl -n mariadb-operator get pods.
+
 smoke:
   - name: standalone
     manifest: |

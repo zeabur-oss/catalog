@@ -7,7 +7,7 @@ use std::fmt;
 use std::path::{Path, PathBuf};
 
 use crate::check::StrictProblem;
-use crate::common::{LicenseUrlProblem, Profile};
+use crate::common::{LicenseUrlProblem, PodSecurity, Profile};
 use crate::order::OrderError;
 
 /// One problem of one file.
@@ -133,6 +133,21 @@ impl fmt::Display for Rendering {
     }
 }
 
+/// A rendered object by kind and name, such as `Deployment/web`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ObjectName {
+    /// The kind.
+    pub kind: String,
+    /// The name.
+    pub name: String,
+}
+
+impl fmt::Display for ObjectName {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}/{}", self.kind, self.name)
+    }
+}
+
 /// What rendering a component and checking its objects finds.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RenderProblem {
@@ -150,6 +165,52 @@ pub enum RenderProblem {
         /// Why.
         message: String,
     },
+    /// The rendered objects are no YAML stream.
+    NotYaml {
+        /// The rendering.
+        on: Rendering,
+        /// The parser's message.
+        message: String,
+    },
+    /// A workload whose pod does not read as one.
+    InvalidPod {
+        /// The rendering.
+        on: Rendering,
+        /// The workload.
+        object: ObjectName,
+        /// Why.
+        message: String,
+    },
+    /// A pod breaks the Pod Security Standard of its component.
+    PodSecurity {
+        /// The rendering.
+        on: Rendering,
+        /// The workload.
+        object: ObjectName,
+        /// The level of the component.
+        level: PodSecurity,
+        /// What breaks it, as Pod Security Admission says.
+        refusal: String,
+    },
+    /// An image without a digest that the release does not allow.
+    UnpinnedImage {
+        /// The rendering.
+        on: Rendering,
+        /// The workload.
+        object: ObjectName,
+        /// The container.
+        container: String,
+        /// The image.
+        image: String,
+    },
+    /// Two renders of the same values give different objects: the chart generates a value.
+    NotReproducible {
+        /// The rendering.
+        on: Rendering,
+    },
+    /// The component serves an admission webhook but has no health check, so what needs it can
+    /// install before it answers.
+    WebhookWithoutHealth,
     /// kubeconform refuses objects rendered for a Kubernetes version, or does not run.
     Kubeconform {
         /// What kubeconform reports.
@@ -160,9 +221,43 @@ pub enum RenderProblem {
 impl fmt::Display for RenderProblem {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Failed { on, message } | Self::CrdSchemas { on, message } => {
-                write!(f, "{on}: {message}")
-            }
+            Self::Failed { on, message }
+            | Self::CrdSchemas { on, message }
+            | Self::NotYaml { on, message } => write!(f, "{on}: {message}"),
+            Self::InvalidPod {
+                on,
+                object,
+                message,
+            } => write!(f, "{on}: {object}: invalid pod: {message}"),
+            Self::PodSecurity {
+                on,
+                object,
+                level,
+                refusal,
+            } => write!(
+                f,
+                "{on}: {object}: pod breaks the Pod Security Standard of its service: {}: \
+                 {refusal}",
+                level.as_str()
+            ),
+            Self::UnpinnedImage {
+                on,
+                object,
+                container,
+                image,
+            } => write!(
+                f,
+                "{on}: {object} {container}: {image} needs a sha256 digest \
+                 (<tag>@sha256:<digest>)"
+            ),
+            Self::NotReproducible { on } => write!(
+                f,
+                "{on}: output differs between renders; supply generated values as inputs"
+            ),
+            Self::WebhookWithoutHealth => f.write_str(
+                "serves an admission webhook but declares no health, so what needs it can \
+                 install before it answers",
+            ),
             Self::Kubeconform { message } => write!(f, "kubeconform: {message}"),
         }
     }

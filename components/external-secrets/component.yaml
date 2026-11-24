@@ -114,6 +114,16 @@ security:
     CRDs into view, and write access into edit and admin.
   podSecurity: restricted
 
+health:
+  - name: controller
+    resource: {kind: Deployment, name: external-secrets, namespace: external-secrets}
+    timeout: 60s
+    advice: No secret is synced from its store until the External Secrets controller runs. Check its pods with kubectl -n external-secrets get pods.
+  - name: webhook
+    resource: {kind: Deployment, name: external-secrets-webhook, namespace: external-secrets}
+    timeout: 60s
+    advice: Stores and external secrets can't be created or changed until the External Secrets webhook runs. Check its pods with kubectl -n external-secrets get pods.
+
 smoke:
   - name: ready
     wait:

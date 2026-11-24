@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"maps"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"slices"
@@ -229,7 +230,7 @@ func runTier(r *repo, tier string, o tierOptions) error {
 	return fmt.Errorf("unknown -tier %q; use %s", tier, strings.Join(tiers, ", "))
 }
 
-// runCheck checks config/e2e.yaml, renders and lints everything, then sends every rendered
+// runCheck checks config/e2e.yaml, lints every template, then sends every rendered
 // component and template to a local API server with --dry-run=server, and
 // fails when it refuses an upgrade from the pull request's base or a profile
 // switch.
@@ -251,7 +252,11 @@ func runCheck(r *repo, cfg config, o tierOptions) error {
 		return err
 	}
 	out := "out/render"
-	if err := step("render", func() error { return renderComponents(r.cat, r.cat.Components, out, cfg.Versions) }); err != nil {
+	if err := step("render", func() error {
+		cmd := exec.Command("cargo", "run", "--locked", "-q", "-p", "zeabur-catalog", "--", "render", "--out", out)
+		cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+		return cmd.Run()
+	}); err != nil {
 		return err
 	}
 	if err := step("template lint", func() error { return lintTemplates(r, out, cfg.Versions) }); err != nil {
