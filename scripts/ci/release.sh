@@ -39,7 +39,7 @@ status=$(curl -sSL -o "$published/api.tar.gz" -w '%{http_code}' \
 case $status in
   200)
     tar -xzf "$published/api.tar.gz" -C "$published"
-    go run ./tools/cmd/catalog compat "$published/$major" "$api/$major"
+    cargo run --locked -q -p zeabur-catalog -- compat "$published/$major" "$api/$major"
     ;;
   404) echo "no published release has api-$major.tar.gz yet; nothing to compare" ;;
   *) echo "downloading the latest release's api-$major.tar.gz: HTTP $status" >&2; exit 1 ;;

@@ -109,3 +109,20 @@ func olderVersion(a, b string) bool {
 	}
 	return va.LessThan(vb)
 }
+
+// contributions returns the values other components add to a release.
+func contributions(cat *catalog.Catalog, target, release string) ([]map[string]any, error) {
+	var out []map[string]any
+	for _, c := range cat.Components {
+		for _, ct := range c.Contributes {
+			if ct.Target == (catalog.ReleaseRef{Component: target, Release: release}) {
+				m, err := catalog.ParseValues(ct.Values)
+				if err != nil {
+					return nil, fmt.Errorf("%s: %w", c.ID, err)
+				}
+				out = append(out, m)
+			}
+		}
+	}
+	return out, nil
+}

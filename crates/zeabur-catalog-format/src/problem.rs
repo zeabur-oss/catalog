@@ -50,6 +50,8 @@ pub enum ProblemKind {
     Values(ValuesProblem),
     /// The objects a component renders into.
     Render(RenderProblem),
+    /// A new file of the API that readers of the published release cannot read.
+    Compat(CompatProblem),
 }
 
 impl fmt::Display for ProblemKind {
@@ -63,6 +65,7 @@ impl fmt::Display for ProblemKind {
             Self::Policy(p) => p.fmt(f),
             Self::Values(p) => p.fmt(f),
             Self::Render(p) => p.fmt(f),
+            Self::Compat(p) => p.fmt(f),
         }
     }
 }
@@ -112,6 +115,31 @@ impl From<ValuesProblem> for ProblemKind {
 impl From<RenderProblem> for ProblemKind {
     fn from(p: RenderProblem) -> Self {
         Self::Render(p)
+    }
+}
+
+impl From<CompatProblem> for ProblemKind {
+    fn from(p: CompatProblem) -> Self {
+        Self::Compat(p)
+    }
+}
+
+/// What the check of a new API against the published one finds.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum CompatProblem {
+    /// The file breaks a published schema, opened as its readers read it.
+    PublishedSchema(SchemaProblem),
+}
+
+impl fmt::Display for CompatProblem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::PublishedSchema(p) => write!(
+                f,
+                "{p}: a change inside v1 must keep passing the published schemas; a breaking \
+                 change goes to v2"
+            ),
+        }
     }
 }
 

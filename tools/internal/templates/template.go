@@ -31,7 +31,6 @@ type Template struct {
 	Dir string `yaml:"-" json:"-"` // holds template.yaml and manifests.yaml
 	// E2E is the template's e2e.yaml, which holds only test data.
 	E2E E2EValues `yaml:"-" json:"-"`
-	raw any
 }
 
 // Metadata is a template's name, summary, version and docs.
@@ -157,9 +156,6 @@ func Load(root string) ([]*Template, error) {
 		}
 		rel, _ := filepath.Rel(root, f)
 		t := &Template{Dir: filepath.Dir(f), ID: filepath.Base(filepath.Dir(f))}
-		if err := yaml.Unmarshal(data, &t.raw); err != nil {
-			return nil, fmt.Errorf("%s: %w", rel, err)
-		}
 		if err := yaml.Unmarshal(data, t); err != nil {
 			return nil, fmt.Errorf("%s: %w", rel, err)
 		}
@@ -170,9 +166,6 @@ func Load(root string) ([]*Template, error) {
 	}
 	return out, nil
 }
-
-// Written returns template.yaml decoded as written, for JSON.
-func (t *Template) Written() any { return t.raw }
 
 // Get returns the template with the given ID.
 func Get(all []*Template, id string) (*Template, error) {

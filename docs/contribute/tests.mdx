@@ -84,7 +84,7 @@ Each template's Namespace generates warnings at its own enforce level. Any warni
 
 ### Build the release
 
-Build `bundle.tar.gz` with `nix build .#release` and the static API with `zeabur-catalog api`. A change to `go.sum` fails here until `flake.nix` has the new `vendorHash`. `catalog compat` then compares the API's schemas with those of the latest published release, and fails when a change inside `v1` removes a field, changes a type or makes a field required.
+Build `bundle.tar.gz` with `nix build .#release` and the static API with `zeabur-catalog api`. A change to `go.sum` fails here until `flake.nix` has the new `vendorHash`. `zeabur-catalog compat` then checks every new API file against the schemas of the latest published release, which accept new fields and values, and fails when a change inside `v1` removes a field, changes a type or makes a field required.
 
 </Step>
 
