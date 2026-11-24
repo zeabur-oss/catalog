@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # The files of a release: bundle.tar.gz from `nix build .#release`, and api-v<N>.tar.gz, the static
-# API of major N. `catalog api` renders charts that helm fetches, so the API is built outside the
+# API of major N. `zeabur-catalog api` renders charts that helm fetches, so the API is built outside the
 # nix sandbox. Both are reproducible: the Release workflow verifies a draft by building them again.
 # CI builds them at flake.nix's version, so a go.sum change fails here first, with flake.nix's new
 # vendorHash. A change inside v<N> keeps every file passing the schemas of the latest published
@@ -28,9 +28,9 @@ install -m 644 result/bundle.tar.gz "$dir/bundle.tar.gz"
 api=$(mktemp -d)
 published=$(mktemp -d)
 trap 'rm -r "$api" "$published"' EXIT
-go run ./tools/cmd/catalog api -version "${version#v}" -out "$api"
+cargo run --locked -q -p zeabur-catalog -- api --version "${version#v}" --out "$api"
 major=$(ls "$api")
-[[ "$major" =~ ^v[0-9]+$ ]] || { echo "catalog api wrote $major, not one v<N> directory" >&2; exit 1; }
+[[ "$major" =~ ^v[0-9]+$ ]] || { echo "zeabur-catalog api wrote $major, not one v<N> directory" >&2; exit 1; }
 tar -C "$api" --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner --mode=u+w,go-w,a+rX \
   -c "$major" | gzip -9n >"$dir/api-$major.tar.gz"
 

@@ -117,7 +117,7 @@ Run these commands at any commit:
 
 ```sh
 nix build .#release
-go run ./tools/cmd/catalog api -version X.Y.Z -out out/api
+cargo run -p zeabur-catalog -- api --version X.Y.Z
 ```
 
 `nix build .#release` builds `bundle.tar.gz`, which contains:
@@ -132,6 +132,6 @@ go run ./tools/cmd/catalog api -version X.Y.Z -out out/api
 - `LICENSE`
 - `README.md`
 
-`catalog api` writes the API to `out/api/v1/` and checks each file against its schema. It renders the charts, so it needs helm and the network. `scripts/ci/release.sh <version> <dir>` packs it into `api-v1.tar.gz` the same way a release does.
+`zeabur-catalog api` writes the API to `out/api/v1/` and checks each file against its schema. It renders the charts, so it needs helm and the network. `scripts/ci/release.sh <version> <dir>` packs it into `api-v1.tar.gz` the same way a release does.
 
 These commands build files that are byte-for-byte identical to the release files. Tools can build from an unreleased commit, then compare the files with the signed release after that commit is released.

@@ -117,7 +117,7 @@ v0.5.1 及以前的版本由 `zeabur-oss/.github` 的 `release.yml` 签署，验
 
 ```sh
 nix build .#release
-go run ./tools/cmd/catalog api -version X.Y.Z -out out/api
+cargo run -p zeabur-catalog -- api --version X.Y.Z
 ```
 
 `nix build .#release` 构建的 `bundle.tar.gz` 包含：
@@ -132,6 +132,6 @@ go run ./tools/cmd/catalog api -version X.Y.Z -out out/api
 - `LICENSE`
 - `README.md`
 
-`catalog api` 将 API 写入 `out/api/v1/`，并用对应的 schema 检查每个文件。这个命令会渲染 chart，需要 helm 和网络连接。`scripts/ci/release.sh <version> <dir>` 会按发布版本的方式，将 API 打包成 `api-v1.tar.gz`。
+`zeabur-catalog api` 将 API 写入 `out/api/v1/`，并用对应的 schema 检查每个文件。这个命令会渲染 chart，需要 helm 和网络连接。`scripts/ci/release.sh <version> <dir>` 会按发布版本的方式，将 API 打包成 `api-v1.tar.gz`。
 
 这些命令构建的文件会与发布版本逐字节相同。工具可先从尚未发布的 commit 构建文件，等该 commit 发布后，再与已签名的版本比对。

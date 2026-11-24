@@ -96,7 +96,7 @@ pub(crate) fn validator(schema: &Value) -> Result<jsonschema::Validator, String>
 }
 
 /// The place in a file that a schema error names.
-fn field_path(location: &jsonschema::paths::Location) -> FieldPath {
+pub(crate) fn field_path(location: &jsonschema::paths::Location) -> FieldPath {
     location
         .into_iter()
         .fold(FieldPath::root(), |at, segment| match segment {

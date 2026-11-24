@@ -15,7 +15,7 @@ The Release workflow builds its files with `scripts/ci/release.sh <version> <dir
 nix develop -c go test ./...
 nix develop -c cargo run -p zeabur-catalog -- check  # schema, licences, references, value comments, template rules
 nix develop -c cargo run -p zeabur-catalog -- schema # writes schema/v1 and types/v1 from the Rust types; edit those, not the output
-nix develop -c go run ./tools/cmd/catalog api -version 0.0.0   # the static API into out/api, checked against the schemas
+nix develop -c cargo run -p zeabur-catalog -- api --version 0.0.0   # the static API into out/api, checked against the schemas
 nix develop -c cargo run -p zeabur-catalog -- render  # helm template every profile, kubeconform
 nix develop -c go run ./tools/cmd/catalog template lint -values values.json <id>   # safety rules, kubeconform
 ```
