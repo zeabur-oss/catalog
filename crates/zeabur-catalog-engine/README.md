@@ -7,3 +7,4 @@ reads. Zeabur and the catalog's own tests call the same code.
   [the rules for clients](https://github.com/zeabur-oss/catalog/blob/main/docs/reference/template-clients.mdx),
   and the tests run the cases in `conformance/template/`.
 - `kube_version`: whether a component's `kubeVersion` range admits a Kubernetes version.
+- `pod_security`: the Pod Security Standards checks of Pod Security Admission, with its messages.

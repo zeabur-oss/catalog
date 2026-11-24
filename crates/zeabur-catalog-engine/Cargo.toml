@@ -12,8 +12,10 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+k8s-openapi.workspace = true
 regex.workspace = true
 regex-syntax.workspace = true
+serde.workspace = true
 serde-saphyr.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
