@@ -2,8 +2,8 @@
 //!
 //! Each component and template file must pass its schema in `schema/v1/`. The components must
 //! then fit together: references, install order, contributions, inputs and what they provision.
-//! Each template's manifests must parse, with no input name or Secret key twice. Then the
-//! repository's policy: licences, languages, READMEs and Kubernetes versions.
+//! Each template must render, and fit the repository: its ID, services, version and requires. Then
+//! the repository's policy: licences, languages, READMEs and Kubernetes versions.
 #![expect(
     clippy::disallowed_types,
     reason = "a file is checked against its JSON Schema as JSON of any shape"
@@ -26,7 +26,7 @@ use zeabur_catalog_format::problem::{
 };
 use zeabur_catalog_format::{Catalog, Component, order};
 
-use crate::policy;
+use crate::{policy, templates};
 
 /// The problems of the checkout at `root`. Schema problems come alone: the other rules read the
 /// files as their types.
@@ -57,6 +57,8 @@ pub(crate) fn check(root: &Path) -> Result<Vec<Problem>, String> {
             let message = e.to_string();
             found.push(FieldPath::root(), TemplateProblem::Broken { message });
         }
+        let text = read(&root.join(&path))?;
+        templates::problems(&catalog, id, dir, &text, &mut found);
         problems.extend(found.into_vec());
         let raw = files.get(&path).unwrap_or(&null);
         let template_dir = Path::new("templates").join(id);
@@ -225,7 +227,7 @@ fn problems_of(catalog: &Catalog, id: &str, component: &Component, found: &mut P
 }
 
 /// Whether `id` names a component or template: lowercase words joined by single hyphens.
-fn is_id(id: &str) -> bool {
+pub(crate) fn is_id(id: &str) -> bool {
     id.split('-').all(|word| {
         !word.is_empty()
             && word

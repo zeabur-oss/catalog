@@ -252,12 +252,50 @@ pub enum TemplateProblem {
         /// The renderer's message.
         message: String,
     },
+    /// The directory name is no DNS label of at most 49 characters, so the e2e namespace
+    /// `templates-e2e-<id>` is none either.
+    Id,
+    /// A component has the same ID.
+    SameIdAsComponent,
+    /// Two services have this name.
+    DuplicateService {
+        /// The name.
+        name: String,
+    },
+    /// `metadata.version` has no `# renovate: depName=<image>` comment on the line above it.
+    VersionWithoutImage,
+    /// `metadata.version` is not the tag, pinned with a digest, of the image it names in the
+    /// manifests.
+    VersionNotPinned {
+        /// The image.
+        image: String,
+    },
+    /// What the template requires has no install order on a profile.
+    Requires {
+        /// The profile.
+        profile: Profile,
+        /// Why.
+        error: OrderError,
+    },
 }
 
 impl fmt::Display for TemplateProblem {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Broken { message } => f.write_str(message),
+            Self::Id => {
+                f.write_str("the directory name must be a DNS label of at most 49 characters")
+            }
+            Self::SameIdAsComponent => f.write_str("a component has the same ID"),
+            Self::DuplicateService { name } => write!(f, "duplicate service {name}"),
+            Self::VersionWithoutImage => {
+                f.write_str(r##"needs "# renovate: depName=<image>" on the line above it"##)
+            }
+            Self::VersionNotPinned { image } => write!(
+                f,
+                "must be the tag of {image} in manifests.yaml, pinned with a digest"
+            ),
+            Self::Requires { profile, error } => write!(f, "on {}: {error}", profile.as_str()),
         }
     }
 }

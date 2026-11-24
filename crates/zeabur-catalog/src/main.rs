@@ -12,6 +12,7 @@ use std::process::ExitCode;
 mod check;
 mod licenses;
 mod policy;
+mod templates;
 mod values;
 
 fn main() -> ExitCode {
