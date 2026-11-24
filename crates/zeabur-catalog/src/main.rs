@@ -3,6 +3,8 @@
 //! - `zeabur-catalog check` prints the problems of the catalog's files and fails if there are any.
 //! - `zeabur-catalog render [--out <dir>] [<id>…]` renders each release of each component on each
 //!   profile and Kubernetes version into `out/render/` and checks the objects with kubeconform.
+//! - `zeabur-catalog digest <dir>…` prints the `sourceDigest` of each component or template
+//!   directory.
 //! - `zeabur-catalog schema` writes `schema/v1/` and `types/v1/catalog.ts` from the types of
 //!   `zeabur-catalog-format`.
 //! - `zeabur-catalog licenses-update` reads the SPDX License List's `licenses.json` from stdin and
@@ -28,9 +30,10 @@ fn main() -> ExitCode {
     {
         ["check"] => check(),
         ["render", rest @ ..] => render(rest),
+        ["digest", dirs @ ..] if !dirs.is_empty() => digest(dirs),
         ["schema"] => write(),
         ["licenses-update"] => licenses_update(),
-        _ => Err("usage: zeabur-catalog check|render|schema|licenses-update".to_owned()),
+        _ => Err("usage: zeabur-catalog check|render|digest|schema|licenses-update".to_owned()),
     };
     match result {
         Ok(()) => ExitCode::SUCCESS,
@@ -68,6 +71,15 @@ fn render(args: &[&str]) -> Result<(), String> {
     }
 }
 
+fn digest(dirs: &[&str]) -> Result<(), String> {
+    for dir in dirs {
+        let digest = zeabur_catalog_engine::digest::source_digest(std::path::Path::new(dir))
+            .map_err(|e| format!("{dir}: {e}"))?;
+        output::print(&digest);
+    }
+    Ok(())
+}
+
 fn write() -> Result<(), String> {
     for (name, text) in zeabur_catalog_format::schema::schemas() {
         let path = format!("schema/v1/{name}");
@@ -91,6 +103,11 @@ mod output {
     #[expect(clippy::print_stderr, reason = "the output module of the command")]
     pub(crate) fn error(message: &str) {
         eprintln!("zeabur-catalog: {message}");
+    }
+
+    #[expect(clippy::print_stdout, reason = "the output module of the command")]
+    pub(crate) fn print(line: &str) {
+        println!("{line}");
     }
 
     #[expect(clippy::print_stderr, reason = "the output module of the command")]

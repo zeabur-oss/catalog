@@ -3,15 +3,17 @@ package main
 import (
 	"cmp"
 	"encoding/json"
-	"io"
+	"errors"
+	"fmt"
 	"maps"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
-	"golang.org/x/mod/sumdb/dirhash"
 	"k8s.io/apimachinery/pkg/version"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
@@ -169,17 +171,58 @@ func templateMeasurementPath(id string) string {
 	return filepath.Join("measurements", "templates", id+".json")
 }
 
-// sourceDigest returns the Go module hash (dirhash.Hash1, "h1:...") of every
-// file in dir, the directory of a component or template, except e2e.yaml and
-// the READMEs, which hold test data and docs and change no measurement.
+// sourceDigest returns the sourceDigest of dir, the directory of a component or template, from
+// `zeabur-catalog digest`, so that the API and the measurements share one definition.
 func sourceDigest(dir string) (string, error) {
-	files, err := dirhash.DirFiles(dir, "")
+	bin, err := rustCLI()
 	if err != nil {
 		return "", err
 	}
-	files = slices.DeleteFunc(files, func(f string) bool { return f == "e2e.yaml" || catalog.IsReadme(f) })
-	return dirhash.Hash1(files, func(name string) (io.ReadCloser, error) { return os.Open(filepath.Join(dir, name)) })
+	out, err := catalog.Run(nil, bin, "digest", dir)
+	return strings.TrimSpace(out), err
 }
+
+// startDir is the directory the command starts in, read before the tests change it.
+var startDir, startDirErr = os.Getwd()
+
+// rustCLI builds zeabur-catalog once and returns its path. The workspace is the first directory
+// above startDir with a Cargo.toml.
+var rustCLI = sync.OnceValues(func() (string, error) {
+	root, err := startDir, startDirErr
+	for err == nil {
+		if _, err = os.Stat(filepath.Join(root, "Cargo.toml")); err == nil {
+			break
+		}
+		parent := filepath.Dir(root)
+		if parent == root {
+			return "", errors.New("no Cargo.toml above the current directory")
+		}
+		root, err = parent, nil
+	}
+	if err != nil {
+		return "", err
+	}
+	// Run in the workspace, so rustup finds rust-toolchain.toml even when the caller runs in a
+	// temporary directory. Cargo names the executable it built, wherever its config puts it.
+	build := exec.Command("cargo", "build", "--locked", "-q", "-p", "zeabur-catalog", "--bin", "zeabur-catalog", "--message-format=json-render-diagnostics")
+	build.Dir = root
+	var stderr strings.Builder
+	build.Stderr = &stderr
+	out, err := build.Output()
+	if err != nil {
+		return "", fmt.Errorf("cargo build: %w: %s", err, strings.TrimSpace(stderr.String()))
+	}
+	for line := range strings.Lines(string(out)) {
+		var m struct {
+			Reason     string  `json:"reason"`
+			Executable *string `json:"executable"`
+		}
+		if json.Unmarshal([]byte(line), &m) == nil && m.Reason == "compiler-artifact" && m.Executable != nil {
+			return *m.Executable, nil
+		}
+	}
+	return "", errors.New("cargo build named no zeabur-catalog executable")
+})
 
 func today() string { return time.Now().UTC().Format(time.DateOnly) }
 

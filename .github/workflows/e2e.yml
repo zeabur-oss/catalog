@@ -43,17 +43,15 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Set up Go
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version-file: go.mod
-          cache: false
+      # The catalog command builds zeabur-catalog to work out sourceDigest, with the dev shell's Rust.
+      - name: Set up Nix
+        uses: zeabur-oss/.github/actions/ci-setup@993db7daf21a752dc7d3940f227e03478ee613cc # main
       - name: List the components to test
         id: list
         env:
           PROFILES: ${{ inputs.profiles }}
           IDS: ${{ inputs.components }}
-        run: echo "matrix=$(go run ./tools/cmd/catalog list -tier full -profiles "$PROFILES" -ids "$IDS")" >> "$GITHUB_OUTPUT"
+        run: echo "matrix=$(nix develop -c go run ./tools/cmd/catalog list -tier full -profiles "$PROFILES" -ids "$IDS")" >> "$GITHUB_OUTPUT"
 
   e2e:
     needs: matrix
