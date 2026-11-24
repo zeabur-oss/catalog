@@ -12,6 +12,7 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+granit-parser.workspace = true
 jsonschema.workspace = true
 regex.workspace = true
 serde.workspace = true

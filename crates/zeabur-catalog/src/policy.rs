@@ -1,6 +1,6 @@
-//! How the catalog's files are written: licences and their links, languages, READMEs and the
-//! Kubernetes versions a component admits. The files install without these; the repository holds
-//! itself to them.
+//! How the catalog's files are written: licences and their links, languages, READMEs, a comment
+//! on every Helm value and the Kubernetes versions a component admits. The files install without
+//! these; the repository holds itself to them.
 #![expect(
     clippy::disallowed_types,
     reason = "the languages of every `locales` map are found in the file as written, of any shape"
@@ -16,8 +16,10 @@ use zeabur_catalog_engine::kube_version;
 use zeabur_catalog_format::common::{
     LicenseUrlProblem, LicenseUrls, Mode, Profile, license_url_problems,
 };
-use zeabur_catalog_format::problem::{FieldPath, PolicyProblem, Problem, Problems};
+use zeabur_catalog_format::problem::{FieldPath, PolicyProblem, Problem, Problems, ValuesProblem};
 use zeabur_catalog_format::{Component, Template};
+
+use crate::values;
 
 /// What `config/` sets for the policy.
 #[derive(Debug)]
@@ -150,6 +152,7 @@ pub(crate) fn component_problems(
         readme_sections(&text, &want, &required, &mut readme_found);
         out.extend(readme_found.into_vec());
     }
+    helm_values_problems(component, &mut found);
     let mut problems = found.into_vec();
     problems.extend(out);
     problems
@@ -181,6 +184,41 @@ fn kube_version_problems(config: &Config, range: &str, found: &mut Problems) -> 
         }
     }
     Vec::new()
+}
+
+/// Adds a problem for each Helm value of `component` that no comment explains.
+fn helm_values_problems(component: &Component, found: &mut Problems) {
+    for (i, release) in component.releases.iter().enumerate() {
+        let Some(helm) = release.helm() else {
+            continue;
+        };
+        let at = FieldPath::root().key("releases").index(i);
+        if let Some(values) = &helm.values {
+            unexplained(values, &at.clone().key("values"), found);
+        }
+        for profile in Profile::ALL {
+            if let Some(values) = helm.profiles.get(profile) {
+                let at = at.clone().key("profiles").key(profile.as_str());
+                unexplained(values, &at, found);
+            }
+        }
+    }
+    for (i, contribution) in component.contributes.iter().enumerate() {
+        let at = FieldPath::root().key("contributes").index(i).key("values");
+        unexplained(&contribution.values, &at, found);
+    }
+}
+
+/// Adds a problem for each value in `values`, the field at `at`, that no comment explains.
+fn unexplained(values: &str, at: &FieldPath, found: &mut Problems) {
+    match values::unexplained(values) {
+        Ok(paths) => {
+            for value in paths {
+                found.push(at.clone(), ValuesProblem::Unexplained { value });
+            }
+        }
+        Err(message) => found.push(at.clone(), ValuesProblem::NotYaml { message }),
+    }
 }
 
 /// The policy problems of the template in `dir` under `root`.
@@ -397,6 +435,7 @@ fn walk_locales(value: &Value, at: &FieldPath, required: &[String], found: &mut 
 
 #[cfg(test)]
 mod tests {
+    use zeabur_catalog_format::component::Release;
     use zeabur_catalog_format::problem::ProblemKind;
 
     use super::*;
@@ -448,6 +487,46 @@ mod tests {
             license: "SSPL-1.0".to_owned(),
         };
         assert_eq!(kinds(&component), [want.into()]);
+    }
+
+    #[test]
+    fn every_helm_value_says_why() {
+        let root = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../.."));
+        let catalog = zeabur_catalog_format::Catalog::read(root).unwrap();
+        let mut component = catalog.components["traefik"].clone();
+        let (i, helm) = component
+            .releases
+            .iter_mut()
+            .enumerate()
+            .find_map(|(i, r)| match r {
+                Release::Helm(helm) => Some((i, helm)),
+                Release::Manifest(_) | Release::Inline(_) | Release::Unknown => None,
+            })
+            .unwrap();
+        helm.values = Some("# why\na: 1\nb:\n  c: 2\n".to_owned());
+        helm.profiles.multi_node = Some("d: [1\n".to_owned());
+        let mut found = Problems::new(Path::new("component.yaml"));
+        helm_values_problems(&component, &mut found);
+        let got: Vec<_> = found
+            .into_vec()
+            .into_iter()
+            .map(|p| (p.at, p.kind))
+            .collect();
+        let release = FieldPath::root().key("releases").index(i);
+        let value = FieldPath::root().key("b").key("c");
+        assert_eq!(
+            got[0],
+            (
+                release.clone().key("values"),
+                ValuesProblem::Unexplained { value }.into()
+            )
+        );
+        assert_eq!(got.len(), 2, "{got:?}");
+        assert!(matches!(
+            &got[1],
+            (at, ProblemKind::Values(ValuesProblem::NotYaml { .. }))
+                if *at == release.key("profiles").key("multi-node")
+        ));
     }
 
     #[test]

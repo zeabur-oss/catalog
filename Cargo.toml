@@ -11,6 +11,7 @@ repository = "https://github.com/zeabur-oss/catalog"
 publish = false
 
 [workspace.dependencies]
+granit-parser = { version = "2.1", default-features = false, features = ["std", "comments"] }
 jsonschema = { version = "0.61.2", default-features = false }
 regex = { version = "1.13", default-features = false, features = ["std", "unicode-case", "unicode-perl"] }
 regex-syntax = { version = "0.8", default-features = false, features = ["std"] }

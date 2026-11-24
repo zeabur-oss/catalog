@@ -46,6 +46,8 @@ pub enum ProblemKind {
     Template(TemplateProblem),
     /// How the repository writes its files: licences, languages, READMEs, Kubernetes versions.
     Policy(PolicyProblem),
+    /// A Helm value no comment explains.
+    Values(ValuesProblem),
 }
 
 impl fmt::Display for ProblemKind {
@@ -57,6 +59,7 @@ impl fmt::Display for ProblemKind {
             Self::Component(p) => p.fmt(f),
             Self::Template(p) => p.fmt(f),
             Self::Policy(p) => p.fmt(f),
+            Self::Values(p) => p.fmt(f),
         }
     }
 }
@@ -94,6 +97,36 @@ impl From<TemplateProblem> for ProblemKind {
 impl From<PolicyProblem> for ProblemKind {
     fn from(p: PolicyProblem) -> Self {
         Self::Policy(p)
+    }
+}
+
+impl From<ValuesProblem> for ProblemKind {
+    fn from(p: ValuesProblem) -> Self {
+        Self::Values(p)
+    }
+}
+
+/// What the check of a component's Helm values finds: every value says why it is set.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ValuesProblem {
+    /// No comment explains the value at this path inside the values.
+    Unexplained {
+        /// The path of the value inside the values, such as `controller.replicas`.
+        value: FieldPath,
+    },
+    /// The values are no YAML.
+    NotYaml {
+        /// The parser's message.
+        message: String,
+    },
+}
+
+impl fmt::Display for ValuesProblem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Unexplained { value } => write!(f, "{value} has no comment saying why"),
+            Self::NotYaml { message } => write!(f, "invalid YAML: {message}"),
+        }
     }
 }
 
