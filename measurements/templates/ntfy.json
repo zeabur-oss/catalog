@@ -21,16 +21,16 @@
       "versions": [
         {
           "image": "binwiederhier/ntfy",
-          "version": "v2.38.0",
-          "digest": "sha256:771309aecfce18d8fe2bfb8069994ddd6be6ca6ccdd7badace3d791a0045ff0d"
+          "version": "v2.38.1",
+          "digest": "sha256:038da2be5e668fee6d36a62884eea48975e1b71c29a56964e5298c1b9165a573"
         }
       ],
-      "sourceDigest": "h1:XBrobIIGQ+1qfL9KqSSfaI0zawU3NnTQ6LdquHaN0Oo=",
+      "sourceDigest": "h1:PZDw1le4/4u6IQ5zDvoAC3k4tbsCfBEtGwsssVVeKjg=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-21"
+      "measuredAt": "2026-11-24"
     }
   ]
 }

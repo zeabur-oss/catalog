@@ -15,13 +15,13 @@
         {
           "workload": "keda-admission-webhooks",
           "kind": "Deployment",
-          "memory": "10Mi",
+          "memory": "9Mi",
           "cpu": "0"
         },
         {
           "workload": "keda-operator",
           "kind": "Deployment",
-          "memory": "33Mi",
+          "memory": "31Mi",
           "cpu": "1m"
         },
         {
@@ -37,8 +37,8 @@
           "version": "2.21.0"
         }
       ],
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I=",
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "k3s",
@@ -66,7 +66,7 @@
         {
           "workload": "keda-operator-metrics-apiserver",
           "kind": "Deployment",
-          "memory": "33Mi",
+          "memory": "31Mi",
           "cpu": "2m"
         }
       ],
@@ -76,8 +76,8 @@
           "version": "2.21.0"
         }
       ],
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I=",
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kind",
@@ -98,8 +98,8 @@
         {
           "workload": "keda-operator",
           "kind": "Deployment",
-          "memory": "31Mi",
-          "cpu": "1m"
+          "memory": "29Mi",
+          "cpu": "2m"
         },
         {
           "workload": "keda-operator-metrics-apiserver",
@@ -114,8 +114,8 @@
           "version": "2.21.0"
         }
       ],
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I=",
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kind",
@@ -142,8 +142,8 @@
         {
           "workload": "keda-operator-metrics-apiserver",
           "kind": "Deployment",
-          "memory": "29Mi",
-          "cpu": "2m"
+          "memory": "28Mi",
+          "cpu": "3m"
         }
       ],
       "versions": [
@@ -152,8 +152,8 @@
           "version": "2.21.0"
         }
       ],
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I=",
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kind",
@@ -168,20 +168,20 @@
         {
           "workload": "keda-admission-webhooks",
           "kind": "Deployment",
-          "memory": "9Mi",
+          "memory": "10Mi",
           "cpu": "0"
         },
         {
           "workload": "keda-operator",
           "kind": "Deployment",
-          "memory": "29Mi",
+          "memory": "30Mi",
           "cpu": "1m"
         },
         {
           "workload": "keda-operator-metrics-apiserver",
           "kind": "Deployment",
           "memory": "31Mi",
-          "cpu": "3m"
+          "cpu": "2m"
         }
       ],
       "versions": [
@@ -190,8 +190,8 @@
           "version": "2.21.0"
         }
       ],
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I=",
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kind",
@@ -212,7 +212,7 @@
         {
           "workload": "keda-operator",
           "kind": "Deployment",
-          "memory": "30Mi",
+          "memory": "31Mi",
           "cpu": "1m"
         },
         {
@@ -228,8 +228,8 @@
           "version": "2.21.0"
         }
       ],
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I=",
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kubesolo",
@@ -257,8 +257,8 @@
         {
           "workload": "keda-operator-metrics-apiserver",
           "kind": "Deployment",
-          "memory": "29Mi",
-          "cpu": "3m"
+          "memory": "30Mi",
+          "cpu": "2m"
         }
       ],
       "versions": [
@@ -267,11 +267,11 @@
           "version": "2.21.0"
         }
       ],
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk=",
+      "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kubesolo",
@@ -299,8 +299,8 @@
         {
           "workload": "keda-operator-metrics-apiserver",
           "kind": "Deployment",
-          "memory": "30Mi",
-          "cpu": "3m"
+          "memory": "29Mi",
+          "cpu": "2m"
         }
       ],
       "versions": [
@@ -309,11 +309,11 @@
           "version": "2.21.0"
         }
       ],
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk=",
+      "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "rke2",
@@ -351,11 +351,11 @@
           "version": "2.21.0"
         }
       ],
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk=",
+      "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "rke2",
@@ -377,7 +377,7 @@
         {
           "workload": "keda-operator",
           "kind": "Deployment",
-          "memory": "30Mi",
+          "memory": "31Mi",
           "cpu": "1m"
         },
         {
@@ -393,11 +393,11 @@
           "version": "2.21.0"
         }
       ],
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk=",
+      "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     }
   ]
 }
