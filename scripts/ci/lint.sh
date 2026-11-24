@@ -11,4 +11,3 @@ fi
 shellcheck scripts/ci/*.sh
 scripts/ci/patterns.sh
 jactionlint
-./scripts/ci/patterns.sh
