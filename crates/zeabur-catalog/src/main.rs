@@ -1,6 +1,8 @@
 //! Zeabur Catalog's command. Run it from the repository root.
 //!
 //! - `zeabur-catalog check` prints the problems of the catalog's files and fails if there are any.
+//! - `zeabur-catalog render [--out <dir>] [<id>…]` renders each release of each component on each
+//!   profile and Kubernetes version into `out/render/` and checks the objects with kubeconform.
 //! - `zeabur-catalog schema` writes `schema/v1/` and `types/v1/catalog.ts` from the types of
 //!   `zeabur-catalog-format`.
 //! - `zeabur-catalog licenses-update` reads the SPDX License List's `licenses.json` from stdin and
@@ -12,6 +14,7 @@ use std::process::ExitCode;
 mod check;
 mod licenses;
 mod policy;
+mod render;
 mod templates;
 mod values;
 
@@ -24,9 +27,10 @@ fn main() -> ExitCode {
         .as_slice()
     {
         ["check"] => check(),
+        ["render", rest @ ..] => render(rest),
         ["schema"] => write(),
         ["licenses-update"] => licenses_update(),
-        _ => Err("usage: zeabur-catalog check|schema|licenses-update".to_owned()),
+        _ => Err("usage: zeabur-catalog check|render|schema|licenses-update".to_owned()),
     };
     match result {
         Ok(()) => ExitCode::SUCCESS,
@@ -39,6 +43,22 @@ fn main() -> ExitCode {
 
 fn check() -> Result<(), String> {
     let problems = check::check(std::path::Path::new("."))?;
+    for problem in &problems {
+        output::error(&problem.to_string());
+    }
+    match problems.len() {
+        0 => Ok(()),
+        n => Err(format!("{n} problems")),
+    }
+}
+
+fn render(args: &[&str]) -> Result<(), String> {
+    let (out, ids) = match args {
+        ["--out", out, ids @ ..] => (*out, ids),
+        ids => ("out/render", ids),
+    };
+    let ids: Vec<String> = ids.iter().map(|&id| id.to_owned()).collect();
+    let problems = render::render(std::path::Path::new("."), &ids, std::path::Path::new(out))?;
     for problem in &problems {
         output::error(&problem.to_string());
     }
@@ -71,5 +91,10 @@ mod output {
     #[expect(clippy::print_stderr, reason = "the output module of the command")]
     pub(crate) fn error(message: &str) {
         eprintln!("zeabur-catalog: {message}");
+    }
+
+    #[expect(clippy::print_stderr, reason = "the output module of the command")]
+    pub(crate) fn info(message: &str) {
+        eprintln!("{message}");
     }
 }

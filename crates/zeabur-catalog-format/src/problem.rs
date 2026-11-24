@@ -48,6 +48,8 @@ pub enum ProblemKind {
     Policy(PolicyProblem),
     /// A Helm value no comment explains.
     Values(ValuesProblem),
+    /// The objects a component renders into.
+    Render(RenderProblem),
 }
 
 impl fmt::Display for ProblemKind {
@@ -60,6 +62,7 @@ impl fmt::Display for ProblemKind {
             Self::Template(p) => p.fmt(f),
             Self::Policy(p) => p.fmt(f),
             Self::Values(p) => p.fmt(f),
+            Self::Render(p) => p.fmt(f),
         }
     }
 }
@@ -103,6 +106,65 @@ impl From<PolicyProblem> for ProblemKind {
 impl From<ValuesProblem> for ProblemKind {
     fn from(p: ValuesProblem) -> Self {
         Self::Values(p)
+    }
+}
+
+impl From<RenderProblem> for ProblemKind {
+    fn from(p: RenderProblem) -> Self {
+        Self::Render(p)
+    }
+}
+
+/// One rendering of a release: on a profile, for a Kubernetes version.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Rendering {
+    /// The release.
+    pub release: String,
+    /// The profile.
+    pub profile: Profile,
+    /// The Kubernetes version.
+    pub version: String,
+}
+
+impl fmt::Display for Rendering {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let profile = self.profile.as_str();
+        write!(f, "{} {profile} {}", self.release, self.version)
+    }
+}
+
+/// What rendering a component and checking its objects finds.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RenderProblem {
+    /// The release does not render.
+    Failed {
+        /// The rendering.
+        on: Rendering,
+        /// Why.
+        message: String,
+    },
+    /// A CRD of the objects gives no schema for kubeconform.
+    CrdSchemas {
+        /// The rendering.
+        on: Rendering,
+        /// Why.
+        message: String,
+    },
+    /// kubeconform refuses objects rendered for a Kubernetes version, or does not run.
+    Kubeconform {
+        /// What kubeconform reports.
+        message: String,
+    },
+}
+
+impl fmt::Display for RenderProblem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Failed { on, message } | Self::CrdSchemas { on, message } => {
+                write!(f, "{on}: {message}")
+            }
+            Self::Kubeconform { message } => write!(f, "kubeconform: {message}"),
+        }
     }
 }
 
