@@ -48,7 +48,7 @@ description: 建立符合標準的範本，完成本機檢查後提交 Pull Requ
 執行以下指令：
 
 ```sh
-go run ./tools/cmd/catalog validate
+cargo run -p zeabur-catalog -- check
 go run ./tools/cmd/catalog template lint -values values.json \
   -domain app.example.test -cluster-issuer letsencrypt <id>
 go run ./tools/cmd/catalog e2e -tier full <id>

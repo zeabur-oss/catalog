@@ -51,29 +51,6 @@ func TestInstallOrder(t *testing.T) {
 	}
 }
 
-func TestUnexplained(t *testing.T) {
-	got := unexplained(`
-# why a
-a: 1
-b: 2
-c:
-  # covers the block
-  d: 1
-  e: 2
-f: 3 # why f
-`)
-	if !reflect.DeepEqual(got, []string{"b"}) {
-		t.Errorf("got %v", got)
-	}
-}
-
-func TestLicenseIDs(t *testing.T) {
-	got := licenseIDs("(MIT OR Apache-2.0) AND GPL-2.0+")
-	if !reflect.DeepEqual(got, []string{"MIT", "Apache-2.0", "GPL-2.0"}) {
-		t.Errorf("got %v", got)
-	}
-}
-
 func TestReplace(t *testing.T) {
 	got, err := replace([]byte("server: https://prod/dir\n---\nserver: https://prod/dir"),
 		map[string]string{"https://prod/dir": "https://staging/dir"})

@@ -1,5 +1,5 @@
 # Each check job runs scripts/ci/<job>.sh in the Nix dev shell, the same as locally: Go tests and
-# lint, then validate, render, template lint and a server-side dry run on a local API server, also of
+# lint, then zeabur-catalog check, render, template lint and a server-side dry run on a local API server, also of
 # an upgrade from the pull request's base and a profile switch, then nix build .#release. Rulesets
 # require check / ok. docs runs the website's check of docs/ (locally: bun scripts/docs-check.ts
 # <this checkout> in the website).

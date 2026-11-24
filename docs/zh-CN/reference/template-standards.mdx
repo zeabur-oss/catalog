@@ -3,13 +3,13 @@ title: 模板标准
 description: 按照模板标准新增或修改 Zeabur Catalog 模板，检查安全、网络、数据、升级与测试配置。
 ---
 
-Zeabur Catalog 的每个模板都必须符合以下规则。新增或修改模板时，使用 `catalog validate`、`catalog template lint` 和安装测试检查其中多项规则，其余规则由你逐项确认。查阅上游文档时，请对照模板固定使用的确切版本。
+Zeabur Catalog 的每个模板都必须符合以下规则。新增或修改模板时，使用 `zeabur-catalog check`、`catalog template lint` 和安装测试检查其中多项规则，其余规则由你逐项确认。查阅上游文档时，请对照模板固定使用的确切版本。
 
 ## `template.yaml`
 
 - `metadata` 必须列出应用名称、许可证、主页与 `docs`。`docs` 是上游使用文档的 https 链接，不是源代码仓库。
 - `metadata.summary` 用一句大白话说明这是什么应用，给挑选模板的人看。`zh-TW` 与 `zh-CN` 的摘要写在 `metadata.locales`。
-- 每个模板都有 `README.md`、`README.zh-TW.md` 和 `README.zh-CN.md`，写给刚部署完的人看。二级标题只能用这几个，顺序固定：英文是 `## Introduction`、`## Getting started`、`## Configuration`、`## Troubleshooting`，zh-TW 是 `簡介`、`開始使用`、`設定`、`疑難排解`，zh-CN 是 `简介`、`开始使用`、`配置`、`故障排除`。前两个必填。简介说明这是什么应用、模板运行了什么。开始使用写成编号步骤：从哪里打开、第一个人怎么登录，以及每个自动生成的值放在哪个 Secret 的哪个 key。配置和故障排除收录用户常遇到的任务或问题，每项一个 `###`，并链接到上游出处。步骤以 Zeabur 开源版界面来写，例如自动生成的值到服务的**变量**标签页查看；只有给不用 Zeabur 开源版的读者，或 Zeabur 开源版没有对应页面时，才写 kubectl 命令。每个步骤都要对照上游文档和模板的 manifests 确认。`catalog validate` 会检查文件、标题，以及开始使用有没有写出每个 `generate` 输入的 Secret。
+- 每个模板都有 `README.md`、`README.zh-TW.md` 和 `README.zh-CN.md`，写给刚部署完的人看。二级标题只能用这几个，顺序固定：英文是 `## Introduction`、`## Getting started`、`## Configuration`、`## Troubleshooting`，zh-TW 是 `簡介`、`開始使用`、`設定`、`疑難排解`，zh-CN 是 `简介`、`开始使用`、`配置`、`故障排除`。前两个必填。简介说明这是什么应用、模板运行了什么。开始使用写成编号步骤：从哪里打开、第一个人怎么登录，以及每个自动生成的值放在哪个 Secret 的哪个 key。配置和故障排除收录用户常遇到的任务或问题，每项一个 `###`，并链接到上游出处。步骤以 Zeabur 开源版界面来写，例如自动生成的值到服务的**变量**标签页查看；只有给不用 Zeabur 开源版的读者，或 Zeabur 开源版没有对应页面时，才写 kubectl 命令。每个步骤都要对照上游文档和模板的 manifests 确认。`zeabur-catalog check` 会检查文件、标题，以及开始使用有没有写出每个 `generate` 输入的 Secret。
 - 每个服务都必须指定安全 profile（`restricted` 或 `baseline`）、资源请求与上限，以及端口。服务名称必须与对应的 Deployment、StatefulSet 或数据库对象名称相同。服务的 CPU 与内存数值必须是该对象所有容器的总和，端口则必须对应容器的命名端口。`catalog template lint` 会检查资源总和与端口。
 - `security` 必须列出管理员在部署前需要知道的风险，每个风险都附上降低风险的措施。
 - `smoke` 必须包含能证明应用正常运行的冒烟测试（smoke check），包括资源状态条件，以及对运行中服务的 HTTP 或 SQL 检查。

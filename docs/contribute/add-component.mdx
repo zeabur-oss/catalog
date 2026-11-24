@@ -39,7 +39,7 @@ Specify configuration values for each of the two profiles (configuration sets), 
 Run the following commands:
 
 ```sh
-go run ./tools/cmd/catalog validate          # schema, license, references, comments
+cargo run -p zeabur-catalog -- check         # schema, license, references, comments
 go run ./tools/cmd/catalog render            # helm template + kubeconform
 go run ./tools/cmd/catalog e2e -tier check   # what every pull request runs
 go run ./tools/cmd/catalog e2e -tier full <id>

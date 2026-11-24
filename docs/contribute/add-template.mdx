@@ -48,7 +48,7 @@ Prepare `values.json`. It must contain a JSON object with a value for every inpu
 Run the following commands:
 
 ```sh
-go run ./tools/cmd/catalog validate
+cargo run -p zeabur-catalog -- check
 go run ./tools/cmd/catalog template lint -values values.json \
   -domain app.example.test -cluster-issuer letsencrypt <id>
 go run ./tools/cmd/catalog e2e -tier full <id>

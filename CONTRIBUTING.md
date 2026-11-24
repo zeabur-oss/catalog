@@ -28,7 +28,7 @@ existing branch: `git rebase --signoff main`, then force-push.
 - Never copy secrets, account IDs, domains, IP addresses or cloud-specific
   settings into values.
 - Do not edit `measurements/`; CI writes it.
-- Run `go run ./tools/cmd/catalog validate` and `go run ./tools/cmd/catalog render`
+- Run `cargo run -p zeabur-catalog -- check` and `go run ./tools/cmd/catalog render`
   before pushing, and `go run ./tools/cmd/catalog template lint <id>` for a
   template (inside `nix develop`).
 

@@ -593,4 +593,74 @@ mod tests {
             ]
         );
     }
+
+    #[test]
+    fn a_template_readme_has_the_sections_and_names_generated_secrets() {
+        let root = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../.."));
+        let config = Config::read(root).unwrap();
+        let catalog = zeabur_catalog_format::Catalog::read(root).unwrap();
+        let template = &catalog.templates["browserless"].template;
+        let id = Path::new("templates/browserless");
+        let raw: Value = serde_saphyr::from_str(
+            &fs::read_to_string(root.join(id).join("template.yaml")).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(template_problems(&config, root, id, template, &raw), []);
+
+        let scratch = root
+            .join("target")
+            .join(format!("catalog-readme-{}", std::process::id()));
+        let dir = Path::new("browserless");
+        fs::create_dir_all(scratch.join(dir)).unwrap();
+        for name in ["template.yaml", "manifests.yaml", "README.zh-CN.md"] {
+            fs::copy(root.join(id).join(name), scratch.join(dir).join(name)).unwrap();
+        }
+        fs::write(
+            scratch.join(dir).join("README.md"),
+            "# Browserless\n\n## Introduction\n\nHeadless Chrome.\n\n## Usage\n\nConnect.\n",
+        )
+        .unwrap();
+        fs::write(
+            scratch.join(dir).join("README.zh-TW.md"),
+            "## 簡介\n\n無頭 Chrome。\n\n## 開始使用\n\n部署後就能使用。\n\n## 設定\n\n權杖在 Secret browserless-secrets。\n",
+        )
+        .unwrap();
+        let got = template_problems(&config, &scratch, dir, template, &raw);
+        fs::remove_dir_all(&scratch).unwrap();
+        let english = dir.join("README.md");
+        let found = |file: &Path, want: &dyn Fn(&PolicyProblem) -> bool| {
+            got.iter().any(|p| {
+                p.file == file && matches!(&p.kind, ProblemKind::Policy(kind) if want(kind))
+            })
+        };
+        assert!(
+            found(
+                &english,
+                &|k| matches!(k, PolicyProblem::Level1Heading { line, .. } if line == "# Browserless")
+            ),
+            "{got:?}"
+        );
+        assert!(
+            found(
+                &english,
+                &|k| matches!(k, PolicyProblem::Heading { line, .. } if line == "## Usage")
+            ),
+            "{got:?}"
+        );
+        assert!(
+            found(&english, &|k| *k
+                == PolicyProblem::MissingSection {
+                    heading: "Getting started".to_owned()
+                }),
+            "{got:?}"
+        );
+        assert!(
+            found(&dir.join("README.zh-TW.md"), &|k| matches!(
+                k,
+                PolicyProblem::SecretNotNamed { section, secret, .. }
+                    if section == "開始使用" && secret == "browserless-secrets"
+            )),
+            "{got:?}"
+        );
+    }
 }

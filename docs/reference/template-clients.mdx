@@ -54,7 +54,7 @@ The objects keep the order of `manifests.yaml`. An empty YAML document isn't an 
 
 ## What a template requires
 
-Each entry in `requires` is `{component: <id>}` or `{capability: <capability>}`. The name of an entry is the value of its one field. `catalog validate` checks that each entry matches a component of the release.
+Each entry in `requires` is `{component: <id>}` or `{capability: <capability>}`. The name of an entry is the value of its one field. `zeabur-catalog check` checks that each entry matches a component of the release.
 
 - `{component: <id>}` matches the component with that id.
 - `{capability: <capability>}` matches every component whose `provides.capability` is that capability.

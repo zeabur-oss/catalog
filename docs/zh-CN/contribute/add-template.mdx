@@ -48,7 +48,7 @@ description: 创建符合模板标准的模板，完成本地检查并提交 Pul
 运行以下命令：
 
 ```sh
-go run ./tools/cmd/catalog validate
+cargo run -p zeabur-catalog -- check
 go run ./tools/cmd/catalog template lint -values values.json \
   -domain app.example.test -cluster-issuer letsencrypt <id>
 go run ./tools/cmd/catalog e2e -tier full <id>

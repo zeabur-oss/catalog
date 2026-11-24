@@ -1,6 +1,5 @@
 // Command catalog checks, renders, tests and packages the catalog.
 //
-//	catalog validate                    schema, licenses, references, value comments
 //	catalog render [ids]                helm template every profile and Kubernetes version, then kubeconform
 //	catalog list -tier smoke|full [-ids <ids>|-since <ref>]  e2e CI matrix as JSON; full without IDs lists what is stale
 //	catalog e2e -tier check|smoke|full [-cluster current] [-since <ref>|ids]  run a test tier (see tier.go)
@@ -16,7 +15,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -37,7 +35,6 @@ type repo struct {
 }
 
 var commands = map[string]func(*flag.FlagSet, *repo) error{
-	"validate":   validate,
 	"render":     render,
 	"list":       list,
 	"e2e":        e2e,
@@ -51,7 +48,7 @@ var commands = map[string]func(*flag.FlagSet, *repo) error{
 
 func main() {
 	if len(os.Args) < 2 || commands[os.Args[1]] == nil {
-		fmt.Fprintln(os.Stderr, "usage: catalog validate|render|list|e2e|budget|api|compat|crosscheck|merge|template [flags] [ids]")
+		fmt.Fprintln(os.Stderr, "usage: catalog render|list|e2e|budget|api|compat|crosscheck|merge|template [flags] [ids]")
 		os.Exit(2)
 	}
 	if dir, err := os.UserCacheDir(); err == nil {
@@ -81,21 +78,6 @@ func main() {
 		slog.Error("catalog "+name+" failed", "err", err)
 		os.Exit(1)
 	}
-}
-
-func validate(fs *flag.FlagSet, r *repo) error {
-	fs.Parse(os.Args[2:])
-	if err := check(r); err != nil {
-		return err
-	}
-	fmt.Println("ok")
-	return nil
-}
-
-// check checks the components, the templates and config/e2e.yaml's representative list.
-func check(r *repo) error {
-	_, repErr := representative(r)
-	return errors.Join(catalog.Check(".", r.cat), templates.Check(".", r.cat, r.templates), repErr)
 }
 
 // list prints the e2e CI matrix of a tier. For smoke: one job per group, with
