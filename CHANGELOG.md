@@ -2,6 +2,108 @@
 
 All notable changes to this catalog are documented in this file; each section comes from the change files in `.changeset/` (CONTRIBUTING.md, "Releases").
 
+## 0.6.2 (2026-11-25)
+
+### Features
+
+#### API v1 has template measurements and READMEs
+
+`v1/templates/<id>.json` has the template's `measurements`, as `v1/components/<id>.json` has the component's. Both have `readmes`, the locales of the READMEs that the API now publishes as Markdown files under `v1/components/<id>/` and `v1/templates/<id>/`. A reader no longer reads the repository for them.
+
+#### Zeabur Builder follows a rotated zot CA without a reinstall
+
+`provides.registry.ca` of `zeabur-builder` now names `builder-system/registry-ca`, a Secret that holds zot's CA and no key. Zeabur Builder keeps it in step with `zot/zot-tls`.
+
+The component installs Zeabur Builder 0.3.0, whose registry values are `tokenSecretRef` and `caSecretRef`.
+
+#### zeabur-catalog api writes the static API
+
+`zeabur-catalog api --version <v> [--out <dir>]` writes `catalog.json`, `components/<id>.json`, `templates/<id>.json` and the schemas to `<dir>/v1/`, then checks every file against the schemas. The release builds the API with it instead of the Go harness. Its files hold the same data as before: the declarations and templates as written, the render of each profile at the newest Kubernetes version, the measurements, and requests, limits and storage as Kubernetes writes them.
+
+#### zeabur-catalog check
+
+Add `zeabur-catalog check`, which checks the component and template files against their schemas and that the components fit together.
+
+#### zeabur-catalog check reads the repository policy
+
+`zeabur-catalog check` also checks licences, the languages of every `locales` map, READMEs and `kubeVersion`. `zeabur-catalog-engine` has the `kubeVersion` reader that Zeabur used.
+
+#### zeabur-catalog check reads the template rules
+
+`zeabur-catalog check` checks each template's manifests, inputs, ID, services, version and requires. `zeabur-catalog-engine` refuses a template that uses an input it is not given or a domain no service routes.
+
+#### zeabur-catalog check wants a comment on every Helm value
+
+`zeabur-catalog check` reports each Helm value that a component sets without a comment saying why.
+
+#### zeabur-catalog render
+
+`zeabur-catalog render` renders each release of each component on each profile and Kubernetes version into `out/render/`, and checks the objects with kubeconform.
+
+#### zeabur-catalog-engine checks pods against the Pod Security Standards
+
+The new `pod_security` module of `zeabur-catalog-engine` runs the checks of Pod Security Admission at their latest version, with the same messages, and finds the pod of each workload kind.
+
+#### Zeabur and the catalog render templates with the same code
+
+Add `zeabur-catalog-engine` with the template renderer that Zeabur used.
+
+#### An optional utoipa feature in zeabur-catalog-format
+
+With the `utoipa` feature, `InputValue` implements `utoipa::ToSchema`, so a reader that builds its OpenAPI document with utoipa uses the type itself instead of a copy. The feature is off by default.
+
+#### A link for every LicenseRef- licence
+
+Component and template metadata have `licenseUrls`: the HTTPS URL of the text of each `LicenseRef-` licence in `license`, by its id. Every `LicenseRef-` id needs one, and the field names no id that `license` does not use. API v1 carries the field, so a client can link the licence. The n8n templates now spell their licence `LicenseRef-n8n-sustainable-use` in every template.
+
+#### zeabur-catalog render checks pods, images and webhooks
+
+`zeabur-catalog render` now runs the render rules that `catalog render` ran: every image has a digest unless `unpinnedImages` names it, a chart gives the same objects on two renders, and every pod meets the component's Pod Security level. The Pod Security checks come from `zeabur-catalog-engine`.
+
+A component that serves an admission webhook must declare `health`, so that what needs the webhook installs only after it answers. `catalog render` is removed.
+
+#### The schemas come from the Rust types, with TypeScript types
+
+`schema/v1/` is now generated from the types of `crates/zeabur-catalog-format` by `cargo run -p zeabur-catalog -- schema`, which also writes `types/v1/catalog.ts`, the TypeScript types of the same files. The Go `catalog schema` command is gone.
+
+Every file of the catalog passes them, as it passed the schemas before. Their `$defs` have new names, such as `Generate` for `generate`, so a `$ref` into another schema's `$defs` needs the new name. An internally tagged object, such as a release, now lists its fields in each variant of its `oneOf`.
+
+A quantity in `resources.work` is a string, such as `cpu: "1"` or `memory: 256Mi`, as the Rust reader reads it. A number there no longer passes the schema. This changes a field's type inside v1, which is why this release is a new baseline: every published file already writes its quantities as strings.
+
+CI no longer compares the text of the schemas with the latest release's. It checks that every file of the new API passes the latest release's schemas, with new fields and values allowed, and its own, because readers depend on the data. A schema change that no file of the catalog uses is not seen by the check. These schemas are the new baseline.
+
+#### zeabur-catalog digest prints the source digest
+
+`zeabur-catalog digest <dir>…` prints the `sourceDigest` of each component or template directory, from the new `digest` module of `zeabur-catalog-engine`. The digests are the same as before. The Go harness calls it, so the API files and the measurements share one definition.
+
+#### The check's problems are typed
+
+`zeabur-catalog-format` has `problem::Problem`: the file, the place in it as a `FieldPath` (written `health[0].condition`) and a `ProblemKind`, which wraps the enum of the check that found it. `check::from_yaml` takes the file's path and returns these, and `ReadError::Check` holds them. A reader matches on the kind instead of the text.
+
+### Fixes
+
+- Ghost, Halo, OpenList and Uptime Kuma declare their domain, so their Ingress gets a host
+
+#### CI checks the catalog with zeabur-catalog check
+
+`catalog validate` is removed. Run `cargo run -p zeabur-catalog -- check` instead.
+
+#### zeabur-catalog compat checks the API against the published schemas
+
+`zeabur-catalog compat <published> <api>` replaces the Go `catalog compat`. Every file of the new API must pass the schemas of the latest published release, which accept a field or a value they do not know, and its own schemas. The Go `catalog api` and `catalog compat` commands are removed.
+
+#### zeabur-catalog-engine writes resource quantities as Kubernetes does
+
+The new `quantity` module gives the canonical text of a resource quantity, as `resource.Quantity` of apimachinery v0.37.2 writes it: `0.5` becomes `500m`, `1024Mi` becomes `1Gi`, and a value already in canonical form keeps its text. The API files will write the requests and limits of a rendered workload with it.
+
+#### licenses-update regenerates the licence list
+
+`config/licenses.yaml` named a `licenses-update` command that did not exist. `zeabur-catalog licenses-update` now writes the list: `curl -sSL https://spdx.org/licenses/licenses.json | cargo run -p zeabur-catalog -- licenses-update`. On SPDX License List 3.29.0 it writes the committed list.
+
+#### A template memory writes kilo as lowercase `k`
+
+`resources.memory` in a template takes the Kubernetes suffixes: `64k` passes and `64K`, which the API server refuses, fails `zeabur-catalog check`. `Pi`, `Ei`, `P` and `E` pass too.
+
 ## 0.6.1 (2026-11-22)
 
 ### Fixes
