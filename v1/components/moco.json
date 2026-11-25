@@ -1,6 +1,6 @@
 {
   "id": "moco",
-  "sourceDigest": "h1:WT758lhpwn6wCb4Z2ikRdPeG9dMi8yKq733BAs8bbJg=",
+  "sourceDigest": "h1:7JDmlp5vaEn6XGAlHvo0j4JJ6TGuR0k+LwKHHpeogmg=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -28,8 +28,20 @@
       "rke2",
       "kubesolo"
     ],
+    "health": [
+      {
+        "advice": "MySQL clusters can't be created or changed until the MOCO controller and its webhook run. Check its pods with kubectl -n moco-system get pods.",
+        "name": "controller",
+        "resource": {
+          "kind": "Deployment",
+          "name": "moco-controller",
+          "namespace": "moco-system"
+        },
+        "timeout": "60s"
+      }
+    ],
     "kind": "Component",
-    "kubeVersion": "\u003e=1.22.0-0",
+    "kubeVersion": ">=1.22.0-0",
     "leftovers": [
       "customresourcedefinitions",
       "persistentvolumeclaims"
@@ -79,7 +91,7 @@
     },
     "smoke": [
       {
-        "manifest": "# Proves MySQL runs under restricted Pod Security.\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: catalog-smoke\n  labels: {pod-security.kubernetes.io/enforce: restricted}\n---\napiVersion: moco.cybozu.com/v1beta2\nkind: MySQLCluster\nmetadata: {name: smoke, namespace: catalog-smoke}\nspec:\n  replicas: 1\n  podTemplate:\n    spec:\n      securityContext:\n        runAsNonRoot: true\n        seccompProfile: {type: RuntimeDefault}\n      containers:\n        - name: mysqld\n          image: ghcr.io/cybozu-go/moco/mysql:8.4.10.1\n          securityContext:\n            runAsUser: 10000\n            runAsGroup: 10000\n            allowPrivilegeEscalation: false\n            capabilities: {drop: [ALL]}\n    overwriteContainers:\n      - name: agent\n        securityContext: \u0026system\n          runAsUser: 10000\n          runAsGroup: 10000\n          allowPrivilegeEscalation: false\n          capabilities: {drop: [ALL]}\n      - name: moco-init\n        securityContext: *system\n      - name: copy-moco-init\n        securityContext: *system\n      - name: slow-log\n        securityContext: *system\n  volumeClaimTemplates:\n    - metadata: {name: mysql-data}\n      spec:\n        accessModes: [ReadWriteOnce]\n        resources: {requests: {storage: 1Gi}}\n",
+        "manifest": "# Proves MySQL runs under restricted Pod Security.\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: catalog-smoke\n  labels: {pod-security.kubernetes.io/enforce: restricted}\n---\napiVersion: moco.cybozu.com/v1beta2\nkind: MySQLCluster\nmetadata: {name: smoke, namespace: catalog-smoke}\nspec:\n  replicas: 1\n  podTemplate:\n    spec:\n      securityContext:\n        runAsNonRoot: true\n        seccompProfile: {type: RuntimeDefault}\n      containers:\n        - name: mysqld\n          image: ghcr.io/cybozu-go/moco/mysql:8.4.10.1\n          securityContext:\n            runAsUser: 10000\n            runAsGroup: 10000\n            allowPrivilegeEscalation: false\n            capabilities: {drop: [ALL]}\n    overwriteContainers:\n      - name: agent\n        securityContext: &system\n          runAsUser: 10000\n          runAsGroup: 10000\n          allowPrivilegeEscalation: false\n          capabilities: {drop: [ALL]}\n      - name: moco-init\n        securityContext: *system\n      - name: copy-moco-init\n        securityContext: *system\n      - name: slow-log\n        securityContext: *system\n  volumeClaimTemplates:\n    - metadata: {name: mysql-data}\n      spec:\n        accessModes: [ReadWriteOnce]\n        resources: {requests: {storage: 1Gi}}\n",
         "name": "one-instance",
         "timeout": "600s",
         "wait": [
@@ -95,30 +107,6 @@
   "render": {
     "kubernetesVersion": "1.37.0",
     "profiles": {
-      "multi-node": {
-        "workloads": [
-          {
-            "release": "moco",
-            "namespace": "moco-system",
-            "name": "moco-controller",
-            "kind": "Deployment",
-            "replicas": 2,
-            "containers": [
-              {
-                "name": "moco-controller",
-                "requests": {
-                  "cpu": "10m",
-                  "memory": "64Mi"
-                },
-                "limits": {
-                  "memory": "512Mi"
-                }
-              }
-            ]
-          }
-        ],
-        "persistentVolumeClaims": []
-      },
       "single-node": {
         "workloads": [
           {
@@ -136,6 +124,30 @@
                 },
                 "limits": {
                   "memory": "256Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      },
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "moco",
+            "namespace": "moco-system",
+            "name": "moco-controller",
+            "kind": "Deployment",
+            "replicas": 2,
+            "containers": [
+              {
+                "name": "moco-controller",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "64Mi"
+                },
+                "limits": {
+                  "memory": "512Mi"
                 }
               }
             ]
@@ -160,7 +172,7 @@
         {
           "workload": "moco-controller",
           "kind": "Deployment",
-          "memory": "21Mi",
+          "memory": "22Mi",
           "cpu": "1m"
         }
       ],
@@ -170,12 +182,12 @@
           "version": "0.28.0"
         }
       ],
-      "sourceDigest": "h1:WT758lhpwn6wCb4Z2ikRdPeG9dMi8yKq733BAs8bbJg=",
+      "sourceDigest": "h1:7JDmlp5vaEn6XGAlHvo0j4JJ6TGuR0k+LwKHHpeogmg=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "k3s",
@@ -191,7 +203,7 @@
         {
           "workload": "moco-controller",
           "kind": "Deployment",
-          "memory": "23Mi",
+          "memory": "21Mi",
           "cpu": "1m"
         }
       ],
@@ -201,12 +213,12 @@
           "version": "0.28.0"
         }
       ],
-      "sourceDigest": "h1:WT758lhpwn6wCb4Z2ikRdPeG9dMi8yKq733BAs8bbJg=",
+      "sourceDigest": "h1:7JDmlp5vaEn6XGAlHvo0j4JJ6TGuR0k+LwKHHpeogmg=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kind",
@@ -231,12 +243,12 @@
           "version": "0.28.0"
         }
       ],
-      "sourceDigest": "h1:WT758lhpwn6wCb4Z2ikRdPeG9dMi8yKq733BAs8bbJg=",
+      "sourceDigest": "h1:7JDmlp5vaEn6XGAlHvo0j4JJ6TGuR0k+LwKHHpeogmg=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kind",
@@ -261,12 +273,12 @@
           "version": "0.28.0"
         }
       ],
-      "sourceDigest": "h1:WT758lhpwn6wCb4Z2ikRdPeG9dMi8yKq733BAs8bbJg=",
+      "sourceDigest": "h1:7JDmlp5vaEn6XGAlHvo0j4JJ6TGuR0k+LwKHHpeogmg=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kind",
@@ -291,12 +303,12 @@
           "version": "0.28.0"
         }
       ],
-      "sourceDigest": "h1:WT758lhpwn6wCb4Z2ikRdPeG9dMi8yKq733BAs8bbJg=",
+      "sourceDigest": "h1:7JDmlp5vaEn6XGAlHvo0j4JJ6TGuR0k+LwKHHpeogmg=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kind",
@@ -321,12 +333,12 @@
           "version": "0.28.0"
         }
       ],
-      "sourceDigest": "h1:WT758lhpwn6wCb4Z2ikRdPeG9dMi8yKq733BAs8bbJg=",
+      "sourceDigest": "h1:7JDmlp5vaEn6XGAlHvo0j4JJ6TGuR0k+LwKHHpeogmg=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kubesolo",
@@ -352,7 +364,7 @@
           "version": "0.28.0"
         }
       ],
-      "sourceDigest": "h1:WT758lhpwn6wCb4Z2ikRdPeG9dMi8yKq733BAs8bbJg=",
+      "sourceDigest": "h1:7JDmlp5vaEn6XGAlHvo0j4JJ6TGuR0k+LwKHHpeogmg=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
@@ -360,7 +372,7 @@
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kubesolo",
@@ -386,7 +398,7 @@
           "version": "0.28.0"
         }
       ],
-      "sourceDigest": "h1:WT758lhpwn6wCb4Z2ikRdPeG9dMi8yKq733BAs8bbJg=",
+      "sourceDigest": "h1:7JDmlp5vaEn6XGAlHvo0j4JJ6TGuR0k+LwKHHpeogmg=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
@@ -394,7 +406,7 @@
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "rke2",
@@ -410,7 +422,7 @@
         {
           "workload": "moco-controller",
           "kind": "Deployment",
-          "memory": "22Mi",
+          "memory": "24Mi",
           "cpu": "1m"
         }
       ],
@@ -420,7 +432,7 @@
           "version": "0.28.0"
         }
       ],
-      "sourceDigest": "h1:WT758lhpwn6wCb4Z2ikRdPeG9dMi8yKq733BAs8bbJg=",
+      "sourceDigest": "h1:7JDmlp5vaEn6XGAlHvo0j4JJ6TGuR0k+LwKHHpeogmg=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
@@ -428,7 +440,7 @@
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "rke2",
@@ -454,7 +466,7 @@
           "version": "0.28.0"
         }
       ],
-      "sourceDigest": "h1:WT758lhpwn6wCb4Z2ikRdPeG9dMi8yKq733BAs8bbJg=",
+      "sourceDigest": "h1:7JDmlp5vaEn6XGAlHvo0j4JJ6TGuR0k+LwKHHpeogmg=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
@@ -462,7 +474,12 @@
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
   ]
 }

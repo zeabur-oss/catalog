@@ -1,6 +1,6 @@
 {
   "id": "lobechat",
-  "sourceDigest": "h1:GDRO7oMuDplsrSlvxcY7TyCC5prOu7FaDcEu2K8VU+0=",
+  "sourceDigest": "h1:k5E9qC0vlyJigCpEOBGPduCRrZF1SQXlPKRq8gBLsgo=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -45,6 +45,9 @@
       "docs": "https://github.com/lobehub/lobe-chat/blob/v1.143.3/docs/self-hosting/environment-variables/basic.mdx",
       "homepage": "https://github.com/lobehub/lobe-chat",
       "license": "LicenseRef-LobeHub-Community",
+      "licenseUrls": {
+        "LicenseRef-LobeHub-Community": "https://github.com/lobehub/lobe-chat/blob/d718de7e1af2dd7281c4eaca70f627e4b9deddb1/LICENSE"
+      },
       "locales": {
         "zh-CN": {
           "summary": "聊天机器人界面，对话存在各自的浏览器里，用访问码保护。"
@@ -139,5 +142,43 @@
       }
     ]
   },
-  "manifests": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: lobechat\n  namespace: '{{ .Namespace }}'\n  labels:\n    app.kubernetes.io/name: lobechat\nspec:\n  replicas: 1\n  strategy:\n    type: Recreate\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: lobechat\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: lobechat\n        app.kubernetes.io/name: lobechat\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1001\n        runAsGroup: 1001\n        fsGroup: 1001\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: lobechat\n        image: docker.io/lobehub/lobe-chat:1.143.3@sha256:b2d2454525523d9f0a19c79661f83ec45f13363dbadd5c1180887e77af35d872\n        ports:\n        - name: http\n          containerPort: 3210\n        env:\n        - name: ACCESS_CODE\n          valueFrom:\n            secretKeyRef:\n              name: lobechat-secrets\n              key: access-code\n        - name: OPENAI_API_KEY\n          valueFrom:\n            secretKeyRef:\n              name: '{{ .Inputs.providerSecret }}'\n              key: api-key\n        - name: ENABLE_AUTH_PROTECTION\n          value: '1'\n        - name: APP_URL\n          value: https://{{ .Domain }}\n        - name: HOSTNAME\n          value: 0.0.0.0\n        - name: PORT\n          value: '3210'\n        - name: SSRF_ALLOW_PRIVATE_IP_ADDRESS\n          value: '0'\n        securityContext:\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n        resources:\n          requests:\n            cpu: 100m\n            memory: 256Mi\n          limits:\n            cpu: '2'\n            memory: 2Gi\n        volumeMounts:\n        - name: tmp\n          mountPath: /tmp\n        - name: cache\n          mountPath: /app/.next/cache\n        readinessProbe:\n          tcpSocket:\n            port: http\n          periodSeconds: 10\n          timeoutSeconds: 3\n          failureThreshold: 6\n        livenessProbe:\n          tcpSocket:\n            port: http\n          periodSeconds: 10\n          timeoutSeconds: 3\n          failureThreshold: 6\n        startupProbe:\n          tcpSocket:\n            port: http\n          periodSeconds: 10\n          timeoutSeconds: 3\n          failureThreshold: 30\n      volumes:\n      - name: tmp\n        emptyDir:\n          sizeLimit: 1Gi\n      - name: cache\n        emptyDir:\n          sizeLimit: 512Mi\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: lobechat\n  namespace: '{{ .Namespace }}'\n  labels:\n    app.kubernetes.io/name: lobechat\nspec:\n  selector:\n    app.kubernetes.io/name: lobechat\n  ports:\n  - name: http\n    port: 3210\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: lobechat\n  namespace: '{{ .Namespace }}'\n  labels:\n    app.kubernetes.io/name: lobechat\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\n    traefik.ingress.kubernetes.io/router.entrypoints: websecure\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts:\n    - '{{ .Domain }}'\n    secretName: lobechat-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: lobechat\n            port:\n              name: http\n"
+  "manifests": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: lobechat\n  namespace: '{{ .Namespace }}'\n  labels:\n    app.kubernetes.io/name: lobechat\nspec:\n  replicas: 1\n  strategy:\n    type: Recreate\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: lobechat\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: lobechat\n        app.kubernetes.io/name: lobechat\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1001\n        runAsGroup: 1001\n        fsGroup: 1001\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: lobechat\n        image: docker.io/lobehub/lobe-chat:1.143.3@sha256:b2d2454525523d9f0a19c79661f83ec45f13363dbadd5c1180887e77af35d872\n        ports:\n        - name: http\n          containerPort: 3210\n        env:\n        - name: ACCESS_CODE\n          valueFrom:\n            secretKeyRef:\n              name: lobechat-secrets\n              key: access-code\n        - name: OPENAI_API_KEY\n          valueFrom:\n            secretKeyRef:\n              name: '{{ .Inputs.providerSecret }}'\n              key: api-key\n        - name: ENABLE_AUTH_PROTECTION\n          value: '1'\n        - name: APP_URL\n          value: https://{{ .Domain }}\n        - name: HOSTNAME\n          value: 0.0.0.0\n        - name: PORT\n          value: '3210'\n        - name: SSRF_ALLOW_PRIVATE_IP_ADDRESS\n          value: '0'\n        securityContext:\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n        resources:\n          requests:\n            cpu: 100m\n            memory: 256Mi\n          limits:\n            cpu: '2'\n            memory: 2Gi\n        volumeMounts:\n        - name: tmp\n          mountPath: /tmp\n        - name: cache\n          mountPath: /app/.next/cache\n        readinessProbe:\n          tcpSocket:\n            port: http\n          periodSeconds: 10\n          timeoutSeconds: 3\n          failureThreshold: 6\n        livenessProbe:\n          tcpSocket:\n            port: http\n          periodSeconds: 10\n          timeoutSeconds: 3\n          failureThreshold: 6\n        startupProbe:\n          tcpSocket:\n            port: http\n          periodSeconds: 10\n          timeoutSeconds: 3\n          failureThreshold: 30\n      volumes:\n      - name: tmp\n        emptyDir:\n          sizeLimit: 1Gi\n      - name: cache\n        emptyDir:\n          sizeLimit: 512Mi\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: lobechat\n  namespace: '{{ .Namespace }}'\n  labels:\n    app.kubernetes.io/name: lobechat\nspec:\n  selector:\n    app.kubernetes.io/name: lobechat\n  ports:\n  - name: http\n    port: 3210\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: lobechat\n  namespace: '{{ .Namespace }}'\n  labels:\n    app.kubernetes.io/name: lobechat\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\n    traefik.ingress.kubernetes.io/router.entrypoints: websecure\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts:\n    - '{{ .Domain }}'\n    secretName: lobechat-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: lobechat\n            port:\n              name: http\n",
+  "measurements": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "lobechat",
+          "kind": "Deployment",
+          "memory": "175Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "image": "docker.io/lobehub/lobe-chat",
+          "version": "1.143.3",
+          "digest": "sha256:b2d2454525523d9f0a19c79661f83ec45f13363dbadd5c1180887e77af35d872"
+        }
+      ],
+      "sourceDigest": "h1:k5E9qC0vlyJigCpEOBGPduCRrZF1SQXlPKRq8gBLsgo=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "measuredAt": "2026-11-24"
+    }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
+  ]
 }

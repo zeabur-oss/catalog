@@ -1,6 +1,6 @@
 {
   "id": "keda",
-  "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk=",
+  "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -31,8 +31,30 @@
       "rke2",
       "kubesolo"
     ],
+    "health": [
+      {
+        "advice": "Nothing is scaled on events until the KEDA operator runs. Check its pods with kubectl -n keda get pods.",
+        "name": "operator",
+        "resource": {
+          "kind": "Deployment",
+          "name": "keda-operator",
+          "namespace": "keda"
+        },
+        "timeout": "60s"
+      },
+      {
+        "advice": "Scaled objects can't be created or changed until the KEDA admission webhook runs. Check its pods with kubectl -n keda get pods.",
+        "name": "webhook",
+        "resource": {
+          "kind": "Deployment",
+          "name": "keda-admission-webhooks",
+          "namespace": "keda"
+        },
+        "timeout": "60s"
+      }
+    ],
     "kind": "Component",
-    "kubeVersion": "\u003e=1.23.0-0",
+    "kubeVersion": ">=1.23.0-0",
     "metadata": {
       "homepage": "https://keda.sh",
       "license": "Apache-2.0",
@@ -74,71 +96,6 @@
   "render": {
     "kubernetesVersion": "1.37.0",
     "profiles": {
-      "multi-node": {
-        "workloads": [
-          {
-            "release": "keda",
-            "namespace": "keda",
-            "name": "keda-operator",
-            "kind": "Deployment",
-            "replicas": 2,
-            "containers": [
-              {
-                "name": "keda-operator",
-                "requests": {
-                  "cpu": "50m",
-                  "memory": "128Mi"
-                },
-                "limits": {
-                  "cpu": "1",
-                  "memory": "512Mi"
-                }
-              }
-            ]
-          },
-          {
-            "release": "keda",
-            "namespace": "keda",
-            "name": "keda-operator-metrics-apiserver",
-            "kind": "Deployment",
-            "replicas": 1,
-            "containers": [
-              {
-                "name": "keda-operator-metrics-apiserver",
-                "requests": {
-                  "cpu": "50m",
-                  "memory": "96Mi"
-                },
-                "limits": {
-                  "cpu": "1",
-                  "memory": "512Mi"
-                }
-              }
-            ]
-          },
-          {
-            "release": "keda",
-            "namespace": "keda",
-            "name": "keda-admission-webhooks",
-            "kind": "Deployment",
-            "replicas": 1,
-            "containers": [
-              {
-                "name": "keda-admission-webhooks",
-                "requests": {
-                  "cpu": "20m",
-                  "memory": "48Mi"
-                },
-                "limits": {
-                  "cpu": "1",
-                  "memory": "256Mi"
-                }
-              }
-            ]
-          }
-        ],
-        "persistentVolumeClaims": []
-      },
       "single-node": {
         "workloads": [
           {
@@ -203,6 +160,71 @@
           }
         ],
         "persistentVolumeClaims": []
+      },
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "keda",
+            "namespace": "keda",
+            "name": "keda-operator",
+            "kind": "Deployment",
+            "replicas": 2,
+            "containers": [
+              {
+                "name": "keda-operator",
+                "requests": {
+                  "cpu": "50m",
+                  "memory": "128Mi"
+                },
+                "limits": {
+                  "cpu": "1",
+                  "memory": "512Mi"
+                }
+              }
+            ]
+          },
+          {
+            "release": "keda",
+            "namespace": "keda",
+            "name": "keda-operator-metrics-apiserver",
+            "kind": "Deployment",
+            "replicas": 1,
+            "containers": [
+              {
+                "name": "keda-operator-metrics-apiserver",
+                "requests": {
+                  "cpu": "50m",
+                  "memory": "96Mi"
+                },
+                "limits": {
+                  "cpu": "1",
+                  "memory": "512Mi"
+                }
+              }
+            ]
+          },
+          {
+            "release": "keda",
+            "namespace": "keda",
+            "name": "keda-admission-webhooks",
+            "kind": "Deployment",
+            "replicas": 1,
+            "containers": [
+              {
+                "name": "keda-admission-webhooks",
+                "requests": {
+                  "cpu": "20m",
+                  "memory": "48Mi"
+                },
+                "limits": {
+                  "cpu": "1",
+                  "memory": "256Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
       }
     }
   },
@@ -221,13 +243,13 @@
         {
           "workload": "keda-admission-webhooks",
           "kind": "Deployment",
-          "memory": "10Mi",
+          "memory": "9Mi",
           "cpu": "0"
         },
         {
           "workload": "keda-operator",
           "kind": "Deployment",
-          "memory": "33Mi",
+          "memory": "31Mi",
           "cpu": "1m"
         },
         {
@@ -243,8 +265,8 @@
           "version": "2.21.0"
         }
       ],
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I=",
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "k3s",
@@ -272,7 +294,7 @@
         {
           "workload": "keda-operator-metrics-apiserver",
           "kind": "Deployment",
-          "memory": "33Mi",
+          "memory": "31Mi",
           "cpu": "2m"
         }
       ],
@@ -282,8 +304,8 @@
           "version": "2.21.0"
         }
       ],
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I=",
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kind",
@@ -304,8 +326,8 @@
         {
           "workload": "keda-operator",
           "kind": "Deployment",
-          "memory": "31Mi",
-          "cpu": "1m"
+          "memory": "29Mi",
+          "cpu": "2m"
         },
         {
           "workload": "keda-operator-metrics-apiserver",
@@ -320,8 +342,8 @@
           "version": "2.21.0"
         }
       ],
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I=",
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kind",
@@ -348,8 +370,8 @@
         {
           "workload": "keda-operator-metrics-apiserver",
           "kind": "Deployment",
-          "memory": "29Mi",
-          "cpu": "2m"
+          "memory": "28Mi",
+          "cpu": "3m"
         }
       ],
       "versions": [
@@ -358,8 +380,8 @@
           "version": "2.21.0"
         }
       ],
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I=",
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kind",
@@ -374,20 +396,20 @@
         {
           "workload": "keda-admission-webhooks",
           "kind": "Deployment",
-          "memory": "9Mi",
+          "memory": "10Mi",
           "cpu": "0"
         },
         {
           "workload": "keda-operator",
           "kind": "Deployment",
-          "memory": "29Mi",
+          "memory": "30Mi",
           "cpu": "1m"
         },
         {
           "workload": "keda-operator-metrics-apiserver",
           "kind": "Deployment",
           "memory": "31Mi",
-          "cpu": "3m"
+          "cpu": "2m"
         }
       ],
       "versions": [
@@ -396,8 +418,8 @@
           "version": "2.21.0"
         }
       ],
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I=",
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kind",
@@ -418,7 +440,7 @@
         {
           "workload": "keda-operator",
           "kind": "Deployment",
-          "memory": "30Mi",
+          "memory": "31Mi",
           "cpu": "1m"
         },
         {
@@ -434,8 +456,8 @@
           "version": "2.21.0"
         }
       ],
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I=",
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kubesolo",
@@ -463,8 +485,8 @@
         {
           "workload": "keda-operator-metrics-apiserver",
           "kind": "Deployment",
-          "memory": "29Mi",
-          "cpu": "3m"
+          "memory": "30Mi",
+          "cpu": "2m"
         }
       ],
       "versions": [
@@ -473,11 +495,11 @@
           "version": "2.21.0"
         }
       ],
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk=",
+      "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kubesolo",
@@ -505,8 +527,8 @@
         {
           "workload": "keda-operator-metrics-apiserver",
           "kind": "Deployment",
-          "memory": "30Mi",
-          "cpu": "3m"
+          "memory": "29Mi",
+          "cpu": "2m"
         }
       ],
       "versions": [
@@ -515,11 +537,11 @@
           "version": "2.21.0"
         }
       ],
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk=",
+      "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "rke2",
@@ -557,11 +579,11 @@
           "version": "2.21.0"
         }
       ],
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk=",
+      "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "rke2",
@@ -583,7 +605,7 @@
         {
           "workload": "keda-operator",
           "kind": "Deployment",
-          "memory": "30Mi",
+          "memory": "31Mi",
           "cpu": "1m"
         },
         {
@@ -599,11 +621,16 @@
           "version": "2.21.0"
         }
       ],
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk=",
+      "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
   ]
 }

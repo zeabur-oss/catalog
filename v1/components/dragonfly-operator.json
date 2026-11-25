@@ -29,7 +29,7 @@
       "kubesolo"
     ],
     "kind": "Component",
-    "kubeVersion": "\u003e=1.34.0-0",
+    "kubeVersion": ">=1.34.0-0",
     "leftovers": [
       "customresourcedefinitions"
     ],
@@ -88,41 +88,6 @@
   "render": {
     "kubernetesVersion": "1.37.0",
     "profiles": {
-      "multi-node": {
-        "workloads": [
-          {
-            "release": "dragonfly-operator",
-            "namespace": "dragonfly-operator-system",
-            "name": "dragonfly-operator",
-            "kind": "Deployment",
-            "replicas": 2,
-            "containers": [
-              {
-                "name": "kube-rbac-proxy",
-                "requests": {
-                  "cpu": "5m",
-                  "memory": "32Mi"
-                },
-                "limits": {
-                  "cpu": "500m",
-                  "memory": "128Mi"
-                }
-              },
-              {
-                "name": "manager",
-                "requests": {
-                  "cpu": "10m",
-                  "memory": "64Mi"
-                },
-                "limits": {
-                  "memory": "512Mi"
-                }
-              }
-            ]
-          }
-        ],
-        "persistentVolumeClaims": []
-      },
       "single-node": {
         "workloads": [
           {
@@ -151,6 +116,41 @@
                 },
                 "limits": {
                   "memory": "256Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      },
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "dragonfly-operator",
+            "namespace": "dragonfly-operator-system",
+            "name": "dragonfly-operator",
+            "kind": "Deployment",
+            "replicas": 2,
+            "containers": [
+              {
+                "name": "kube-rbac-proxy",
+                "requests": {
+                  "cpu": "5m",
+                  "memory": "32Mi"
+                },
+                "limits": {
+                  "cpu": "500m",
+                  "memory": "128Mi"
+                }
+              },
+              {
+                "name": "manager",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "64Mi"
+                },
+                "limits": {
+                  "memory": "512Mi"
                 }
               }
             ]
@@ -439,5 +439,10 @@
       },
       "measuredAt": "2026-11-20"
     }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
   ]
 }

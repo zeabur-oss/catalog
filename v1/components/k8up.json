@@ -30,7 +30,7 @@
       "kubesolo"
     ],
     "kind": "Component",
-    "kubeVersion": "\u003e=1.34.0-0",
+    "kubeVersion": ">=1.34.0-0",
     "leftovers": [
       "customresourcedefinitions"
     ],
@@ -75,30 +75,6 @@
   "render": {
     "kubernetesVersion": "1.37.0",
     "profiles": {
-      "multi-node": {
-        "workloads": [
-          {
-            "release": "k8up",
-            "namespace": "k8up-system",
-            "name": "k8up",
-            "kind": "Deployment",
-            "replicas": 2,
-            "containers": [
-              {
-                "name": "k8up-operator",
-                "requests": {
-                  "cpu": "10m",
-                  "memory": "32Mi"
-                },
-                "limits": {
-                  "memory": "512Mi"
-                }
-              }
-            ]
-          }
-        ],
-        "persistentVolumeClaims": []
-      },
       "single-node": {
         "workloads": [
           {
@@ -116,6 +92,30 @@
                 },
                 "limits": {
                   "memory": "256Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      },
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "k8up",
+            "namespace": "k8up-system",
+            "name": "k8up",
+            "kind": "Deployment",
+            "replicas": 2,
+            "containers": [
+              {
+                "name": "k8up-operator",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "32Mi"
+                },
+                "limits": {
+                  "memory": "512Mi"
                 }
               }
             ]
@@ -404,5 +404,10 @@
       },
       "measuredAt": "2026-11-20"
     }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
   ]
 }

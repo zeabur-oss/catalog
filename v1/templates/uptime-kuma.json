@@ -1,6 +1,6 @@
 {
   "id": "uptime-kuma",
-  "sourceDigest": "h1:7xoPlgggle2jBnu3u7Fc5eRAABj37uQvDo4vAtKY9ew=",
+  "sourceDigest": "h1:kh8cNKvw/WixvJ/as7Ie6+/V4KrVx2w5OCf+iWVdCOA=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "kind": "Template",
@@ -85,6 +85,9 @@
     },
     "services": [
       {
+        "domains": [
+          "{{ .Domain }}"
+        ],
         "name": "uptime-kuma",
         "podSecurity": "restricted",
         "ports": [
@@ -113,5 +116,43 @@
       }
     ]
   },
-  "manifests": "apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: uptime-kuma-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes:\n  - ReadWriteOnce\n  resources:\n    requests:\n      storage: 10Gi\n---\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: uptime-kuma\n  namespace: '{{ .Namespace }}'\nspec:\n  serviceName: uptime-kuma\n  replicas: 1\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: uptime-kuma\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: uptime-kuma\n        app.kubernetes.io/name: uptime-kuma\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n        sysctls:\n        - name: net.ipv4.ping_group_range\n          value: 1000 1000\n      containers:\n      - name: uptime-kuma\n        image: louislam/uptime-kuma:2.5.11-rootless@sha256:d213a1d2b6a7d7c00afbcb936b53f585afea3e1620432b3a161b68bfffa13dac\n        ports:\n        - name: http\n          containerPort: 3001\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n        resources:\n          requests:\n            cpu: 100m\n            memory: 256Mi\n          limits:\n            cpu: '2'\n            memory: 1Gi\n        env:\n        - name: UPTIME_KUMA_DB_TYPE\n          value: sqlite\n        - name: UPTIME_KUMA_ENABLE_EMBEDDED_MARIADB\n          value: '0'\n        - name: HOME\n          value: /home/node\n        volumeMounts:\n        - name: data\n          mountPath: /app/data\n        - name: tmp\n          mountPath: /tmp\n        - name: cache\n          mountPath: /home/node/.cache\n        startupProbe:\n          httpGet:\n            path: /\n            port: http\n          failureThreshold: 90\n          periodSeconds: 5\n        readinessProbe:\n          httpGet:\n            path: /\n            port: http\n          periodSeconds: 10\n        livenessProbe:\n          httpGet:\n            path: /\n            port: http\n          periodSeconds: 20\n          failureThreshold: 6\n      volumes:\n      - name: data\n        persistentVolumeClaim:\n          claimName: uptime-kuma-data\n      - name: tmp\n        emptyDir:\n          sizeLimit: 512Mi\n      - name: cache\n        emptyDir:\n          sizeLimit: 512Mi\n      terminationGracePeriodSeconds: 60\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: uptime-kuma\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: uptime-kuma\n  ports:\n  - name: http\n    port: 3001\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: uptime-kuma\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts:\n    - '{{ .Domain }}'\n    secretName: uptime-kuma-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: uptime-kuma\n            port:\n              number: 3001\n"
+  "manifests": "apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: uptime-kuma-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes:\n  - ReadWriteOnce\n  resources:\n    requests:\n      storage: 10Gi\n---\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: uptime-kuma\n  namespace: '{{ .Namespace }}'\nspec:\n  serviceName: uptime-kuma\n  replicas: 1\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: uptime-kuma\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: uptime-kuma\n        app.kubernetes.io/name: uptime-kuma\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n        sysctls:\n        - name: net.ipv4.ping_group_range\n          value: 1000 1000\n      containers:\n      - name: uptime-kuma\n        image: louislam/uptime-kuma:2.5.11-rootless@sha256:d213a1d2b6a7d7c00afbcb936b53f585afea3e1620432b3a161b68bfffa13dac\n        ports:\n        - name: http\n          containerPort: 3001\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n        resources:\n          requests:\n            cpu: 100m\n            memory: 256Mi\n          limits:\n            cpu: '2'\n            memory: 1Gi\n        env:\n        - name: UPTIME_KUMA_DB_TYPE\n          value: sqlite\n        - name: UPTIME_KUMA_ENABLE_EMBEDDED_MARIADB\n          value: '0'\n        - name: HOME\n          value: /home/node\n        volumeMounts:\n        - name: data\n          mountPath: /app/data\n        - name: tmp\n          mountPath: /tmp\n        - name: cache\n          mountPath: /home/node/.cache\n        startupProbe:\n          httpGet:\n            path: /\n            port: http\n          failureThreshold: 90\n          periodSeconds: 5\n        readinessProbe:\n          httpGet:\n            path: /\n            port: http\n          periodSeconds: 10\n        livenessProbe:\n          httpGet:\n            path: /\n            port: http\n          periodSeconds: 20\n          failureThreshold: 6\n      volumes:\n      - name: data\n        persistentVolumeClaim:\n          claimName: uptime-kuma-data\n      - name: tmp\n        emptyDir:\n          sizeLimit: 512Mi\n      - name: cache\n        emptyDir:\n          sizeLimit: 512Mi\n      terminationGracePeriodSeconds: 60\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: uptime-kuma\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: uptime-kuma\n  ports:\n  - name: http\n    port: 3001\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: uptime-kuma\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts:\n    - '{{ .Domain }}'\n    secretName: uptime-kuma-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: uptime-kuma\n            port:\n              number: 3001\n",
+  "measurements": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "uptime-kuma",
+          "kind": "StatefulSet",
+          "memory": "118Mi",
+          "cpu": "3m"
+        }
+      ],
+      "versions": [
+        {
+          "image": "louislam/uptime-kuma",
+          "version": "2.5.11-rootless",
+          "digest": "sha256:d213a1d2b6a7d7c00afbcb936b53f585afea3e1620432b3a161b68bfffa13dac"
+        }
+      ],
+      "sourceDigest": "h1:kh8cNKvw/WixvJ/as7Ie6+/V4KrVx2w5OCf+iWVdCOA=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "measuredAt": "2026-11-23"
+    }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
+  ]
 }

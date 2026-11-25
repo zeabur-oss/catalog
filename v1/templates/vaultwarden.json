@@ -180,5 +180,43 @@
       }
     ]
   },
-  "manifests": "apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: vaultwarden-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi\n---\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: vaultwarden\n  namespace: '{{ .Namespace }}'\nspec:\n  serviceName: vaultwarden\n  replicas: 1\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: vaultwarden\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: vaultwarden\n        app.kubernetes.io/name: vaultwarden\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: vaultwarden\n        image: vaultwarden/server:1.37.5@sha256:4fe17f415f90087377d37c755e0ea3cf189dcc6794e49cdd2a9adbb4937d9e1f\n        ports:\n        - name: http\n          containerPort: 8080\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop: [ALL]\n        resources:\n          requests:\n            cpu: 50m\n            memory: 64Mi\n          limits:\n            cpu: '1'\n            memory: 512Mi\n        env:\n        - name: ROCKET_PORT\n          value: '8080'\n        - name: DOMAIN\n          value: https://{{ .Domain }}\n        - name: DATA_FOLDER\n          value: /data\n        - name: SIGNUPS_ALLOWED\n          value: 'false'\n        - name: INVITATIONS_ALLOWED\n          value: 'true'\n        - name: SHOW_PASSWORD_HINT\n          value: 'false'\n        - name: IP_HEADER\n          value: X-Forwarded-For\n        - name: ADMIN_TOKEN\n          valueFrom:\n            secretKeyRef:\n              name: vaultwarden-secrets\n              key: admin-token\n        volumeMounts:\n        - name: data\n          mountPath: /data\n        - name: tmp\n          mountPath: /tmp\n        startupProbe:\n          httpGet:\n            path: /alive\n            port: http\n          periodSeconds: 5\n          failureThreshold: 60\n        readinessProbe:\n          httpGet:\n            path: /alive\n            port: http\n          periodSeconds: 10\n        livenessProbe:\n          httpGet:\n            path: /alive\n            port: http\n          periodSeconds: 20\n          failureThreshold: 6\n      volumes:\n      - name: data\n        persistentVolumeClaim:\n          claimName: vaultwarden-data\n      - name: tmp\n        emptyDir:\n          sizeLimit: 256Mi\n      terminationGracePeriodSeconds: 30\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: vaultwarden\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: vaultwarden\n  ports:\n  - name: http\n    port: 8080\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: vaultwarden\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts: ['{{ .Domain }}']\n    secretName: vaultwarden-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: vaultwarden\n            port:\n              number: 8080\n"
+  "manifests": "apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: vaultwarden-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi\n---\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: vaultwarden\n  namespace: '{{ .Namespace }}'\nspec:\n  serviceName: vaultwarden\n  replicas: 1\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: vaultwarden\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: vaultwarden\n        app.kubernetes.io/name: vaultwarden\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: vaultwarden\n        image: vaultwarden/server:1.37.5@sha256:4fe17f415f90087377d37c755e0ea3cf189dcc6794e49cdd2a9adbb4937d9e1f\n        ports:\n        - name: http\n          containerPort: 8080\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop: [ALL]\n        resources:\n          requests:\n            cpu: 50m\n            memory: 64Mi\n          limits:\n            cpu: '1'\n            memory: 512Mi\n        env:\n        - name: ROCKET_PORT\n          value: '8080'\n        - name: DOMAIN\n          value: https://{{ .Domain }}\n        - name: DATA_FOLDER\n          value: /data\n        - name: SIGNUPS_ALLOWED\n          value: 'false'\n        - name: INVITATIONS_ALLOWED\n          value: 'true'\n        - name: SHOW_PASSWORD_HINT\n          value: 'false'\n        - name: IP_HEADER\n          value: X-Forwarded-For\n        - name: ADMIN_TOKEN\n          valueFrom:\n            secretKeyRef:\n              name: vaultwarden-secrets\n              key: admin-token\n        volumeMounts:\n        - name: data\n          mountPath: /data\n        - name: tmp\n          mountPath: /tmp\n        startupProbe:\n          httpGet:\n            path: /alive\n            port: http\n          periodSeconds: 5\n          failureThreshold: 60\n        readinessProbe:\n          httpGet:\n            path: /alive\n            port: http\n          periodSeconds: 10\n        livenessProbe:\n          httpGet:\n            path: /alive\n            port: http\n          periodSeconds: 20\n          failureThreshold: 6\n      volumes:\n      - name: data\n        persistentVolumeClaim:\n          claimName: vaultwarden-data\n      - name: tmp\n        emptyDir:\n          sizeLimit: 256Mi\n      terminationGracePeriodSeconds: 30\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: vaultwarden\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: vaultwarden\n  ports:\n  - name: http\n    port: 8080\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: vaultwarden\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts: ['{{ .Domain }}']\n    secretName: vaultwarden-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: vaultwarden\n            port:\n              number: 8080\n",
+  "measurements": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "vaultwarden",
+          "kind": "StatefulSet",
+          "memory": "7Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "image": "vaultwarden/server",
+          "version": "1.37.5",
+          "digest": "sha256:4fe17f415f90087377d37c755e0ea3cf189dcc6794e49cdd2a9adbb4937d9e1f"
+        }
+      ],
+      "sourceDigest": "h1:EMWUjaWRSlFs6FkvuDiyp2CRa1Tph6W4vx4invRUEz8=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "measuredAt": "2026-11-20"
+    }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
+  ]
 }

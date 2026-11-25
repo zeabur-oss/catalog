@@ -1,7 +1,7 @@
 {
   "catalog": {
-    "version": "0.6.1",
-    "commit": "bcc7d3c21ffde0f4c13257bc28e1f5de4f3b7872"
+    "version": "0.6.2",
+    "commit": "ef46d0dd87e85ce0da87c773b197677796024106"
   },
   "profiles": [
     "single-node",
@@ -38,11 +38,11 @@
     },
     {
       "id": "cloudnative-pg",
-      "sourceDigest": "h1:Ng6oc40/aM4zbnEnU9OxiYQvyFSJOFad1fNMHEGfXH4="
+      "sourceDigest": "h1:kxR2I/yV/uEYbOKkmqnpEBZvRo8+vX6+eVHsYbxjO1Q="
     },
     {
       "id": "crowdsec",
-      "sourceDigest": "h1:PP40PYGFHuoF9IbIz3YiTOZNJkJSe+1QvBlLldLQkaA="
+      "sourceDigest": "h1:K1kM/eLfYFXn2Hx7bEaq1T2bBhqS+qe5WdlO2s9FxZ4="
     },
     {
       "id": "dragonfly-operator",
@@ -50,7 +50,7 @@
     },
     {
       "id": "external-secrets",
-      "sourceDigest": "h1:J9BwTWHLxYulVB1U0FLXNBVlFnIfLk0oLQrTO+SraFQ="
+      "sourceDigest": "h1:+FVbCI6ppyKt1SX4VbMiSm+H2bq+cWU9Ek4qPChd2OE="
     },
     {
       "id": "falco",
@@ -62,7 +62,7 @@
     },
     {
       "id": "keda",
-      "sourceDigest": "h1:oEC99JgVhDDK9vurEhD1D/ubVH6fKIcThlIgR27XxMk="
+      "sourceDigest": "h1:JuhEX27cw9mYpmFjcQuMBHUPfITEpEB+M7MTqHeU2+I="
     },
     {
       "id": "keda-http-add-on",
@@ -78,7 +78,7 @@
     },
     {
       "id": "mariadb-operator",
-      "sourceDigest": "h1:3Po7PxiFKlAxTRzCf8jHd2FosZvOenb0TGvqMF5yg/o="
+      "sourceDigest": "h1:KjpAgFdHDr4CjJzMpZstt0AhRUA2MPTeZYfqsuZd4d0="
     },
     {
       "id": "metrics-server",
@@ -86,7 +86,7 @@
     },
     {
       "id": "moco",
-      "sourceDigest": "h1:WT758lhpwn6wCb4Z2ikRdPeG9dMi8yKq733BAs8bbJg="
+      "sourceDigest": "h1:7JDmlp5vaEn6XGAlHvo0j4JJ6TGuR0k+LwKHHpeogmg="
     },
     {
       "id": "percona-mongodb",
@@ -98,7 +98,7 @@
     },
     {
       "id": "seaweedfs-operator",
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI="
+      "sourceDigest": "h1:evcla7qREi3hktguB1gpKGIX5yvANm9P4391gKPPKTY="
     },
     {
       "id": "system-upgrade-controller",
@@ -134,25 +134,25 @@
     },
     {
       "id": "victoria-metrics-operator",
-      "sourceDigest": "h1:ZWowCU/WNHZ+cTY/ofvmuNCb5dp+QAnzpimPIyTg7mo="
+      "sourceDigest": "h1:uk/JW3XcUDAu268TCwOOxjbKgO7M2qxtjgjttIxtIig="
     },
     {
       "id": "zeabur-builder",
-      "sourceDigest": "h1:dCF2W4c1M4fSRHJAVcnn1fODtIO5B+XVKzfsLPbs/cQ="
+      "sourceDigest": "h1:s2k4cyL32aMqwXoI+dEqqrqc1ZIcMP02PgePdrjmgmM="
     }
   ],
   "templates": [
     {
       "id": "browserless",
-      "sourceDigest": "h1:nxTUnJEWoJ27W22OZluSecRT5R0vyJNq/kgro+6+574="
+      "sourceDigest": "h1:90VqU61hvSvZ+Zf/m1PWgCvRKphPuvr7taZXP1auFr4="
     },
     {
       "id": "cliproxyapi",
-      "sourceDigest": "h1:IywnsRZ6lJbtS/WEDTwKIwigfiUJFC5u+Whxn/Gu/Q0="
+      "sourceDigest": "h1:0gWZx87XHNe+ZlJm4/N7PeWnrk04TzYHduK4kEpBKF0="
     },
     {
       "id": "dify",
-      "sourceDigest": "h1:vsP5AEp3htlEGaBpwb9iqGd9oFhPQxIx/c/2fqtpNuw="
+      "sourceDigest": "h1:jqn76ZCp2bCbkJLwWu5kK1kUYE4vSY3s3Vya/E6Qb3k="
     },
     {
       "id": "error-pages",
@@ -160,7 +160,7 @@
     },
     {
       "id": "ghost",
-      "sourceDigest": "h1:ttkOF8Lm4VUdWunhz6X9uyGN2DM7A5uZ9CaSMTERkZA="
+      "sourceDigest": "h1:AXuLsBA57LxRvOdAO0PfvPetodN4EE5Qqj/KGN+reHk="
     },
     {
       "id": "gitea",
@@ -168,7 +168,7 @@
     },
     {
       "id": "halo",
-      "sourceDigest": "h1:omOPvGk2vOB43kKd5roM8DMevL0nLOVuGYb4OT9at3A="
+      "sourceDigest": "h1:0rbKUVN31DjHGz9UycAp51BzcHciXgwtlQF/zFTYNAY="
     },
     {
       "id": "hermes-agent",
@@ -180,11 +180,11 @@
     },
     {
       "id": "litellm",
-      "sourceDigest": "h1:rcgfGzSZz0FswE995RkKa0PzW2h1iYjS39kIz4P5fs4="
+      "sourceDigest": "h1:4Br3gdDHrQdObB7M1Zw4KsRIf6JaIRsbrQexQwY6bT4="
     },
     {
       "id": "lobechat",
-      "sourceDigest": "h1:GDRO7oMuDplsrSlvxcY7TyCC5prOu7FaDcEu2K8VU+0="
+      "sourceDigest": "h1:k5E9qC0vlyJigCpEOBGPduCRrZF1SQXlPKRq8gBLsgo="
     },
     {
       "id": "meilisearch",
@@ -200,15 +200,15 @@
     },
     {
       "id": "n8n",
-      "sourceDigest": "h1:Kep0LqdYhS3nM1xOSoGQaJVY06gpWhwvuTuH3AiZTN0="
+      "sourceDigest": "h1:wRElBmxPDX8oijTJxCZBowDqrI1HIrszpO57FMr0XAY="
     },
     {
       "id": "n8n-ai-brain",
-      "sourceDigest": "h1:IPc9+XjrDmyjPqlucHqbKLBgseQx5IHDuzq+Gf0vGJs="
+      "sourceDigest": "h1:qhZZQkVkOeISlun6W28n6+v9l15R/9fdvJpLUXLgEGc="
     },
     {
       "id": "n8n-sqlite",
-      "sourceDigest": "h1:Dw73zHvJCP9S7+DyB80wPY/+9YjFpA5eoHyJRxbkNMI="
+      "sourceDigest": "h1:nPrFzrLOiXyT0NR9JAMBwzCtAuPbrfFJo7q0I62N2e0="
     },
     {
       "id": "new-api",
@@ -220,7 +220,7 @@
     },
     {
       "id": "ntfy",
-      "sourceDigest": "h1:XBrobIIGQ+1qfL9KqSSfaI0zawU3NnTQ6LdquHaN0Oo="
+      "sourceDigest": "h1:PZDw1le4/4u6IQ5zDvoAC3k4tbsCfBEtGwsssVVeKjg="
     },
     {
       "id": "ollama",
@@ -228,7 +228,7 @@
     },
     {
       "id": "open-webui",
-      "sourceDigest": "h1:1b5fNM85HWJafamWjnbrg3EkHr5fcsiriVOBSDFtO/g="
+      "sourceDigest": "h1:SL1D1Hu+G3G5aRh6W6IRGIItroVkEkcWKTCKVicMcpo="
     },
     {
       "id": "openclaw",
@@ -240,7 +240,7 @@
     },
     {
       "id": "openlist",
-      "sourceDigest": "h1:z1Wh2dVc7KrqUnChkJT30oU1e4LTEKVD0Na+G5z1uwY="
+      "sourceDigest": "h1:5bonPnLWGE5kcpxVec/3a3UtuRctPC+sGMR8Zk2iYcs="
     },
     {
       "id": "postgresql-pgvector",
@@ -264,7 +264,7 @@
     },
     {
       "id": "uptime-kuma",
-      "sourceDigest": "h1:7xoPlgggle2jBnu3u7Fc5eRAABj37uQvDo4vAtKY9ew="
+      "sourceDigest": "h1:kh8cNKvw/WixvJ/as7Ie6+/V4KrVx2w5OCf+iWVdCOA="
     },
     {
       "id": "vaultwarden",

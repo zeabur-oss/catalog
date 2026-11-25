@@ -111,11 +111,43 @@
           "cluster": "postgresql",
           "database": "zeabur",
           "expect": "1",
-          "query": "SELECT '[1,2,3]'::vector \u003c-\u003e '[1,2,4]'::vector"
+          "query": "SELECT '[1,2,3]'::vector <-> '[1,2,4]'::vector"
         },
         "timeout": "600s"
       }
     ]
   },
-  "manifests": "apiVersion: postgresql.cnpg.io/v1\nkind: Cluster\nmetadata:\n  name: postgresql\n  namespace: {{ .Namespace }}\nspec:\n  inheritedMetadata:\n    labels:\n      templates.zeabur.com/template: postgresql-pgvector\n  instances: 1\n  imageName: ghcr.io/cloudnative-pg/postgresql:18-standard-trixie@sha256:d72ace96f5803b12c341bb5dac48532e8c1f92f69e8a717a59d779bfc038dea9\n  enableSuperuserAccess: false\n  enablePDB: true\n  postgresUID: 26\n  postgresGID: 26\n  seccompProfile: {type: RuntimeDefault}\n  bootstrap:\n    initdb:\n      database: zeabur\n      owner: app\n      encoding: UTF8\n      postInitApplicationSQL:\n        - CREATE EXTENSION IF NOT EXISTS vector;\n  storage:\n    size: 10Gi\n  resources:\n    requests: {cpu: 100m, memory: 256Mi}\n    limits: {cpu: '1', memory: 1Gi}\n  postgresql:\n    parameters:\n      shared_buffers: 128MB\n      max_connections: '100'\n"
+  "manifests": "apiVersion: postgresql.cnpg.io/v1\nkind: Cluster\nmetadata:\n  name: postgresql\n  namespace: {{ .Namespace }}\nspec:\n  inheritedMetadata:\n    labels:\n      templates.zeabur.com/template: postgresql-pgvector\n  instances: 1\n  imageName: ghcr.io/cloudnative-pg/postgresql:18-standard-trixie@sha256:d72ace96f5803b12c341bb5dac48532e8c1f92f69e8a717a59d779bfc038dea9\n  enableSuperuserAccess: false\n  enablePDB: true\n  postgresUID: 26\n  postgresGID: 26\n  seccompProfile: {type: RuntimeDefault}\n  bootstrap:\n    initdb:\n      database: zeabur\n      owner: app\n      encoding: UTF8\n      postInitApplicationSQL:\n        - CREATE EXTENSION IF NOT EXISTS vector;\n  storage:\n    size: 10Gi\n  resources:\n    requests: {cpu: 100m, memory: 256Mi}\n    limits: {cpu: '1', memory: 1Gi}\n  postgresql:\n    parameters:\n      shared_buffers: 128MB\n      max_connections: '100'\n",
+  "measurements": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "postgresql",
+          "kind": "Cluster",
+          "memory": "51Mi",
+          "cpu": "5m"
+        }
+      ],
+      "sourceDigest": "h1:wfaGhFQxpHahDsJB9A8bZAfSBqqCmLr9xQ38KA+dszc=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "cloudnative-pg": "h1:kxR2I/yV/uEYbOKkmqnpEBZvRo8+vX6+eVHsYbxjO1Q=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "measuredAt": "2026-11-24"
+    }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
+  ]
 }

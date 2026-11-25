@@ -1,6 +1,6 @@
 {
   "id": "cloudnative-pg",
-  "sourceDigest": "h1:Ng6oc40/aM4zbnEnU9OxiYQvyFSJOFad1fNMHEGfXH4=",
+  "sourceDigest": "h1:kxR2I/yV/uEYbOKkmqnpEBZvRo8+vX6+eVHsYbxjO1Q=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -36,8 +36,20 @@
       "rke2",
       "kubesolo"
     ],
+    "health": [
+      {
+        "advice": "PostgreSQL clusters can't be created or changed until the CloudNativePG operator and its webhook run. Check its pods with kubectl -n cnpg-system get pods.",
+        "name": "operator",
+        "resource": {
+          "kind": "Deployment",
+          "name": "cnpg-cloudnative-pg",
+          "namespace": "cnpg-system"
+        },
+        "timeout": "60s"
+      }
+    ],
     "kind": "Component",
-    "kubeVersion": "\u003e=1.29.0-0",
+    "kubeVersion": ">=1.29.0-0",
     "leftovers": [
       "customresourcedefinitions",
       "persistentvolumeclaims"
@@ -128,49 +140,6 @@
   "render": {
     "kubernetesVersion": "1.37.0",
     "profiles": {
-      "multi-node": {
-        "workloads": [
-          {
-            "release": "cloudnative-pg",
-            "namespace": "cnpg-system",
-            "name": "cnpg-cloudnative-pg",
-            "kind": "Deployment",
-            "replicas": 2,
-            "containers": [
-              {
-                "name": "manager",
-                "requests": {
-                  "cpu": "10m",
-                  "memory": "56Mi"
-                },
-                "limits": {
-                  "memory": "512Mi"
-                }
-              }
-            ]
-          },
-          {
-            "release": "plugin-barman-cloud",
-            "namespace": "cnpg-system",
-            "name": "plugin-barman-cloud",
-            "kind": "Deployment",
-            "replicas": 1,
-            "containers": [
-              {
-                "name": "barman-cloud",
-                "requests": {
-                  "cpu": "10m",
-                  "memory": "32Mi"
-                },
-                "limits": {
-                  "memory": "256Mi"
-                }
-              }
-            ]
-          }
-        ],
-        "persistentVolumeClaims": []
-      },
       "single-node": {
         "workloads": [
           {
@@ -213,6 +182,49 @@
           }
         ],
         "persistentVolumeClaims": []
+      },
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "cloudnative-pg",
+            "namespace": "cnpg-system",
+            "name": "cnpg-cloudnative-pg",
+            "kind": "Deployment",
+            "replicas": 2,
+            "containers": [
+              {
+                "name": "manager",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "56Mi"
+                },
+                "limits": {
+                  "memory": "512Mi"
+                }
+              }
+            ]
+          },
+          {
+            "release": "plugin-barman-cloud",
+            "namespace": "cnpg-system",
+            "name": "plugin-barman-cloud",
+            "kind": "Deployment",
+            "replicas": 1,
+            "containers": [
+              {
+                "name": "barman-cloud",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "32Mi"
+                },
+                "limits": {
+                  "memory": "256Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
       }
     }
   },
@@ -231,13 +243,13 @@
         {
           "workload": "cnpg-cloudnative-pg",
           "kind": "Deployment",
-          "memory": "22Mi",
+          "memory": "21Mi",
           "cpu": "2m"
         },
         {
           "workload": "plugin-barman-cloud",
           "kind": "Deployment",
-          "memory": "11Mi",
+          "memory": "12Mi",
           "cpu": "1m"
         }
       ],
@@ -251,12 +263,12 @@
           "version": "0.9.0"
         }
       ],
-      "sourceDigest": "h1:Ng6oc40/aM4zbnEnU9OxiYQvyFSJOFad1fNMHEGfXH4=",
+      "sourceDigest": "h1:kxR2I/yV/uEYbOKkmqnpEBZvRo8+vX6+eVHsYbxjO1Q=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "k3s",
@@ -273,12 +285,12 @@
           "workload": "cnpg-cloudnative-pg",
           "kind": "Deployment",
           "memory": "21Mi",
-          "cpu": "1m"
+          "cpu": "2m"
         },
         {
           "workload": "plugin-barman-cloud",
           "kind": "Deployment",
-          "memory": "12Mi",
+          "memory": "11Mi",
           "cpu": "1m"
         }
       ],
@@ -292,12 +304,12 @@
           "version": "0.9.0"
         }
       ],
-      "sourceDigest": "h1:Ng6oc40/aM4zbnEnU9OxiYQvyFSJOFad1fNMHEGfXH4=",
+      "sourceDigest": "h1:kxR2I/yV/uEYbOKkmqnpEBZvRo8+vX6+eVHsYbxjO1Q=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kind",
@@ -313,7 +325,7 @@
           "workload": "cnpg-cloudnative-pg",
           "kind": "Deployment",
           "memory": "21Mi",
-          "cpu": "3m"
+          "cpu": "2m"
         },
         {
           "workload": "plugin-barman-cloud",
@@ -332,12 +344,12 @@
           "version": "0.9.0"
         }
       ],
-      "sourceDigest": "h1:Ng6oc40/aM4zbnEnU9OxiYQvyFSJOFad1fNMHEGfXH4=",
+      "sourceDigest": "h1:kxR2I/yV/uEYbOKkmqnpEBZvRo8+vX6+eVHsYbxjO1Q=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kind",
@@ -372,12 +384,12 @@
           "version": "0.9.0"
         }
       ],
-      "sourceDigest": "h1:Ng6oc40/aM4zbnEnU9OxiYQvyFSJOFad1fNMHEGfXH4=",
+      "sourceDigest": "h1:kxR2I/yV/uEYbOKkmqnpEBZvRo8+vX6+eVHsYbxjO1Q=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kind",
@@ -412,12 +424,12 @@
           "version": "0.9.0"
         }
       ],
-      "sourceDigest": "h1:Ng6oc40/aM4zbnEnU9OxiYQvyFSJOFad1fNMHEGfXH4=",
+      "sourceDigest": "h1:kxR2I/yV/uEYbOKkmqnpEBZvRo8+vX6+eVHsYbxjO1Q=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kind",
@@ -452,12 +464,12 @@
           "version": "0.9.0"
         }
       ],
-      "sourceDigest": "h1:Ng6oc40/aM4zbnEnU9OxiYQvyFSJOFad1fNMHEGfXH4=",
+      "sourceDigest": "h1:kxR2I/yV/uEYbOKkmqnpEBZvRo8+vX6+eVHsYbxjO1Q=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kubesolo",
@@ -465,50 +477,6 @@
       "platform": {
         "os": "linux",
         "architecture": "amd64"
-      },
-      "kubernetesVersion": "v1.36.6",
-      "distributionVersion": "v1.3.0",
-      "result": "passed",
-      "pods": [
-        {
-          "workload": "cnpg-cloudnative-pg",
-          "kind": "Deployment",
-          "memory": "21Mi",
-          "cpu": "2m"
-        },
-        {
-          "workload": "plugin-barman-cloud",
-          "kind": "Deployment",
-          "memory": "12Mi",
-          "cpu": "1m"
-        }
-      ],
-      "versions": [
-        {
-          "release": "cloudnative-pg",
-          "version": "0.29.1"
-        },
-        {
-          "release": "plugin-barman-cloud",
-          "version": "0.9.0"
-        }
-      ],
-      "sourceDigest": "h1:Ng6oc40/aM4zbnEnU9OxiYQvyFSJOFad1fNMHEGfXH4=",
-      "dependencies": {
-        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
-        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
-      },
-      "addOns": {
-        "helm-controller": "v0.17.9"
-      },
-      "measuredAt": "2026-11-20"
-    },
-    {
-      "distribution": "kubesolo",
-      "profile": "single-node",
-      "platform": {
-        "os": "linux",
-        "architecture": "arm64"
       },
       "kubernetesVersion": "v1.36.6",
       "distributionVersion": "v1.3.0",
@@ -537,7 +505,7 @@
           "version": "0.9.0"
         }
       ],
-      "sourceDigest": "h1:Ng6oc40/aM4zbnEnU9OxiYQvyFSJOFad1fNMHEGfXH4=",
+      "sourceDigest": "h1:kxR2I/yV/uEYbOKkmqnpEBZvRo8+vX6+eVHsYbxjO1Q=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
@@ -545,7 +513,51 @@
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
+    },
+    {
+      "distribution": "kubesolo",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "arm64"
+      },
+      "kubernetesVersion": "v1.36.6",
+      "distributionVersion": "v1.3.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "cnpg-cloudnative-pg",
+          "kind": "Deployment",
+          "memory": "22Mi",
+          "cpu": "2m"
+        },
+        {
+          "workload": "plugin-barman-cloud",
+          "kind": "Deployment",
+          "memory": "12Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "release": "cloudnative-pg",
+          "version": "0.29.1"
+        },
+        {
+          "release": "plugin-barman-cloud",
+          "version": "0.9.0"
+        }
+      ],
+      "sourceDigest": "h1:kxR2I/yV/uEYbOKkmqnpEBZvRo8+vX6+eVHsYbxjO1Q=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "addOns": {
+        "helm-controller": "v0.17.9"
+      },
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "rke2",
@@ -562,7 +574,7 @@
           "workload": "cnpg-cloudnative-pg",
           "kind": "Deployment",
           "memory": "24Mi",
-          "cpu": "3m"
+          "cpu": "2m"
         },
         {
           "workload": "plugin-barman-cloud",
@@ -581,7 +593,7 @@
           "version": "0.9.0"
         }
       ],
-      "sourceDigest": "h1:Ng6oc40/aM4zbnEnU9OxiYQvyFSJOFad1fNMHEGfXH4=",
+      "sourceDigest": "h1:kxR2I/yV/uEYbOKkmqnpEBZvRo8+vX6+eVHsYbxjO1Q=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
@@ -589,7 +601,7 @@
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "rke2",
@@ -611,7 +623,7 @@
         {
           "workload": "plugin-barman-cloud",
           "kind": "Deployment",
-          "memory": "12Mi",
+          "memory": "11Mi",
           "cpu": "1m"
         }
       ],
@@ -625,7 +637,7 @@
           "version": "0.9.0"
         }
       ],
-      "sourceDigest": "h1:Ng6oc40/aM4zbnEnU9OxiYQvyFSJOFad1fNMHEGfXH4=",
+      "sourceDigest": "h1:kxR2I/yV/uEYbOKkmqnpEBZvRo8+vX6+eVHsYbxjO1Q=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
@@ -633,7 +645,12 @@
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
   ]
 }

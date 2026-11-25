@@ -1,6 +1,6 @@
 {
   "id": "browserless",
-  "sourceDigest": "h1:nxTUnJEWoJ27W22OZluSecRT5R0vyJNq/kgro+6+574=",
+  "sourceDigest": "h1:90VqU61hvSvZ+Zf/m1PWgCvRKphPuvr7taZXP1auFr4=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -26,6 +26,9 @@
       "docs": "https://docs.browserless.io/baas/docker/quickstart",
       "homepage": "https://github.com/browserless/browserless",
       "license": "SSPL-1.0 OR LicenseRef-Browserless-Commercial",
+      "licenseUrls": {
+        "LicenseRef-Browserless-Commercial": "https://github.com/browserless/browserless/blob/main/LICENSE"
+      },
       "locales": {
         "zh-CN": {
           "summary": "让自动化工具用令牌操作的无头 Chrome 浏览器。"
@@ -159,5 +162,43 @@
       }
     ]
   },
-  "manifests": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: browserless\n  namespace: {{ .Namespace }}\nspec:\n  replicas: 1\n  revisionHistoryLimit: 2\n  strategy:\n    type: Recreate\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: browserless\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: browserless\n        app.kubernetes.io/name: browserless\n    spec:\n      automountServiceAccountToken: false\n      terminationGracePeriodSeconds: 90\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 999\n        runAsGroup: 999\n        fsGroup: 999\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n        - name: browserless\n          image: ghcr.io/browserless/chromium:latest@sha256:3231c6747363e1214b7d674e2945606bb68b629a10ae59a489dc44d99572a022\n          imagePullPolicy: IfNotPresent\n          securityContext:\n            allowPrivilegeEscalation: false\n            readOnlyRootFilesystem: true\n            capabilities:\n              drop: [ALL]\n          ports:\n            - name: web\n              containerPort: 3000\n          env:\n            - name: TOKEN\n              valueFrom:\n                secretKeyRef:\n                  name: browserless-secrets\n                  key: token\n            - name: HOST\n              value: 0.0.0.0\n            - name: PORT\n              value: \"3000\"\n            - name: CONCURRENT\n              value: \"4\"\n            - name: QUEUED\n              value: \"4\"\n            - name: TIMEOUT\n              value: \"60000\"\n            - name: ALLOW_FILE_PROTOCOL\n              value: \"false\"\n            - name: ALLOW_GET\n              value: \"false\"\n            - name: CORS\n              value: \"false\"\n            - name: STRICT_TOKEN_USE\n              value: \"true\"\n          resources:\n            requests:\n              cpu: 250m\n              memory: 512Mi\n              ephemeral-storage: 256Mi\n            limits:\n              cpu: \"2\"\n              memory: 2Gi\n              ephemeral-storage: 2Gi\n          startupProbe:\n            tcpSocket:\n              port: web\n            periodSeconds: 5\n            failureThreshold: 60\n          readinessProbe:\n            exec:\n              command:\n                - node\n                - -e\n                - 'fetch(\"http://127.0.0.1:3000/pressure?token=\"+encodeURIComponent(process.env.TOKEN),{headers:{Accept:\"text/plain\"}}).then(r=\u003eprocess.exit(r.ok?0:1)).catch(()=\u003eprocess.exit(1))'\n            periodSeconds: 10\n            timeoutSeconds: 5\n          livenessProbe:\n            tcpSocket:\n              port: web\n            periodSeconds: 20\n            timeoutSeconds: 3\n            failureThreshold: 6\n          volumeMounts:\n            - name: tmp\n              mountPath: /tmp\n            - name: home\n              mountPath: /home/blessuser\n            - name: shm\n              mountPath: /dev/shm\n      volumes:\n        - name: tmp\n          emptyDir:\n            sizeLimit: 1Gi\n        - name: home\n          emptyDir:\n            sizeLimit: 256Mi\n        - name: shm\n          emptyDir:\n            medium: Memory\n            sizeLimit: 256Mi\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: browserless\n  namespace: {{ .Namespace }}\nspec:\n  selector:\n    app.kubernetes.io/name: browserless\n  ports:\n    - name: web\n      port: 3000\n      targetPort: web\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: browserless\n  namespace: {{ .Namespace }}\n  annotations:\n    cert-manager.io/cluster-issuer: {{ .ClusterIssuer }}\nspec:\n  ingressClassName: traefik\n  tls:\n    - hosts: [\"{{ .Domain }}\"]\n      secretName: browserless-tls\n  rules:\n    - host: {{ .Domain }}\n      http:\n        paths:\n          - path: /\n            pathType: Prefix\n            backend:\n              service:\n                name: browserless\n                port:\n                  name: web\n"
+  "manifests": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: browserless\n  namespace: {{ .Namespace }}\nspec:\n  replicas: 1\n  revisionHistoryLimit: 2\n  strategy:\n    type: Recreate\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: browserless\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: browserless\n        app.kubernetes.io/name: browserless\n    spec:\n      automountServiceAccountToken: false\n      terminationGracePeriodSeconds: 90\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 999\n        runAsGroup: 999\n        fsGroup: 999\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n        - name: browserless\n          image: ghcr.io/browserless/chromium:latest@sha256:3231c6747363e1214b7d674e2945606bb68b629a10ae59a489dc44d99572a022\n          imagePullPolicy: IfNotPresent\n          securityContext:\n            allowPrivilegeEscalation: false\n            readOnlyRootFilesystem: true\n            capabilities:\n              drop: [ALL]\n          ports:\n            - name: web\n              containerPort: 3000\n          env:\n            - name: TOKEN\n              valueFrom:\n                secretKeyRef:\n                  name: browserless-secrets\n                  key: token\n            - name: HOST\n              value: 0.0.0.0\n            - name: PORT\n              value: \"3000\"\n            - name: CONCURRENT\n              value: \"4\"\n            - name: QUEUED\n              value: \"4\"\n            - name: TIMEOUT\n              value: \"60000\"\n            - name: ALLOW_FILE_PROTOCOL\n              value: \"false\"\n            - name: ALLOW_GET\n              value: \"false\"\n            - name: CORS\n              value: \"false\"\n            - name: STRICT_TOKEN_USE\n              value: \"true\"\n          resources:\n            requests:\n              cpu: 250m\n              memory: 512Mi\n              ephemeral-storage: 256Mi\n            limits:\n              cpu: \"2\"\n              memory: 2Gi\n              ephemeral-storage: 2Gi\n          startupProbe:\n            tcpSocket:\n              port: web\n            periodSeconds: 5\n            failureThreshold: 60\n          readinessProbe:\n            exec:\n              command:\n                - node\n                - -e\n                - 'fetch(\"http://127.0.0.1:3000/pressure?token=\"+encodeURIComponent(process.env.TOKEN),{headers:{Accept:\"text/plain\"}}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))'\n            periodSeconds: 10\n            timeoutSeconds: 5\n          livenessProbe:\n            tcpSocket:\n              port: web\n            periodSeconds: 20\n            timeoutSeconds: 3\n            failureThreshold: 6\n          volumeMounts:\n            - name: tmp\n              mountPath: /tmp\n            - name: home\n              mountPath: /home/blessuser\n            - name: shm\n              mountPath: /dev/shm\n      volumes:\n        - name: tmp\n          emptyDir:\n            sizeLimit: 1Gi\n        - name: home\n          emptyDir:\n            sizeLimit: 256Mi\n        - name: shm\n          emptyDir:\n            medium: Memory\n            sizeLimit: 256Mi\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: browserless\n  namespace: {{ .Namespace }}\nspec:\n  selector:\n    app.kubernetes.io/name: browserless\n  ports:\n    - name: web\n      port: 3000\n      targetPort: web\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: browserless\n  namespace: {{ .Namespace }}\n  annotations:\n    cert-manager.io/cluster-issuer: {{ .ClusterIssuer }}\nspec:\n  ingressClassName: traefik\n  tls:\n    - hosts: [\"{{ .Domain }}\"]\n      secretName: browserless-tls\n  rules:\n    - host: {{ .Domain }}\n      http:\n        paths:\n          - path: /\n            pathType: Prefix\n            backend:\n              service:\n                name: browserless\n                port:\n                  name: web\n",
+  "measurements": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "browserless",
+          "kind": "Deployment",
+          "memory": "302Mi",
+          "cpu": "8m"
+        }
+      ],
+      "versions": [
+        {
+          "image": "ghcr.io/browserless/chromium",
+          "version": "latest",
+          "digest": "sha256:3231c6747363e1214b7d674e2945606bb68b629a10ae59a489dc44d99572a022"
+        }
+      ],
+      "sourceDigest": "h1:90VqU61hvSvZ+Zf/m1PWgCvRKphPuvr7taZXP1auFr4=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "measuredAt": "2026-11-24"
+    }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
+  ]
 }

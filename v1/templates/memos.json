@@ -152,5 +152,43 @@
       }
     ]
   },
-  "manifests": "apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: memos-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi\n---\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: memos-config\n  namespace: '{{ .Namespace }}'\ndata:\n  instance.json: |\n    {\n      \"instanceSettings\": [\n        {\"name\": \"instance/settings/GENERAL\", \"generalSetting\": {\"disallowUserRegistration\": true}}\n      ],\n      \"users\": [\n        {\"name\": \"users/admin\", \"username\": \"admin\", \"role\": \"ADMIN\", \"password\": \"${env:ADMIN_PASSWORD}\"}\n      ]\n    }\n---\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: memos\n  namespace: '{{ .Namespace }}'\nspec:\n  serviceName: memos\n  replicas: 1\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: memos\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: memos\n        app.kubernetes.io/name: memos\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 10001\n        runAsGroup: 10001\n        fsGroup: 10001\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: memos\n        image: neosmemo/memos:26.11.0@sha256:087e7dc6b76b31fcd1107a5767398b2a310ced209adb791efd8760c745dc8034\n        ports:\n        - name: http\n          containerPort: 5230\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop: [ALL]\n        resources:\n          requests:\n            cpu: 50m\n            memory: 128Mi\n          limits:\n            cpu: '1'\n            memory: 512Mi\n        env:\n        - name: MEMOS_PORT\n          value: '5230'\n        - name: MEMOS_DATA\n          value: /var/opt/memos\n        - name: MEMOS_DRIVER\n          value: sqlite\n        - name: MEMOS_INSTANCE_URL\n          value: https://{{ .Domain }}\n        - name: ADMIN_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: memos-secrets\n              key: admin-password\n        volumeMounts:\n        - name: data\n          mountPath: /var/opt/memos\n        - name: config\n          mountPath: /etc/memos/config\n          readOnly: true\n        - name: tmp\n          mountPath: /tmp\n        startupProbe:\n          httpGet:\n            path: /healthz\n            port: http\n          periodSeconds: 5\n          failureThreshold: 60\n        readinessProbe:\n          httpGet:\n            path: /healthz\n            port: http\n          periodSeconds: 10\n        livenessProbe:\n          httpGet:\n            path: /healthz\n            port: http\n          periodSeconds: 20\n          failureThreshold: 6\n      volumes:\n      - name: data\n        persistentVolumeClaim:\n          claimName: memos-data\n      - name: config\n        configMap:\n          name: memos-config\n      - name: tmp\n        emptyDir:\n          sizeLimit: 512Mi\n      terminationGracePeriodSeconds: 30\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: memos\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: memos\n  ports:\n  - name: http\n    port: 5230\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: memos\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts: ['{{ .Domain }}']\n    secretName: memos-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: memos\n            port:\n              number: 5230\n"
+  "manifests": "apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: memos-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 10Gi\n---\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: memos-config\n  namespace: '{{ .Namespace }}'\ndata:\n  instance.json: |\n    {\n      \"instanceSettings\": [\n        {\"name\": \"instance/settings/GENERAL\", \"generalSetting\": {\"disallowUserRegistration\": true}}\n      ],\n      \"users\": [\n        {\"name\": \"users/admin\", \"username\": \"admin\", \"role\": \"ADMIN\", \"password\": \"${env:ADMIN_PASSWORD}\"}\n      ]\n    }\n---\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: memos\n  namespace: '{{ .Namespace }}'\nspec:\n  serviceName: memos\n  replicas: 1\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: memos\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: memos\n        app.kubernetes.io/name: memos\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 10001\n        runAsGroup: 10001\n        fsGroup: 10001\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: memos\n        image: neosmemo/memos:26.11.0@sha256:087e7dc6b76b31fcd1107a5767398b2a310ced209adb791efd8760c745dc8034\n        ports:\n        - name: http\n          containerPort: 5230\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop: [ALL]\n        resources:\n          requests:\n            cpu: 50m\n            memory: 128Mi\n          limits:\n            cpu: '1'\n            memory: 512Mi\n        env:\n        - name: MEMOS_PORT\n          value: '5230'\n        - name: MEMOS_DATA\n          value: /var/opt/memos\n        - name: MEMOS_DRIVER\n          value: sqlite\n        - name: MEMOS_INSTANCE_URL\n          value: https://{{ .Domain }}\n        - name: ADMIN_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: memos-secrets\n              key: admin-password\n        volumeMounts:\n        - name: data\n          mountPath: /var/opt/memos\n        - name: config\n          mountPath: /etc/memos/config\n          readOnly: true\n        - name: tmp\n          mountPath: /tmp\n        startupProbe:\n          httpGet:\n            path: /healthz\n            port: http\n          periodSeconds: 5\n          failureThreshold: 60\n        readinessProbe:\n          httpGet:\n            path: /healthz\n            port: http\n          periodSeconds: 10\n        livenessProbe:\n          httpGet:\n            path: /healthz\n            port: http\n          periodSeconds: 20\n          failureThreshold: 6\n      volumes:\n      - name: data\n        persistentVolumeClaim:\n          claimName: memos-data\n      - name: config\n        configMap:\n          name: memos-config\n      - name: tmp\n        emptyDir:\n          sizeLimit: 512Mi\n      terminationGracePeriodSeconds: 30\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: memos\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: memos\n  ports:\n  - name: http\n    port: 5230\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: memos\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts: ['{{ .Domain }}']\n    secretName: memos-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: memos\n            port:\n              number: 5230\n",
+  "measurements": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "memos",
+          "kind": "StatefulSet",
+          "memory": "16Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "image": "neosmemo/memos",
+          "version": "26.11.0",
+          "digest": "sha256:087e7dc6b76b31fcd1107a5767398b2a310ced209adb791efd8760c745dc8034"
+        }
+      ],
+      "sourceDigest": "h1:qwqajGrIsVCrAJ8bqeTI7wV3bneX4nR0JATC9yqMWQE=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "measuredAt": "2026-11-20"
+    }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
+  ]
 }

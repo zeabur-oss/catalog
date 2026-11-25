@@ -26,7 +26,7 @@
       "kubesolo"
     ],
     "kind": "Component",
-    "kubeVersion": "\u003e=1.34.0-0",
+    "kubeVersion": ">=1.34.0-0",
     "metadata": {
       "homepage": "https://keel.sh",
       "license": "MPL-2.0",
@@ -91,31 +91,6 @@
   "render": {
     "kubernetesVersion": "1.37.0",
     "profiles": {
-      "multi-node": {
-        "workloads": [
-          {
-            "release": "keel",
-            "namespace": "keel",
-            "name": "keel",
-            "kind": "Deployment",
-            "replicas": 1,
-            "containers": [
-              {
-                "name": "keel",
-                "requests": {
-                  "cpu": "20m",
-                  "memory": "64Mi"
-                },
-                "limits": {
-                  "cpu": "100m",
-                  "memory": "256Mi"
-                }
-              }
-            ]
-          }
-        ],
-        "persistentVolumeClaims": []
-      },
       "single-node": {
         "workloads": [
           {
@@ -134,6 +109,31 @@
                 "limits": {
                   "cpu": "100m",
                   "memory": "128Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      },
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "keel",
+            "namespace": "keel",
+            "name": "keel",
+            "kind": "Deployment",
+            "replicas": 1,
+            "containers": [
+              {
+                "name": "keel",
+                "requests": {
+                  "cpu": "20m",
+                  "memory": "64Mi"
+                },
+                "limits": {
+                  "cpu": "100m",
+                  "memory": "256Mi"
                 }
               }
             ]
@@ -422,5 +422,10 @@
       },
       "measuredAt": "2026-11-20"
     }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
   ]
 }

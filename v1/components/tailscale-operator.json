@@ -49,7 +49,7 @@
       }
     ],
     "kind": "Component",
-    "kubeVersion": "\u003e=1.34.0-0",
+    "kubeVersion": ">=1.34.0-0",
     "metadata": {
       "homepage": "https://tailscale.com/kb/1236/kubernetes-operator",
       "license": "BSD-3-Clause",
@@ -106,30 +106,6 @@
   "render": {
     "kubernetesVersion": "1.37.0",
     "profiles": {
-      "multi-node": {
-        "workloads": [
-          {
-            "release": "tailscale-operator",
-            "namespace": "tailscale",
-            "name": "operator",
-            "kind": "Deployment",
-            "replicas": 1,
-            "containers": [
-              {
-                "name": "operator",
-                "requests": {
-                  "cpu": "50m",
-                  "memory": "128Mi"
-                },
-                "limits": {
-                  "memory": "512Mi"
-                }
-              }
-            ]
-          }
-        ],
-        "persistentVolumeClaims": []
-      },
       "single-node": {
         "workloads": [
           {
@@ -153,8 +129,37 @@
           }
         ],
         "persistentVolumeClaims": []
+      },
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "tailscale-operator",
+            "namespace": "tailscale",
+            "name": "operator",
+            "kind": "Deployment",
+            "replicas": 1,
+            "containers": [
+              {
+                "name": "operator",
+                "requests": {
+                  "cpu": "50m",
+                  "memory": "128Mi"
+                },
+                "limits": {
+                  "memory": "512Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
       }
     }
   },
-  "measurements": []
+  "measurements": [],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
+  ]
 }

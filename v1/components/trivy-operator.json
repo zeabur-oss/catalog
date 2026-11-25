@@ -32,7 +32,7 @@
       "vulnerabilityreports.aquasecurity.github.io"
     ],
     "kind": "Component",
-    "kubeVersion": "\u003e=1.34.0-0",
+    "kubeVersion": ">=1.34.0-0",
     "leftovers": [
       "customresourcedefinitions"
     ],
@@ -77,30 +77,6 @@
   "render": {
     "kubernetesVersion": "1.37.0",
     "profiles": {
-      "multi-node": {
-        "workloads": [
-          {
-            "release": "trivy-operator",
-            "namespace": "trivy-system",
-            "name": "trivy-operator",
-            "kind": "Deployment",
-            "replicas": 1,
-            "containers": [
-              {
-                "name": "trivy-operator",
-                "requests": {
-                  "cpu": "50m",
-                  "memory": "128Mi"
-                },
-                "limits": {
-                  "memory": "1Gi"
-                }
-              }
-            ]
-          }
-        ],
-        "persistentVolumeClaims": []
-      },
       "single-node": {
         "workloads": [
           {
@@ -118,6 +94,30 @@
                 },
                 "limits": {
                   "memory": "512Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      },
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "trivy-operator",
+            "namespace": "trivy-system",
+            "name": "trivy-operator",
+            "kind": "Deployment",
+            "replicas": 1,
+            "containers": [
+              {
+                "name": "trivy-operator",
+                "requests": {
+                  "cpu": "50m",
+                  "memory": "128Mi"
+                },
+                "limits": {
+                  "memory": "1Gi"
                 }
               }
             ]
@@ -412,5 +412,10 @@
       },
       "measuredAt": "2026-11-20"
     }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
   ]
 }

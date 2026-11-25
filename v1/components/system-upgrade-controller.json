@@ -28,7 +28,7 @@
       "rke2"
     ],
     "kind": "Component",
-    "kubeVersion": "\u003e=1.34.0-0",
+    "kubeVersion": ">=1.34.0-0",
     "metadata": {
       "homepage": "https://github.com/rancher/system-upgrade-controller",
       "license": "Apache-2.0",
@@ -80,7 +80,7 @@
   "render": {
     "kubernetesVersion": "1.37.0",
     "profiles": {
-      "multi-node": {
+      "single-node": {
         "workloads": [
           {
             "release": "controller",
@@ -97,7 +97,7 @@
         ],
         "persistentVolumeClaims": []
       },
-      "single-node": {
+      "multi-node": {
         "workloads": [
           {
             "release": "controller",
@@ -367,5 +367,10 @@
       },
       "measuredAt": "2026-11-22"
     }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
   ]
 }

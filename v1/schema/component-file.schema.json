@@ -1,75 +1,91 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://oss-catalog.zeabur.com/v1/schema/component-file.schema.json",
   "$defs": {
-    "declaration": {
-      "$ref": "component.schema.json"
+    "Distribution": {
+      "description": "A host distribution of Kubernetes that a component runs on.",
+      "oneOf": [
+        {
+          "const": "k3s",
+          "description": "K3s.",
+          "type": "string"
+        },
+        {
+          "const": "rke2",
+          "description": "RKE2.",
+          "type": "string"
+        },
+        {
+          "const": "kubesolo",
+          "description": "KubeSolo.",
+          "type": "string"
+        }
+      ]
     },
-    "environment": {
+    "Environment": {
+      "additionalProperties": false,
+      "description": "One run of an e2e test.",
       "properties": {
-        "distribution": {
-          "type": "string",
-          "description": "kind, k3s, rke2 or kubesolo. A reader ignores a value it does not know."
-        },
-        "profile": {
-          "type": "string",
-          "description": "The catalog profile whose values the run installed."
-        },
-        "platform": {
-          "$ref": "#/$defs/platform"
-        },
-        "kubernetesVersion": {
-          "type": "string",
-          "description": "Empty when the cluster never answered."
-        },
-        "distributionVersion": {
-          "type": "string",
-          "description": "The release of a distribution installed on the host. kind has none."
-        },
-        "result": {
-          "type": "string",
-          "description": "passed or failed. A reader treats any other value as not passed."
-        },
-        "pods": {
-          "items": {
-            "$ref": "#/$defs/podUsage"
+        "addOns": {
+          "additionalProperties": {
+            "type": "string"
           },
-          "type": "array",
-          "description": "The idle usage of one pod of each workload the run started."
-        },
-        "versions": {
-          "items": {
-            "$ref": "#/$defs/measuredVersion"
-          },
-          "type": "array",
-          "description": "The version of each release that the run installed."
-        },
-        "sourceDigest": {
-          "type": "string",
-          "description": "The Go module hash (h1:) of the component file, or of the template directory, that the run\ninstalled."
+          "description": "The pinned release of each add-on it installed on the host, by name.",
+          "type": "object"
         },
         "dependencies": {
           "additionalProperties": {
             "type": "string"
           },
-          "type": "object",
-          "description": "The sourceDigest of each component that the run installed first, by ID."
+          "description": "The digest of each component it installed first, by id.",
+          "type": "object"
         },
-        "addOns": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "type": "object",
-          "description": "The pinned release of each add-on that the run installed on the host, by name."
+        "distribution": {
+          "$ref": "#/$defs/MeasuredDistribution",
+          "description": "Where it ran."
+        },
+        "distributionVersion": {
+          "description": "The release of a host distribution; kind has none.",
+          "type": "string"
+        },
+        "kubernetesVersion": {
+          "description": "Absent when the cluster never answered.",
+          "type": "string"
         },
         "measuredAt": {
-          "type": "string",
+          "description": "The day, `YYYY-MM-DD` in UTC.",
           "format": "date",
-          "description": "The day of the run, in UTC."
+          "type": "string"
+        },
+        "platform": {
+          "$ref": "#/$defs/Platform",
+          "description": "The platform of the nodes."
+        },
+        "pods": {
+          "description": "The idle use of one pod of each workload it started.",
+          "items": {
+            "$ref": "#/$defs/PodUsage"
+          },
+          "type": "array"
+        },
+        "profile": {
+          "$ref": "#/$defs/Profile",
+          "description": "The profile whose values it installed."
+        },
+        "result": {
+          "$ref": "#/$defs/RunResult",
+          "description": "Whether it passed."
+        },
+        "sourceDigest": {
+          "description": "The digest of the directory it installed.",
+          "type": "string"
+        },
+        "versions": {
+          "description": "The version of each release or image it installed.",
+          "items": {
+            "$ref": "#/$defs/MeasuredVersion"
+          },
+          "type": "array"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "distribution",
         "profile",
@@ -77,214 +93,271 @@
         "result",
         "measuredAt"
       ],
-      "description": "Environment is one run of a component or template test. distribution, profile, platform,\nkubernetesVersion and distributionVersion identify it."
+      "type": "object"
     },
-    "measuredVersion": {
+    "Kind": {
+      "description": "kind, Kubernetes in Docker.",
+      "oneOf": [
+        {
+          "const": "kind",
+          "description": "`kind`.",
+          "type": "string"
+        }
+      ]
+    },
+    "MeasuredDistribution": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Kind",
+          "description": "kind."
+        },
+        {
+          "$ref": "#/$defs/Distribution",
+          "description": "A distribution installed on the host."
+        }
+      ],
+      "description": "Where an e2e run ran: kind, or a host distribution."
+    },
+    "MeasuredVersion": {
+      "additionalProperties": false,
+      "description": "The version of a component's release or of a template's image.",
       "properties": {
-        "release": {
+        "digest": {
+          "description": "The digest.",
           "type": "string"
         },
         "image": {
+          "description": "The image.",
+          "type": "string"
+        },
+        "release": {
+          "description": "The release.",
           "type": "string"
         },
         "version": {
-          "type": "string"
-        },
-        "digest": {
+          "description": "The version.",
           "type": "string"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
-      "description": "MeasuredVersion is the version of a component's release or of a template's image."
+      "type": "object"
     },
-    "platform": {
+    "Platform": {
+      "additionalProperties": false,
+      "description": "An OS and an architecture.",
       "properties": {
-        "os": {
+        "architecture": {
+          "description": "`amd64`.",
           "type": "string"
         },
-        "architecture": {
+        "os": {
+          "description": "`linux`.",
           "type": "string"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "os",
         "architecture"
       ],
-      "description": "Platform is the OS and architecture of the nodes of a run."
+      "type": "object"
     },
-    "podUsage": {
+    "PodUsage": {
+      "additionalProperties": false,
+      "description": "The idle use of one pod of a workload.",
       "properties": {
-        "workload": {
+        "cpu": {
+          "description": "CPU, such as `3m`.",
+          "pattern": "^[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)(([KMGTPE]i)|[numkMGTPE]|([eE][+-]?[0-9]+))?$",
           "type": "string"
         },
         "kind": {
+          "description": "The controller's kind.",
           "type": "string"
         },
         "memory": {
-          "type": "string",
+          "description": "Memory, such as `22Mi`.",
           "pattern": "^[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)(([KMGTPE]i)|[numkMGTPE]|([eE][+-]?[0-9]+))?$",
-          "description": "Memory and CPU are Kubernetes quantities in JSON, such as \"22Mi\" and \"3m\"."
+          "type": "string"
         },
-        "cpu": {
-          "type": "string",
-          "pattern": "^[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)(([KMGTPE]i)|[numkMGTPE]|([eE][+-]?[0-9]+))?$"
+        "workload": {
+          "description": "The controller the pod belongs to.",
+          "type": "string"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "workload",
         "kind",
         "memory",
         "cpu"
       ],
-      "description": "PodUsage is the idle usage of one pod of a workload: the median over the\nworkload's pods at the measurement time. Replicas and requests are not\nmeasured; they come from the rendered objects."
+      "type": "object"
     },
-    "render": {
+    "Profile": {
+      "description": "A deployment layout. Every component describes both.",
+      "oneOf": [
+        {
+          "const": "single-node",
+          "description": "One node.",
+          "type": "string"
+        },
+        {
+          "const": "multi-node",
+          "description": "Three nodes or more.",
+          "type": "string"
+        }
+      ]
+    },
+    "Render": {
+      "additionalProperties": false,
+      "description": "What `helm template` renders for each profile with the test inputs and every contribution.",
       "properties": {
         "kubernetesVersion": {
-          "type": "string",
-          "description": "The Kubernetes version of the render: the newest in catalog.json kubernetes."
+          "description": "The Kubernetes version of the render.",
+          "type": "string"
         },
         "profiles": {
           "additionalProperties": {
-            "$ref": "#/$defs/renderedProfile"
+            "$ref": "#/$defs/RenderedProfile"
           },
-          "type": "object",
-          "description": "The objects of each profile. A profile where the component is unsupported is missing."
+          "description": "The objects of each profile. A profile where the component is unsupported is missing.",
+          "type": "object"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "kubernetesVersion",
         "profiles"
       ],
-      "description": "Render is what helm template renders for each profile with the test inputs and the values that\nother components contribute."
+      "type": "object"
     },
-    "renderedClaim": {
+    "RenderedClaim": {
+      "additionalProperties": false,
+      "description": "The requested storage of a `PersistentVolumeClaim`.",
       "properties": {
-        "release": {
-          "type": "string",
-          "description": "The release of the component that renders it. A volumeClaimTemplates entry has none."
+        "name": {
+          "description": "Its name.",
+          "type": "string"
         },
         "namespace": {
-          "type": "string",
-          "description": "The namespace of a PersistentVolumeClaim. A volumeClaimTemplates entry has none."
+          "description": "Its namespace; a `volumeClaimTemplates` entry has none.",
+          "type": "string"
         },
-        "name": {
+        "release": {
+          "description": "The release that renders it; a `volumeClaimTemplates` entry has none.",
           "type": "string"
         },
         "storage": {
-          "type": "string",
-          "pattern": "^[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)(([KMGTPE]i)|[numkMGTPE]|([eE][+-]?[0-9]+))?$"
+          "description": "The storage it requests.",
+          "pattern": "^[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)(([KMGTPE]i)|[numkMGTPE]|([eE][+-]?[0-9]+))?$",
+          "type": "string"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "name",
         "storage"
       ],
-      "description": "RenderedClaim is the requested storage of a PersistentVolumeClaim."
+      "type": "object"
     },
-    "renderedContainer": {
+    "RenderedContainer": {
+      "additionalProperties": false,
+      "description": "The requests and limits of a container, by resource name.",
       "properties": {
+        "limits": {
+          "additionalProperties": {
+            "pattern": "^[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)(([KMGTPE]i)|[numkMGTPE]|([eE][+-]?[0-9]+))?$",
+            "type": "string"
+          },
+          "description": "Its limits.",
+          "type": "object"
+        },
         "name": {
+          "description": "Its name.",
           "type": "string"
         },
         "requests": {
           "additionalProperties": {
-            "type": "string",
             "pattern": "^[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)(([KMGTPE]i)|[numkMGTPE]|([eE][+-]?[0-9]+))?$",
-            "description": "A Kubernetes quantity, such as 256Mi or 100m."
+            "type": "string"
           },
-          "type": "object"
-        },
-        "limits": {
-          "additionalProperties": {
-            "type": "string",
-            "pattern": "^[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)(([KMGTPE]i)|[numkMGTPE]|([eE][+-]?[0-9]+))?$",
-            "description": "A Kubernetes quantity, such as 256Mi or 100m."
-          },
+          "description": "Its requests.",
           "type": "object"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "name"
       ],
-      "description": "RenderedContainer is the requests and limits of a container, by resource name."
+      "type": "object"
     },
-    "renderedProfile": {
+    "RenderedProfile": {
+      "additionalProperties": false,
+      "description": "The objects of a component on one profile.",
       "properties": {
-        "workloads": {
+        "persistentVolumeClaims": {
+          "description": "Its `PersistentVolumeClaims`.",
           "items": {
-            "$ref": "#/$defs/renderedWorkload"
+            "$ref": "#/$defs/RenderedClaim"
           },
           "type": "array"
         },
-        "persistentVolumeClaims": {
+        "workloads": {
+          "description": "Its workloads.",
           "items": {
-            "$ref": "#/$defs/renderedClaim"
+            "$ref": "#/$defs/RenderedWorkload"
           },
           "type": "array"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "workloads",
         "persistentVolumeClaims"
       ],
-      "description": "RenderedProfile is the objects of a component on one profile."
+      "type": "object"
     },
-    "renderedWorkload": {
+    "RenderedWorkload": {
+      "additionalProperties": false,
+      "description": "A rendered workload. One that an operator creates later is missing.",
       "properties": {
-        "release": {
-          "type": "string",
-          "description": "The release of the component that renders it."
-        },
-        "namespace": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "kind": {
-          "type": "string",
-          "description": "Deployment, StatefulSet or DaemonSet. A reader ignores a value it does not know."
-        },
-        "replicas": {
-          "type": "integer",
-          "description": "spec.replicas, 1 if not set. A DaemonSet has none: it runs one pod on each node."
-        },
         "containers": {
+          "description": "Its containers.",
           "items": {
-            "$ref": "#/$defs/renderedContainer"
+            "$ref": "#/$defs/RenderedContainer"
           },
           "type": "array"
         },
         "initContainers": {
+          "description": "Its init containers.",
           "items": {
-            "$ref": "#/$defs/renderedContainer"
+            "$ref": "#/$defs/RenderedContainer"
           },
           "type": "array"
         },
+        "kind": {
+          "$ref": "#/$defs/WorkloadKind",
+          "description": "Its kind."
+        },
+        "name": {
+          "description": "Its name.",
+          "type": "string"
+        },
+        "namespace": {
+          "description": "Its namespace.",
+          "type": "string"
+        },
+        "release": {
+          "description": "The release that renders it.",
+          "type": "string"
+        },
+        "replicas": {
+          "description": "`spec.replicas`; a `DaemonSet` has none.",
+          "format": "int32",
+          "type": "integer"
+        },
         "volumeClaimTemplates": {
+          "description": "The claims a `StatefulSet` makes for each pod.",
           "items": {
-            "$ref": "#/$defs/renderedClaim"
+            "$ref": "#/$defs/RenderedClaim"
           },
-          "type": "array",
-          "description": "The claims that a StatefulSet makes for each pod."
+          "type": "array"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "release",
         "namespace",
@@ -292,36 +365,82 @@
         "kind",
         "containers"
       ],
-      "description": "RenderedWorkload is a Deployment, StatefulSet or DaemonSet. A workload that an operator creates\nlater is missing."
+      "type": "object"
+    },
+    "RunResult": {
+      "description": "Whether a run passed.",
+      "oneOf": [
+        {
+          "const": "passed",
+          "description": "It passed.",
+          "type": "string"
+        },
+        {
+          "const": "failed",
+          "description": "It failed.",
+          "type": "string"
+        }
+      ]
+    },
+    "WorkloadKind": {
+      "description": "A workload kind that the catalog recognises by its labels or its rollout.",
+      "oneOf": [
+        {
+          "const": "DaemonSet",
+          "description": "`DaemonSet`.",
+          "type": "string"
+        },
+        {
+          "const": "Deployment",
+          "description": "`Deployment`.",
+          "type": "string"
+        },
+        {
+          "const": "StatefulSet",
+          "description": "`StatefulSet`.",
+          "type": "string"
+        }
+      ]
     }
   },
+  "$id": "https://oss-catalog.zeabur.com/v1/schema/component-file.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "`components/<id>.json`.",
   "properties": {
-    "id": {
-      "type": "string",
-      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
-      "description": "The directory name of the component under components/."
-    },
-    "sourceDigest": {
-      "type": "string",
-      "description": "The Go module hash (h1:) of the directory components/\u003cid\u003e/, without its READMEs. A\nmeasurement with another sourceDigest tested older files."
-    },
     "declaration": {
-      "$ref": "#/$defs/declaration",
-      "description": "components/\u003cid\u003e/component.yaml as written."
+      "$ref": "component.schema.json",
+      "description": "`component.yaml` as written."
     },
-    "render": {
-      "$ref": "#/$defs/render"
+    "id": {
+      "description": "Its id.",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "type": "string"
     },
     "measurements": {
+      "description": "Every recorded run of its e2e test.",
       "items": {
-        "$ref": "#/$defs/environment"
+        "$ref": "#/$defs/Environment"
       },
-      "type": "array",
-      "description": "Every recorded run of the component's e2e test, passed or failed."
+      "type": "array"
+    },
+    "readmes": {
+      "default": [],
+      "description": "The locales of its READMEs, such as `en` and `zh-TW`. Each is a Markdown file next to this\none: `components/<id>/README.md` for `en`, `components/<id>/README.<locale>.md` for\nanother.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "render": {
+      "$ref": "#/$defs/Render",
+      "description": "What it renders on each profile."
+    },
+    "sourceDigest": {
+      "description": "The digest of its directory.",
+      "type": "string"
     }
   },
-  "additionalProperties": false,
-  "type": "object",
   "required": [
     "id",
     "sourceDigest",
@@ -329,6 +448,6 @@
     "render",
     "measurements"
   ],
-  "title": "components/\u003cid\u003e.json",
-  "description": "ComponentFile is components/\u003cid\u003e.json: the declaration of a component, the objects it renders\nand the runs of its e2e test."
+  "title": "components/<id>.json",
+  "type": "object"
 }

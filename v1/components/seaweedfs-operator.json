@@ -1,6 +1,6 @@
 {
   "id": "seaweedfs-operator",
-  "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
+  "sourceDigest": "h1:evcla7qREi3hktguB1gpKGIX5yvANm9P4391gKPPKTY=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -28,8 +28,20 @@
       "rke2",
       "kubesolo"
     ],
+    "health": [
+      {
+        "advice": "SeaweedFS clusters can't be created or changed until the SeaweedFS operator and its webhook run. Check its pods with kubectl -n seaweedfs-operator get pods.",
+        "name": "operator",
+        "resource": {
+          "kind": "Deployment",
+          "name": "seaweedfs-operator",
+          "namespace": "seaweedfs-operator"
+        },
+        "timeout": "60s"
+      }
+    ],
     "kind": "Component",
-    "kubeVersion": "\u003e=1.34.0-0",
+    "kubeVersion": ">=1.34.0-0",
     "leftovers": [
       "customresourcedefinitions",
       "persistentvolumeclaims"
@@ -79,7 +91,7 @@
     },
     "smoke": [
       {
-        "manifest": "# Proves SeaweedFS runs under restricted Pod Security.\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: catalog-smoke\n  labels: {pod-security.kubernetes.io/enforce: restricted}\n---\napiVersion: seaweed.seaweedfs.com/v1\nkind: Seaweed\nmetadata: {name: smoke, namespace: catalog-smoke}\nspec:\n  image: chrislusf/seaweedfs:4.53\n  volumeServerDiskCount: 1\n  master:\n    replicas: 1\n    podSecurityContext: \u0026pod\n      runAsNonRoot: true\n      runAsUser: 1000\n      runAsGroup: 1000\n      fsGroup: 1000\n      seccompProfile: {type: RuntimeDefault}\n    containerSecurityContext: \u0026container\n      allowPrivilegeEscalation: false\n      capabilities: {drop: [ALL]}\n  volume:\n    replicas: 1\n    requests: {storage: 1Gi}\n    podSecurityContext: *pod\n    containerSecurityContext: *container\n  filer:\n    replicas: 1\n    podSecurityContext: *pod\n    containerSecurityContext: *container\n  s3:\n    replicas: 1\n    podSecurityContext: *pod\n    containerSecurityContext: *container\n",
+        "manifest": "# Proves SeaweedFS runs under restricted Pod Security.\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: catalog-smoke\n  labels: {pod-security.kubernetes.io/enforce: restricted}\n---\napiVersion: seaweed.seaweedfs.com/v1\nkind: Seaweed\nmetadata: {name: smoke, namespace: catalog-smoke}\nspec:\n  image: chrislusf/seaweedfs:4.53\n  volumeServerDiskCount: 1\n  master:\n    replicas: 1\n    podSecurityContext: &pod\n      runAsNonRoot: true\n      runAsUser: 1000\n      runAsGroup: 1000\n      fsGroup: 1000\n      seccompProfile: {type: RuntimeDefault}\n    containerSecurityContext: &container\n      allowPrivilegeEscalation: false\n      capabilities: {drop: [ALL]}\n  volume:\n    replicas: 1\n    requests: {storage: 1Gi}\n    podSecurityContext: *pod\n    containerSecurityContext: *container\n  filer:\n    replicas: 1\n    podSecurityContext: *pod\n    containerSecurityContext: *container\n  s3:\n    replicas: 1\n    podSecurityContext: *pod\n    containerSecurityContext: *container\n",
         "name": "one-node-s3",
         "timeout": "600s",
         "wait": [
@@ -94,31 +106,6 @@
   "render": {
     "kubernetesVersion": "1.37.0",
     "profiles": {
-      "multi-node": {
-        "workloads": [
-          {
-            "release": "seaweedfs-operator",
-            "namespace": "seaweedfs-operator",
-            "name": "seaweedfs-operator",
-            "kind": "Deployment",
-            "replicas": 2,
-            "containers": [
-              {
-                "name": "seaweedfs-operator",
-                "requests": {
-                  "cpu": "10m",
-                  "memory": "64Mi"
-                },
-                "limits": {
-                  "cpu": "500m",
-                  "memory": "512Mi"
-                }
-              }
-            ]
-          }
-        ],
-        "persistentVolumeClaims": []
-      },
       "single-node": {
         "workloads": [
           {
@@ -143,6 +130,31 @@
           }
         ],
         "persistentVolumeClaims": []
+      },
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "seaweedfs-operator",
+            "namespace": "seaweedfs-operator",
+            "name": "seaweedfs-operator",
+            "kind": "Deployment",
+            "replicas": 2,
+            "containers": [
+              {
+                "name": "seaweedfs-operator",
+                "requests": {
+                  "cpu": "10m",
+                  "memory": "64Mi"
+                },
+                "limits": {
+                  "cpu": "500m",
+                  "memory": "512Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
       }
     }
   },
@@ -161,7 +173,7 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "28Mi",
+          "memory": "27Mi",
           "cpu": "1m"
         }
       ],
@@ -171,12 +183,12 @@
           "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
+      "sourceDigest": "h1:evcla7qREi3hktguB1gpKGIX5yvANm9P4391gKPPKTY=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "k3s",
@@ -202,12 +214,12 @@
           "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
+      "sourceDigest": "h1:evcla7qREi3hktguB1gpKGIX5yvANm9P4391gKPPKTY=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kind",
@@ -232,12 +244,12 @@
           "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
+      "sourceDigest": "h1:evcla7qREi3hktguB1gpKGIX5yvANm9P4391gKPPKTY=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kind",
@@ -252,7 +264,7 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "26Mi",
+          "memory": "27Mi",
           "cpu": "1m"
         }
       ],
@@ -262,12 +274,12 @@
           "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
+      "sourceDigest": "h1:evcla7qREi3hktguB1gpKGIX5yvANm9P4391gKPPKTY=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kind",
@@ -292,12 +304,12 @@
           "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
+      "sourceDigest": "h1:evcla7qREi3hktguB1gpKGIX5yvANm9P4391gKPPKTY=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kind",
@@ -322,12 +334,12 @@
           "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
+      "sourceDigest": "h1:evcla7qREi3hktguB1gpKGIX5yvANm9P4391gKPPKTY=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kubesolo",
@@ -343,7 +355,7 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "23Mi",
+          "memory": "25Mi",
           "cpu": "1m"
         }
       ],
@@ -353,7 +365,7 @@
           "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
+      "sourceDigest": "h1:evcla7qREi3hktguB1gpKGIX5yvANm9P4391gKPPKTY=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
@@ -361,7 +373,7 @@
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "kubesolo",
@@ -377,7 +389,7 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "24Mi",
+          "memory": "27Mi",
           "cpu": "1m"
         }
       ],
@@ -387,7 +399,7 @@
           "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
+      "sourceDigest": "h1:evcla7qREi3hktguB1gpKGIX5yvANm9P4391gKPPKTY=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
@@ -395,7 +407,7 @@
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "rke2",
@@ -411,7 +423,7 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "30Mi",
+          "memory": "28Mi",
           "cpu": "1m"
         }
       ],
@@ -421,7 +433,7 @@
           "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
+      "sourceDigest": "h1:evcla7qREi3hktguB1gpKGIX5yvANm9P4391gKPPKTY=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
@@ -429,7 +441,7 @@
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     },
     {
       "distribution": "rke2",
@@ -445,7 +457,7 @@
         {
           "workload": "seaweedfs-operator",
           "kind": "Deployment",
-          "memory": "29Mi",
+          "memory": "28Mi",
           "cpu": "1m"
         }
       ],
@@ -455,7 +467,7 @@
           "version": "0.1.47"
         }
       ],
-      "sourceDigest": "h1:1WNRfEFoMcpo2+AkCZrDalPLAWhAMMsvhMf12xUIIFI=",
+      "sourceDigest": "h1:evcla7qREi3hktguB1gpKGIX5yvANm9P4391gKPPKTY=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
@@ -463,7 +475,12 @@
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-24"
     }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
   ]
 }

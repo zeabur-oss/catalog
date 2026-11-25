@@ -94,5 +94,39 @@
       }
     ]
   },
-  "manifests": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: openclaw-sandbox-browser\n  namespace: '{{ .Namespace }}'\n  labels:\n    app.kubernetes.io/name: openclaw-sandbox-browser\nspec:\n  replicas: 1\n  strategy:\n    type: Recreate\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: openclaw-sandbox-browser\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: openclaw-browser-sandbox\n        app.kubernetes.io/name: openclaw-sandbox-browser\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: openclaw-sandbox-browser\n        image: ghcr.io/canyugs/openclaw-sandbox-browser:edcc8e5@sha256:e6fcd2cb4272498709d16ad6a12526363559ed5846eb2ff0f775f15d62365ef7\n        ports:\n        - name: cdp\n          containerPort: 9222\n        env:\n        - name: OPENCLAW_BROWSER_CDP_PORT\n          value: '9222'\n        - name: OPENCLAW_BROWSER_HEADLESS\n          value: '1'\n        - name: OPENCLAW_BROWSER_ENABLE_NOVNC\n          value: '0'\n        securityContext:\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n        resources:\n          requests:\n            cpu: 250m\n            memory: 512Mi\n          limits:\n            cpu: '2'\n            memory: 2Gi\n        volumeMounts:\n        - name: tmp\n          mountPath: /tmp\n        - name: shm\n          mountPath: /dev/shm\n        readinessProbe:\n          tcpSocket:\n            port: cdp\n          periodSeconds: 10\n          timeoutSeconds: 3\n          failureThreshold: 6\n        livenessProbe:\n          tcpSocket:\n            port: cdp\n          periodSeconds: 10\n          timeoutSeconds: 3\n          failureThreshold: 6\n        startupProbe:\n          tcpSocket:\n            port: cdp\n          periodSeconds: 10\n          timeoutSeconds: 3\n          failureThreshold: 60\n      volumes:\n      - name: tmp\n        emptyDir:\n          sizeLimit: 1Gi\n      - name: shm\n        emptyDir:\n          medium: Memory\n          sizeLimit: 256Mi\n---\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: openclaw-sandbox-browser-allow\n  namespace: '{{ .Namespace }}'\n  labels:\n    app.kubernetes.io/name: openclaw-sandbox-browser-allow\nspec:\n  podSelector:\n    matchLabels:\n      templates.zeabur.com/template: openclaw-browser-sandbox\n      app.kubernetes.io/name: openclaw-sandbox-browser\n  policyTypes: [Ingress]\n  ingress:\n  - from:\n    - podSelector:\n        matchLabels:\n          templates.zeabur.com/openclaw-browser-sandbox-client: 'true'\n    ports:\n    - protocol: TCP\n      port: 9222\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: openclaw-sandbox-browser\n  namespace: '{{ .Namespace }}'\n  labels:\n    app.kubernetes.io/name: openclaw-sandbox-browser\nspec:\n  type: ClusterIP\n  selector:\n    app.kubernetes.io/name: openclaw-sandbox-browser\n  ports:\n  - name: cdp\n    port: 9222\n    targetPort: cdp\n"
+  "manifests": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: openclaw-sandbox-browser\n  namespace: '{{ .Namespace }}'\n  labels:\n    app.kubernetes.io/name: openclaw-sandbox-browser\nspec:\n  replicas: 1\n  strategy:\n    type: Recreate\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: openclaw-sandbox-browser\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: openclaw-browser-sandbox\n        app.kubernetes.io/name: openclaw-sandbox-browser\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: openclaw-sandbox-browser\n        image: ghcr.io/canyugs/openclaw-sandbox-browser:edcc8e5@sha256:e6fcd2cb4272498709d16ad6a12526363559ed5846eb2ff0f775f15d62365ef7\n        ports:\n        - name: cdp\n          containerPort: 9222\n        env:\n        - name: OPENCLAW_BROWSER_CDP_PORT\n          value: '9222'\n        - name: OPENCLAW_BROWSER_HEADLESS\n          value: '1'\n        - name: OPENCLAW_BROWSER_ENABLE_NOVNC\n          value: '0'\n        securityContext:\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n        resources:\n          requests:\n            cpu: 250m\n            memory: 512Mi\n          limits:\n            cpu: '2'\n            memory: 2Gi\n        volumeMounts:\n        - name: tmp\n          mountPath: /tmp\n        - name: shm\n          mountPath: /dev/shm\n        readinessProbe:\n          tcpSocket:\n            port: cdp\n          periodSeconds: 10\n          timeoutSeconds: 3\n          failureThreshold: 6\n        livenessProbe:\n          tcpSocket:\n            port: cdp\n          periodSeconds: 10\n          timeoutSeconds: 3\n          failureThreshold: 6\n        startupProbe:\n          tcpSocket:\n            port: cdp\n          periodSeconds: 10\n          timeoutSeconds: 3\n          failureThreshold: 60\n      volumes:\n      - name: tmp\n        emptyDir:\n          sizeLimit: 1Gi\n      - name: shm\n        emptyDir:\n          medium: Memory\n          sizeLimit: 256Mi\n---\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: openclaw-sandbox-browser-allow\n  namespace: '{{ .Namespace }}'\n  labels:\n    app.kubernetes.io/name: openclaw-sandbox-browser-allow\nspec:\n  podSelector:\n    matchLabels:\n      templates.zeabur.com/template: openclaw-browser-sandbox\n      app.kubernetes.io/name: openclaw-sandbox-browser\n  policyTypes: [Ingress]\n  ingress:\n  - from:\n    - podSelector:\n        matchLabels:\n          templates.zeabur.com/openclaw-browser-sandbox-client: 'true'\n    ports:\n    - protocol: TCP\n      port: 9222\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: openclaw-sandbox-browser\n  namespace: '{{ .Namespace }}'\n  labels:\n    app.kubernetes.io/name: openclaw-sandbox-browser\nspec:\n  type: ClusterIP\n  selector:\n    app.kubernetes.io/name: openclaw-sandbox-browser\n  ports:\n  - name: cdp\n    port: 9222\n    targetPort: cdp\n",
+  "measurements": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "openclaw-sandbox-browser",
+          "kind": "Deployment",
+          "memory": "176Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "image": "ghcr.io/canyugs/openclaw-sandbox-browser",
+          "version": "edcc8e5",
+          "digest": "sha256:e6fcd2cb4272498709d16ad6a12526363559ed5846eb2ff0f775f15d62365ef7"
+        }
+      ],
+      "sourceDigest": "h1:AILr7F7ks/+CiHt7TWE4v7eStXUgQDXxZmlnWVsncUU=",
+      "measuredAt": "2026-11-20"
+    }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
+  ]
 }

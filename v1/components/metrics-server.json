@@ -57,7 +57,7 @@
       }
     ],
     "kind": "Component",
-    "kubeVersion": "\u003e=1.34.0-0",
+    "kubeVersion": ">=1.34.0-0",
     "metadata": {
       "homepage": "https://github.com/kubernetes-sigs/metrics-server",
       "license": "Apache-2.0",
@@ -100,30 +100,6 @@
   "render": {
     "kubernetesVersion": "1.37.0",
     "profiles": {
-      "multi-node": {
-        "workloads": [
-          {
-            "release": "metrics-server",
-            "namespace": "kube-system",
-            "name": "metrics-server",
-            "kind": "Deployment",
-            "replicas": 2,
-            "containers": [
-              {
-                "name": "metrics-server",
-                "requests": {
-                  "cpu": "50m",
-                  "memory": "96Mi"
-                },
-                "limits": {
-                  "memory": "256Mi"
-                }
-              }
-            ]
-          }
-        ],
-        "persistentVolumeClaims": []
-      },
       "single-node": {
         "workloads": [
           {
@@ -141,6 +117,30 @@
                 },
                 "limits": {
                   "memory": "128Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      },
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "metrics-server",
+            "namespace": "kube-system",
+            "name": "metrics-server",
+            "kind": "Deployment",
+            "replicas": 2,
+            "containers": [
+              {
+                "name": "metrics-server",
+                "requests": {
+                  "cpu": "50m",
+                  "memory": "96Mi"
+                },
+                "limits": {
+                  "memory": "256Mi"
                 }
               }
             ]
@@ -429,5 +429,10 @@
       },
       "measuredAt": "2026-11-20"
     }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
   ]
 }

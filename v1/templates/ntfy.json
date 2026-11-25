@@ -1,6 +1,6 @@
 {
   "id": "ntfy",
-  "sourceDigest": "h1:XBrobIIGQ+1qfL9KqSSfaI0zawU3NnTQ6LdquHaN0Oo=",
+  "sourceDigest": "h1:PZDw1le4/4u6IQ5zDvoAC3k4tbsCfBEtGwsssVVeKjg=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -36,7 +36,7 @@
       },
       "name": "ntfy",
       "summary": "A push notification server where topics need an account and messages stay on a volume.",
-      "version": "v2.38.0"
+      "version": "v2.38.1"
     },
     "requires": [
       {
@@ -152,5 +152,43 @@
       }
     ]
   },
-  "manifests": "apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: ntfy-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 5Gi\n---\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: ntfy\n  namespace: '{{ .Namespace }}'\nspec:\n  serviceName: ntfy\n  replicas: 1\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: ntfy\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: ntfy\n        app.kubernetes.io/name: ntfy\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: ntfy\n        image: binwiederhier/ntfy:v2.38.0@sha256:771309aecfce18d8fe2bfb8069994ddd6be6ca6ccdd7badace3d791a0045ff0d\n        # auth-users takes a bcrypt hash. Hash the generated password at each\n        # start, so the Secret stays the source of the admin password.\n        command:\n        - /bin/sh\n        - -ec\n        - |\n          hash=\"$(printf '%s\\n%s\\n' \"$ADMIN_PASSWORD\" \"$ADMIN_PASSWORD\" | ntfy user hash | sed -n 's/.*\\(\\$2[aby]\\$.*\\)/\\1/p')\"\n          [ -n \"$hash\" ]\n          unset ADMIN_PASSWORD\n          export NTFY_AUTH_USERS=\"admin:$hash:admin\"\n          exec ntfy serve\n        ports:\n        - name: http\n          containerPort: 8080\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop: [ALL]\n        resources:\n          requests:\n            cpu: 50m\n            memory: 64Mi\n          limits:\n            cpu: '1'\n            memory: 512Mi\n        env:\n        - name: ADMIN_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: ntfy-secrets\n              key: admin-password\n        - name: NTFY_BASE_URL\n          value: https://{{ .Domain }}\n        - name: NTFY_LISTEN_HTTP\n          value: :8080\n        - name: NTFY_BEHIND_PROXY\n          value: 'true'\n        - name: NTFY_CACHE_FILE\n          value: /var/lib/ntfy/cache.db\n        - name: NTFY_AUTH_FILE\n          value: /var/lib/ntfy/user.db\n        - name: NTFY_AUTH_DEFAULT_ACCESS\n          value: deny-all\n        - name: NTFY_ENABLE_LOGIN\n          value: 'true'\n        - name: NTFY_ATTACHMENT_CACHE_DIR\n          value: /var/lib/ntfy/attachments\n        - name: NTFY_ATTACHMENT_TOTAL_SIZE_LIMIT\n          value: 2G\n        volumeMounts:\n        - name: data\n          mountPath: /var/lib/ntfy\n        - name: tmp\n          mountPath: /tmp\n        startupProbe:\n          httpGet:\n            path: /v1/health\n            port: http\n          periodSeconds: 5\n          failureThreshold: 60\n        readinessProbe:\n          httpGet:\n            path: /v1/health\n            port: http\n          periodSeconds: 10\n        livenessProbe:\n          httpGet:\n            path: /v1/health\n            port: http\n          periodSeconds: 20\n          failureThreshold: 6\n      volumes:\n      - name: data\n        persistentVolumeClaim:\n          claimName: ntfy-data\n      - name: tmp\n        emptyDir:\n          sizeLimit: 256Mi\n      terminationGracePeriodSeconds: 30\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: ntfy\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: ntfy\n  ports:\n  - name: http\n    port: 8080\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: ntfy\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts: ['{{ .Domain }}']\n    secretName: ntfy-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: ntfy\n            port:\n              number: 8080\n"
+  "manifests": "apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: ntfy-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 5Gi\n---\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: ntfy\n  namespace: '{{ .Namespace }}'\nspec:\n  serviceName: ntfy\n  replicas: 1\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: ntfy\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: ntfy\n        app.kubernetes.io/name: ntfy\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: ntfy\n        image: binwiederhier/ntfy:v2.38.1@sha256:038da2be5e668fee6d36a62884eea48975e1b71c29a56964e5298c1b9165a573\n        # auth-users takes a bcrypt hash. Hash the generated password at each\n        # start, so the Secret stays the source of the admin password.\n        command:\n        - /bin/sh\n        - -ec\n        - |\n          hash=\"$(printf '%s\\n%s\\n' \"$ADMIN_PASSWORD\" \"$ADMIN_PASSWORD\" | ntfy user hash | sed -n 's/.*\\(\\$2[aby]\\$.*\\)/\\1/p')\"\n          [ -n \"$hash\" ]\n          unset ADMIN_PASSWORD\n          export NTFY_AUTH_USERS=\"admin:$hash:admin\"\n          exec ntfy serve\n        ports:\n        - name: http\n          containerPort: 8080\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop: [ALL]\n        resources:\n          requests:\n            cpu: 50m\n            memory: 64Mi\n          limits:\n            cpu: '1'\n            memory: 512Mi\n        env:\n        - name: ADMIN_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: ntfy-secrets\n              key: admin-password\n        - name: NTFY_BASE_URL\n          value: https://{{ .Domain }}\n        - name: NTFY_LISTEN_HTTP\n          value: :8080\n        - name: NTFY_BEHIND_PROXY\n          value: 'true'\n        - name: NTFY_CACHE_FILE\n          value: /var/lib/ntfy/cache.db\n        - name: NTFY_AUTH_FILE\n          value: /var/lib/ntfy/user.db\n        - name: NTFY_AUTH_DEFAULT_ACCESS\n          value: deny-all\n        - name: NTFY_ENABLE_LOGIN\n          value: 'true'\n        - name: NTFY_ATTACHMENT_CACHE_DIR\n          value: /var/lib/ntfy/attachments\n        - name: NTFY_ATTACHMENT_TOTAL_SIZE_LIMIT\n          value: 2G\n        volumeMounts:\n        - name: data\n          mountPath: /var/lib/ntfy\n        - name: tmp\n          mountPath: /tmp\n        startupProbe:\n          httpGet:\n            path: /v1/health\n            port: http\n          periodSeconds: 5\n          failureThreshold: 60\n        readinessProbe:\n          httpGet:\n            path: /v1/health\n            port: http\n          periodSeconds: 10\n        livenessProbe:\n          httpGet:\n            path: /v1/health\n            port: http\n          periodSeconds: 20\n          failureThreshold: 6\n      volumes:\n      - name: data\n        persistentVolumeClaim:\n          claimName: ntfy-data\n      - name: tmp\n        emptyDir:\n          sizeLimit: 256Mi\n      terminationGracePeriodSeconds: 30\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: ntfy\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: ntfy\n  ports:\n  - name: http\n    port: 8080\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: ntfy\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts: ['{{ .Domain }}']\n    secretName: ntfy-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: ntfy\n            port:\n              number: 8080\n",
+  "measurements": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "ntfy",
+          "kind": "StatefulSet",
+          "memory": "15Mi",
+          "cpu": "1m"
+        }
+      ],
+      "versions": [
+        {
+          "image": "binwiederhier/ntfy",
+          "version": "v2.38.1",
+          "digest": "sha256:038da2be5e668fee6d36a62884eea48975e1b71c29a56964e5298c1b9165a573"
+        }
+      ],
+      "sourceDigest": "h1:PZDw1le4/4u6IQ5zDvoAC3k4tbsCfBEtGwsssVVeKjg=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "measuredAt": "2026-11-24"
+    }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
+  ]
 }

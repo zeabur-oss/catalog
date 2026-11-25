@@ -29,7 +29,7 @@
       "kubesolo"
     ],
     "kind": "Component",
-    "kubeVersion": "\u003e=1.34.0-0",
+    "kubeVersion": ">=1.34.0-0",
     "leftovers": [
       "customresourcedefinitions"
     ],
@@ -75,7 +75,7 @@
   "render": {
     "kubernetesVersion": "1.37.0",
     "profiles": {
-      "multi-node": {
+      "single-node": {
         "workloads": [
           {
             "release": "vpa",
@@ -92,7 +92,7 @@
         ],
         "persistentVolumeClaims": []
       },
-      "single-node": {
+      "multi-node": {
         "workloads": [
           {
             "release": "vpa",
@@ -420,5 +420,10 @@
       },
       "measuredAt": "2026-11-20"
     }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
   ]
 }

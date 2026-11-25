@@ -155,5 +155,43 @@
       }
     ]
   },
-  "manifests": "apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: qdrant-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 20Gi\n---\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: qdrant\n  namespace: '{{ .Namespace }}'\nspec:\n  serviceName: qdrant\n  replicas: 1\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: qdrant\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: qdrant\n        app.kubernetes.io/name: qdrant\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: qdrant\n        image: qdrant/qdrant:v1.20.1-unprivileged@sha256:a5872d32bdeef0f7ed4c1115bfb66d688ecd037703288a2484ccb1d4e5016bb9\n        ports:\n        - name: http\n          containerPort: 6333\n        - name: grpc\n          containerPort: 6334\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop: [ALL]\n        resources:\n          requests:\n            cpu: 200m\n            memory: 512Mi\n          limits:\n            cpu: '2'\n            memory: 2Gi\n        env:\n        - name: QDRANT__SERVICE__API_KEY\n          valueFrom:\n            secretKeyRef:\n              name: qdrant-secrets\n              key: api-key\n        - name: QDRANT__STORAGE__STORAGE_PATH\n          value: /qdrant/data/storage\n        - name: QDRANT__STORAGE__SNAPSHOTS_PATH\n          value: /qdrant/data/snapshots\n        - name: QDRANT__STORAGE__TEMP_PATH\n          value: /qdrant/data/tmp\n        - name: QDRANT_INIT_FILE_PATH\n          value: /qdrant/data/.qdrant-initialized\n        - name: QDRANT__TELEMETRY_DISABLED\n          value: 'true'\n        volumeMounts:\n        - name: data\n          mountPath: /qdrant/data\n        - name: tmp\n          mountPath: /tmp\n        startupProbe:\n          httpGet:\n            path: /healthz\n            port: http\n          periodSeconds: 5\n          failureThreshold: 120\n        readinessProbe:\n          httpGet:\n            path: /readyz\n            port: http\n          periodSeconds: 10\n        livenessProbe:\n          httpGet:\n            path: /livez\n            port: http\n          periodSeconds: 20\n          failureThreshold: 6\n      volumes:\n      - name: data\n        persistentVolumeClaim:\n          claimName: qdrant-data\n      - name: tmp\n        emptyDir:\n          sizeLimit: 256Mi\n      terminationGracePeriodSeconds: 60\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: qdrant\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: qdrant\n  ports:\n  - name: http\n    port: 6333\n    targetPort: http\n  - name: grpc\n    port: 6334\n    targetPort: grpc\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: qdrant\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts: ['{{ .Domain }}']\n    secretName: qdrant-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: qdrant\n            port:\n              number: 6333\n"
+  "manifests": "apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: qdrant-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 20Gi\n---\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: qdrant\n  namespace: '{{ .Namespace }}'\nspec:\n  serviceName: qdrant\n  replicas: 1\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: qdrant\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: qdrant\n        app.kubernetes.io/name: qdrant\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: qdrant\n        image: qdrant/qdrant:v1.20.1-unprivileged@sha256:a5872d32bdeef0f7ed4c1115bfb66d688ecd037703288a2484ccb1d4e5016bb9\n        ports:\n        - name: http\n          containerPort: 6333\n        - name: grpc\n          containerPort: 6334\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop: [ALL]\n        resources:\n          requests:\n            cpu: 200m\n            memory: 512Mi\n          limits:\n            cpu: '2'\n            memory: 2Gi\n        env:\n        - name: QDRANT__SERVICE__API_KEY\n          valueFrom:\n            secretKeyRef:\n              name: qdrant-secrets\n              key: api-key\n        - name: QDRANT__STORAGE__STORAGE_PATH\n          value: /qdrant/data/storage\n        - name: QDRANT__STORAGE__SNAPSHOTS_PATH\n          value: /qdrant/data/snapshots\n        - name: QDRANT__STORAGE__TEMP_PATH\n          value: /qdrant/data/tmp\n        - name: QDRANT_INIT_FILE_PATH\n          value: /qdrant/data/.qdrant-initialized\n        - name: QDRANT__TELEMETRY_DISABLED\n          value: 'true'\n        volumeMounts:\n        - name: data\n          mountPath: /qdrant/data\n        - name: tmp\n          mountPath: /tmp\n        startupProbe:\n          httpGet:\n            path: /healthz\n            port: http\n          periodSeconds: 5\n          failureThreshold: 120\n        readinessProbe:\n          httpGet:\n            path: /readyz\n            port: http\n          periodSeconds: 10\n        livenessProbe:\n          httpGet:\n            path: /livez\n            port: http\n          periodSeconds: 20\n          failureThreshold: 6\n      volumes:\n      - name: data\n        persistentVolumeClaim:\n          claimName: qdrant-data\n      - name: tmp\n        emptyDir:\n          sizeLimit: 256Mi\n      terminationGracePeriodSeconds: 60\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: qdrant\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: qdrant\n  ports:\n  - name: http\n    port: 6333\n    targetPort: http\n  - name: grpc\n    port: 6334\n    targetPort: grpc\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: qdrant\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts: ['{{ .Domain }}']\n    secretName: qdrant-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: qdrant\n            port:\n              number: 6333\n",
+  "measurements": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "qdrant",
+          "kind": "StatefulSet",
+          "memory": "16Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "image": "qdrant/qdrant",
+          "version": "v1.20.1-unprivileged",
+          "digest": "sha256:a5872d32bdeef0f7ed4c1115bfb66d688ecd037703288a2484ccb1d4e5016bb9"
+        }
+      ],
+      "sourceDigest": "h1:6rGn63MyGJ64CbzR5KPEB6zwPjsH3+erlrWcB5KiJJM=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "measuredAt": "2026-11-20"
+    }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
+  ]
 }

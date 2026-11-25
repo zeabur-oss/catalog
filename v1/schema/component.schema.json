@@ -1,189 +1,246 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://oss-catalog.zeabur.com/v1/schema/component.schema.json",
   "$defs": {
-    "addon": {
+    "Addon": {
+      "additionalProperties": false,
+      "description": "An add-on of a distribution.",
       "properties": {
         "distribution": {
-          "type": "string",
-          "description": "A reader ignores an entry of a distribution it does not know."
+          "$ref": "#/$defs/Distribution",
+          "description": "The distribution."
         },
         "name": {
+          "description": "The name of its `HelmChart` in `kube-system`.",
           "type": "string"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "distribution",
         "name"
       ],
-      "description": "Addon is an add-on of a distribution."
+      "type": "object"
     },
-    "contribution": {
+    "ApiVersion": {
+      "description": "The `apiVersion` of every component and template file.",
+      "oneOf": [
+        {
+          "const": "catalog.zeabur.com/v1",
+          "description": "`catalog.zeabur.com/v1`.",
+          "type": "string"
+        }
+      ]
+    },
+    "ComponentKind": {
+      "description": "The `kind` of a component file.",
+      "oneOf": [
+        {
+          "const": "Component",
+          "description": "`Component`.",
+          "type": "string"
+        }
+      ]
+    },
+    "Contribution": {
+      "additionalProperties": false,
+      "description": "Values a component adds to a release of another component.",
       "properties": {
         "target": {
-          "$ref": "#/$defs/releaseRef"
+          "$ref": "#/$defs/ReleaseRef",
+          "description": "The release that receives them."
         },
         "values": {
-          "type": "string",
-          "description": "Helm values (YAML). Every value needs a comment saying why."
+          "description": "Helm values, as YAML.",
+          "type": "string"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "target",
         "values"
       ],
-      "description": "Contribution is values that a component adds to a release of another component."
+      "type": "object"
     },
-    "detectedWorkload": {
+    "DetectedWorkload": {
+      "additionalProperties": false,
+      "description": "A workload whose labels show the upstream.",
       "properties": {
         "kind": {
-          "type": "string",
-          "enum": [
-            "DaemonSet",
-            "Deployment",
-            "StatefulSet"
-          ]
+          "$ref": "#/$defs/WorkloadKind",
+          "description": "Its kind."
         },
         "labels": {
           "additionalProperties": {
             "type": "string"
           },
+          "description": "Labels that must all be there with these values.",
           "type": "object"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "kind",
         "labels"
       ],
-      "description": "DetectedWorkload is a workload whose labels show the upstream."
+      "type": "object"
     },
-    "detection": {
+    "Detection": {
+      "additionalProperties": false,
+      "description": "How to recognise an existing installation. Any one match means it is there.",
+      "minProperties": 1,
       "properties": {
-        "crds": {
+        "addons": {
+          "default": [],
+          "description": "Add-ons of a distribution that install the same upstream.",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Addon"
           },
           "type": "array"
         },
         "apiServices": {
+          "default": [],
+          "description": "`APIService` names.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
-        "gatewayControllers": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "ingressControllers": {
+        "crds": {
+          "default": [],
+          "description": "`CustomResourceDefinition` names.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "csiDrivers": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array",
-          "description": "CSI drivers of the PersistentVolumes it provides."
-        },
-        "helmCharts": {
+          "default": [],
+          "description": "CSI drivers of the `PersistentVolumes` it provides.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
-        "addons": {
+        "gatewayControllers": {
+          "default": [],
+          "description": "`GatewayClass` controller names.",
           "items": {
-            "$ref": "#/$defs/addon"
+            "type": "string"
           },
-          "type": "array",
-          "description": "Add-ons of a distribution that install the same upstream, such as k3s's packaged Traefik."
+          "type": "array"
+        },
+        "helmCharts": {
+          "default": [],
+          "description": "Helm chart names.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "ingressControllers": {
+          "default": [],
+          "description": "`IngressClass` controller names.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "workloads": {
+          "default": [],
+          "description": "Workloads whose labels show the upstream.",
           "items": {
-            "$ref": "#/$defs/detectedWorkload"
+            "$ref": "#/$defs/DetectedWorkload"
           },
           "type": "array"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
-      "minProperties": 1,
-      "description": "Detection is how to recognise an existing installation."
+      "type": "object"
     },
-    "generate": {
+    "Distribution": {
+      "description": "A host distribution of Kubernetes that a component runs on.",
       "oneOf": [
         {
+          "const": "k3s",
+          "description": "K3s.",
+          "type": "string"
+        },
+        {
+          "const": "rke2",
+          "description": "RKE2.",
+          "type": "string"
+        },
+        {
+          "const": "kubesolo",
+          "description": "KubeSolo.",
+          "type": "string"
+        }
+      ]
+    },
+    "Encoding": {
+      "description": "How random bytes are written.",
+      "oneOf": [
+        {
+          "const": "hex",
+          "description": "Lowercase hexadecimal.",
+          "type": "string"
+        },
+        {
+          "const": "base64url",
+          "description": "base64url without padding.",
+          "type": "string"
+        }
+      ]
+    },
+    "Generate": {
+      "description": "How an installer makes a value instead of asking for it.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "`bytes` random bytes in `encoding`.",
           "properties": {
+            "bytes": {
+              "description": "How many, 12 to 64.",
+              "format": "uint8",
+              "maximum": 64,
+              "minimum": 12,
+              "type": "integer"
+            },
+            "encoding": {
+              "$ref": "#/$defs/Encoding",
+              "description": "How they are written."
+            },
             "type": {
-              "const": "random"
+              "const": "random",
+              "type": "string"
             }
           },
           "required": [
+            "type",
             "bytes",
             "encoding"
-          ]
+          ],
+          "type": "object"
         },
         {
-          "not": {
-            "anyOf": [
-              {
-                "required": [
-                  "bytes"
-                ]
-              },
-              {
-                "required": [
-                  "encoding"
-                ]
-              }
-            ]
-          },
+          "additionalProperties": false,
+          "description": "A free address in the cluster's Service CIDR, for a Service's fixed `ClusterIP`.",
           "properties": {
             "type": {
-              "const": "clusterIP"
+              "const": "clusterIP",
+              "type": "string"
             }
-          }
-        }
-      ],
-      "properties": {
-        "type": {
-          "type": "string",
-          "description": "random: bytes random bytes in encoding. clusterIP: a free address in the cluster's Service\nCIDR, for a Service's fixed ClusterIP. A template generates random values only."
-        },
-        "bytes": {
-          "type": "integer",
-          "maximum": 64,
-          "minimum": 12,
-          "description": "Random bytes to generate."
-        },
-        "encoding": {
-          "type": "string",
-          "enum": [
-            "hex",
-            "base64url"
+          },
+          "required": [
+            "type"
           ],
-          "description": "hex, or base64url without padding."
+          "type": "object"
         }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "type"
-      ],
-      "description": "Generate is how the installer makes the value instead of asking. A reader does not fill in an\ninput whose type it does not know."
+      ]
     },
-    "health": {
+    "Health": {
+      "additionalProperties": false,
+      "description": "A read-only check of an installed component: one `kubectl wait` or `kubectl rollout status`.",
+      "else": {
+        "required": [
+          "condition"
+        ]
+      },
       "if": {
         "properties": {
           "resource": {
@@ -199,6 +256,39 @@
           }
         }
       },
+      "properties": {
+        "advice": {
+          "description": "What to do when the check fails, in English.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "condition": {
+          "default": null,
+          "description": "The condition the objects reach. A workload kind has none: it is ready when its rollout\nis complete.",
+          "pattern": "^[A-Za-z]+$",
+          "type": "string"
+        },
+        "name": {
+          "description": "Its name.",
+          "pattern": "^[a-z0-9-]+$",
+          "type": "string"
+        },
+        "resource": {
+          "$ref": "#/$defs/HealthResource",
+          "description": "The objects to wait for."
+        },
+        "timeout": {
+          "description": "How long to wait, such as `60s`.",
+          "pattern": "^[1-9][0-9]*(s|m)$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "resource",
+        "timeout",
+        "advice"
+      ],
       "then": {
         "not": {
           "required": [
@@ -215,46 +305,71 @@
           }
         }
       },
+      "type": "object"
+    },
+    "HealthKind": {
+      "description": "A kind that a health check can wait for.",
+      "oneOf": [
+        {
+          "const": "APIService",
+          "description": "`APIService`.",
+          "type": "string"
+        },
+        {
+          "const": "DaemonSet",
+          "description": "`DaemonSet`.",
+          "type": "string"
+        },
+        {
+          "const": "Deployment",
+          "description": "`Deployment`.",
+          "type": "string"
+        },
+        {
+          "const": "GatewayClass",
+          "description": "`GatewayClass`.",
+          "type": "string"
+        },
+        {
+          "const": "Node.longhorn.io",
+          "description": "Longhorn's `Node`.",
+          "type": "string"
+        },
+        {
+          "const": "Pod",
+          "description": "`Pod`.",
+          "type": "string"
+        },
+        {
+          "const": "StatefulSet",
+          "description": "`StatefulSet`.",
+          "type": "string"
+        }
+      ]
+    },
+    "HealthResource": {
+      "additionalProperties": false,
+      "description": "The objects of one kind a health check waits for: by `name`, by `selector`, or `all`.",
       "else": {
-        "required": [
-          "condition"
-        ]
-      },
-      "properties": {
-        "name": {
-          "type": "string",
-          "pattern": "^[a-z0-9-]+$"
-        },
-        "resource": {
-          "$ref": "#/$defs/healthResource",
-          "description": "The objects to wait for."
-        },
-        "condition": {
-          "type": "string",
-          "pattern": "^[A-Za-z]+$",
-          "description": "The condition the objects reach, such as Ready. A Deployment, DaemonSet or StatefulSet has none:\nit is ready when its rollout is complete."
-        },
-        "timeout": {
-          "type": "string",
-          "pattern": "^[1-9][0-9]*(s|m)$"
-        },
-        "advice": {
-          "type": "string",
-          "minLength": 1,
-          "description": "What to do when the check fails, in English. An installer shows it to the reader."
+        "not": {
+          "required": [
+            "namespace"
+          ]
         }
       },
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "name",
-        "resource",
-        "timeout",
-        "advice"
-      ],
-      "description": "Health is a read-only check of an installed component: one kubectl wait\nthat applies nothing, so it can run on a production cluster."
-    },
-    "healthResource": {
+      "if": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "DaemonSet",
+              "Deployment",
+              "Node.longhorn.io",
+              "Pod",
+              "StatefulSet"
+            ]
+          }
+        }
+      },
       "oneOf": [
         {
           "required": [
@@ -272,77 +387,52 @@
           ]
         }
       ],
-      "if": {
-        "properties": {
-          "kind": {
-            "enum": [
-              "DaemonSet",
-              "Deployment",
-              "Node.longhorn.io",
-              "Pod",
-              "StatefulSet"
-            ]
-          }
-        }
-      },
-      "then": {
-        "required": [
-          "namespace"
-        ]
-      },
-      "else": {
-        "not": {
-          "required": [
-            "namespace"
-          ]
-        }
-      },
       "properties": {
+        "all": {
+          "const": true,
+          "default": false,
+          "description": "Every object of the kind.",
+          "type": "boolean"
+        },
         "kind": {
-          "type": "string",
-          "enum": [
-            "APIService",
-            "DaemonSet",
-            "Deployment",
-            "GatewayClass",
-            "Node.longhorn.io",
-            "Pod",
-            "StatefulSet"
-          ],
-          "description": "The kind of the objects. A kind outside the core and apps groups that shares a name with\nanother has its group after a dot, such as Node.longhorn.io."
+          "$ref": "#/$defs/HealthKind",
+          "description": "Their kind."
         },
         "name": {
-          "type": "string",
+          "default": null,
+          "description": "The name of one object.",
           "minLength": 1,
-          "description": "The name of one object."
+          "type": "string"
+        },
+        "namespace": {
+          "default": null,
+          "description": "Their namespace, for a namespaced kind.",
+          "minLength": 1,
+          "type": "string"
         },
         "selector": {
           "additionalProperties": {
             "type": "string"
           },
-          "type": "object",
+          "default": null,
+          "description": "The labels of the objects.",
           "minProperties": 1,
-          "description": "The labels of the objects, each a key with its value."
-        },
-        "all": {
-          "type": "boolean",
-          "const": true,
-          "description": "Every object of the kind."
-        },
-        "namespace": {
-          "type": "string",
-          "minLength": 1,
-          "description": "The namespace of the objects. A kind that has namespaces needs it, and any other kind can't have it."
+          "type": "object"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "kind"
       ],
-      "description": "HealthResource names the objects of one kind by name, by labels, or all of them."
+      "then": {
+        "required": [
+          "namespace"
+        ]
+      },
+      "type": "object"
     },
-    "input": {
+    "Input": {
+      "additionalProperties": false,
+      "description": "A value an installer asks for or generates.",
       "oneOf": [
         {
           "required": [
@@ -356,70 +446,122 @@
         }
       ],
       "properties": {
-        "name": {
-          "type": "string",
-          "pattern": "^[a-z][A-Za-z0-9]*$",
-          "description": "camelCase."
+        "default": {
+          "$ref": "#/$defs/InputValue",
+          "default": null,
+          "description": "The value when none is given."
         },
         "description": {
+          "description": "What it is, in English.",
+          "type": "string"
+        },
+        "generate": {
+          "$ref": "#/$defs/Generate",
+          "default": null,
+          "description": "How an installer makes it when it is not given."
+        },
+        "name": {
+          "description": "Its name, camelCase.",
+          "pattern": "^[a-z][A-Za-z0-9]*$",
+          "type": "string"
+        },
+        "path": {
+          "default": null,
+          "description": "Where it goes in the release's values: a dotted path, where a number indexes a list.",
           "type": "string"
         },
         "release": {
-          "type": "string",
-          "description": "Release whose values receive the input; defaults to the first chart release."
-        },
-        "path": {
-          "type": "string",
-          "description": "Dotted values path; numbers index lists."
-        },
-        "secret": {
-          "$ref": "#/$defs/secretRef",
-          "description": "Store the input in this Secret, created before install."
-        },
-        "generate": {
-          "$ref": "#/$defs/generate"
+          "default": null,
+          "description": "The release whose values take a `path` input; the first chart release when absent.",
+          "type": "string"
         },
         "required": {
+          "default": false,
+          "description": "An install needs a value.",
           "type": "boolean"
         },
-        "default": true,
+        "secret": {
+          "$ref": "#/$defs/SecretRef",
+          "default": null,
+          "description": "The Secret key it is stored in, created before install."
+        },
         "testValue": {
-          "description": "Value CI installs with."
+          "$ref": "#/$defs/InputValue",
+          "default": null,
+          "description": "The value CI installs with."
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "name",
         "description"
       ],
-      "description": "Input is a value the installer asks for or generates."
+      "type": "object"
     },
-    "metadata": {
+    "InputValue": {
+      "anyOf": [
+        {
+          "description": "`true` or `false`.",
+          "type": "boolean"
+        },
+        {
+          "description": "A whole number.",
+          "format": "int64",
+          "type": "integer"
+        },
+        {
+          "description": "Text.",
+          "type": "string"
+        }
+      ],
+      "description": "The value of an input."
+    },
+    "Metadata": {
+      "additionalProperties": false,
+      "description": "A component's name and summary.",
       "properties": {
-        "name": {
-          "type": "string",
-          "description": "Name for people."
-        },
-        "summary": {
-          "type": "string",
-          "pattern": "^[^\\n]+$",
-          "description": "What it gives the cluster, in one plain sentence for people choosing components."
-        },
-        "locales": {
-          "$ref": "#/$defs/summaryLocales"
+        "homepage": {
+          "description": "The project's home page.",
+          "format": "uri",
+          "type": "string"
         },
         "license": {
-          "type": "string",
-          "description": "SPDX expression; every identifier must be OSI-approved, or listed under optInOnly in\nconfig/licenses.yaml with no profile recommending the component."
+          "description": "An SPDX expression.",
+          "type": "string"
         },
-        "homepage": {
-          "type": "string",
-          "format": "uri"
+        "licenseUrls": {
+          "additionalProperties": {
+            "format": "uri",
+            "pattern": "^https://",
+            "type": "string"
+          },
+          "description": "The URL of the text of each `LicenseRef-` licence in `license`, by its id.",
+          "propertyNames": {
+            "pattern": "^LicenseRef-[A-Za-z0-9.-]+$",
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "locales": {
+          "additionalProperties": {
+            "$ref": "#/$defs/Summary"
+          },
+          "description": "The summary in other languages.",
+          "propertyNames": {
+            "pattern": "^([a-z]{2,3}(-[a-z]{3}){0,3}|[a-z]{4,8})(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?(-([a-z0-9]{5,8}|[0-9][a-z0-9]{3}))*(-[a-wyz0-9](-[a-z0-9]{2,8})+)*(-x(-[a-z0-9]{1,8})+)?$",
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "name": {
+          "description": "The name for people.",
+          "type": "string"
+        },
+        "summary": {
+          "description": "What it gives the cluster, in one plain sentence.",
+          "pattern": "^[^\\n]+$",
+          "type": "string"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "name",
         "summary",
@@ -427,460 +569,494 @@
         "license",
         "homepage"
       ],
-      "description": "Metadata is a component's name and summary."
+      "type": "object"
     },
-    "modes": {
-      "properties": {
-        "single-node": {
-          "enum": [
-            "recommended",
-            "optional",
-            "unsupported"
-          ]
+    "Mode": {
+      "description": "Whether a profile installs a component by default.",
+      "oneOf": [
+        {
+          "const": "recommended",
+          "description": "On by default.",
+          "type": "string"
         },
+        {
+          "const": "optional",
+          "description": "Off by default.",
+          "type": "string"
+        },
+        {
+          "const": "unsupported",
+          "description": "Not installed on the profile.",
+          "type": "string"
+        }
+      ]
+    },
+    "PerProfile": {
+      "additionalProperties": false,
+      "description": "A value for each profile.",
+      "properties": {
         "multi-node": {
-          "enum": [
-            "recommended",
-            "optional",
-            "unsupported"
-          ]
+          "$ref": "#/$defs/Mode",
+          "description": "On `multi-node`."
+        },
+        "single-node": {
+          "$ref": "#/$defs/Mode",
+          "description": "On `single-node`."
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "single-node",
         "multi-node"
-      ]
+      ],
+      "type": "object"
     },
-    "provides": {
-      "properties": {
-        "capability": {
-          "type": "string",
-          "pattern": "^[a-z0-9-]+$",
-          "description": "The capability it offers, such as logs. A requires entry {capability: \u003cname\u003e} installs one\ncomponent that offers it."
-        },
-        "registry": {
-          "$ref": "#/$defs/registry"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "minProperties": 1,
-      "description": "Provides is what a component offers other software in the cluster."
-    },
-    "quantities": {
-      "properties": {
-        "cpu": {
-          "anyOf": [
-            {
-              "type": "string",
-              "minLength": 1
-            },
-            {
-              "type": "number",
-              "exclusiveMinimum": 0
-            }
-          ]
-        },
-        "memory": {
-          "anyOf": [
-            {
-              "type": "string",
-              "minLength": 1
-            },
-            {
-              "type": "number",
-              "exclusiveMinimum": 0
-            }
-          ]
-        }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "minProperties": 1,
-      "description": "Kubernetes quantities by resource name, such as memory: 256Mi. Each is above zero."
-    },
-    "ref": {
+    "PodSecurity": {
+      "description": "A Pod Security Standard level.",
       "oneOf": [
         {
-          "required": [
-            "component"
-          ]
+          "const": "restricted",
+          "description": "`restricted`.",
+          "type": "string"
         },
         {
+          "const": "baseline",
+          "description": "`baseline`.",
+          "type": "string"
+        },
+        {
+          "const": "privileged",
+          "description": "`privileged`.",
+          "type": "string"
+        }
+      ]
+    },
+    "ProfileValues": {
+      "additionalProperties": false,
+      "description": "Values for some profiles, as YAML.",
+      "properties": {
+        "multi-node": {
+          "default": null,
+          "description": "On `multi-node`.",
+          "type": "string"
+        },
+        "single-node": {
+          "default": null,
+          "description": "On `single-node`.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Provides": {
+      "additionalProperties": false,
+      "description": "What a component offers other software in the cluster.",
+      "minProperties": 1,
+      "properties": {
+        "capability": {
+          "default": null,
+          "description": "The capability it offers, such as `logs`.",
+          "pattern": "^[a-z0-9-]+$",
+          "type": "string"
+        },
+        "registry": {
+          "$ref": "#/$defs/Registry",
+          "default": null,
+          "description": "An OCI registry in the cluster that nodes pull from."
+        }
+      },
+      "type": "object"
+    },
+    "Quantities": {
+      "additionalProperties": false,
+      "description": "Kubernetes quantities by resource name.",
+      "minProperties": 1,
+      "properties": {
+        "cpu": {
+          "default": null,
+          "description": "CPU, such as `100m`.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "memory": {
+          "default": null,
+          "description": "Memory, such as `256Mi`.",
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Reference": {
+      "description": "A component by id, or a capability: one component that provides it.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "`{component: <id>}`.",
+          "properties": {
+            "component": {
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "component"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "`{capability: <name>}`.",
+          "properties": {
+            "capability": {
+              "pattern": "^[a-z0-9-]+$",
+              "type": "string"
+            }
+          },
           "required": [
             "capability"
-          ]
+          ],
+          "type": "object"
         }
-      ],
-      "properties": {
-        "component": {
-          "type": "string",
-          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
-        },
-        "capability": {
-          "type": "string",
-          "pattern": "^[a-z0-9-]+$"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "description": "Ref is a component by id, or a capability: its recommended upstream on the profile, else an\noptional one."
+      ]
     },
-    "registry": {
+    "Registry": {
+      "additionalProperties": false,
+      "description": "An OCI registry in the cluster that nodes pull from.",
       "properties": {
-        "host": {
-          "type": "string",
-          "pattern": "^[a-z0-9.-]+:[0-9]+$",
-          "description": "host:port that images name."
-        },
         "ca": {
-          "$ref": "#/$defs/secretRef",
+          "$ref": "#/$defs/SecretRef",
           "description": "The CA that signs its serving certificate."
+        },
+        "host": {
+          "description": "The `host:port` that images name.",
+          "pattern": "^[a-z0-9.-]+:[0-9]+$",
+          "type": "string"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "host",
         "ca"
       ],
-      "description": "Registry is an OCI registry in the cluster that nodes pull from."
+      "type": "object"
     },
-    "release": {
+    "Release": {
+      "description": "One install step of a component, by its `type`.",
       "oneOf": [
         {
-          "not": {
-            "anyOf": [
-              {
-                "required": [
-                  "urls"
-                ]
-              },
-              {
-                "required": [
-                  "manifests"
-                ]
-              }
-            ]
-          },
+          "additionalProperties": false,
+          "description": "A Helm chart.",
           "properties": {
+            "chart": {
+              "description": "`oci://registry/path/chart`, or a chart name in `repo`.",
+              "type": "string"
+            },
+            "chartDigest": {
+              "description": "The OCI manifest digest, or the SHA-256 of the chart archive.",
+              "pattern": "^sha256:[a-f0-9]{64}$",
+              "type": "string"
+            },
+            "name": {
+              "description": "Its name in the file.",
+              "pattern": "^[a-z0-9-]+$",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "The namespace it installs into.",
+              "type": "string"
+            },
+            "profiles": {
+              "$ref": "#/$defs/ProfileValues",
+              "default": {
+                "multi-node": null,
+                "single-node": null
+              },
+              "description": "Values merged over `values` on each profile, as YAML."
+            },
+            "releaseName": {
+              "default": null,
+              "description": "The Helm release name, when it is not `name`.",
+              "type": "string"
+            },
+            "repo": {
+              "default": null,
+              "description": "The HTTP chart repository.",
+              "pattern": "^https://",
+              "type": "string"
+            },
+            "skipIfPresent": {
+              "default": [],
+              "description": "Skip it when these CRDs exist.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
             "type": {
-              "const": "helm"
+              "const": "helm",
+              "type": "string"
+            },
+            "unpinnedImages": {
+              "default": [],
+              "description": "Images, without tag, that the chart cannot pin by digest.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "values": {
+              "default": null,
+              "description": "Values for every profile, as YAML.",
+              "type": "string"
+            },
+            "version": {
+              "description": "The chart version.",
+              "type": "string"
             }
           },
           "required": [
+            "type",
+            "name",
+            "namespace",
             "chart",
             "version",
             "chartDigest"
-          ]
+          ],
+          "type": "object"
         },
         {
-          "not": {
-            "anyOf": [
-              {
-                "required": [
-                  "chart"
-                ]
-              },
-              {
-                "required": [
-                  "manifests"
-                ]
-              }
-            ]
-          },
+          "additionalProperties": false,
+          "description": "Files downloaded from URLs.",
           "properties": {
+            "name": {
+              "description": "Its name in the file.",
+              "pattern": "^[a-z0-9-]+$",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "The namespace it installs into.",
+              "type": "string"
+            },
+            "skipIfPresent": {
+              "default": [],
+              "description": "Skip it when these CRDs exist.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
             "type": {
-              "const": "manifest"
+              "const": "manifest",
+              "type": "string"
+            },
+            "urlDigests": {
+              "description": "The `sha256:<hex>` digest of each file, in the order of `urls`.",
+              "items": {
+                "pattern": "^sha256:[a-f0-9]{64}$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "urls": {
+              "description": "The URLs, with `{version}` for `version`.",
+              "items": {
+                "pattern": "\\{version\\}",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "version": {
+              "description": "The version.",
+              "type": "string"
             }
           },
           "required": [
+            "type",
+            "name",
+            "namespace",
             "urls",
             "version",
             "urlDigests"
-          ]
+          ],
+          "type": "object"
         },
         {
-          "not": {
-            "anyOf": [
-              {
-                "required": [
-                  "chart"
-                ]
-              },
-              {
-                "required": [
-                  "urls"
-                ]
-              }
-            ]
-          },
+          "additionalProperties": false,
+          "description": "Objects written in the file.",
           "properties": {
+            "manifests": {
+              "description": "The objects, as YAML.",
+              "type": "string"
+            },
+            "name": {
+              "description": "Its name in the file.",
+              "pattern": "^[a-z0-9-]+$",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "The namespace it installs into.",
+              "type": "string"
+            },
+            "skipIfPresent": {
+              "default": [],
+              "description": "Skip it when these CRDs exist.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
             "type": {
-              "const": "inline"
+              "const": "inline",
+              "type": "string"
             }
           },
           "required": [
+            "type",
+            "name",
+            "namespace",
             "manifests"
-          ]
-        }
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "pattern": "^[a-z0-9-]+$"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "helm",
-            "manifest",
-            "inline"
           ],
-          "description": "helm: a chart. manifest: files downloaded from urls. inline: the objects in manifests."
-        },
-        "namespace": {
-          "type": "string"
-        },
-        "releaseName": {
-          "type": "string",
-          "description": "Helm release name; defaults to name."
-        },
-        "skipIfPresent": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array",
-          "description": "Skip when these CRDs already exist."
-        },
-        "chart": {
-          "type": "string",
-          "description": "oci://registry/path/chart, or a chart name with repo."
-        },
-        "repo": {
-          "type": "string",
-          "pattern": "^https://",
-          "description": "HTTP chart repository."
-        },
-        "urls": {
-          "items": {
-            "type": "string",
-            "pattern": "\\{version\\}"
-          },
-          "type": "array",
-          "description": "Manifest URLs; {version} is replaced."
-        },
-        "version": {
-          "type": "string"
-        },
-        "chartDigest": {
-          "type": "string",
-          "pattern": "^sha256:[a-f0-9]{64}$",
-          "description": "The chart at version: for an oci:// chart, its OCI manifest digest; for a chart in an HTTP\nrepository, the SHA-256 of the chart archive, as the repository's index.yaml records it."
-        },
-        "urlDigests": {
-          "items": {
-            "type": "string",
-            "pattern": "^sha256:[a-f0-9]{64}$"
-          },
-          "type": "array",
-          "description": "The SHA-256 of each file in urls, in the same order."
-        },
-        "unpinnedImages": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array",
-          "description": "Images, without tag, that the chart cannot pin by digest. A comment says why."
-        },
-        "manifests": {
-          "type": "string",
-          "description": "Objects applied as written."
-        },
-        "values": {
-          "type": "string",
-          "description": "Values for every profile: Helm values (YAML). Every value needs a comment saying why."
-        },
-        "profiles": {
-          "properties": {
-            "single-node": {
-              "type": "string"
-            },
-            "multi-node": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false,
           "type": "object"
         }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "name",
-        "type",
-        "namespace"
-      ],
-      "dependentRequired": {
-        "chartDigest": [
-          "chart"
-        ],
-        "profiles": [
-          "chart"
-        ],
-        "repo": [
-          "chart"
-        ],
-        "urlDigests": [
-          "urls"
-        ],
-        "values": [
-          "chart"
-        ]
-      },
-      "description": "Release is one install step of a component."
+      ]
     },
-    "releaseRef": {
+    "ReleaseRef": {
+      "additionalProperties": false,
+      "description": "A release of a component.",
       "properties": {
         "component": {
-          "type": "string",
-          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          "description": "The component's id.",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "type": "string"
         },
         "release": {
+          "description": "The release's name in its file.",
           "type": "string"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "component",
         "release"
       ],
-      "description": "ReleaseRef is the release of another component that receives the values."
+      "type": "object"
     },
-    "resources": {
+    "Resources": {
+      "additionalProperties": false,
+      "description": "What a component needs beyond its measured idle use.",
       "properties": {
         "work": {
+          "description": "Each kind of work it does, such as a build.",
           "items": {
-            "$ref": "#/$defs/work"
+            "$ref": "#/$defs/Work"
           },
-          "type": "array",
           "minItems": 1,
-          "description": "Each kind of work the component does, such as a build. Names are unique."
+          "type": "array"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "work"
       ],
-      "description": "Resources is what a component needs beyond its measured idle use."
+      "type": "object"
     },
-    "secretRef": {
+    "SecretRef": {
+      "additionalProperties": false,
+      "description": "A key of a Secret.",
       "properties": {
-        "name": {
+        "key": {
+          "description": "The key.",
           "type": "string"
         },
-        "key": {
+        "name": {
+          "description": "The Secret's name.",
           "type": "string"
         },
         "namespace": {
+          "description": "The Secret's namespace.",
           "type": "string"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "name",
         "key",
         "namespace"
       ],
-      "description": "SecretRef is a key of a Secret."
+      "type": "object"
     },
-    "security": {
+    "Security": {
+      "additionalProperties": false,
+      "description": "What a component's RBAC lets it do and what its namespaces must allow.",
       "properties": {
-        "summary": {
-          "type": "string",
-          "description": "What its RBAC lets it do."
-        },
         "podSecurity": {
-          "type": "string",
-          "enum": [
-            "restricted",
-            "baseline",
-            "privileged"
-          ],
-          "description": "The Pod Security Standard level its namespaces need."
+          "$ref": "#/$defs/PodSecurity",
+          "description": "The level its namespaces need."
+        },
+        "summary": {
+          "description": "What its RBAC lets it do.",
+          "type": "string"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "summary",
         "podSecurity"
       ],
-      "description": "Security is what a component's RBAC lets it do and what its namespaces must allow."
+      "type": "object"
     },
-    "smoke": {
+    "Smoke": {
+      "additionalProperties": false,
+      "description": "An e2e check after install.",
       "properties": {
-        "name": {
+        "manifest": {
+          "default": null,
+          "description": "Objects to apply first, in the namespace `catalog-smoke`.",
           "type": "string"
         },
-        "manifest": {
-          "type": "string",
-          "description": "Objects to apply first, in namespace catalog-smoke."
-        },
-        "wait": {
-          "items": {
-            "$ref": "#/$defs/wait"
-          },
-          "type": "array",
-          "description": "What to wait for after the objects are applied."
+        "name": {
+          "description": "Its name.",
+          "type": "string"
         },
         "timeout": {
-          "type": "string",
+          "default": null,
+          "description": "How long to wait; 180 seconds when absent.",
           "pattern": "^[1-9][0-9]*(s|m)$",
-          "default": "180s"
+          "type": "string"
+        },
+        "wait": {
+          "description": "What to wait for after the objects are applied.",
+          "items": {
+            "$ref": "#/$defs/Wait"
+          },
+          "type": "array"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "name",
         "wait"
       ],
-      "description": "Smoke is an e2e check after install."
+      "type": "object"
     },
-    "summaryLocale": {
+    "Summary": {
+      "additionalProperties": false,
+      "description": "A name and a summary in English, with the summary in other languages.",
       "properties": {
         "summary": {
-          "type": "string",
-          "pattern": "^[^\\n]+$"
+          "description": "One line.",
+          "pattern": "^[^\\n]+$",
+          "type": "string"
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "summary"
       ],
-      "description": "SummaryLocale is a summary in one language."
+      "type": "object"
     },
-    "summaryLocales": {
-      "additionalProperties": {
-        "$ref": "#/$defs/summaryLocale"
-      },
-      "propertyNames": {
-        "type": "string",
-        "pattern": "^([a-z]{2,3}(-[a-z]{3}){0,3}|[a-z]{4,8})(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?(-([a-z0-9]{5,8}|[0-9][a-z0-9]{3}))*(-[a-wyz0-9](-[a-z0-9]{2,8})+)*(-x(-[a-z0-9]{1,8})+)?$"
-      },
-      "type": "object",
-      "description": "SummaryLocales is the summary in other languages, by BCP 47 tag.\nconfig/locales.yaml lists the tags each needs."
-    },
-    "wait": {
+    "Wait": {
+      "additionalProperties": false,
       "allOf": [
         {
+          "else": {
+            "required": [
+              "condition"
+            ]
+          },
           "if": {
             "properties": {
               "resource": {
@@ -894,14 +1070,24 @@
                 "pattern": "^jsonpath="
               }
             }
-          },
-          "else": {
-            "required": [
-              "condition"
-            ]
           }
         }
       ],
+      "description": "One `kubectl wait` of a smoke check.",
+      "else": {
+        "oneOf": [
+          {
+            "required": [
+              "selector"
+            ]
+          },
+          {
+            "required": [
+              "all"
+            ]
+          }
+        ]
+      },
       "if": {
         "properties": {
           "resource": {
@@ -909,6 +1095,43 @@
           }
         }
       },
+      "properties": {
+        "all": {
+          "const": true,
+          "default": false,
+          "description": "Every object of the kind.",
+          "type": "boolean"
+        },
+        "condition": {
+          "default": null,
+          "description": "What the objects reach, as a `kubectl wait --for` value.",
+          "pattern": "^(condition=[A-Za-z][A-Za-z0-9]*(=(True|False|Unknown))?|jsonpath=.+)$",
+          "type": "string"
+        },
+        "namespace": {
+          "default": null,
+          "description": "The namespace of the objects.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "resource": {
+          "description": "One object as `kind/name`, or a kind alone with a selector or `all`.",
+          "pattern": "^[A-Za-z][A-Za-z0-9.]*(/[a-z0-9][a-z0-9.-]*)?$",
+          "type": "string"
+        },
+        "selector": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": null,
+          "description": "The labels of the objects.",
+          "minProperties": 1,
+          "type": "object"
+        }
+      },
+      "required": [
+        "resource"
+      ],
       "then": {
         "not": {
           "anyOf": [
@@ -925,58 +1148,10 @@
           ]
         }
       },
-      "else": {
-        "oneOf": [
-          {
-            "required": [
-              "selector"
-            ]
-          },
-          {
-            "required": [
-              "all"
-            ]
-          }
-        ]
-      },
-      "properties": {
-        "resource": {
-          "type": "string",
-          "pattern": "^[A-Za-z][A-Za-z0-9.]*(/[a-z0-9][a-z0-9.-]*)?$",
-          "description": "One object as kind/name, such as certificate/smoke. A kind alone takes a selector or all."
-        },
-        "namespace": {
-          "type": "string",
-          "minLength": 1,
-          "description": "The namespace of the objects. A kind without namespaces has none."
-        },
-        "selector": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "type": "object",
-          "minProperties": 1,
-          "description": "The labels of the objects, each a key with its value."
-        },
-        "all": {
-          "type": "boolean",
-          "const": true,
-          "description": "Every object of the kind."
-        },
-        "condition": {
-          "type": "string",
-          "pattern": "^(condition=[A-Za-z][A-Za-z0-9]*(=(True|False|Unknown))?|jsonpath=.+)$",
-          "description": "What the objects reach, as a kubectl wait --for value. A deployment, statefulset or daemonset\nhas none: it is ready when its rollout is complete."
-        }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "resource"
-      ],
-      "description": "Wait is the objects that a check waits for, and what they reach. Health checks, the smoke checks\nof components and the smoke checks of templates all run as a Wait."
+      "type": "object"
     },
-    "work": {
+    "Work": {
+      "additionalProperties": false,
       "anyOf": [
         {
           "required": [
@@ -994,147 +1169,184 @@
           ]
         }
       ],
+      "description": "One kind of work a component does.",
       "properties": {
+        "limits": {
+          "$ref": "#/$defs/Quantities",
+          "default": null,
+          "description": "The limits of each pod doing one unit of work."
+        },
         "name": {
-          "type": "string",
-          "pattern": "^[a-z0-9-]+$"
+          "description": "Its name.",
+          "pattern": "^[a-z0-9-]+$",
+          "type": "string"
         },
         "requests": {
-          "$ref": "#/$defs/quantities",
-          "description": "Resource requests of each pod doing one unit of work, for pods that no render shows, such as\na build pod."
-        },
-        "limits": {
-          "$ref": "#/$defs/quantities",
-          "description": "Resource limits of each pod doing one unit of work."
+          "$ref": "#/$defs/Quantities",
+          "default": null,
+          "description": "The requests of each pod doing one unit of work."
         },
         "use": {
-          "$ref": "#/$defs/quantities",
-          "description": "What one unit of work uses on top of the component's idle use."
+          "$ref": "#/$defs/Quantities",
+          "default": null,
+          "description": "What one unit of work uses on top of the idle use."
         }
       },
-      "additionalProperties": false,
-      "type": "object",
       "required": [
         "name"
       ],
-      "description": "Work is one kind of work a component does, such as a build."
+      "type": "object"
+    },
+    "WorkloadKind": {
+      "description": "A workload kind that the catalog recognises by its labels or its rollout.",
+      "oneOf": [
+        {
+          "const": "DaemonSet",
+          "description": "`DaemonSet`.",
+          "type": "string"
+        },
+        {
+          "const": "Deployment",
+          "description": "`Deployment`.",
+          "type": "string"
+        },
+        {
+          "const": "StatefulSet",
+          "description": "`StatefulSet`.",
+          "type": "string"
+        }
+      ]
     }
   },
+  "$id": "https://oss-catalog.zeabur.com/v1/schema/component.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "One upstream project that a cluster administrator installs.",
   "properties": {
     "apiVersion": {
-      "const": "catalog.zeabur.com/v1"
-    },
-    "kind": {
-      "const": "Component"
-    },
-    "metadata": {
-      "$ref": "#/$defs/metadata"
-    },
-    "defaults": {
-      "$ref": "#/$defs/modes",
-      "description": "Per profile: recommended (on by default), optional (off by default) or unsupported."
-    },
-    "distributions": {
-      "items": {
-        "type": "string",
-        "enum": [
-          "k3s",
-          "rke2",
-          "kubesolo"
-        ]
-      },
-      "type": "array",
-      "minItems": 1,
-      "uniqueItems": true,
-      "description": "Distributions it runs on and e2e tests it on, of k3s, rke2 and kubesolo. kind tests it\nregardless. A reader ignores a value it does not know."
-    },
-    "kubeVersion": {
-      "type": "string",
-      "minLength": 1,
-      "description": "The Kubernetes versions it supports, as a SemVer range like Helm's Chart.yaml kubeVersion:\nthe strictest kubeVersion of its charts, else the oldest version that config/kubernetes.yaml\nrenders. Every version that config/kubernetes.yaml renders or tests on must be in it."
-    },
-    "persistsData": {
-      "type": "boolean",
-      "description": "Keeps state in volumes; uninstalling loses data."
-    },
-    "requires": {
-      "items": {
-        "$ref": "#/$defs/ref"
-      },
-      "type": "array",
-      "uniqueItems": true,
-      "description": "Components installed first."
-    },
-    "inputs": {
-      "items": {
-        "$ref": "#/$defs/input"
-      },
-      "type": "array",
-      "description": "Values the installer asks for or generates."
-    },
-    "releases": {
-      "items": {
-        "$ref": "#/$defs/release"
-      },
-      "type": "array",
-      "minItems": 1,
-      "description": "Installed in order."
-    },
-    "provides": {
-      "$ref": "#/$defs/provides",
-      "description": "What it offers other software in the cluster."
-    },
-    "internalCRDs": {
-      "items": {
-        "type": "string"
-      },
-      "type": "array",
-      "description": "CRDs of detection.crds whose objects the component writes itself, so they don't mean anyone\nuses it."
-    },
-    "resources": {
-      "$ref": "#/$defs/resources"
-    },
-    "networkPolicies": {
-      "type": "string",
-      "description": "Standard NetworkPolicy objects in its namespaces, for installers that block incoming traffic\nto each namespace by default: applied before the releases, they admit the traffic the\ncomponent needs from elsewhere."
+      "$ref": "#/$defs/ApiVersion",
+      "description": "`catalog.zeabur.com/v1`."
     },
     "contributes": {
+      "default": [],
+      "description": "Values it adds to releases of other components.",
       "items": {
-        "$ref": "#/$defs/contribution"
+        "$ref": "#/$defs/Contribution"
       },
-      "type": "array",
-      "description": "Values this component adds to another component's release."
+      "type": "array"
+    },
+    "defaults": {
+      "$ref": "#/$defs/PerProfile",
+      "description": "Whether each profile installs it by default."
     },
     "detection": {
-      "$ref": "#/$defs/detection"
+      "$ref": "#/$defs/Detection",
+      "description": "How to recognise an existing installation."
     },
-    "security": {
-      "$ref": "#/$defs/security"
+    "distributions": {
+      "description": "The distributions it runs on and e2e tests it on.",
+      "items": {
+        "$ref": "#/$defs/Distribution"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
     },
     "health": {
+      "default": [],
+      "description": "Read-only checks of an installed component.",
       "items": {
-        "$ref": "#/$defs/health"
+        "$ref": "#/$defs/Health"
       },
-      "type": "array",
-      "description": "Read-only checks that an installer runs on an installed cluster.\nEach is one `kubectl wait` and applies nothing. e2e runs them after install, before smoke."
+      "type": "array"
     },
-    "smoke": {
+    "inputs": {
+      "default": [],
+      "description": "Values an installer asks for or generates.",
       "items": {
-        "$ref": "#/$defs/smoke"
+        "$ref": "#/$defs/Input"
       },
-      "type": "array",
-      "description": "Extra e2e checks after install. They may apply objects in catalog-smoke, so only e2e runs\nthem. Read-only checks go in health."
+      "type": "array"
     },
-    "leftovers": {
+    "internalCRDs": {
+      "default": [],
+      "description": "The CRDs of `detection.crds` whose objects it writes itself, so they do not mean anyone\nuses it.",
       "items": {
         "type": "string"
       },
+      "type": "array"
+    },
+    "kind": {
+      "$ref": "#/$defs/ComponentKind",
+      "description": "`Component`."
+    },
+    "kubeVersion": {
+      "description": "The Kubernetes versions it supports, as a `SemVer` range like Helm's `kubeVersion`.",
+      "minLength": 1,
+      "type": "string"
+    },
+    "leftovers": {
+      "default": [],
+      "description": "What the upstream keeps on uninstall.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "metadata": {
+      "$ref": "#/$defs/Metadata",
+      "description": "Its name and summary."
+    },
+    "networkPolicies": {
+      "default": null,
+      "description": "`NetworkPolicy` objects for its namespaces, applied before the releases.",
+      "type": "string"
+    },
+    "persistsData": {
+      "default": false,
+      "description": "It keeps state in volumes, so uninstalling it loses data.",
+      "type": "boolean"
+    },
+    "provides": {
+      "$ref": "#/$defs/Provides",
+      "default": null,
+      "description": "What it offers other software in the cluster."
+    },
+    "releases": {
+      "description": "What it installs, in order.",
+      "items": {
+        "$ref": "#/$defs/Release"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "requires": {
+      "default": [],
+      "description": "The components installed before it.",
+      "items": {
+        "$ref": "#/$defs/Reference"
+      },
       "type": "array",
-      "description": "What the upstream keeps on uninstall: a kind (customresourcedefinitions) or\n\u003cresource\u003e/\u003cname\u003e."
+      "uniqueItems": true
+    },
+    "resources": {
+      "$ref": "#/$defs/Resources",
+      "default": null,
+      "description": "What it needs beyond its measured idle use."
+    },
+    "security": {
+      "$ref": "#/$defs/Security",
+      "description": "What its RBAC lets it do and what its namespaces must allow."
+    },
+    "smoke": {
+      "default": [],
+      "description": "Extra e2e checks after install.",
+      "items": {
+        "$ref": "#/$defs/Smoke"
+      },
+      "type": "array"
     }
   },
-  "additionalProperties": false,
-  "type": "object",
   "required": [
     "apiVersion",
     "kind",
@@ -1147,5 +1359,5 @@
     "security"
   ],
   "title": "Component",
-  "description": "Component is one upstream, at components/\u003cid\u003e/component.yaml. A cluster administrator installs it."
+  "type": "object"
 }

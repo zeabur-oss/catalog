@@ -140,5 +140,43 @@
       }
     ]
   },
-  "manifests": "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: searxng\n  namespace: {{ .Namespace }}\ndata:\n  settings.yml: |\n    use_default_settings: true\n    general:\n      instance_name: SearXNG\n    server:\n      bind_address: 0.0.0.0\n      port: 8080\n      base_url: https://{{ .Domain }}/\n      limiter: false\n      public_instance: false\n      image_proxy: true\n    search:\n      formats: [html, json]\n---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: searxng\n  namespace: {{ .Namespace }}\nspec:\n  replicas: 1\n  revisionHistoryLimit: 3\n  strategy: {type: Recreate}\n  selector:\n    matchLabels: {app.kubernetes.io/name: searxng}\n  template:\n    metadata:\n      labels: {app.kubernetes.io/name: searxng, templates.zeabur.com/template: searxng}\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 977\n        runAsGroup: 977\n        fsGroup: 977\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile: {type: RuntimeDefault}\n      containers:\n        - name: searxng\n          image: searxng/searxng:2026.10.24-ef0ec03da@sha256:7c7cbe509429e82755104b2a95f52085a98633c95d53f44e4e905fa3a59f08c8\n          env:\n            - {name: SEARXNG_BASE_URL, value: 'https://{{ .Domain }}/'}\n            - name: SEARXNG_SECRET\n              valueFrom:\n                secretKeyRef: {name: app-secrets, key: signing-key}\n            - {name: FORCE_OWNERSHIP, value: 'false'}\n            - {name: GRANIAN_HOST, value: '0.0.0.0'}\n          ports: [{name: http, containerPort: 8080}]\n          securityContext:\n            runAsNonRoot: true\n            allowPrivilegeEscalation: false\n            readOnlyRootFilesystem: true\n            capabilities: {drop: [ALL]}\n          resources:\n            requests: {cpu: 100m, memory: 256Mi}\n            limits: {cpu: 1000m, memory: 1Gi}\n          startupProbe:\n            httpGet: {path: /healthz, port: http}\n            periodSeconds: 5\n            failureThreshold: 60\n          readinessProbe:\n            httpGet: {path: /healthz, port: http}\n            periodSeconds: 10\n          livenessProbe:\n            httpGet: {path: /healthz, port: http}\n            periodSeconds: 20\n            failureThreshold: 6\n          volumeMounts:\n            - {name: config, mountPath: /etc/searxng, readOnly: true}\n            - {name: cache, mountPath: /var/cache/searxng}\n            - {name: tmp, mountPath: /tmp}\n      volumes:\n        - name: config\n          configMap: {name: searxng}\n        - name: cache\n          emptyDir: {sizeLimit: 256Mi}\n        - name: tmp\n          emptyDir: {sizeLimit: 128Mi}\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: searxng\n  namespace: {{ .Namespace }}\nspec:\n  selector: {app.kubernetes.io/name: searxng}\n  ports: [{name: http, port: 8080, targetPort: http}]\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: searxng\n  namespace: {{ .Namespace }}\n  annotations:\n    cert-manager.io/cluster-issuer: {{ .ClusterIssuer }}\nspec:\n  ingressClassName: traefik\n  tls:\n    - hosts: [{{ .Domain }}]\n      secretName: searxng-tls\n  rules:\n    - host: {{ .Domain }}\n      http:\n        paths:\n          - path: /\n            pathType: Prefix\n            backend:\n              service:\n                name: searxng\n                port: {name: http}\n"
+  "manifests": "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: searxng\n  namespace: {{ .Namespace }}\ndata:\n  settings.yml: |\n    use_default_settings: true\n    general:\n      instance_name: SearXNG\n    server:\n      bind_address: 0.0.0.0\n      port: 8080\n      base_url: https://{{ .Domain }}/\n      limiter: false\n      public_instance: false\n      image_proxy: true\n    search:\n      formats: [html, json]\n---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: searxng\n  namespace: {{ .Namespace }}\nspec:\n  replicas: 1\n  revisionHistoryLimit: 3\n  strategy: {type: Recreate}\n  selector:\n    matchLabels: {app.kubernetes.io/name: searxng}\n  template:\n    metadata:\n      labels: {app.kubernetes.io/name: searxng, templates.zeabur.com/template: searxng}\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 977\n        runAsGroup: 977\n        fsGroup: 977\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile: {type: RuntimeDefault}\n      containers:\n        - name: searxng\n          image: searxng/searxng:2026.10.24-ef0ec03da@sha256:7c7cbe509429e82755104b2a95f52085a98633c95d53f44e4e905fa3a59f08c8\n          env:\n            - {name: SEARXNG_BASE_URL, value: 'https://{{ .Domain }}/'}\n            - name: SEARXNG_SECRET\n              valueFrom:\n                secretKeyRef: {name: app-secrets, key: signing-key}\n            - {name: FORCE_OWNERSHIP, value: 'false'}\n            - {name: GRANIAN_HOST, value: '0.0.0.0'}\n          ports: [{name: http, containerPort: 8080}]\n          securityContext:\n            runAsNonRoot: true\n            allowPrivilegeEscalation: false\n            readOnlyRootFilesystem: true\n            capabilities: {drop: [ALL]}\n          resources:\n            requests: {cpu: 100m, memory: 256Mi}\n            limits: {cpu: 1000m, memory: 1Gi}\n          startupProbe:\n            httpGet: {path: /healthz, port: http}\n            periodSeconds: 5\n            failureThreshold: 60\n          readinessProbe:\n            httpGet: {path: /healthz, port: http}\n            periodSeconds: 10\n          livenessProbe:\n            httpGet: {path: /healthz, port: http}\n            periodSeconds: 20\n            failureThreshold: 6\n          volumeMounts:\n            - {name: config, mountPath: /etc/searxng, readOnly: true}\n            - {name: cache, mountPath: /var/cache/searxng}\n            - {name: tmp, mountPath: /tmp}\n      volumes:\n        - name: config\n          configMap: {name: searxng}\n        - name: cache\n          emptyDir: {sizeLimit: 256Mi}\n        - name: tmp\n          emptyDir: {sizeLimit: 128Mi}\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: searxng\n  namespace: {{ .Namespace }}\nspec:\n  selector: {app.kubernetes.io/name: searxng}\n  ports: [{name: http, port: 8080, targetPort: http}]\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: searxng\n  namespace: {{ .Namespace }}\n  annotations:\n    cert-manager.io/cluster-issuer: {{ .ClusterIssuer }}\nspec:\n  ingressClassName: traefik\n  tls:\n    - hosts: [{{ .Domain }}]\n      secretName: searxng-tls\n  rules:\n    - host: {{ .Domain }}\n      http:\n        paths:\n          - path: /\n            pathType: Prefix\n            backend:\n              service:\n                name: searxng\n                port: {name: http}\n",
+  "measurements": [
+    {
+      "distribution": "kind",
+      "profile": "single-node",
+      "platform": {
+        "os": "linux",
+        "architecture": "amd64"
+      },
+      "kubernetesVersion": "v1.37.0",
+      "result": "passed",
+      "pods": [
+        {
+          "workload": "searxng",
+          "kind": "Deployment",
+          "memory": "99Mi",
+          "cpu": "0"
+        }
+      ],
+      "versions": [
+        {
+          "image": "searxng/searxng",
+          "version": "2026.10.24-ef0ec03da",
+          "digest": "sha256:7c7cbe509429e82755104b2a95f52085a98633c95d53f44e4e905fa3a59f08c8"
+        }
+      ],
+      "sourceDigest": "h1:mcVtBa0sLe/ut5xTvaUQWBGIPhrLfWwVhz70ikMMCxU=",
+      "dependencies": {
+        "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
+      },
+      "measuredAt": "2026-11-20"
+    }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
+  ]
 }

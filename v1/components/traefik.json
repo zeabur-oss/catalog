@@ -77,7 +77,7 @@
       }
     ],
     "kind": "Component",
-    "kubeVersion": "\u003e=1.30.0-0",
+    "kubeVersion": ">=1.30.0-0",
     "leftovers": [
       "customresourcedefinitions"
     ],
@@ -136,29 +136,6 @@
   "render": {
     "kubernetesVersion": "1.37.0",
     "profiles": {
-      "multi-node": {
-        "workloads": [
-          {
-            "release": "traefik",
-            "namespace": "traefik",
-            "name": "traefik",
-            "kind": "DaemonSet",
-            "containers": [
-              {
-                "name": "traefik",
-                "requests": {
-                  "cpu": "100m",
-                  "memory": "128Mi"
-                },
-                "limits": {
-                  "memory": "512Mi"
-                }
-              }
-            ]
-          }
-        ],
-        "persistentVolumeClaims": []
-      },
       "single-node": {
         "workloads": [
           {
@@ -176,6 +153,29 @@
                 },
                 "limits": {
                   "memory": "256Mi"
+                }
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      },
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "traefik",
+            "namespace": "traefik",
+            "name": "traefik",
+            "kind": "DaemonSet",
+            "containers": [
+              {
+                "name": "traefik",
+                "requests": {
+                  "cpu": "100m",
+                  "memory": "128Mi"
+                },
+                "limits": {
+                  "memory": "512Mi"
                 }
               }
             ]
@@ -516,5 +516,10 @@
       },
       "measuredAt": "2026-11-20"
     }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
   ]
 }

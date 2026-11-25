@@ -45,7 +45,7 @@
       }
     ],
     "kind": "Component",
-    "kubeVersion": "\u003e=1.34.0-0",
+    "kubeVersion": ">=1.34.0-0",
     "leftovers": [
       "storageclasses/longhorn-static"
     ],
@@ -124,70 +124,6 @@
   "render": {
     "kubernetesVersion": "1.37.0",
     "profiles": {
-      "multi-node": {
-        "workloads": [
-          {
-            "release": "longhorn",
-            "namespace": "longhorn-system",
-            "name": "longhorn-manager",
-            "kind": "DaemonSet",
-            "containers": [
-              {
-                "name": "longhorn-manager",
-                "requests": {
-                  "cpu": "25m",
-                  "memory": "128Mi"
-                }
-              },
-              {
-                "name": "pre-pull-share-manager-image"
-              }
-            ]
-          },
-          {
-            "release": "longhorn",
-            "namespace": "longhorn-system",
-            "name": "longhorn-driver-deployer",
-            "kind": "Deployment",
-            "replicas": 1,
-            "containers": [
-              {
-                "name": "longhorn-driver-deployer"
-              }
-            ],
-            "initContainers": [
-              {
-                "name": "wait-longhorn-manager"
-              }
-            ]
-          },
-          {
-            "release": "longhorn",
-            "namespace": "longhorn-system",
-            "name": "longhorn-global-manager",
-            "kind": "Deployment",
-            "replicas": 3,
-            "containers": [
-              {
-                "name": "longhorn-global-manager"
-              }
-            ]
-          },
-          {
-            "release": "longhorn",
-            "namespace": "longhorn-system",
-            "name": "longhorn-ui",
-            "kind": "Deployment",
-            "replicas": 1,
-            "containers": [
-              {
-                "name": "longhorn-ui"
-              }
-            ]
-          }
-        ],
-        "persistentVolumeClaims": []
-      },
       "single-node": {
         "workloads": [
           {
@@ -231,6 +167,70 @@
             "name": "longhorn-global-manager",
             "kind": "Deployment",
             "replicas": 1,
+            "containers": [
+              {
+                "name": "longhorn-global-manager"
+              }
+            ]
+          },
+          {
+            "release": "longhorn",
+            "namespace": "longhorn-system",
+            "name": "longhorn-ui",
+            "kind": "Deployment",
+            "replicas": 1,
+            "containers": [
+              {
+                "name": "longhorn-ui"
+              }
+            ]
+          }
+        ],
+        "persistentVolumeClaims": []
+      },
+      "multi-node": {
+        "workloads": [
+          {
+            "release": "longhorn",
+            "namespace": "longhorn-system",
+            "name": "longhorn-manager",
+            "kind": "DaemonSet",
+            "containers": [
+              {
+                "name": "longhorn-manager",
+                "requests": {
+                  "cpu": "25m",
+                  "memory": "128Mi"
+                }
+              },
+              {
+                "name": "pre-pull-share-manager-image"
+              }
+            ]
+          },
+          {
+            "release": "longhorn",
+            "namespace": "longhorn-system",
+            "name": "longhorn-driver-deployer",
+            "kind": "Deployment",
+            "replicas": 1,
+            "containers": [
+              {
+                "name": "longhorn-driver-deployer"
+              }
+            ],
+            "initContainers": [
+              {
+                "name": "wait-longhorn-manager"
+              }
+            ]
+          },
+          {
+            "release": "longhorn",
+            "namespace": "longhorn-system",
+            "name": "longhorn-global-manager",
+            "kind": "Deployment",
+            "replicas": 3,
             "containers": [
               {
                 "name": "longhorn-global-manager"
@@ -965,5 +965,10 @@
       },
       "measuredAt": "2026-11-20"
     }
+  ],
+  "readmes": [
+    "en",
+    "zh-CN",
+    "zh-TW"
   ]
 }

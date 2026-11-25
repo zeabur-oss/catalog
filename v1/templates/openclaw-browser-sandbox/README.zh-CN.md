@@ -1,0 +1,51 @@
+## 简介
+
+这个模板运行一个无头 Chrome，供 [OpenClaw](https://docs.openclaw.ai/tools/browser/remote) 或其他服务通过 Chrome DevTools 协议（CDP）操作。
+
+这个浏览器只给单个可信任的所有者使用。它没有网页，不用登录，也没有令牌。只有同一个项目里带有标签 `templates.zeabur.com/openclaw-browser-sandbox-client: "true"` 的 Pod 连得进来。
+
+## 开始使用
+
+1. 在 Zeabur 开源版打开 `openclaw-sandbox-browser` 服务。**概览**显示副本已就绪，服务就启动好了。它没有域名。
+2. OpenClaw 模板的 Pod 已经带有客户端标签。其他客户端 Pod 要在 Pod 模板加上：
+
+   ```yaml
+   templates.zeabur.com/openclaw-browser-sandbox-client: "true"
+   ```
+3. 在该 Pod 里，把下面的地址当成 CDP 端点：
+
+   ```text
+   http://openclaw-sandbox-browser:9222
+   ```
+
+   没有这个标签的 Pod 会被挡掉。这里没有自动生成的机密变量，所以能连进来的对象都能完全控制浏览器。
+
+## 配置
+
+### 连接 OpenClaw
+
+把 `browser.profiles.<name>.cdpUrl` 设成上面的地址，并让该配置文件成为默认：
+
+```json5
+{
+  browser: {
+    enabled: true,
+    defaultProfile: "sandbox",
+    profiles: {
+      sandbox: { cdpUrl: "http://openclaw-sandbox-browser:9222" },
+    },
+  },
+}
+```
+
+地址用 `http://` 开头时，OpenClaw 会通过 `/json/version` 找到 WebSocket 端点。详见 [Remote and hosted browsers](https://docs.openclaw.ai/tools/browser/remote)。
+
+## 故障排除
+
+### 浏览器一直重启或没有响应
+
+在 Zeabur 开源版打开 `openclaw-sandbox-browser` 服务，确认**概览**显示副本已就绪，再看**日志**选项卡。打开**部署记录**，切换到**事件**。如果事件显示 `OOMKilled`，到**设置** → **计算资源**调高**内存上限**。详见[调整副本、资源和健康检查](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/service-settings/)和[查看日志、事件和用量，打开终端](https://oss.zeabur.com/zh-CN/docs/zeabur/configure/logs-terminal/)。
+
+### 客户端连不上
+
+网络策略只放行带有客户端标签的 Pod，而且只开 9222 端口。确认客户端在同一个项目里，并且带有开始使用里的标签。详见 [Remote and hosted browsers](https://docs.openclaw.ai/tools/browser/remote)。
