@@ -715,6 +715,8 @@ spec:
   unsafeFlags:
     replsetSize: true
   image: docker.io/percona/percona-server-mongodb:8.0.32-14@sha256:5ba5f240d2dc98bc6236ab1d79c0862c4b62dba9d98cd0ffdf716c30473d2d11
+  # Built on UBI 10, which needs an x86-64-v3 CPU (security.risks). On a bump, check
+  # the base image of the new tag.
   initImage: docker.io/percona/percona-server-mongodb-operator:1.23.1@sha256:78c87b933e184b9af36dbb0078751862c75934c1521c33d3be4d0a38aa58dd0a
   initContainerSecurityContext:
     runAsNonRoot: true

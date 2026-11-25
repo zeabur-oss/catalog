@@ -174,6 +174,15 @@ security:
         zh-CN:
           risk: "MongoDB 8.0.32 在 Linux 内核 6.19 以上无法启动（SERVER-121912）。模板设置了 GLIBC_TUNABLES 来绕过，但还没有在真实集群上验证过。"
           mitigation: "新内核上 MongoDB 一启动就崩溃时，请确认 Percona Pod 带有 GLIBC_TUNABLES=glibc.pthread.rseq=1。"
+    - risk: "The MongoDB init container runs the Percona operator image 1.23.1, which is built on UBI 10 and needs an x86-64-v3 CPU on x86 nodes. On an older CPU, mongodb-rs0-0 stays in Init:CrashLoopBackOff with 'Fatal glibc error: CPU does not support x86-64-v3'."
+      mitigation: "Before you deploy, run grep -o -w -E 'avx2|bmi2|fma|movbe' /proc/cpuinfo | sort -u on each node that can run MongoDB. It must print all four flags."
+      locales:
+        zh-TW:
+          risk: "MongoDB 的 init 容器執行 Percona operator 1.23.1 映像檔。它以 UBI 10 為基底，在 x86 節點上需要支援 x86-64-v3 的 CPU。CPU 太舊時，mongodb-rs0-0 會停在 Init:CrashLoopBackOff，並出現「Fatal glibc error: CPU does not support x86-64-v3」。"
+          mitigation: "部署前，在每個可能執行 MongoDB 的節點上執行 grep -o -w -E 'avx2|bmi2|fma|movbe' /proc/cpuinfo | sort -u，必須印出全部四個旗標。"
+        zh-CN:
+          risk: "MongoDB 的 init 容器运行 Percona operator 1.23.1 镜像。它以 UBI 10 为基础，在 x86 节点上需要支持 x86-64-v3 的 CPU。CPU 太旧时，mongodb-rs0-0 会停在 Init:CrashLoopBackOff，并出现“Fatal glibc error: CPU does not support x86-64-v3”。"
+          mitigation: "部署前，在每个可能运行 MongoDB 的节点上运行 grep -o -w -E 'avx2|bmi2|fma|movbe' /proc/cpuinfo | sort -u，必须输出全部四个标志。"
 
 smoke:
   - name: librechat-ready
