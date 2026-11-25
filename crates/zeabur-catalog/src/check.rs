@@ -471,6 +471,22 @@ mod tests {
     }
 
     #[test]
+    fn a_template_memory_writes_kilo_as_lowercase_k() {
+        let schema: Value =
+            serde_json::from_str(&read(&root().join("schema/v1/template.schema.json")).unwrap())
+                .unwrap();
+        let validator = validator(&schema).unwrap();
+        let mut template: Value = serde_saphyr::from_str(
+            &read(&root().join("templates/browserless/template.yaml")).unwrap(),
+        )
+        .unwrap();
+        template["services"][0]["resources"]["requests"]["memory"] = Value::from("64k");
+        assert!(validator.is_valid(&template));
+        template["services"][0]["resources"]["requests"]["memory"] = Value::from("64K");
+        assert!(!validator.is_valid(&template));
+    }
+
+    #[test]
     fn a_capability_must_not_be_the_id_of_another_component() {
         let got = problems("traefik", |c| {
             c.provides.as_mut().unwrap().capability = Some("cert-manager".to_owned());

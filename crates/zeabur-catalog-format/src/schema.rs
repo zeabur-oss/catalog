@@ -106,8 +106,8 @@ pub(crate) mod pattern {
     pub(crate) const SECRET_KEY: &str = "^[A-Za-z0-9_.-]+$";
     /// A CPU quantity, such as `50m`.
     pub(crate) const CPU: &str = "^[0-9]+(\\.[0-9]+)?m?$";
-    /// A memory quantity, such as `64Mi`.
-    pub(crate) const MEMORY: &str = "^[1-9][0-9]*(Ki|Mi|Gi|Ti|K|M|G|T)?$";
+    /// A memory quantity, such as `64Mi` or `64k`. Kilo is a lowercase `k`.
+    pub(crate) const MEMORY: &str = "^[1-9][0-9]*(Ki|Mi|Gi|Ti|Pi|Ei|k|M|G|T|P|E)?$";
     /// A Kubernetes quantity, such as `256Mi` or `100m`.
     pub(crate) const QUANTITY: &str =
         "^[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)(([KMGTPE]i)|[numkMGTPE]|([eE][+-]?[0-9]+))?$";
