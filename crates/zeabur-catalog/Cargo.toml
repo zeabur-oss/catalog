@@ -21,4 +21,4 @@ zeabur-catalog-engine.workspace = true
 serde_json.workspace = true
 serde-saphyr.workspace = true
 sha2.workspace = true
-zeabur-catalog-format.workspace = true
+zeabur-catalog-format = { workspace = true, features = ["schema"] }

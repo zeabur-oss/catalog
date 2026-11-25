@@ -7,6 +7,7 @@ pub mod component;
 pub mod contributions;
 pub mod order;
 pub mod problem;
+#[cfg(feature = "schema")]
 pub mod schema;
 pub mod select;
 pub mod template;
