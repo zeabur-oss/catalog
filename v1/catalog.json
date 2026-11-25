@@ -1,7 +1,7 @@
 {
   "catalog": {
-    "version": "0.6.2",
-    "commit": "ef46d0dd87e85ce0da87c773b197677796024106"
+    "version": "0.6.3",
+    "commit": "17002b3a99f72840f270a90b642dbf1b749a355a"
   },
   "profiles": [
     "single-node",
