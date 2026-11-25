@@ -10,10 +10,10 @@ Operator 会为每个 Namespace 的 MongoDB 集群管理 Pod、Service、Secret 
 
 Operator 镜像以 UBI 10 为基础，在 x86 节点上需要支持 x86-64-v3 的 CPU。每个数据库都用这个镜像作为 init 容器，所以在旧 CPU 上 Operator 能启动，第一个数据库却起不来。它的第一个 Pod（例如 `mongodb-rs0-0`）会停在 `Init:CrashLoopBackOff`，init 容器的日志会出现 `Fatal glibc error: CPU does not support x86-64-v3`。
 
-每个可能运行数据库的节点都要检查。下面的命令必须输出全部四个标志：
+每个可能运行数据库的节点都要检查。下面的命令询问节点上的 glibc（2.33 及以上），它做的检查和镜像相同。命令必须输出一行：
 
 ```sh
-grep -o -w -E 'avx2|bmi2|fma|movbe' /proc/cpuinfo | sort -u
+/lib64/ld-linux-x86-64.so.2 --help | grep 'x86-64-v3 (supported'
 ```
 
 ## 使用方法
