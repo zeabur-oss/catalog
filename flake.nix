@@ -104,6 +104,9 @@
             kube-apiserver
             etcd
             victoriametrics
+            yq-go
+            # Pattern rules (scripts/ci/patterns.sh)
+            ripgrep
           ];
           RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
         };

@@ -10,6 +10,7 @@ rules=(
   "string-problems|crates/**/*.rs|fn \w*problems?\w*(<[^>]*>)?\([^)]*\)\s*->[^{;]*Vec<String>|a check returns its own problem enum, wrapped by zeabur_catalog_format::problem::ProblemKind|fn license_problems(x: &str) -> Vec<String> {"
   "string-problems-out|crates/**/*.rs|fn \w*problems?\w*(<[^>]*>)?\([^)]*&mut Vec<String>|a check pushes its own problem enum into zeabur_catalog_format::problem::Problems|fn walk_problems(\n    raw: &Value,\n    out: &mut Vec<String>,\n) {"
   "text-tools|scripts/**|\b(grep|sed|awk|cut)\b|scripts read JSON with jq, YAML with yq, objects with kubectl -o jsonpath and search with rg|ready=\$(cut -d, -f2 pods.csv)"
+  "registry-ca-copy|{components,templates,docs,crates}/**|\bca(From|Bundle)\b|pass the source Secret as registry.caSecretRef to Zeabur Builder, and name its published CA in provides.registry.ca|      caFrom: {namespace: zot, secret: zot-tls}"
 )
 
 failed=0
