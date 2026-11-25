@@ -168,7 +168,7 @@ spec:
 		{name: "mysql-system-container", manifest: strings.Replace(mysql, "      - {name: slow-log, securityContext: *system}\n", "", 1), provider: "moco", rule: templates.ErrPodSecurity},
 		{name: "mysql-no-limits", manifest: strings.Replace(mysql, "            limits: {cpu: 100m, memory: 32Mi}\n", "", 1), provider: "moco", rule: templates.ErrPositiveResource},
 		{name: "mysql-service", manifest: mysql + "  primaryServiceTemplate: {spec: {type: LoadBalancer}}\n", provider: "moco", rule: templates.ErrUnsupportedOverride},
-		{name: "mysql-sidecar", manifest: strings.Replace(mysql, "        - name: mysqld\n", "        - {name: shell, image: busybox" + digest + "}\n        - name: mysqld\n", 1), provider: "moco", rule: templates.ErrUnsupportedOverride},
+		{name: "mysql-sidecar", manifest: strings.Replace(mysql, "        - name: mysqld\n", "        - {name: shell, image: busybox"+digest+"}\n        - name: mysqld\n", 1), provider: "moco", rule: templates.ErrUnsupportedOverride},
 		{name: "dragonfly", manifest: dragonfly, provider: "dragonfly-operator"},
 		{name: "dragonfly-provider", manifest: dragonfly, provider: "mariadb-operator", rule: templates.ErrDragonflyProvider},
 		{name: "dragonfly-tag", manifest: strings.Replace(dragonfly, "dragonfly"+digest, "dragonfly:v1", 1), provider: "dragonfly-operator", rule: templates.ErrDragonflyDigest},
