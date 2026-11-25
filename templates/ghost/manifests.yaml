@@ -10,31 +10,6 @@ spec:
     requests:
       storage: 10Gi
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: ghost-mysql-data
-  namespace: '{{ .Namespace }}'
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: ghost-mysql
-  namespace: '{{ .Namespace }}'
-spec:
-  selector:
-    app.kubernetes.io/name: ghost-mysql
-  ports:
-  - name: mysql
-    port: 3306
-    targetPort: mysql
----
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -87,7 +62,7 @@ spec:
         - name: database__client
           value: mysql
         - name: database__connection__host
-          value: ghost-mysql
+          value: moco-ghost-mysql-primary
         - name: database__connection__database
           value: ghost
         - name: database__connection__user
@@ -97,8 +72,8 @@ spec:
         - name: database__connection__password
           valueFrom:
             secretKeyRef:
-              name: ghost-secrets
-              key: database-password
+              name: ghost-mysql-app
+              key: password
         - name: mail__transport
           value: SMTP
         - name: mail__from
@@ -267,38 +242,92 @@ spec:
             port:
               number: 2368
 ---
-apiVersion: apps/v1
-kind: StatefulSet
+# The annotations name the database and the Secret of its user, so Zeabur OSS
+# connects services as that user. MOCO's pods run as 10000.
+apiVersion: moco.cybozu.com/v1beta2
+kind: MySQLCluster
 metadata:
   name: ghost-mysql
   namespace: '{{ .Namespace }}'
+  annotations:
+    zeabur.com/app-database: ghost
+    zeabur.com/app-secret: ghost-mysql-app
 spec:
-  serviceName: ghost-mysql
   replicas: 1
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: ghost-mysql
-  template:
+  podTemplate:
     metadata:
       labels:
         templates.zeabur.com/template: ghost
-        app.kubernetes.io/name: ghost-mysql
     spec:
-      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
-        runAsUser: 999
-        runAsGroup: 999
-        fsGroup: 999
+        runAsUser: 10000
+        runAsGroup: 10000
+        fsGroup: 10000
         fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
           type: RuntimeDefault
       containers:
-      - name: ghost-mysql
-        image: mysql:8.4@sha256:a81d043930e51745522bd5c430961cf8286f0a23f0a9a2a6e0108f7ea71b0902
-        ports:
-        - name: mysql
-          containerPort: 3306
+      - name: mysqld
+        image: ghcr.io/cybozu-go/moco/mysql:8.4.10.1@sha256:bdb88ae2023dcba0218bf900c7f39117c7a6e4101de6b5c8f62774c1d897b68a
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: '2'
+            memory: 1Gi
+        securityContext: &system
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+    overwriteContainers:
+    - name: agent
+      securityContext: *system
+    - name: moco-init
+      securityContext: *system
+    - name: copy-moco-init
+      securityContext: *system
+    - name: slow-log
+      securityContext: *system
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+---
+# MOCO makes no database. This Job waits for the primary, then makes the ghost
+# database and user as moco-writable. The passwords go in through a file
+# descriptor and standard input, so no process's arguments hold them.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ghost-mysql-app-setup
+  namespace: '{{ .Namespace }}'
+spec:
+  backoffLimit: 6
+  template:
+    metadata:
+      labels:
+        templates.zeabur.com/template: ghost
+        app.kubernetes.io/name: ghost-mysql-app-setup
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: OnFailure
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10000
+        runAsGroup: 10000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: setup
+        image: ghcr.io/cybozu-go/moco/mysql:8.4.10.1@sha256:bdb88ae2023dcba0218bf900c7f39117c7a6e4101de6b5c8f62774c1d897b68a
         securityContext:
           runAsNonRoot: true
           allowPrivilegeEscalation: false
@@ -308,68 +337,33 @@ spec:
             - ALL
         resources:
           requests:
-            cpu: 100m
-            memory: 256Mi
+            cpu: 10m
+            memory: 32Mi
           limits:
-            cpu: '2'
-            memory: 1Gi
+            cpu: 200m
+            memory: 128Mi
         env:
-        - name: MYSQL_DATABASE
-          value: ghost
-        - name: MYSQL_USER
-          value: ghost
-        - name: MYSQL_ROOT_HOST
-          value: localhost
-        - name: MYSQL_PASSWORD
+        - name: HOST
+          value: moco-ghost-mysql-primary
+        - name: WRITABLE_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: ghost-secrets
-              key: database-password
-        - name: MYSQL_ROOT_PASSWORD
+              name: moco-ghost-mysql
+              key: WRITABLE_PASSWORD
+        - name: APP_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: ghost-secrets
-              key: root-password
-        volumeMounts:
-        - name: data
-          mountPath: /var/lib/mysql
-        - name: tmp
-          mountPath: /tmp
-        - name: run
-          mountPath: /var/run/mysqld
-        args:
-        - --socket=/var/run/mysqld/mysqld.sock
-        - --pid-file=/var/run/mysqld/mysqld.pid
-        - --skip-name-resolve
-        - --host-cache-size=0
-        - --max-allowed-packet=10M
-        - --performance-schema=OFF
-        startupProbe:
-          tcpSocket:
-            port: mysql
-          failureThreshold: 90
-          periodSeconds: 5
-        readinessProbe:
-          exec:
-            command:
-            - /bin/sh
-            - -ec
-            - MYSQL_PWD="$MYSQL_PASSWORD" mysql --protocol=TCP -h127.0.0.1 -ughost -Dghost -e "SELECT 1"
-          periodSeconds: 10
-          timeoutSeconds: 5
-        livenessProbe:
-          tcpSocket:
-            port: mysql
-          periodSeconds: 20
-          failureThreshold: 6
-      volumes:
-      - name: data
-        persistentVolumeClaim:
-          claimName: ghost-mysql-data
-      - name: tmp
-        emptyDir:
-          sizeLimit: 512Mi
-      - name: run
-        emptyDir:
-          sizeLimit: 32Mi
-      terminationGracePeriodSeconds: 60
+              name: ghost-mysql-app
+              key: password
+        command:
+        - bash
+        - -c
+        - |
+          set -eu
+          sql() { mysql --defaults-extra-file=<(printf '[client]\npassword=%s\n' "$WRITABLE_PASSWORD") -h "$HOST" -u moco-writable "$@"; }
+          for _ in $(seq 120); do sql -e 'SELECT 1' >/dev/null 2>&1 && break; sleep 5; done
+          sql <<SQL
+          CREATE DATABASE IF NOT EXISTS ghost;
+          CREATE USER IF NOT EXISTS 'ghost'@'%' IDENTIFIED BY '$APP_PASSWORD';
+          GRANT ALL ON ghost.* TO 'ghost'@'%';
+          SQL

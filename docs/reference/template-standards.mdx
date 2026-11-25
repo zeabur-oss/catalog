@@ -40,7 +40,7 @@ Every template in Zeabur Catalog must follow these rules. When you add or update
 
 ## Networking
 
-- Every Pod must have the `templates.zeabur.com/template: <id>` label. For operator-managed Pods, configure labels in the custom resource: use `inheritedMetadata` for CloudNativePG, `podMetadata` for Dragonfly and MariaDB, and `replsets[].labels` for Percona.
+- Every Pod must have the `templates.zeabur.com/template: <id>` label. For operator-managed Pods, configure labels in the custom resource: use `inheritedMetadata` for CloudNativePG, `podMetadata` for Dragonfly and MariaDB, `replsets[].labels` for Percona, and `podTemplate.metadata.labels` for MOCO.
 - Templates must not include default-deny or per-Pod NetworkPolicies. The installer uses base policies to isolate project Namespaces from one another. This is the default isolation boundary.
 - Components without a login mechanism or their own key are exceptions. They must have an ingress NetworkPolicy that permits connections only from their application. Examples include Redis or Dragonfly without a password, Meilisearch or Qdrant without a key, and sandboxes that execute other people's code. List the service in `security.unauthenticated`; `catalog template lint` requires an ingress NetworkPolicy whose `podSelector` selects that service. The risk description in `security` must explain why this policy exists. Components that execute untrusted code can also restrict outbound traffic to DNS and their own peers.
 - Don't restrict outbound traffic outside the cases above.
@@ -68,7 +68,7 @@ Every template in Zeabur Catalog must follow these rules. When you add or update
 ## Data and backups
 
 - You must explain who manages each piece of stateful data, including databases, uploaded files, search indexes, queues, configuration, and encryption keys. Use `emptyDir` only for data that can be lost.
-- When the components include a matching database operator, you must use it: CloudNativePG for PostgreSQL, Percona for MongoDB, MariaDB Operator for MariaDB, and Dragonfly Operator for Redis-compatible use cases.
+- When the components include a matching database operator, you must use it: CloudNativePG for PostgreSQL, Percona for MongoDB, MOCO for MySQL, MariaDB Operator for MariaDB, and Dragonfly Operator for Redis-compatible use cases.
 - Don't enable database backups in templates. Backups are disabled by default for newly installed databases. Users can enable them later from the **Backups** tab of their Zeabur OSS database.
 - If a template configures backups, it must send them to S3 over HTTPS, enable TLS verification, and store credentials in Secrets.
 - You must explain what remains and what gets deleted when users delete the application.

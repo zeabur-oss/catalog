@@ -48,6 +48,7 @@ var kindRules = []kindRule{
 	{"psmdb.percona.com/v1", []string{"PerconaServerMongoDBBackup"}, "percona-mongodb", ErrPerconaBackupProvider, checkPerconaBackup},
 	{"dragonflydb.io/v1alpha1", []string{"Dragonfly"}, "dragonfly-operator", ErrDragonflyProvider, checkDragonfly},
 	{"k8s.mariadb.com/v1alpha1", []string{"MariaDB", "Backup", "Database", "User", "Grant"}, "mariadb-operator", ErrMariaDBProvider, checkMariaDB},
+	{"moco.cybozu.com/v1beta2", []string{"MySQLCluster"}, "moco", ErrMOCOProvider, checkMySQLCluster},
 	{"traefik.io/v1alpha1", []string{"Middleware"}, "traefik", ErrMiddlewareProvider, checkMiddleware},
 }
 
@@ -397,4 +398,60 @@ func checkMariaDB(c kindContext) {
 			fail(w, "Grant grantOption forbidden")
 		}
 	}
+}
+
+// mocoContainers are the containers MOCO adds to each MySQL pod, which
+// overwriteContainers may change.
+// https://github.com/cybozu-go/moco/blob/v0.37.0/docs/customize-system-container.md
+var mocoContainers = []string{"agent", "copy-moco-init", "moco-init", "slow-log"}
+
+// checkMySQLCluster checks a MOCO MySQLCluster: the mysqld container in
+// spec.podTemplate and the security contexts of the containers MOCO adds.
+func checkMySQLCluster(c kindContext) {
+	r, w, fail := c.r, c.where, c.fail
+	if len(r.Security.Risks) == 0 {
+		fail(w, "security.risks must describe the operator-generated pods and service account")
+	}
+	spec := object(c.d["spec"])
+	onlyKeys(spec, []string{"replicas", "podTemplate", "volumeClaimTemplates", "mysqlConfigMapName", "maxDelaySeconds", "startupWaitSeconds", "disableSlowQueryLogContainer", "logRotationSchedule"}, "MySQLCluster", w, fail)
+	tmpl := object(spec["podTemplate"])
+	onlyKeys(tmpl, []string{"metadata", "spec", "overwriteContainers"}, "podTemplate", w, fail)
+	if text(object(object(tmpl["metadata"])["labels"])[TemplateLabel]) != r.ID {
+		fail(w+"/podTemplate", ErrTemplateLabel)
+	}
+	podSpec := object(tmpl["spec"])
+	onlyKeys(podSpec, []string{"securityContext", "containers", "affinity", "nodeSelector", "tolerations", "topologySpreadConstraints", "terminationGracePeriodSeconds"}, "podTemplate.spec", w, fail)
+	var pod corev1.PodSpec
+	if err := convert(podSpec, &pod); err != nil {
+		fail(w, ErrPodSecurity, err.Error())
+		return
+	}
+	if len(pod.Containers) != 1 || pod.Containers[0].Name != "mysqld" {
+		fail(w, ErrUnsupportedOverride, "containers other than mysqld")
+	}
+	for _, container := range array(podSpec["containers"]) {
+		onlyKeys(object(container), []string{"name", "image", "resources", "securityContext"}, "container", w, fail)
+	}
+	for _, m := range pod.Containers {
+		if !catalog.PinnedImage.MatchString(m.Image) {
+			fail(w+"/"+m.Name, ErrImageDigest)
+		}
+		checkRequirements(m.Resources, w+"/"+m.Name, fail)
+	}
+	for _, o := range array(tmpl["overwriteContainers"]) {
+		var added corev1.Container
+		if err := convert(object(o), &added); err != nil || !slices.Contains(mocoContainers, added.Name) {
+			fail(w, ErrUnsupportedOverride, "overwriteContainers "+text(object(o)["name"]))
+			continue
+		}
+		pod.Containers = append(pod.Containers, corev1.Container{Name: added.Name, SecurityContext: added.SecurityContext})
+	}
+	// A container MOCO adds without an overwrite runs with MOCO's default
+	// security context, which restricted does not admit.
+	for _, name := range mocoContainers {
+		if !slices.ContainsFunc(pod.Containers, func(c corev1.Container) bool { return c.Name == name }) {
+			pod.Containers = append(pod.Containers, corev1.Container{Name: name})
+		}
+	}
+	checkPodSecurity(metav1.ObjectMeta{}, pod, "restricted", w, fail)
 }
