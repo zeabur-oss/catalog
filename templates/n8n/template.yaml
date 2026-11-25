@@ -7,12 +7,12 @@ metadata:
   name: n8n PostgreSQL
   # renovate: depName=docker.io/n8nio/n8n
   version: "3.2.2"
-  summary: Workflow automation with PostgreSQL and separate code runners.
+  summary: Workflow automation with its own PostgreSQL database, the usual choice for a team.
   locales:
     zh-TW:
-      summary: "工作流程自動化，搭配 PostgreSQL 和獨立的程式碼執行器。"
+      summary: "工作流程自動化，附自己的 PostgreSQL 資料庫，團隊使用就選這個。"
     zh-CN:
-      summary: "工作流自动化，搭配 PostgreSQL 和独立的代码执行器。"
+      summary: "工作流自动化，带自己的 PostgreSQL 数据库，团队使用就选这个。"
   license: LicenseRef-n8n-sustainable-use AND PostgreSQL AND Apache-2.0
   licenseUrls:
     LicenseRef-n8n-sustainable-use: https://docs.n8n.io/sustainable-use-license/
