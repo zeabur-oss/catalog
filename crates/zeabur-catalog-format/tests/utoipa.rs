@@ -1,6 +1,6 @@
 //! The `utoipa` schemas describe the same values as the schemars ones.
 
-#![cfg(feature = "utoipa")]
+#![cfg(all(feature = "utoipa", feature = "schema"))]
 
 #[cfg(test)]
 mod tests {
