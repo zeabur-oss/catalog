@@ -7,12 +7,12 @@ metadata:
   name: n8n SQLite
   # renovate: depName=docker.io/n8nio/n8n
   version: "3.2.2"
-  summary: Workflow automation with SQLite and separate code runners.
+  summary: The smallest n8n, with SQLite on a volume and no database server, for one person or light use.
   locales:
     zh-TW:
-      summary: "工作流程自動化，資料存在 SQLite，搭配獨立的程式碼執行器。"
+      summary: "最精簡的 n8n，資料存在磁碟區上的 SQLite，不需要資料庫伺服器，適合一個人或用量少的時候。"
     zh-CN:
-      summary: "工作流自动化，数据存在 SQLite，搭配独立的代码执行器。"
+      summary: "最精简的 n8n，数据存在卷上的 SQLite，不需要数据库服务器，适合一个人或用量少的时候。"
   license: LicenseRef-n8n-sustainable-use
   licenseUrls:
     LicenseRef-n8n-sustainable-use: https://docs.n8n.io/sustainable-use-license/
