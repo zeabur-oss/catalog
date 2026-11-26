@@ -40,7 +40,7 @@ Zeabur Catalog 的每个模板都必须符合以下规则。新增或修改模�
 
 ## 网络
 
-- 每个 Pod 都必须加上 `templates.zeabur.com/template: <id>` 标签。operator 管理的 Pod 必须在自定义资源中设置标签：CloudNativePG 使用 `inheritedMetadata`，Dragonfly 与 MariaDB 使用 `podMetadata`，Percona 使用 `replsets[].labels`。
+- 每个 Pod 都必须加上 `templates.zeabur.com/template: <id>` 标签。operator 管理的 Pod 必须在自定义资源中设置标签：CloudNativePG 使用 `inheritedMetadata`，Dragonfly 与 MariaDB 使用 `podMetadata`，Percona 使用 `replsets[].labels`，MOCO 使用 `podTemplate.metadata.labels`。
 - 模板不得附带默认拒绝流量或针对单个 Pod 的 NetworkPolicy。安装程序会使用基础策略隔离不同项目的 Namespace，这就是默认的隔离边界。
 - 没有登录机制或自身密钥的组件属于例外，必须配置只允许所属应用连入的 ingress NetworkPolicy。例如未设置密码的 Redis 或 Dragonfly、未设置密钥的 Meilisearch 或 Qdrant，以及运行他人代码的沙箱。必须将该服务列在 `security.unauthenticated` 中；`catalog template lint` 会要求提供 ingress NetworkPolicy，且其 `podSelector` 必须指定该服务。`security` 的风险说明必须解释这项策略存在的原因。运行不受信任代码的组件也可以将出站流量限制为 DNS 与自身的对等服务。
 - 除了上述情况，不得限制出站流量。
@@ -68,7 +68,7 @@ Zeabur Catalog 的每个模板都必须符合以下规则。新增或修改模�
 ## 数据与备份
 
 - 必须说明每份状态数据由谁管理，包括数据库、上传文件、搜索索引、队列、配置与加密密钥。只有丢失也无妨的数据才能使用 `emptyDir`。
-- 组件中已有对应的数据库 operator 时，必须使用该 operator：PostgreSQL 使用 CloudNativePG，MongoDB 使用 Percona，MariaDB 使用 MariaDB Operator，兼容 Redis 的用途使用 Dragonfly Operator。
+- 组件中已有对应的数据库 operator 时，必须使用该 operator：PostgreSQL 使用 CloudNativePG，MongoDB 使用 Percona，MySQL 使用 MOCO，MariaDB 使用 MariaDB Operator，兼容 Redis 的用途使用 Dragonfly Operator。
 - 不得在模板中启用数据库备份。新安装的数据库默认不启用备份，用户之后可从 Zeabur 开源版数据库的 **Backups** 选项卡启用。
 - 如果模板配置了备份，必须将备份发送到使用 HTTPS 的 S3，启用 TLS 验证，并将凭据存放在 Secret 中。
 - 必须说明删除应用时会保留什么，以及会删除什么。

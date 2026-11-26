@@ -130,10 +130,45 @@ spec:
       secretAccessKeySecretKeyRef: {name: s3, key: secret}
       tls: {enabled: true}
 `
+	mysql := safeManifest + `---
+apiVersion: moco.cybozu.com/v1beta2
+kind: MySQLCluster
+metadata: {name: mysql}
+spec:
+  replicas: 1
+  podTemplate:
+    metadata: {labels: {templates.zeabur.com/template: app}}
+    spec:
+      securityContext: {runAsNonRoot: true, runAsUser: 10000, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: mysqld
+          image: ghcr.io/cybozu-go/moco/mysql` + digest + `
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {cpu: 100m, memory: 32Mi}
+          securityContext: &system {allowPrivilegeEscalation: false, capabilities: {drop: [ALL]}}
+    overwriteContainers:
+      - {name: agent, securityContext: *system}
+      - {name: moco-init, securityContext: *system}
+      - {name: copy-moco-init, securityContext: *system}
+      - {name: slow-log, securityContext: *system}
+  volumeClaimTemplates:
+    - metadata: {name: mysql-data}
+      spec: {accessModes: [ReadWriteOnce], resources: {requests: {storage: 1Gi}}}
+`
 	for _, tc := range []struct {
 		name, manifest, provider string
 		rule                     templates.Rule
 	}{
+		{name: "mysql", manifest: mysql, provider: "moco"},
+		{name: "mysql-provider", manifest: mysql, provider: "mariadb-operator", rule: templates.ErrMOCOProvider},
+		{name: "mysql-tag", manifest: strings.Replace(mysql, "mysql"+digest, "mysql:8.4.10", 1), provider: "moco", rule: templates.ErrImageDigest},
+		{name: "mysql-label", manifest: strings.Replace(mysql, "    metadata: {labels: {templates.zeabur.com/template: app}}\n", "", 1), provider: "moco", rule: templates.ErrTemplateLabel},
+		{name: "mysql-root", manifest: strings.Replace(mysql, "runAsUser: 10000", "runAsUser: 0", 1), provider: "moco", rule: templates.ErrPodSecurity},
+		{name: "mysql-system-container", manifest: strings.Replace(mysql, "      - {name: slow-log, securityContext: *system}\n", "", 1), provider: "moco", rule: templates.ErrPodSecurity},
+		{name: "mysql-no-limits", manifest: strings.Replace(mysql, "            limits: {cpu: 100m, memory: 32Mi}\n", "", 1), provider: "moco", rule: templates.ErrPositiveResource},
+		{name: "mysql-service", manifest: mysql + "  primaryServiceTemplate: {spec: {type: LoadBalancer}}\n", provider: "moco", rule: templates.ErrUnsupportedOverride},
+		{name: "mysql-sidecar", manifest: strings.Replace(mysql, "        - name: mysqld\n", "        - {name: shell, image: busybox"+digest+"}\n        - name: mysqld\n", 1), provider: "moco", rule: templates.ErrUnsupportedOverride},
 		{name: "dragonfly", manifest: dragonfly, provider: "dragonfly-operator"},
 		{name: "dragonfly-provider", manifest: dragonfly, provider: "mariadb-operator", rule: templates.ErrDragonflyProvider},
 		{name: "dragonfly-tag", manifest: strings.Replace(dragonfly, "dragonfly"+digest, "dragonfly:v1", 1), provider: "dragonfly-operator", rule: templates.ErrDragonflyDigest},

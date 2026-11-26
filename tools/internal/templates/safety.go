@@ -62,6 +62,7 @@ const (
 	ErrMariaDBRefNamespace   Rule = "mariaDbRef escapes target namespace"
 	ErrMariaDBRefUndeclared  Rule = "mariaDbRef must name a MariaDB declared in this template"
 	ErrMariaDBProvider       Rule = "MariaDB Operator resources require exact mariadb-operator"
+	ErrMOCOProvider          Rule = "MySQLCluster requires exact moco"
 	ErrMariaDBBackupS3       Rule = "backup must use S3 with explicit credentials and TLS verification"
 	ErrGlobalGrant           Rule = "Grant must name one database; global privileges forbidden"
 	ErrPerconaBackupProvider Rule = "Percona backup requires exact percona-mongodb"

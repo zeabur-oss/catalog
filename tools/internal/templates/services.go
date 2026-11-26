@@ -47,6 +47,12 @@ func CheckServices(r *Template, manifest []byte) error {
 				operand = object(spec["resources"])
 			case kind == "PerconaServerMongoDB":
 				operand = object(object(array(spec["replsets"])[0])["resources"])
+			case kind == "MySQLCluster":
+				for _, c := range array(object(object(spec["podTemplate"])["spec"])["containers"]) {
+					if text(object(c)["name"]) == "mysqld" {
+						operand = object(object(c)["resources"])
+					}
+				}
 			default:
 				continue
 			}

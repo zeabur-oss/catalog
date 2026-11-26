@@ -37,3 +37,29 @@ func TestCheckServicesComparesTheManifests(t *testing.T) {
 		t.Fatal("service without an object accepted")
 	}
 }
+
+func TestCheckServicesReadsTheMySQLServer(t *testing.T) {
+	manifest := []byte(`apiVersion: moco.cybozu.com/v1beta2
+kind: MySQLCluster
+metadata: {name: db}
+spec:
+  podTemplate:
+    spec:
+      containers:
+        - name: mysqld
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {cpu: "1", memory: 1Gi}
+`)
+	r := &templates.Template{ID: "app", Services: []templates.Service{{
+		Name:      "db",
+		Resources: map[string]map[string]string{"requests": {"cpu": "100m", "memory": "256Mi"}, "limits": {"cpu": "1", "memory": "1Gi"}},
+	}}}
+	if err := templates.CheckServices(r, manifest); err != nil {
+		t.Fatalf("the mysqld container's resources rejected: %v", err)
+	}
+	r.Services[0].Resources["limits"]["memory"] = "2Gi"
+	if err := templates.CheckServices(r, manifest); err == nil {
+		t.Fatal("memory limit other than mysqld's accepted")
+	}
+}
