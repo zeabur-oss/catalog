@@ -6,6 +6,16 @@ The operator is Apache-2.0. The Percona Server for MongoDB images it runs are un
 
 The operator manages Pods, Services, Secrets and PVCs for MongoDB clusters in every namespace. The component turns off the operator's telemetry, which reports to Percona by default.
 
+## Before you install
+
+The operator image is built on UBI 10, which needs an x86-64-v3 CPU on x86 nodes. Each database runs this image as its init container, so the operator starts on an older CPU, but the first database does not. Its first Pod, such as `mongodb-rs0-0`, stays in `Init:CrashLoopBackOff`, and the init container's log shows `Fatal glibc error: CPU does not support x86-64-v3`.
+
+Check each node that can run a database. The command asks the node's glibc (2.33 or later), which runs the same check as the image. It must print a line:
+
+```sh
+/lib64/ld-linux-x86-64.so.2 --help | grep 'x86-64-v3 (supported'
+```
+
 ## Use it
 
 In Zeabur OSS, open a project's **Add** menu and choose **MongoDB**. Set the version and storage, then connect services and set up S3 backups in the database's **Backups** tab. See [Create, back up, and restore databases](https://oss.zeabur.com/docs/zeabur/deploy/databases/).
