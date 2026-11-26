@@ -1,6 +1,6 @@
 ## Introduction
 
-[Ghost](https://github.com/TryGhost/Ghost) is a publishing platform for blogs and paid newsletters. This template runs Ghost 6 behind your domain, with MySQL on a volume.
+[Ghost](https://github.com/TryGhost/Ghost) is a publishing platform for blogs and paid newsletters. This template runs Ghost 6 behind your domain, with a MySQL database that MOCO runs.
 
 Ghost sends sign-in and system email through the SMTP server you entered in the install form.
 
@@ -15,7 +15,7 @@ Ghost sends sign-in and system email through the SMTP server you entered in the 
 
 3. Open the admin page and sign in with the owner email and that password.
 
-The other keys in `ghost-secrets` (`database-password` and `root-password`) are for MySQL. Ghost does not use `root-password`.
+The Secret `ghost-mysql-app`, key `password`, holds the password of the `ghost` MySQL user that Ghost connects as. MOCO keeps its own administrator passwords in `moco-ghost-mysql`.
 
 ## Configuration
 
@@ -25,11 +25,7 @@ SMTP only sends system email. To send a post as a newsletter, Ghost needs a bulk
 
 ### Back up the data
 
-Ghost keeps posts, members and settings in MySQL, on the volume `ghost-mysql-data`. Images, themes and other uploads are on the volume `ghost-data`, mounted at `/var/lib/ghost/content`. `ghost-mysql` is a plain MySQL container, not a Zeabur OSS database, so it has no **Backups** tab. Dump it to a file on your machine with kubectl:
-
-```sh
-kubectl -n <namespace> exec statefulset/ghost-mysql -- sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysqldump --single-transaction --no-tablespaces -h127.0.0.1 -ughost ghost' > ghost.sql
-```
+Ghost keeps posts, members and settings in the `ghost-mysql` database. In the project, open `ghost-mysql`. Under **Backups**, set up S3 backups. To get a file instead, click **More** → **Export**. Images, themes and other uploads are on the volume `ghost-data`, mounted at `/var/lib/ghost/content`.
 
 Copy the content folder with the **Files** tab of the `ghost` service. For a large folder, use kubectl:
 
@@ -37,19 +33,25 @@ Copy the content folder with the **Files** tab of the `ghost` service. For a lar
 kubectl -n <namespace> cp ghost-0:/var/lib/ghost/content ./ghost-content
 ```
 
-The export in the Ghost admin, under Settings > Advanced > Import/Export, gives posts and settings as JSON, but not the images of a self-hosted site. See [Exporting content and data](https://ghost.org/help/exports/) in the Ghost docs.
+The export in the Ghost admin, under Settings > Advanced > Import/Export, gives posts and settings as JSON, but not the images of a self-hosted site. See [Create, back up, and restore databases](https://oss.zeabur.com/docs/zeabur/deploy/databases/#set-up-s3-backups) in the Zeabur OSS docs and [Exporting content and data](https://ghost.org/help/exports/) in the Ghost docs.
 
 ### Change the database password
 
-Ghost reads `database-password` from the Secret, but MySQL sets the password of the `ghost` user only when its data directory is empty. If you change only the Secret, Ghost cannot connect. Change it in MySQL first. Open **Terminal** on the `ghost-mysql` service and run:
+Ghost reads the password from `ghost-mysql-app`, but MySQL keeps its own copy. If you change only the Secret, Ghost cannot connect. Change it in MySQL first, as `moco-writable`:
 
 ```sh
-mysql --socket=/var/run/mysqld/mysqld.sock -uroot -p"$MYSQL_ROOT_PASSWORD" -e "ALTER USER 'ghost'@'%' IDENTIFIED BY '<new password>'"
+kubectl -n <namespace> exec -i moco-ghost-mysql-0 -c mysqld -- mysql -h127.0.0.1 -umoco-writable \
+  -p"$(kubectl -n <namespace> get secret moco-ghost-mysql -o jsonpath='{.data.WRITABLE_PASSWORD}' | base64 -d)" \
+  -e "ALTER USER 'ghost'@'%' IDENTIFIED BY '<new password>'"
 ```
 
-Then enter the same value for `database-password` in `ghost-secrets`, review and apply, and click **Restart** on the `ghost` and `ghost-mysql` services. See the environment variables in the [MySQL image](https://hub.docker.com/_/mysql) docs.
+Then enter the same value for `password` in `ghost-mysql-app`, review and apply, and click **Restart** on the `ghost` service.
 
 ## Troubleshooting
+
+### Ghost restarts after the install
+
+Ghost cannot connect until MOCO has started MySQL and the job `ghost-mysql-app-setup` has made the `ghost` user. This takes a few minutes, and Ghost restarts until then. Check the database with `kubectl -n <namespace> get mysqlcluster ghost-mysql` and the job with `kubectl -n <namespace> get job ghost-mysql-app-setup`.
 
 ### Sign-in or system email fails with a connection timeout
 

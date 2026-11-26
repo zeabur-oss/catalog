@@ -1,7 +1,7 @@
 {
   "catalog": {
-    "version": "0.6.3",
-    "commit": "17002b3a99f72840f270a90b642dbf1b749a355a"
+    "version": "0.6.4",
+    "commit": "b7f0e673aa69dd6df7a5dffaec9698b6c5161868"
   },
   "profiles": [
     "single-node",
@@ -90,7 +90,7 @@
     },
     {
       "id": "percona-mongodb",
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do="
+      "sourceDigest": "h1:0LIaGqK1F8mGjazMvZTYGFCVlXDlxosISt7qmB4MURQ="
     },
     {
       "id": "reloader",
@@ -160,7 +160,7 @@
     },
     {
       "id": "ghost",
-      "sourceDigest": "h1:AXuLsBA57LxRvOdAO0PfvPetodN4EE5Qqj/KGN+reHk="
+      "sourceDigest": "h1:aVuCb0y8hXfZ4obH3FmjI67RItaIlbs2h/66Ap6IGdc="
     },
     {
       "id": "gitea",
@@ -176,7 +176,7 @@
     },
     {
       "id": "librechat",
-      "sourceDigest": "h1:oZbdgY0U78F+8HhZNyB2fQT7DKDCA4t611EtJwkw4Pg="
+      "sourceDigest": "h1:oSl/cqrdI0vXmX6royB6t8/zEcTQtrVqjHOBtdmnhG0="
     },
     {
       "id": "litellm",
@@ -200,15 +200,15 @@
     },
     {
       "id": "n8n",
-      "sourceDigest": "h1:wRElBmxPDX8oijTJxCZBowDqrI1HIrszpO57FMr0XAY="
+      "sourceDigest": "h1:eaCTsZVhvNA8Katj6IQ79eygbhno7kvLhFSReZv94TM="
     },
     {
       "id": "n8n-ai-brain",
-      "sourceDigest": "h1:qhZZQkVkOeISlun6W28n6+v9l15R/9fdvJpLUXLgEGc="
+      "sourceDigest": "h1:pLuIkbbAPlZibYqbw1tYjPD+9XDM+9Z4SuG64lCD6XM="
     },
     {
       "id": "n8n-sqlite",
-      "sourceDigest": "h1:nPrFzrLOiXyT0NR9JAMBwzCtAuPbrfFJo7q0I62N2e0="
+      "sourceDigest": "h1:OoIAoKvMJ+C2zEQElKvSLjC1uJi8kKk2HM5ojePZ4cU="
     },
     {
       "id": "new-api",

@@ -1,6 +1,6 @@
 ## 簡介
 
-[Ghost](https://github.com/TryGhost/Ghost) 是用來經營部落格和付費電子報的發布平台。這個範本在你的網域後面跑 Ghost 6，MySQL 放在磁碟區上。
+[Ghost](https://github.com/TryGhost/Ghost) 是用來經營部落格和付費電子報的發布平台。這個範本在你的網域後面跑 Ghost 6，搭配由 MOCO 執行的 MySQL 資料庫。
 
 Ghost 透過你在安裝表單填寫的 SMTP 伺服器寄出登入信和系統信件。
 
@@ -15,7 +15,7 @@ Ghost 透過你在安裝表單填寫的 SMTP 伺服器寄出登入信和系統�
 
 3. 開啟管理後台，用擁有者 Email 和這組密碼登入。
 
-`ghost-secrets` 裡其他的欄位（`database-password` 和 `root-password`）是給 MySQL 用的。Ghost 不會用到 `root-password`。
+機密變數 `ghost-mysql-app` 的 `password` 是 Ghost 連線時用的 MySQL 使用者 `ghost` 的密碼。MOCO 自己的管理員密碼放在 `moco-ghost-mysql`。
 
 ## 設定
 
@@ -25,11 +25,7 @@ SMTP 只負責系統信件。要把文章寄成電子報，Ghost 需要大量寄
 
 ### 備份資料
 
-Ghost 把文章、會員和設定存在 MySQL，放在磁碟區 `ghost-mysql-data`。圖片、佈景主題和其他上傳的檔案放在磁碟區 `ghost-data`，掛載在 `/var/lib/ghost/content`。`ghost-mysql` 是單純的 MySQL 容器，不是 Zeabur 開源版資料庫，所以沒有**備份**分頁。用 kubectl 把它傾印成你電腦上的檔案：
-
-```sh
-kubectl -n <namespace> exec statefulset/ghost-mysql -- sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysqldump --single-transaction --no-tablespaces -h127.0.0.1 -ughost ghost' > ghost.sql
-```
+Ghost 把文章、會員和設定存在 `ghost-mysql` 資料庫。在專案打開 `ghost-mysql`，到**備份**設定 S3 備份。想直接拿到檔案，按**更多** → **匯出**。圖片、佈景主題和其他上傳的檔案放在磁碟區 `ghost-data`，掛載在 `/var/lib/ghost/content`。
 
 內容資料夾用 `ghost` 服務的**檔案**分頁複製。資料夾很大時，改用 kubectl：
 
@@ -37,19 +33,25 @@ kubectl -n <namespace> exec statefulset/ghost-mysql -- sh -c 'MYSQL_PWD="$MYSQL_
 kubectl -n <namespace> cp ghost-0:/var/lib/ghost/content ./ghost-content
 ```
 
-Ghost 管理後台的「設定 > 進階 > 匯入/匯出」可以把文章和設定匯出成 JSON，但自架網站的圖片不在裡面。詳見 Ghost 文件的 [Exporting content and data](https://ghost.org/help/exports/)。
+Ghost 管理後台的「設定 > 進階 > 匯入/匯出」可以把文章和設定匯出成 JSON，但自架網站的圖片不在裡面。詳見 Zeabur 開源版文件的[建立、備份與還原資料庫](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/databases/#設定-s3-備份)和 Ghost 文件的 [Exporting content and data](https://ghost.org/help/exports/)。
 
 ### 更換資料庫密碼
 
-Ghost 從機密變數讀取 `database-password`，但 MySQL 只在資料目錄是空的時候才設定 `ghost` 使用者的密碼。只改機密變數的話，Ghost 會連不上資料庫。要先在 MySQL 裡改。在 `ghost-mysql` 服務打開**終端機**，執行：
+Ghost 從 `ghost-mysql-app` 讀取密碼，但 MySQL 自己也存了一份。只改機密變數的話，Ghost 會連不上資料庫。要先以 `moco-writable` 在 MySQL 裡改：
 
 ```sh
-mysql --socket=/var/run/mysqld/mysqld.sock -uroot -p"$MYSQL_ROOT_PASSWORD" -e "ALTER USER 'ghost'@'%' IDENTIFIED BY '<new password>'"
+kubectl -n <namespace> exec -i moco-ghost-mysql-0 -c mysqld -- mysql -h127.0.0.1 -umoco-writable \
+  -p"$(kubectl -n <namespace> get secret moco-ghost-mysql -o jsonpath='{.data.WRITABLE_PASSWORD}' | base64 -d)" \
+  -e "ALTER USER 'ghost'@'%' IDENTIFIED BY '<new password>'"
 ```
 
-接著在 `ghost-secrets` 為 `database-password` 填入同一個值，檢查後套用，再按 `ghost` 和 `ghost-mysql` 服務頁上方的**重新啟動**。詳見 [MySQL 映像檔](https://hub.docker.com/_/mysql)文件的環境變數說明。
+接著在 `ghost-mysql-app` 為 `password` 填入同一個值，檢查後套用，再按 `ghost` 服務頁上方的**重新啟動**。
 
 ## 疑難排解
+
+### 安裝後 Ghost 一直重新啟動
+
+MOCO 啟動 MySQL、工作 `ghost-mysql-app-setup` 建好 `ghost` 使用者之前，Ghost 連不上資料庫。這要幾分鐘，在那之前 Ghost 會一直重新啟動。用 `kubectl -n <namespace> get mysqlcluster ghost-mysql` 查看資料庫，用 `kubectl -n <namespace> get job ghost-mysql-app-setup` 查看工作。
 
 ### 登入信或系統信件寄不出去，出現連線逾時
 

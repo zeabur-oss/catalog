@@ -6,6 +6,16 @@ Operator 采用 Apache-2.0 许可。它运行的 Percona Server for MongoDB 镜�
 
 Operator 会为每个 Namespace 的 MongoDB 集群管理 Pod、Service、Secret 和 PVC。这个组件关闭了 Operator 的遥测（默认会上报给 Percona）。
 
+## 安装前准备
+
+Operator 镜像以 UBI 10 为基础，在 x86 节点上需要支持 x86-64-v3 的 CPU。每个数据库都用这个镜像作为 init 容器，所以在旧 CPU 上 Operator 能启动，第一个数据库却起不来。它的第一个 Pod（例如 `mongodb-rs0-0`）会停在 `Init:CrashLoopBackOff`，init 容器的日志会出现 `Fatal glibc error: CPU does not support x86-64-v3`。
+
+每个可能运行数据库的节点都要检查。下面的命令询问节点上的 glibc（2.33 及以上），它做的检查和镜像相同。命令必须输出一行：
+
+```sh
+/lib64/ld-linux-x86-64.so.2 --help | grep 'x86-64-v3 (supported'
+```
+
 ## 使用方法
 
 在 Zeabur 开源版打开项目的**新建**菜单，选择 **MongoDB**。设置版本和存储空间，再连接到服务，并在数据库的**备份**标签页配置 S3 备份。详见[创建、备份与还原数据库](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/databases/)。

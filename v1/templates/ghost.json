@@ -1,6 +1,6 @@
 {
   "id": "ghost",
-  "sourceDigest": "h1:AXuLsBA57LxRvOdAO0PfvPetodN4EE5Qqj/KGN+reHk=",
+  "sourceDigest": "h1:aVuCb0y8hXfZ4obH3FmjI67RItaIlbs2h/66Ap6IGdc=",
   "template": {
     "apiVersion": "catalog.zeabur.com/v1",
     "inputs": [
@@ -48,24 +48,8 @@
         },
         "name": "databasePassword",
         "secret": {
-          "key": "database-password",
-          "name": "ghost-secrets"
-        },
-        "validation": {
-          "pattern": "^[A-Za-z0-9_-]{43}$"
-        }
-      },
-      {
-        "description": "Local MySQL administrator password; never used by Ghost.",
-        "generate": {
-          "bytes": 32,
-          "encoding": "base64url",
-          "type": "random"
-        },
-        "name": "mysqlRootPassword",
-        "secret": {
-          "key": "root-password",
-          "name": "ghost-secrets"
+          "key": "password",
+          "name": "ghost-mysql-app"
         },
         "validation": {
           "pattern": "^[A-Za-z0-9_-]{43}$"
@@ -191,6 +175,9 @@
       },
       {
         "component": "cert-manager"
+      },
+      {
+        "component": "moco"
       }
     ],
     "security": {
@@ -220,16 +207,16 @@
         {
           "locales": {
             "zh-CN": {
-              "mitigation": "只保留一个副本。MySQL 备份和内容备份都要存放在节点之外，并妥善保护。在承诺高可用或自动恢复到任意时间点之前，请先从目录添加 MySQL operator。",
-              "risk": "MySQL 是以普通的 StatefulSet 运行，没有 operator 在管理。"
+              "mitigation": "moco 组件会为每个集群创建权限。Ghost 以 ghost 用户连接，这个用户只有 ghost 数据库的权限。Ghost 的 Pod 没有令牌。",
+              "risk": "MOCO 的数据库 Pod 会运行 MOCO 的 agent，由 moco 组件配置。MOCO 把 MySQL 管理员密码放在机密 moco-ghost-mysql。"
             },
             "zh-TW": {
-              "mitigation": "只保留一個副本。MySQL 備份和內容備份都要存在節點以外的地方，並妥善保護。在承諾高可用或自動還原到任意時間點之前，請先從目錄加入 MySQL operator。",
-              "risk": "MySQL 是以單純的 StatefulSet 執行，沒有 operator 在管理。"
+              "mitigation": "moco 元件會替每個叢集建立權限。Ghost 以 ghost 使用者連線，這個使用者只有 ghost 資料庫的權限。Ghost 的 Pod 沒有權杖。",
+              "risk": "MOCO 的資料庫 Pod 會執行 MOCO 的 agent，由 moco 元件設定。MOCO 把 MySQL 管理員密碼放在機密 moco-ghost-mysql。"
             }
           },
-          "mitigation": "Keep one replica. Store both the MySQL backups and the content backups off the node, and protect them. Add a MySQL operator from the catalog before you promise high availability or automatic point-in-time recovery.",
-          "risk": "MySQL runs as a plain StatefulSet, with no operator to manage it."
+          "mitigation": "The moco component creates the permissions for each cluster. Ghost connects as the ghost user, which has rights on the ghost database only. The Ghost Pod has no token.",
+          "risk": "The MOCO database Pods run MOCO's agent, which the moco component configures, and MOCO keeps the MySQL administrator passwords in the Secret moco-ghost-mysql."
         },
         {
           "locales": {
@@ -295,6 +282,18 @@
     ],
     "smoke": [
       {
+        "condition": "condition=Healthy",
+        "name": "mysql-ready",
+        "resource": "mysqlcluster/ghost-mysql",
+        "timeout": "600s"
+      },
+      {
+        "condition": "condition=Complete",
+        "name": "mysql-user-created",
+        "resource": "job/ghost-mysql-app-setup",
+        "timeout": "600s"
+      },
+      {
         "condition": "condition=Complete",
         "name": "owner-created",
         "resource": "job/ghost-setup",
@@ -304,15 +303,10 @@
         "name": "application-ready",
         "resource": "statefulset/ghost",
         "timeout": "600s"
-      },
-      {
-        "name": "mysql-ready",
-        "resource": "statefulset/ghost-mysql",
-        "timeout": "600s"
       }
     ]
   },
-  "manifests": "apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: ghost-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes:\n  - ReadWriteOnce\n  resources:\n    requests:\n      storage: 10Gi\n---\napiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: ghost-mysql-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes:\n  - ReadWriteOnce\n  resources:\n    requests:\n      storage: 10Gi\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: ghost-mysql\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: ghost-mysql\n  ports:\n  - name: mysql\n    port: 3306\n    targetPort: mysql\n---\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: ghost\n  namespace: '{{ .Namespace }}'\nspec:\n  serviceName: ghost\n  replicas: 1\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: ghost\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: ghost\n        app.kubernetes.io/name: ghost\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: ghost\n        image: ghost:6-alpine@sha256:4195f6c405e40230cd10c0770425cf500c1f542a96e9f6584c11649c150e5a89\n        ports:\n        - name: http\n          containerPort: 2368\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n        resources:\n          requests:\n            cpu: 100m\n            memory: 256Mi\n          limits:\n            cpu: '2'\n            memory: 1Gi\n        env:\n        - name: url\n          value: https://{{ .Domain }}\n        - name: database__client\n          value: mysql\n        - name: database__connection__host\n          value: ghost-mysql\n        - name: database__connection__database\n          value: ghost\n        - name: database__connection__user\n          value: ghost\n        - name: database__connection__port\n          value: '3306'\n        - name: database__connection__password\n          valueFrom:\n            secretKeyRef:\n              name: ghost-secrets\n              key: database-password\n        - name: mail__transport\n          value: SMTP\n        - name: mail__from\n          value: '{{ .Inputs.smtpFrom }}'\n        - name: mail__options__host\n          value: '{{ .Inputs.smtpHost }}'\n        - name: mail__options__port\n          value: '{{ .Inputs.smtpPort }}'\n        - name: mail__options__secure\n          value: '{{ .Inputs.smtpSecure }}'\n        - name: mail__options__requireTLS\n          value: 'true'\n        - name: mail__options__auth__user\n          valueFrom:\n            secretKeyRef:\n              name: '{{ .Inputs.smtpSecret }}'\n              key: username\n        - name: mail__options__auth__pass\n          valueFrom:\n            secretKeyRef:\n              name: '{{ .Inputs.smtpSecret }}'\n              key: password\n        - name: logging__transports\n          value: '[\"stdout\"]'\n        volumeMounts:\n        - name: data\n          mountPath: /var/lib/ghost/content\n        - name: tmp\n          mountPath: /tmp\n        startupProbe:\n          tcpSocket:\n            port: http\n          failureThreshold: 120\n          periodSeconds: 5\n        readinessProbe:\n          httpGet:\n            path: /ghost/api/admin/site/\n            port: http\n          periodSeconds: 10\n        livenessProbe:\n          tcpSocket:\n            port: http\n          periodSeconds: 20\n          failureThreshold: 6\n      volumes:\n      - name: data\n        persistentVolumeClaim:\n          claimName: ghost-data\n      - name: tmp\n        emptyDir:\n          sizeLimit: 512Mi\n      terminationGracePeriodSeconds: 60\n---\napiVersion: batch/v1\nkind: Job\nmetadata:\n  name: ghost-setup\n  namespace: '{{ .Namespace }}'\nspec:\n  backoffLimit: 6\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: ghost\n        app.kubernetes.io/name: ghost-setup\n    spec:\n      automountServiceAccountToken: false\n      restartPolicy: OnFailure\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: setup\n        image: ghost:6-alpine@sha256:4195f6c405e40230cd10c0770425cf500c1f542a96e9f6584c11649c150e5a89\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n        resources:\n          requests:\n            cpu: 10m\n            memory: 64Mi\n          limits:\n            cpu: 200m\n            memory: 128Mi\n        env:\n        - name: DOMAIN\n          value: '{{ .Domain }}'\n        - name: OWNER_EMAIL\n          value: '{{ .Inputs.ownerEmail }}'\n        - name: OWNER_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: ghost-secrets\n              key: admin-password\n        command:\n        - node\n        - -e\n        - |\n          const http = require('http');\n          const call = (method, body) => new Promise((ok, fail) => {\n            const r = http.request({host: 'ghost', port: 2368, path: '/ghost/api/admin/authentication/setup/', method,\n              headers: {Host: process.env.DOMAIN, 'X-Forwarded-Proto': 'https', 'Content-Type': 'application/json'}},\n              (res) => { let d = ''; res.on('data', (c) => d += c); res.on('end', () => ok({status: res.statusCode, body: d})); });\n            r.on('error', fail);\n            r.end(body);\n          });\n          (async () => {\n            for (let i = 0; i < 300; i++) {\n              try {\n                const g = await call('GET');\n                if (g.status === 200) {\n                  if (JSON.parse(g.body).setup[0].status) return;\n                  const p = await call('POST', JSON.stringify({setup: [{name: 'Owner', email: process.env.OWNER_EMAIL,\n                    password: process.env.OWNER_PASSWORD, blogTitle: process.env.DOMAIN}]}));\n                  if (p.status === 200 || p.status === 201) return;\n                  console.error('setup answered', p.status);\n                }\n              } catch (e) {}\n              await new Promise((r) => setTimeout(r, 2000));\n            }\n            process.exit(1);\n          })();\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: ghost\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: ghost\n  ports:\n  - name: http\n    port: 2368\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: ghost\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts:\n    - '{{ .Domain }}'\n    secretName: ghost-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: ghost\n            port:\n              number: 2368\n---\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: ghost-mysql\n  namespace: '{{ .Namespace }}'\nspec:\n  serviceName: ghost-mysql\n  replicas: 1\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: ghost-mysql\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: ghost\n        app.kubernetes.io/name: ghost-mysql\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 999\n        runAsGroup: 999\n        fsGroup: 999\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: ghost-mysql\n        image: mysql:8.4@sha256:a81d043930e51745522bd5c430961cf8286f0a23f0a9a2a6e0108f7ea71b0902\n        ports:\n        - name: mysql\n          containerPort: 3306\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n        resources:\n          requests:\n            cpu: 100m\n            memory: 256Mi\n          limits:\n            cpu: '2'\n            memory: 1Gi\n        env:\n        - name: MYSQL_DATABASE\n          value: ghost\n        - name: MYSQL_USER\n          value: ghost\n        - name: MYSQL_ROOT_HOST\n          value: localhost\n        - name: MYSQL_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: ghost-secrets\n              key: database-password\n        - name: MYSQL_ROOT_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: ghost-secrets\n              key: root-password\n        volumeMounts:\n        - name: data\n          mountPath: /var/lib/mysql\n        - name: tmp\n          mountPath: /tmp\n        - name: run\n          mountPath: /var/run/mysqld\n        args:\n        - --socket=/var/run/mysqld/mysqld.sock\n        - --pid-file=/var/run/mysqld/mysqld.pid\n        - --skip-name-resolve\n        - --host-cache-size=0\n        - --max-allowed-packet=10M\n        - --performance-schema=OFF\n        startupProbe:\n          tcpSocket:\n            port: mysql\n          failureThreshold: 90\n          periodSeconds: 5\n        readinessProbe:\n          exec:\n            command:\n            - /bin/sh\n            - -ec\n            - MYSQL_PWD=\"$MYSQL_PASSWORD\" mysql --protocol=TCP -h127.0.0.1 -ughost -Dghost -e \"SELECT 1\"\n          periodSeconds: 10\n          timeoutSeconds: 5\n        livenessProbe:\n          tcpSocket:\n            port: mysql\n          periodSeconds: 20\n          failureThreshold: 6\n      volumes:\n      - name: data\n        persistentVolumeClaim:\n          claimName: ghost-mysql-data\n      - name: tmp\n        emptyDir:\n          sizeLimit: 512Mi\n      - name: run\n        emptyDir:\n          sizeLimit: 32Mi\n      terminationGracePeriodSeconds: 60\n",
+  "manifests": "apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: ghost-data\n  namespace: '{{ .Namespace }}'\nspec:\n  accessModes:\n  - ReadWriteOnce\n  resources:\n    requests:\n      storage: 10Gi\n---\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: ghost\n  namespace: '{{ .Namespace }}'\nspec:\n  serviceName: ghost\n  replicas: 1\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: ghost\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: ghost\n        app.kubernetes.io/name: ghost\n    spec:\n      automountServiceAccountToken: false\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        fsGroup: 1000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: ghost\n        image: ghost:6-alpine@sha256:4195f6c405e40230cd10c0770425cf500c1f542a96e9f6584c11649c150e5a89\n        ports:\n        - name: http\n          containerPort: 2368\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n        resources:\n          requests:\n            cpu: 100m\n            memory: 256Mi\n          limits:\n            cpu: '2'\n            memory: 1Gi\n        env:\n        - name: url\n          value: https://{{ .Domain }}\n        - name: database__client\n          value: mysql\n        - name: database__connection__host\n          value: moco-ghost-mysql-primary\n        - name: database__connection__database\n          value: ghost\n        - name: database__connection__user\n          value: ghost\n        - name: database__connection__port\n          value: '3306'\n        - name: database__connection__password\n          valueFrom:\n            secretKeyRef:\n              name: ghost-mysql-app\n              key: password\n        - name: mail__transport\n          value: SMTP\n        - name: mail__from\n          value: '{{ .Inputs.smtpFrom }}'\n        - name: mail__options__host\n          value: '{{ .Inputs.smtpHost }}'\n        - name: mail__options__port\n          value: '{{ .Inputs.smtpPort }}'\n        - name: mail__options__secure\n          value: '{{ .Inputs.smtpSecure }}'\n        - name: mail__options__requireTLS\n          value: 'true'\n        - name: mail__options__auth__user\n          valueFrom:\n            secretKeyRef:\n              name: '{{ .Inputs.smtpSecret }}'\n              key: username\n        - name: mail__options__auth__pass\n          valueFrom:\n            secretKeyRef:\n              name: '{{ .Inputs.smtpSecret }}'\n              key: password\n        - name: logging__transports\n          value: '[\"stdout\"]'\n        volumeMounts:\n        - name: data\n          mountPath: /var/lib/ghost/content\n        - name: tmp\n          mountPath: /tmp\n        startupProbe:\n          tcpSocket:\n            port: http\n          failureThreshold: 120\n          periodSeconds: 5\n        readinessProbe:\n          httpGet:\n            path: /ghost/api/admin/site/\n            port: http\n          periodSeconds: 10\n        livenessProbe:\n          tcpSocket:\n            port: http\n          periodSeconds: 20\n          failureThreshold: 6\n      volumes:\n      - name: data\n        persistentVolumeClaim:\n          claimName: ghost-data\n      - name: tmp\n        emptyDir:\n          sizeLimit: 512Mi\n      terminationGracePeriodSeconds: 60\n---\napiVersion: batch/v1\nkind: Job\nmetadata:\n  name: ghost-setup\n  namespace: '{{ .Namespace }}'\nspec:\n  backoffLimit: 6\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: ghost\n        app.kubernetes.io/name: ghost-setup\n    spec:\n      automountServiceAccountToken: false\n      restartPolicy: OnFailure\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 1000\n        runAsGroup: 1000\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: setup\n        image: ghost:6-alpine@sha256:4195f6c405e40230cd10c0770425cf500c1f542a96e9f6584c11649c150e5a89\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n        resources:\n          requests:\n            cpu: 10m\n            memory: 64Mi\n          limits:\n            cpu: 200m\n            memory: 128Mi\n        env:\n        - name: DOMAIN\n          value: '{{ .Domain }}'\n        - name: OWNER_EMAIL\n          value: '{{ .Inputs.ownerEmail }}'\n        - name: OWNER_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: ghost-secrets\n              key: admin-password\n        command:\n        - node\n        - -e\n        - |\n          const http = require('http');\n          const call = (method, body) => new Promise((ok, fail) => {\n            const r = http.request({host: 'ghost', port: 2368, path: '/ghost/api/admin/authentication/setup/', method,\n              headers: {Host: process.env.DOMAIN, 'X-Forwarded-Proto': 'https', 'Content-Type': 'application/json'}},\n              (res) => { let d = ''; res.on('data', (c) => d += c); res.on('end', () => ok({status: res.statusCode, body: d})); });\n            r.on('error', fail);\n            r.end(body);\n          });\n          (async () => {\n            for (let i = 0; i < 300; i++) {\n              try {\n                const g = await call('GET');\n                if (g.status === 200) {\n                  if (JSON.parse(g.body).setup[0].status) return;\n                  const p = await call('POST', JSON.stringify({setup: [{name: 'Owner', email: process.env.OWNER_EMAIL,\n                    password: process.env.OWNER_PASSWORD, blogTitle: process.env.DOMAIN}]}));\n                  if (p.status === 200 || p.status === 201) return;\n                  console.error('setup answered', p.status);\n                }\n              } catch (e) {}\n              await new Promise((r) => setTimeout(r, 2000));\n            }\n            process.exit(1);\n          })();\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: ghost\n  namespace: '{{ .Namespace }}'\nspec:\n  selector:\n    app.kubernetes.io/name: ghost\n  ports:\n  - name: http\n    port: 2368\n    targetPort: http\n---\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: ghost\n  namespace: '{{ .Namespace }}'\n  annotations:\n    cert-manager.io/cluster-issuer: '{{ .ClusterIssuer }}'\nspec:\n  ingressClassName: traefik\n  tls:\n  - hosts:\n    - '{{ .Domain }}'\n    secretName: ghost-tls\n  rules:\n  - host: '{{ .Domain }}'\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: ghost\n            port:\n              number: 2368\n---\n# The annotations name the database and the Secret of its user, so Zeabur OSS\n# connects services as that user. MOCO's pods run as 10000.\napiVersion: moco.cybozu.com/v1beta2\nkind: MySQLCluster\nmetadata:\n  name: ghost-mysql\n  namespace: '{{ .Namespace }}'\n  annotations:\n    zeabur.com/app-database: ghost\n    zeabur.com/app-secret: ghost-mysql-app\nspec:\n  replicas: 1\n  podTemplate:\n    metadata:\n      labels:\n        templates.zeabur.com/template: ghost\n    spec:\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 10000\n        runAsGroup: 10000\n        fsGroup: 10000\n        fsGroupChangePolicy: OnRootMismatch\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: mysqld\n        image: ghcr.io/cybozu-go/moco/mysql:8.4.10.1@sha256:bdb88ae2023dcba0218bf900c7f39117c7a6e4101de6b5c8f62774c1d897b68a\n        resources:\n          requests:\n            cpu: 100m\n            memory: 256Mi\n          limits:\n            cpu: '2'\n            memory: 1Gi\n        securityContext: &system\n          allowPrivilegeEscalation: false\n          capabilities:\n            drop:\n            - ALL\n    overwriteContainers:\n    - name: agent\n      securityContext: *system\n    - name: moco-init\n      securityContext: *system\n    - name: copy-moco-init\n      securityContext: *system\n    - name: slow-log\n      securityContext: *system\n  volumeClaimTemplates:\n  - metadata:\n      name: mysql-data\n    spec:\n      accessModes:\n      - ReadWriteOnce\n      resources:\n        requests:\n          storage: 10Gi\n---\n# MOCO makes no database. This Job waits for the primary, then makes the ghost\n# database and user as moco-writable. The passwords go in through a file\n# descriptor and standard input, so no process's arguments hold them.\napiVersion: batch/v1\nkind: Job\nmetadata:\n  name: ghost-mysql-app-setup\n  namespace: '{{ .Namespace }}'\nspec:\n  backoffLimit: 6\n  template:\n    metadata:\n      labels:\n        templates.zeabur.com/template: ghost\n        app.kubernetes.io/name: ghost-mysql-app-setup\n    spec:\n      automountServiceAccountToken: false\n      restartPolicy: OnFailure\n      securityContext:\n        runAsNonRoot: true\n        runAsUser: 10000\n        runAsGroup: 10000\n        seccompProfile:\n          type: RuntimeDefault\n      containers:\n      - name: setup\n        image: ghcr.io/cybozu-go/moco/mysql:8.4.10.1@sha256:bdb88ae2023dcba0218bf900c7f39117c7a6e4101de6b5c8f62774c1d897b68a\n        securityContext:\n          runAsNonRoot: true\n          allowPrivilegeEscalation: false\n          readOnlyRootFilesystem: true\n          capabilities:\n            drop:\n            - ALL\n        resources:\n          requests:\n            cpu: 10m\n            memory: 32Mi\n          limits:\n            cpu: 200m\n            memory: 128Mi\n        env:\n        - name: HOST\n          value: moco-ghost-mysql-primary\n        - name: WRITABLE_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: moco-ghost-mysql\n              key: WRITABLE_PASSWORD\n        - name: APP_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: ghost-mysql-app\n              key: password\n        command:\n        - bash\n        - -c\n        - |\n          set -eu\n          sql() { mysql --defaults-extra-file=<(printf '[client]\\npassword=%s\\n' \"$WRITABLE_PASSWORD\") -h \"$HOST\" -u moco-writable \"$@\"; }\n          for _ in $(seq 120); do sql -e 'SELECT 1' >/dev/null 2>&1 && break; sleep 5; done\n          sql <<SQL\n          CREATE DATABASE IF NOT EXISTS ghost;\n          CREATE USER IF NOT EXISTS 'ghost'@'%' IDENTIFIED BY '$APP_PASSWORD';\n          GRANT ALL ON ghost.* TO 'ghost'@'%';\n          SQL\n",
   "measurements": [
     {
       "distribution": "kind",
@@ -328,33 +322,34 @@
           "workload": "ghost",
           "kind": "StatefulSet",
           "memory": "164Mi",
-          "cpu": "1m"
+          "cpu": "0"
         },
         {
-          "workload": "ghost-mysql",
+          "workload": "moco-ghost-mysql",
           "kind": "StatefulSet",
-          "memory": "236Mi",
-          "cpu": "6m"
+          "memory": "534Mi",
+          "cpu": "4m"
         }
       ],
       "versions": [
         {
+          "image": "ghcr.io/cybozu-go/moco/mysql",
+          "version": "8.4.10.1",
+          "digest": "sha256:bdb88ae2023dcba0218bf900c7f39117c7a6e4101de6b5c8f62774c1d897b68a"
+        },
+        {
           "image": "ghost",
           "version": "6-alpine",
           "digest": "sha256:4195f6c405e40230cd10c0770425cf500c1f542a96e9f6584c11649c150e5a89"
-        },
-        {
-          "image": "mysql",
-          "version": "8.4",
-          "digest": "sha256:a81d043930e51745522bd5c430961cf8286f0a23f0a9a2a6e0108f7ea71b0902"
         }
       ],
-      "sourceDigest": "h1:AXuLsBA57LxRvOdAO0PfvPetodN4EE5Qqj/KGN+reHk=",
+      "sourceDigest": "h1:aVuCb0y8hXfZ4obH3FmjI67RItaIlbs2h/66Ap6IGdc=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "moco": "h1:7JDmlp5vaEn6XGAlHvo0j4JJ6TGuR0k+LwKHHpeogmg=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-23"
+      "measuredAt": "2026-11-26"
     }
   ],
   "readmes": [

@@ -1,6 +1,6 @@
 {
   "id": "percona-mongodb",
-  "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
+  "sourceDigest": "h1:0LIaGqK1F8mGjazMvZTYGFCVlXDlxosISt7qmB4MURQ=",
   "declaration": {
     "apiVersion": "catalog.zeabur.com/v1",
     "defaults": {
@@ -64,7 +64,7 @@
         },
         "repo": "https://percona.github.io/percona-helm-charts",
         "type": "helm",
-        "values": "# Pinned by digest; a tag alone can move.\nimage:\n  repository: percona/percona-server-mongodb-operator\n  tag: 1.23.1@sha256:78c87b933e184b9af36dbb0078751862c75934c1521c33d3be4d0a38aa58dd0a\n# Reconcile clusters in every namespace.\nwatchAllNamespaces: true\n# Telemetry is on by default and reports to Percona.\ndisableTelemetry: true\n# The chart sets no security context; the namespace enforces Pod Security restricted.\npodSecurityContext:\n  runAsNonRoot: true\n  seccompProfile: {type: RuntimeDefault}\n# Pod Security restricted requires both settings.\nsecurityContext:\n  allowPrivilegeEscalation: false\n  capabilities: {drop: [ALL]}\n",
+        "values": "# Pinned by digest; a tag alone can move. Images 1.22.0 and later are on\n# UBI 10, which needs an x86-64-v3 CPU: the database's init container\n# runs this image. On a bump, check the base image of the new tag and\n# update \"Before you install\" in the READMEs.\nimage:\n  repository: percona/percona-server-mongodb-operator\n  tag: 1.23.1@sha256:78c87b933e184b9af36dbb0078751862c75934c1521c33d3be4d0a38aa58dd0a\n# Reconcile clusters in every namespace.\nwatchAllNamespaces: true\n# Telemetry is on by default and reports to Percona.\ndisableTelemetry: true\n# The chart sets no security context; the namespace enforces Pod Security restricted.\npodSecurityContext:\n  runAsNonRoot: true\n  seccompProfile: {type: RuntimeDefault}\n# Pod Security restricted requires both settings.\nsecurityContext:\n  allowPrivilegeEscalation: false\n  capabilities: {drop: [ALL]}\n",
         "version": "1.23.2"
       }
     ],
@@ -155,7 +155,7 @@
         {
           "workload": "psmdb-operator",
           "kind": "Deployment",
-          "memory": "22Mi",
+          "memory": "23Mi",
           "cpu": "1m"
         }
       ],
@@ -165,8 +165,8 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:0LIaGqK1F8mGjazMvZTYGFCVlXDlxosISt7qmB4MURQ=",
+      "measuredAt": "2026-11-26"
     },
     {
       "distribution": "k3s",
@@ -182,7 +182,7 @@
         {
           "workload": "psmdb-operator",
           "kind": "Deployment",
-          "memory": "21Mi",
+          "memory": "22Mi",
           "cpu": "1m"
         }
       ],
@@ -192,8 +192,8 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:0LIaGqK1F8mGjazMvZTYGFCVlXDlxosISt7qmB4MURQ=",
+      "measuredAt": "2026-11-26"
     },
     {
       "distribution": "kind",
@@ -218,8 +218,8 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:0LIaGqK1F8mGjazMvZTYGFCVlXDlxosISt7qmB4MURQ=",
+      "measuredAt": "2026-11-26"
     },
     {
       "distribution": "kind",
@@ -234,7 +234,7 @@
         {
           "workload": "psmdb-operator",
           "kind": "Deployment",
-          "memory": "19Mi",
+          "memory": "18Mi",
           "cpu": "1m"
         }
       ],
@@ -244,8 +244,8 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:0LIaGqK1F8mGjazMvZTYGFCVlXDlxosISt7qmB4MURQ=",
+      "measuredAt": "2026-11-26"
     },
     {
       "distribution": "kind",
@@ -270,8 +270,8 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:0LIaGqK1F8mGjazMvZTYGFCVlXDlxosISt7qmB4MURQ=",
+      "measuredAt": "2026-11-26"
     },
     {
       "distribution": "kind",
@@ -286,7 +286,7 @@
         {
           "workload": "psmdb-operator",
           "kind": "Deployment",
-          "memory": "19Mi",
+          "memory": "18Mi",
           "cpu": "1m"
         }
       ],
@@ -296,8 +296,8 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
-      "measuredAt": "2026-11-20"
+      "sourceDigest": "h1:0LIaGqK1F8mGjazMvZTYGFCVlXDlxosISt7qmB4MURQ=",
+      "measuredAt": "2026-11-26"
     },
     {
       "distribution": "kubesolo",
@@ -323,11 +323,11 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
+      "sourceDigest": "h1:0LIaGqK1F8mGjazMvZTYGFCVlXDlxosISt7qmB4MURQ=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-26"
     },
     {
       "distribution": "kubesolo",
@@ -353,11 +353,11 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
+      "sourceDigest": "h1:0LIaGqK1F8mGjazMvZTYGFCVlXDlxosISt7qmB4MURQ=",
       "addOns": {
         "helm-controller": "v0.17.9"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-26"
     },
     {
       "distribution": "rke2",
@@ -383,11 +383,11 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
+      "sourceDigest": "h1:0LIaGqK1F8mGjazMvZTYGFCVlXDlxosISt7qmB4MURQ=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-26"
     },
     {
       "distribution": "rke2",
@@ -403,7 +403,7 @@
         {
           "workload": "psmdb-operator",
           "kind": "Deployment",
-          "memory": "23Mi",
+          "memory": "24Mi",
           "cpu": "1m"
         }
       ],
@@ -413,11 +413,11 @@
           "version": "1.23.2"
         }
       ],
-      "sourceDigest": "h1:PlXEtf/riwgwAGCPplQan44Q4QIXz6UDq8kwQE6F0do=",
+      "sourceDigest": "h1:0LIaGqK1F8mGjazMvZTYGFCVlXDlxosISt7qmB4MURQ=",
       "addOns": {
         "local-path-provisioner": "v0.0.37"
       },
-      "measuredAt": "2026-11-20"
+      "measuredAt": "2026-11-26"
     }
   ],
   "readmes": [
