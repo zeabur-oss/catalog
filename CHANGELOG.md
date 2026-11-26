@@ -2,6 +2,26 @@
 
 All notable changes to this catalog are documented in this file; each section comes from the change files in `.changeset/` (CONTRIBUTING.md, "Releases").
 
+## 0.6.4 (2026-11-26)
+
+### Features
+
+#### Ghost runs its MySQL on MOCO
+
+A new Ghost deploy creates a MOCO `MySQLCluster`, `ghost-mysql`, in place of the plain `ghost-mysql` StatefulSet, and requires the `moco` component. Zeabur OSS shows it as a MySQL database with a **Backups** tab. A job makes the `ghost` database and user, and the user's password is in the Secret `ghost-mysql-app`. The `mysqlRootPassword` input is gone. A Ghost you already deployed keeps its StatefulSet.
+
+`catalog template lint` checks MOCO `MySQLCluster` objects: the template's `moco` requirement, a pinned `mysqld` image with requests and limits, the template label on its pods, and restricted security contexts on `mysqld` and on each container MOCO adds.
+
+### Fixes
+
+#### The three n8n templates' summaries say how they differ
+
+n8n PostgreSQL is the usual choice for a team, n8n SQLite is the smallest for one person or light use, and n8n (AI Brain) says that it is n8n PostgreSQL with half the CPU and memory reserved for n8n and no extra AI parts.
+
+#### Percona MongoDB and LibreChat say that the operator image needs an x86-64-v3 CPU
+
+The `percona-mongodb` READMEs and the LibreChat risks say that the operator image 1.22.0 and later is built on UBI 10 and needs an x86-64-v3 CPU on x86 nodes, with a command that checks a node.
+
 ## 0.6.3 (2026-11-25)
 
 ### Fixes
