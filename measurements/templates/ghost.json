@@ -15,33 +15,34 @@
           "workload": "ghost",
           "kind": "StatefulSet",
           "memory": "164Mi",
-          "cpu": "1m"
+          "cpu": "0"
         },
         {
-          "workload": "ghost-mysql",
+          "workload": "moco-ghost-mysql",
           "kind": "StatefulSet",
-          "memory": "236Mi",
-          "cpu": "6m"
+          "memory": "534Mi",
+          "cpu": "4m"
         }
       ],
       "versions": [
         {
+          "image": "ghcr.io/cybozu-go/moco/mysql",
+          "version": "8.4.10.1",
+          "digest": "sha256:bdb88ae2023dcba0218bf900c7f39117c7a6e4101de6b5c8f62774c1d897b68a"
+        },
+        {
           "image": "ghost",
           "version": "6-alpine",
           "digest": "sha256:4195f6c405e40230cd10c0770425cf500c1f542a96e9f6584c11649c150e5a89"
-        },
-        {
-          "image": "mysql",
-          "version": "8.4",
-          "digest": "sha256:a81d043930e51745522bd5c430961cf8286f0a23f0a9a2a6e0108f7ea71b0902"
         }
       ],
-      "sourceDigest": "h1:AXuLsBA57LxRvOdAO0PfvPetodN4EE5Qqj/KGN+reHk=",
+      "sourceDigest": "h1:aVuCb0y8hXfZ4obH3FmjI67RItaIlbs2h/66Ap6IGdc=",
       "dependencies": {
         "cert-manager": "h1:cl4GHwtZdGGz+1g9mNZ6jr2QOnZ0yXbXubQuKvteies=",
+        "moco": "h1:7JDmlp5vaEn6XGAlHvo0j4JJ6TGuR0k+LwKHHpeogmg=",
         "traefik": "h1:pW/IOZjWHt3Rdag6Xn/6Uv1tK7hJ/qc0lxQtmiZq8YU="
       },
-      "measuredAt": "2026-11-23"
+      "measuredAt": "2026-11-26"
     }
   ]
 }
