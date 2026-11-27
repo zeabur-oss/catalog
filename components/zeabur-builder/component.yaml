@@ -94,6 +94,43 @@ inputs:
     release: builder
     path: agent.auth
 
+provides:
+  capability: builds
+  registry:
+    host: zot.zot.svc:5000
+    ca: {name: registry-ca, key: ca.crt, namespace: builder-system}
+
+# Only builds, installers and nodes reach zot, so an app can't pull other
+# projects' images.
+networkPolicies: |
+  apiVersion: networking.k8s.io/v1
+  kind: NetworkPolicy
+  metadata:
+    name: zot-builder
+    namespace: zot
+  spec:
+    podSelector:
+      matchLabels: {app.kubernetes.io/name: zot}
+    policyTypes: [Ingress]
+    ingress:
+      - from:
+          - namespaceSelector:
+              matchLabels: {kubernetes.io/metadata.name: builder-system}
+            podSelector:
+              matchLabels: {app.kubernetes.io/name: buildkitd}
+          - namespaceSelector:
+              matchLabels: {kubernetes.io/metadata.name: builder-system}
+            podSelector:
+              matchLabels: {app.kubernetes.io/name: zeabur-builder}
+          # Any Pod in a project namespace can set this label.
+          - namespaceSelector:
+              matchLabels: {zeabur.com/project: "true"}
+            podSelector:
+              matchExpressions:
+                - {key: builder.zeabur.com/buildrun, operator: Exists}
+        ports:
+          - {port: 5000, protocol: TCP}
+
 releases:
   # Before the chart: the CA that signs zot-tls, and the key that signs push
   # tokens.
