@@ -3,12 +3,12 @@ title: 交給 Agent 安裝元件和範本
 description: 把一段提示貼進 Claude Code 或 Codex，它會用 Catalog 釘選的版本和設定值安裝 Zeabur Catalog 元件，每次改動前先給你看。
 ---
 
-Claude Code 或 Codex 這類 Coding Agent 可以替你安裝元件。放著它自己做，它會用 `helm install` 挑自己的 chart 版本和設定值，也會漏掉 Zeabur 開源版替元件加上的物件。這段提示讓它只用 `zeaburctl components export` 印出的內容，版本和設定值都和 Zeabur 開源版安裝的一樣。
+Claude Code 或 Codex 這類 Coding Agent 可以替你安裝元件。放著它自己做，它可能自己挑 chart 版本和設定值來跑 `helm install`，也漏掉 Zeabur 開源版替元件加上的物件。這段提示讓它只用 `zeaburctl components export` 印出的內容，版本和設定值都和 Zeabur 開源版安裝的一樣。
 
 ## 開始前
 
 - 在執行 Agent 的電腦上安裝 [zeaburctl](https://oss.zeabur.com/zh-TW/docs/zeabur/reference/zeaburctl/) 和 kubectl，並準備能連到叢集的 kubeconfig。
-- 知道叢集怎麼安裝 Helm chart。K3s 和 RKE2 內建 helm-controller，格式是 `helmchart`。由 Flux 或 Argo CD 管理的叢集用 `flux` 或 `argocd`。其他叢集用 `helm`。
+- 知道叢集怎麼安裝 Helm chart。由 Flux 或 Argo CD 管理的叢集用 `flux` 或 `argocd`。不是的話，K3s 和 RKE2 內建 helm-controller，格式是 `helmchart`。其他叢集用 `helm`。
 
 ## 貼上這段提示
 
@@ -16,12 +16,12 @@ Claude Code 或 Codex 這類 Coding Agent 可以替你安裝元件。放著它�
 
 ```text
 在我的叢集安裝 Zeabur Catalog 元件 <ids>，照著 https://oss.zeabur.com/zh-TW/docs/catalog/get-started/agent.md 做。
-先問我要用哪個 kubeconfig context，每個 kubectl 和 zeaburctl doctor 指令都用 --context 指定。
-問我叢集適合哪種格式：K3s 和 RKE2 用 helmchart，由 Flux 或 Argo CD 管理的用 flux 或 argocd，其他用 helm。
-只安裝 `zeaburctl components export <ids> --format <格式>` 印出的內容。不要自己挑 chart 版本、改設定值，或自己執行 helm install。
+先問我要用哪個 kubeconfig context，每個 kubectl、helm 和 zeaburctl doctor 指令都指定它（helm 用 --kube-context，其他用 --context）。
+問我叢集適合哪種格式：由 Flux 或 Argo CD 管理的用 flux 或 argocd，不是的話 K3s 和 RKE2 用 helmchart，其他用 helm。
+只安裝 `zeaburctl components export <ids> --format <格式>` 印出的內容。不要自己挑 chart 版本、改設定值，也不要執行輸出以外的 helm 指令。
 輸出裡每個 <名稱> 佔位符的值都要問我，再把我的回答填進去。
-每次寫入叢集前，先給我看會改什麼，等我同意：manifest 給我看 `kubectl diff --server-side -f <檔案>` 的結果，helm 格式給我看要執行的指令。
-每個元件輸出最後的 Zeabur 物件，要等那個元件就緒後再套用。
+每次寫入叢集前，先給我看會改什麼，等我同意：manifest 給我看 `kubectl diff --server-side -f <檔案>` 的結果，helm 格式給我看輸出裡要執行的指令。
+每個元件的輸出最後是「Zeabur's objects for <id>」那段，要等那個元件裝好、Pod 都就緒後再套用。
 做完後執行 `zeaburctl doctor --output json`，告訴我它找到的問題。
 ```
 
@@ -32,11 +32,11 @@ Claude Code 或 Codex 這類 Coding Agent 可以替你安裝元件。放著它�
 1. 問你 kubeconfig context、格式和每個佔位符的值。
 2. 用 `zeaburctl components export` 印出每個元件的 manifest 或指令。
 3. 每個改動先給你看，你同意後才套用。
-4. 元件就緒後，套用 Zeabur 自己的物件，例如告警規則。
+4. 元件裝好、Pod 都就緒後，套用 Zeabur 自己的物件，例如告警規則。
 5. 告訴你 `zeaburctl doctor` 找到的問題。
 
 ## 你自己要做的事
 
 - 決定要裝哪些元件、用哪種格式，以及佔位符的值。
 - 同意之前，先看過每份 diff。
-- 由 Flux 或 Argo CD 管理的叢集，可以請 Agent 把檔案寫進工具監看的儲存庫，不直接套用。
+- 由 Flux 或 Argo CD 管理的叢集，可以請 Agent 把檔案寫進它同步的儲存庫，不直接套用。

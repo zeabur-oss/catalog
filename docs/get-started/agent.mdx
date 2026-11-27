@@ -3,12 +3,12 @@ title: Install components and templates with an agent
 description: Paste one prompt into Claude Code or Codex, and it installs Zeabur Catalog components with the catalog's pinned versions and values, and shows you each change before it applies it.
 ---
 
-A coding agent such as Claude Code or Codex can install components for you. Left to itself, it picks its own chart versions and values with `helm install` and skips the objects Zeabur OSS adds to a component. This prompt keeps it to what `zeaburctl components export` prints, the same versions and values Zeabur OSS installs.
+A coding agent such as Claude Code or Codex can install components for you. Left to itself, it may run `helm install` with chart versions and values it chooses, and leave out the objects Zeabur OSS adds to a component. This prompt keeps it to what `zeaburctl components export` prints, the same versions and values Zeabur OSS installs.
 
 ## Before you begin
 
 - Install [zeaburctl](https://oss.zeabur.com/docs/zeabur/reference/zeaburctl/) and kubectl on the computer the agent runs on, with a kubeconfig that can reach the cluster.
-- Know how the cluster installs Helm charts. K3s and RKE2 have helm-controller, so the format is `helmchart`. A cluster that Flux or Argo CD manages uses `flux` or `argocd`. Other clusters use `helm`.
+- Know how the cluster installs Helm charts. A cluster that Flux or Argo CD manages uses `flux` or `argocd`. Otherwise, K3s and RKE2 have helm-controller, so the format is `helmchart`. Other clusters use `helm`.
 
 ## Paste this prompt
 
@@ -16,12 +16,12 @@ Put the component IDs from [Components](../reference/components.mdx) in place of
 
 ```text
 Install the Zeabur Catalog components <ids> on my cluster. Follow https://oss.zeabur.com/docs/catalog/get-started/agent.md.
-Ask me which kubeconfig context to use, and pass it with --context to every kubectl and zeaburctl doctor command.
-Ask me which format fits my cluster: helmchart on K3s and RKE2, flux or argocd when Flux or Argo CD manages it, helm otherwise.
-Install only what `zeaburctl components export <ids> --format <format>` prints. Don't choose chart versions, change values or run helm install yourself.
+Ask me which kubeconfig context to use, and use it in every kubectl, helm and zeaburctl doctor command (--context, or --kube-context for helm).
+Ask me which format fits my cluster: flux or argocd when Flux or Argo CD manages it, else helmchart on K3s and RKE2, else helm.
+Install only what `zeaburctl components export <ids> --format <format>` prints. Don't choose chart versions, change values or run helm commands of your own.
 Ask me for the value of every <name> placeholder in the output, and put my answer in its place.
-Before each write to the cluster, show me what changes and wait for my go-ahead: the output of `kubectl diff --server-side -f <file>` for a manifest, the exact commands for the helm format.
-Apply Zeabur's own objects at the end of a component's output only after that component is ready.
+Before each write to the cluster, show me what changes and wait for my go-ahead: the output of `kubectl diff --server-side -f <file>` for a manifest, the exact printed commands for the helm format.
+Each component's output ends with "Zeabur's objects for <id>". Apply those only after that component is installed and its pods are ready.
 When you finish, run `zeaburctl doctor --output json` and report its findings.
 ```
 
@@ -32,11 +32,11 @@ To deploy a template, use the prompt in [Deploy with an agent](https://oss.zeabu
 1. Asks you for the kubeconfig context, the format and every placeholder.
 2. Prints each component's manifests or commands with `zeaburctl components export`.
 3. Shows you each change, and applies it after you agree.
-4. Applies Zeabur's own objects, such as alert rules, once the component is ready.
+4. Applies Zeabur's own objects, such as alert rules, once the component is installed and its pods are ready.
 5. Reports what `zeaburctl doctor` finds.
 
 ## What you do yourself
 
 - Choose the components, the format and the placeholder values.
 - Read each diff before you agree to it.
-- For a cluster that Flux or Argo CD manages, you can have the agent write the files into the repository the tool watches instead of applying them.
+- For a cluster that Flux or Argo CD manages, you can have the agent write the files into the repository Flux or Argo CD syncs from instead of applying them.
