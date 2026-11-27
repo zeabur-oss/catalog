@@ -7,10 +7,14 @@ Pushing a `vX.Y.Z` tag builds `bundle.tar.gz`, `api-v1.tar.gz`, and `SHA256SUMS`
 
 ## Release files
 
-| File | Contents |
-| --- | --- |
-| `api-v1.tar.gz` | The [API](#the-api) of this release, under `v1/`. |
-| `bundle.tar.gz` | A bundle containing cross-check data, components, templates, schemas, conformance cases and related files. |
+Each archive has one job:
+
+| File | Job | Contents |
+| --- | --- | --- |
+| `api-v1.tar.gz` | The catalog. A tool reads it. | The [API](#the-api) of this release, under `v1/`. |
+| `bundle.tar.gz` | The test kit. A tool tests its reader with it. | `conformance/`, the [installer cases](installers.mdx) and [template client cases](template-clients.mdx), and `crosscheck.json`, the catalog's own renders of each template, with their schemas under `schema/`. |
+
+Read components, templates and measurements from `api-v1.tar.gz` only. Then run the cases and the renders of `bundle.tar.gz` of the same release against your reader. `bundle.tar.gz` still holds a copy of `components/`, `templates/`, `measurements/` and `config/` in the layout of this repository. Don't read it: a minor release can change it, and [#459](https://github.com/zeabur-oss/catalog/issues/459) removes it from the bundle.
 
 `SHA256SUMS` lists the checksum of every other file and has a cosign keyless Sigstore signature bundle, `SHA256SUMS.sigstore.json`. Every file also has a GitHub build provenance attestation.
 

@@ -7,10 +7,14 @@ description: 從靜態 API 讀取 catalog、固定 Zeabur Catalog 版本並驗�
 
 ## 版本檔案
 
-| 檔案 | 內容 |
-| --- | --- |
-| `api-v1.tar.gz` | 這個版本的 [API](#api)，放在 `v1/` 下。 |
-| `bundle.tar.gz` | 套件包（bundle），包含交叉檢查資料、元件、範本、schema、一致性測試案例及相關檔案。 |
+兩個封存檔各有一個用途：
+
+| 檔案 | 用途 | 內容 |
+| --- | --- | --- |
+| `api-v1.tar.gz` | catalog 本身，工具讀取它。 | 這個版本的 [API](#api)，放在 `v1/` 下。 |
+| `bundle.tar.gz` | 測試套件，工具用它測試自己的讀取程式。 | `conformance/`（[安裝工具案例](installers.mdx)和[範本用戶端案例](template-clients.mdx)）、`crosscheck.json`（catalog 自己對每個範本的渲染結果），以及放在 `schema/` 下的對應 schema。 |
+
+元件、範本和量測資料只從 `api-v1.tar.gz` 讀取。要測試讀取程式，就拿同一版本的 `bundle.tar.gz`，逐一跑過其中的案例，並比對渲染結果。`bundle.tar.gz` 目前仍以這個儲存庫的目錄結構附帶一份 `components/`、`templates/`、`measurements/` 和 `config/`。不要讀取這份資料：次要版本可能改變它，[#459](https://github.com/zeabur-oss/catalog/issues/459) 也會把它移出 bundle。
 
 `SHA256SUMS` 列出其他每個檔案的雜湊值，並附有 cosign 無金鑰 Sigstore 簽章套件 `SHA256SUMS.sigstore.json`。每個檔案也都有 GitHub 建置來源證明（build provenance attestation）。
 
