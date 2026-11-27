@@ -317,7 +317,7 @@ mod tests {
         let result = super::order_schemas(&dir.join("rendered"), &components, &schemas);
         let a = schemas.join("a.example.com/thing_v1.json").exists();
         let b = schemas.join("b.example.com").exists();
-        fs::remove_dir_all(&dir).unwrap();
+        fs::remove_dir_all(dir).unwrap();
         result.unwrap();
         assert!(a && !b, "a: {a}, b: {b}");
     }
@@ -336,8 +336,8 @@ mod tests {
         .unwrap();
         let catalog = Catalog::read(&root()).unwrap();
         let template = catalog.templates.values().next().unwrap();
-        let result = super::e2e_inputs(&dir, "app", template);
-        fs::remove_dir_all(&dir).unwrap();
+        let result = super::e2e_inputs(dir, "app", template);
+        fs::remove_dir_all(dir).unwrap();
         assert!(result.unwrap_err().contains(".S3.SecretKey"));
     }
 }
