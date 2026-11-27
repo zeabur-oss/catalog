@@ -50,9 +50,9 @@ inputs:
   # The `agent` ClusterBuilder: a model writes the Dockerfile for a repository
   # that has none (Builder's docs/builds/ai-builder.mdx). Off by default: each
   # Dockerfile it writes costs tokens, and the model reads the repository. The
-  # inputs map onto the chart's agent values one to one. The testValues turn
-  # it on with a token exchange that no run reaches: the smoke check stops at
-  # the missing ServiceAccount, before any model call.
+  # inputs map onto the chart's agent values one to one. agentEnabled and
+  # agentAuth have no testValue: config/e2e.yaml turns the agent on with a
+  # token exchange, because the published v1 API has no map input values.
   - name: agentEnabled
     description: >
       Off by default. Set true to install the `agent` builder, which asks a
@@ -62,7 +62,6 @@ inputs:
     release: builder
     path: agent.enabled
     default: false
-    testValue: true
   - name: agentProvider
     description: >
       The model provider by its name in Rig, such as anthropic, openai,
@@ -94,51 +93,6 @@ inputs:
       ServiceAccount.
     release: builder
     path: agent.auth
-    testValue:
-      type: tokenExchange
-      tokenExchange:
-        serviceAccountName: builder-agent
-        audience: api://catalog-e2e
-        url: https://token.invalid/token
-        subjectField: subject_token
-        form: {grant_type: "urn:ietf:params:oauth:grant-type:token-exchange"}
-
-provides:
-  capability: builds
-  registry:
-    host: zot.zot.svc:5000
-    ca: {name: registry-ca, key: ca.crt, namespace: builder-system}
-
-# Only builds, installers and nodes reach zot, so an app can't pull other
-# projects' images.
-networkPolicies: |
-  apiVersion: networking.k8s.io/v1
-  kind: NetworkPolicy
-  metadata:
-    name: zot-builder
-    namespace: zot
-  spec:
-    podSelector:
-      matchLabels: {app.kubernetes.io/name: zot}
-    policyTypes: [Ingress]
-    ingress:
-      - from:
-          - namespaceSelector:
-              matchLabels: {kubernetes.io/metadata.name: builder-system}
-            podSelector:
-              matchLabels: {app.kubernetes.io/name: buildkitd}
-          - namespaceSelector:
-              matchLabels: {kubernetes.io/metadata.name: builder-system}
-            podSelector:
-              matchLabels: {app.kubernetes.io/name: zeabur-builder}
-          # Any Pod in a project namespace can set this label.
-          - namespaceSelector:
-              matchLabels: {zeabur.com/project: "true"}
-            podSelector:
-              matchExpressions:
-                - {key: builder.zeabur.com/buildrun, operator: Exists}
-        ports:
-          - {port: 5000, protocol: TCP}
 
 releases:
   # Before the chart: the CA that signs zot-tls, and the key that signs push
@@ -552,9 +506,10 @@ smoke:
     wait:
       - {resource: deployment/zeabur-builder, namespace: builder-system}
       - {resource: crd/builds.builder.zeabur.com, condition: condition=Established}
-  # The agent inputs reach the ClusterBuilder, and a run reads its auth: with
-  # no ServiceAccount builder-agent in the namespace, the run waits with
-  # ModelKeyMissing before it creates a Job or calls the model. An archive
+  # With the agent on in config/e2e.yaml, the agent inputs reach the
+  # ClusterBuilder, and a run reads its auth: with no ServiceAccount
+  # builder-agent in the namespace, the run waits with ModelKeyMissing before
+  # it creates a Job or calls the model. An archive
   # source with a made-up digest needs no Git server; nothing pulls it.
   - name: agent
     manifest: |
