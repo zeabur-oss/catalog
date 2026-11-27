@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 use crate::check::StrictProblem;
 use crate::common::{LicenseUrlProblem, PodSecurity, Profile};
 use crate::order::OrderError;
+use crate::template::Port;
 
 /// One problem of one file.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -52,6 +53,8 @@ pub enum ProblemKind {
     Render(RenderProblem),
     /// A new file of the API that readers of the published release cannot read.
     Compat(CompatProblem),
+    /// The objects a template renders into with its e2e inputs.
+    Lint(LintProblem),
 }
 
 impl fmt::Display for ProblemKind {
@@ -66,6 +69,7 @@ impl fmt::Display for ProblemKind {
             Self::Values(p) => p.fmt(f),
             Self::Render(p) => p.fmt(f),
             Self::Compat(p) => p.fmt(f),
+            Self::Lint(p) => p.fmt(f),
         }
     }
 }
@@ -121,6 +125,505 @@ impl From<RenderProblem> for ProblemKind {
 impl From<CompatProblem> for ProblemKind {
     fn from(p: CompatProblem) -> Self {
         Self::Compat(p)
+    }
+}
+
+impl From<LintProblem> for ProblemKind {
+    fn from(p: LintProblem) -> Self {
+        Self::Lint(p)
+    }
+}
+
+/// A rule that a template's rendered objects break, and where.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LintProblem {
+    /// The object as `<kind>/<name>`, with `/<container>` or another part of it after, or the
+    /// field of `template.yaml`, such as `security.unauthenticated`. Empty for the render as a
+    /// whole.
+    pub at: String,
+    /// The rule.
+    pub rule: LintRule,
+}
+
+impl fmt::Display for LintProblem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.at.is_empty() {
+            self.rule.fmt(f)
+        } else {
+            write!(f, "{}: {}", self.at, self.rule)
+        }
+    }
+}
+
+/// A rule of the template lint.
+///
+/// A template renders only objects that stay in its namespace, run pinned images with bounded
+/// resources at the Pod Security level of their service, and reach only the pods and networks
+/// they declare.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum LintRule {
+    /// Two objects have the same API version, kind and name.
+    DuplicateResource,
+    /// An object names a namespace other than the template's.
+    NamespaceEscape,
+    /// A cluster-scoped object or RBAC.
+    ClusterScoped,
+    /// A kind that neither Kubernetes, cert-manager nor an operator rule covers.
+    UnsupportedKind,
+    /// A `storageClassName` or `storageClass` key anywhere in an object.
+    StorageClass,
+    /// A Secret: the installer creates Secrets from inputs.
+    RenderedSecret,
+    /// A core object or pod that does not read as its type.
+    Invalid {
+        /// What it should be, such as `Service` or `pod`.
+        kind: String,
+        /// Why it does not read.
+        message: String,
+    },
+    /// A ServiceAccount that mounts its token.
+    ServiceAccountToken,
+    /// A `NodePort` or `LoadBalancer` Service, or one with external IPs.
+    ExposedService,
+    /// An Ingress of class `traefik`, and the template does not require `traefik`.
+    TraefikProvider,
+    /// An Ingress with a cert-manager `ClusterIssuer`, and the template does not require
+    /// `cert-manager`.
+    ClusterIssuerProvider,
+    /// A pod without the template label set to the template ID.
+    TemplateLabel,
+    /// A pod breaks the Pod Security Standard of its service.
+    PodSecurity {
+        /// The level checked, or `None` when a security context does not read.
+        level: Option<PodSecurity>,
+        /// What breaks it, as Pod Security Admission says, or why the context does not read.
+        refusal: String,
+    },
+    /// A pod mounts the service account token.
+    PodTokenAutomount,
+    /// A projected service account token volume.
+    ProjectedToken,
+    /// A sysctl other than `net.ipv4.ip_unprivileged_port_start` and `net.ipv4.ping_group_range`.
+    UnsafeSysctl {
+        /// The sysctl.
+        name: String,
+    },
+    /// An image without a sha256 digest.
+    ImageDigest,
+    /// A `Bidirectional` volume mount.
+    BidirectionalMount,
+    /// A CPU or memory request or limit that is missing or not above zero.
+    PositiveResource {
+        /// Which, such as `requests.cpu`, or why the resources do not read.
+        resource: String,
+    },
+    /// A long-running container without a readiness and a liveness probe.
+    ProbesRequired,
+    /// A NetworkPolicy selector or peer that selects pods other than the template's own or its
+    /// clients.
+    ForeignPods {
+        /// `podSelector`, `ingress` or `egress`.
+        selector: String,
+    },
+    /// A NetworkPolicy rule without a peer.
+    UnboundedRule {
+        /// `ingress` or `egress`.
+        direction: String,
+    },
+    /// A NetworkPolicy peer without a selector or an IP block.
+    EmptyPeer,
+    /// An IP block of every address, and `security.risks` is empty.
+    PublicNetworkWithoutRisk,
+    /// `security.unauthenticated` names a service that no ingress NetworkPolicy selects.
+    IngressPolicy {
+        /// The service.
+        service: String,
+    },
+    /// `security.unauthenticated` names a service the template does not declare.
+    UnknownService {
+        /// The service.
+        service: String,
+    },
+    /// A field the lint has no rule for.
+    UnsupportedOverride {
+        /// The field.
+        field: String,
+    },
+    /// An operator's pod gets a ServiceAccount that the template does not declare with its token
+    /// disabled.
+    OperandServiceAccount,
+    /// An operator's pod gets sysctls.
+    OperandSysctls,
+    /// An operator's pod gets `seLinuxOptions`.
+    OperandSeLinux,
+    /// A CloudNativePG Cluster, and the template does not require `cloudnative-pg`.
+    CnpgProvider,
+    /// A CloudNativePG or Barman Cloud object, and the template does not require
+    /// `cloudnative-pg`.
+    CnpgResourceProvider,
+    /// A CloudNativePG `imageName` without a digest.
+    CnpgDigest,
+    /// A CloudNativePG Cluster, and `security.risks` is empty.
+    CnpgRisks,
+    /// A CloudNativePG Cluster without a `RuntimeDefault` or `Localhost` seccomp profile.
+    CnpgSeccomp,
+    /// A CloudNativePG Cluster that runs PostgreSQL as user or group 0.
+    CnpgRoot,
+    /// A CloudNativePG plugin other than Barman Cloud.
+    CnpgPlugin,
+    /// A Percona MongoDB object, and the template does not require `percona-mongodb`.
+    PerconaProvider,
+    /// A Percona MongoDB cluster, and `security.risks` is empty.
+    PerconaRisks,
+    /// A Percona MongoDB image without a digest.
+    PerconaDigest {
+        /// The field, such as `initImage`.
+        field: String,
+    },
+    /// A sharded Percona MongoDB cluster.
+    PerconaSharding,
+    /// A Percona MongoDB unsafe flag other than `replsetSize`.
+    PerconaUnsafeFlag {
+        /// The flag.
+        flag: String,
+    },
+    /// A Percona MongoDB cluster without a replica set.
+    PerconaNoReplicaSet,
+    /// A Percona MongoDB volume other than a PersistentVolumeClaim.
+    PerconaVolume,
+    /// A Percona MongoDB backup, and the template does not require `percona-mongodb`.
+    PerconaBackupProvider,
+    /// A Percona MongoDB backup field the lint has no rule for.
+    PerconaBackupOverride {
+        /// The field.
+        field: String,
+    },
+    /// A Percona MongoDB backup that is not logical with gzip.
+    PerconaBackupMode,
+    /// A Percona MongoDB backup without its cluster or storage.
+    PerconaBackupTarget,
+    /// A Percona MongoDB backup storage that is not S3 over verified HTTPS with credentials.
+    PerconaBackupStorage {
+        /// The storage, when the cluster names it.
+        storage: Option<String>,
+    },
+    /// A Percona MongoDB backup of a cluster the template does not declare.
+    PerconaBackupCluster,
+    /// A Dragonfly, and the template does not require `dragonfly-operator`.
+    DragonflyProvider,
+    /// A Dragonfly, and `security.risks` is empty.
+    DragonflyRisks,
+    /// A Dragonfly image without a digest.
+    DragonflyDigest,
+    /// A Dragonfly without a password from a Secret.
+    DragonflyPassword,
+    /// A Dragonfly flag that opens a port or the admin console without a password.
+    DragonflyFlag {
+        /// The flag.
+        flag: String,
+    },
+    /// A MariaDB Operator object, and the template does not require `mariadb-operator`.
+    MariaDbProvider,
+    /// A MariaDB, and `security.risks` is empty.
+    MariaDbRisks,
+    /// A MariaDB image without a digest.
+    MariaDbDigest,
+    /// A `mariaDbRef` to another namespace.
+    MariaDbRefNamespace,
+    /// A `mariaDbRef` to a MariaDB the template does not declare.
+    MariaDbRefUndeclared,
+    /// A MariaDB backup staging storage other than a PersistentVolumeClaim.
+    MariaDbStagingStorage,
+    /// A MariaDB backup that is not S3 with credentials and TLS.
+    MariaDbBackupS3,
+    /// A MariaDB User without a password from a Secret.
+    MariaDbUserPassword,
+    /// A MariaDB Grant on every database.
+    GlobalGrant,
+    /// A MariaDB Grant with `grantOption`.
+    GrantOption,
+    /// A MOCO `MySQLCluster`, and the template does not require `moco`.
+    MocoProvider,
+    /// A MOCO `MySQLCluster`, and `security.risks` is empty.
+    MocoRisks,
+    /// A Traefik Middleware, and the template does not require `traefik`.
+    MiddlewareProvider,
+    /// A Traefik Middleware other than one `ipAllowList`.
+    IpAllowListOnly,
+    /// An `ipAllowList` with keys other than `sourceRange`.
+    IpAllowListKeys,
+    /// An `ipAllowList` without a `sourceRange`.
+    IpAllowListEmpty,
+    /// A `sourceRange` entry that is no CIDR, or one of every address.
+    IpAllowListCidr,
+    /// A service of `template.yaml` with no workload or database object of its name.
+    ServiceWithoutObject,
+    /// The resources of a database object do not read.
+    ServiceOperandResources {
+        /// Why.
+        message: String,
+    },
+    /// A quantity of a service, or of its objects, that is not one.
+    ServiceQuantity {
+        /// `requests` or `limits`.
+        level: &'static str,
+        /// `cpu` or `memory`.
+        resource: &'static str,
+        /// The text.
+        value: String,
+    },
+    /// A request or limit of a service is not the sum of its containers.
+    ServiceResources {
+        /// `requests` or `limits`.
+        level: &'static str,
+        /// `cpu` or `memory`.
+        resource: &'static str,
+        /// What `template.yaml` gives.
+        declared: String,
+        /// The sum of the objects, or `None` when none gives it.
+        rendered: Option<String>,
+    },
+    /// The ports of a service are not the named ports of its containers.
+    ServicePorts {
+        /// What `template.yaml` gives, by port number.
+        declared: Vec<Port>,
+        /// The named ports of the containers, by port number.
+        named: Vec<Port>,
+    },
+    /// The template does not render with its e2e inputs.
+    NotRendered {
+        /// Why.
+        message: String,
+    },
+    /// The e2e inputs do not read.
+    E2eInputs {
+        /// Why.
+        message: String,
+    },
+    /// kubeconform refuses the objects for a Kubernetes version, or does not run.
+    Kubeconform {
+        /// The version.
+        version: String,
+        /// What kubeconform reports.
+        message: String,
+    },
+}
+
+impl fmt::Display for LintRule {
+    #[expect(
+        clippy::too_many_lines,
+        reason = "one arm for each rule, with the text of the Go lint"
+    )]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let ports = |ports: &[Port]| {
+            let items: Vec<String> = ports
+                .iter()
+                .map(|p| format!("{{{} {}}}", p.name, p.port))
+                .collect();
+            format!("[{}]", items.join(" "))
+        };
+        match self {
+            Self::DuplicateResource => f.write_str("duplicate resource"),
+            Self::NamespaceEscape => f.write_str("resource escapes target namespace"),
+            Self::ClusterScoped => f.write_str("cluster-scoped resources and RBAC are forbidden"),
+            Self::UnsupportedKind => f.write_str(
+                "unsupported resource kind; the linter needs a namespaced safety adapter for it",
+            ),
+            Self::StorageClass => f.write_str(
+                "storage class forbidden; volumes use the cluster's default StorageClass",
+            ),
+            Self::RenderedSecret => f.write_str(
+                "rendered Secrets forbidden; use explicit inputs and preexisting Secrets",
+            ),
+            Self::Invalid { kind, message } => write!(f, "invalid {kind}: {message}"),
+            Self::ServiceAccountToken => f.write_str("ServiceAccount must disable token automount"),
+            Self::ExposedService => {
+                f.write_str("externally exposed Service forbidden; use ingress")
+            }
+            Self::TraefikProvider => f.write_str("Traefik Ingress requires exact traefik provider"),
+            Self::ClusterIssuerProvider => {
+                f.write_str("ClusterIssuer annotation requires exact cert-manager provider")
+            }
+            Self::TemplateLabel => f.write_str(
+                "pods must have the label templates.zeabur.com/template set to the template ID",
+            ),
+            Self::PodSecurity { level, refusal } => {
+                f.write_str("pod breaks the Pod Security Standard of its service: ")?;
+                if let Some(level) = level {
+                    write!(f, "{}: ", level.as_str())?;
+                }
+                f.write_str(refusal)
+            }
+            Self::PodTokenAutomount => {
+                f.write_str("automountServiceAccountToken must explicitly be false")
+            }
+            Self::ProjectedToken => f.write_str("projected service account tokens forbidden"),
+            Self::UnsafeSysctl { name } => write!(f, "sysctl not in safe allowlist: {name}"),
+            Self::ImageDigest => f.write_str("image must use immutable sha256 digest"),
+            Self::BidirectionalMount => f.write_str("bidirectional mount propagation forbidden"),
+            Self::PositiveResource { resource } => {
+                write!(f, "positive resource required: {resource}")
+            }
+            Self::ProbesRequired => f.write_str("readiness and liveness probes required"),
+            Self::ForeignPods { selector } => write!(
+                f,
+                "NetworkPolicy selectors must select the template's own pods, or in a peer its \
+                 clients, by label: {selector}"
+            ),
+            Self::UnboundedRule { direction } => {
+                write!(f, "unbounded rule forbidden: {direction}")
+            }
+            Self::EmptyPeer => f.write_str("empty peer permits all traffic"),
+            Self::PublicNetworkWithoutRisk => {
+                f.write_str("public network access requires risk documentation")
+            }
+            Self::IngressPolicy { service } => write!(
+                f,
+                "a service listed in security.unauthenticated needs an ingress NetworkPolicy \
+                 whose podSelector names it: {service}"
+            ),
+            Self::UnknownService { service } => write!(
+                f,
+                "security.unauthenticated names a service the template does not declare: \
+                 {service}"
+            ),
+            Self::UnsupportedOverride { field } => {
+                write!(f, "unsupported override forbidden: {field}")
+            }
+            Self::OperandServiceAccount => {
+                f.write_str("operand must reference declared token-disabled ServiceAccount")
+            }
+            Self::OperandSysctls => f.write_str("operand sysctl overrides forbidden"),
+            Self::OperandSeLinux => {
+                f.write_str("operand SELinux overrides require separate review")
+            }
+            Self::CnpgProvider => {
+                f.write_str("CNPG workload requires exact cloudnative-pg provider")
+            }
+            Self::CnpgResourceProvider => {
+                f.write_str("CNPG/Barman custom resources require cloudnative-pg")
+            }
+            Self::CnpgDigest => f.write_str("CNPG imageName must use sha256 digest"),
+            Self::CnpgRisks => f.write_str(
+                "operator-managed workload must document generated pod and service-account trust",
+            ),
+            Self::CnpgSeccomp => f.write_str("CNPG restricted seccomp required"),
+            Self::CnpgRoot => f.write_str("CNPG root identity forbidden"),
+            Self::CnpgPlugin => f.write_str("unsupported CNPG plugin forbidden"),
+            Self::PerconaProvider => f.write_str("Percona operand requires exact percona-mongodb"),
+            Self::PerconaRisks => f.write_str(
+                "security.risks must describe the operator-generated pods, service account and \
+                 probes",
+            ),
+            Self::PerconaDigest { field } => {
+                write!(f, "Percona image must use sha256 digest: {field}")
+            }
+            Self::PerconaSharding => {
+                f.write_str("sharded Percona topology requires separate safety adapter")
+            }
+            Self::PerconaUnsafeFlag { flag } => {
+                write!(f, "unsafe Percona flag forbidden: {flag}")
+            }
+            Self::PerconaNoReplicaSet => f.write_str("at least one Percona replica set required"),
+            Self::PerconaVolume => f.write_str("operand volumeSpec must use PVC only"),
+            Self::PerconaBackupProvider => {
+                f.write_str("Percona backup requires exact percona-mongodb")
+            }
+            Self::PerconaBackupOverride { field } => {
+                write!(f, "unsupported backup override forbidden: {field}")
+            }
+            Self::PerconaBackupMode => {
+                f.write_str("only gzip-compressed logical Percona backups supported")
+            }
+            Self::PerconaBackupTarget => {
+                f.write_str("backup requires an explicit cluster and storage")
+            }
+            Self::PerconaBackupStorage { storage } => {
+                f.write_str(
+                    "backup must use the declared cluster's enabled S3 storage with explicit \
+                     credentials and TLS verification",
+                )?;
+                storage
+                    .as_ref()
+                    .map_or(Ok(()), |storage| write!(f, ": {storage}"))
+            }
+            Self::PerconaBackupCluster => {
+                f.write_str("backup cluster must be declared in this template")
+            }
+            Self::DragonflyProvider => f.write_str("Dragonfly requires exact dragonfly-operator"),
+            Self::DragonflyRisks => f.write_str(
+                "security.risks must describe the BUSL-1.1 licence and the operator-generated pods",
+            ),
+            Self::DragonflyDigest => f.write_str("Dragonfly image must use sha256 digest"),
+            Self::DragonflyPassword => {
+                f.write_str("Dragonfly authentication.passwordFromSecret required")
+            }
+            Self::DragonflyFlag { flag } => {
+                write!(f, "unauthenticated Dragonfly flag forbidden: {flag}")
+            }
+            Self::MariaDbProvider => {
+                f.write_str("MariaDB Operator resources require exact mariadb-operator")
+            }
+            Self::MariaDbRisks => f.write_str(
+                "security.risks must describe the operator-generated pods and helper images",
+            ),
+            Self::MariaDbDigest => f.write_str("MariaDB image must use sha256 digest"),
+            Self::MariaDbRefNamespace => f.write_str("mariaDbRef escapes target namespace"),
+            Self::MariaDbRefUndeclared => {
+                f.write_str("mariaDbRef must name a MariaDB declared in this template")
+            }
+            Self::MariaDbStagingStorage => f.write_str("backup stagingStorage must use PVC only"),
+            Self::MariaDbBackupS3 => {
+                f.write_str("backup must use S3 with explicit credentials and TLS verification")
+            }
+            Self::MariaDbUserPassword => f.write_str("User passwordSecretKeyRef required"),
+            Self::GlobalGrant => {
+                f.write_str("Grant must name one database; global privileges forbidden")
+            }
+            Self::GrantOption => f.write_str("Grant grantOption forbidden"),
+            Self::MocoProvider => f.write_str("MySQLCluster requires exact moco"),
+            Self::MocoRisks => f.write_str(
+                "security.risks must describe the operator-generated pods and service account",
+            ),
+            Self::MiddlewareProvider => f.write_str("Middleware requires traefik"),
+            Self::IpAllowListOnly => f.write_str("only explicit ipAllowList Middleware supported"),
+            Self::IpAllowListKeys => f.write_str("ipAllowList may only contain sourceRange"),
+            Self::IpAllowListEmpty => f.write_str("ipAllowList sourceRange required"),
+            Self::IpAllowListCidr => {
+                f.write_str("ipAllowList requires non-public, valid explicit CIDR")
+            }
+            Self::ServiceWithoutObject => f.write_str(
+                "no DaemonSet, Deployment, StatefulSet or database object of the same name",
+            ),
+            Self::ServiceOperandResources { message } => write!(f, "resources: {message}"),
+            Self::ServiceQuantity {
+                level,
+                resource,
+                value,
+            } => write!(
+                f,
+                "resources.{level}.{resource}: {value:?} is not a quantity"
+            ),
+            Self::ServiceResources {
+                level,
+                resource,
+                declared,
+                rendered,
+            } => write!(
+                f,
+                "resources.{level}.{resource} is {declared}; the manifests give {}",
+                rendered.as_deref().unwrap_or("<nil>")
+            ),
+            Self::ServicePorts { declared, named } => write!(
+                f,
+                "ports are {}; the containers' named ports are {}",
+                ports(declared),
+                ports(named)
+            ),
+            Self::NotRendered { message } => write!(f, "does not render: {message}"),
+            Self::E2eInputs { message } => write!(f, "e2e inputs: {message}"),
+            Self::Kubeconform { version, message } => write!(f, "kubeconform {version}: {message}"),
+        }
     }
 }
 

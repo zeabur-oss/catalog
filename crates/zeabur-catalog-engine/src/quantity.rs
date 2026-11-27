@@ -3,10 +3,14 @@
 //! It is the text
 //! [`resource.Quantity`](https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity) of
 //! apimachinery v0.37.2 writes: `0.5` becomes `500m` and `1024Mi` becomes `1Gi`, and a value
-//! already in canonical form keeps the text it was written with.
+//! already in canonical form keeps the text it was written with. [`Quantity`] is its value, which
+//! sums and compares as Go's does.
+
+use std::cmp::Ordering;
+use std::fmt;
 
 /// How a quantity is written: its suffix picks the format.
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Format {
     /// `e3`, `E-2`.
     DecimalExponent,
@@ -158,13 +162,131 @@ fn interpret(suffix: &str) -> Option<(Format, i32)> {
     Some((Format::DecimalExponent, exponent.parse().ok()?))
 }
 
+/// The value of a quantity, as `resource.Quantity` holds it: rounded up to a nano, a binary
+/// quantity capped at the largest int64, and the format of its suffix.
+///
+/// Two quantities are equal when their values are, as Go's `Cmp` compares them: `250m` is `0.25`.
+#[derive(Debug, Clone, Copy)]
+pub struct Quantity {
+    amount: Amount,
+    format: Format,
+}
+
+impl Quantity {
+    /// The value of `text`, or `None` when it is not a quantity or is too large for this port.
+    #[must_use]
+    pub fn parse(text: &str) -> Option<Self> {
+        let parsed = Parsed::new(text)?;
+        Some(Self {
+            amount: parsed.amount()?,
+            format: parsed.format,
+        })
+    }
+
+    /// Whether it is above zero.
+    #[must_use]
+    pub const fn is_positive(&self) -> bool {
+        self.amount.mantissa > 0
+    }
+
+    /// The sum, as Go's `Add` gives it: a zero takes the format of what is added to it. `None`
+    /// when it is too large for this port.
+    #[must_use]
+    pub fn checked_add(self, other: Self) -> Option<Self> {
+        let exponent = self.amount.exponent.min(other.amount.exponent);
+        let mantissa = self
+            .amount
+            .scaled(exponent)?
+            .checked_add(other.amount.scaled(exponent)?)?;
+        let format = if self.amount.mantissa == 0 {
+            other.format
+        } else {
+            self.format
+        };
+        Some(Self {
+            amount: Amount { mantissa, exponent },
+            format,
+        })
+    }
+}
+
+impl PartialEq for Quantity {
+    fn eq(&self, other: &Self) -> bool {
+        self.cmp(other) == Ordering::Equal
+    }
+}
+
+impl Eq for Quantity {}
+
+impl PartialOrd for Quantity {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Quantity {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let (a, b) = (self.amount, other.amount);
+        a.mantissa.signum().cmp(&b.mantissa.signum()).then_with(|| {
+            let magnitude = a.magnitude_cmp(b);
+            if a.mantissa < 0 {
+                magnitude.reverse()
+            } else {
+                magnitude
+            }
+        })
+    }
+}
+
+/// The canonical text, as Go's `String` writes a quantity it computed.
+impl fmt::Display for Quantity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.amount.canonical(self.format) {
+            Some(text) => f.write_str(&text),
+            None => write!(f, "{}e{}", self.amount.mantissa, self.amount.exponent),
+        }
+    }
+}
+
 /// `mantissa × 10^exponent`.
+#[derive(Debug, Clone, Copy)]
 struct Amount {
     mantissa: i128,
     exponent: i32,
 }
 
 impl Amount {
+    /// The mantissa for the smaller `exponent`.
+    fn scaled(self, exponent: i32) -> Option<i128> {
+        let power = u32::try_from(self.exponent.checked_sub(exponent)?).ok()?;
+        self.mantissa.checked_mul(10_i128.checked_pow(power)?)
+    }
+
+    /// Compares the magnitudes, digit by digit, so that no exponent overflows.
+    fn magnitude_cmp(self, other: Self) -> Ordering {
+        let digits = |a: Self| {
+            let text = a.mantissa.unsigned_abs().to_string();
+            // The value is 0.<text> × 10^order; zeros at the end do not change it.
+            let order = i64::from(a.exponent) + i64::try_from(text.len()).unwrap_or(i64::MAX);
+            (text.trim_end_matches('0').to_owned(), order)
+        };
+        if self.mantissa == 0 || other.mantissa == 0 {
+            return self
+                .mantissa
+                .unsigned_abs()
+                .cmp(&other.mantissa.unsigned_abs());
+        }
+        let ((a, a_order), (b, b_order)) = (digits(self), digits(other));
+        let len = a.len().max(b.len());
+        let pad = |s: &str| {
+            s.bytes()
+                .chain(std::iter::repeat(b'0'))
+                .take(len)
+                .collect::<Vec<u8>>()
+        };
+        a_order.cmp(&b_order).then_with(|| pad(&a).cmp(&pad(&b)))
+    }
+
     /// Go rounds a value below a nano up, away from zero, so a request for some resource gets
     /// some.
     fn round_up_to_nano(self) -> Self {
@@ -257,7 +379,47 @@ impl Amount {
 
 #[cfg(test)]
 mod tests {
-    use super::canonical;
+    use super::{Quantity, canonical};
+
+    fn q(text: &str) -> Quantity {
+        Quantity::parse(text).unwrap()
+    }
+
+    /// `resource.Quantity` of apimachinery v0.37.2: `Cmp`, `Sign` and the `String` of a sum.
+    #[test]
+    fn sums_and_compares_as_go_does() {
+        assert_eq!(q("250m"), q("0.25"));
+        assert_eq!(q("1Gi"), q("1024Mi"));
+        assert_eq!(q("1"), q("1000m"));
+        assert_eq!(q("1e3"), q("1k"));
+        assert!(q("1100m") > q("1"));
+        assert!(q("1Mi") > q("1M"));
+        assert!(q("-1") < q("0"));
+        assert!(q("-2") < q("-1"));
+        assert!(q("1E") > q("999P"));
+        assert!(q("1n") < q("2n"));
+        assert!(q("1n") > q("0"));
+        assert!(q("10m").is_positive());
+        assert!(!q("0").is_positive());
+        assert!(!q("-1m").is_positive());
+        let sum = |texts: &[&str]| {
+            texts
+                .iter()
+                .map(|t| q(t))
+                .try_fold(q("0"), Quantity::checked_add)
+                .unwrap()
+                .to_string()
+        };
+        // The output of `Add` on a zero `Quantity{}`, then `String`.
+        assert_eq!(sum(&["5m", "1"]), "1005m");
+        assert_eq!(sum(&["1", "100m"]), "1100m");
+        assert_eq!(sum(&["8Mi", "32Mi"]), "40Mi");
+        assert_eq!(sum(&["16Mi", "8Mi"]), "24Mi");
+        assert_eq!(sum(&["1000m"]), "1");
+        assert_eq!(sum(&["512Mi", "512Mi"]), "1Gi");
+        assert_eq!(sum(&["100m", "1Gi"]), "1073741824100m");
+        assert_eq!(q("2").checked_add(q("2")), Some(q("4")));
+    }
 
     /// The output of `resource.MustParse(in).String()` with apimachinery v0.37.2.
     #[test]

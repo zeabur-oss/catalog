@@ -535,11 +535,12 @@ fn is_webhook(doc: &Value) -> bool {
     )
 }
 
-/// `<image>@sha256:<64 hex>`.
-fn pinned(image: &str) -> bool {
-    image.split_once("@sha256:").is_some_and(|(name, digest)| {
+/// `<image>@sha256:<64 hex>`, as the pattern `^[^\s]+@sha256:[a-f0-9]{64}$` of Go's RE2 reads
+/// it: `\s` is only the ASCII space, tab, newline, form feed and carriage return.
+pub(crate) fn pinned(image: &str) -> bool {
+    image.rsplit_once("@sha256:").is_some_and(|(name, digest)| {
         !name.is_empty()
-            && !image.contains(char::is_whitespace)
+            && !image.contains([' ', '\t', '\n', '\x0c', '\r'])
             && digest.len() == 64
             && digest
                 .bytes()
@@ -701,6 +702,28 @@ mod tests {
         assert_eq!(got["properties"]["open"].get("additionalProperties"), None);
         // The top level stays open: kubeconform checks apiVersion, kind and metadata there.
         assert_eq!(got.get("additionalProperties"), None);
+    }
+
+    /// The answers of `catalog.PinnedImage`, `^[^\s]+@sha256:[a-f0-9]{64}$` in Go's RE2.
+    #[test]
+    fn a_pinned_image_is_what_the_go_pattern_matches() {
+        let digest = "a".repeat(64);
+        for (image, want) in [
+            (format!("example.test/app@sha256:{digest}"), true),
+            (format!("example.test/app:1@sha256:{digest}"), true),
+            (format!("a@sha256:x@sha256:{digest}"), true),
+            (format!("a\u{b}b@sha256:{digest}"), true),
+            (format!("a\u{a0}b@sha256:{digest}"), true),
+            (format!("@sha256:{digest}"), false),
+            (format!("a b@sha256:{digest}"), false),
+            (format!("a\tb@sha256:{digest}"), false),
+            (format!("a@sha256:{digest}0"), false),
+            (format!("a@sha256:{}", "A".repeat(64)), false),
+            ("example.test/app:latest".to_owned(), false),
+            (String::new(), false),
+        ] {
+            assert_eq!(pinned(&image), want, "{image:?}");
+        }
     }
 
     #[test]
