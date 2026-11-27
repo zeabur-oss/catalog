@@ -2,12 +2,12 @@
 //! [kstatus-status].
 //!
 //! The functions of the built-in kinds follow the rule of one kind in kstatus's `core.go`
-//! [kstatus-core], after the generation check of `generic.go` [kstatus-generic]: if
-//! `status.observedGeneration` is present and differs from `metadata.generation`, the object is in
-//! progress. The built-in controllers do not set the `Reconciling` and `Stalled` conditions, so
-//! those functions do not read them. [`generic`] is the rule for every other kind, custom
-//! resources first among them, and [`custom_resource_definition`] the rule of a CRD. A caller
-//! maps its own states, such as paused, on top of this result.
+//! [kstatus-core], after the checks of `generic.go` [kstatus-generic]: an object with
+//! `metadata.deletionTimestamp` is in progress, and so is one whose `status.observedGeneration` is
+//! present and differs from `metadata.generation`. The built-in controllers do not set the
+//! `Reconciling` and `Stalled` conditions, so those functions do not read them. [`generic`] is the
+//! rule for every other kind, custom resources first among them, and [`custom_resource_definition`]
+//! the rule of a CRD. A caller maps its own states, such as paused, on top of this result.
 //!
 //! # References
 //!
@@ -269,6 +269,14 @@ impl From<Readiness> for Explained<'_> {
 /// How long a pod can be unscheduled before kstatus reports it as unschedulable.
 pub const SCHEDULE_WINDOW: SignedDuration = SignedDuration::from_secs(15);
 
+/// The deletion check of kstatus `checkGenericProperties`: an object with
+/// `metadata.deletionTimestamp` is in progress, whatever its kind.
+fn terminating(meta: &ObjectMeta) -> Option<Readiness> {
+    meta.deletion_timestamp
+        .is_some()
+        .then_some(Readiness::in_progress(Reason::Terminating))
+}
+
 /// The generation check of kstatus `checkGeneration`.
 fn generation_unobserved(meta: &ObjectMeta, observed: Option<i64>) -> Option<Readiness> {
     let (Some(generation), Some(observed)) = (meta.generation, observed) else {
@@ -286,6 +294,9 @@ fn generation_unobserved(meta: &ObjectMeta, observed: Option<i64>) -> Option<Rea
 /// does not apply.
 #[must_use]
 pub fn deployment(deployment: &Deployment) -> Readiness {
+    if let Some(terminating) = terminating(&deployment.metadata) {
+        return terminating;
+    }
     let status = deployment.status.as_ref();
     if let Some(unobserved) = generation_unobserved(
         &deployment.metadata,
@@ -346,6 +357,9 @@ pub fn deployment(deployment: &Deployment) -> Readiness {
 /// ready.
 #[must_use]
 pub fn stateful_set(stateful_set: &StatefulSet) -> Readiness {
+    if let Some(terminating) = terminating(&stateful_set.metadata) {
+        return terminating;
+    }
     let status = stateful_set.status.as_ref();
     if let Some(unobserved) = generation_unobserved(
         &stateful_set.metadata,
@@ -399,6 +413,9 @@ pub fn stateful_set(stateful_set: &StatefulSet) -> Readiness {
 /// that should run its pod has one that is current, updated, available and ready.
 #[must_use]
 pub fn daemon_set(daemon_set: &DaemonSet) -> Readiness {
+    if let Some(terminating) = terminating(&daemon_set.metadata) {
+        return terminating;
+    }
     let status = daemon_set.status.as_ref();
     let observed = status.and_then(|status| status.observed_generation);
     if daemon_set.metadata.generation.is_none() {
@@ -434,6 +451,9 @@ pub fn daemon_set(daemon_set: &DaemonSet) -> Readiness {
 /// that is unschedulable fails once it is older than [`SCHEDULE_WINDOW`].
 #[must_use]
 pub fn pod(pod: &Pod, now: Timestamp) -> Readiness {
+    if let Some(terminating) = terminating(&pod.metadata) {
+        return terminating;
+    }
     let status = pod.status.as_ref();
     let conditions = status
         .and_then(|status| status.conditions.as_deref())
@@ -485,6 +505,9 @@ pub fn pod(pod: &Pod, now: Timestamp) -> Readiness {
 /// progress until it starts, and current while it runs.
 #[must_use]
 pub fn job(job: &Job) -> Readiness {
+    if let Some(terminating) = terminating(&job.metadata) {
+        return terminating;
+    }
     let status = job.status.as_ref();
     let conditions = status
         .and_then(|status| status.conditions.as_deref())
@@ -619,6 +642,25 @@ mod tests {
 
     fn of(status: Status, reason: Reason) -> Readiness {
         Readiness { status, reason }
+    }
+
+    #[test]
+    fn every_built_in_kind_is_in_progress_while_it_is_deleted() {
+        let metadata = json!({"name": "web", "generation": 1,
+            "deletionTimestamp": "2026-11-13T11:59:00Z"});
+        let terminating = of(Status::InProgress, Reason::Terminating);
+        let ready_pod: Pod = typed(json!({"metadata": metadata, "status": {"phase": "Running",
+            "conditions": [{"type": "Ready", "status": "True"}]}}));
+        let now: Timestamp = "2026-11-13T12:00:00Z".parse().unwrap();
+        assert_eq!(pod(&ready_pod, now), terminating);
+        let complete_job: Job = typed(json!({"metadata": metadata, "status": {
+            "conditions": [{"type": "Complete", "status": "True"}]}}));
+        assert_eq!(job(&complete_job), terminating);
+        let empty = json!({"metadata": metadata, "spec": {"replicas": 0, "selector": {},
+            "template": {}}, "status": {"observedGeneration": 1}});
+        assert_eq!(deployment(&typed(empty.clone())), terminating);
+        assert_eq!(stateful_set(&typed(empty.clone())), terminating);
+        assert_eq!(daemon_set(&typed(empty)), terminating);
     }
 
     #[test]
