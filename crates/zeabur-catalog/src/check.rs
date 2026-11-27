@@ -20,7 +20,7 @@ use serde_json::Value;
 use zeabur_catalog_engine::template;
 use zeabur_catalog_format::check::StrictProblem;
 use zeabur_catalog_format::common::{Generate, Mode, Profile};
-use zeabur_catalog_format::component::{Release, Resources};
+use zeabur_catalog_format::component::{InputValue, Release, Resources};
 use zeabur_catalog_format::problem::{
     ComponentProblem, FieldPath, Problem, Problems, QuantityProblem, SchemaProblem, TemplateProblem,
 };
@@ -220,7 +220,17 @@ fn problems_of(catalog: &Catalog, id: &str, component: &Component, found: &mut P
             && input.test_value.is_none()
             && input.generate.is_none()
         {
-            found.push(at, ComponentProblem::InputWithoutValue);
+            found.push(at.clone(), ComponentProblem::InputWithoutValue);
+        }
+        if input.secret.is_some() {
+            for (key, value) in [
+                ("default", &input.default),
+                ("testValue", &input.test_value),
+            ] {
+                if matches!(value, Some(InputValue::Map(_))) {
+                    found.push(at.clone().key(key), ComponentProblem::MapInSecret);
+                }
+            }
         }
     }
     provision_problems(component, found);
@@ -499,6 +509,34 @@ mod tests {
             },
         );
         assert!(got.contains(&want), "{got:?}");
+    }
+
+    #[test]
+    fn a_map_goes_to_a_path_and_not_to_a_secret() {
+        let map = || InputValue::Map([("a".to_owned(), InputValue::Flag(true))].into());
+        let got = problems("velero", |c| {
+            let input = c
+                .inputs
+                .iter_mut()
+                .find(|i| i.name == "credentials")
+                .unwrap();
+            input.test_value = Some(map());
+        });
+        let want = problem(
+            component_file("velero"),
+            FieldPath::root().key("inputs").index(3).key("testValue"),
+            ComponentProblem::MapInSecret,
+        );
+        assert!(got.contains(&want), "{got:?}");
+        let got = problems("velero", |c| {
+            let input = c.inputs.iter_mut().find(|i| i.name == "region").unwrap();
+            input.default = Some(map());
+        });
+        assert!(
+            !got.iter()
+                .any(|p| p.kind == ComponentProblem::MapInSecret.into()),
+            "{got:?}"
+        );
     }
 
     #[test]

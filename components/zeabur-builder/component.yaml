@@ -47,6 +47,52 @@ inputs:
     release: zot
     path: service.clusterIP
     generate: {type: clusterIP}
+  # The `agent` ClusterBuilder: a model writes the Dockerfile for a repository
+  # that has none (Builder's docs/builds/ai-builder.mdx). Off by default: each
+  # Dockerfile it writes costs tokens, and the model reads the repository. The
+  # inputs map onto the chart's agent values one to one. agentEnabled and
+  # agentAuth have no testValue: config/e2e.yaml turns the agent on with a
+  # token exchange, because the published v1 API has no map input values.
+  - name: agentEnabled
+    description: >
+      Off by default. Set true to install the `agent` builder, which asks a
+      model to write a Dockerfile for a repository without one and sends the
+      repository's files to the model provider. agentProvider, agentModel and
+      agentAuth are then required.
+    release: builder
+    path: agent.enabled
+    default: false
+  - name: agentProvider
+    description: >
+      The model provider by its name in Rig, such as anthropic, openai,
+      gcp.gemini or openrouter. It sets the endpoint and the API format.
+    release: builder
+    path: agent.provider
+    testValue: openai
+  - name: agentModel
+    description: The model as the provider names it, such as claude-opus-5-5. Pick one that supports tool calls.
+    release: builder
+    path: agent.model
+    testValue: catalog-e2e
+  - name: agentBaseUrl
+    description: >
+      Another endpoint of the same API, such as a proxy or a server you run.
+      Leave it empty for the provider's own.
+    release: builder
+    path: agent.baseUrl
+    testValue: https://model.invalid/v1
+  - name: agentAuth
+    description: >
+      How runs sign in to the model API, the ClusterBuilder's
+      spec.agent.model.auth. An API key in a Secret:
+      {type: apiKey, apiKey: {name: model, key: anthropic}}. Service account
+      federation: {type: anthropicFederation, anthropicFederation: {...}} or
+      {type: openaiFederation, openaiFederation: {...}}. Another OAuth 2.0
+      token endpoint: {type: tokenExchange, tokenExchange: {...}}. Every
+      namespace with a Build on the agent builder needs that Secret or
+      ServiceAccount.
+    release: builder
+    path: agent.auth
 
 provides:
   capability: builds
@@ -401,8 +447,8 @@ releases:
     type: helm
     namespace: builder-system
     chart: oci://ghcr.io/zeabur-oss/charts/zeabur-builder
-    version: 0.3.0
-    chartDigest: sha256:838704ae07ada7bbfb3bf750475b5c56b57d9ca24995d571c432358d182ffa17
+    version: 0.3.1
+    chartDigest: sha256:ed134518bcf35209f78b66f191be8adcfaa3f4f07b6d8a54b2fa397b9f3447eb
     values: |
       registry:
         # zot above: images go to zot.zot.svc:5000/<namespace>/<build>.
@@ -497,6 +543,29 @@ smoke:
     wait:
       - {resource: deployment/zeabur-builder, namespace: builder-system}
       - {resource: crd/builds.builder.zeabur.com, condition: condition=Established}
+  # With the agent on in config/e2e.yaml, the agent inputs reach the
+  # ClusterBuilder, and a run reads its auth: with no ServiceAccount
+  # builder-agent in the namespace, the run waits with ModelKeyMissing before
+  # it creates a Job or calls the model. An archive source with a made-up
+  # digest needs no Git server; nothing pulls it.
+  - name: agent
+    manifest: |
+      apiVersion: builder.zeabur.com/v1alpha1
+      kind: Build
+      metadata: {name: smoke, namespace: catalog-smoke}
+      spec:
+        source:
+          type: archive
+          archive: {digest: "sha256:0000000000000000000000000000000000000000000000000000000000000000"}
+        builderRef: agent
+    wait:
+      - {resource: clusterbuilder/agent, condition: "jsonpath={.spec.agent.model.provider}=openai"}
+      - {resource: clusterbuilder/agent, condition: "jsonpath={.spec.agent.model.baseUrl}=https://model.invalid/v1"}
+      - {resource: clusterbuilder/agent, condition: "jsonpath={.spec.agent.model.auth.tokenExchange.serviceAccountName}=builder-agent"}
+      - resource: buildrun
+        selector: {builder.zeabur.com/build: smoke}
+        namespace: catalog-smoke
+        condition: "jsonpath={.status.reason}=ModelKeyMissing"
 
 # zot's volumeClaimTemplate claims outlive the StatefulSet, with every image;
 # Builder's CRDs stay, with every Build.

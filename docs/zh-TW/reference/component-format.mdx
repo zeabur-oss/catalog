@@ -126,7 +126,7 @@ provides:
 
 輸入的 `name` 用 camelCase。設成 `generate: {type: random, bytes: 64, encoding: hex}` 的輸入，會產生 `bytes` 個隨機位元組（12 到 64），再用 `encoding` 編碼：小寫 `hex`，或不含填補字元的 `base64url`。這兩個欄位都必填，安裝工具不用猜長度。遇到不認得的 `generate.type`，安裝工具不會替這個輸入填值。
 
-輸入的值會寫到某個 release 設定值裡的 `path`，或寫進 `secret` 指定的 Secret 的某個 key，這個 Secret 由安裝工具在安裝前建立。`testValue` 是 CI 安裝時用的值。
+輸入的值會寫到某個 release 設定值裡的 `path`，或寫進 `secret` 指定的 Secret 的某個 key，這個 Secret 由安裝工具在安裝前建立。`testValue` 是 CI 安裝時用的值。值可以是 `true` 或 `false`、整數、文字，或是以 key 對應這些值的 map。map 會整個寫到 `path`，成為一個物件，例如 Zeabur Builder 的 `agent.auth`；Secret 的 key 只能存文字，所以 `secret` 輸入的值是 map 時，`zeabur-catalog check` 會報錯。
 
 `detection.csiDrivers` 列出元件提供的磁碟區所用的 CSI driver。移除元件前，會等到沒有 PersistentVolume 使用其中任何一個。要找對應的 StorageClass，看它的 `provisioner`。
 

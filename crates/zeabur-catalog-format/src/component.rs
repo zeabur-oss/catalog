@@ -528,6 +528,10 @@ pub enum InputValue {
     Integer(#[cfg_attr(feature = "schema", ts(type = "number"))] i64),
     /// Text.
     Text(String),
+    /// Values by key, set at a `path` as one object, such as a chart value that is a map.
+    // The values refer to this schema; utoipa's schema collection stops at that reference.
+    #[cfg_attr(feature = "utoipa", schema(no_recursion))]
+    Map(BTreeMap<String, Self>),
 }
 
 impl InputValue {
@@ -542,16 +546,22 @@ impl InputValue {
             Self::Flag(b) => (*b).into(),
             Self::Integer(i) => (*i).into(),
             Self::Text(s) => s.clone().into(),
+            Self::Map(m) => m
+                .iter()
+                .map(|(k, v)| (k.clone(), v.to_json()))
+                .collect::<serde_json::Map<_, _>>()
+                .into(),
         }
     }
 
-    /// The value as a Secret stores it.
+    /// The value as a Secret stores it: a map as JSON. `check` refuses a map in a Secret input.
     #[must_use]
     pub fn text(&self) -> String {
         match self {
             Self::Flag(b) => b.to_string(),
             Self::Integer(i) => i.to_string(),
             Self::Text(s) => s.clone(),
+            Self::Map(_) => self.to_json().to_string(),
         }
     }
 }

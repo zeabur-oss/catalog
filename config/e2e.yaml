@@ -17,6 +17,22 @@ overrides:
       defaultSettings:
         # e2e uninstalls after every test; the chart refuses to without it.
         deletingConfirmationFlag: true
+  zeabur-builder:
+    builder: |
+      # The agent ClusterBuilder, which the agentEnabled and agentAuth inputs
+      # turn on; the published v1 API cannot hold agentAuth as a testValue.
+      # Nothing answers at these addresses, and no run gets that far: the
+      # smoke check stops at the missing ServiceAccount.
+      agent:
+        enabled: true
+        auth:
+          type: tokenExchange
+          tokenExchange:
+            serviceAccountName: builder-agent
+            audience: api://catalog-e2e
+            url: https://token.invalid/token
+            subjectField: subject_token
+            form: {grant_type: "urn:ietf:params:oauth:grant-type:token-exchange"}
   velero:
     velero: |
       configuration:

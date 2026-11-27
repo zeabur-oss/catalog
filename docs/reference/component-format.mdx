@@ -126,7 +126,7 @@ provides:
 
 An input's `name` is camelCase. An input with `generate: {type: random, bytes: 64, encoding: hex}` takes `bytes` random bytes, from 12 to 64, in `encoding`: lowercase `hex` or `base64url` without padding. Both fields are required, so an installer never guesses a length. An installer doesn't fill in an input whose `generate.type` it doesn't know.
 
-An input goes either to `path` in the values of a release, or to a key of the Secret in `secret`, which the installer creates before the install. `testValue` is the value CI installs with.
+An input goes either to `path` in the values of a release, or to a key of the Secret in `secret`, which the installer creates before the install. `testValue` is the value CI installs with. A value is `true` or `false`, a whole number, text, or a map of such values by key. A map goes to a `path` as one object, such as Zeabur Builder's `agent.auth`; a Secret key holds text, so `zeabur-catalog check` refuses a map in a `secret` input.
 
 `detection.csiDrivers` lists the CSI drivers of the volumes the component provides. Removing the component waits until no PersistentVolume uses one of them. Find the StorageClass by its `provisioner`.
 

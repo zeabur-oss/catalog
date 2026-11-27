@@ -660,7 +660,7 @@ key: string, };
 /**
  * The value of an input.
  */
-export type InputValue = boolean | number | string;
+export type InputValue = boolean | number | string | { [key in string]: InputValue };
 
 /**
  * The install order on each profile.
