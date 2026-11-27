@@ -886,6 +886,66 @@ fn windows_host_process(_: &ObjectMeta, spec: &PodSpec) -> Option<Forbidden> {
     ))
 }
 
+/// A Pod Security Standards level, from the least to the most restrictive.
+///
+/// [`PodSecurity`] lists the levels in the files' order, the most restrictive first; this type
+/// orders them so that `<` means "less restrictive".
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Level {
+    /// No restrictions.
+    Privileged,
+    /// Prevents known privilege escalations; a container may run as root.
+    Baseline,
+    /// Current hardening practice: non-root, no privilege escalation, every capability dropped
+    /// but `NET_BIND_SERVICE`, a seccomp profile.
+    Restricted,
+}
+
+impl Level {
+    /// The namespace label whose level Pod Security admission enforces: it refuses pods that
+    /// break it [k8s-psa-labels].
+    ///
+    /// [k8s-psa-labels]: https://kubernetes.io/docs/concepts/security/pod-security-admission/#pod-security-admission-labels-for-namespaces
+    pub const ENFORCE: &'static str = "pod-security.kubernetes.io/enforce";
+    /// The namespace label whose level is recorded in the audit log.
+    pub const AUDIT: &'static str = "pod-security.kubernetes.io/audit";
+    /// The namespace label whose level is returned to the client as a warning.
+    pub const WARN: &'static str = "pod-security.kubernetes.io/warn";
+
+    /// The label value.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Privileged => "privileged",
+            Self::Baseline => "baseline",
+            Self::Restricted => "restricted",
+        }
+    }
+
+    /// The level a label value names; `None` for any other value.
+    #[must_use]
+    pub fn parse(value: &str) -> Option<Self> {
+        match value {
+            "privileged" => Some(Self::Privileged),
+            "baseline" => Some(Self::Baseline),
+            "restricted" => Some(Self::Restricted),
+            _ => None,
+        }
+    }
+
+    /// The level of a component's or template's `podSecurity`; `None` for a level this build
+    /// does not know.
+    #[must_use]
+    pub const fn of(pod_security: PodSecurity) -> Option<Self> {
+        match pod_security {
+            PodSecurity::Restricted => Some(Self::Restricted),
+            PodSecurity::Baseline => Some(Self::Baseline),
+            PodSecurity::Privileged => Some(Self::Privileged),
+            PodSecurity::Unknown => None,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     #![expect(
@@ -1029,5 +1089,22 @@ mod tests {
                 .unwrap()
                 .is_none()
         );
+    }
+
+    #[test]
+    fn levels_read_their_label_values_and_order_by_strictness() {
+        use super::Level;
+        for (level, file) in [
+            (Level::Privileged, PodSecurity::Privileged),
+            (Level::Baseline, PodSecurity::Baseline),
+            (Level::Restricted, PodSecurity::Restricted),
+        ] {
+            assert_eq!(Level::parse(level.as_str()), Some(level));
+            assert_eq!(Level::of(file), Some(level));
+            assert_eq!(level.as_str(), file.as_str());
+        }
+        assert_eq!(Level::parse("Restricted"), None);
+        assert_eq!(Level::of(PodSecurity::Unknown), None);
+        assert!(Level::Baseline < Level::Restricted);
     }
 }

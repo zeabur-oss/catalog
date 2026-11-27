@@ -8,5 +8,8 @@ reads. Zeabur and the catalog's own tests call the same code.
   and the tests run the cases in `conformance/template/`.
 - `digest`: the `sourceDigest` of a component or template directory, Go's `dirhash` `h1:`.
 - `kube_version`: whether a component's `kubeVersion` range admits a Kubernetes version.
-- `pod_security`: the Pod Security Standards checks of Pod Security Admission, with its messages.
+- `namespace`: the namespaces Kubernetes keeps for itself.
+- `pod_security`: the Pod Security Standards checks of Pod Security Admission, with its messages,
+  and the levels as namespace labels name them.
 - `quantity`: the canonical text of a resource quantity, as Kubernetes writes it.
+- `readiness`: whether an object has reached the state its spec asks for, as kstatus computes it.
