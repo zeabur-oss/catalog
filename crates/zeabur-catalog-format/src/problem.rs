@@ -55,6 +55,8 @@ pub enum ProblemKind {
     Compat(CompatProblem),
     /// The objects a template renders into with its e2e inputs.
     Lint(LintProblem),
+    /// What an API server refuses of the rendered objects.
+    DryRun(DryRunProblem),
 }
 
 impl fmt::Display for ProblemKind {
@@ -70,6 +72,7 @@ impl fmt::Display for ProblemKind {
             Self::Render(p) => p.fmt(f),
             Self::Compat(p) => p.fmt(f),
             Self::Lint(p) => p.fmt(f),
+            Self::DryRun(p) => p.fmt(f),
         }
     }
 }
@@ -119,6 +122,12 @@ impl From<ValuesProblem> for ProblemKind {
 impl From<RenderProblem> for ProblemKind {
     fn from(p: RenderProblem) -> Self {
         Self::Render(p)
+    }
+}
+
+impl From<DryRunProblem> for ProblemKind {
+    fn from(p: DryRunProblem) -> Self {
+        Self::DryRun(p)
     }
 }
 
@@ -641,6 +650,73 @@ impl fmt::Display for CompatProblem {
                 f,
                 "{p}: a change inside v1 must keep passing the published schemas; a breaking \
                  change goes to v2"
+            ),
+        }
+    }
+}
+
+/// What an API server refuses of the rendered objects, applied with `--dry-run=server`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DryRunProblem {
+    /// The API server refuses objects, or warns about a template's.
+    Refused {
+        /// What was sent, such as `single-node postgresql/cnpg` or `templates/ghost`.
+        subject: String,
+        /// What kubectl printed.
+        output: String,
+    },
+    /// The API server refuses to update a release installed on one profile to the other.
+    ProfileSwitch {
+        /// The release.
+        release: String,
+        /// The profile it is installed on.
+        from: Profile,
+        /// The profile it switches to.
+        to: Profile,
+        /// What kubectl printed.
+        output: String,
+    },
+    /// The API server refuses to update a release from the base's render on a profile.
+    Upgrade {
+        /// The release.
+        release: String,
+        /// The profile.
+        profile: Profile,
+        /// What kubectl printed.
+        output: String,
+    },
+}
+
+impl fmt::Display for DryRunProblem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Refused { subject, output } => {
+                write!(f, "{subject}: the API server refuses it\n{}", output.trim())
+            }
+            Self::ProfileSwitch {
+                release,
+                from,
+                to,
+                output,
+            } => write!(
+                f,
+                "the API server refuses to update release {release} from {} to {}. Give the \
+                 field the same value in both profiles.\n{}",
+                from.as_str(),
+                to.as_str(),
+                output.trim()
+            ),
+            Self::Upgrade {
+                release,
+                profile,
+                output,
+            } => write!(
+                f,
+                "the API server refuses to update release {release} from the base in {}. Change \
+                 the component so the release updates in place, or add a `major` change file \
+                 with the migration steps.\n{}",
+                profile.as_str(),
+                output.trim()
             ),
         }
     }

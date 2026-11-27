@@ -45,6 +45,21 @@
           vendorHash = "sha256-1LkS+9E7JJegz1UHVU+X/L0I8Gha8alk3ml5P1ZDwJE=";
           doCheck = false;
         };
+        rustPlatform = pkgs.makeRustPlatform {
+          cargo = rustToolchain;
+          rustc = rustToolchain;
+        };
+        zeabur-catalog = rustPlatform.buildRustPackage {
+          pname = "zeabur-catalog";
+          inherit version;
+          src = self;
+          cargoLock.lockFile = ./Cargo.lock;
+          cargoBuildFlags = [
+            "-p"
+            "zeabur-catalog"
+          ];
+          doCheck = false;
+        };
         # The check tier runs this API server with etcd and no nodes. Keep the version equal to the RKE2
         # release in config/kubernetes.yaml.
         kube-apiserver = pkgs.buildGoModule rec {
@@ -71,17 +86,17 @@
       in
       {
         packages = {
-          inherit catalog kube-apiserver;
+          inherit catalog zeabur-catalog kube-apiserver;
           # The bundle that a release publishes. Zeabur OSS builds this output at its
           # pinned commit, so it embeds the same bytes as the release. The static API needs helm
           # to fetch charts, so scripts/ci/release.sh builds it outside this sandbox.
-          release = pkgs.runCommand "catalog-release" { nativeBuildInputs = [ catalog ]; } ''
+          release = pkgs.runCommand "catalog-release" { nativeBuildInputs = [ zeabur-catalog ]; } ''
             cp -r ${self} src
             chmod -R u+w src
             cd src
             # Git keeps no empty directory, and the tar below needs measurements/.
             mkdir -p measurements
-            catalog crosscheck -out crosscheck.json
+            zeabur-catalog crosscheck --out crosscheck.json
             tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner --mode=u+w,go-w,a+rX \
               -c crosscheck.json components templates schema config conformance measurements LICENSE README.md |
               gzip -9n > bundle.tar.gz
@@ -103,6 +118,8 @@
             kind
             kube-apiserver
             etcd
+            # The check tier's API server signs ServiceAccount tokens with a key it makes.
+            openssl
             victoriametrics
             yq-go
             # Pattern rules (scripts/ci/patterns.sh)
