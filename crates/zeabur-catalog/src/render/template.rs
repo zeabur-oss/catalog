@@ -298,7 +298,10 @@ mod tests {
     /// resource of a component it does not require fails kubeconform.
     #[test]
     fn a_template_sees_only_the_crds_of_what_it_installs() {
-        let dir = std::env::temp_dir().join(format!("catalog-schemas-{}", std::process::id()));
+        let dir = std::path::Path::new(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../out/test/template-schemas"
+        ));
         for group in ["a", "b"] {
             let crd = format!(
                 "apiVersion: apiextensions.k8s.io/v1\nkind: CustomResourceDefinition\nspec:\n  \
@@ -321,7 +324,10 @@ mod tests {
 
     #[test]
     fn e2e_inputs_refuse_an_unknown_field() {
-        let dir = std::env::temp_dir().join(format!("catalog-e2e-{}", std::process::id()));
+        let dir = std::path::Path::new(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../out/test/template-e2e"
+        ));
         fs::create_dir_all(dir.join("templates/app")).unwrap();
         fs::write(
             dir.join("templates/app/e2e.yaml"),

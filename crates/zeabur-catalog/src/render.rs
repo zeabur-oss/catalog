@@ -632,6 +632,16 @@ pub(crate) fn documents(text: &[u8]) -> Result<Vec<Value>, String> {
     Ok(out)
 }
 
+/// Whether `part` of a CRD, its group, lowercase kind or version, is safe as a path segment: the
+/// API server takes only DNS names there, so a chart that writes `..` or `/` is refused.
+fn is_path_part(part: &str) -> bool {
+    !part.is_empty()
+        && !part.starts_with('.')
+        && part
+            .bytes()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'.' || b == b'-')
+}
+
 /// Writes a kubeconform schema for each version of each CRD in `objects`, at
 /// `dir/<group>/<kind>_<version>.json`, so custom resources are checked against the CRDs they
 /// install with.
@@ -650,11 +660,16 @@ fn crd_schemas(objects: &[u8], dir: &Path) -> Result<(), String> {
             for property in schema.properties.iter_mut().flat_map(|p| p.values_mut()) {
                 strict(property);
             }
-            let file = dir.join(&spec.group).join(format!(
-                "{}_{}.json",
-                spec.names.kind.to_lowercase(),
-                version.name
-            ));
+            let kind = spec.names.kind.to_lowercase();
+            if !is_path_part(&spec.group) || !is_path_part(&kind) || !is_path_part(&version.name) {
+                return Err(format!(
+                    "a CRD of group {:?}, kind {:?}, version {:?}: not a DNS name",
+                    spec.group, spec.names.kind, version.name
+                ));
+            }
+            let file = dir
+                .join(&spec.group)
+                .join(format!("{kind}_{}.json", version.name));
             if let Some(parent) = file.parent() {
                 fs::create_dir_all(parent).map_err(|e| format!("{}: {e}", parent.display()))?;
             }
@@ -716,6 +731,19 @@ mod tests {
     use serde_json::json;
 
     use super::*;
+
+    #[test]
+    fn a_crd_whose_group_is_not_a_dns_name_writes_no_schema() {
+        let dir = Path::new(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../out/test/crd-group"
+        ));
+        let crd = b"apiVersion: apiextensions.k8s.io/v1\nkind: CustomResourceDefinition\nspec:\n  \
+            group: ../../escape\n  names: {kind: Thing}\n  versions:\n    - name: v1\n      \
+            schema:\n        openAPIV3Schema: {type: object}\n";
+        assert!(crd_schemas(crd, dir).is_err());
+        assert!(!dir.join("../../escape").exists() && !dir.exists());
+    }
 
     #[test]
     fn a_crd_schema_refuses_unknown_fields_and_takes_int_or_string() {
