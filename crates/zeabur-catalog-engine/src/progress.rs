@@ -190,10 +190,12 @@ pub fn health_resource(kind: HealthKind, served: &[ServedResource]) -> Option<&S
 
 /// Whether a health check passes on `objects` of `resource`, the objects it names.
 ///
-/// Each object of a kind with a rule of its own is Current by kstatus. Each other object passes
-/// the generic rule's checks of deletion, generation, `Reconciling` and `Stalled`, and has the
-/// check's condition `True`. No object yet is waiting. A failure names the object and its reason
-/// or condition.
+/// Each object of a kind with a rule of its own is Current by kstatus, or, when the check names
+/// a condition, has that condition `True` and is not failed by kstatus: kstatus counts a Pod
+/// that has ended as Current, but `kubectl wait --for=condition=Ready` does not. Each other
+/// object passes the generic rule's checks of deletion, generation, `Reconciling` and
+/// `Stalled`, and has the check's condition `True`. No object yet is waiting. A failure names the
+/// object and its reason or condition.
 #[must_use]
 pub fn check_progress(
     check: &Health,
@@ -208,10 +210,14 @@ pub fn check_progress(
     let own_rule = OWN_RULE.contains(&(group, kind));
     let mut waiting = false;
     for object in objects {
-        let progress = if own_rule {
-            kstatus(group, kind, object, now).unwrap_or(Progress::Waiting)
-        } else {
-            condition_progress(kind, object, check.condition.as_deref().unwrap_or_default())
+        let condition = check.condition.as_deref();
+        let progress = match (own_rule, condition) {
+            (true, None) => kstatus(group, kind, object, now).unwrap_or(Progress::Waiting),
+            (true, Some(condition)) => match kstatus(group, kind, object, now) {
+                Some(Progress::Failed(why)) => Progress::Failed(why),
+                Some(_) | None => condition_progress(kind, object, condition),
+            },
+            (false, condition) => condition_progress(kind, object, condition.unwrap_or_default()),
         };
         match progress {
             Progress::Ready => {}
@@ -595,6 +601,50 @@ mod tests {
             check_progress(&check, &resource, &[node(2)], now),
             Progress::Ready
         );
+    }
+
+    #[test]
+    fn a_pod_check_with_a_condition_needs_the_condition() {
+        // Traefik's `controller` check.
+        let check = Health {
+            name: "controller".to_owned(),
+            resource: HealthResource {
+                kind: HealthKind::Pod,
+                namespace: Some("traefik".to_owned()),
+                name: None,
+                selector: Some(BTreeMap::from([(
+                    "app.kubernetes.io/name".to_owned(),
+                    "traefik".to_owned(),
+                )])),
+                all: false,
+            },
+            condition: Some("Ready".to_owned()),
+            timeout: "60s".to_owned(),
+            advice: String::new(),
+        };
+        let resource = served("", "Pod");
+        let now = Timestamp::from_second(2_000_000_000).unwrap();
+        let pod = |phase: &str, ready: &str| {
+            object(json!({"metadata": {"name": "traefik-1"},
+                "status": {"phase": phase,
+                    "conditions": [{"type": "Ready", "status": ready}]}}))
+        };
+        let progress = |phase, ready| check_progress(&check, &resource, &[pod(phase, ready)], now);
+        assert_eq!(progress("Failed", "False"), Progress::Waiting);
+        assert_eq!(progress("Succeeded", "False"), Progress::Waiting);
+        assert_eq!(progress("Running", "False"), Progress::Waiting);
+        assert_eq!(progress("Running", "True"), Progress::Ready);
+
+        let crashing = object(json!({"metadata": {"name": "traefik-1"},
+            "status": {"phase": "Running",
+                "conditions": [{"type": "Ready", "status": "False"}],
+                "containerStatuses": [{"name": "traefik", "image": "traefik", "imageID": "",
+                    "ready": false, "restartCount": 5,
+                    "state": {"waiting": {"reason": "CrashLoopBackOff"}}}]}}));
+        assert!(matches!(
+            check_progress(&check, &resource, &[crashing], now),
+            Progress::Failed(_)
+        ));
     }
 
     #[test]
