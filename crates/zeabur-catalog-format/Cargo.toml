@@ -18,12 +18,8 @@ serde-saphyr.workspace = true
 serde_ignored.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
-ts-rs = { workspace = true, optional = true }
-utoipa = { workspace = true, optional = true }
 
 [features]
-# Derives `schemars::JsonSchema` and `ts_rs::TS`, for `schema/v1/` and `types/v1/`. A reader that only
-# parses the files leaves it off.
-schema = ["dep:schemars", "dep:ts-rs"]
-# Derives `utoipa::ToSchema` on the types a reader puts in its own API.
-utoipa = ["dep:utoipa"]
+# Derives `schemars::JsonSchema`, for `schema/v1/`. A reader that only parses the files leaves it
+# off.
+schema = ["dep:schemars"]

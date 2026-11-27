@@ -3,7 +3,7 @@ title: Tests and CI
 description: Learn when each CI tier runs, what it checks, and how to configure template test inputs.
 ---
 
-`check` runs on every pull request, and `smoke` runs in the merge queue, on the commit about to land. `full` runs on what is stale, after a push to `main` that changes a component or template and every Saturday. Check that nothing is stale before tagging a commit. Each tier covers different checks, and later tiers run checks that earlier tiers don't cover. You can also run the same tests as CI with `catalog e2e -tier check|smoke|full`.
+`check` runs on every pull request, and `smoke` runs in the merge queue, on the commit about to land. `full` runs on what is stale, after a push to `main` that changes a component or template and every Saturday. Check that nothing is stale before tagging a commit. Each tier covers different checks, and later tiers run checks that earlier tiers don't cover. You can also run the same tests as CI: `scripts/ci/check.sh` for `check`, and `catalog e2e -tier smoke|full` for the others.
 
 ## Before you start
 
@@ -84,7 +84,7 @@ Each template's Namespace generates warnings at its own enforce level. Any warni
 
 ### Build the release
 
-Build `bundle.tar.gz` with `nix build .#release` and the static API with `zeabur-catalog api`. A change to `go.sum` fails here until `flake.nix` has the new `vendorHash`. `zeabur-catalog compat` then checks every new API file against the schemas of the latest published release, which accept new fields and values, and fails when a change inside `v1` removes a field, changes a type or makes a field required.
+Build `bundle.tar.gz` with `nix build .#release` and the static API with `zeabur-catalog api`. `zeabur-catalog compat` then checks every new API file against the schemas of the latest published release, which accept new fields and values, and fails when a change inside `v1` removes a field, changes a type or makes a field required.
 
 </Step>
 

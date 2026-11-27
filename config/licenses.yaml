@@ -1,6 +1,7 @@
-# OSI-approved SPDX identifiers, generated from the SPDX License List 3.29.0
-# (https://spdx.org/licenses/licenses.json, isOsiApproved). Regenerate with:
-# curl -sSL https://spdx.org/licenses/licenses.json | cargo run -p zeabur-catalog -- licenses-update
+# OSI-approved SPDX identifiers from the SPDX License List. To refresh, set spdxVersion to the list's
+# licenseListVersion and replace osiApproved with the output of:
+# curl -sSL https://spdx.org/licenses/licenses.json |
+#   jq -r '.licenses[] | select(.isOsiApproved) | .licenseId' | LC_ALL=C sort
 spdxVersion: "3.29.0"
 osiApproved:
   - 0BSD

@@ -6,13 +6,10 @@ use std::fmt;
 #[cfg(feature = "schema")]
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "schema")]
-use ts_rs::TS;
 
 /// The `apiVersion` of every component and template file.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 pub enum ApiVersion {
     /// `catalog.zeabur.com/v1`.
     #[serde(rename = "catalog.zeabur.com/v1")]
@@ -21,8 +18,7 @@ pub enum ApiVersion {
 
 /// A deployment layout. Every component describes both.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum Profile {
     /// One node.
@@ -53,8 +49,7 @@ impl fmt::Display for Profile {
 
 /// A value for each profile.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub struct PerProfile<T> {
     /// On `single-node`.
@@ -76,8 +71,7 @@ impl<T> PerProfile<T> {
 
 /// Whether a profile installs a component by default.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub enum Mode {
     /// On by default.
@@ -89,7 +83,6 @@ pub enum Mode {
     /// A mode this reader does not know, read as `unsupported`.
     #[serde(other)]
     #[cfg_attr(feature = "schema", schemars(skip))]
-    #[cfg_attr(feature = "schema", ts(skip))]
     Unknown,
 }
 
@@ -107,8 +100,7 @@ impl PerProfile<Mode> {
 
 /// A host distribution of Kubernetes that a component runs on.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum Distribution {
     /// K3s.
@@ -120,7 +112,6 @@ pub enum Distribution {
     /// A distribution this reader does not know. An entry that names it is ignored.
     #[serde(other)]
     #[cfg_attr(feature = "schema", schemars(skip))]
-    #[cfg_attr(feature = "schema", ts(skip))]
     Unknown,
 }
 
@@ -145,8 +136,7 @@ impl fmt::Display for Distribution {
 
 /// A Pod Security Standard level.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum PodSecurity {
     /// `restricted`.
@@ -158,7 +148,6 @@ pub enum PodSecurity {
     /// A level this reader does not know. A component or template with it is not offered.
     #[serde(other)]
     #[cfg_attr(feature = "schema", schemars(skip))]
-    #[cfg_attr(feature = "schema", ts(skip))]
     Unknown,
 }
 
@@ -177,8 +166,7 @@ impl PodSecurity {
 
 /// A component by id, or a capability: one component that provides it.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub enum Reference {
     /// `{component: <id>}`.
@@ -191,8 +179,7 @@ pub enum Reference {
 
 /// A name and a summary in English, with the summary in other languages.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Summary {
     /// One line.
@@ -253,8 +240,7 @@ pub fn license_url_problems(license: &str, urls: &LicenseUrls) -> Vec<LicenseUrl
 
 /// A key of a Secret.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct SecretRef {
     /// The Secret's name.
@@ -267,8 +253,7 @@ pub struct SecretRef {
 
 /// How an installer makes a value instead of asking for it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(tag = "type")]
 pub enum Generate {
     /// `bytes` random bytes in `encoding`.
@@ -286,14 +271,12 @@ pub enum Generate {
     /// A type this reader does not know. The input is not filled in.
     #[serde(other)]
     #[cfg_attr(feature = "schema", schemars(skip))]
-    #[cfg_attr(feature = "schema", ts(skip))]
     Unknown,
 }
 
 /// How random bytes are written.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum Encoding {
     /// Lowercase hexadecimal.
@@ -304,8 +287,7 @@ pub enum Encoding {
 
 /// A workload kind that the catalog recognises by its labels or its rollout.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 pub enum WorkloadKind {
     /// `DaemonSet`.
     DaemonSet,
@@ -316,7 +298,6 @@ pub enum WorkloadKind {
     /// A kind this reader does not know. An entry that names it is ignored.
     #[serde(other)]
     #[cfg_attr(feature = "schema", schemars(skip))]
-    #[cfg_attr(feature = "schema", ts(skip))]
     Unknown,
 }
 

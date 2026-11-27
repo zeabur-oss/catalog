@@ -7,8 +7,6 @@ use std::collections::BTreeMap;
 #[cfg(feature = "schema")]
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "schema")]
-use ts_rs::TS;
 
 use crate::common::{
     ApiVersion, Distribution, Generate, LicenseUrls, Locales, Mode, PerProfile, PodSecurity,
@@ -17,8 +15,7 @@ use crate::common::{
 
 /// The `kind` of a component file.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 pub enum ComponentKind {
     /// `Component`.
     Component,
@@ -26,8 +23,7 @@ pub enum ComponentKind {
 
 /// One upstream project that a cluster administrator installs.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Component {
     /// `catalog.zeabur.com/v1`.
@@ -47,40 +43,32 @@ pub struct Component {
     pub kube_version: String,
     /// It keeps state in volumes, so uninstalling it loses data.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub persists_data: bool,
     /// The components installed before it.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(extend("uniqueItems" = true)))]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub requires: Vec<Reference>,
     /// Values an installer asks for or generates.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub inputs: Vec<Input>,
     /// What it installs, in order.
     #[cfg_attr(feature = "schema", schemars(length(min = 1)))]
     pub releases: Vec<Release>,
     /// What it offers other software in the cluster.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub provides: Option<Provides>,
     /// The CRDs of `detection.crds` whose objects it writes itself, so they do not mean anyone
     /// uses it.
     #[serde(default, rename = "internalCRDs")]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub internal_crds: Vec<String>,
     /// What it needs beyond its measured idle use.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub resources: Option<Resources>,
     /// `NetworkPolicy` objects for its namespaces, applied before the releases.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub network_policies: Option<String>,
     /// Values it adds to releases of other components.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub contributes: Vec<Contribution>,
     /// How to recognise an existing installation.
     pub detection: Detection,
@@ -88,15 +76,12 @@ pub struct Component {
     pub security: Security,
     /// Read-only checks of an installed component.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub health: Vec<Health>,
     /// Extra e2e checks after install.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub smoke: Vec<Smoke>,
     /// What the upstream keeps on uninstall.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub leftovers: Vec<String>,
 }
 
@@ -151,8 +136,7 @@ impl Component {
 
 /// A component's name and summary.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Metadata {
     /// The name for people.
@@ -167,7 +151,6 @@ pub struct Metadata {
     pub license: String,
     /// The URL of the text of each `LicenseRef-` licence in `license`, by its id.
     #[serde(default, skip_serializing_if = "LicenseUrls::is_empty")]
-    #[cfg_attr(feature = "schema", ts(optional, as = "Option<_>"))]
     #[cfg_attr(feature = "schema", schemars(extend(
         "propertyNames" = {"type": "string", "pattern": crate::schema::pattern::LICENSE_REF},
         "additionalProperties" = {"type": "string", "format": "uri", "pattern": crate::schema::pattern::HTTPS}
@@ -180,8 +163,7 @@ pub struct Metadata {
 
 /// What a component's RBAC lets it do and what its namespaces must allow.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Security {
     /// What its RBAC lets it do.
@@ -192,26 +174,22 @@ pub struct Security {
 
 /// What a component offers other software in the cluster.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "schema", schemars(extend("minProperties" = 1)))]
 pub struct Provides {
     /// The capability it offers, such as `logs`.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::schema::pattern::NAME)))]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub capability: Option<String>,
     /// An OCI registry in the cluster that nodes pull from.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub registry: Option<Registry>,
 }
 
 /// An OCI registry in the cluster that nodes pull from.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Registry {
     /// The `host:port` that images name.
@@ -223,8 +201,7 @@ pub struct Registry {
 
 /// What a component needs beyond its measured idle use.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Resources {
     /// Each kind of work it does, such as a build.
@@ -234,8 +211,7 @@ pub struct Resources {
 
 /// One kind of work a component does.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "schema", schemars(extend("anyOf" = [{"required": ["requests"]}, {"required": ["limits"]}, {"required": ["use"]}])))]
 pub struct Work {
@@ -244,41 +220,34 @@ pub struct Work {
     pub name: String,
     /// The requests of each pod doing one unit of work.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub requests: Option<Quantities>,
     /// The limits of each pod doing one unit of work.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub limits: Option<Quantities>,
     /// What one unit of work uses on top of the idle use.
     #[serde(default, rename = "use")]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub uses: Option<Quantities>,
 }
 
 /// Kubernetes quantities by resource name.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "schema", schemars(extend("minProperties" = 1)))]
 pub struct Quantities {
     /// CPU, such as `100m`.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(length(min = 1)))]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub cpu: Option<String>,
     /// Memory, such as `256Mi`.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(length(min = 1)))]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub memory: Option<String>,
 }
 
 /// One install step of a component, by its `type`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum Release {
     /// A Helm chart.
@@ -290,7 +259,6 @@ pub enum Release {
     /// A type this reader does not know. A component with it is not offered.
     #[serde(other)]
     #[cfg_attr(feature = "schema", schemars(skip))]
-    #[cfg_attr(feature = "schema", ts(skip))]
     Unknown,
 }
 
@@ -340,8 +308,7 @@ impl Release {
 
 /// A release of a Helm chart.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct HelmRelease {
     /// Its name in the file.
@@ -351,18 +318,15 @@ pub struct HelmRelease {
     pub namespace: String,
     /// The Helm release name, when it is not `name`.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub release_name: Option<String>,
     /// Skip it when these CRDs exist.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub skip_if_present: Vec<String>,
     /// `oci://registry/path/chart`, or a chart name in `repo`.
     pub chart: String,
     /// The HTTP chart repository.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::schema::pattern::HTTPS)))]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub repo: Option<String>,
     /// The chart version.
     pub version: String,
@@ -371,15 +335,12 @@ pub struct HelmRelease {
     pub chart_digest: String,
     /// Images, without tag, that the chart cannot pin by digest.
     #[serde(default, rename = "unpinnedImages")]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub unpinned_images: Vec<String>,
     /// Values for every profile, as YAML.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub values: Option<String>,
     /// Values merged over `values` on each profile, as YAML.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub profiles: ProfileValues,
 }
 
@@ -393,17 +354,14 @@ impl HelmRelease {
 
 /// Values for some profiles, as YAML.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub struct ProfileValues {
     /// On `single-node`.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub single_node: Option<String>,
     /// On `multi-node`.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub multi_node: Option<String>,
 }
 
@@ -420,8 +378,7 @@ impl ProfileValues {
 
 /// A release of files downloaded from URLs.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ManifestRelease {
     /// Its name in the file.
@@ -431,7 +388,6 @@ pub struct ManifestRelease {
     pub namespace: String,
     /// Skip it when these CRDs exist.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub skip_if_present: Vec<String>,
     /// The URLs, with `{version}` for `version`.
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = crate::schema::pattern::VERSION_FIELD))))]
@@ -456,8 +412,7 @@ impl ManifestRelease {
 
 /// A release of objects written in the file.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct InlineRelease {
     /// Its name in the file.
@@ -467,7 +422,6 @@ pub struct InlineRelease {
     pub namespace: String,
     /// Skip it when these CRDs exist.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub skip_if_present: Vec<String>,
     /// The objects, as YAML.
     pub manifests: String,
@@ -475,8 +429,7 @@ pub struct InlineRelease {
 
 /// A value an installer asks for or generates.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "schema", schemars(extend("oneOf" = [{"required": ["path"]}, {"required": ["secret"]}])))]
 pub struct Input {
@@ -487,50 +440,39 @@ pub struct Input {
     pub description: String,
     /// The release whose values take a `path` input; the first chart release when absent.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub release: Option<String>,
     /// Where it goes in the release's values: a dotted path, where a number indexes a list.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub path: Option<String>,
     /// The Secret key it is stored in, created before install.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub secret: Option<SecretRef>,
     /// How an installer makes it when it is not given.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub generate: Option<Generate>,
     /// An install needs a value.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub required: bool,
     /// The value when none is given.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub default: Option<InputValue>,
     /// The value CI installs with.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub test_value: Option<InputValue>,
 }
 
 /// The value of an input.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "utoipa", derive(utoipa::ToSchema))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum InputValue {
     /// `true` or `false`.
     Flag(bool),
     /// A whole number.
-    Integer(#[cfg_attr(feature = "schema", ts(type = "number"))] i64),
+    Integer(i64),
     /// Text.
     Text(String),
     /// Values by key, set at a `path` as one object, such as a chart value that is a map.
-    // The values refer to this schema; utoipa's schema collection stops at that reference.
-    #[cfg_attr(feature = "utoipa", schema(no_recursion))]
     Map(BTreeMap<String, Self>),
 }
 
@@ -568,8 +510,7 @@ impl InputValue {
 
 /// Values a component adds to a release of another component.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Contribution {
     /// The release that receives them.
@@ -580,8 +521,7 @@ pub struct Contribution {
 
 /// A release of a component.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ReleaseRef {
     /// The component's id.
@@ -593,42 +533,33 @@ pub struct ReleaseRef {
 
 /// How to recognise an existing installation. Any one match means it is there.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "schema", schemars(extend("minProperties" = 1)))]
 pub struct Detection {
     /// `CustomResourceDefinition` names.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub crds: Vec<String>,
     /// `APIService` names.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub api_services: Vec<String>,
     /// `GatewayClass` controller names.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub gateway_controllers: Vec<String>,
     /// `IngressClass` controller names.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub ingress_controllers: Vec<String>,
     /// CSI drivers of the `PersistentVolumes` it provides.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub csi_drivers: Vec<String>,
     /// Helm chart names.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub helm_charts: Vec<String>,
     /// Add-ons of a distribution that install the same upstream.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub addons: Vec<Addon>,
     /// Workloads whose labels show the upstream.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub workloads: Vec<DetectedWorkload>,
 }
 
@@ -644,8 +575,7 @@ impl Detection {
 
 /// An add-on of a distribution.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Addon {
     /// The distribution.
@@ -656,8 +586,7 @@ pub struct Addon {
 
 /// A workload whose labels show the upstream.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct DetectedWorkload {
     /// Its kind.
@@ -668,8 +597,7 @@ pub struct DetectedWorkload {
 
 /// A read-only check of an installed component: one `kubectl wait` or `kubectl rollout status`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "schema", schemars(extend("if" = {"properties": {"resource": {"properties": {"kind": {"enum": ["DaemonSet", "Deployment", "StatefulSet"]}}}}}, "then" = {"not": {"required": ["condition"]}, "properties": {"resource": {"not": {"required": ["all"]}}}}, "else" = {"required": ["condition"]})))]
 pub struct Health {
@@ -682,7 +610,6 @@ pub struct Health {
     /// is complete.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::schema::pattern::CONDITION_NAME)))]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub condition: Option<String>,
     /// How long to wait, such as `60s`.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::schema::pattern::TIMEOUT)))]
@@ -694,8 +621,7 @@ pub struct Health {
 
 /// The objects of one kind a health check waits for: by `name`, by `selector`, or `all`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "schema", schemars(extend("oneOf" = [{"required": ["name"]}, {"required": ["selector"]}, {"required": ["all"]}], "if" = {"properties": {"kind": {"enum": ["DaemonSet", "Deployment", "Node.longhorn.io", "Pod", "StatefulSet"]}}}, "then" = {"required": ["namespace"]}, "else" = {"not": {"required": ["namespace"]}})))]
 pub struct HealthResource {
@@ -704,29 +630,24 @@ pub struct HealthResource {
     /// The name of one object.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(length(min = 1)))]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub name: Option<String>,
     /// The labels of the objects.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(extend("minProperties" = 1)))]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub selector: Option<BTreeMap<String, String>>,
     /// Every object of the kind.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(extend("const" = true)))]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub all: bool,
     /// Their namespace, for a namespaced kind.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(length(min = 1)))]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub namespace: Option<String>,
 }
 
 /// A kind that a health check can wait for.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 pub enum HealthKind {
     /// `APIService`.
     #[serde(rename = "APIService")]
@@ -786,29 +707,25 @@ impl HealthKind {
 
 /// An e2e check after install.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Smoke {
     /// Its name.
     pub name: String,
     /// Objects to apply first, in the namespace `catalog-smoke`.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub manifest: Option<String>,
     /// What to wait for after the objects are applied.
     pub wait: Vec<Wait>,
     /// How long to wait; 180 seconds when absent.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::schema::pattern::TIMEOUT)))]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub timeout: Option<String>,
 }
 
 /// One `kubectl wait` of a smoke check.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "schema", schemars(extend("allOf" = [{"if": {"properties": {"resource": {"pattern": crate::schema::pattern::ROLLOUT}}}, "then": {"properties": {"condition": {"pattern": "^jsonpath="}}}, "else": {"required": ["condition"]}}], "if" = {"properties": {"resource": {"pattern": "/"}}}, "then" = {"not": {"anyOf": [{"required": ["selector"]}, {"required": ["all"]}]}}, "else" = {"oneOf": [{"required": ["selector"]}, {"required": ["all"]}]})))]
 pub struct Wait {
@@ -818,22 +735,18 @@ pub struct Wait {
     /// The namespace of the objects.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(length(min = 1)))]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub namespace: Option<String>,
     /// The labels of the objects.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(extend("minProperties" = 1)))]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub selector: Option<BTreeMap<String, String>>,
     /// Every object of the kind.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(extend("const" = true)))]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub all: bool,
     /// What the objects reach, as a `kubectl wait --for` value.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::schema::pattern::CONDITION)))]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub condition: Option<String>,
 }
 
@@ -863,10 +776,19 @@ pub fn default_accounts(component: &Component) -> Vec<Release> {
                 name: format!("{DEFAULT_ACCOUNT_PREFIX}{namespace}"),
                 namespace: namespace.to_owned(),
                 skip_if_present: Vec::new(),
-                manifests: format!(
-                    "apiVersion: v1\nkind: ServiceAccount\nmetadata:\n  name: default\n  namespace: {namespace}\nautomountServiceAccountToken: false\n"
-                ),
+                manifests: default_account(namespace),
             })
         })
         .collect()
+}
+
+/// The `default` `ServiceAccount` of `namespace` with no token, as JSON, which is also YAML.
+fn default_account(namespace: &str) -> String {
+    let account = serde_json::json!({
+        "apiVersion": "v1",
+        "kind": "ServiceAccount",
+        "metadata": {"name": "default", "namespace": namespace},
+        "automountServiceAccountToken": false,
+    });
+    format!("{account}\n")
 }

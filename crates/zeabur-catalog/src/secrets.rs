@@ -1,9 +1,6 @@
-//! `zeabur-catalog template render|inputs`: a template of a release's static API, rendered for a
-//! namespace or with its generated inputs, to deploy it by hand.
+//! The generated inputs of a template as Secrets, which the dry run applies before the template.
 
 use std::collections::BTreeMap;
-use std::fs;
-use std::path::Path;
 
 use base64::Engine as _;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
@@ -17,76 +14,7 @@ use serde_json::json;
 use zeabur_catalog_engine::dns::is_dns_label;
 use zeabur_catalog_engine::template;
 use zeabur_catalog_format::TemplateDir;
-use zeabur_catalog_format::api::TemplateFile;
 use zeabur_catalog_format::common::{Encoding, Generate};
-
-use crate::check::is_id;
-
-/// What to render a template with.
-#[derive(Debug, Default)]
-pub(crate) struct Options {
-    /// The namespace.
-    pub(crate) namespace: String,
-    /// The hostname of the services with domains.
-    pub(crate) domain: Option<String>,
-    /// The cert-manager `ClusterIssuer` of the services with domains.
-    pub(crate) cluster_issuer: Option<String>,
-    /// A JSON file with an object of input values.
-    pub(crate) values: Option<String>,
-}
-
-/// The template `id` from `<api>/templates/<id>.json`, where `api` is the `v1` directory of a
-/// release's `api-v1.tar.gz`.
-pub(crate) fn read(api: &Path, id: &str) -> Result<TemplateDir, String> {
-    if !is_id(id) {
-        return Err(format!("{id:?} is not a template ID"));
-    }
-    let path = api.join("templates").join(format!("{id}.json"));
-    let text = fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
-    let file: TemplateFile =
-        serde_json::from_slice(&text).map_err(|e| format!("{}: {e}", path.display()))?;
-    if file.id != id {
-        return Err(format!(
-            "{}: the file is template {}",
-            path.display(),
-            file.id
-        ));
-    }
-    Ok(TemplateDir {
-        template: file.template,
-        manifests: file.manifests,
-    })
-}
-
-/// The objects of the template `id` for `options`, as a YAML stream of JSON documents.
-pub(crate) fn render(id: &str, dir: &TemplateDir, options: &Options) -> Result<String, String> {
-    let inputs: BTreeMap<String, String> = match &options.values {
-        None => BTreeMap::new(),
-        Some(path) => {
-            let text = fs::read(path).map_err(|e| format!("{path}: {e}"))?;
-            serde_json::from_slice(&text)
-                .map_err(|e| format!("{path}: want a JSON object of strings: {e}"))?
-        }
-    };
-    let objects = template::render(
-        id,
-        dir,
-        &template::Options {
-            namespace: &options.namespace,
-            domain: options.domain.as_deref(),
-            cluster_issuer: options.cluster_issuer.as_deref(),
-            inputs: &inputs,
-        },
-    )
-    .map_err(|e| e.to_string())?;
-    let mut text = String::new();
-    for object in &objects {
-        text.push_str("---\n");
-        text.push_str(&serde_json::to_string(object).map_err(|e| e.to_string())?);
-        text.push('\n');
-    }
-    Ok(text)
-}
 
 /// A `List` of the Secrets that hold the generated inputs of the template `id` in `namespace`,
 /// with values from `random`, which fills its buffer with random bytes.
@@ -209,11 +137,5 @@ mod tests {
         let (id, dir) = catalog.templates.iter().next().unwrap();
         let err = super::inputs(id, dir, "App", |_| Ok(())).unwrap_err();
         assert!(err.contains("DNS label"), "{err}");
-    }
-
-    #[test]
-    fn read_refuses_an_id_that_is_not_one() {
-        let err = super::read(std::path::Path::new("."), "../x").unwrap_err();
-        assert!(err.contains("not a template ID"), "{err}");
     }
 }

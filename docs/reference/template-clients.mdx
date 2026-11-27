@@ -3,7 +3,7 @@ title: How clients render templates
 description: The checks a client runs before it renders a template, how it tells whether what the template requires is installed and which language it shows, with cases to test a client against.
 ---
 
-A client installs a [template](template-format.mdx) into one namespace: it checks the options, renders `manifests.yaml` and applies the objects. This page gives the rules. `zeabur-catalog template render` follows them with `crates/zeabur-catalog-engine/src/template.rs`, and Zeabur OSS follows them too. Each rule has a case in [`conformance/template/`](#test-cases) to test against.
+A client installs a [template](template-format.mdx) into one namespace: it checks the options, renders `manifests.yaml` and applies the objects. This page gives the rules. `crates/zeabur-catalog-engine/src/template.rs` follows them, and so does Zeabur OSS. Each rule has a case in [`conformance/template/`](#test-cases) to test against.
 
 ## What a render takes
 

@@ -263,7 +263,7 @@ fn templates(root: &Path, catalog: &Catalog, dir: &Path, plan: &mut Plan) -> Res
             .any(|i| i.generate.is_some())
         {
             let list =
-                crate::deploy::inputs(id, template, &run.namespace, crate::deploy::os_random)?;
+                crate::secrets::inputs(id, template, &run.namespace, crate::secrets::os_random)?;
             texts.push(serde_json::to_string(&list).map_err(|e| e.to_string())?);
         }
         for text in texts.into_iter().filter(|t| !t.trim().is_empty()) {

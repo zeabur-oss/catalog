@@ -16,8 +16,5 @@ unknown value as `Unknown`, as [releases](https://github.com/zeabur-oss/catalog/
 says. `check` reads the files authors write strictly and names each unknown field or value by its
 path. `Catalog::read` reads a catalog checkout through it.
 
-The `utoipa` feature, off by default, derives `utoipa::ToSchema` on the types a reader puts in its
-own OpenAPI document, so the reader needs no copy of them. It covers `InputValue`.
-
-The `schema` feature, off by default, derives `schemars::JsonSchema` and `ts_rs::TS` and adds the
-`schema` module, which writes `schema/v1/` and `types/v1/`. Only this repository needs it.
+The `schema` feature, off by default, derives `schemars::JsonSchema` and adds the `schema` module,
+which writes `schema/v1/`. Only this repository needs it.

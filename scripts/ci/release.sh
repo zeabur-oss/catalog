@@ -2,15 +2,15 @@
 # The files of a release: bundle.tar.gz from `nix build .#release`, and api-v<N>.tar.gz, the static
 # API of major N. `zeabur-catalog api` renders charts that helm fetches, so the API is built outside the
 # nix sandbox. Both are reproducible: the Release workflow verifies a draft by building them again.
-# CI builds them at flake.nix's version, so a go.sum change fails here first, with flake.nix's new
-# vendorHash. A change inside v<N> keeps every file passing the schemas of the latest published
+# CI builds them at flake.nix's version, so a Cargo.lock change that breaks the nix build fails
+# here first. A change inside v<N> keeps every file passing the schemas of the latest published
 # release's api-v<N>.tar.gz; a breaking change goes to v<N+1>, which has none yet.
 #
 #   scripts/ci/release.sh [<version> <dir>]
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
-version=${1:-v$(nix eval --raw .#catalog.version)}
+version=${1:-v$(nix eval --raw .#zeabur-catalog.version)}
 if [[ $# == 0 ]]; then
   out=${CI_ARTIFACTS:-$PWD/out/ci}
   rm -rf "$out"
@@ -20,8 +20,12 @@ fi
 mkdir -p "$out"
 dir=$(cd "$out" && pwd)
 
-cargo run --locked -p zeabur-catalog -- check
-cargo run --locked -p zeabur-catalog -- render
+# Without arguments this is the CI release job, and the check job of the same workflow runs
+# scripts/ci/check.sh. A tagged release runs the checks here.
+if [[ $# != 0 ]]; then
+  cargo run --locked -p zeabur-catalog -- check
+  cargo run --locked -p zeabur-catalog -- render
+fi
 nix build .#release
 install -m 644 result/bundle.tar.gz "$dir/bundle.tar.gz"
 

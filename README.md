@@ -69,7 +69,6 @@ templates/<id>/template.yaml              one application: inputs, services, sec
 templates/<id>/manifests.yaml             its Kubernetes objects
 templates/<id>/e2e.yaml                       test-only inputs of that template (optional)
 schema/v1/                                JSON Schemas for both, generated from crates/
-types/v1/                                 TypeScript types, generated from crates/
 config/licenses.yaml                      OSI-approved SPDX identifiers; opt-in-only exceptions
 config/kubernetes.yaml                    Kubernetes versions; kind node version for e2e
 config/budget.yaml                        single-node memory budget (MiB)

@@ -8,8 +8,6 @@ use std::collections::BTreeMap;
 #[cfg(feature = "schema")]
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "schema")]
-use ts_rs::TS;
 
 use crate::common::{Distribution, Profile, WorkloadKind};
 use crate::component::Component;
@@ -17,8 +15,7 @@ use crate::template::Template;
 
 /// `catalog.json`: the release, its test environments, its components and its templates.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Index {
     /// The release.
@@ -48,8 +45,7 @@ impl Index {
 
 /// The catalog release an API was built from.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct CatalogRelease {
     /// `0.5.6`.
@@ -62,8 +58,7 @@ pub struct CatalogRelease {
 
 /// The release of a distribution that e2e installs on the host.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct PinnedDistribution {
     /// The distribution.
@@ -74,8 +69,7 @@ pub struct PinnedDistribution {
 
 /// A component or template in `catalog.json`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Entry {
     /// Its directory name.
@@ -87,8 +81,7 @@ pub struct Entry {
 
 /// `components/<id>.json`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ComponentFile {
     /// Its id.
@@ -181,8 +174,7 @@ impl ComponentFile {
 
 /// A distribution where a component passed its test, with the platforms it passed on.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct TestedOn {
     /// The distribution.
@@ -196,8 +188,7 @@ pub struct TestedOn {
 
 /// What `helm template` renders for each profile with the test inputs and every contribution.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Render {
     /// The Kubernetes version of the render.
@@ -208,8 +199,7 @@ pub struct Render {
 
 /// The objects of a component on one profile.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct RenderedProfile {
     /// Its workloads.
@@ -220,8 +210,7 @@ pub struct RenderedProfile {
 
 /// A rendered workload. One that an operator creates later is missing.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct RenderedWorkload {
     /// The release that renders it.
@@ -247,8 +236,7 @@ pub struct RenderedWorkload {
 
 /// The requests and limits of a container, by resource name.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct RenderedContainer {
     /// Its name.
@@ -265,8 +253,7 @@ pub struct RenderedContainer {
 
 /// The requested storage of a `PersistentVolumeClaim`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct RenderedClaim {
     /// The release that renders it; a `volumeClaimTemplates` entry has none.
@@ -284,8 +271,7 @@ pub struct RenderedClaim {
 
 /// `templates/<id>.json`: the two files of a template as written.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct TemplateFile {
     /// Its id.
@@ -313,8 +299,7 @@ pub struct TemplateFile {
 
 /// `measurements/components/<id>.json` or `measurements/templates/<id>.json`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct MeasurementFile {
     /// The component's id; a template's file has none.
@@ -329,8 +314,7 @@ pub struct MeasurementFile {
 
 /// One run of an e2e test.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Environment {
     /// Where it ran.
@@ -369,8 +353,7 @@ pub struct Environment {
 
 /// Where an e2e run ran: kind, or a host distribution.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum MeasuredDistribution {
     /// kind.
@@ -381,8 +364,7 @@ pub enum MeasuredDistribution {
 
 /// kind, Kubernetes in Docker.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum Kind {
     /// `kind`.
@@ -391,8 +373,7 @@ pub enum Kind {
 
 /// Whether a run passed.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum RunResult {
     /// It passed.
@@ -402,14 +383,12 @@ pub enum RunResult {
     /// A result this reader does not know, read as a failed run.
     #[serde(other)]
     #[cfg_attr(feature = "schema", schemars(skip))]
-    #[cfg_attr(feature = "schema", ts(skip))]
     Unknown,
 }
 
 /// An OS and an architecture.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Platform {
     /// `linux`.
@@ -426,8 +405,7 @@ impl std::fmt::Display for Platform {
 
 /// The idle use of one pod of a workload.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct PodUsage {
     /// The controller the pod belongs to.
@@ -444,8 +422,7 @@ pub struct PodUsage {
 
 /// The version of a component's release or of a template's image.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct MeasuredVersion {
     /// The release.

@@ -1,17 +1,17 @@
 ---
-title: Deploy a template with the catalog command
-description: Verify the release signature, prepare the cluster, and render and apply a template to complete the deployment.
+title: Deploy a template with zeaburctl
+description: Export a template's objects with zeaburctl, review them, and apply them with kubectl.
 ---
 
-After you verify the release signature, use the `catalog` command to render and apply a template. Then run the smoke check and your own tests to verify the deployment.
+`zeaburctl templates export` prints the objects that deploying a catalog template into a Zeabur OSS project writes, the same ones the web interface writes. Review them, apply them with `kubectl`, then run the smoke check and your own tests. The [Zeabur OSS docs](https://oss.zeabur.com/docs/zeabur/deploy/templates/) describe the command and a prompt for a coding agent.
 
 ## Before you begin
 
-- Install Rust, `git`, `gh`, `cosign`, `kubectl` and `sha256sum` (on macOS, from GNU coreutils).
-- Install every component listed in the template's `requires`, all at the same version.
-- Use a CNI that enforces NetworkPolicy. The installer isolates each project's Namespace. Templates don't restrict outbound traffic.
+- Install `kubectl` and a `zeaburctl` of the same version as your Zeabur OSS. `zeaburctl` holds the templates of the catalog release that Zeabur OSS bundles.
+- Read the license, inputs, `requires`, and security risks in the template's `template.yaml`.
+- Use a CNI that enforces NetworkPolicy. Templates don't restrict outbound traffic.
 - If the template requires a domain, prepare a cert-manager ClusterIssuer first.
-- Install each template only once per Namespace. Object names within a template are fixed.
+- Install each template only once per project. Object names within a template are fixed.
 
 <Steps>
 
@@ -31,68 +31,21 @@ One line has `(default)` after its name, such as `local-path (default)`. If none
 
 <Step>
 
-### Get the catalog command
+### Export and apply the template
 
-Replace `vX.Y.Z` with the release tag you plan to deploy, check out its source, and run the `catalog` command from that checkout. Don't run unverified downloads.
-
-```sh
-tag=vX.Y.Z
-git clone --depth 1 --branch "$tag" https://github.com/zeabur-oss/catalog
-cd catalog
-cargo run -p zeabur-catalog -- check
-```
-
-`check` prints nothing and exits with status 0 when the catalog has no problems.
-
-</Step>
-
-<Step>
-
-### Verify the release
-
-Download `bundle.tar.gz`, `api-v1.tar.gz`, `SHA256SUMS` and `SHA256SUMS.sigstore.json` from the same release tag into a new private directory. Then verify the signature of `SHA256SUMS` against the workflow, the repository and the tag, and check the files against it:
-
-```sh
-dir=$(mktemp -d)
-gh release download "$tag" --repo zeabur-oss/catalog --dir "$dir" \
-  --pattern bundle.tar.gz --pattern api-v1.tar.gz --pattern SHA256SUMS --pattern SHA256SUMS.sigstore.json
-(cd "$dir" &&
-  cosign verify-blob SHA256SUMS --bundle SHA256SUMS.sigstore.json \
-    --certificate-identity "https://github.com/zeabur-oss/catalog/.github/workflows/release.yml@refs/tags/$tag" \
-    --certificate-oidc-issuer https://token.actions.githubusercontent.com &&
-  sha256sum --check --ignore-missing SHA256SUMS)
-```
-
-`cosign` prints `Verified OK`, and `sha256sum` prints `bundle.tar.gz: OK` and `api-v1.tar.gz: OK`. Stop if either prints anything else.
-
-Checking only the issuer or the workflow accepts signatures from other workflows or other zeabur-oss repositories. Extract the files only after signature verification succeeds, and reject absolute paths, `..`, and links. Extract `api-v1.tar.gz` into `$dir`: the commands below read the template from the API in `$dir/v1`.
-
-</Step>
-
-<Step>
-
-### Render and apply the template
-
-Read the license, inputs, `requires`, and security risks in `templates/<id>/template.yaml` before you render the objects:
-
-```sh
-cargo run -q -p zeabur-catalog -- template render --api "$dir/v1" --namespace app \
-  --domain app.example.com --cluster-issuer letsencrypt --values inputs.json <id> > plan.yaml
-```
-
-`inputs.json` is a JSON object that provides the inputs the template requires as string values. Prepare object storage buckets and credentials beforehand.
-
-Generate the template's passwords and keys as Secrets, then apply the objects:
+Replace `<id>` with the template ID and `app` with the project:
 
 ```sh
 umask 077
-cargo run -q -p zeabur-catalog -- template inputs --api "$dir/v1" --namespace app <id> > secrets.json
-kubectl create namespace app
-kubectl -n app apply -f secrets.json
-kubectl -n app apply -f plan.yaml
+zeaburctl templates export <id> --project app \
+  --domain app.example.com --cluster-issuer letsencrypt --set <name>=<value> > app.yaml
+kubectl diff --server-side -f app.yaml
+kubectl apply --server-side -f app.yaml
 ```
 
-Don't commit `secrets.json` to version control. Each run of `inputs` generates new values. Run it only once per deployment, and reuse the existing Secrets during upgrades.
+Give each input the template asks for with `--set <name>=<value>`. An input you don't give, a missing `--domain` and a missing `--cluster-issuer` appear as `<name>` placeholders: export again with their values before you apply. If the cluster lacks a component that the template requires, `zeaburctl` says so and names the `zeaburctl components export` command that installs it. Prepare object storage buckets and credentials beforehand.
+
+The output starts with the Secrets that hold the template's generated passwords and keys. Each export generates new values, so export once and apply that file. Applying a later export again replaces the passwords of a running application. Don't commit the file to version control.
 
 Check that every pod starts:
 
@@ -114,9 +67,9 @@ The first line is the status line, such as `HTTP/2 200`.
 
 ### Upgrade and roll back
 
-Record the version, Namespace, image references, inputs, and Secret names for each deployment. Before you upgrade, compare the rendered objects, read all upgrade notes between the current and target versions, complete a backup, and rehearse the upgrade on a copy.
+Record the version, project, image references, inputs, and Secret names for each deployment. Before you upgrade, compare the exported objects, read all upgrade notes between the current and target versions, complete a backup, and rehearse the upgrade on a copy.
 
-To roll back the application, check database and storage compatibility first, then deploy the objects from a previously verified release. Database downgrades usually require a restore. Store backups outside the application's Namespace.
+To roll back the application, check database and storage compatibility first, then apply the objects of a previously verified release. Database downgrades usually require a restore. Store backups outside the application's project.
 
 </Step>
 
@@ -138,7 +91,5 @@ CloudNativePG creates its own Secret for application credentials, and the templa
 
 ## References
 
-- [Cosign blob verification](https://docs.sigstore.dev/cosign/verifying/verify/)
-- [GitHub OIDC](https://docs.github.com/en/actions/reference/security/oidc)
 - [Kubernetes Secret best practices](https://kubernetes.io/docs/concepts/security/secrets-good-practices/)
 - [Pod Security Standards](https://kubernetes.io/docs/concepts/security/pod-security-standards/)

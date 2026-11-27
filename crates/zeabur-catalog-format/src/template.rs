@@ -6,15 +6,12 @@
 #[cfg(feature = "schema")]
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "schema")]
-use ts_rs::TS;
 
 use crate::common::{ApiVersion, Generate, LicenseUrls, Locales, PodSecurity, Reference, Summary};
 
 /// The `kind` of a template file.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 pub enum TemplateKind {
     /// `Template`.
     Template,
@@ -22,8 +19,7 @@ pub enum TemplateKind {
 
 /// One application that a project member installs into one namespace.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Template {
     /// `catalog.zeabur.com/v1`.
@@ -35,14 +31,12 @@ pub struct Template {
     /// The components the cluster must have.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(extend("uniqueItems" = true)))]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub requires: Vec<Reference>,
     /// The workloads in `manifests.yaml`.
     #[cfg_attr(feature = "schema", schemars(length(min = 1)))]
     pub services: Vec<Service>,
     /// Values a person gives or the installer generates.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub inputs: Vec<Input>,
     /// What it exposes and how its risks are mitigated.
     pub security: Security,
@@ -70,11 +64,7 @@ impl Template {
 
 /// A template's name, summary, version and docs.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(
-    feature = "schema",
-    ts(export_to = "catalog.ts", rename = "TemplateMetadata")
-)]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(rename = "TemplateMetadata"))]
 #[serde(rename_all = "camelCase")]
 pub struct Metadata {
@@ -92,7 +82,6 @@ pub struct Metadata {
     pub license: String,
     /// The URL of the text of each `LicenseRef-` licence in `license`, by its id.
     #[serde(default, skip_serializing_if = "LicenseUrls::is_empty")]
-    #[cfg_attr(feature = "schema", ts(optional, as = "Option<_>"))]
     #[cfg_attr(feature = "schema", schemars(extend(
         "propertyNames" = {"type": "string", "pattern": crate::schema::pattern::LICENSE_REF},
         "additionalProperties" = {"type": "string", "format": "uri", "pattern": crate::schema::pattern::HTTPS}
@@ -112,8 +101,7 @@ pub struct Metadata {
 
 /// A workload in `manifests.yaml`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Service {
     /// Its name.
@@ -125,21 +113,18 @@ pub struct Service {
     pub pod_security: PodSecurity,
     /// Its named ports.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub ports: Vec<Port>,
     /// Its requests and limits.
     pub resources: ServiceResources,
     /// Public hostnames; rendering then needs a domain and a `ClusterIssuer`.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(inner(length(min = 1))))]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub domains: Vec<String>,
 }
 
 /// A named port of a service.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Port {
     /// Its name.
@@ -152,8 +137,7 @@ pub struct Port {
 
 /// The requests and limits of a service.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ServiceResources {
     /// What it requests.
@@ -164,8 +148,7 @@ pub struct ServiceResources {
 
 /// A CPU and a memory quantity.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct CpuMemory {
     /// CPU, such as `50m`.
@@ -178,11 +161,7 @@ pub struct CpuMemory {
 
 /// A value the person installing gives, or the installer generates into a Secret.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(
-    feature = "schema",
-    ts(export_to = "catalog.ts", rename = "TemplateInput")
-)]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(rename = "TemplateInput"))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "schema", schemars(extend("oneOf" = [{"not": {"anyOf": [{"required": ["required"]}, {"required": ["default"]}]}, "required": ["generate", "secret"]}, {"not": {"anyOf": [{"required": ["generate"]}, {"required": ["secret"]}]}, "required": ["required", "label", "locales"]}])))]
@@ -196,28 +175,22 @@ pub struct Input {
     /// A short name for the field, in English.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(length(max = 40)))]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub label: Option<String>,
     /// The label and description in other languages.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(extend("propertyNames" = {"type": "string", "pattern": crate::schema::pattern::LOCALE})))]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub locales: Locales<InputLocale>,
     /// How the installer makes it.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub generate: Option<Generate>,
     /// A deploy needs a value.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub required: bool,
     /// The value when a deploy does not give it.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub default: Option<String>,
     /// The Secret key a generated value is stored in.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub secret: Option<InputSecret>,
     /// What the value must match.
     pub validation: Validation,
@@ -225,8 +198,7 @@ pub struct Input {
 
 /// An input's label and description in one language.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct InputLocale {
     /// A short name for the field.
@@ -239,8 +211,7 @@ pub struct InputLocale {
 
 /// A key of a Secret in the template's namespace.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct InputSecret {
     /// The Secret's name.
@@ -253,8 +224,7 @@ pub struct InputSecret {
 
 /// What an input's value must match.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Validation {
     /// A regular expression the whole value matches.
@@ -264,11 +234,7 @@ pub struct Validation {
 
 /// What a template exposes and how its risks are mitigated.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(
-    feature = "schema",
-    ts(export_to = "catalog.ts", rename = "TemplateSecurity")
-)]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(rename = "TemplateSecurity"))]
 #[serde(rename_all = "camelCase")]
 pub struct Security {
@@ -278,21 +244,18 @@ pub struct Security {
     /// The summary in other languages.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(extend("propertyNames" = {"type": "string", "pattern": crate::schema::pattern::LOCALE})))]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub locales: Locales<Summary>,
     /// Its risks.
     pub risks: Vec<Risk>,
     /// Services with no sign-in or key of their own.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(extend("uniqueItems" = true)))]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub unauthenticated: Vec<String>,
 }
 
 /// A risk of a template and its mitigation.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[expect(clippy::struct_field_names, reason = "the file's key is `risk`")]
 pub struct Risk {
@@ -309,8 +272,7 @@ pub struct Risk {
 
 /// A risk and its mitigation in one language.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct RiskLocale {
     /// The risk.
@@ -323,11 +285,7 @@ pub struct RiskLocale {
 
 /// An e2e check after install.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(
-    feature = "schema",
-    ts(export_to = "catalog.ts", rename = "TemplateSmoke")
-)]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[cfg_attr(feature = "schema", schemars(rename = "TemplateSmoke"))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "schema", schemars(extend("if" = {"properties": {"resource": {"pattern": crate::schema::pattern::ROLLOUT}}}, "then" = {"not": {"required": ["condition"]}}, "else" = {"required": ["condition"]})))]
@@ -341,25 +299,21 @@ pub struct Smoke {
     /// What it reaches, as a `kubectl wait --for` value.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::schema::pattern::CONDITION)))]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub condition: Option<String>,
     /// How long to wait.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::schema::pattern::TIMEOUT)))]
     pub timeout: String,
     /// A GET through a port-forward to a Service.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub http: Option<HttpCheck>,
     /// One read-only `SELECT` on a `CloudNativePG` primary.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub sql: Option<SqlCheck>,
 }
 
 /// A GET through a port-forward to a Service.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct HttpCheck {
     /// The Service.
@@ -376,14 +330,12 @@ pub struct HttpCheck {
     pub status: u16,
     /// Text the body contains.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub contains: Option<String>,
 }
 
 /// One read-only `SELECT` on a `CloudNativePG` primary.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct SqlCheck {
     /// The `CloudNativePG` cluster.

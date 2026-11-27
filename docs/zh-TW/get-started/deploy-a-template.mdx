@@ -1,17 +1,17 @@
 ---
-title: 用 catalog 指令部署範本
-description: 驗證版本簽章、準備叢集，再渲染並套用範本，完成部署。
+title: 用 zeaburctl 部署範本
+description: 用 zeaburctl 匯出範本的物件，檢查後再用 kubectl 套用。
 ---
 
-先驗證版本簽章，再用 `catalog` 指令渲染並套用範本。最後執行範本的煙霧測試（smoke check），再執行你自己的測試，確認部署結果。
+`zeaburctl templates export` 會印出把 Zeabur Catalog 範本部署到 Zeabur 開源版專案時寫入的物件，和網頁介面寫入的相同。檢查這些物件，用 `kubectl` 套用，再執行煙霧測試（smoke check）和你自己的測試。指令的說明和給程式碼代理的提示詞見 [Zeabur 開源版文件](https://oss.zeabur.com/zh-TW/docs/zeabur/deploy/templates/)。
 
 ## 開始前
 
-- 安裝 Rust、`git`、`gh`、`cosign`、`kubectl` 和 `sha256sum`（macOS 可從 GNU coreutils 取得）。
-- 安裝範本 `requires` 列出的每個元件，全部使用同一個版本。
-- 使用會落實 NetworkPolicy 的 CNI。安裝程式會隔離各專案的 Namespace。範本不限制對外流量。
+- 安裝 `kubectl`，以及和你的 Zeabur 開源版同版本的 `zeaburctl`。`zeaburctl` 內含 Zeabur 開源版所附 Zeabur Catalog 版本的範本。
+- 閱讀範本 `template.yaml` 中的授權、輸入、`requires` 和安全風險。
+- 使用會落實 NetworkPolicy 的 CNI。範本不限制對外流量。
 - 如果範本需要網域，先準備好 cert-manager ClusterIssuer。
-- 每個 Namespace 內，同一個範本只能安裝一次，因為範本內的物件名稱固定。
+- 每個專案內，同一個範本只能安裝一次，因為範本內的物件名稱固定。
 
 <Steps>
 
@@ -31,68 +31,21 @@ kubectl get storageclass
 
 <Step>
 
-### 取得 catalog 指令
+### 匯出並套用範本
 
-把 `vX.Y.Z` 換成你要部署的版本 tag，取出這個 tag 的原始程式碼，在裡面執行 `catalog` 指令。不要執行未驗證的下載檔。
-
-```sh
-tag=vX.Y.Z
-git clone --depth 1 --branch "$tag" https://github.com/zeabur-oss/catalog
-cd catalog
-cargo run -p zeabur-catalog -- check
-```
-
-目錄沒有問題時，`check` 不會印出任何內容，並以狀態 0 結束。
-
-</Step>
-
-<Step>
-
-### 驗證版本
-
-建立一個私有目錄，把同一個版本 tag 的 `bundle.tar.gz`、`api-v1.tar.gz`、`SHA256SUMS` 和 `SHA256SUMS.sigstore.json` 下載到裡面。再依工作流程、儲存庫和 tag 驗證 `SHA256SUMS` 的簽章，並用它核對這些檔案：
-
-```sh
-dir=$(mktemp -d)
-gh release download "$tag" --repo zeabur-oss/catalog --dir "$dir" \
-  --pattern bundle.tar.gz --pattern api-v1.tar.gz --pattern SHA256SUMS --pattern SHA256SUMS.sigstore.json
-(cd "$dir" &&
-  cosign verify-blob SHA256SUMS --bundle SHA256SUMS.sigstore.json \
-    --certificate-identity "https://github.com/zeabur-oss/catalog/.github/workflows/release.yml@refs/tags/$tag" \
-    --certificate-oidc-issuer https://token.actions.githubusercontent.com &&
-  sha256sum --check --ignore-missing SHA256SUMS)
-```
-
-`cosign` 會印出 `Verified OK`，`sha256sum` 會印出 `bundle.tar.gz: OK` 和 `api-v1.tar.gz: OK`。只要任何一個印出別的內容，就停下來。
-
-如果只檢查簽發者或工作流程，驗證時也會接受其他工作流程或其他 zeabur-oss 儲存庫的簽章。簽章驗證通過後，才能解開這些檔案。解開時必須拒絕絕對路徑、`..` 和連結。把 `api-v1.tar.gz` 解開到 `$dir`，下面的指令會從 `$dir/v1` 的 API 讀取範本。
-
-</Step>
-
-<Step>
-
-### 渲染並套用範本
-
-先閱讀 `templates/<id>/template.yaml` 中的授權、輸入、`requires` 和安全風險，再渲染物件：
-
-```sh
-cargo run -q -p zeabur-catalog -- template render --api "$dir/v1" --namespace app \
-  --domain app.example.com --cluster-issuer letsencrypt --values inputs.json <id> > plan.yaml
-```
-
-`inputs.json` 是一個 JSON 物件，範本要求的輸入都要填入字串值。物件儲存貯體和認證資訊必須事先準備好。
-
-產生包含範本密碼和金鑰的 Secret，再套用物件：
+把 `<id>` 換成範本 ID，`app` 換成專案：
 
 ```sh
 umask 077
-cargo run -q -p zeabur-catalog -- template inputs --api "$dir/v1" --namespace app <id> > secrets.json
-kubectl create namespace app
-kubectl -n app apply -f secrets.json
-kubectl -n app apply -f plan.yaml
+zeaburctl templates export <id> --project app \
+  --domain app.example.com --cluster-issuer letsencrypt --set <name>=<value> > app.yaml
+kubectl diff --server-side -f app.yaml
+kubectl apply --server-side -f app.yaml
 ```
 
-不要把 `secrets.json` 加入版本控制。每次執行 `inputs` 都會產生新值，所以每次部署只執行一次，升級時沿用既有的 Secret。
+範本要求的每個輸入都用 `--set <name>=<value>` 提供。沒提供的輸入、缺少的 `--domain` 和 `--cluster-issuer` 會以 `<name>` 預留位置出現，套用前要帶上這些值重新匯出。如果叢集缺少範本需要的元件，`zeaburctl` 會說明，並列出安裝它的 `zeaburctl components export` 指令。物件儲存貯體和認證資訊必須事先準備好。
+
+輸出的開頭是存放範本自動產生的密碼和金鑰的 Secret。每次匯出都會產生新值，所以只匯出一次，並套用那個檔案。再套用之後的匯出，會換掉執行中應用程式的密碼。不要把這個檔案加入版本控制。
 
 確認每個 Pod 都有啟動：
 
@@ -114,9 +67,9 @@ curl -sI https://app.example.com | head -n 1
 
 ### 升級與回滾
 
-記錄每次部署的版本、Namespace、映像檔參照、輸入和 Secret 名稱。升級前，先比較渲染後的物件差異，再閱讀目前版本到目標版本之間的所有升級注意事項。接著完成備份，並在複本上演練升級。
+記錄每次部署的版本、專案、映像檔參照、輸入和 Secret 名稱。升級前，先比較匯出的物件差異，再閱讀目前版本到目標版本之間的所有升級注意事項。接著完成備份，並在複本上演練升級。
 
-要把應用程式回滾到舊版，先確認資料庫和儲存空間的相容性，再部署先前已驗證版本的物件。資料庫降版通常需要還原。備份應存放在應用程式的 Namespace 之外。
+要把應用程式回滾到舊版，先確認資料庫和儲存空間的相容性，再套用先前已驗證版本的物件。資料庫降版通常需要還原。備份應存放在應用程式的專案之外。
 
 </Step>
 
@@ -138,7 +91,5 @@ CloudNativePG 會自行建立存放應用程式認證資訊的 Secret，範本�
 
 ## 參考連結
 
-- [Cosign blob 驗證](https://docs.sigstore.dev/cosign/verifying/verify/)
-- [GitHub OIDC](https://docs.github.com/en/actions/reference/security/oidc)
 - [Kubernetes Secret 最佳實務](https://kubernetes.io/docs/concepts/security/secrets-good-practices/)
 - [Pod 安全標準](https://kubernetes.io/docs/concepts/security/pod-security-standards/)

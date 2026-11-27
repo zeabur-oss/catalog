@@ -8,7 +8,7 @@ cargo lint
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --document-private-items --locked
 cargo nextest run --workspace --all-features --locked --no-tests=warn
 cargo run --locked -p zeabur-catalog -- schema
-stale=$(git status --porcelain -- schema types)
+stale=$(git status --porcelain -- schema)
 if [[ -n "$stale" ]]; then
   echo "run cargo run -p zeabur-catalog -- schema and commit the result:" >&2
   echo "$stale" >&2

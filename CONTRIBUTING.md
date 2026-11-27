@@ -50,8 +50,8 @@ existing branch: `git rebase --signoff main`, then force-push.
   `go run ./tools/cmd/catalog list -tier full` prints that list. The release pull
   request fails `check / ok` until it is empty (`scripts/ci/measurements.sh`).
 
-Run the same tiers with `go run ./tools/cmd/catalog e2e -tier check`,
-`-tier smoke <ids>` or `-tier full <id>`. `check` needs no Docker. `smoke` and `full`
+Run `check` with `scripts/ci/check.sh`, and the other tiers with
+`go run ./tools/cmd/catalog e2e -tier smoke <ids>` or `-tier full <id>`. `check` needs no Docker. `smoke` and `full`
 create kind clusters on a Linux machine with Docker.
 `nix develop -c scripts/ci/<job>.sh` runs one job of `.github/workflows/ci.yml` as CI does.
 

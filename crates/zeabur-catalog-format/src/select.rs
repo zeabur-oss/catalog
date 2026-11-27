@@ -8,8 +8,6 @@ use std::collections::{BTreeMap, BTreeSet};
 #[cfg(feature = "schema")]
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "schema")]
-use ts_rs::TS;
 
 use crate::api::{ComponentFile, Index, TestedOn};
 use crate::common::{Distribution, Mode, PerProfile, Profile};
@@ -18,8 +16,7 @@ use crate::order::{self, OrderError};
 
 /// What selection reads of a component, with the `testedOn` and `installOrder` worked out.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Candidate {
     /// Its id.
@@ -37,14 +34,12 @@ pub struct Candidate {
     pub tested_on: Vec<TestedOn>,
     /// What installing it installs; a profile left out means the component alone.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub install_order: InstallOrders,
 }
 
 /// The install order on each profile.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub struct InstallOrders {
     /// On `single-node`.
@@ -127,8 +122,7 @@ impl Candidate {
 
 /// The cluster and the lists of the installer and the person.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
     /// The profile.
@@ -142,46 +136,38 @@ pub struct Config {
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(extend("uniqueItems" = true)))]
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = crate::schema::pattern::NAME))))]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub add: Vec<String>,
     /// What the person turns on, by id or capability.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(extend("uniqueItems" = true)))]
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = crate::schema::pattern::NAME))))]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub enable: Vec<String>,
     /// What the person turns off, by id or capability.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(extend("uniqueItems" = true)))]
     #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = crate::schema::pattern::NAME))))]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub disable: Vec<String>,
 }
 
 /// The chosen components and why.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Selection {
     /// In install order.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub components: Vec<Chosen>,
     /// Each component taken out because it cannot run here, by id.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub left_out: BTreeMap<String, LeftOut>,
     /// In any order.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub warnings: Vec<Warning>,
 }
 
 /// A component to install.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Chosen {
     /// Its id.
@@ -193,8 +179,7 @@ pub struct Chosen {
 
 /// Why a component is installed.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum Why {
     /// It is recommended on the profile, or the installer adds it.
@@ -207,8 +192,7 @@ pub enum Why {
 
 /// Why a chosen component is taken out.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(tag = "reason", rename_all = "kebab-case")]
 pub enum LeftOut {
     /// Its `distributions` do not list the cluster's.
@@ -226,8 +210,7 @@ pub enum LeftOut {
 
 /// Something the person should know about the selection.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(tag = "kind", rename_all = "kebab-case")]
 pub enum Warning {
     /// A component to install did not pass its test on the distribution and platform.
@@ -248,8 +231,7 @@ pub enum Warning {
 
 /// Why nothing is installed.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, thiserror::Error)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(tag = "kind", rename_all = "kebab-case")]
 pub enum SelectError {
     /// A name is no component id or capability.
@@ -414,8 +396,7 @@ fn named<'a>(
 /// A case of `conformance/select/`: a small catalog, a configuration and what an installer
 /// chooses.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct SelectCase {
     /// The rule the case checks.
@@ -431,26 +412,21 @@ pub struct SelectCase {
 
 /// What a case expects. A list or map left out is empty.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "schema", derive(JsonSchema, TS))]
-#[cfg_attr(feature = "schema", ts(export_to = "catalog.ts"))]
+#[cfg_attr(feature = "schema", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "schema", schemars(extend("not" = {"required": ["error", "components"]})))]
 pub struct Expected {
     /// In install order.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub components: Vec<Chosen>,
     /// By id.
     #[serde(default)]
     #[cfg_attr(feature = "schema", schemars(extend("propertyNames" = {"pattern": crate::schema::pattern::ID})))]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub left_out: BTreeMap<String, LeftOut>,
     /// In any order.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(as = "Option<_>", optional))]
     pub warnings: Vec<Warning>,
     /// The error, instead of a selection.
     #[serde(default)]
-    #[cfg_attr(feature = "schema", ts(optional))]
     pub error: Option<SelectError>,
 }

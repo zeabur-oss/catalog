@@ -141,7 +141,7 @@ impl ApiServer {
             ));
         }
         let mut token = [0; 24];
-        crate::deploy::os_random(&mut token)?;
+        crate::secrets::os_random(&mut token)?;
         let token = crate::render::hex(&token);
         let tokens = self.dir.join("tokens.csv");
         fs::write(&tokens, format!("{token},admin,admin,system:masters\n"))
@@ -173,14 +173,11 @@ impl ApiServer {
                 "--allow-privileged".as_ref(),
             ],
         )?;
-        let config = format!(
-            "apiVersion: v1\nkind: Config\nclusters: [{{name: check, cluster: {{server: \
-             \"https://127.0.0.1:{api_port}\", certificate-authority: {:?}}}}}]\nusers: [{{name: \
-             admin, user: {{token: {token:?}}}}}]\ncontexts: [{{name: check, context: {{cluster: \
-             check, user: admin}}}}]\ncurrent-context: check\n",
-            certs.join("apiserver.crt").display().to_string(),
-        );
-        fs::write(&self.kubectl.kubeconfig, config)
+        let ca = certs.join("apiserver.crt");
+        let ca = ca
+            .to_str()
+            .ok_or_else(|| format!("{}: not UTF-8", ca.display()))?;
+        fs::write(&self.kubectl.kubeconfig, kubeconfig(api_port, ca, &token))
             .map_err(|e| format!("{}: {e}", self.kubectl.kubeconfig.display()))?;
         let deadline = Instant::now() + Duration::from_secs(120);
         loop {
@@ -280,4 +277,21 @@ fn free_ports() -> Result<[u16; 3], String> {
         port(&listeners[1])?,
         port(&listeners[2])?,
     ])
+}
+
+/// A kubeconfig that reaches the API server on `port`, trusts the certificate at `ca` and signs
+/// in as `system:masters` with `token`.
+fn kubeconfig(port: u16, ca: &str, token: &str) -> String {
+    serde_json::json!({
+        "apiVersion": "v1",
+        "kind": "Config",
+        "clusters": [{"name": "check", "cluster": {
+            "server": format!("https://127.0.0.1:{port}"),
+            "certificate-authority": ca,
+        }}],
+        "users": [{"name": "admin", "user": {"token": token}}],
+        "contexts": [{"name": "check", "context": {"cluster": "check", "user": "admin"}}],
+        "current-context": "check",
+    })
+    .to_string()
 }
