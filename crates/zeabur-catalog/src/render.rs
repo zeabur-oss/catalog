@@ -1,9 +1,13 @@
 //! `zeabur-catalog render`: the objects of every release of every component, on each profile it
-//! supports and each Kubernetes version of `config/kubernetes.yaml`, checked with kubeconform.
+//! supports and each Kubernetes version of `config/kubernetes.yaml`, checked with kubeconform,
+//! and of every template, checked with the template lint.
 //!
 //! Helm renders the charts. This module only composes the values that the catalog owns, and
 //! fetches charts and manifests into a cache.
 
+mod template;
+
+use std::collections::BTreeSet;
 use std::fs;
 use std::io::Write as _;
 use std::path::{Path, PathBuf};
@@ -283,15 +287,14 @@ fn run_with_input(cmd: &mut Command, input: &[u8]) -> Result<Vec<u8>, String> {
     ))
 }
 
-/// Renders `ids` (every component when empty) into `out/<version>/<profile>/<id>/<release>.yaml`
-/// and checks the objects with kubeconform. It returns the problems.
+/// Renders the components and templates `ids` (all of them when empty), and checks them. A
+/// component renders into `out/<version>/<profile>/<id>/<release>.yaml` and is checked with
+/// kubeconform. A template renders with its e2e values into `out/<version>/templates/<id>.yaml`,
+/// with the components its e2e run installs, and is checked with the template lint and then
+/// kubeconform. It returns the problems.
 pub(crate) fn render(root: &Path, ids: &[String], out: &Path) -> Result<Vec<Problem>, String> {
     let catalog = Catalog::read(root).map_err(|e| e.to_string())?;
-    for id in ids {
-        if !catalog.components.contains_key(id) {
-            return Err(format!("no component {id}"));
-        }
-    }
+    let (components, templates) = selection(root, &catalog, ids)?;
     let versions = kube_versions(root)?;
     let cache = Cache::user()?;
     let contributions = Contributions::of(
@@ -300,14 +303,15 @@ pub(crate) fn render(root: &Path, ids: &[String], out: &Path) -> Result<Vec<Prob
     )
     .map_err(|e| e.to_string())?;
     let schemas = PathBuf::from(format!("{}-schemas", out.display()));
-    for dir in [out, schemas.as_path()] {
+    let template_schemas = PathBuf::from(format!("{}-template-schemas", out.display()));
+    for dir in [out, &schemas, &template_schemas] {
         if dir.exists() {
             fs::remove_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
         }
     }
     let mut problems = Vec::new();
     for (id, component) in &catalog.components {
-        if !ids.is_empty() && !ids.contains(id) {
+        if !components.contains(id) {
             continue;
         }
         let mut found = Problems::new(&Path::new("components").join(id).join("component.yaml"));
@@ -385,14 +389,56 @@ pub(crate) fn render(root: &Path, ids: &[String], out: &Path) -> Result<Vec<Prob
         crate::output::info(&format!("rendered {id}"));
     }
     problems.extend(kubeconform(&versions, out, &schemas));
+    for id in &templates {
+        if let Some(dir) = catalog.templates.get(id) {
+            problems.extend(template::check(root, &catalog, id, dir, &versions, out)?);
+        }
+    }
     Ok(problems)
 }
 
-/// Checks the rendered objects of each version against its Kubernetes schemas and the CRDs in
-/// `schemas`.
+/// The components and templates that `ids` select: every one when `ids` is empty, and with a
+/// template the components its e2e run installs.
+fn selection(
+    root: &Path,
+    catalog: &Catalog,
+    ids: &[String],
+) -> Result<(BTreeSet<String>, BTreeSet<String>), String> {
+    let mut components = BTreeSet::new();
+    let mut templates = BTreeSet::new();
+    for id in ids {
+        if catalog.components.contains_key(id) {
+            components.insert(id.clone());
+        } else if let Some(dir) = catalog.templates.get(id) {
+            templates.insert(id.clone());
+            let installs = template::e2e_inputs(root, id, dir)
+                .and_then(|(_, s3)| template::installs(catalog, id, dir, s3));
+            // A template whose e2e values or requirements do not resolve reports it below.
+            components.extend(installs.unwrap_or_default());
+        } else {
+            return Err(format!("no component or template {id}"));
+        }
+    }
+    if ids.is_empty() {
+        components.extend(catalog.components.keys().cloned());
+        templates.extend(catalog.templates.keys().cloned());
+    }
+    Ok((components, templates))
+}
+
+/// Checks the rendered components of each version against its Kubernetes schemas and the CRDs
+/// in `schemas`.
 fn kubeconform(versions: &[String], out: &Path, schemas: &Path) -> Vec<Problem> {
     let mut problems = Vec::new();
     for version in versions {
+        let profiles: Vec<PathBuf> = Profile::ALL
+            .iter()
+            .map(|p| out.join(version).join(p.as_str()))
+            .filter(|dir| dir.exists())
+            .collect();
+        if profiles.is_empty() {
+            continue;
+        }
         let mut cmd = Command::new("kubeconform");
         cmd.args(["-kubernetes-version", version, "-strict", "-summary"])
             .args(["-skip", "CustomResourceDefinition"])
@@ -401,7 +447,7 @@ fn kubeconform(versions: &[String], out: &Path, schemas: &Path) -> Vec<Problem> 
                 "{}/{{{{.Group}}}}/{{{{.ResourceKind}}}}_{{{{.ResourceAPIVersion}}}}.json",
                 schemas.display()
             ))
-            .arg(out.join(version));
+            .args(&profiles);
         let message = match cmd.status() {
             Ok(status) if status.success() => continue,
             Ok(status) => status.to_string(),
