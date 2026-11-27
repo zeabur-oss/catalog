@@ -546,8 +546,8 @@ smoke:
   # With the agent on in config/e2e.yaml, the agent inputs reach the
   # ClusterBuilder, and a run reads its auth: with no ServiceAccount
   # builder-agent in the namespace, the run waits with ModelKeyMissing before
-  # it creates a Job or calls the model. An archive
-  # source with a made-up digest needs no Git server; nothing pulls it.
+  # it creates a Job or calls the model. An archive source with a made-up
+  # digest needs no Git server; nothing pulls it.
   - name: agent
     manifest: |
       apiVersion: builder.zeabur.com/v1alpha1
