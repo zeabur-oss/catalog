@@ -8,7 +8,7 @@ mod tests {
 
     use schemars::schema_for;
     use serde_json::{Value, json};
-    use utoipa::PartialSchema;
+    use utoipa::{PartialSchema, ToSchema};
     use zeabur_catalog_format::component::InputValue;
 
     /// The type of each branch of an untagged enum's schema, in order.
@@ -33,5 +33,18 @@ mod tests {
         ];
         assert_eq!(branch_types(&utoipa, "oneOf"), want);
         assert_eq!(branch_types(&schemars, "anyOf"), want);
+    }
+
+    /// A map holds input values, so the schema refers to itself. Collecting the
+    /// schemas an OpenAPI document needs stops at that reference.
+    #[test]
+    fn collecting_the_schemas_of_a_map_ends() {
+        let mut schemas = Vec::new();
+        InputValue::schemas(&mut schemas);
+        let utoipa = serde_json::to_value(InputValue::schema()).unwrap();
+        assert_eq!(
+            utoipa["oneOf"][3]["additionalProperties"]["$ref"],
+            json!("#/components/schemas/InputValue")
+        );
     }
 }

@@ -529,6 +529,8 @@ pub enum InputValue {
     /// Text.
     Text(String),
     /// Values by key, set at a `path` as one object, such as a chart value that is a map.
+    // The values refer to this schema; utoipa's schema collection stops at that reference.
+    #[cfg_attr(feature = "utoipa", schema(no_recursion))]
     Map(BTreeMap<String, Self>),
 }
 
