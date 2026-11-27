@@ -1,7 +1,7 @@
 # The pages the site publishes, in this order. index.mdx is the home page.
 - group: get-started
   label: Get started
-  pages: [zeabur-com-templates, deploy-a-template]
+  pages: [zeabur-com-templates, deploy-a-template, agent]
 - group: reference
   label: Reference
   pages: [components, templates, distributions, component-format, template-format, template-standards, releases, installers, template-clients, licenses]

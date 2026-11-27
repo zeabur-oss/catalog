@@ -5,6 +5,8 @@ description: Verify the release signature, prepare the cluster, and render and a
 
 After you verify the release signature, use the `catalog` command to render and apply a template. Then run the smoke check and your own tests to verify the deployment.
 
+On a cluster that runs Zeabur OSS, deploy from **Add** → **App template** instead, or have a coding agent do it with the prompt in [Install components and templates with an agent](./agent.mdx). This page is for clusters without Zeabur OSS.
+
 ## Before you begin
 
 - Install Go, `git`, `gh`, `cosign`, `kubectl` and `sha256sum` (on macOS, from GNU coreutils).

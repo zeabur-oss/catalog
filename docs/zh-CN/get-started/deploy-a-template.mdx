@@ -5,6 +5,8 @@ description: 验证版本签名、准备集群，渲染并应用模板，完成�
 
 验证版本签名后，用 `catalog` 命令渲染并应用一个模板，再运行冒烟测试（smoke check）和你自己的测试，确认部署结果。
 
+如果集群运行着 Zeabur 开源版，改为从**新建** → **应用模板**部署，或用[交给 Agent 安装组件和模板](./agent.mdx)中的提示让 Coding Agent 部署。本页适用于没有 Zeabur 开源版的集群。
+
 ## 开始前
 
 - 安装 Go、`git`、`gh`、`cosign`、`kubectl` 和 `sha256sum`（macOS 可从 GNU coreutils 获取）。

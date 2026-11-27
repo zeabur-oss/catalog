@@ -3,6 +3,7 @@
   pages:
     zeabur-com-templates: Zeabur 範本對照表
     deploy-a-template: 用 catalog 指令部署範本
+    agent: 交給 Agent 安裝元件和範本
 - group: reference
   label: 參考
   pages:

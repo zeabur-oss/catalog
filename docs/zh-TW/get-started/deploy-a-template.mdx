@@ -5,6 +5,8 @@ description: 驗證版本簽章、準備叢集，再渲染並套用範本，完�
 
 先驗證版本簽章，再用 `catalog` 指令渲染並套用範本。最後執行範本的煙霧測試（smoke check），再執行你自己的測試，確認部署結果。
 
+叢集有跑 Zeabur 開源版時，改從**新增** → **應用程式範本**部署，或用[交給 Agent 安裝元件和範本](./agent.mdx)裡的提示讓 Coding Agent 部署。這一頁給沒有 Zeabur 開源版的叢集用。
+
 ## 開始前
 
 - 安裝 Go、`git`、`gh`、`cosign`、`kubectl` 和 `sha256sum`（macOS 可從 GNU coreutils 取得）。
