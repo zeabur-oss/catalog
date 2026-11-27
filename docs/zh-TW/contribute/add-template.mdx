@@ -43,14 +43,13 @@ description: 建立符合標準的範本，完成本機檢查後提交 Pull Requ
 
 ### 在本機檢查
 
-準備 `values.json`，內容必須是 JSON 物件。範本要求的每個輸入都必須填入值。
+`zeabur-catalog render <id>` 會用測試值渲染範本：`config/e2e.yaml` 中範本有宣告的輸入，以及 `templates/<id>/e2e.yaml` 的輸入。接著用範本 lint 與 kubeconform 檢查渲染出的物件。如果某個必填輸入在 `config/e2e.yaml` 中沒有值，請在 `templates/<id>/e2e.yaml` 設定。
 
 執行以下指令：
 
 ```sh
 cargo run -p zeabur-catalog -- check
-go run ./tools/cmd/catalog template lint -values values.json \
-  -domain app.example.test -cluster-issuer letsencrypt <id>
+cargo run -p zeabur-catalog -- render <id>
 go run ./tools/cmd/catalog e2e -tier full <id>
 ```
 

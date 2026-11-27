@@ -43,14 +43,13 @@ description: 创建符合模板标准的模板，完成本地检查并提交 Pul
 
 ### 在本地检查
 
-准备 `values.json`。内容必须是 JSON 对象，并为模板要求的每个输入提供值。
+`zeabur-catalog render <id>` 会用测试值渲染模板：`config/e2e.yaml` 中模板声明的输入，以及 `templates/<id>/e2e.yaml` 中的输入。随后用模板 lint 与 kubeconform 检查渲染出的对象。如果某个必填输入在 `config/e2e.yaml` 中没有值，请在 `templates/<id>/e2e.yaml` 中设置。
 
 运行以下命令：
 
 ```sh
 cargo run -p zeabur-catalog -- check
-go run ./tools/cmd/catalog template lint -values values.json \
-  -domain app.example.test -cluster-issuer letsencrypt <id>
+cargo run -p zeabur-catalog -- render <id>
 go run ./tools/cmd/catalog e2e -tier full <id>
 ```
 

@@ -18,6 +18,13 @@ const (
 	VersionLabel  = "app.kubernetes.io/version"
 )
 
+// TemplateLabel is the label that every pod of a template has, with the template
+// ID as its value. The NetworkPolicies of a template select only these pods, so
+// other pods in a shared namespace keep their own policies. It is not
+// app.kubernetes.io/part-of: the Dragonfly operator owns that label and
+// rejects it in podMetadata.
+const TemplateLabel = "templates.zeabur.com/template"
+
 // Labels returns the labels of the objects of r.
 func Labels(r *Template) map[string]string {
 	return map[string]string{TemplateLabel: r.ID, InstanceLabel: r.ID, VersionLabel: r.Metadata.Version}

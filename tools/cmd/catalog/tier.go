@@ -230,10 +230,11 @@ func runTier(r *repo, tier string, o tierOptions) error {
 	return fmt.Errorf("unknown -tier %q; use %s", tier, strings.Join(tiers, ", "))
 }
 
-// runCheck checks config/e2e.yaml, lints every template, then sends every rendered
-// component and template to a local API server with --dry-run=server, and
-// fails when it refuses an upgrade from the pull request's base or a profile
-// switch.
+// runCheck checks config/e2e.yaml, renders and checks every component and
+// template with zeabur-catalog render (the template lint included), then sends
+// every rendered component and template to a local API server with
+// --dry-run=server, and fails when it refuses an upgrade from the pull
+// request's base or a profile switch.
 func runCheck(r *repo, cfg config, o tierOptions) error {
 	var ts catalog.Timings
 	step := func(name string, f func() error) error {
@@ -257,9 +258,6 @@ func runCheck(r *repo, cfg config, o tierOptions) error {
 		cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
 		return cmd.Run()
 	}); err != nil {
-		return err
-	}
-	if err := step("template lint", func() error { return lintTemplates(r, out, cfg.Versions) }); err != nil {
 		return err
 	}
 	var api *apiServer
@@ -297,64 +295,6 @@ func serverVersion(api *apiServer, versions []string) (string, error) {
 		return "", fmt.Errorf("the API server is Kubernetes %s; config/kubernetes.yaml renders no version with the same minor", server)
 	}
 	return versions[i], nil
-}
-
-// lintTemplates runs what `catalog template lint` runs on every template,
-// rendered with its e2e values: the safety rules, then kubeconform with only
-// the CRDs of the components that its e2e installs. render holds the render of
-// every component.
-func lintTemplates(r *repo, render string, versions []string) error {
-	errs := make([]error, len(r.templates))
-	var wg sync.WaitGroup
-	sem := make(chan struct{}, 4)
-	for i, t := range r.templates {
-		wg.Go(func() {
-			sem <- struct{}{}
-			defer func() { <-sem }()
-			errs[i] = lintTemplate(r, t, render, versions)
-			if errs[i] != nil {
-				errs[i] = fmt.Errorf("templates/%s: %w", t.ID, errs[i])
-			}
-		})
-	}
-	wg.Wait()
-	return errors.Join(errs...)
-}
-
-func lintTemplate(r *repo, t *templates.Template, render string, versions []string) error {
-	v, err := e2eValues(r, t)
-	if err != nil {
-		return err
-	}
-	manifest, err := templates.E2EManifest(t, v)
-	if err != nil {
-		return err
-	}
-	order, err := installOrder(r, t.ID, templateProfile)
-	if err != nil {
-		return err
-	}
-	schemas, err := orderSchemas(filepath.Join(render, versions[len(versions)-1], templateProfile), order)
-	defer os.RemoveAll(schemas)
-	if err != nil {
-		return err
-	}
-	return templates.Lint(t, manifest, templates.Namespace(t), schemas, versions)
-}
-
-// orderSchemas writes the schemas of the CRDs that the components of order
-// render under dir to a new directory.
-func orderSchemas(dir string, order []*catalog.Component) (string, error) {
-	schemas, err := os.MkdirTemp("", "catalog-schemas-")
-	if err != nil {
-		return "", err
-	}
-	for _, c := range order {
-		if err := catalog.CRDSchemas(filepath.Join(dir, c.ID), schemas); err != nil {
-			return schemas, err
-		}
-	}
-	return schemas, nil
 }
 
 // dryRun applies every CRD under dir, creates the namespaces, then applies

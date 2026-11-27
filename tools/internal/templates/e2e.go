@@ -24,25 +24,6 @@ import (
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 )
 
-// Lint runs Safety and CheckServices, then kubeconform for every Kubernetes
-// version. Custom resources are checked against the CRD schemas in schemas
-// (see catalog.CRDSchemas).
-func Lint(r *Template, manifest []byte, namespace, schemas string, versions []string) error {
-	if err := errors.Join(Safety(r, manifest, namespace), CheckServices(r, manifest)); err != nil {
-		return err
-	}
-	var errs []error
-	for _, kv := range versions {
-		out, err := catalog.Run(manifest, "kubeconform", "-kubernetes-version", kv, "-strict",
-			"-schema-location", "default",
-			"-schema-location", schemas+"/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json", "-")
-		if err != nil {
-			errs = append(errs, fmt.Errorf("kubeconform %s: %s", kv, strings.TrimSpace(out)))
-		}
-	}
-	return errors.Join(errs...)
-}
-
 const selfSignedIssuer = "ci-selfsigned"
 
 // E2EValues are the test values for one template: input values, objects to
@@ -85,10 +66,6 @@ func E2E(t *catalog.Tester, r *Template, values E2EValues, measure bool) (usage 
 	if err != nil {
 		return nil, err
 	}
-	if err := Safety(r, manifest, ns); err != nil {
-		return nil, err
-	}
-
 	refs := slices.Clone(r.Requires)
 	if useS3 {
 		refs = append(refs, catalog.Ref{Component: S3Component})
