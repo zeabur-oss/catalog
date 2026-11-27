@@ -7,7 +7,6 @@
 //	catalog merge [-keep <dir>] <dir>   merge measurements uploaded by CI jobs into measurements/
 //	catalog template render <id>        expand manifests.yaml
 //	catalog template inputs <id>        print the Secrets of generated inputs
-//	catalog template lint <id>          render, then safety rules and kubeconform
 package main
 
 import (

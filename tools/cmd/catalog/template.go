@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"maps"
 	"os"
-	"path/filepath"
 
-	"github.com/zeabur-oss/catalog/tools/internal/catalog"
 	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
 
@@ -20,7 +18,7 @@ const templateArch = "amd64"
 
 func template(fs *flag.FlagSet, r *repo) error {
 	if len(os.Args) < 3 {
-		return errors.New("usage: catalog template render|inputs|lint [flags] <id>")
+		return errors.New("usage: catalog template render|inputs [flags] <id>")
 	}
 	action := os.Args[2]
 	namespace := fs.String("namespace", "default", "namespace to render for")
@@ -39,24 +37,12 @@ func template(fs *flag.FlagSet, r *repo) error {
 	if err != nil {
 		return err
 	}
-	cfg, err := loadConfig()
-	if err != nil {
-		return err
-	}
 	opts := templates.RenderOptions{Namespace: *namespace, Domain: *domain, ClusterIssuer: *issuer, Inputs: inputs}
 	switch action {
-	case "render", "lint":
+	case "render":
 		manifest, err := templates.Render(t, opts)
 		if err != nil {
 			return err
-		}
-		if action == "lint" {
-			schemas, err := requiredSchemas(r.cat, t, cfg.Versions)
-			if err != nil {
-				return err
-			}
-			defer os.RemoveAll(schemas)
-			return templates.Lint(t, manifest, *namespace, schemas, cfg.Versions)
 		}
 		_, err = os.Stdout.Write(manifest)
 		return err
@@ -69,41 +55,6 @@ func template(fs *flag.FlagSet, r *repo) error {
 		return err
 	}
 	return fmt.Errorf("unknown template action %q", action)
-}
-
-// requiredSchemas renders the components that t requires and writes the
-// schemas of their CRDs to a new directory.
-func requiredSchemas(cat *catalog.Catalog, t *templates.Template, versions []string) (string, error) {
-	dir, err := os.MkdirTemp("", "catalog-template-")
-	if err != nil {
-		return "", err
-	}
-	defer os.RemoveAll(dir)
-	order, err := cat.InstallOrder(t.Requires, templateProfile)
-	if err != nil {
-		return "", err
-	}
-	for _, c := range order {
-		for _, rel := range c.Releases {
-			out, err := catalog.Template(c, rel, templateProfile, versions[len(versions)-1])
-			if err != nil {
-				return "", fmt.Errorf("%s/%s: %w", c.ID, rel.Name, err)
-			}
-			f := filepath.Join(dir, "components", c.ID, rel.Name+".yaml")
-			if err := os.MkdirAll(filepath.Dir(f), 0o755); err != nil {
-				return "", err
-			}
-			if err := os.WriteFile(f, out, 0o644); err != nil {
-				return "", err
-			}
-		}
-	}
-	schemas, err := orderSchemas(filepath.Join(dir, "components"), order)
-	if err != nil {
-		os.RemoveAll(schemas)
-		return "", err
-	}
-	return schemas, nil
 }
 
 // e2eValues returns the test values for t: the shared inputs of

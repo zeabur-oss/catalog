@@ -3,14 +3,14 @@ title: Template standards
 description: Follow the template standards when adding or updating Zeabur Catalog templates, and check security, networking, data, upgrades, and test configuration.
 ---
 
-Every template in Zeabur Catalog must follow these rules. When you add or update a template, use `zeabur-catalog check`, `catalog template lint`, and installation tests to check the rules those tools cover, then review the remaining rules individually. When you consult upstream documentation, check the exact version pinned in the template.
+Every template in Zeabur Catalog must follow these rules. When you add or update a template, use `zeabur-catalog check`, `zeabur-catalog render` (which runs the template lint), and installation tests to check the rules those tools cover, then review the remaining rules individually. When you consult upstream documentation, check the exact version pinned in the template.
 
 ## `template.yaml`
 
 - `metadata` must list the application name, license, homepage, and `docs`. `docs` is an https link to the upstream usage docs, not to the source repository.
 - `metadata.summary` says what the application is in one plain sentence, for people choosing a template. Provide `zh-TW` and `zh-CN` summaries in `metadata.locales`.
 - Each template has `README.md`, `README.zh-TW.md` and `README.zh-CN.md` for the person who just deployed. They use only these level-2 headings, in this order: `## Introduction`, `## Getting started`, `## Configuration` and `## Troubleshooting` (`簡介`, `開始使用`, `設定`, `疑難排解` in zh-TW; `简介`, `开始使用`, `配置`, `故障排除` in zh-CN). The first two are required. Introduction says what the app is and what the template runs. Getting started is numbered steps: where to open the app, how the first person signs in, and which Secret and key hold each generated value. Configuration and Troubleshooting hold one `###` per task or problem that users commonly hit, each linked to the upstream page it comes from. Write each step for the Zeabur OSS interface, such as the service's **Variables** tab for a generated value, and give a kubectl command only for readers without Zeabur OSS or where Zeabur OSS has no screen for it. Check every step against the upstream docs and the template's manifests. `zeabur-catalog check` checks the files, the headings, and that Getting started names the Secret of every `generate` input.
-- Every service must specify a security profile (`restricted` or `baseline`), resource requests and limits, and ports. The service name must match the corresponding Deployment, StatefulSet, or database object name. The service's CPU and memory values must equal the totals across all containers in that object, and its ports must match the containers' named ports. `catalog template lint` checks resource totals and ports.
+- Every service must specify a security profile (`restricted` or `baseline`), resource requests and limits, and ports. The service name must match the corresponding Deployment, StatefulSet, or database object name. The service's CPU and memory values must equal the totals across all containers in that object, and its ports must match the containers' named ports. The template lint checks resource totals and ports.
 - `security` must cover the risks administrators need to know before deployment, each with its mitigation.
 - `smoke` must include smoke checks that prove the application works, including resource status conditions and HTTP or SQL checks against the running service.
 - `requires` must list the components the template needs as `{capability: <capability>}` or `{component: <id>}`. A capability is what a component offers, which it declares in `provides.capability`.
@@ -26,14 +26,14 @@ Every template in Zeabur Catalog must follow these rules. When you add or update
 - Every container must follow the [Restricted Pod Security Standard](https://kubernetes.io/docs/concepts/security/pod-security-standards/), including init containers and containers in Jobs. Containers must run as a non-root user, set `allowPrivilegeEscalation: false`, drop all Linux capabilities, and set `seccompProfile: RuntimeDefault`.
 - When the application supports it, use a read-only root filesystem and provide dedicated writable volumes for paths that need writes.
 - For a service that uses `baseline`, a comment in `manifests.yaml` names each Restricted control it doesn't meet and why. Don't use privileged containers, host namespaces, `hostPath`, or host ports.
-- `catalog template lint` permits only the `net.ipv4.ip_unprivileged_port_start` and `net.ipv4.ping_group_range` sysctls and rejects probes or hooks that set a host.
+- The template lint permits only the `net.ipv4.ip_unprivileged_port_start` and `net.ipv4.ping_group_range` sysctls and rejects probes or hooks that set a host.
 - Don't modify the Namespace's Pod Security labels.
 - Check Pods that operators create, such as database instances and backup Jobs, against the same rules. Configure them with the fields listed in the operator's documentation.
 
 ## Identity and Secrets
 
-- You must set `automountServiceAccountToken: false`. Don't grant RBAC permissions unless the application needs to call the Kubernetes API. All permissions must be limited to named resources and operation verbs within that Namespace. `catalog template lint` doesn't accept Role or RoleBinding yet.
-- Rendered resources must reference Secrets and must not contain passwords, keys, or tokens directly. `catalog template lint` rejects any Secret in `manifests.yaml`. Declare automatically generated values as `generate` inputs and existing credentials as required inputs.
+- You must set `automountServiceAccountToken: false`. Don't grant RBAC permissions unless the application needs to call the Kubernetes API. All permissions must be limited to named resources and operation verbs within that Namespace. The template lint doesn't accept Role or RoleBinding yet.
+- Rendered resources must reference Secrets and must not contain passwords, keys, or tokens directly. The template lint rejects any Secret in `manifests.yaml`. Declare automatically generated values as `generate` inputs and existing credentials as required inputs.
 - Every input that users must fill in must have a short `label`, with `zh-TW` and `zh-CN` labels and descriptions in `locales`. Write for the person deploying the application, and use everyday language.
 - The `security` summary and each risk must use language that first-time self-hosters can understand. Explain what can go wrong and who it affects. Provide `zh-TW` and `zh-CN` content for the summary and each risk in `locales`.
 - You must disable management and debug endpoints that permit unauthenticated access, along with insecure first-start defaults. Getting started in the README must explain how the first administrator signs in.
@@ -42,7 +42,7 @@ Every template in Zeabur Catalog must follow these rules. When you add or update
 
 - Every Pod must have the `templates.zeabur.com/template: <id>` label. For operator-managed Pods, configure labels in the custom resource: use `inheritedMetadata` for CloudNativePG, `podMetadata` for Dragonfly and MariaDB, `replsets[].labels` for Percona, and `podTemplate.metadata.labels` for MOCO.
 - Templates must not include default-deny or per-Pod NetworkPolicies. The installer uses base policies to isolate project Namespaces from one another. This is the default isolation boundary.
-- Components without a login mechanism or their own key are exceptions. They must have an ingress NetworkPolicy that permits connections only from their application. Examples include Redis or Dragonfly without a password, Meilisearch or Qdrant without a key, and sandboxes that execute other people's code. List the service in `security.unauthenticated`; `catalog template lint` requires an ingress NetworkPolicy whose `podSelector` selects that service. The risk description in `security` must explain why this policy exists. Components that execute untrusted code can also restrict outbound traffic to DNS and their own peers.
+- Components without a login mechanism or their own key are exceptions. They must have an ingress NetworkPolicy that permits connections only from their application. Examples include Redis or Dragonfly without a password, Meilisearch or Qdrant without a key, and sandboxes that execute other people's code. List the service in `security.unauthenticated`; the template lint requires an ingress NetworkPolicy whose `podSelector` selects that service. The risk description in `security` must explain why this policy exists. Components that execute untrusted code can also restrict outbound traffic to DNS and their own peers.
 - Don't restrict outbound traffic outside the cases above.
 - Every NetworkPolicy must select Pods with the label above. Each peer in the template's Namespace selects either those Pods or the template's clients: Pods with the label `templates.zeabur.com/<id>-client: "true"`. Another template that calls this one sets that label on its Pods. For example, the OpenClaw template sets `templates.zeabur.com/openclaw-browser-sandbox-client: "true"`.
 - Users who need stronger isolation within a Namespace can add their own NetworkPolicies. For example, the following configuration permits only Pods labeled `role=frontend` to connect to the specified template's Pods:
@@ -72,14 +72,14 @@ Every template in Zeabur Catalog must follow these rules. When you add or update
 - Don't enable database backups in templates. Backups are disabled by default for newly installed databases. Users can enable them later from the **Backups** tab of their Zeabur OSS database.
 - If a template configures backups, it must send them to S3 over HTTPS, enable TLS verification, and store credentials in Secrets.
 - You must explain what remains and what gets deleted when users delete the application.
-- Don't set a storage class. Volumes use the cluster's default StorageClass, and `catalog template lint` rejects `storageClassName`.
+- Don't set a storage class. Volumes use the cluster's default StorageClass, and the template lint rejects `storageClassName`.
 - For each S3 endpoint, if the client supports a custom CA, you must provide an optional CA input. Use a Secret containing `ca.crt` to support storage services that use a private CA. End-to-end tests use this input. Manifests must not contain conditionals: set `optional: true` when mounting the Secret, and provide a separate input with a `default` for the CA file path.
 - `manifests.yaml` must use only field substitution. When users need a choice, use inputs with a `default`, not conditionals.
 
 ## Scaling and resources
 
 - Every container, Job, and sidecar must have CPU and memory requests and limits.
-- Services that start slowly must use startup probes and readiness probes to stop receiving traffic. Use liveness probes only for states that a restart can fix. `catalog template lint` requires both probes on every container outside Jobs, so write the liveness probe to fail only in those states.
+- Services that start slowly must use startup probes and readiness probes to stop receiving traffic. Use liveness probes only for states that a restart can fix. The template lint requires both probes on every container outside Jobs, so write the liveness probe to fail only in those states.
 - Services with multiple replicas must have a PodDisruptionBudget. Enable autoscaling only for services that support it.
 
 ## Upgrades

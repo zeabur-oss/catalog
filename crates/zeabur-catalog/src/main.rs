@@ -21,6 +21,7 @@ mod api;
 mod check;
 mod compat;
 mod licenses;
+mod lint;
 mod policy;
 mod render;
 mod templates;

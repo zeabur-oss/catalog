@@ -43,14 +43,13 @@ Add resource condition checks and HTTP or SQL checks to confirm that the applica
 
 ### Run local checks
 
-Prepare `values.json`. It must contain a JSON object with a value for every input the template requires.
+`zeabur-catalog render <id>` renders the template with its test values: the inputs in `config/e2e.yaml` that the template declares, and the inputs in `templates/<id>/e2e.yaml`. It then checks the objects with the template lint and kubeconform. If a required input has no value in `config/e2e.yaml`, set one in `templates/<id>/e2e.yaml`.
 
 Run the following commands:
 
 ```sh
 cargo run -p zeabur-catalog -- check
-go run ./tools/cmd/catalog template lint -values values.json \
-  -domain app.example.test -cluster-issuer letsencrypt <id>
+cargo run -p zeabur-catalog -- render <id>
 go run ./tools/cmd/catalog e2e -tier full <id>
 ```
 

@@ -3,14 +3,14 @@ title: 範本標準
 description: 新增或修改 Zeabur Catalog 範本時，請依照範本標準檢查安全性、網路、資料、升級與測試設定。
 ---
 
-Zeabur Catalog 的每個範本都必須符合以下規則。新增或修改範本時，請用 `zeabur-catalog check`、`catalog template lint` 與安裝測試檢查其中多項規則，其餘規則則需自行逐項確認。查閱上游文件時，請確認文件版本與範本固定使用的版本完全一致。
+Zeabur Catalog 的每個範本都必須符合以下規則。新增或修改範本時，請用 `zeabur-catalog check`、`zeabur-catalog render`（會執行範本 lint）與安裝測試檢查其中多項規則，其餘規則則需自行逐項確認。查閱上游文件時，請確認文件版本與範本固定使用的版本完全一致。
 
 ## `template.yaml`
 
 - `metadata` 必須列出應用程式名稱、授權、首頁與 `docs`。`docs` 是上游使用說明的 https 連結，不是原始碼儲存庫。
 - `metadata.summary` 用一句白話說明這是什麼應用程式，給挑選範本的人看。`zh-TW` 與 `zh-CN` 的摘要寫在 `metadata.locales`。
 - 每個範本都有 `README.md`、`README.zh-TW.md` 和 `README.zh-CN.md`，寫給剛部署完的人看。二級標題只能用這幾個，順序固定：英文是 `## Introduction`、`## Getting started`、`## Configuration`、`## Troubleshooting`，zh-TW 是 `簡介`、`開始使用`、`設定`、`疑難排解`，zh-CN 是 `简介`、`开始使用`、`配置`、`故障排除`。前兩個必填。簡介說明這是什麼應用、範本跑了什麼。開始使用寫成編號步驟：從哪裡打開、第一個人怎麼登入，以及每個自動產生的值放在哪個 Secret 的哪個 key。設定和疑難排解收錄使用者常遇到的工作或問題，每項一個 `###`，並連到上游出處。步驟以 Zeabur 開源版介面來寫，例如自動產生的值到服務的**環境變數**分頁查看；只有給不用 Zeabur 開源版的讀者，或 Zeabur 開源版沒有對應畫面時，才寫 kubectl 指令。每個步驟都要對照上游文件和範本的 manifests 確認。`zeabur-catalog check` 會檢查檔案、標題，以及開始使用有沒有寫出每個 `generate` 輸入的 Secret。
-- 每個服務都必須指定安全性 profile（`restricted` 或 `baseline`）、資源請求與上限，以及連接埠。服務名稱必須與對應的 Deployment、StatefulSet 或資料庫物件名稱相同。服務的 CPU 與記憶體數值必須是該物件所有容器的總和，連接埠則必須對應容器的具名連接埠。`catalog template lint` 會檢查資源總和與連接埠。
+- 每個服務都必須指定安全性 profile（`restricted` 或 `baseline`）、資源請求與上限，以及連接埠。服務名稱必須與對應的 Deployment、StatefulSet 或資料庫物件名稱相同。服務的 CPU 與記憶體數值必須是該物件所有容器的總和，連接埠則必須對應容器的具名連接埠。範本 lint 會檢查資源總和與連接埠。
 - `security` 必須列出管理者在部署前需要知道的風險，每個風險都附上降低風險的措施。
 - `smoke` 必須包含能證明應用程式正常運作的煙霧測試（smoke check），包括資源狀態條件，以及對執行中服務的 HTTP 或 SQL 檢查。
 - `requires` 必須以 `{capability: <capability>}` 或 `{component: <id>}` 列出範本需要的元件。capability 是元件提供的用途類別，寫在元件的 `provides.capability`。
@@ -26,14 +26,14 @@ Zeabur Catalog 的每個範本都必須符合以下規則。新增或修改範�
 - 每個容器都必須遵守 [Restricted Pod Security Standard](https://kubernetes.io/docs/concepts/security/pod-security-standards/)，包括初始化容器與 Job 中的容器。容器必須以非 root 使用者執行、設定 `allowPrivilegeEscalation: false`、移除所有 Linux capabilities，並設定 `seccompProfile: RuntimeDefault`。
 - 只要應用程式允許，就必須使用唯讀根檔案系統。需要寫入的路徑則必須各自使用專用的可寫入磁碟區。
 - 使用 `baseline` 的服務，要在 `manifests.yaml` 用註解寫出未符合的每個 Restricted 控制項與原因。不得使用特權容器、主機 Namespace、`hostPath` 或主機連接埠。
-- `catalog template lint` 只允許 `net.ipv4.ip_unprivileged_port_start` 與 `net.ipv4.ping_group_range` 這兩個 sysctl，也不允許探針或 hook 設定 host。
+- 範本 lint 只允許 `net.ipv4.ip_unprivileged_port_start` 與 `net.ipv4.ping_group_range` 這兩個 sysctl，也不允許探針或 hook 設定 host。
 - 不得修改 Namespace 的 Pod Security 標籤。
 - operator 建立的 Pod 也必須依照相同規則檢查，例如資料庫執行個體與備份 Job。設定時，必須使用 operator 文件列出的欄位。
 
 ## 身分識別與 Secret
 
-- 必須設定 `automountServiceAccountToken: false`。除非應用程式需要呼叫 Kubernetes API，否則不得授予 RBAC 權限。所有存取權限都必須限制在該 Namespace 內，且只能存取指定名稱的資源、使用指定的操作動詞。`catalog template lint` 目前不接受 Role 與 RoleBinding。
-- 渲染後的資源必須引用 Secret，不得直接包含密碼、金鑰或權杖。`catalog template lint` 會拒絕 `manifests.yaml` 裡的任何 Secret。自動產生的值必須宣告為 `generate` 輸入，既有認證資訊則必須宣告為必填輸入。
+- 必須設定 `automountServiceAccountToken: false`。除非應用程式需要呼叫 Kubernetes API，否則不得授予 RBAC 權限。所有存取權限都必須限制在該 Namespace 內，且只能存取指定名稱的資源、使用指定的操作動詞。範本 lint 目前不接受 Role 與 RoleBinding。
+- 渲染後的資源必須引用 Secret，不得直接包含密碼、金鑰或權杖。範本 lint 會拒絕 `manifests.yaml` 裡的任何 Secret。自動產生的值必須宣告為 `generate` 輸入，既有認證資訊則必須宣告為必填輸入。
 - 每個需要使用者填寫的輸入都必須有簡短的 `label`，並在 `locales` 中提供 `zh-TW` 與 `zh-CN` 的標籤和描述。文字必須寫給部署者看，並使用日常用語。
 - `security` 摘要與每項風險的說明，都必須讓第一次自行架設服務的人看得懂。請說清楚會出什麼問題，以及誰會受影響。摘要與每項風險都必須在 `locales` 中提供 `zh-TW` 與 `zh-CN` 內容。
 - 必須關閉未經驗證就能存取的管理與除錯端點，以及不安全的首次啟動預設設定。README 的開始使用必須說明第一位管理員如何登入。
@@ -42,7 +42,7 @@ Zeabur Catalog 的每個範本都必須符合以下規則。新增或修改範�
 
 - 每個 Pod 都必須加上 `templates.zeabur.com/template: <id>` 標籤。operator 管理的 Pod 必須在自訂資源中設定標籤：CloudNativePG 使用 `inheritedMetadata`，Dragonfly 與 MariaDB 使用 `podMetadata`，Percona 使用 `replsets[].labels`，MOCO 使用 `podTemplate.metadata.labels`。
 - 範本不得附帶預設拒絕流量或針對個別 Pod 的 NetworkPolicy。安裝程式會使用基礎政策隔離不同專案的 Namespace，這就是預設的隔離邊界。
-- 沒有登入機制或自身金鑰的元件屬於例外，必須設定 ingress NetworkPolicy，只允許所屬應用程式連入。例如未設定密碼的 Redis 或 Dragonfly、未設定金鑰的 Meilisearch 或 Qdrant，以及執行他人程式碼的沙盒。必須將該服務列在 `security.unauthenticated` 中。`catalog template lint` 會要求提供 ingress NetworkPolicy，且其 `podSelector` 必須指定該服務。`security` 的風險說明必須交代為什麼需要這項政策。執行不受信任程式碼的元件也可以限制對外流量，只允許連往 DNS 與自身的對等服務。
+- 沒有登入機制或自身金鑰的元件屬於例外，必須設定 ingress NetworkPolicy，只允許所屬應用程式連入。例如未設定密碼的 Redis 或 Dragonfly、未設定金鑰的 Meilisearch 或 Qdrant，以及執行他人程式碼的沙盒。必須將該服務列在 `security.unauthenticated` 中。範本 lint 會要求提供 ingress NetworkPolicy，且其 `podSelector` 必須指定該服務。`security` 的風險說明必須交代為什麼需要這項政策。執行不受信任程式碼的元件也可以限制對外流量，只允許連往 DNS 與自身的對等服務。
 - 除了上述情況，不得限制對外流量。
 - 每個 NetworkPolicy 都必須用上述標籤選取 Pod。範本 Namespace 內的每個對等端，要選取這些 Pod，或選取範本的用戶端，也就是帶有標籤 `templates.zeabur.com/<id>-client: "true"` 的 Pod。呼叫這個範本的其他範本，要在自己的 Pod 加上這個標籤。例如 OpenClaw 範本加上了 `templates.zeabur.com/openclaw-browser-sandbox-client: "true"`。
 - 需要在 Namespace 內加強隔離的使用者可以自行新增 NetworkPolicy。例如，下列設定只允許標示 `role=frontend` 的 Pod 連入指定範本的 Pod：
@@ -72,14 +72,14 @@ Zeabur Catalog 的每個範本都必須符合以下規則。新增或修改範�
 - 不得在範本中啟用資料庫備份。新安裝的資料庫預設不啟用備份，使用者之後可從 Zeabur 開源版資料庫的 **Backups** 分頁啟用。
 - 如果範本有設定備份，必須將備份送到使用 HTTPS 的 S3，啟用 TLS 驗證，並將認證資訊存放在 Secret 中。
 - 必須說明刪除應用程式時會保留什麼，以及會刪除什麼。
-- 不得指定儲存類別。磁碟區使用叢集預設的 StorageClass，`catalog template lint` 會拒絕 `storageClassName`。
+- 不得指定儲存類別。磁碟區使用叢集預設的 StorageClass，範本 lint 會拒絕 `storageClassName`。
 - 每個 S3 端點的用戶端只要支援自訂 CA，就必須提供選填的 CA 輸入。使用者可提供包含 `ca.crt` 的 Secret，讓用戶端連線到使用私有 CA 的儲存服務。端對端測試會使用這項輸入。資源清單不得包含條件判斷。掛載 Secret 時必須設定 `optional: true`，CA 檔案路徑則必須有獨立的輸入與 `default`。
 - `manifests.yaml` 只能使用欄位替換。需要提供選項時，必須使用帶有 `default` 的輸入，不得使用條件判斷。
 
 ## 擴充與資源
 
 - 每個容器、Job 與 sidecar 都必須設定 CPU 與記憶體的資源請求和上限。
-- 啟動較慢的服務必須使用啟動探針，並使用就緒探針停止接收流量。存活探針只能用於重新啟動就能修復的狀態。`catalog template lint` 要求 Job 以外的每個容器都有就緒探針和存活探針，所以存活探針要寫成只在這些狀態下才失敗。
+- 啟動較慢的服務必須使用啟動探針，並使用就緒探針停止接收流量。存活探針只能用於重新啟動就能修復的狀態。範本 lint 要求 Job 以外的每個容器都有就緒探針和存活探針，所以存活探針要寫成只在這些狀態下才失敗。
 - 有多個副本的服務必須加上 PodDisruptionBudget。只有支援自動擴充的服務才能啟用自動擴充。
 
 ## 升級

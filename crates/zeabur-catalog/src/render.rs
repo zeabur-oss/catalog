@@ -1,9 +1,13 @@
 //! `zeabur-catalog render`: the objects of every release of every component, on each profile it
-//! supports and each Kubernetes version of `config/kubernetes.yaml`, checked with kubeconform.
+//! supports and each Kubernetes version of `config/kubernetes.yaml`, checked with kubeconform,
+//! and of every template, checked with the template lint.
 //!
 //! Helm renders the charts. This module only composes the values that the catalog owns, and
 //! fetches charts and manifests into a cache.
 
+mod template;
+
+use std::collections::BTreeSet;
 use std::fs;
 use std::io::Write as _;
 use std::path::{Path, PathBuf};
@@ -283,15 +287,14 @@ fn run_with_input(cmd: &mut Command, input: &[u8]) -> Result<Vec<u8>, String> {
     ))
 }
 
-/// Renders `ids` (every component when empty) into `out/<version>/<profile>/<id>/<release>.yaml`
-/// and checks the objects with kubeconform. It returns the problems.
+/// Renders the components and templates `ids` (all of them when empty), and checks them. A
+/// component renders into `out/<version>/<profile>/<id>/<release>.yaml` and is checked with
+/// kubeconform. A template renders with its e2e values into `out/<version>/templates/<id>.yaml`,
+/// with the components its e2e run installs, and is checked with the template lint and then
+/// kubeconform. It returns the problems.
 pub(crate) fn render(root: &Path, ids: &[String], out: &Path) -> Result<Vec<Problem>, String> {
     let catalog = Catalog::read(root).map_err(|e| e.to_string())?;
-    for id in ids {
-        if !catalog.components.contains_key(id) {
-            return Err(format!("no component {id}"));
-        }
-    }
+    let (components, templates) = selection(root, &catalog, ids)?;
     let versions = kube_versions(root)?;
     let cache = Cache::user()?;
     let contributions = Contributions::of(
@@ -300,14 +303,15 @@ pub(crate) fn render(root: &Path, ids: &[String], out: &Path) -> Result<Vec<Prob
     )
     .map_err(|e| e.to_string())?;
     let schemas = PathBuf::from(format!("{}-schemas", out.display()));
-    for dir in [out, schemas.as_path()] {
+    let template_schemas = PathBuf::from(format!("{}-template-schemas", out.display()));
+    for dir in [out, &schemas, &template_schemas] {
         if dir.exists() {
             fs::remove_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
         }
     }
     let mut problems = Vec::new();
     for (id, component) in &catalog.components {
-        if !ids.is_empty() && !ids.contains(id) {
+        if !components.contains(id) {
             continue;
         }
         let mut found = Problems::new(&Path::new("components").join(id).join("component.yaml"));
@@ -385,14 +389,56 @@ pub(crate) fn render(root: &Path, ids: &[String], out: &Path) -> Result<Vec<Prob
         crate::output::info(&format!("rendered {id}"));
     }
     problems.extend(kubeconform(&versions, out, &schemas));
+    for id in &templates {
+        if let Some(dir) = catalog.templates.get(id) {
+            problems.extend(template::check(root, &catalog, id, dir, &versions, out)?);
+        }
+    }
     Ok(problems)
 }
 
-/// Checks the rendered objects of each version against its Kubernetes schemas and the CRDs in
-/// `schemas`.
+/// The components and templates that `ids` select: every one when `ids` is empty, and with a
+/// template the components its e2e run installs.
+fn selection(
+    root: &Path,
+    catalog: &Catalog,
+    ids: &[String],
+) -> Result<(BTreeSet<String>, BTreeSet<String>), String> {
+    let mut components = BTreeSet::new();
+    let mut templates = BTreeSet::new();
+    for id in ids {
+        if catalog.components.contains_key(id) {
+            components.insert(id.clone());
+        } else if let Some(dir) = catalog.templates.get(id) {
+            templates.insert(id.clone());
+            let installs = template::e2e_inputs(root, id, dir)
+                .and_then(|(_, s3)| template::installs(catalog, id, dir, s3));
+            // A template whose e2e values or requirements do not resolve reports it below.
+            components.extend(installs.unwrap_or_default());
+        } else {
+            return Err(format!("no component or template {id}"));
+        }
+    }
+    if ids.is_empty() {
+        components.extend(catalog.components.keys().cloned());
+        templates.extend(catalog.templates.keys().cloned());
+    }
+    Ok((components, templates))
+}
+
+/// Checks the rendered components of each version against its Kubernetes schemas and the CRDs
+/// in `schemas`.
 fn kubeconform(versions: &[String], out: &Path, schemas: &Path) -> Vec<Problem> {
     let mut problems = Vec::new();
     for version in versions {
+        let profiles: Vec<PathBuf> = Profile::ALL
+            .iter()
+            .map(|p| out.join(version).join(p.as_str()))
+            .filter(|dir| dir.exists())
+            .collect();
+        if profiles.is_empty() {
+            continue;
+        }
         let mut cmd = Command::new("kubeconform");
         cmd.args(["-kubernetes-version", version, "-strict", "-summary"])
             .args(["-skip", "CustomResourceDefinition"])
@@ -401,7 +447,7 @@ fn kubeconform(versions: &[String], out: &Path, schemas: &Path) -> Vec<Problem> 
                 "{}/{{{{.Group}}}}/{{{{.ResourceKind}}}}_{{{{.ResourceAPIVersion}}}}.json",
                 schemas.display()
             ))
-            .arg(out.join(version));
+            .args(&profiles);
         let message = match cmd.status() {
             Ok(status) if status.success() => continue,
             Ok(status) => status.to_string(),
@@ -535,11 +581,12 @@ fn is_webhook(doc: &Value) -> bool {
     )
 }
 
-/// `<image>@sha256:<64 hex>`.
-fn pinned(image: &str) -> bool {
-    image.split_once("@sha256:").is_some_and(|(name, digest)| {
+/// `<image>@sha256:<64 hex>`, as the pattern `^[^\s]+@sha256:[a-f0-9]{64}$` of Go's RE2 reads
+/// it: `\s` is only the ASCII space, tab, newline, form feed and carriage return.
+pub(crate) fn pinned(image: &str) -> bool {
+    image.rsplit_once("@sha256:").is_some_and(|(name, digest)| {
         !name.is_empty()
-            && !image.contains(char::is_whitespace)
+            && !image.contains([' ', '\t', '\n', '\x0c', '\r'])
             && digest.len() == 64
             && digest
                 .bytes()
@@ -585,6 +632,16 @@ pub(crate) fn documents(text: &[u8]) -> Result<Vec<Value>, String> {
     Ok(out)
 }
 
+/// Whether `part` of a CRD, its group, lowercase kind or version, is safe as a path segment: the
+/// API server takes only DNS names there, so a chart that writes `..` or `/` is refused.
+fn is_path_part(part: &str) -> bool {
+    !part.is_empty()
+        && !part.starts_with('.')
+        && part
+            .bytes()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'.' || b == b'-')
+}
+
 /// Writes a kubeconform schema for each version of each CRD in `objects`, at
 /// `dir/<group>/<kind>_<version>.json`, so custom resources are checked against the CRDs they
 /// install with.
@@ -603,11 +660,16 @@ fn crd_schemas(objects: &[u8], dir: &Path) -> Result<(), String> {
             for property in schema.properties.iter_mut().flat_map(|p| p.values_mut()) {
                 strict(property);
             }
-            let file = dir.join(&spec.group).join(format!(
-                "{}_{}.json",
-                spec.names.kind.to_lowercase(),
-                version.name
-            ));
+            let kind = spec.names.kind.to_lowercase();
+            if !is_path_part(&spec.group) || !is_path_part(&kind) || !is_path_part(&version.name) {
+                return Err(format!(
+                    "a CRD of group {:?}, kind {:?}, version {:?}: not a DNS name",
+                    spec.group, spec.names.kind, version.name
+                ));
+            }
+            let file = dir
+                .join(&spec.group)
+                .join(format!("{kind}_{}.json", version.name));
             if let Some(parent) = file.parent() {
                 fs::create_dir_all(parent).map_err(|e| format!("{}: {e}", parent.display()))?;
             }
@@ -671,6 +733,19 @@ mod tests {
     use super::*;
 
     #[test]
+    fn a_crd_whose_group_is_not_a_dns_name_writes_no_schema() {
+        let dir = Path::new(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../out/test/crd-group"
+        ));
+        let crd = b"apiVersion: apiextensions.k8s.io/v1\nkind: CustomResourceDefinition\nspec:\n  \
+            group: ../../escape\n  names: {kind: Thing}\n  versions:\n    - name: v1\n      \
+            schema:\n        openAPIV3Schema: {type: object}\n";
+        assert!(crd_schemas(crd, dir).is_err());
+        assert!(!dir.join("../../escape").exists() && !dir.exists());
+    }
+
+    #[test]
     fn a_crd_schema_refuses_unknown_fields_and_takes_int_or_string() {
         let mut schema: JSONSchemaProps = serde_json::from_value(json!({
             "type": "object",
@@ -701,6 +776,28 @@ mod tests {
         assert_eq!(got["properties"]["open"].get("additionalProperties"), None);
         // The top level stays open: kubeconform checks apiVersion, kind and metadata there.
         assert_eq!(got.get("additionalProperties"), None);
+    }
+
+    /// The answers of `catalog.PinnedImage`, `^[^\s]+@sha256:[a-f0-9]{64}$` in Go's RE2.
+    #[test]
+    fn a_pinned_image_is_what_the_go_pattern_matches() {
+        let digest = "a".repeat(64);
+        for (image, want) in [
+            (format!("example.test/app@sha256:{digest}"), true),
+            (format!("example.test/app:1@sha256:{digest}"), true),
+            (format!("a@sha256:x@sha256:{digest}"), true),
+            (format!("a\u{b}b@sha256:{digest}"), true),
+            (format!("a\u{a0}b@sha256:{digest}"), true),
+            (format!("@sha256:{digest}"), false),
+            (format!("a b@sha256:{digest}"), false),
+            (format!("a\tb@sha256:{digest}"), false),
+            (format!("a@sha256:{digest}0"), false),
+            (format!("a@sha256:{}", "A".repeat(64)), false),
+            ("example.test/app:latest".to_owned(), false),
+            (String::new(), false),
+        ] {
+            assert_eq!(pinned(&image), want, "{image:?}");
+        }
     }
 
     #[test]

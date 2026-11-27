@@ -29,13 +29,13 @@ existing branch: `git rebase --signoff main`, then force-push.
   settings into values.
 - Do not edit `measurements/`; CI writes it.
 - Run `cargo run -p zeabur-catalog -- check` and `cargo run -p zeabur-catalog -- render`
-  before pushing, and `go run ./tools/cmd/catalog template lint <id>` for a
-  template (inside `nix develop`).
+  before pushing (inside `nix develop`). The render also runs the template lint;
+  `render <id>` renders one component or template.
 
 ## When tests run
 
 - **Every pull request (`check`, about 5 minutes):** Go formatting and tests, schema and license
-  checks, rendering, template safety rules, and a dry run of every manifest
+  checks, rendering, the template lint, and a dry run of every manifest
   against a real API server. Nothing is installed.
 - **The merge queue (`smoke`, about 15 to 20 minutes):**
   what you changed, what it needs and what installs it is installed on one node and
