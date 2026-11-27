@@ -776,10 +776,19 @@ pub fn default_accounts(component: &Component) -> Vec<Release> {
                 name: format!("{DEFAULT_ACCOUNT_PREFIX}{namespace}"),
                 namespace: namespace.to_owned(),
                 skip_if_present: Vec::new(),
-                manifests: format!(
-                    "apiVersion: v1\nkind: ServiceAccount\nmetadata:\n  name: default\n  namespace: {namespace}\nautomountServiceAccountToken: false\n"
-                ),
+                manifests: default_account(namespace),
             })
         })
         .collect()
+}
+
+/// The `default` `ServiceAccount` of `namespace` with no token, as JSON, which is also YAML.
+fn default_account(namespace: &str) -> String {
+    let account = serde_json::json!({
+        "apiVersion": "v1",
+        "kind": "ServiceAccount",
+        "metadata": {"name": "default", "namespace": namespace},
+        "automountServiceAccountToken": false,
+    });
+    format!("{account}\n")
 }

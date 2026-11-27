@@ -8,6 +8,7 @@ mod tests {
     use zeabur_catalog_format::api::MeasurementFile;
     use zeabur_catalog_format::check::StrictProblem;
     use zeabur_catalog_format::common::{Distribution, Profile};
+    use zeabur_catalog_format::component::{Release, default_accounts};
     use zeabur_catalog_format::order::install_order;
     use zeabur_catalog_format::problem::{FieldPath, ProblemKind};
     use zeabur_catalog_format::{Catalog, Component, Contributions, check, values};
@@ -46,6 +47,39 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn a_default_account_reads_as_yaml() {
+        #[derive(serde::Deserialize, Debug, PartialEq)]
+        #[serde(rename_all = "camelCase")]
+        struct Account {
+            kind: String,
+            metadata: Metadata,
+            automount_service_account_token: bool,
+        }
+        #[derive(serde::Deserialize, Debug, PartialEq)]
+        struct Metadata {
+            name: String,
+            namespace: String,
+        }
+        let catalog = catalog();
+        let accounts = default_accounts(&catalog.components["cert-manager"]);
+        let Some(Release::Inline(release)) = accounts.first() else {
+            panic!("no default account: {accounts:?}");
+        };
+        let account: Account = serde_saphyr::from_str(&release.manifests).unwrap();
+        assert_eq!(
+            account,
+            Account {
+                kind: "ServiceAccount".to_owned(),
+                metadata: Metadata {
+                    name: "default".to_owned(),
+                    namespace: release.namespace.clone(),
+                },
+                automount_service_account_token: false,
+            }
+        );
     }
 
     #[test]

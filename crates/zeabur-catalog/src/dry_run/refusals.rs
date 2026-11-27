@@ -366,9 +366,7 @@ fn refused_into(
                 .map_err(|e| format!("{name}: base CRDs: {e}"))?;
         }
         for (ns, text) in updatable(&old) {
-            let namespace = format!(
-                r#"{{"apiVersion": "v1", "kind": "Namespace", "metadata": {{"name": {ns:?}}}}}"#
-            );
+            let namespace = namespace_object(&ns);
             kubectl
                 .text(namespace.as_bytes(), &["apply", "-f", "-"])
                 .map_err(|e| format!("namespace {ns}: {e}"))?;
@@ -513,6 +511,12 @@ fn updatable(docs: &[Doc]) -> std::collections::BTreeMap<String, String> {
                     | "APIService"
             )
     }))
+}
+
+/// The `Namespace` named `name`, as JSON.
+fn namespace_object(name: &str) -> String {
+    serde_json::json!({"apiVersion": "v1", "kind": "Namespace", "metadata": {"name": name}})
+        .to_string()
 }
 
 #[cfg(test)]
