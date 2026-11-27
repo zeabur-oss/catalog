@@ -66,7 +66,7 @@ mod tests {
         let catalog = catalog();
         let accounts = default_accounts(&catalog.components["cert-manager"]);
         let Some(Release::Inline(release)) = accounts.first() else {
-            panic!("no default account: {accounts:?}");
+            panic!("cert-manager has no default account");
         };
         let account: Account = serde_saphyr::from_str(&release.manifests).unwrap();
         assert_eq!(
