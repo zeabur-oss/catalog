@@ -3,7 +3,7 @@ title: 客户端如何渲染模板
 description: 客户端渲染模板前要做的检查、怎样判断模板需要的组件是否已安装、显示哪种语言，以及用来测试客户端的用例。
 ---
 
-客户端把[模板](template-format.mdx)安装到一个命名空间时，先检查选项，再渲染 `manifests.yaml`，最后应用生成的对象。本页列出要遵守的规则。`catalog template render` 用 `tools/internal/templates/render.go` 按这些规则渲染，Zeabur 开源版也遵守同样的规则。每条规则在 `conformance/template/` 都有一个测试用例，用法见本页最后一节。
+客户端把[模板](template-format.mdx)安装到一个命名空间时，先检查选项，再渲染 `manifests.yaml`，最后应用生成的对象。本页列出要遵守的规则。`zeabur-catalog template render` 用 `crates/zeabur-catalog-engine/src/template.rs` 按这些规则渲染，Zeabur 开源版也遵守同样的规则。每条规则在 `conformance/template/` 都有一个测试用例，用法见本页最后一节。
 
 ## 渲染需要的数据
 
@@ -30,7 +30,7 @@ description: 客户端渲染模板前要做的检查、怎样判断模板需要�
 
 pattern 只用 RE2、Rust 的 `regex` crate 和 JavaScript 读法都一样的语法：ASCII 字符、由字符和范围组成的方括号字符类（例如 `[a-z0-9_-]`）、分组 `( )` 和 `(?: )`、`|`、重复 `?`、`*`、`+`、`{n}`、`{n,}` 和 `{n,m}`（次数最多 1000），以及 `^` 和 `$`。特殊字符要用 `\` 转义，字符类里的 `]` 一律要转义。其他写法，例如 `.`、否定字符类 `[^...]`、重复再重复（例如 `a++`）、`\d`、`\s`、`\w`、`\b`、`\p{...}`、标志和命名分组，这几种引擎的读法不同，目录的检查会拒绝。要匹配整个值，请把 pattern 包成 `^(?:<pattern>)$`。
 
-有多项检查不通过时，客户端报告其中一项即可。`render.go` 按表格的顺序检查。每个测试用例只违反一条规则，所以检查顺序不影响结果。
+有多项检查不通过时，客户端报告其中一项即可。每个测试用例只违反一条规则，所以检查顺序不影响结果。
 
 ## 渲染
 
@@ -50,7 +50,7 @@ pattern 只用 RE2、Rust 的 `regex` crate 和 JavaScript 读法都一样的语
 
 对象按 `manifests.yaml` 里的顺序排列。空的 YAML 文档不算对象。
 
-`bundle.tar.gz` 里的 `crosscheck.json` 记录了真实模板的完整渲染结果。每个模板 ID 下有一组选项（`namespace`、`domain`、`clusterIssuer`、`inputs`），以及 `render.go` 渲染出的 `objects`。客户端用这些选项渲染每个模板，再比较对象。Zeabur 开源版的测试就是这样做的。
+`bundle.tar.gz` 里的 `crosscheck.json` 记录了真实模板的完整渲染结果。每个模板 ID 下有一组选项（`namespace`、`domain`、`clusterIssuer`、`inputs`），以及 `crates/zeabur-catalog-engine/src/template.rs` 渲染出的 `objects`。客户端用这些选项渲染每个模板，再比较对象。Zeabur 开源版的测试就是这样做的。
 
 ## 模板需要的组件
 

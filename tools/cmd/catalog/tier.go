@@ -1,25 +1,19 @@
 package main
 
 import (
-	"bytes"
 	"cmp"
 	"errors"
 	"fmt"
 	"log/slog"
-	"maps"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"runtime"
 	"slices"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/zeabur-oss/catalog/tools/internal/catalog"
-	"github.com/zeabur-oss/catalog/tools/internal/kubeobj"
 	"github.com/zeabur-oss/catalog/tools/internal/templates"
-	"go.yaml.in/yaml/v4"
 )
 
 // Tiers. check runs on every pull request: static checks, then a server-side
@@ -221,7 +215,7 @@ func runTier(r *repo, tier string, o tierOptions) error {
 	}
 	switch tier {
 	case "check":
-		return runCheck(r, cfg, o)
+		return runCheck(r)
 	case "smoke":
 		return runSmoke(r, cfg, o)
 	case "full":
@@ -230,12 +224,12 @@ func runTier(r *repo, tier string, o tierOptions) error {
 	return fmt.Errorf("unknown -tier %q; use %s", tier, strings.Join(tiers, ", "))
 }
 
-// runCheck checks config/e2e.yaml, renders and checks every component and
-// template with zeabur-catalog render (the template lint included), then sends
-// every rendered component and template to a local API server with
-// --dry-run=server, and fails when it refuses an upgrade from the pull
-// request's base or a profile switch.
-func runCheck(r *repo, cfg config, o tierOptions) error {
+// runCheck checks config/e2e.yaml, then renders and checks every component and
+// template with zeabur-catalog render (the template lint included), and sends
+// them to a local API server with zeabur-catalog dry-run, which also fails
+// when the API server refuses an upgrade from the pull request's base or a
+// profile switch.
+func runCheck(r *repo) error {
 	var ts catalog.Timings
 	step := func(name string, f func() error) error {
 		start := time.Now()
@@ -252,184 +246,16 @@ func runCheck(r *repo, cfg config, o tierOptions) error {
 	}); err != nil {
 		return err
 	}
-	out := "out/render"
-	if err := step("render", func() error {
-		cmd := exec.Command("cargo", "run", "--locked", "-q", "-p", "zeabur-catalog", "--", "render", "--out", out)
-		cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
-		return cmd.Run()
-	}); err != nil {
-		return err
-	}
-	var api *apiServer
-	if err := step("api server", func() (err error) {
-		api, err = startAPIServer()
-		return err
-	}); err != nil {
-		return err
-	}
-	if !o.keep {
-		defer api.stop()
-	}
-	kv, err := serverVersion(api, cfg.Versions)
-	if err != nil {
-		return err
-	}
-	err = step("dry run", func() error { return dryRun(r, filepath.Join(out, kv)) })
-	if err == nil {
-		err = step("refusals", func() error { return checkRefusals(r, filepath.Join(out, kv)) })
-	}
-	if err == nil {
-		err = report("check", []row{{subject: "check", timings: ts}})
-	}
-	return err
-}
-
-// serverVersion returns the version in versions with the API server's minor.
-func serverVersion(api *apiServer, versions []string) (string, error) {
-	server, err := api.version()
-	if err != nil {
-		return "", err
-	}
-	i := slices.IndexFunc(versions, func(v string) bool { return minorVersion(v) == minorVersion(server) })
-	if i < 0 {
-		return "", fmt.Errorf("the API server is Kubernetes %s; config/kubernetes.yaml renders no version with the same minor", server)
-	}
-	return versions[i], nil
-}
-
-// dryRun applies every CRD under dir, creates the namespaces, then applies
-// every rendered component and template with --dry-run=server. The API
-// server checks fields, defaults, CEL rules and Pod Security; nothing runs.
-// A warning on a template fails it.
-func dryRun(r *repo, dir string) error {
-	type file struct {
-		subject, namespace string
-		data               []byte
-		strict             bool
-	}
-	var files []file
-	crds := map[string]string{}
-	namespaces := map[string]bool{}
-	for _, p := range catalog.Profiles {
-		for _, c := range r.cat.Components {
-			if c.Defaults[p] == "unsupported" {
-				continue
-			}
-			for _, rel := range c.Releases {
-				data, err := os.ReadFile(filepath.Join(dir, p, c.ID, rel.Name+".yaml"))
-				if err != nil {
-					return err
-				}
-				namespaces[rel.Namespace] = true
-				docs, err := manifestDocs(data, rel.Namespace)
-				if err != nil {
-					return fmt.Errorf("%s/%s: %w", c.ID, rel.Name, err)
-				}
-				for _, d := range docs {
-					namespaces[d.Namespace] = true
-					switch d.Kind {
-					case "CustomResourceDefinition":
-						crds[d.Name] = d.text
-					case "Namespace":
-						namespaces[d.Name] = true
-					}
-				}
-				for _, d := range byNamespace(docs) {
-					files = append(files, file{p + " " + c.ID + "/" + rel.Name, d.namespace, []byte(d.docs), false})
-				}
-			}
-		}
-	}
-	for _, c := range r.cat.Components {
-		policies, err := kubeobj.Decode([]byte(c.NetworkPolicies))
-		if err != nil {
-			return fmt.Errorf("%s networkPolicies: %w", c.ID, err)
-		}
-		for _, o := range policies {
-			doc, err := yaml.Marshal(o.Object)
-			if err != nil {
-				return err
-			}
-			files = append(files, file{c.ID + " networkPolicies", o.GetNamespace(), doc, false})
-		}
-	}
-	var all strings.Builder
-	for _, name := range slices.Sorted(maps.Keys(crds)) {
-		all.WriteString(crds[name] + "\n---\n")
-	}
-	slog.Info("applying CRDs", "count", len(crds))
-	if _, err := catalog.Run([]byte(all.String()), "kubectl", "apply", "--server-side", "--force-conflicts", "-f", "-"); err != nil {
-		return err
-	}
-	if _, err := catalog.Run(nil, "kubectl", "wait", "--for=condition=Established", "crd", "--all", "--timeout=2m"); err != nil {
-		return err
-	}
-	var nsList bytes.Buffer
-	for _, ns := range slices.Sorted(maps.Keys(namespaces)) {
-		fmt.Fprintf(&nsList, "{\"apiVersion\": \"v1\", \"kind\": \"Namespace\", \"metadata\": {\"name\": %q}}\n", ns)
-	}
-	if _, err := catalog.Run(nsList.Bytes(), "kubectl", "apply", "-f", "-"); err != nil {
-		return err
-	}
-	for _, t := range r.templates {
-		ns := templates.Namespace(t)
-		if err := templates.CreateNamespace(t, ns); err != nil {
+	for _, args := range [][]string{{"render", "--out", "out/render"}, {"dry-run", "--render", "out/render"}} {
+		if err := step(args[0], func() error {
+			cmd := exec.Command("cargo", append([]string{"run", "--locked", "-q", "-p", "zeabur-catalog", "--"}, args...)...)
+			cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+			return cmd.Run()
+		}); err != nil {
 			return err
 		}
-		namespaces[ns] = true
-		v, err := e2eValues(r, t)
-		if err != nil {
-			return err
-		}
-		manifest, err := templates.E2EManifest(t, v)
-		if err != nil {
-			return fmt.Errorf("templates/%s: %w", t.ID, err)
-		}
-		secrets, err := templates.GenerateInputs(t, ns)
-		if err != nil {
-			return err
-		}
-		docs := [][]byte{[]byte(v.Setup), manifest}
-		if slices.ContainsFunc(t.Inputs, func(in templates.Input) bool { return in.Generate != nil }) {
-			docs = append(docs, secrets)
-		}
-		for _, d := range docs {
-			if len(bytes.TrimSpace(d)) > 0 {
-				files = append(files, file{"templates/" + t.ID, ns, d, true})
-			}
-		}
 	}
-	// The API server has no controller manager to create each namespace's
-	// default ServiceAccount, which Pods without one use.
-	var accounts bytes.Buffer
-	for _, ns := range slices.Sorted(maps.Keys(namespaces)) {
-		fmt.Fprintf(&accounts, "{\"apiVersion\": \"v1\", \"kind\": \"ServiceAccount\", \"metadata\": {\"name\": \"default\", \"namespace\": %q}}\n", ns)
-	}
-	if _, err := catalog.Run(accounts.Bytes(), "kubectl", "apply", "-f", "-"); err != nil {
-		return err
-	}
-	errs := make([]error, len(files))
-	var wg sync.WaitGroup
-	sem := make(chan struct{}, 8)
-	for i, f := range files {
-		wg.Go(func() {
-			sem <- struct{}{}
-			defer func() { <-sem }()
-			args := []string{"apply", "--server-side", "--force-conflicts", "--dry-run=server",
-				"--field-manager=catalog", "-n", f.namespace, "-f", "-"}
-			if f.strict {
-				// Pod Security warns on workloads whose pods its enforce level rejects.
-				args = append(args, "--warnings-as-errors")
-			}
-			_, err := catalog.Run(f.data, "kubectl", args...)
-			if err != nil {
-				errs[i] = fmt.Errorf("%s: %w", f.subject, err)
-			}
-		})
-	}
-	wg.Wait()
-	slog.Info("dry run done", "manifests", len(files))
-	return errors.Join(errs...)
+	return report("check", []row{{subject: "check", timings: ts}})
 }
 
 // runSmoke installs and smoke tests each group in its own single-node cluster.

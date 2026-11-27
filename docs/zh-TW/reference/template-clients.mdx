@@ -3,7 +3,7 @@ title: 用戶端如何渲染範本
 description: 用戶端渲染範本前要做的檢查、怎麼判斷範本需要的元件裝好了沒，以及要顯示哪種語言，還有用來測試用戶端的案例。
 ---
 
-用戶端把[範本](template-format.mdx)安裝到一個命名空間時，會先檢查選項，再渲染 `manifests.yaml`，最後套用產生的物件。這一頁列出要遵守的規則。`catalog template render` 用 `tools/internal/templates/render.go` 照這些規則渲染，Zeabur 開源版也遵守同樣的規則。每條規則在 `conformance/template/` 都有一個測試案例，用法見本頁最後一節。
+用戶端把[範本](template-format.mdx)安裝到一個命名空間時，會先檢查選項，再渲染 `manifests.yaml`，最後套用產生的物件。這一頁列出要遵守的規則。`zeabur-catalog template render` 用 `crates/zeabur-catalog-engine/src/template.rs` 照這些規則渲染，Zeabur 開源版也遵守同樣的規則。每條規則在 `conformance/template/` 都有一個測試案例，用法見本頁最後一節。
 
 ## 渲染需要的資料
 
@@ -35,7 +35,7 @@ description: 用戶端渲染範本前要做的檢查、怎麼判斷範本需要�
 
 pattern 只用 RE2、Rust 的 `regex` crate 和 JavaScript 讀法都一樣的語法：ASCII 字元、由字元和範圍組成的方括號字元類別（例如 `[a-z0-9_-]`）、群組 `( )` 和 `(?: )`、`|`、重複 `?`、`*`、`+`、`{n}`、`{n,}` 和 `{n,m}`（次數最多 1000），以及 `^` 和 `$`。特殊字元要用 `\` 跳脫，字元類別裡的 `]` 一律要跳脫。其他寫法，例如 `.`、否定字元類別 `[^...]`、重複再重複（例如 `a++`）、`\d`、`\s`、`\w`、`\b`、`\p{...}`、旗標和具名群組，這幾種引擎的讀法不同，目錄的檢查會拒絕。要比對整個值，請把 pattern 包成 `^(?:<pattern>)$`。
 
-有好幾項檢查沒過時，用戶端回報其中一項即可。`render.go` 依表格的順序檢查。每個測試案例只違反一條規則，所以檢查順序不影響結果。
+有好幾項檢查沒過時，用戶端回報其中一項即可。每個測試案例只違反一條規則，所以檢查順序不影響結果。
 
 ## 渲染
 
@@ -55,7 +55,7 @@ pattern 只用 RE2、Rust 的 `regex` crate 和 JavaScript 讀法都一樣的語
 
 物件依 `manifests.yaml` 裡的順序排列。空的 YAML 文件不算物件。
 
-`bundle.tar.gz` 裡的 `crosscheck.json` 記錄了實際範本的完整渲染結果。每個範本 ID 底下各有一組選項（`namespace`、`domain`、`clusterIssuer`、`inputs`），以及 `render.go` 渲染出的 `objects`。用戶端用這些選項渲染每個範本，再比對物件。Zeabur 開源版的測試就是這樣做。
+`bundle.tar.gz` 裡的 `crosscheck.json` 記錄了實際範本的完整渲染結果。每個範本 ID 底下各有一組選項（`namespace`、`domain`、`clusterIssuer`、`inputs`），以及 `crates/zeabur-catalog-engine/src/template.rs` 渲染出的 `objects`。用戶端用這些選項渲染每個範本，再比對物件。Zeabur 開源版的測試就是這樣做。
 
 ## 範本需要的元件
 
