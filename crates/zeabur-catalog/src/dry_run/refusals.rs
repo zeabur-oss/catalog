@@ -526,6 +526,7 @@ mod tests {
     use std::process::Command;
 
     use zeabur_catalog_format::common::Profile;
+    use zeabur_catalog_format::problem::{DryRunProblem, ProblemKind};
 
     use super::super::server::ApiServer;
     use super::{Refusal, Update, adds_major_change_file, judge, refused};
@@ -706,17 +707,27 @@ spec: {SET: VALUE}
         };
         let upgrade = refusal(Update::Upgrade(Profile::MultiNode));
         let switch = refusal(Update::Switch(Profile::SingleNode, Profile::MultiNode));
-        let found = judge(vec![upgrade.clone()], false);
-        assert_eq!(found.len(), 1);
-        assert!(found[0].to_string().contains(r#"StatefulSet "zot""#));
+        let file = Path::new("components/zeabur-builder/component.yaml");
+        let [found] = judge(vec![upgrade.clone()], false).try_into().unwrap();
+        assert_eq!(found.file, file);
+        assert!(found.at.is_empty());
+        assert!(matches!(
+            found.kind,
+            ProblemKind::DryRun(DryRunProblem::Upgrade { release, profile: Profile::MultiNode, output: o })
+                if release == "zot" && o == output
+        ));
         assert_eq!(judge(vec![upgrade], true).len(), 0);
-        let found = judge(vec![switch], true);
-        assert_eq!(found.len(), 1);
-        assert!(
-            found[0]
-                .to_string()
-                .contains("from single-node to multi-node")
-        );
+        let [found] = judge(vec![switch], true).try_into().unwrap();
+        assert_eq!(found.file, file);
+        assert!(matches!(
+            found.kind,
+            ProblemKind::DryRun(DryRunProblem::ProfileSwitch {
+                release,
+                from: Profile::SingleNode,
+                to: Profile::MultiNode,
+                ..
+            }) if release == "zot"
+        ));
     }
 
     /// A repository with one commit that has a `major` change file, and the commit.
