@@ -511,6 +511,13 @@
         {
           "description": "Text.",
           "type": "string"
+        },
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/InputValue"
+          },
+          "description": "Values by key, set at a `path` as one object, such as a chart value that is a map.",
+          "type": "object"
         }
       ],
       "description": "The value of an input."

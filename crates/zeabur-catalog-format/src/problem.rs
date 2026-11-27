@@ -517,6 +517,8 @@ pub enum ComponentProblem {
     InputWithoutRelease,
     /// A required input has no value CI can install it with.
     InputWithoutValue,
+    /// A Secret input has a map as its value; a Secret key holds text.
+    MapInSecret,
     /// `provides.registry.ca` is in a namespace the component does not own.
     CaNamespace {
         /// The namespace.
@@ -587,6 +589,7 @@ impl fmt::Display for ComponentProblem {
             Self::InputWithoutValue => {
                 f.write_str("required, so set default, testValue or generate for CI to install it")
             }
+            Self::MapInSecret => f.write_str("a map goes to a path, not to a Secret key"),
             Self::CaNamespace { namespace } => write!(f, "{namespace} is none of its namespaces"),
             Self::InternalCrd { crd } => write!(f, "{crd} is not in detection.crds"),
             Self::ClusterIpWithoutPath => f.write_str("generate clusterIP needs a path"),
