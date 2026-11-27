@@ -18,7 +18,7 @@ func e2e(fs *flag.FlagSet, r *repo) error {
 	profile := fs.String("profile", templateProfile, "full: single-node, multi-node (kind), or k3s, rke2 or kubesolo (installed on this host)")
 	write := fs.Bool("write", false, "full: update measurements/ for passing tests")
 	since := fs.String("since", "", "smoke: only what changed since this git commit")
-	keep := fs.Bool("keep", false, "keep the clusters and the check tier's API server")
+	keep := fs.Bool("keep", false, "keep the clusters")
 	fs.Parse(os.Args[2:])
 	if *cluster != "kind" && *cluster != "current" {
 		return fmt.Errorf("unknown -cluster %q; use kind or current", *cluster)

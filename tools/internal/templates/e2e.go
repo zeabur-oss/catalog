@@ -3,7 +3,6 @@ package templates
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -298,22 +297,6 @@ func httpSmoke(ns string, s Smoke) error {
 		case <-time.After(500 * time.Millisecond):
 		}
 	}
-}
-
-// ReadValues reads a JSON object of input values.
-func ReadValues(path string) (map[string]string, error) {
-	values := map[string]string{}
-	if path == "" {
-		return values, nil
-	}
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	if err := json.Unmarshal(data, &values); err != nil || values == nil {
-		return nil, fmt.Errorf("%s: want a JSON object of strings: %v", path, err)
-	}
-	return values, nil
 }
 
 // wait is the Wait of the object of s.

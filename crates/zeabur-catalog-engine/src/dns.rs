@@ -16,7 +16,7 @@ const fn is_label_byte(b: u8) -> bool {
 /// and ending with a letter or digit [k8s-label].
 ///
 /// [k8s-label]: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-label-names
-pub(crate) fn is_dns_label(name: &str) -> bool {
+pub fn is_dns_label(name: &str) -> bool {
     let bytes = name.as_bytes();
     name.len() <= LABEL_MAX
         && bytes.iter().copied().all(is_label_byte)
@@ -28,7 +28,7 @@ pub(crate) fn is_dns_label(name: &str) -> bool {
 /// RFC 1123 label [rfc1123].
 ///
 /// [rfc1123]: https://www.rfc-editor.org/rfc/rfc1123#section-2.1
-pub(crate) fn is_hostname(name: &str) -> bool {
+pub fn is_hostname(name: &str) -> bool {
     name.len() <= SUBDOMAIN_MAX && name.split('.').all(is_dns_label)
 }
 

@@ -12,6 +12,8 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+base64.workspace = true
+getrandom.workspace = true
 granit-parser.workspace = true
 jsonschema.workspace = true
 k8s-openapi.workspace = true

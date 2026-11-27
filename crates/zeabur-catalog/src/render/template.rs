@@ -24,7 +24,7 @@ use crate::lint::{self, Subject};
 const S3_COMPONENT: &str = "seaweedfs-operator";
 
 /// The cert-manager `ClusterIssuer` of an e2e run.
-const CLUSTER_ISSUER: &str = "ci-selfsigned";
+pub(crate) const CLUSTER_ISSUER: &str = "ci-selfsigned";
 
 /// `config/e2e.yaml`: the input values every template gets when it declares the input.
 #[derive(Debug, Default, Deserialize)]
@@ -34,25 +34,49 @@ struct SharedValues {
     template_inputs: BTreeMap<String, String>,
 }
 
-/// `templates/<id>/e2e.yaml`: whether the run starts an S3 store, and the template's own input
-/// values.
+/// `templates/<id>/e2e.yaml`: whether the run starts an S3 store, the template's own input
+/// values, and the objects to apply before the template.
 #[derive(Debug, Default, Deserialize)]
 struct E2eValues {
     #[serde(default)]
     s3: bool,
     #[serde(default)]
     inputs: BTreeMap<String, String>,
+    #[serde(default)]
+    setup: String,
 }
 
-/// The input values of the e2e run of the template `id`, and whether the run starts an S3 store.
-/// They are the values of `config/e2e.yaml` that the template declares, overlaid by its own
-/// `e2e.yaml`, with `{{ .ID }}`, `{{ .S3.Endpoint }}` and `{{ .S3.Bucket }}` expanded against a
-/// placeholder store.
-pub(super) fn e2e_inputs(
-    root: &Path,
-    id: &str,
-    dir: &TemplateDir,
-) -> Result<(BTreeMap<String, String>, bool), String> {
+/// The e2e run of a template, with a placeholder S3 store.
+#[derive(Debug)]
+pub(crate) struct E2e {
+    /// The namespace it installs into.
+    pub(crate) namespace: String,
+    /// The hostname of its services with domains.
+    pub(crate) domain: String,
+    /// The input values.
+    pub(crate) inputs: BTreeMap<String, String>,
+    /// The run starts an S3 store.
+    pub(crate) s3: bool,
+    /// Objects to apply before the template, as YAML.
+    pub(crate) setup: String,
+}
+
+impl E2e {
+    /// The render options of the run.
+    pub(crate) fn options(&self) -> template::Options<'_> {
+        template::Options {
+            namespace: &self.namespace,
+            domain: Some(&self.domain),
+            cluster_issuer: Some(CLUSTER_ISSUER),
+            inputs: &self.inputs,
+        }
+    }
+}
+
+/// The e2e run of the template `id`. Its input values are the values of `config/e2e.yaml` that
+/// the template declares, overlaid by its own `e2e.yaml`, with `{{ .ID }}`, `{{ .S3.Endpoint }}`
+/// and `{{ .S3.Bucket }}` expanded against a placeholder store.
+pub(crate) fn e2e(root: &Path, id: &str, dir: &TemplateDir) -> Result<E2e, String> {
     let read = |path: PathBuf| match fs::read_to_string(&path) {
         Ok(text) => Ok(Some((path, text))),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
@@ -98,7 +122,13 @@ pub(super) fn e2e_inputs(
         expanded.push_str(rest);
         *value = expanded;
     }
-    Ok((inputs, own.s3))
+    Ok(E2e {
+        namespace: format!("templates-e2e-{id}"),
+        domain: format!("{id}.example.test"),
+        inputs,
+        s3: own.s3,
+        setup: own.setup,
+    })
 }
 
 /// The components the e2e run of the template installs on single-node, in no order.
@@ -132,22 +162,14 @@ pub(super) fn check(
     out: &Path,
 ) -> Result<Vec<Problem>, String> {
     let mut found = Problems::new(&Path::new("templates").join(id).join("manifests.yaml"));
-    let (inputs, s3) = match e2e_inputs(root, id, dir) {
-        Ok(values) => values,
+    let run = match e2e(root, id, dir) {
+        Ok(run) => run,
         Err(message) => {
             found.push(FieldPath::root(), whole(LintRule::E2eInputs { message }));
             return Ok(found.into_vec());
         }
     };
-    let namespace = format!("templates-e2e-{id}");
-    let domain = format!("{id}.example.test");
-    let options = template::Options {
-        namespace: &namespace,
-        domain: Some(&domain),
-        cluster_issuer: Some(CLUSTER_ISSUER),
-        inputs: &inputs,
-    };
-    let docs = match template::render(id, dir, &options) {
+    let docs = match template::render(id, dir, &run.options()) {
         Ok(docs) => docs,
         Err(e) => {
             let message = e.to_string();
@@ -172,7 +194,7 @@ pub(super) fn check(
     let subject = Subject {
         id,
         template: &dir.template,
-        namespace: &namespace,
+        namespace: &run.namespace,
     };
     let problems = lint::lint(&subject, &docs);
     if !problems.is_empty() {
@@ -181,7 +203,7 @@ pub(super) fn check(
         }
         return Ok(found.into_vec());
     }
-    let components = match installs(catalog, id, dir, s3) {
+    let components = match installs(catalog, id, dir, run.s3) {
         Ok(components) => components,
         Err(message) => {
             found.push(FieldPath::root(), whole(LintRule::E2eInputs { message }));
@@ -286,11 +308,11 @@ mod tests {
     fn e2e_inputs_expand_the_s3_store_and_the_id() {
         let catalog = Catalog::read(&root()).unwrap();
         let dir = &catalog.templates["dify"];
-        let (inputs, s3) = super::e2e_inputs(&root(), "dify", dir).unwrap();
-        assert!(s3);
-        assert_eq!(inputs["storageEndpoint"], "https://s3.example.test");
-        assert_eq!(inputs["storageBucket"], "e2e");
-        let components = super::installs(&catalog, "dify", dir, s3).unwrap();
+        let run = super::e2e(&root(), "dify", dir).unwrap();
+        assert!(run.s3);
+        assert_eq!(run.inputs["storageEndpoint"], "https://s3.example.test");
+        assert_eq!(run.inputs["storageBucket"], "e2e");
+        let components = super::installs(&catalog, "dify", dir, run.s3).unwrap();
         assert!(components.contains(super::S3_COMPONENT));
     }
 
@@ -336,7 +358,7 @@ mod tests {
         .unwrap();
         let catalog = Catalog::read(&root()).unwrap();
         let template = catalog.templates.values().next().unwrap();
-        let result = super::e2e_inputs(dir, "app", template);
+        let result = super::e2e(dir, "app", template);
         fs::remove_dir_all(dir).unwrap();
         assert!(result.unwrap_err().contains(".S3.SecretKey"));
     }

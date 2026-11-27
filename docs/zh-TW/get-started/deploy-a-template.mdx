@@ -7,7 +7,7 @@ description: 驗證版本簽章、準備叢集，再渲染並套用範本，完�
 
 ## 開始前
 
-- 安裝 Go、`git`、`gh`、`cosign`、`kubectl` 和 `sha256sum`（macOS 可從 GNU coreutils 取得）。
+- 安裝 Rust、`git`、`gh`、`cosign`、`kubectl` 和 `sha256sum`（macOS 可從 GNU coreutils 取得）。
 - 安裝範本 `requires` 列出的每個元件，全部使用同一個版本。
 - 使用會落實 NetworkPolicy 的 CNI。安裝程式會隔離各專案的 Namespace。範本不限制對外流量。
 - 如果範本需要網域，先準備好 cert-manager ClusterIssuer。
@@ -50,12 +50,12 @@ cargo run -p zeabur-catalog -- check
 
 ### 驗證版本
 
-建立一個私有目錄，把同一個版本 tag 的 `bundle.tar.gz`、`SHA256SUMS` 和 `SHA256SUMS.sigstore.json` 下載到裡面。再依工作流程、儲存庫和 tag 驗證 `SHA256SUMS` 的簽章，並用它核對 bundle：
+建立一個私有目錄，把同一個版本 tag 的 `bundle.tar.gz`、`api-v1.tar.gz`、`SHA256SUMS` 和 `SHA256SUMS.sigstore.json` 下載到裡面。再依工作流程、儲存庫和 tag 驗證 `SHA256SUMS` 的簽章，並用它核對這些檔案：
 
 ```sh
 dir=$(mktemp -d)
 gh release download "$tag" --repo zeabur-oss/catalog --dir "$dir" \
-  --pattern bundle.tar.gz --pattern SHA256SUMS --pattern SHA256SUMS.sigstore.json
+  --pattern bundle.tar.gz --pattern api-v1.tar.gz --pattern SHA256SUMS --pattern SHA256SUMS.sigstore.json
 (cd "$dir" &&
   cosign verify-blob SHA256SUMS --bundle SHA256SUMS.sigstore.json \
     --certificate-identity "https://github.com/zeabur-oss/catalog/.github/workflows/release.yml@refs/tags/$tag" \
@@ -63,9 +63,9 @@ gh release download "$tag" --repo zeabur-oss/catalog --dir "$dir" \
   sha256sum --check --ignore-missing SHA256SUMS)
 ```
 
-`cosign` 會印出 `Verified OK`，`sha256sum` 會印出 `bundle.tar.gz: OK`。只要任何一個印出別的內容，就停下來。
+`cosign` 會印出 `Verified OK`，`sha256sum` 會印出 `bundle.tar.gz: OK` 和 `api-v1.tar.gz: OK`。只要任何一個印出別的內容，就停下來。
 
-如果只檢查簽發者或工作流程，驗證時也會接受其他工作流程或其他 zeabur-oss 儲存庫的簽章。簽章驗證通過後，才能解開套件包（bundle）。解開時必須拒絕絕對路徑、`..` 和連結。
+如果只檢查簽發者或工作流程，驗證時也會接受其他工作流程或其他 zeabur-oss 儲存庫的簽章。簽章驗證通過後，才能解開這些檔案。解開時必須拒絕絕對路徑、`..` 和連結。把 `api-v1.tar.gz` 解開到 `$dir`，下面的指令會從 `$dir/v1` 的 API 讀取範本。
 
 </Step>
 
@@ -76,8 +76,8 @@ gh release download "$tag" --repo zeabur-oss/catalog --dir "$dir" \
 先閱讀 `templates/<id>/template.yaml` 中的授權、輸入、`requires` 和安全風險，再渲染物件：
 
 ```sh
-go run ./tools/cmd/catalog template render -namespace app \
-  -domain app.example.com -cluster-issuer letsencrypt -values inputs.json <id> > plan.yaml
+cargo run -q -p zeabur-catalog -- template render --api "$dir/v1" --namespace app \
+  --domain app.example.com --cluster-issuer letsencrypt --values inputs.json <id> > plan.yaml
 ```
 
 `inputs.json` 是一個 JSON 物件，範本要求的輸入都要填入字串值。物件儲存貯體和認證資訊必須事先準備好。
@@ -86,7 +86,7 @@ go run ./tools/cmd/catalog template render -namespace app \
 
 ```sh
 umask 077
-go run ./tools/cmd/catalog template inputs -namespace app <id> > secrets.json
+cargo run -q -p zeabur-catalog -- template inputs --api "$dir/v1" --namespace app <id> > secrets.json
 kubectl create namespace app
 kubectl -n app apply -f secrets.json
 kubectl -n app apply -f plan.yaml

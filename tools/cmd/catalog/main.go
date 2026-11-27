@@ -3,10 +3,7 @@
 //	catalog list -tier smoke|full [-ids <ids>|-since <ref>]  e2e CI matrix as JSON; full without IDs lists what is stale
 //	catalog e2e -tier check|smoke|full [-cluster current] [-since <ref>|ids]  run a test tier (see tier.go)
 //	catalog budget                      single-node memory budget
-//	catalog crosscheck                  write crosscheck.json, the render of every template with its e2e values
 //	catalog merge [-keep <dir>] <dir>   merge measurements uploaded by CI jobs into measurements/
-//	catalog template render <id>        expand manifests.yaml
-//	catalog template inputs <id>        print the Secrets of generated inputs
 package main
 
 import (
@@ -31,17 +28,15 @@ type repo struct {
 }
 
 var commands = map[string]func(*flag.FlagSet, *repo) error{
-	"list":       list,
-	"e2e":        e2e,
-	"budget":     budget,
-	"crosscheck": crosscheck,
-	"merge":      merge,
-	"template":   template,
+	"list":   list,
+	"e2e":    e2e,
+	"budget": budget,
+	"merge":  merge,
 }
 
 func main() {
 	if len(os.Args) < 2 || commands[os.Args[1]] == nil {
-		fmt.Fprintln(os.Stderr, "usage: catalog list|e2e|budget|crosscheck|merge|template [flags] [ids]")
+		fmt.Fprintln(os.Stderr, "usage: catalog list|e2e|budget|merge [flags] [ids]")
 		os.Exit(2)
 	}
 	if dir, err := os.UserCacheDir(); err == nil {

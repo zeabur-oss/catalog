@@ -5,7 +5,7 @@
 //! Helm renders the charts. This module only composes the values that the catalog owns, and
 //! fetches charts and manifests into a cache.
 
-mod template;
+pub(crate) mod template;
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -235,7 +235,8 @@ fn test_inputs(component: &Component) -> Map<String, Value> {
         .collect()
 }
 
-fn hex(bytes: &[u8]) -> String {
+/// `bytes` in lowercase hexadecimal.
+pub(crate) fn hex(bytes: &[u8]) -> String {
     bytes
         .iter()
         .flat_map(|b| [b >> 4, b & 0xF])
@@ -411,8 +412,8 @@ fn selection(
             components.insert(id.clone());
         } else if let Some(dir) = catalog.templates.get(id) {
             templates.insert(id.clone());
-            let installs = template::e2e_inputs(root, id, dir)
-                .and_then(|(_, s3)| template::installs(catalog, id, dir, s3));
+            let installs = template::e2e(root, id, dir)
+                .and_then(|run| template::installs(catalog, id, dir, run.s3));
             // A template whose e2e values or requirements do not resolve reports it below.
             components.extend(installs.unwrap_or_default());
         } else {

@@ -3,7 +3,7 @@ title: How clients render templates
 description: The checks a client runs before it renders a template, how it tells whether what the template requires is installed and which language it shows, with cases to test a client against.
 ---
 
-A client installs a [template](template-format.mdx) into one namespace: it checks the options, renders `manifests.yaml` and applies the objects. This page gives the rules. `catalog template render` follows them with `tools/internal/templates/render.go`, and Zeabur OSS follows them too. Each rule has a case in [`conformance/template/`](#test-cases) to test against.
+A client installs a [template](template-format.mdx) into one namespace: it checks the options, renders `manifests.yaml` and applies the objects. This page gives the rules. `zeabur-catalog template render` follows them with `crates/zeabur-catalog-engine/src/template.rs`, and Zeabur OSS follows them too. Each rule has a case in [`conformance/template/`](#test-cases) to test against.
 
 ## What a render takes
 
@@ -30,7 +30,7 @@ The client checks the options before it renders. When a check fails, it renders 
 
 A pattern uses only the syntax that RE2, Rust's `regex` crate and JavaScript read the same way: ASCII characters, bracket classes of characters and ranges such as `[a-z0-9_-]`, groups `( )` and `(?: )`, `|`, the repetitions `?`, `*`, `+`, `{n}`, `{n,}` and `{n,m}` with counts up to 1000, and `^` and `$`. Escape a special character with `\`, and always escape `]` inside a class. The catalog's check refuses every other construct, such as `.`, negated classes `[^...]`, a repetition of a repetition such as `a++`, `\d`, `\s`, `\w`, `\b`, `\p{...}`, flags and named groups, because these engines read them differently. To match the whole value, wrap a pattern as `^(?:<pattern>)$`.
 
-When several checks fail, the client reports one of them. `render.go` checks in the order of the table. Each case breaks one rule, so the order doesn't change the result.
+When several checks fail, the client reports one of them. Each case breaks one rule, so the order doesn't change the result.
 
 ## Render
 
@@ -50,7 +50,7 @@ Then add these labels to the metadata of every object:
 
 The objects keep the order of `manifests.yaml`. An empty YAML document isn't an object.
 
-`crosscheck.json` in `bundle.tar.gz` holds full renders of the real templates. For each template id, it records one set of options (`namespace`, `domain`, `clusterIssuer`, `inputs`) and the `objects` that `render.go` renders. A client renders each template with those options and compares the objects. Zeabur OSS's tests do this.
+`crosscheck.json` in `bundle.tar.gz` holds full renders of the real templates. For each template id, it records one set of options (`namespace`, `domain`, `clusterIssuer`, `inputs`) and the `objects` that `crates/zeabur-catalog-engine/src/template.rs` renders. A client renders each template with those options and compares the objects. Zeabur OSS's tests do this.
 
 ## What a template requires
 
