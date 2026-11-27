@@ -401,8 +401,8 @@ releases:
     type: helm
     namespace: builder-system
     chart: oci://ghcr.io/zeabur-oss/charts/zeabur-builder
-    version: 0.3.0
-    chartDigest: sha256:838704ae07ada7bbfb3bf750475b5c56b57d9ca24995d571c432358d182ffa17
+    version: 0.3.1
+    chartDigest: sha256:ed134518bcf35209f78b66f191be8adcfaa3f4f07b6d8a54b2fa397b9f3447eb
     values: |
       registry:
         # zot above: images go to zot.zot.svc:5000/<namespace>/<build>.
