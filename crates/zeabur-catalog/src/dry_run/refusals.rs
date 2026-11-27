@@ -159,6 +159,11 @@ pub(crate) fn judge(found: Vec<Refusal>, major: bool) -> Vec<Problem> {
 /// directory, or nothing when `HEAD` is the merge-base or there is none.
 fn render_base(root: &Path) -> Result<Option<(String, PathBuf)>, String> {
     let reference = std::env::var("CATALOG_BASE").unwrap_or_else(|_| "origin/main".to_owned());
+    if !is_ref_name(&reference) {
+        return Err(format!(
+            "CATALOG_BASE {reference:?} is not a branch or commit name"
+        ));
+    }
     let Ok(sha) = git(root, &["merge-base", "HEAD", &reference]) else {
         crate::output::info(&format!(
             "no base to upgrade from: no merge-base with {reference}"
@@ -228,6 +233,16 @@ fn run_with_input(cmd: &mut Command, input: &[u8]) -> Result<(), String> {
     } else {
         Err(format!("{}: {status}", cmd.get_program().display()))
     }
+}
+
+/// Whether `name` is a plain ref or commit name that git can't read as an option: ASCII letters,
+/// digits, `.`, `_`, `-` and `/`, not starting with `-`.
+fn is_ref_name(name: &str) -> bool {
+    !name.is_empty()
+        && !name.starts_with('-')
+        && name
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'_' | b'-' | b'/'))
 }
 
 /// `git <args>` in `dir`, its output trimmed.
@@ -716,6 +731,15 @@ spec: {SET: VALUE}
         commit(&dir, "base");
         let base = git(&dir, &["rev-parse", "HEAD"]);
         (dir, base)
+    }
+
+    #[test]
+    fn a_base_that_reads_as_an_option_is_refused() {
+        assert!(super::is_ref_name("origin/main"));
+        assert!(super::is_ref_name("56e427a7"));
+        assert!(!super::is_ref_name("--output=x"));
+        assert!(!super::is_ref_name("main;rm"));
+        assert!(!super::is_ref_name(""));
     }
 
     fn git(dir: &Path, args: &[&str]) -> String {
