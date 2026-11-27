@@ -35,16 +35,6 @@
         rustToolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
         # The release version: the Release workflow compares the tag with it.
         version = "0.6.4";
-        catalog = pkgs.buildGoModule {
-          pname = "catalog";
-          inherit version;
-          src = self;
-          subPackages = [ "tools/cmd/catalog" ];
-          # Change it when go.sum changes: nix build prints the new value. On Renovate's pull
-          # requests the vendorhash workflow commits it.
-          vendorHash = "sha256-1LkS+9E7JJegz1UHVU+X/L0I8Gha8alk3ml5P1ZDwJE=";
-          doCheck = false;
-        };
         rustPlatform = pkgs.makeRustPlatform {
           cargo = rustToolchain;
           rustc = rustToolchain;
@@ -86,7 +76,7 @@
       in
       {
         packages = {
-          inherit catalog zeabur-catalog kube-apiserver;
+          inherit zeabur-catalog kube-apiserver;
           # The bundle that a release publishes. Zeabur OSS builds this output at its
           # pinned commit, so it embeds the same bytes as the release. The static API needs helm
           # to fetch charts, so scripts/ci/release.sh builds it outside this sandbox.

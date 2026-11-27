@@ -46,7 +46,7 @@ jobs:
     if: ${{ !cancelled() && (needs.e2e-kind.outputs.ran == 'true' || needs.e2e-hosts.outputs.ran == 'true') }}
     runs-on: instabox-small
     timeout-minutes: 30
-    # Holds zeabur-oss-bot's key (see vendorhash.yml).
+    # Holds zeabur-oss-bot's key. The environment keeps the name of the workflow that first used it.
     environment: vendorhash
     permissions:
       contents: read

@@ -44,7 +44,7 @@ jobs:
       - name: The version is flake.nix's, with a CHANGELOG.md section, on main
         run: |
           bun x zeabur-oss-release check-tag "$VERSION" --changelog CHANGELOG.md \
-            --version "$(nix eval --raw .#catalog.version)" ${{ github.event_name != 'push' && '--rehearsal' || '' }}
+            --version "$(nix eval --raw .#zeabur-catalog.version)" ${{ github.event_name != 'push' && '--rehearsal' || '' }}
       - name: Build the bundle and the static API
         run: scripts/ci/release.sh "$VERSION" assets
       - name: Upload the assets

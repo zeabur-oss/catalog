@@ -84,7 +84,7 @@ description: 了解各层 CI 的运行时机和检查内容，并配置模板测
 
 ### 构建发布文件
 
-用 `nix build .#release` 构建 `bundle.tar.gz`，用 `zeabur-catalog api` 构建静态 API。变更 `go.sum` 后，要等 `flake.nix` 换成新的 `vendorHash`，这一步才会通过。接着 `zeabur-catalog compat` 用最新发布版本的 schema 检查每个新的 API 文件，新字段和新值都可以通过。`v1` 里的变更如果删除字段、改变类型或把字段改为必填，这一步就会失败。
+用 `nix build .#release` 构建 `bundle.tar.gz`，用 `zeabur-catalog api` 构建静态 API。接着 `zeabur-catalog compat` 用最新发布版本的 schema 检查每个新的 API 文件，新字段和新值都可以通过。`v1` 里的变更如果删除字段、改变类型或把字段改为必填，这一步就会失败。
 
 </Step>
 
