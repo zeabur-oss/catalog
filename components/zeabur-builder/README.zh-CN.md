@@ -17,7 +17,7 @@ Builder 会读取、创建、更新和删除每个 Namespace 的 Secret（Git �
 
 ### 启用 AI 构建器
 
-AI 构建器（`builderRef: agent`）会让模型为没有 Dockerfile、Railpack 也构建不了的仓库写一份 Dockerfile。模型会读取仓库的文件，这些文件会发给模型提供商，而且每写一份 Dockerfile 都会消耗 token。之后的构建沿用这份 Dockerfile，不再调用模型。这个构建器默认关闭，详见[用 AI 构建器构建](https://github.com/zeabur-oss/builder/blob/v0.3.1/docs/zh-CN/builds/ai-builder.mdx)。
+AI 构建器（`builderRef: agent`）会让模型为没有 Dockerfile、Railpack 也构建不了的仓库写一份 Dockerfile。模型会读取仓库的文件，这些文件会发给模型提供商，而且每写一份 Dockerfile 都会消耗 token。之后的构建沿用这份 Dockerfile，不再调用模型。这个构建器默认关闭，详见[用 AI 构建器构建](https://oss.zeabur.com/zh-CN/docs/builder/builds/ai-builder/)。
 
 1. 决定 run 怎样登录模型 API，并在每个有 Build 使用 AI 构建器的 Namespace 创建它需要的东西：存放 API 密钥的 Secret；用令牌交换时，则是 `agentAuth` 指定的 ServiceAccount。
 2. 设置组件的输入项：`agentEnabled` 设为 `true`，再设置 `agentProvider`（提供商在 Rig 里的名称，例如 `anthropic` 或 `openai`）、`agentModel` 和 `agentAuth`。只有要把请求发到代理服务器或自建的服务器时，才设置 `agentBaseUrl`。设置好后，组件会安装名为 `agent` 的 ClusterBuilder。

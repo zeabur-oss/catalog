@@ -17,7 +17,7 @@ In a Zeabur OSS project, select **Add** → **Deploy from Git** and enter the re
 
 ### Turn on the AI builder
 
-The AI builder (`builderRef: agent`) has a model write a Dockerfile for a repository that has none and that Railpack can't build. The model reads the repository's files, so they go to the model provider, and each Dockerfile it writes uses tokens. Later builds reuse that Dockerfile and don't call the model. The builder is off by default. See [Build with the AI builder](https://github.com/zeabur-oss/builder/blob/v0.3.1/docs/builds/ai-builder.mdx).
+The AI builder (`builderRef: agent`) has a model write a Dockerfile for a repository that has none and that Railpack can't build. The model reads the repository's files, so they go to the model provider, and each Dockerfile it writes uses tokens. Later builds reuse that Dockerfile and don't call the model. The builder is off by default. See [Build with the AI builder](https://oss.zeabur.com/docs/builder/builds/ai-builder/).
 
 1. Choose how runs sign in to the model API, and create what that needs in every namespace with a Build on the AI builder: a Secret with the API key, or for a token exchange, a ServiceAccount named in `agentAuth`.
 2. Set the component's inputs: `agentEnabled` to `true`, `agentProvider` (the provider's name in Rig, such as `anthropic` or `openai`), `agentModel` and `agentAuth`. Set `agentBaseUrl` only to send requests to a proxy or a server you run. The component then installs a ClusterBuilder named `agent`.
