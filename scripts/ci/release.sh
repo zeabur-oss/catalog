@@ -20,8 +20,12 @@ fi
 mkdir -p "$out"
 dir=$(cd "$out" && pwd)
 
-cargo run --locked -p zeabur-catalog -- check
-cargo run --locked -p zeabur-catalog -- render
+# Without arguments this is the CI release job, and the check job of the same workflow runs
+# scripts/ci/check.sh. A tagged release runs the checks here.
+if [[ $# != 0 ]]; then
+  cargo run --locked -p zeabur-catalog -- check
+  cargo run --locked -p zeabur-catalog -- render
+fi
 nix build .#release
 install -m 644 result/bundle.tar.gz "$dir/bundle.tar.gz"
 

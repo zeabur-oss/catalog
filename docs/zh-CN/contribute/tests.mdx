@@ -3,7 +3,7 @@ title: 测试与 CI
 description: 了解各层 CI 的运行时机和检查内容，并配置模板测试输入。
 ---
 
-`check` 在每个 pull request 中运行，`smoke` 在 merge queue 中、对即将合并的 commit 运行。`full` 在 `main` 收到变更组件或模板的 push 后和每周六运行，只测过期的项目。打发布 tag 前，要确认没有过期的项目。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以用 `catalog e2e -tier check|smoke|full` 运行与 CI 相同的测试。
+`check` 在每个 pull request 中运行，`smoke` 在 merge queue 中、对即将合并的 commit 运行。`full` 在 `main` 收到变更组件或模板的 push 后和每周六运行，只测过期的项目。打发布 tag 前，要确认没有过期的项目。各层分工检查，前一层未覆盖的项目会在后续层级运行。你也可以运行与 CI 相同的测试：`check` 用 `scripts/ci/check.sh`，其他层级用 `catalog e2e -tier smoke|full`。
 
 ## 开始前
 

@@ -141,7 +141,7 @@ impl ApiServer {
             ));
         }
         let mut token = [0; 24];
-        crate::deploy::os_random(&mut token)?;
+        crate::secrets::os_random(&mut token)?;
         let token = crate::render::hex(&token);
         let tokens = self.dir.join("tokens.csv");
         fs::write(&tokens, format!("{token},admin,admin,system:masters\n"))

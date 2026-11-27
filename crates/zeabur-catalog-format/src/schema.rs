@@ -1,17 +1,13 @@
-//! The JSON Schemas of `schema/v1/` and the TypeScript types of `types/v1/`, generated from the
-//! types of this crate.
+//! The JSON Schemas of `schema/v1/`, generated from the types of this crate.
 #![expect(
     clippy::disallowed_types,
     reason = "a JSON Schema is a document of any shape, which the generated schemas are edited as"
 )]
 
-use std::path::Path;
-
 use schemars::generate::SchemaSettings;
 use schemars::transform::transform_subschemas;
 use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde_json::{Map, Value, json};
-use ts_rs::{Config, TS};
 
 use crate::api::{ComponentFile, Index, TemplateFile};
 use crate::component::Component;
@@ -32,25 +28,6 @@ pub fn schemas() -> Vec<(&'static str, String)> {
         file::<TemplateFile>("template-file.schema.json", "templates/<id>.json"),
         file::<SelectCase>("select-case.schema.json", "A case of conformance/select/"),
     ]
-}
-
-/// Writes the TypeScript types of every file in [`schemas`] to `<dir>/catalog.ts`, replacing it.
-///
-/// # Errors
-///
-/// The file cannot be removed, or `ts-rs` cannot write a type.
-pub fn write_typescript(dir: &Path) -> Result<(), ts_rs::ExportError> {
-    match std::fs::remove_file(dir.join("catalog.ts")) {
-        Err(e) if e.kind() != std::io::ErrorKind::NotFound => return Err(e.into()),
-        Ok(()) | Err(_) => {}
-    }
-    let config = Config::new().with_out_dir(dir);
-    Component::export_all(&config)?;
-    Template::export_all(&config)?;
-    Index::export_all(&config)?;
-    ComponentFile::export_all(&config)?;
-    TemplateFile::export_all(&config)?;
-    SelectCase::export_all(&config)
 }
 
 /// The patterns that the schemas give strings.

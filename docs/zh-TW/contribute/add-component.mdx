@@ -41,7 +41,7 @@ description: 建立元件檔案、完成本機檢查，再提交包含 signed-of
 ```sh
 cargo run -p zeabur-catalog -- check         # schema, license, references, comments
 cargo run -p zeabur-catalog -- render        # helm template + kubeconform
-go run ./tools/cmd/catalog e2e -tier check   # what every pull request runs
+scripts/ci/check.sh                          # what every pull request runs
 go run ./tools/cmd/catalog e2e -tier full <id>
 ```
 

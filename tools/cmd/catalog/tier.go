@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"os"
-	"os/exec"
 	"runtime"
 	"slices"
 	"strings"
@@ -16,16 +14,15 @@ import (
 	"github.com/zeabur-oss/catalog/tools/internal/templates"
 )
 
-// Tiers. check runs on every pull request: static checks, then a server-side
-// dry run on a local API server with only the CRDs and no nodes, which also
-// fails when the API server refuses an upgrade from the base or a profile switch. smoke runs in
+// Tiers. The check tier of every pull request is scripts/ci/check.sh, which runs
+// zeabur-catalog check, render and dry-run. smoke runs in
 // the merge queue: it installs and smoke tests what changed, what it needs and
 // what installs it, single-node amd64, in groups that share their
 // dependencies. full runs what is stale after a push to main and weekly: every
 // profile and architecture in a fresh cluster each, with
 // idle usage, uninstall, and residue checks. With -cluster current, smoke and full use the current cluster
 // instead of kind.
-var tiers = []string{"check", "smoke", "full"}
+var tiers = []string{"smoke", "full"}
 
 // row is one line of the tier report.
 type row struct {
@@ -214,48 +211,12 @@ func runTier(r *repo, tier string, o tierOptions) error {
 		return err
 	}
 	switch tier {
-	case "check":
-		return runCheck(r)
 	case "smoke":
 		return runSmoke(r, cfg, o)
 	case "full":
 		return runFull(r, cfg, o)
 	}
 	return fmt.Errorf("unknown -tier %q; use %s", tier, strings.Join(tiers, ", "))
-}
-
-// runCheck checks config/e2e.yaml, then renders and checks every component and
-// template with zeabur-catalog render (the template lint included), and sends
-// them to a local API server with zeabur-catalog dry-run, which also fails
-// when the API server refuses an upgrade from the pull request's base or a
-// profile switch.
-func runCheck(r *repo) error {
-	var ts catalog.Timings
-	step := func(name string, f func() error) error {
-		start := time.Now()
-		err := f()
-		ts.Since(name, start)
-		if err != nil {
-			report("check", []row{{subject: "check", timings: ts, err: fmt.Errorf("%s: %w", name, err)}})
-		}
-		return err
-	}
-	if err := step("e2e config", func() error {
-		_, err := representative(r)
-		return err
-	}); err != nil {
-		return err
-	}
-	for _, args := range [][]string{{"render", "--out", "out/render"}, {"dry-run", "--render", "out/render"}} {
-		if err := step(args[0], func() error {
-			cmd := exec.Command("cargo", append([]string{"run", "--locked", "-q", "-p", "zeabur-catalog", "--"}, args...)...)
-			cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
-			return cmd.Run()
-		}); err != nil {
-			return err
-		}
-	}
-	return report("check", []row{{subject: "check", timings: ts}})
 }
 
 // runSmoke installs and smoke tests each group in its own single-node cluster.

@@ -1,7 +1,7 @@
 // Command catalog checks, renders, tests and packages the catalog.
 //
 //	catalog list -tier smoke|full [-ids <ids>|-since <ref>]  e2e CI matrix as JSON; full without IDs lists what is stale
-//	catalog e2e -tier check|smoke|full [-cluster current] [-since <ref>|ids]  run a test tier (see tier.go)
+//	catalog e2e -tier smoke|full [-cluster current] [-since <ref>|ids]  run a test tier (see tier.go)
 //	catalog budget                      single-node memory budget
 //	catalog merge [-keep <dir>] <dir>   merge measurements uploaded by CI jobs into measurements/
 package main

@@ -1,6 +1,6 @@
 [package]
 name = "zeabur-catalog"
-description = "Zeabur Catalog's command: checks and renders the catalog, and writes its schemas, TypeScript types and licence list"
+description = "Zeabur Catalog's command: checks and renders the catalog, and writes its schemas and API"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -13,6 +13,7 @@ workspace = true
 
 [dependencies]
 base64.workspace = true
+clap.workspace = true
 getrandom.workspace = true
 granit-parser.workspace = true
 jsonschema.workspace = true

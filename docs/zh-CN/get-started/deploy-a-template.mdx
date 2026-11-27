@@ -1,17 +1,17 @@
 ---
-title: 用 catalog 命令部署模板
-description: 验证版本签名、准备集群，渲染并应用模板，完成部署。
+title: 用 zeaburctl 部署模板
+description: 用 zeaburctl 导出模板的对象，检查后再用 kubectl 应用。
 ---
 
-验证版本签名后，用 `catalog` 命令渲染并应用一个模板，再运行冒烟测试（smoke check）和你自己的测试，确认部署结果。
+`zeaburctl templates export` 会输出将 Zeabur Catalog 模板部署到 Zeabur 开源版项目时写入的对象，与网页界面写入的相同。检查这些对象，用 `kubectl` 应用，再运行冒烟测试（smoke check）和你自己的测试。命令说明和给编程代理的提示词见 [Zeabur 开源版文档](https://oss.zeabur.com/zh-CN/docs/zeabur/deploy/templates/)。
 
 ## 开始前
 
-- 安装 Rust、`git`、`gh`、`cosign`、`kubectl` 和 `sha256sum`（macOS 可从 GNU coreutils 获取）。
-- 安装模板 `requires` 列出的每个组件，全部使用同一个版本。
-- 使用能落实 NetworkPolicy 的 CNI。安装程序会隔离各项目的 Namespace。模板不限制出站流量。
+- 安装 `kubectl`，以及与你的 Zeabur 开源版同版本的 `zeaburctl`。`zeaburctl` 内含 Zeabur 开源版所附 Zeabur Catalog 版本的模板。
+- 阅读模板 `template.yaml` 中的许可证、输入、`requires` 和安全风险。
+- 使用能落实 NetworkPolicy 的 CNI。模板不限制出站流量。
 - 如果模板需要域名，先准备好 cert-manager ClusterIssuer。
-- 每个 Namespace 内，同一个模板只能安装一次。模板内的对象名称固定。
+- 每个项目内，同一个模板只能安装一次。模板内的对象名称固定。
 
 <Steps>
 
@@ -31,68 +31,21 @@ kubectl get storageclass
 
 <Step>
 
-### 获取 catalog 命令
+### 导出并应用模板
 
-把 `vX.Y.Z` 换成你要部署的版本 tag，取出这个 tag 的源码，在其中运行 `catalog` 命令。不要运行未经验证的下载文件。
-
-```sh
-tag=vX.Y.Z
-git clone --depth 1 --branch "$tag" https://github.com/zeabur-oss/catalog
-cd catalog
-cargo run -p zeabur-catalog -- check
-```
-
-目录没有问题时，`check` 不会输出任何内容，并以状态 0 退出。
-
-</Step>
-
-<Step>
-
-### 验证版本
-
-将同一个版本 tag 的 `bundle.tar.gz`、`api-v1.tar.gz`、`SHA256SUMS` 和 `SHA256SUMS.sigstore.json` 下载到新建的私有目录，再按工作流、仓库和 tag 验证 `SHA256SUMS` 的签名，并用它核对这些文件：
-
-```sh
-dir=$(mktemp -d)
-gh release download "$tag" --repo zeabur-oss/catalog --dir "$dir" \
-  --pattern bundle.tar.gz --pattern api-v1.tar.gz --pattern SHA256SUMS --pattern SHA256SUMS.sigstore.json
-(cd "$dir" &&
-  cosign verify-blob SHA256SUMS --bundle SHA256SUMS.sigstore.json \
-    --certificate-identity "https://github.com/zeabur-oss/catalog/.github/workflows/release.yml@refs/tags/$tag" \
-    --certificate-oidc-issuer https://token.actions.githubusercontent.com &&
-  sha256sum --check --ignore-missing SHA256SUMS)
-```
-
-`cosign` 会输出 `Verified OK`，`sha256sum` 会输出 `bundle.tar.gz: OK` 和 `api-v1.tar.gz: OK`。只要有一个输出别的内容，就停下来。
-
-只检查签发者或工作流，都会接受其他工作流或其他 zeabur-oss 仓库的签名。签名验证通过后才能解压这些文件，并拒绝绝对路径、`..` 和链接。把 `api-v1.tar.gz` 解压到 `$dir`，下面的命令会从 `$dir/v1` 的 API 读取模板。
-
-</Step>
-
-<Step>
-
-### 渲染并应用模板
-
-先阅读 `templates/<id>/template.yaml` 中的许可证、输入、`requires` 和安全风险，再渲染对象：
-
-```sh
-cargo run -q -p zeabur-catalog -- template render --api "$dir/v1" --namespace app \
-  --domain app.example.com --cluster-issuer letsencrypt --values inputs.json <id> > plan.yaml
-```
-
-`inputs.json` 是一个 JSON 对象，以字符串值提供模板要求的输入。对象存储桶和凭证必须提前准备好。
-
-为模板生成包含密码和密钥的 Secret，再应用对象：
+将 `<id>` 换成模板 ID，`app` 换成项目：
 
 ```sh
 umask 077
-cargo run -q -p zeabur-catalog -- template inputs --api "$dir/v1" --namespace app <id> > secrets.json
-kubectl create namespace app
-kubectl -n app apply -f secrets.json
-kubectl -n app apply -f plan.yaml
+zeaburctl templates export <id> --project app \
+  --domain app.example.com --cluster-issuer letsencrypt --set <name>=<value> > app.yaml
+kubectl diff --server-side -f app.yaml
+kubectl apply --server-side -f app.yaml
 ```
 
-不要将 `secrets.json` 加入版本控制。每次运行 `inputs` 都会生成新值；每次部署只运行一次，升级时沿用现有的 Secret。
+模板要求的每个输入都用 `--set <name>=<value>` 提供。未提供的输入、缺少的 `--domain` 和 `--cluster-issuer` 会以 `<name>` 占位符出现，应用前要带上这些值重新导出。如果集群缺少模板需要的组件，`zeaburctl` 会说明，并列出安装它的 `zeaburctl components export` 命令。对象存储桶和凭据需要事先准备好。
+
+输出的开头是存放模板自动生成的密码和密钥的 Secret。每次导出都会生成新值，所以只导出一次，并应用那个文件。再应用之后的导出，会替换运行中应用的密码。不要将这个文件加入版本控制。
 
 确认每个 Pod 都已启动：
 
@@ -114,9 +67,9 @@ curl -sI https://app.example.com | head -n 1
 
 ### 升级与回滚
 
-记录每次部署的版本、Namespace、镜像引用、输入和 Secret 名称。升级前，比较渲染后的对象差异，阅读当前版本到目标版本之间的所有升级注意事项，完成备份，并先在复制出的环境中演练升级。
+记录每次部署的版本、项目、镜像引用、输入和 Secret 名称。升级前，比较导出的对象差异，阅读当前版本到目标版本之间的所有升级注意事项，完成备份，并先在复制出的环境中演练升级。
 
-要将应用回滚到旧版，先确认数据库和存储的兼容性，再部署此前已验证版本的对象。数据库降级通常需要恢复。备份应存放在应用的 Namespace 之外。
+要将应用回滚到旧版，先确认数据库和存储的兼容性，再应用此前已验证版本的对象。数据库降级通常需要恢复。备份应存放在应用的项目之外。
 
 </Step>
 
@@ -138,7 +91,5 @@ CloudNativePG 会自行创建应用凭证的 Secret，模板直接沿用。
 
 ## 参考链接
 
-- [Cosign blob 验证](https://docs.sigstore.dev/cosign/verifying/verify/)
-- [GitHub OIDC](https://docs.github.com/en/actions/reference/security/oidc)
 - [Kubernetes Secret 最佳实践](https://kubernetes.io/docs/concepts/security/secrets-good-practices/)
 - [Pod 安全标准](https://kubernetes.io/docs/concepts/security/pod-security-standards/)

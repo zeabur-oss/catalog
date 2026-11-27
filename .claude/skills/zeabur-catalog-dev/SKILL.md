@@ -14,7 +14,7 @@ The Release workflow builds its files with `scripts/ci/release.sh <version> <dir
 ```sh
 nix develop -c go test ./...
 nix develop -c cargo run -p zeabur-catalog -- check  # schema, licences, references, value comments, template rules
-nix develop -c cargo run -p zeabur-catalog -- schema # writes schema/v1 and types/v1 from the Rust types; edit those, not the output
+nix develop -c cargo run -p zeabur-catalog -- schema # writes schema/v1 from the Rust types; edit those, not the output
 nix develop -c cargo run -p zeabur-catalog -- api --version 0.0.0   # the static API into out/api, checked against the schemas
 nix develop -c cargo run -p zeabur-catalog -- render  # helm template every profile, the template lint, kubeconform
 nix develop -c cargo run -p zeabur-catalog -- render <id>  # one component, or one template with its e2e values and what it installs
@@ -22,11 +22,11 @@ nix develop -c cargo run -p zeabur-catalog -- render <id>  # one component, or o
 `crates/zeabur-catalog-format` is the typed model and the installer rules in Rust, and
 `crates/zeabur-catalog-engine` decides what an install does from them (today, template rendering);
 the `rust` job runs `scripts/ci/rust.sh` (rustfmt, `cargo lint`, docs, nextest with every
-`conformance/select/` and `conformance/template/` case, the check that `schema/v1` and `types/v1` match the Rust types, cargo-deny). Iterate with `nix develop -c cargo nextest run -p zeabur-catalog-format`.
+`conformance/select/` and `conformance/template/` case, the check that `schema/v1` matches the Rust types, cargo-deny). Iterate with `nix develop -c cargo nextest run -p zeabur-catalog-format`.
 Cluster tests come in tiers (`docs/contribute/tests.mdx`). `check` starts its own etcd and kube-apiserver and
 needs no Docker. `smoke` and `full` create their own kind clusters; run them on a disposable Linux machine or VM:
 ```sh
-nix develop -c go run ./tools/cmd/catalog e2e -tier check            # every pull request
+nix develop -c scripts/ci/check.sh                                  # every pull request
 nix develop -c go run ./tools/cmd/catalog e2e -tier smoke <ids>      # merge queue: install, smoke
 nix develop -c go run ./tools/cmd/catalog e2e -tier full <id>        # after a push to main; without IDs, what is stale
 ```
