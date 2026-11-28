@@ -9,6 +9,7 @@ cd "$(dirname "$0")/../.."
 rules=(
   "string-problems|crates/**/*.rs|fn \w*problems?\w*(<[^>]*>)?\([^)]*\)\s*->[^{;]*Vec<String>|a check returns its own problem enum, wrapped by zeabur_catalog_format::problem::ProblemKind|fn license_problems(x: &str) -> Vec<String> {"
   "string-problems-out|crates/**/*.rs|fn \w*problems?\w*(<[^>]*>)?\([^)]*&mut Vec<String>|a check pushes its own problem enum into zeabur_catalog_format::problem::Problems|fn walk_problems(\n    raw: &Value,\n    out: &mut Vec<String>,\n) {"
+  "problem-text|crates/**/*.rs|\bto_string\(\)\s*\.(contains|starts_with|ends_with)\(|a test matches a problem by its kind, file and path, not by the text Display builds|        assert!(found[0].to_string().contains(\"zot\"));"
   "text-tools|scripts/**|\b(grep|sed|awk|cut)\b|scripts read JSON with jq, YAML with yq, objects with kubectl -o jsonpath and search with rg|ready=\$(cut -d, -f2 pods.csv)"
   "registry-ca-copy|{components,templates,docs,crates}/**|\bca(From|Bundle)\b|pass the source Secret as registry.caSecretRef to Zeabur Builder, and name its published CA in provides.registry.ca|      caFrom: {namespace: zot, secret: zot-tls}"
 )

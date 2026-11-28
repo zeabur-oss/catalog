@@ -1513,7 +1513,7 @@ spec:
         clippy::disallowed_types,
         reason = "the backup spec is written as JSON"
     )]
-    fn cluster_backup(backup: Option<serde_json::Value>) -> Vec<String> {
+    fn cluster_backup(backup: Option<serde_json::Value>) -> Vec<LintRule> {
         let template = template(&[], &["percona-mongodb"]);
         let mut spec = json!({
             "image": format!("example.test/mongod{}", digest()),
@@ -1542,7 +1542,7 @@ spec:
                     || matches!(&p.rule, LintRule::PerconaDigest { field } if field == "backup.image")
                     || p.at.contains("/operand-")
             })
-            .map(|p| p.to_string())
+            .map(|p| p.rule)
             .collect()
     }
 
@@ -1550,9 +1550,9 @@ spec:
     fn a_percona_cluster_checks_backups_only_when_enabled() {
         assert_eq!(
             cluster_backup(Some(json!({"enabled": false}))),
-            Vec::<String>::new()
+            Vec::<LintRule>::new()
         );
-        assert_eq!(cluster_backup(None), Vec::<String>::new());
+        assert_eq!(cluster_backup(None), Vec::<LintRule>::new());
         let unverified = json!({
             "enabled": true,
             "image": format!("example.test/pbm{}", digest()),
@@ -1562,8 +1562,14 @@ spec:
                 "insecureSkipTLSVerify": true,
             }}},
         });
-        assert_ne!(cluster_backup(Some(unverified)), Vec::<String>::new());
+        assert_breaks!(
+            cluster_backup(Some(unverified)),
+            LintRule::PerconaBackupStorage { .. }
+        );
         let unpinned = json!({"enabled": true, "image": "example.test/pbm:2", "storages": {}});
-        assert_ne!(cluster_backup(Some(unpinned)), Vec::<String>::new());
+        assert_breaks!(
+            cluster_backup(Some(unpinned)),
+            LintRule::PerconaDigest { field } if field == "backup.image"
+        );
     }
 }
