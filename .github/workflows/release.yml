@@ -29,7 +29,7 @@ env:
 
 jobs:
   build:
-    runs-on: instabox-small
+    runs-on: ubuntu-26.04
     timeout-minutes: 60
     steps:
       - name: Check out
@@ -58,7 +58,7 @@ jobs:
   release:
     if: github.event_name == 'push'
     needs: build
-    runs-on: instabox-small
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     permissions:
       contents: write # the draft
@@ -87,7 +87,7 @@ jobs:
 
   verify:
     needs: release
-    runs-on: instabox-small
+    runs-on: ubuntu-26.04
     timeout-minutes: 60
     permissions:
       # GitHub shows a draft release only to a token that can push.
