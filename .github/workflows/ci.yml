@@ -29,7 +29,7 @@ concurrency:
 
 jobs:
   lint:
-    runs-on: instabox-medium
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     steps:
       - name: Check out
@@ -42,7 +42,7 @@ jobs:
         run: nix develop -c scripts/ci/lint.sh
 
   test:
-    runs-on: instabox-medium
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     steps:
       - name: Check out
@@ -55,7 +55,7 @@ jobs:
         run: nix develop -c scripts/ci/test.sh
 
   rust:
-    runs-on: instabox-medium
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     steps:
       - name: Check out
@@ -68,7 +68,7 @@ jobs:
         run: nix develop -c scripts/ci/rust.sh
 
   check:
-    runs-on: instabox-medium
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     steps:
       - name: Check out
@@ -83,7 +83,7 @@ jobs:
         run: nix develop -c scripts/ci/check.sh
 
   release:
-    runs-on: instabox-medium
+    runs-on: ubuntu-26.04
     timeout-minutes: 120
     steps:
       - name: Check out
@@ -110,7 +110,7 @@ jobs:
           retention-days: 14
 
   docs:
-    runs-on: instabox-small
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     steps:
       - uses: zeabur-oss/website/.github/actions/docs-check@2e35930439db8ffcf686c95abef945087697a9ec # main
@@ -119,7 +119,7 @@ jobs:
     name: check / ok
     if: always()
     needs: [lint, test, rust, check, release, docs]
-    runs-on: instabox-small
+    runs-on: ubuntu-slim
     timeout-minutes: 5
     steps:
       - name: Fail if a job failed or was cancelled
@@ -129,7 +129,7 @@ jobs:
 
   smoke-matrix:
     if: github.event_name == 'merge_group'
-    runs-on: instabox-small
+    runs-on: ubuntu-slim
     timeout-minutes: 5
     outputs:
       matrix: ${{ steps.list.outputs.matrix }}
@@ -184,7 +184,7 @@ jobs:
   smoke-ok:
     if: always()
     needs: [smoke-matrix, smoke]
-    runs-on: instabox-small
+    runs-on: ubuntu-slim
     timeout-minutes: 5
     steps:
       - name: Fail if a smoke job failed or was cancelled
